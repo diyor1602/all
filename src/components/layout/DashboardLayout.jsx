@@ -1,11 +1,20 @@
 import TechnologLayout from "./DashboardLayouts/TechnologLayout";
 import SuperHrLayout from "./DashboardLayouts/SuperHrLayout";
+import { Outlet } from "react-router-dom";
 
 const renderPage = (role) => {
   if (role === "technologist") {
-    return <TechnologLayout />;
+    return (
+      <TechnologLayout>
+        <Outlet />
+      </TechnologLayout>
+    );
   } else if (role === "superhr") {
-    return <SuperHrLayout />;
+    return (
+      <SuperHrLayout>
+        <Outlet />
+      </SuperHrLayout>
+    );
   } else {
     return <div>404 Not Found</div>;
   }

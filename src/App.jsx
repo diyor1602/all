@@ -20,11 +20,7 @@ const ProtectedRoute = () => {
     return <Navigate to="/" replace />;
   }
 
-  return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
-  );
+  return <DashboardLayout />;
 };
 
 const RootRoute = () => {
