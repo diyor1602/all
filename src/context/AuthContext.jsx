@@ -22,10 +22,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (res.status === 200) {
-        console.log(res);
         const token = res.data.token;
         localStorage.setItem("imgUrl", res.data.user.employee.img);
-
         localStorage.setItem("token", token);
         localStorage.setItem("role", res.data.user.role.name);
         localStorage.setItem("username", username);
@@ -36,7 +34,6 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
     } catch (error) {
-      console.log(error);
       let errorMessage = "Kutilmagan xatolik yuz berdi";
 
       if (error.response) {
