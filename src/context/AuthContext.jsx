@@ -22,20 +22,21 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (res.status === 200) {
-        const { token } = res.data.message;
-        const decodedToken = JSON.parse(atob(token.split(".")[1]));
-        localStorage.setItem("imgUrl", res.data.message.user.employee.img);
+        console.log(res);
+        const token = res.data.token;
+        localStorage.setItem("imgUrl", res.data.user.employee.img);
 
         localStorage.setItem("token", token);
-        localStorage.setItem("role", decodedToken.role.name);
+        localStorage.setItem("role", res.data.user.role.name);
         localStorage.setItem("username", username);
-        localStorage.setItem("user_id", res.data.message.user.id);
-        localStorage.setItem("name", res.data.message.user.employee.name);
-        setUser({ username, role: decodedToken.role.name });
+        localStorage.setItem("user_id", res.data.user.id);
+        localStorage.setItem("name", res.data.user.employee.name);
+        setUser({ username, role: res.data.user.role.name });
         navigate("/home", { replace: true });
         return { success: true };
       }
     } catch (error) {
+      console.log(error);
       let errorMessage = "Kutilmagan xatolik yuz berdi";
 
       if (error.response) {

@@ -10,7 +10,6 @@ import {
   Home,
   BadgeDollarSign,
   Sparkles,
-  Origami,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,12 +31,6 @@ const navigation = [
     name: "Maosh",
     href: "/superhr/employees",
     icon: Sparkles,
-    onMobile: true,
-  },
-  {
-    name: "Buyurtmalar",
-    href: "/ceoorders",
-    icon: Origami,
     onMobile: true,
   },
 ];
