@@ -38,14 +38,40 @@ export const AuthProvider = ({ children }) => {
 
       if (error.response) {
         switch (error.response.status) {
+          case 400:
+            errorMessage =
+              "Noto'g'ri so'rov. Ma'lumotlarni tekshirib qaytadan urinib ko'ring.";
+            break;
           case 401:
             errorMessage = "Login yoki parol xato";
             break;
           case 403:
             errorMessage = "Sizda saytga kirish imkoni mavjud emas";
             break;
+          case 404:
+            errorMessage = "So'ralgan ma'lumot topilmadi";
+            break;
+          case 408:
+            errorMessage =
+              "So'rov vaqt limiti tugadi. Qaytadan urinib ko'ring.";
+            break;
+          case 422:
+            errorMessage = "Parol kamida 6 belgidan iborat bo'lishi kerak";
+            break;
+          case 429:
+            errorMessage =
+              "Juda ko'p urinishlar. Bir oz kutib, qaytadan urinib ko'ring.";
+            break;
+          case 500:
+            errorMessage =
+              "Ichki server xatosi. Keyinroq qaytadan urinib ko'ring.";
+            break;
+          case 503:
+            errorMessage =
+              "Xizmat vaqtincha mavjud emas. Keyinroq urinib ko'ring.";
+            break;
           default:
-            errorMessage = "Server xatosi yuz berdi";
+            errorMessage = "Nimadir xato ketdi";
         }
       } else if (error.request) {
         errorMessage = "Server bilan bog'lanishda xatolik";
