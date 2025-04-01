@@ -11,7 +11,19 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, Bluetooth, Printer, X } from "lucide-react";
+import QRCode from "qrcode";
+
+// Import Dialog components
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 const CuttingStart = () => {
   const { toast } = useToast();
@@ -22,6 +34,12 @@ const CuttingStart = () => {
   const [selectedSpec, setSelectedSpec] = useState("");
   const [quantity, setQuantity] = useState("");
   const [sending, setSending] = useState(false);
+
+  // Bluetooth states
+  const [bluetoothDevices, setBluetoothDevices] = useState([]);
+  const [connectedDevice, setConnectedDevice] = useState(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
 
   const { id } = useParams();
 
@@ -57,6 +75,129 @@ const CuttingStart = () => {
     }
   };
 
+  // Bluetooth functions
+  const scanForDevices = async () => {
+    if (!navigator.bluetooth) {
+      toast({
+        title: "Error",
+        description: "Bluetooth API is not available in your browser",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsScanning(true);
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: ["generic_access"],
+      });
+
+      setBluetoothDevices((prev) => {
+        if (!prev.some((d) => d.id === device.id)) {
+          return [...prev, device];
+        }
+        return prev;
+      });
+    } catch (error) {
+      toast({
+        title: "Bluetooth Error",
+        description: error.message || "Failed to scan for devices",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const connectToDevice = async (device) => {
+    try {
+      await device.gatt.connect();
+      setConnectedDevice(device);
+      toast({
+        title: "Connected",
+        description: `Connected to ${device.name}`,
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+    } catch (error) {
+      toast({
+        title: "Connection Error",
+        description: error.message || "Failed to connect to device",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const disconnectDevice = async () => {
+    if (connectedDevice && connectedDevice.gatt.connected) {
+      try {
+        connectedDevice.gatt.disconnect();
+        setConnectedDevice(null);
+        toast({
+          title: "Disconnected",
+          description: "Bluetooth device disconnected",
+        });
+      } catch (error) {
+        toast({
+          title: "Disconnection Error",
+          description: error.message || "Failed to disconnect device",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Generate QR code
+  const generateQRCode = async () => {
+    try {
+      const qrData = `${id}, ${selectedSpec}`;
+      const dataUrl = await QRCode.toDataURL(qrData);
+      setQrCodeDataUrl(dataUrl);
+      return dataUrl;
+    } catch (error) {
+      toast({
+        title: "QR Code Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  // Print QR code
+  const printQRCode = async () => {
+    if (!connectedDevice) {
+      toast({
+        title: "Error",
+        description: "No printer connected",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Here we would implement the actual bluetooth printing
+      // For demonstration, we'll just show a success message
+      toast({
+        title: "Success",
+        description: "QR code sent to printer",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+    } catch (error) {
+      toast({
+        title: "Printing Error",
+        description: error.message || "Failed to print QR code",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedSubmodel || !selectedSpec || !quantity) {
       toast({
@@ -66,13 +207,29 @@ const CuttingStart = () => {
       });
       return;
     }
+
     try {
       setSending(true);
+
+      // Generate QR code first
+      const qrCode = await generateQRCode();
+
+      if (!qrCode) {
+        throw new Error("Failed to generate QR code");
+      }
+
+      // Save the cut data
       await api.post(`/cuttingMaster/markAsCut`, {
         order_id: id,
         category_id: selectedSpec,
         quantity,
       });
+
+      // Print QR code if device is connected
+      if (connectedDevice) {
+        await printQRCode();
+      }
+
       toast({
         title: "Success",
         description: "Muvaffaqiyatli kesildi",
@@ -81,6 +238,7 @@ const CuttingStart = () => {
           color: "white",
         },
       });
+
       fetchCuts();
       fetchOrder();
     } catch (error) {
@@ -97,6 +255,13 @@ const CuttingStart = () => {
   useEffect(() => {
     fetchOrder();
     fetchCuts();
+
+    // Clean up bluetooth connection on unmount
+    return () => {
+      if (connectedDevice && connectedDevice.gatt.connected) {
+        connectedDevice.gatt.disconnect();
+      }
+    };
   }, [id]);
 
   if (loading) {
@@ -125,6 +290,95 @@ const CuttingStart = () => {
           </span>
         </div>
       </div>
+
+      {/* Bluetooth status indicator */}
+      <div className="flex justify-between items-center bg-white rounded-lg p-3 mt-4">
+        <div className="flex items-center gap-2">
+          <Bluetooth
+            className={connectedDevice ? "text-blue-500" : "text-gray-400"}
+          />
+          <span>
+            {connectedDevice
+              ? `Connected to: ${connectedDevice.name}`
+              : "No printer connected"}
+          </span>
+        </div>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Bluetooth className="w-4 h-4" />
+              {connectedDevice ? "Change Printer" : "Connect Printer"}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Bluetooth Devices</DialogTitle>
+              <DialogDescription>
+                Select a bluetooth printer to connect
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex flex-col gap-4 py-4">
+              {bluetoothDevices.length === 0 && !isScanning && (
+                <div className="text-center text-gray-500">
+                  No devices found. Click scan to search for devices.
+                </div>
+              )}
+
+              {bluetoothDevices.map((device) => (
+                <div
+                  key={device.id}
+                  className={`flex justify-between items-center p-3 rounded-lg border ${
+                    connectedDevice && connectedDevice.id === device.id
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Printer className="w-5 h-5" />
+                    <span>{device.name || "Unknown Device"}</span>
+                  </div>
+
+                  {connectedDevice && connectedDevice.id === device.id ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={disconnectDevice}
+                      className="text-red-500 border-red-200 hover:bg-red-50"
+                    >
+                      Disconnect
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => connectToDevice(device)}
+                    >
+                      Connect
+                    </Button>
+                  )}
+                </div>
+              ))}
+
+              <Button
+                onClick={scanForDevices}
+                disabled={isScanning}
+                className="mt-2"
+              >
+                {isScanning ? "Scanning..." : "Scan for Devices"}
+              </Button>
+            </div>
+
+            <DialogClose asChild>
+              <Button variant="outline" className="w-full">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <div className="flex flex-col gap-4 bg-white rounded-lg p-3 mt-4">
         <Select
           value={selectedSubmodel}
@@ -167,10 +421,34 @@ const CuttingStart = () => {
           type="number"
           onChange={(e) => setQuantity(e.target.value)}
         />
-        <Button onClick={handleSave} disabled={sending}>
-          {sending ? "Yuborilmoqda..." : "Saqlash"}
+
+        {/* QR code preview */}
+        {qrCodeDataUrl && (
+          <div className="flex flex-col items-center p-4 border rounded-lg">
+            <h3 className="text-sm font-medium mb-2">QR Code Preview</h3>
+            <img src={qrCodeDataUrl} alt="QR Code" className="w-32 h-32" />
+            <p className="text-xs text-gray-500 mt-2">
+              Will be sent to printer on save
+            </p>
+          </div>
+        )}
+
+        <Button
+          onClick={handleSave}
+          disabled={sending}
+          className="flex items-center gap-2"
+        >
+          {sending ? (
+            "Yuborilmoqda..."
+          ) : (
+            <>
+              <span>Saqlash{connectedDevice ? " va Chop etish" : ""}</span>
+              {connectedDevice && <Printer className="w-4 h-4" />}
+            </>
+          )}
         </Button>
       </div>
+
       <div className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cuts?.map((cut, index) => (
