@@ -293,11 +293,13 @@ const Orders = () => {
                                     <span className="font-bold">
                                       {size?.size?.name}
                                     </span>{" "}
-                                    -{" "}
-                                    <span className="font-bold mr-1">
-                                      {size?.quantity}
-                                    </span>{" "}
-                                    ta
+                                    {size?.quantity ? (
+                                      <span className="font-medium mx-1 text-black">
+                                        {size?.quantity} ta
+                                      </span>
+                                    ) : (
+                                      ""
+                                    )}
                                   </Badge>
                                 ))}
                               </div>

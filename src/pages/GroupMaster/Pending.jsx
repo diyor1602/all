@@ -15,7 +15,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Search,
   Package,
-  Calendar,
   MessageSquare,
   AlertCircle,
   Tag,
@@ -39,9 +38,7 @@ const Pending = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/groupMaster/orders", {
-        params: { status: "pending" },
-      });
+      const response = await api.get("/groupMaster/orders/pending");
       setOrders(response.data);
       setFilteredOrders(response.data);
     } catch (error) {
@@ -254,11 +251,13 @@ const Pending = () => {
                                     <span className="font-bold">
                                       {size?.size?.name}
                                     </span>{" "}
-                                    -{" "}
-                                    <span className="font-bold mr-1">
-                                      {size?.quantity}
-                                    </span>{" "}
-                                    ta
+                                    {size?.quantity ? (
+                                      <span className="font-medium mx-1 text-black">
+                                        {size?.quantity} ta
+                                      </span>
+                                    ) : (
+                                      ""
+                                    )}
                                   </Badge>
                                 ))}
                               </div>
@@ -308,50 +307,6 @@ const Pending = () => {
                             </div>
                           </Card>
                         </div>
-
-                        <div className="mt-6 pt-6 border-t border-gray-200">
-                          <div className="grid grid-cols-1 gap-4">
-                            <div>
-                              <label className="text-base font-bold text-gray-700 flex items-center mb-2">
-                                <Calendar className="h-5 w-5 mr-2 text-purple-600" />
-                                Reja vaqti
-                              </label>
-                              <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                                {order?.order_printing_time?.planned_time.toLocaleString(
-                                  "en-GB"
-                                )}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-base font-bold text-gray-700 flex items-center mb-2">
-                                <MessageSquare className="h-5 w-5 mr-2 text-purple-600" />
-                                Izoh
-                              </label>
-                              <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                                {order?.order_printing_time?.comment ||
-                                  "Izoh yo'q"}
-                              </div>
-                            </div>
-                            <div>Status: Konstruktorda</div>
-                            <div>
-                              Bajarilganv vaqti:{" "}
-                              {order?.order_printing_time?.actual_time ||
-                                "Bajarilmagan"}
-                            </div>
-                            <div>
-                              Ma'sul:{" "}
-                              {order?.order_printing_time?.user?.employee?.name}
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          className="mt-6 w-full"
-                          onClick={() => {
-                            navigate(`/cuttingMaster/start/${order?.id}`);
-                          }}
-                        >
-                          Boshlash
-                        </Button>
                       </CardContent>
                     </AccordionContent>
                   </AccordionItem>
