@@ -124,9 +124,6 @@ const Printing = () => {
           <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
             Buyurtmalar
           </h1>
-          <p className="text-gray-700 text-lg">
-            Chop etishdagi buyurtmalar ro'yxati
-          </p>
         </motion.div>
 
         <motion.div
