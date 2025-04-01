@@ -64,10 +64,10 @@ const Orders = () => {
   useEffect(() => {
     const filtered = orders.filter(
       (order) =>
-        order.name.toLowerCase().includes(search.toLowerCase()) ||
-        order.quantity.toString().includes(search) ||
-        order.comment.toLowerCase().includes(search.toLowerCase()) ||
-        order.order_model.model.name
+        order?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        order?.quantity?.toString().includes(search) ||
+        order?.comment?.toLowerCase().includes(search.toLowerCase()) ||
+        order?.order_model?.model?.name
           .toLowerCase()
           .includes(search.toLowerCase())
     );
@@ -231,17 +231,17 @@ const Orders = () => {
                               className="font-bold text-xl text-gray-800"
                               aria-label="Buyurtma nomi"
                             >
-                              {order.name}
+                              {order?.name}
                             </h3>
                             <div className="flex items-center text-sm text-gray-600 mt-1">
                               <Tag className="h-4 w-4 mr-1" />
-                              <span>{order.order_model.model.name}</span>
+                              <span>{order?.order_model?.model?.name}</span>
                             </div>
                           </div>
                         </div>
                         <Badge className="bg-indigo-100 text-indigo-800 ml-2">
                           <ShoppingBag className="h-3 w-3 mr-1" />
-                          {order.quantity} ta
+                          {order?.quantity} ta
                         </Badge>
                       </div>
                     </AccordionTrigger>
@@ -255,7 +255,7 @@ const Orders = () => {
                                 Model
                               </h4>
                               <div className="font-bold text-lg text-gray-800 bg-purple-50 p-3 rounded-lg border border-purple-100">
-                                {order.order_model.model.name}
+                                {order?.order_model?.model?.name}
                               </div>
                             </div>
 
@@ -265,7 +265,7 @@ const Orders = () => {
                                 Izoh
                               </h4>
                               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-gray-700 text-base">
-                                {order.comment || "Izoh yo'q"}
+                                {order?.comment || "Izoh yo'q"}
                               </div>
                             </div>
                           </div>
@@ -277,17 +277,17 @@ const Orders = () => {
                                 O'lchamlar
                               </h4>
                               <div className="flex flex-wrap gap-2 bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                                {order.order_model.sizes.map((size) => (
+                                {order?.order_model?.sizes?.map((size) => (
                                   <Badge
                                     key={size.id}
                                     className="bg-white text-indigo-700 border border-indigo-200 px-3 py-2 text-base"
                                   >
                                     <span className="font-bold">
-                                      {size.size.name}
+                                      {size?.size?.name}
                                     </span>{" "}
                                     -{" "}
                                     <span className="font-bold mr-1">
-                                      {size.quantity}
+                                      {size?.quantity}
                                     </span>{" "}
                                     ta
                                   </Badge>
@@ -301,14 +301,16 @@ const Orders = () => {
                                 Submodellar
                               </h4>
                               <div className="flex flex-wrap gap-2 bg-pink-50 p-4 rounded-lg border border-pink-100">
-                                {order.order_model.submodels.map((submodel) => (
-                                  <Badge
-                                    key={submodel.id}
-                                    className="bg-white text-pink-700 border border-pink-200 px-3 py-1.5 text-base"
-                                  >
-                                    {submodel.submodel.name}
-                                  </Badge>
-                                ))}
+                                {order?.order_model?.submodels?.map(
+                                  (submodel) => (
+                                    <Badge
+                                      key={submodel.id}
+                                      className="bg-white text-pink-700 border border-pink-200 px-3 py-1.5 text-base"
+                                    >
+                                      {submodel?.submodel?.name}
+                                    </Badge>
+                                  )
+                                )}
                               </div>
                             </div>
                           </div>
@@ -321,16 +323,16 @@ const Orders = () => {
                           </h4>
                           <Card className="bg-green-50 border border-green-100">
                             <div className="divide-y divide-green-100">
-                              {order.instructions.map((instruction) => (
+                              {order?.instructions?.map((instruction) => (
                                 <div
                                   key={instruction.id}
                                   className="p-4 flex flex-col"
                                 >
                                   <div className="font-bold text-gray-800 text-lg mb-1">
-                                    {instruction.title}
+                                    {instruction?.title}
                                   </div>
                                   <div className="text-gray-700 text-base">
-                                    {instruction.description}
+                                    {instruction?.description}
                                   </div>
                                 </div>
                               ))}
