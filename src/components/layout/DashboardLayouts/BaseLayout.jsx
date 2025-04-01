@@ -14,40 +14,74 @@ export default function BaseLayout({ children, navigation }) {
   const imageUrl = localStorage.getItem("imgUrl");
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar */}
-      <aside
+    <div className="min-h-screen bg-gray-50">
+      <div className="lg:hidden fixed top-4 right-4 z-40">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          {sidebarOpen ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <Menu className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+
+      {/* Sidebar backdrop for mobile */}
+      <div
         className={cn(
-          "fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0",
+          "fixed inset-0 z-30 lg:hidden bg-black/80 backdrop-blur-sm transition-opacity duration-200",
+          sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* Sidebar for desktop */}
+      <div
+        className={cn(
+          "fixed top-0 left-0 z-30 h-full w-64 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center justify-center border-b px-6">
+          {/* Logo section */}
+          <div className="flex h-16 shrink-0 items-center justify-center border-b px-6">
             <span className="text-xl font-semibold">Vizzano</span>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  location.pathname === item.href
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-700 hover:bg-gray-100"
-                )}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex-1 overflow-y-auto">
+            <nav className="space-y-1 px-3 py-4">
+              {navigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-700 hover:bg-gray-100"
+                    )}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <item.icon
+                      className={cn(
+                        "h-5 w-5",
+                        isActive ? "text-primary" : "text-gray-500"
+                      )}
+                    />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
-          {/* User Info */}
+          {/* User section */}
           <div className="border-t bg-gray-50 p-4">
             <div className="flex items-center gap-3 mb-4 px-2">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
@@ -80,28 +114,17 @@ export default function BaseLayout({ children, navigation }) {
             </Button>
           </div>
         </div>
-      </aside>
-
-      {/* Mobile Toggle Button */}
-      <div className="lg:hidden fixed top-4 right-4 z-40">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? (
-            <X className="h-4 w-4" />
-          ) : (
-            <Menu className="h-4 w-4" />
-          )}
-        </Button>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 lg:pl-72 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-        {children}
-      </main>
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden z-20">
+      {/* Main content */}
+      <div className="lg:pl-64 pb-16 lg:pb-0">
+        <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+          {children}
+        </main>
+      </div>
+
+      {/* Bottom navigation for mobile */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden  z-20">
         <ul className="flex justify-around">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
