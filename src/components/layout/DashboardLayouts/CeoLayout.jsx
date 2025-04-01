@@ -1,7 +1,13 @@
-import React from "react";
+import BaseLayout from "./BaseLayout";
+import { Home, PackageOpen, Printer, Scissors } from "lucide-react";
 
-const CeoLayout = () => {
-  return <div>CeoLayout</div>;
-};
+const navigation = [
+  { name: "Asosiy", href: "/home", icon: Home },
+  { name: "Buyurtmalar", href: "/ceo/orders", icon: PackageOpen },
+  { name: "Chop etishda", href: "/ceo/printing", icon: Printer },
+  { name: "Kesishda", href: "/ceo/cutting", icon: Scissors },
+];
 
-export default CeoLayout;
+export default function CeoLayout({ children }) {
+  return <BaseLayout navigation={navigation}>{children}</BaseLayout>;
+}

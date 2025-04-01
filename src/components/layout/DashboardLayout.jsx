@@ -1,36 +1,25 @@
 import TechnologLayout from "./DashboardLayouts/TechnologLayout";
 import SuperHrLayout from "./DashboardLayouts/SuperHrLayout";
-import { Outlet } from "react-router-dom";
 import CuttingMasterLayout from "./DashboardLayouts/CuttingMasterLayout";
+import TailorMasterLayout from "./DashboardLayouts/TailorMasterLayout";
+import { Outlet } from "react-router-dom";
 
-const renderPage = (role) => {
-  if (role === "technologist") {
-    return (
-      <TechnologLayout>
-        <Outlet />
-      </TechnologLayout>
-    );
-  } else if (role === "superhr") {
-    return (
-      <SuperHrLayout>
-        <Outlet />
-      </SuperHrLayout>
-    );
-  } else if (role === "cuttingMaster") {
-    return (
-      <CuttingMasterLayout>
-        <Outlet />
-      </CuttingMasterLayout>
-    );
-  } else {
-    return <div>404 Not Found</div>;
-  }
+const layouts = {
+  technologist: TechnologLayout,
+  superhr: SuperHrLayout,
+  cuttingMaster: CuttingMasterLayout,
+  tailorMaster: TailorMasterLayout,
 };
 
 const DashboardLayout = () => {
   const role = localStorage.getItem("role");
+  const LayoutComponent = layouts[role] || (() => <div>404 Not Found</div>);
 
-  return <div>{renderPage(role)}</div>;
+  return (
+    <LayoutComponent>
+      <Outlet />
+    </LayoutComponent>
+  );
 };
 
 export default DashboardLayout;

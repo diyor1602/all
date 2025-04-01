@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
 
@@ -13,6 +13,7 @@ import Home from "./pages/Home";
 import SuperHr from "./pages/SuperHR/SuperHr";
 import Technolog from "./pages/Technolog/Technolog";
 import CuttingMaster from "./pages/CuttingMaster/CuttingMaster";
+import TailorMaster from "./pages/TailorMaster/TailorMaster";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -46,6 +47,7 @@ function App() {
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />
+          <Route path="/tailorMaster/*" element={<TailorMaster />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
