@@ -12,6 +12,7 @@ import DashboardLayout from "./components/layout/DashboardLayout";
 import Home from "./pages/Home";
 import SuperHr from "./pages/SuperHR/SuperHr";
 import Technolog from "./pages/Technolog/Technolog";
+import CuttingMaster from "./pages/CuttingMaster/CuttingMaster";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -42,9 +43,9 @@ function App() {
         <Route element={<ProtectedRoute />}>
           {/* Home */}
           <Route path="/home" element={<Home />} />
-          {/* Calendar */}
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />
+          <Route path="/cuttingMaster/*" element={<CuttingMaster />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

@@ -1,6 +1,7 @@
 import TechnologLayout from "./DashboardLayouts/TechnologLayout";
 import SuperHrLayout from "./DashboardLayouts/SuperHrLayout";
 import { Outlet } from "react-router-dom";
+import CuttingMasterLayout from "./DashboardLayouts/CuttingMasterLayout";
 
 const renderPage = (role) => {
   if (role === "technologist") {
@@ -14,6 +15,12 @@ const renderPage = (role) => {
       <SuperHrLayout>
         <Outlet />
       </SuperHrLayout>
+    );
+  } else if (role === "cuttingMaster") {
+    return (
+      <CuttingMasterLayout>
+        <Outlet />
+      </CuttingMasterLayout>
     );
   } else {
     return <div>404 Not Found</div>;
