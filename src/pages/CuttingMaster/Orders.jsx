@@ -26,6 +26,7 @@ import {
   Ruler,
   CheckCircle,
   Loader2,
+  Shell,
 } from "lucide-react";
 
 const Orders = () => {
@@ -258,7 +259,15 @@ const Orders = () => {
                                 {order?.order_model?.model?.name}
                               </div>
                             </div>
-
+                            <div>
+                              <h4 className="text-base font-bold text-gray-700 mb-2 flex items-center">
+                                <Shell className="h-5 w-5 mr-2 text-purple-600" />
+                                Material
+                              </h4>
+                              <div className="font-bold text-lg text-gray-800 bg-purple-50 p-3 rounded-lg border border-purple-100">
+                                {order?.order_model?.material?.name}
+                              </div>
+                            </div>
                             <div>
                               <h4 className="text-base font-bold text-gray-700 mb-2 flex items-center">
                                 <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
