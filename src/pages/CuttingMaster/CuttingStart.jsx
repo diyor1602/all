@@ -79,8 +79,8 @@ const CuttingStart = () => {
   const scanForDevices = async () => {
     if (!navigator.bluetooth) {
       toast({
-        title: "Error",
-        description: "Bluetooth API is not available in your browser",
+        title: "Diqqat",
+        description: "Sizning qurilmangiz bluetoothni qo'llab quvvatlamaydi",
         variant: "destructive",
       });
       return;
@@ -101,8 +101,8 @@ const CuttingStart = () => {
       });
     } catch (error) {
       toast({
-        title: "Bluetooth Error",
-        description: error.message || "Failed to scan for devices",
+        title: "Bluetooth Xatolik",
+        description: error.message || "Qurilmalarni qidirishda xatolik",
         variant: "destructive",
       });
     } finally {
@@ -115,8 +115,8 @@ const CuttingStart = () => {
       await device.gatt.connect();
       setConnectedDevice(device);
       toast({
-        title: "Connected",
-        description: `Connected to ${device.name}`,
+        title: "Ulandi",
+        description: `${device.name} ga ulandi`,
         style: {
           backgroundColor: "green",
           color: "white",
@@ -124,8 +124,8 @@ const CuttingStart = () => {
       });
     } catch (error) {
       toast({
-        title: "Connection Error",
-        description: error.message || "Failed to connect to device",
+        title: "Ulanishda xatolik",
+        description: error.message || "Qurilmaga ulanishda xatolik",
         variant: "destructive",
       });
     }
@@ -137,13 +137,13 @@ const CuttingStart = () => {
         connectedDevice.gatt.disconnect();
         setConnectedDevice(null);
         toast({
-          title: "Disconnected",
-          description: "Bluetooth device disconnected",
+          title: "Uzildi",
+          description: `${connectedDevice.name} dan uzildi`,
         });
       } catch (error) {
         toast({
-          title: "Disconnection Error",
-          description: error.message || "Failed to disconnect device",
+          title: "Uzilishda xatolik",
+          description: error.message || "Qurilmaga uzilishda xatolik",
           variant: "destructive",
         });
       }
@@ -159,8 +159,8 @@ const CuttingStart = () => {
       return dataUrl;
     } catch (error) {
       toast({
-        title: "QR Code Error",
-        description: "Failed to generate QR code",
+        title: "QR Code xatolik",
+        description: "QR code yaratishda xatolik",
         variant: "destructive",
       });
       return null;
@@ -171,8 +171,8 @@ const CuttingStart = () => {
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
-        title: "Error",
-        description: "No printer connected",
+        title: "Xatolik",
+        description: "Printer ulanmagan",
         variant: "destructive",
       });
       return;
@@ -182,8 +182,8 @@ const CuttingStart = () => {
       // Here we would implement the actual bluetooth printing
       // For demonstration, we'll just show a success message
       toast({
-        title: "Success",
-        description: "QR code sent to printer",
+        title: "Muvaffaqiyatli",
+        description: "QR code printerga yuborildi",
         style: {
           backgroundColor: "green",
           color: "white",
@@ -191,8 +191,8 @@ const CuttingStart = () => {
       });
     } catch (error) {
       toast({
-        title: "Printing Error",
-        description: error.message || "Failed to print QR code",
+        title: "Chop etishda xatolik",
+        description: error.message || "QR code chop etishda xatolik",
         variant: "destructive",
       });
     }
@@ -215,7 +215,7 @@ const CuttingStart = () => {
       const qrCode = await generateQRCode();
 
       if (!qrCode) {
-        throw new Error("Failed to generate QR code");
+        throw new Error("QR code yaratishda xatolik");
       }
 
       // Save the cut data
@@ -299,8 +299,8 @@ const CuttingStart = () => {
           />
           <span>
             {connectedDevice
-              ? `Connected to: ${connectedDevice.name}`
-              : "No printer connected"}
+              ? `${connectedDevice.name} ga ulangan`
+              : "Printer ulanmagan"}
           </span>
         </div>
 
@@ -308,21 +308,19 @@ const CuttingStart = () => {
           <DialogTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2">
               <Bluetooth className="w-4 h-4" />
-              {connectedDevice ? "Change Printer" : "Connect Printer"}
+              {connectedDevice ? "Printerni o'zgartirish" : "Printerga ulanish"}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Bluetooth Devices</DialogTitle>
-              <DialogDescription>
-                Select a bluetooth printer to connect
-              </DialogDescription>
+              <DialogTitle>Bluetooth Qurilamalar</DialogTitle>
+              <DialogDescription>Bluetooth printer tanlang</DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col gap-4 py-4">
               {bluetoothDevices.length === 0 && !isScanning && (
                 <div className="text-center text-gray-500">
-                  No devices found. Click scan to search for devices.
+                  Qurilma topilmadi
                 </div>
               )}
 
@@ -337,7 +335,7 @@ const CuttingStart = () => {
                 >
                   <div className="flex items-center gap-2">
                     <Printer className="w-5 h-5" />
-                    <span>{device.name || "Unknown Device"}</span>
+                    <span>{device.name || "Noma'lum qurilma"}</span>
                   </div>
 
                   {connectedDevice && connectedDevice.id === device.id ? (
@@ -366,7 +364,7 @@ const CuttingStart = () => {
                 disabled={isScanning}
                 className="mt-2"
               >
-                {isScanning ? "Scanning..." : "Scan for Devices"}
+                {isScanning ? "Qidirilmoqda..." : "Qurilmalarni qidirish"}
               </Button>
             </div>
 
@@ -425,10 +423,10 @@ const CuttingStart = () => {
         {/* QR code preview */}
         {qrCodeDataUrl && (
           <div className="flex flex-col items-center p-4 border rounded-lg">
-            <h3 className="text-sm font-medium mb-2">QR Code Preview</h3>
+            <h3 className="text-sm font-medium mb-2">QR Code</h3>
             <img src={qrCodeDataUrl} alt="QR Code" className="w-32 h-32" />
             <p className="text-xs text-gray-500 mt-2">
-              Will be sent to printer on save
+              QR kod saqlashda yuboriladi
             </p>
           </div>
         )}
