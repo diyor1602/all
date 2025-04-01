@@ -22,9 +22,19 @@ import {
   Ruler,
   CheckCircle,
   Shell,
+  LoaderCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 const Pending = () => {
   const { toast } = useToast();
@@ -32,8 +42,10 @@ const Pending = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filteredOrders, setFilteredOrders] = useState([]);
-
-  const navigate = useNavigate();
+  const [selectedSubModel, setSelectedSubModel] = useState(null);
+  const [showSubModelDialog, setShowSubModelDialog] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -68,6 +80,34 @@ const Pending = () => {
     );
     setFilteredOrders(filtered);
   }, [search, orders]);
+
+  const handleStart = async () => {
+    setSending(true);
+    try {
+      await api.post("/groupMaster/receiveOrder", {
+        order_id: selectedOrder,
+        submodel_id: selectedSubModel?.id,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Buyurtma boshlash muvaffaqiyatli",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+      setShowSubModelDialog(false);
+      fetchOrders();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Nimadir xato ketdi",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -273,7 +313,17 @@ const Pending = () => {
                                   (submodel) => (
                                     <Badge
                                       key={submodel.id}
-                                      className="bg-white text-pink-700 border border-pink-200 px-3 py-1.5 text-base"
+                                      className={cn(
+                                        "bg-white border px-3 py-1.5 text-base",
+                                        submodel?.group
+                                          ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                          : "bg-pink-100 text-pink-700 hover:bg-pink-200 cursor-pointer"
+                                      )}
+                                      onClick={() => {
+                                        setSelectedSubModel(submodel);
+                                        setShowSubModelDialog(true);
+                                        setSelectedOrder(order?.id);
+                                      }}
                                     >
                                       {submodel?.submodel?.name}
                                     </Badge>
@@ -315,6 +365,58 @@ const Pending = () => {
             </Accordion>
           )}
         </AnimatePresence>
+        <Dialog open={showSubModelDialog} onOpenChange={setShowSubModelDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{selectedSubModel?.submodel?.name}</DialogTitle>
+              <DialogDescription>{""}</DialogDescription>
+            </DialogHeader>
+            <div className="text-gray-700 text-base">
+              {!selectedSubModel?.group ? (
+                "Tikishni boshlashni tasdiqlaysizmi?"
+              ) : (
+                <>
+                  <div>
+                    Qabul qilgan guruh:{" "}
+                    <span className="font-semibold">
+                      {selectedSubModel?.group?.group?.name}
+                    </span>
+                  </div>
+                  <div>
+                    Qabul qilgan xodim:{" "}
+                    <span className="font-semibold">
+                      {
+                        selectedSubModel?.group?.group?.responsible_user
+                          ?.employee?.name
+                      }
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <DialogFooter>
+              {!selectedSubModel?.group ? (
+                <div className="flex gap-4 items-center justify-end">
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Yopish</Button>
+                  </DialogTrigger>
+                  <Button disabled={sending} onClick={handleStart}>
+                    {sending ? (
+                      <LoaderCircle className="h-5 w-5" />
+                    ) : (
+                      "Boshlash"
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <DialogTrigger asChild>
+                  <Button variant="outline">Yopish</Button>
+                </DialogTrigger>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </motion.div>
   );
