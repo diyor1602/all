@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CircleCheck, Bluetooth, Printer, X } from "lucide-react";
+import { CircleCheck, Bluetooth, Printer, X, LoaderCircle } from "lucide-react";
 import QRCode from "qrcode";
 
 // Import Dialog components
@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
+  DialogFooter,
 } from "@/components/ui/dialog";
 
 const CuttingStart = () => {
@@ -34,6 +35,8 @@ const CuttingStart = () => {
   const [selectedSpec, setSelectedSpec] = useState("");
   const [quantity, setQuantity] = useState("");
   const [sending, setSending] = useState(false);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
 
   // Bluetooth states
   const [bluetoothDevices, setBluetoothDevices] = useState([]);
@@ -42,6 +45,7 @@ const CuttingStart = () => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
 
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const fetchOrder = async () => {
     setLoading(true);
@@ -252,6 +256,30 @@ const CuttingStart = () => {
     }
   };
 
+  const handleApprove = async () => {
+    try {
+      setIsApproving(true);
+      await api.get(`/cuttingMaster/finishCutting/${id}`);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Buyurtma muvaffaqiyatli tugatildi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+      navigate("/cuttingMaster/cutting");
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Nimadir xato ketdi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
   useEffect(() => {
     fetchOrder();
     fetchCuts();
@@ -265,7 +293,21 @@ const CuttingStart = () => {
   }, [id]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-b from-blue-50 to-purple-50 p-4 sm:p-6">
+        <LoaderCircle className="w-10 h-10 text-purple-700 mb-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (order?.status !== "cutting") {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-b from-blue-50 to-purple-50 p-4 sm:p-6">
+        <div className="text-3xl font-extrabold text-purple-700 mb-8">
+          Buyurtma topilmadi
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -479,6 +521,32 @@ const CuttingStart = () => {
           ))}
         </div>
       </div>
+      <Button
+        onClick={() => setApproveDialogOpen(true)}
+        className="mt-6 w-full"
+      >
+        Buyurtmani tugatish
+      </Button>
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Buyurtmani tugatish</DialogTitle>
+            <DialogDescription>
+              Buyurtmani yakunlashga tayyorsizmi?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <div className="flex gap-2 items-center justify-end">
+              <DialogClose asChild>
+                <Button variant="outline">Yo'q</Button>
+              </DialogClose>
+              <Button onClick={handleApprove} disabled={isApproving}>
+                {isApproving ? "Yakunlanmoqda" : "Tasdiqlash"}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
