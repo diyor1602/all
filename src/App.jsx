@@ -13,7 +13,7 @@ import Home from "./pages/Home";
 import SuperHr from "./pages/SuperHR/SuperHr";
 import Technolog from "./pages/Technolog/Technolog";
 import CuttingMaster from "./pages/CuttingMaster/CuttingMaster";
-import TailorMaster from "./pages/TailorMaster/TailorMaster";
+import GroupMaster from "./pages/GroupMaster/GroupMaster";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -47,7 +47,7 @@ function App() {
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />
-          <Route path="/tailorMaster/*" element={<TailorMaster />} />
+          <Route path="/groupMaster/*" element={<GroupMaster />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

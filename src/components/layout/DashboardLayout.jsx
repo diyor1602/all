@@ -1,19 +1,25 @@
 import TechnologLayout from "./DashboardLayouts/TechnologLayout";
 import SuperHrLayout from "./DashboardLayouts/SuperHrLayout";
 import CuttingMasterLayout from "./DashboardLayouts/CuttingMasterLayout";
-import TailorMasterLayout from "./DashboardLayouts/TailorMasterLayout";
+import GroupMasterLayout from "./DashboardLayouts/GroupMasterLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
   technologist: TechnologLayout,
   superhr: SuperHrLayout,
   cuttingMaster: CuttingMasterLayout,
-  tailorMaster: TailorMasterLayout,
+  groupMaster: GroupMasterLayout,
 };
 
 const DashboardLayout = () => {
   const role = localStorage.getItem("role");
-  const LayoutComponent = layouts[role] || (() => <div>404 Not Found</div>);
+  const LayoutComponent =
+    layouts[role] ||
+    (() => (
+      <div className="text-2xl w-screen h-screen flex items-center justify-center">
+        404 Sahifa topilmadi
+      </div>
+    ));
 
   return (
     <LayoutComponent>

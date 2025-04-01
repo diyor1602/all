@@ -15,7 +15,25 @@ api.interceptors.request.use(
     }
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+// ✅ Add a response interceptor to handle 401/403 errors
+api.interceptors.response.use(
+  (response) => response,
   (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      console.warn("Unauthorized request detected! Logging out...");
+
+      // Clear local storage
+      localStorage.clear();
+
+      // Redirect using window.location
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 100);
+    }
+
     return Promise.reject(error);
   }
 );

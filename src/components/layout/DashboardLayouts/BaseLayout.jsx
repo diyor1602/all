@@ -1,14 +1,11 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import useApiInterceptor from "@/hooks/useApiInterceptor";
 import { Users, LogOut, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function BaseLayout({ children, navigation }) {
-  useApiInterceptor();
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { logout } = useAuth();
   const location = useLocation();
@@ -104,6 +101,29 @@ export default function BaseLayout({ children, navigation }) {
       <main className="flex-1 lg:pl-72 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden z-20">
+        <ul className="flex justify-around">
+          {navigation.map((item) => {
+            const isActive = location.pathname === item.href;
+            return (
+              item.onMobile && (
+                <li key={item.name}>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "flex flex-col items-center py-2 px-3",
+                      isActive ? "text-primary" : "text-gray-500"
+                    )}
+                  >
+                    <item.icon className="h-6 w-6" />
+                    <span className="text-xs mt-1">{item.name}</span>
+                  </Link>
+                </li>
+              )
+            );
+          })}
+        </ul>
+      </nav>
     </div>
   );
 }

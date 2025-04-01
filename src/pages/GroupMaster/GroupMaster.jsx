@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Pending from "./Pending";
 
-const TailorMaster = () => {
+const GroupMaster = () => {
   return (
     <Routes>
       <Route path="pending" element={<Pending />} />
@@ -9,4 +9,4 @@ const TailorMaster = () => {
   );
 };
 
-export default TailorMaster;
+export default GroupMaster;
