@@ -202,38 +202,49 @@ const ConnectResult = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <div className="flex flex-col gap-2">
-                  {data.times?.map((time) => {
-                    const output = submodel?.sewingOutputs?.find(
-                      (output) => output?.time?.time === time?.time
-                    );
-                    const hasQuantity = output?.quantity > 0;
-                    const disabled = isFutureTime(time?.time) || hasQuantity;
+                  {(() => {
+                    const buttons = data.times?.map((time) => {
+                      const output = submodel?.sewingOutputs?.find(
+                        (output) => output?.time?.time === time?.time
+                      );
+                      const hasQuantity = output?.quantity > 0;
+                      const disabled = isFutureTime(time?.time) || hasQuantity;
 
-                    return (
-                      <Button
-                        key={time.id}
-                        className={`flex items-center w-full justify-between bg-gray-200 text-black ${
-                          disabled ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                        disabled={disabled}
-                        onClick={() =>
-                          !disabled && handleOpenDialog(submodel, time)
-                        }
-                      >
-                        <div>{time?.time?.slice(0, 5)}</div>
-                        <div>{output?.quantity || ""}</div>
-                        {output?.quantity ? (
-                          <CircleCheck
-                            className="text-green-500"
-                            strokeWidth={2}
-                            size={30}
-                          />
-                        ) : (
-                          <Check strokeWidth={2} size={30} />
-                        )}
-                      </Button>
-                    );
-                  })}
+                      return { time, output, disabled };
+                    });
+
+                    // Find the first button without quantity to enable
+                    const buttonToEnable = buttons.find((btn) => !btn.disabled);
+
+                    return buttons.map(({ time, output, disabled }) => {
+                      const isEnabled =
+                        buttonToEnable && buttonToEnable.time === time;
+                      return (
+                        <Button
+                          key={time.id}
+                          className={`flex items-center w-full justify-between bg-gray-400 text-black ${
+                            !isEnabled ? "bg-gray-200 cursor-not-allowed" : ""
+                          }`}
+                          disabled={!isEnabled}
+                          onClick={() =>
+                            isEnabled && handleOpenDialog(submodel, time)
+                          }
+                        >
+                          <div>{time?.time?.slice(0, 5)}</div>
+                          <div>{output?.quantity || ""}</div>
+                          {output?.quantity ? (
+                            <CircleCheck
+                              className="text-green-500"
+                              strokeWidth={2}
+                              size={30}
+                            />
+                          ) : (
+                            <Check strokeWidth={2} size={30} />
+                          )}
+                        </Button>
+                      );
+                    });
+                  })()}
                 </div>
               </AccordionContent>
             </AccordionItem>
