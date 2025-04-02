@@ -2,8 +2,19 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
-import { Check, CircleCheck, Loader2 } from "lucide-react";
+import { Check, CircleCheck, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Accordion,
   AccordionContent,
@@ -22,6 +33,16 @@ const ConnectResult = () => {
     times: [],
   });
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedOutput, setSelectedOutput] = useState({
+    order_submodel_id: null,
+    time_id: null,
+    quantity: "",
+    comment: "",
+    submodelName: "",
+    timeValue: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleError = useCallback(
     (error) => {
@@ -60,6 +81,65 @@ const ConnectResult = () => {
   const isFutureTime = (time) => {
     const currentTime = format(new Date(), "HH:mm");
     return time > currentTime;
+  };
+
+  const handleOpenDialog = (submodel, time) => {
+    setSelectedOutput({
+      order_submodel_id: submodel.id,
+      time_id: time.id,
+      quantity: "",
+      comment: "",
+      submodelName: submodel.submodel.name,
+      timeValue: time.time.slice(0, 5),
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedOutput.quantity || Number(selectedOutput.quantity) <= 0) {
+      toast({
+        title: "Diqqat!",
+        description: "Miqdor 0 dan katta bo'lishi kerak",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (Number(selectedOutput.quantity) > data.order.quantity) {
+      toast({
+        title: "Diqqat!",
+        description: `Miqdor ${data.order.quantity} dan oshmasin`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api.post("/groupMaster/sewingOutputs", {
+        order_submodel_id: selectedOutput.order_submodel_id,
+        time_id: selectedOutput.time_id,
+        quantity: Number(selectedOutput.quantity),
+        comment: selectedOutput.comment || null,
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Ma'lumotlar saqlandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+
+      // Close dialog and refresh data
+      setDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -136,6 +216,9 @@ const ConnectResult = () => {
                           disabled ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                         disabled={disabled}
+                        onClick={() =>
+                          !disabled && handleOpenDialog(submodel, time)
+                        }
                       >
                         <div>{time?.time?.slice(0, 5)}</div>
                         <div>{output?.quantity || ""}</div>
@@ -157,6 +240,80 @@ const ConnectResult = () => {
           );
         })}
       </Accordion>
+
+      {/* Sewing Output Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedOutput.submodelName} - {selectedOutput.timeValue}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="quantity" className="text-right">
+                Miqdor
+              </Label>
+              <Input
+                id="quantity"
+                type="number"
+                value={selectedOutput.quantity}
+                onChange={(e) =>
+                  setSelectedOutput({
+                    ...selectedOutput,
+                    quantity: e.target.value,
+                  })
+                }
+                className="col-span-3"
+                placeholder="Miqdor kiriting"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="comment" className="text-right">
+                Izoh
+              </Label>
+              <Textarea
+                id="comment"
+                value={selectedOutput.comment}
+                onChange={(e) =>
+                  setSelectedOutput({
+                    ...selectedOutput,
+                    comment: e.target.value,
+                  })
+                }
+                className="col-span-3"
+                placeholder="Izoh qoldirish (majburiy emas)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <div className="w-full flex justify-end items-center gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" className="gap-2">
+                  <X size={16} /> Bekor qilish
+                </Button>
+              </DialogClose>
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={
+                  submitting ||
+                  !selectedOutput.quantity ||
+                  Number(selectedOutput.quantity) <= 0
+                }
+                className="gap-2"
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check size={16} />
+                )}
+                Saqlash
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
