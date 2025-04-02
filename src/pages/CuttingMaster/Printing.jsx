@@ -43,7 +43,7 @@ const Printing = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Something went wrong",
+        description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
     } finally {

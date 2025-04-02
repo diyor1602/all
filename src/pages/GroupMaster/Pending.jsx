@@ -55,8 +55,8 @@ const Pending = () => {
       setFilteredOrders(response.data);
     } catch (error) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Something went wrong",
+        title: "Xatolik",
+        description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
     } finally {
