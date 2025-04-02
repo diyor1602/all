@@ -144,7 +144,7 @@ const ConnectToWork = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto md:px-4 py-6">
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
           <div>
