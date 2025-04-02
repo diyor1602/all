@@ -4,7 +4,7 @@ import { FilePlus, Home, ListChecks, Shirt } from "lucide-react";
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
-    name: "Buyurtmalar",
+    name: "Tasdiqlash",
     href: "/groupMaster/pending",
     icon: ListChecks,
     onMobile: true,

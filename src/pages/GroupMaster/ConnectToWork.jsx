@@ -135,7 +135,10 @@ const ConnectToWork = () => {
           <p className="text-gray-600">
             Ushbu buyurtma mavjud emas yoki tikuvda emas
           </p>
-          <Button className="mt-4" onClick={() => navigate(-1)}>
+          <Button
+            className="mt-4"
+            onClick={() => navigate("/groupMaster/tailoring")}
+          >
             Orqaga qaytish
           </Button>
         </div>

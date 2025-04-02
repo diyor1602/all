@@ -3,6 +3,7 @@ import Pending from "./Pending";
 import Tailoring from "./Tailoring";
 import ConnectToWork from "./ConnectToWork";
 import Result from "./Result";
+import ConnectResult from "./ConnectResult";
 
 const GroupMaster = () => {
   return (
@@ -10,6 +11,7 @@ const GroupMaster = () => {
       <Route path="pending" element={<Pending />} />
       <Route path="tailoring" element={<Tailoring />} />
       <Route path="tailoring/:id" element={<ConnectToWork />} />
+      <Route path="result/:id" element={<ConnectResult />} />
       <Route path="result" element={<Result />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
