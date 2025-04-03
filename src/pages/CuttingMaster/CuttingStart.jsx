@@ -162,31 +162,6 @@ const CuttingStart = () => {
     }
   };
 
-  // Generate QR code
-  const generateQRCode = async () => {
-    try {
-      const qrData = `${id}, ${selectedSpec}`;
-      const dataUrl = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: "H",
-        margin: 1,
-        scale: 8,
-        color: {
-          dark: "#000000",
-          light: "#FFFFFF",
-        },
-      });
-      setQrCodeDataUrl(dataUrl);
-      return dataUrl;
-    } catch (error) {
-      toast({
-        title: "QR Code xatolik",
-        description: "QR code yaratishda xatolik",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
   // Simple text printing approach that just sends formatted text commands to the printer
   const printQRCode = async () => {
     if (!connectedDevice) {
@@ -248,7 +223,7 @@ const CuttingStart = () => {
     }
   };
 
-  // Simple ESC/POS command generation for text printing
+  // ESC/POS command generation for text and QR code printing
   const preparePrintData = () => {
     try {
       // Get specification name
@@ -257,6 +232,9 @@ const CuttingStart = () => {
           ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
           ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
           ?.name || "";
+
+      // QR code data
+      const qrData = `${id},${selectedSpec}`;
 
       // ESC/POS commands
       const ESC = 0x1b;
@@ -267,6 +245,8 @@ const CuttingStart = () => {
 
       // Center alignment
       const center = new Uint8Array([ESC, 0x61, 0x01]); // ESC a 1
+      // Left alignment
+      const left = new Uint8Array([ESC, 0x61, 0x00]); // ESC a 0
 
       // Text size - slightly larger
       const largeText = new Uint8Array([GS, 0x21, 0x11]); // GS ! 17 - double width & height
@@ -294,7 +274,74 @@ const CuttingStart = () => {
       const categoryIdBytes = encoder.encode(categoryIdText);
       const specNameBytes = encoder.encode(specNameText);
 
-      // Combine all commands and text
+      // QR Code commands for thermal printer - Standard ESC/POS
+      // Select model (model 2 - standard QR Code)
+      const qrModelSelect = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        0x04,
+        0x00,
+        0x31,
+        0x41,
+        0x32,
+        0x00,
+      ]); // GS ( k 4 0 49 65 50 0 - select QR code, model 2
+
+      // Set QR code size (1-16) - choosing 8 here
+      const qrSize = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        0x03,
+        0x00,
+        0x31,
+        0x43,
+        0x08,
+      ]); // GS ( k 3 0 49 67 8 - size 8
+
+      // Set error correction level (48-51 for L,M,Q,H) - using H (51) for best
+      const qrErrorCorrection = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        0x03,
+        0x00,
+        0x31,
+        0x45,
+        0x33,
+      ]); // GS ( k 3 0 49 69 51 - level H
+
+      // Store QR code data
+      const qrDataLengthLSB = qrData.length % 256;
+      const qrDataLengthMSB = Math.floor(qrData.length / 256);
+
+      const qrStoreData = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        qrDataLengthLSB,
+        qrDataLengthMSB,
+        0x31,
+        0x50,
+        0x30,
+      ]); // GS ( k pL pH 49 80 48
+
+      const qrDataBytes = encoder.encode(qrData);
+
+      // Print QR code
+      const qrPrint = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        0x03,
+        0x00,
+        0x31,
+        0x51,
+        0x30,
+      ]); // GS ( k 3 0 49 81 48
+
+      // Calculate total length
       const combinedLength =
         init.length +
         center.length +
@@ -306,6 +353,13 @@ const CuttingStart = () => {
         categoryIdBytes.length +
         LF.length +
         specNameBytes.length +
+        lineFeed.length +
+        qrModelSelect.length +
+        qrSize.length +
+        qrErrorCorrection.length +
+        qrStoreData.length +
+        qrDataBytes.length +
+        qrPrint.length +
         lineFeed.length +
         cut.length;
 
@@ -334,6 +388,22 @@ const CuttingStart = () => {
       offset += specNameBytes.length;
       result.set(lineFeed, offset);
       offset += lineFeed.length;
+
+      // Add QR code
+      result.set(qrModelSelect, offset);
+      offset += qrModelSelect.length;
+      result.set(qrSize, offset);
+      offset += qrSize.length;
+      result.set(qrErrorCorrection, offset);
+      offset += qrErrorCorrection.length;
+      result.set(qrStoreData, offset);
+      offset += qrStoreData.length;
+      result.set(qrDataBytes, offset);
+      offset += qrDataBytes.length;
+      result.set(qrPrint, offset);
+      offset += qrPrint.length;
+      result.set(lineFeed, offset);
+      offset += lineFeed.length;
       result.set(cut, offset);
 
       return result;
@@ -345,6 +415,31 @@ const CuttingStart = () => {
         variant: "destructive",
       });
       throw error;
+    }
+  };
+
+  // Optional: Generate a QR code for preview only (not for printing)
+  const generateQRCode = async () => {
+    try {
+      const qrData = `${id}, ${selectedSpec}`;
+      const dataUrl = await QRCode.toDataURL(qrData, {
+        errorCorrectionLevel: "H",
+        margin: 1,
+        scale: 8,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
+      setQrCodeDataUrl(dataUrl);
+      return dataUrl;
+    } catch (error) {
+      toast({
+        title: "QR Code xatolik",
+        description: "QR code yaratishda xatolik",
+        variant: "destructive",
+      });
+      return null;
     }
   };
 
