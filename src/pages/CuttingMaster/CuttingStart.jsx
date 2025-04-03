@@ -175,7 +175,133 @@ const CuttingStart = () => {
     }
   };
 
-  // Print QR code
+  // Updated function to prepare print data for thermal printer
+  const preparePrintData = async () => {
+    // Generate QR code
+    const qrDataUrl = await generateQRCode();
+
+    // Initialize printer
+    let commands = [];
+
+    // ESC @ - Initialize printer
+    commands.push(0x1b, 0x40);
+
+    // ESC a 1 - Center alignment
+    commands.push(0x1b, 0x61, 0x01);
+
+    // Add header text
+    const headerText = `${order?.name || "Order"}\n`;
+    const encoder = new TextEncoder();
+    const headerBytes = encoder.encode(headerText);
+    commands = [...commands, ...Array.from(headerBytes)];
+
+    // Line feed for spacing
+    commands.push(0x0a);
+
+    // Convert QR code to bitmap for thermal printer
+    const bitmapData = await convertQRtoBitmap(qrDataUrl);
+    commands = [...commands, ...bitmapData];
+
+    // Add text information after QR code
+    const specName =
+      order?.orderModel?.submodels
+        ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
+        ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
+        ?.name || "";
+
+    const footerText = `\nOrder: ${id}\n${specName}\n\n\n`;
+    const footerBytes = encoder.encode(footerText);
+    commands = [...commands, ...Array.from(footerBytes)];
+
+    // GS V - Paper cut
+    commands.push(0x1d, 0x56, 0x41, 0x10);
+
+    return new Uint8Array(commands);
+  };
+
+  // New function to convert QR code image to bitmap data for thermal printer
+  const convertQRtoBitmap = async (qrDataUrl) => {
+    // Create a bitmap from the QR code image
+    const img = new Image();
+
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = qrDataUrl;
+    });
+
+    // Create a canvas to process the image
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Printer width (typically 384 dots for most 58mm thermal printers)
+    const printerWidth = 384;
+
+    // Calculate dimensions to make QR code fit properly
+    const size = Math.min(printerWidth, 240); // QR code size (not too large)
+    const offsetX = Math.floor((printerWidth - size) / 2); // Center horizontally
+
+    canvas.width = printerWidth;
+    canvas.height = size;
+
+    // Fill with white background
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw QR code centered on canvas (scaled to fit)
+    ctx.drawImage(img, offsetX, 0, size, size);
+
+    // Get image data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Prepare bitmap commands using ESC * command
+    // ESC * m nL nH d1...dk - where m is the mode
+    const commands = [];
+    const { width, height, data } = imageData;
+
+    // Process each row of the QR code
+    for (let y = 0; y < height; y++) {
+      // ESC * 0 nL nH - Print bitmap graphics in normal density
+      // Mode 0 is standard 8-dot single density
+      commands.push(0x1b, 0x2a, 0x00);
+
+      // nL and nH are the low and high bytes of the number of dot columns
+      commands.push(width % 256, Math.floor(width / 256));
+
+      // Process each column in groups of 8 bits (1 byte)
+      for (let x = 0; x < width; x += 8) {
+        let byte = 0;
+
+        // Combine 8 pixels into one byte
+        for (let bit = 0; bit < 8; bit++) {
+          if (x + bit < width) {
+            // Get pixel intensity (RGBA data)
+            const i = (y * width + (x + bit)) * 4;
+
+            // Calculate grayscale - if dark, set bit
+            // Using standard grayscale formula
+            const grayscale =
+              data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+
+            // If pixel is dark, set corresponding bit
+            // Note we invert the logic for thermal printers (they print dark pixels)
+            if (grayscale < 128) {
+              byte |= 1 << (7 - bit);
+            }
+          }
+        }
+
+        commands.push(byte);
+      }
+
+      // Line feed after each row
+      commands.push(0x0a);
+    }
+
+    return commands;
+  };
+
+  // Updated print function that sends data in smaller chunks with delays
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -190,8 +316,7 @@ const CuttingStart = () => {
       // Connect to the printer's service
       const server = await connectedDevice.gatt.connect();
 
-      // Get the printer service - SK58 typically uses a custom service
-      // Common service UUID for thermal printers
+      // Get the printer service
       const service = await server.getPrimaryService(
         "000018f0-0000-1000-8000-00805f9b34fb"
       );
@@ -204,12 +329,16 @@ const CuttingStart = () => {
       // Prepare the print data
       const printData = await preparePrintData();
 
-      // Send data to printer in chunks (Bluetooth has packet size limitations)
-      for (let i = 0; i < printData.length; i += 512) {
-        const chunk = printData.slice(i, i + 512);
+      // Send data to printer in smaller chunks with longer delays
+      // Many thermal printers have limited buffer sizes
+      const CHUNK_SIZE = 20; // Smaller chunks
+
+      for (let i = 0; i < printData.length; i += CHUNK_SIZE) {
+        const chunk = printData.slice(i, i + CHUNK_SIZE);
         await characteristic.writeValue(chunk);
-        // Small delay between chunks to prevent buffer overflow
-        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Add longer delay between chunks to prevent buffer overflow
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       toast({
@@ -223,8 +352,7 @@ const CuttingStart = () => {
 
       return true;
     } catch (error) {
-      alert(error);
-      alert(error.message);
+      console.error("Printing error:", error);
       toast({
         title: "Chop etishda xatolik",
         description: error.message || "QR code chop etishda xatolik",
@@ -233,90 +361,6 @@ const CuttingStart = () => {
       return false;
     }
   };
-
-  // Add this new function to prepare the print data
-  const preparePrintData = async () => {
-    // Get the QR code as a data URL
-    const qrDataUrl = await generateQRCode();
-
-    // Convert data URL to image data
-    const img = new Image();
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = qrDataUrl;
-      img.crossOrigin = "anonymous";
-    });
-
-    // Create a canvas to process the image
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    // SK58 printer typically has 384 dots per line (48mm width)
-    canvas.width = 384;
-    canvas.height = 384;
-
-    // Draw the QR code on canvas (centered)
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, (canvas.width - 300) / 2, 40, 300, 300);
-
-    // Add text information
-    ctx.fillStyle = "black";
-    ctx.font = "16px Arial";
-    ctx.textAlign = "center";
-
-    // Add order ID and spec info
-    const specName =
-      order?.orderModel?.submodels
-        ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
-        ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
-        ?.name || "";
-
-    ctx.fillText(`Order: ${id}`, canvas.width / 2, 20);
-    ctx.fillText(`${specName}`, canvas.width / 2, 360);
-
-    // Convert canvas to bitmap data for thermal printer
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // Prepare ESC/POS commands for thermal printer
-    // Initialize printer
-    let printBuffer = new Uint8Array([
-      0x1b,
-      0x40, // ESC @ - Initialize printer
-      0x1b,
-      0x61,
-      0x01, // ESC a 1 - Center alignment
-    ]);
-
-    // Add text header
-    const encoder = new TextEncoder();
-    const headerText = encoder.encode(`${order?.name || "Order"}\n`);
-
-    // Combine buffers
-    const combinedBuffer = new Uint8Array(
-      printBuffer.length + headerText.length
-    );
-    combinedBuffer.set(printBuffer);
-    combinedBuffer.set(headerText, printBuffer.length);
-    printBuffer = combinedBuffer;
-
-    // Convert image data to printer bitmap format
-    const bitmapData = convertToBitmapFormat(imageData);
-
-    // Combine all data
-    const finalBuffer = new Uint8Array(
-      printBuffer.length + bitmapData.length + 4
-    );
-    finalBuffer.set(printBuffer);
-    finalBuffer.set(bitmapData, printBuffer.length);
-
-    // Add paper cut command at the end
-    finalBuffer.set([0x1d, 0x56, 0x41, 0x10], finalBuffer.length - 4);
-
-    return finalBuffer;
-  };
-
   // Add this function to convert image data to bitmap format for thermal printer
   const convertToBitmapFormat = (imageData) => {
     const { width, height, data } = imageData;
