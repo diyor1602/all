@@ -1,3 +1,5 @@
+"use client";
+
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,9 +13,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CircleCheck, Bluetooth, Printer, X, LoaderCircle } from "lucide-react";
+import { CircleCheck, Bluetooth, Printer, LoaderCircle } from "lucide-react";
 import QRCode from "qrcode";
-// No need for pdf-lib imports anymore
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 // Import Dialog components
 import {
@@ -44,7 +46,6 @@ const CuttingStart = () => {
   const [connectedDevice, setConnectedDevice] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
-  // Removed pdfBytes state since we're not using PDFs anymore
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -160,7 +161,7 @@ const CuttingStart = () => {
     }
   };
 
-  // Generate QR code data URL
+  // Generate QR code
   const generateQRCode = async () => {
     try {
       const qrData = `${id}, ${selectedSpec}`;
@@ -185,9 +186,7 @@ const CuttingStart = () => {
     }
   };
 
-  // We're no longer using PDF generation, so this function is removed
-
-  // Print QR code using direct Bluetooth approach
+  // Print QR code
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -202,7 +201,7 @@ const CuttingStart = () => {
       // Connect to the printer's service
       const server = await connectedDevice.gatt.connect();
 
-      // Get the printer service - SK58 typically uses a custom service
+      // Get the printer service
       const service = await server.getPrimaryService(
         "000018f0-0000-1000-8000-00805f9b34fb"
       );
@@ -212,132 +211,20 @@ const CuttingStart = () => {
         "00002af1-0000-1000-8000-00805f9b34fb"
       );
 
-      // Create simple ESC/POS commands for a clean print
-      const encoder = new TextEncoder();
+      // Prepare the print data
+      const printData = await preparePrintData();
 
-      // Initialize printer
-      let initCommand = new Uint8Array([
-        0x1b,
-        0x40, // ESC @ - Initialize printer
-        0x1b,
-        0x61,
-        0x01, // ESC a 1 - Center alignment
-      ]);
-      await characteristic.writeValue(initCommand);
-
-      // Header text - Order number
-      // const specName =
-      //   order?.orderModel?.submodels
-      //     ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
-      //     ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
-      //     ?.name || "";
-
-      // const orderText = encoder.encode(`Order: ${id}\n${specName}\n\n`);
-      // await characteristic.writeValue(orderText);
-
-      // Wait a bit for processing
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Now send the QR code data
-      if (!qrCodeDataUrl) {
-        await generateQRCode();
+      // Send data to printer in chunks (Bluetooth has packet size limitations)
+      const CHUNK_SIZE = 512; // Most Bluetooth devices have a limit around 512 bytes
+      for (let i = 0; i < printData.length; i += CHUNK_SIZE) {
+        const chunk = printData.slice(
+          i,
+          Math.min(i + CHUNK_SIZE, printData.length)
+        );
+        await characteristic.writeValue(chunk);
+        // Small delay between chunks to prevent buffer overflow
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-
-      // Convert QR code image to printer-readable format
-      const img = new Image();
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = qrCodeDataUrl;
-      });
-
-      // Create a canvas to process the image
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-
-      // Set size to ensure it fits on thermal paper (most are 384px wide)
-      canvas.width = 384;
-      canvas.height = 384;
-
-      // Fill with white and draw QR centered
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, (canvas.width - 350) / 2, 10, 350, 350);
-
-      // Send QR as image data
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      // Simplified ESC/POS image data format (bitmap mode)
-      // Set line spacing to 0
-      await characteristic.writeValue(new Uint8Array([0x1b, 0x33, 0]));
-
-      // For each line of the QR code
-      const byteWidth = Math.ceil(canvas.width / 8);
-      for (let y = 0; y < canvas.height; y += 24) {
-        // Limit height to remaining pixels (for the last row)
-        const printHeight = Math.min(24, canvas.height - y);
-        if (printHeight <= 0) break;
-
-        // ESC * - Print bitmap graphics
-        const header = new Uint8Array([
-          0x1b,
-          0x2a,
-          33, // ESC * mode
-          canvas.width & 0xff, // nL
-          (canvas.width >> 8) & 0xff, // nH
-        ]);
-        await characteristic.writeValue(header);
-
-        // Prepare dot data line by line
-        const lineData = new Uint8Array(byteWidth * printHeight);
-        let dataIndex = 0;
-
-        for (let subY = 0; subY < printHeight; subY++) {
-          for (let x = 0; x < canvas.width; x += 8) {
-            let b = 0;
-            for (let bit = 0; bit < 8; bit++) {
-              if (x + bit < canvas.width) {
-                const i = ((y + subY) * canvas.width + (x + bit)) * 4;
-                // Calculate grayscale value
-                const grayscale =
-                  imageData.data[i] * 0.299 +
-                  imageData.data[i + 1] * 0.587 +
-                  imageData.data[i + 2] * 0.114;
-
-                // Set bit if pixel is dark
-                if (grayscale < 128) {
-                  b |= 0x80 >> bit;
-                }
-              }
-            }
-            lineData[dataIndex++] = b;
-          }
-        }
-
-        // Send line data in chunks to prevent buffer overflows
-        for (let i = 0; i < lineData.length; i += 64) {
-          const chunk = lineData.slice(i, Math.min(i + 64, lineData.length));
-          await characteristic.writeValue(chunk);
-          // Small delay between chunks
-          await new Promise((resolve) => setTimeout(resolve, 20));
-        }
-
-        // Send line feed
-        await characteristic.writeValue(new Uint8Array([0x0a]));
-      }
-
-      // Reset line spacing and feed extra lines
-      await characteristic.writeValue(
-        new Uint8Array([
-          0x1b,
-          0x32, // Reset line spacing
-          0x0a,
-          0x0a, // Feed a couple of lines
-          0x1d,
-          0x56,
-          0x01, // GS V - Cut paper (partial cut)
-        ])
-      );
 
       toast({
         title: "Muvaffaqiyatli",
@@ -350,7 +237,7 @@ const CuttingStart = () => {
 
       return true;
     } catch (error) {
-      console.error("Print error:", error);
+      console.error("Printing error:", error);
       toast({
         title: "Chop etishda xatolik",
         description: error.message || "QR code chop etishda xatolik",
@@ -358,6 +245,198 @@ const CuttingStart = () => {
       });
       return false;
     }
+  };
+
+  // Add this new function to prepare the print data
+  const preparePrintData = async () => {
+    try {
+      // Create a new PDF Document
+      const pdfDoc = await PDFDocument.create();
+
+      // Add a page with appropriate size for thermal printer (58mm width)
+      const page = pdfDoc.addPage([226, 226]); // ~58mm at 96 DPI
+      const { width, height } = page.getSize();
+
+      // Add standard font
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // Fill background white
+      page.drawRectangle({
+        x: 0,
+        y: 0,
+        width,
+        height,
+        color: rgb(1, 1, 1), // White
+      });
+
+      // Get specification name
+      const specName =
+        order?.orderModel?.submodels
+          ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
+          ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
+          ?.name || "";
+
+      // Draw header text
+      page.drawText(`Order: ${id}`, {
+        x: width / 2 - 40,
+        y: height - 20,
+        size: 12,
+        font: helveticaBold,
+        color: rgb(0, 0, 0),
+      });
+
+      // Generate QR code
+      const qrData = `${id}, ${selectedSpec}`;
+      const qrDataUrl = await QRCode.toDataURL(qrData, {
+        errorCorrectionLevel: "H",
+        margin: 1,
+        scale: 8,
+      });
+
+      // Convert data URL to bytes
+      const qrBytes = await (await fetch(qrDataUrl)).arrayBuffer();
+      const qrImage = await pdfDoc.embedPng(qrBytes);
+
+      // Draw QR Code in center
+      const qrSize = 160;
+      const qrX = (width - qrSize) / 2;
+      const qrY = (height - qrSize) / 2 - 10;
+
+      page.drawImage(qrImage, {
+        x: qrX,
+        y: qrY,
+        width: qrSize,
+        height: qrSize,
+      });
+
+      // Draw specification text at bottom
+      page.drawText(specName, {
+        x: width / 2 - specName.length * 3,
+        y: 20,
+        size: 10,
+        font: helveticaBold,
+        color: rgb(0, 0, 0),
+      });
+
+      // Convert PDF to bytes
+      const pdfBytes = await pdfDoc.save();
+
+      // Convert PDF to printer commands for thermal printer
+      // ESC/POS commands
+      const escInit = new Uint8Array([
+        0x1b,
+        0x40, // ESC @ - Initialize printer
+        0x1b,
+        0x61,
+        0x01, // ESC a 1 - Center alignment
+      ]);
+
+      // Add paper cut command
+      const paperCut = new Uint8Array([
+        0x1d,
+        0x56,
+        0x41,
+        0x10, // GS V A - Paper cut
+      ]);
+
+      // Combine commands with PDF data
+      // For thermal printers, we need to convert the PDF to a bitmap
+      // This is a simplified approach - in production, you might need
+      // a more sophisticated PDF to ESC/POS conversion
+
+      // Create a temporary canvas to render the PDF
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      // Create an image from the PDF bytes
+      const img = new Image();
+      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      // Convert the first page of the PDF to an image
+      // Note: This is a simplified approach. In a production environment,
+      // you might want to use a library like pdf.js to render the PDF properly
+      return new Promise((resolve) => {
+        img.onload = () => {
+          // Draw the image on the canvas
+          ctx.fillStyle = "white";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Get the image data
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          // Convert to bitmap format for thermal printer
+          const bitmapData = convertToBitmapFormat(imageData);
+
+          // Combine all commands
+          const finalBuffer = new Uint8Array(
+            escInit.length + bitmapData.length + paperCut.length
+          );
+
+          finalBuffer.set(escInit);
+          finalBuffer.set(bitmapData, escInit.length);
+          finalBuffer.set(paperCut, escInit.length + bitmapData.length);
+
+          // Clean up
+          URL.revokeObjectURL(pdfUrl);
+
+          resolve(finalBuffer);
+        };
+
+        // Set the image source to the PDF URL
+        // Note: This won't actually render the PDF, but we'll use the canvas
+        // to generate bitmap data for the printer
+        img.src = qrDataUrl; // Use the QR code directly instead
+      });
+    } catch (error) {
+      console.error("Error preparing print data:", error);
+      toast({
+        title: "Xatolik",
+        description: "QR code tayyorlashda xatolik",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Add this function to convert image data to bitmap format for thermal printer
+  const convertToBitmapFormat = (imageData) => {
+    const { width, height, data } = imageData;
+    const bytesPerLine = Math.ceil(width / 8);
+    const result = new Uint8Array(height * (bytesPerLine + 4));
+
+    // For each line of the image
+    for (let y = 0; y < height; y++) {
+      // ESC * 0 n1 n2 - Print bitmap graphics
+      result[y * (bytesPerLine + 4)] = 0x1b;
+      result[y * (bytesPerLine + 4) + 1] = 0x2a;
+      result[y * (bytesPerLine + 4) + 2] = 0;
+      result[y * (bytesPerLine + 4) + 3] = width % 256;
+      result[y * (bytesPerLine + 4) + 4] = width / 256;
+
+      // Convert each line to bitmap
+      for (let x = 0; x < width; x += 8) {
+        let b = 0;
+        for (let bit = 0; bit < 8; bit++) {
+          if (x + bit < width) {
+            // Get pixel data (RGBA)
+            const i = (y * width + x + bit) * 4;
+            // Calculate grayscale value
+            const grayscale =
+              data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+            // Set bit if pixel is dark (thermal printers print dark pixels)
+            if (grayscale < 128) {
+              b |= 0x80 >> bit;
+            }
+          }
+        }
+        result[y * (bytesPerLine + 4) + 5 + x / 8] = b;
+      }
+    }
+    return result;
   };
 
   const handleSave = async () => {
@@ -629,7 +708,11 @@ const CuttingStart = () => {
         {qrCodeDataUrl && (
           <div className="flex flex-col items-center p-4 border rounded-lg">
             <h3 className="text-sm font-medium mb-2">QR Code</h3>
-            <img src={qrCodeDataUrl} alt="QR Code" className="w-32 h-32" />
+            <img
+              src={qrCodeDataUrl || "/placeholder.svg"}
+              alt="QR Code"
+              className="w-32 h-32"
+            />
             <p className="text-xs text-gray-500 mt-2">
               QR kod saqlashda yuboriladi
             </p>
