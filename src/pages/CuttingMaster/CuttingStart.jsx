@@ -369,7 +369,7 @@ const CuttingStart = () => {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
           // Convert to bitmap format for thermal printer
-          const bitmapData = convertToBitmapFormat(imageData);
+          const bitmapData = imageData;
 
           // Combine all commands
           const finalBuffer = new Uint8Array(
@@ -400,43 +400,6 @@ const CuttingStart = () => {
       });
       throw error;
     }
-  };
-
-  // Add this function to convert image data to bitmap format for thermal printer
-  const convertToBitmapFormat = (imageData) => {
-    const { width, height, data } = imageData;
-    const bytesPerLine = Math.ceil(width / 8);
-    const result = new Uint8Array(height * (bytesPerLine + 4));
-
-    // For each line of the image
-    for (let y = 0; y < height; y++) {
-      // ESC * 0 n1 n2 - Print bitmap graphics
-      result[y * (bytesPerLine + 4)] = 0x1b;
-      result[y * (bytesPerLine + 4) + 1] = 0x2a;
-      result[y * (bytesPerLine + 4) + 2] = 0;
-      result[y * (bytesPerLine + 4) + 3] = width % 256;
-      result[y * (bytesPerLine + 4) + 4] = width / 256;
-
-      // Convert each line to bitmap
-      for (let x = 0; x < width; x += 8) {
-        let b = 0;
-        for (let bit = 0; bit < 8; bit++) {
-          if (x + bit < width) {
-            // Get pixel data (RGBA)
-            const i = (y * width + x + bit) * 4;
-            // Calculate grayscale value
-            const grayscale =
-              data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-            // Set bit if pixel is dark (thermal printers print dark pixels)
-            if (grayscale < 128) {
-              b |= 0x80 >> bit;
-            }
-          }
-        }
-        result[y * (bytesPerLine + 4) + 5 + x / 8] = b;
-      }
-    }
-    return result;
   };
 
   const handleSave = async () => {
