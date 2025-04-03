@@ -150,7 +150,11 @@ const ConnectResult = () => {
     );
   }
 
-  if (!data.order || data.order.status !== "tailoring") {
+  if (
+    !data.order ||
+    data.order.status !== "tailoring" ||
+    data.order.status !== "pending"
+  ) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="bg-white rounded-xl shadow-md p-6 text-center">
