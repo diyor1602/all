@@ -354,7 +354,7 @@ const CuttingStart = () => {
       }
 
       toast({
-        title: "Success",
+        title: "Muvaffaqiyatli",
         description: "Muvaffaqiyatli kesildi",
         style: {
           backgroundColor: "green",
