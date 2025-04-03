@@ -234,7 +234,7 @@ const CuttingStart = () => {
           ?.name || "";
 
       // QR code data - fix format to avoid issues
-      const qrData = `Order:${id},Category:${selectedSpec}`;
+      const qrData = `${id}, ${selectedSpec}`;
 
       // ESC/POS commands
       const ESC = 0x1b;
