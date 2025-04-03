@@ -219,7 +219,8 @@ const CuttingStart = () => {
 
       return true;
     } catch (error) {
-      console.error("Printing error:", error);
+      alert(error);
+      alert(error.message);
       toast({
         title: "Chop etishda xatolik",
         description: error.message || "QR code chop etishda xatolik",
