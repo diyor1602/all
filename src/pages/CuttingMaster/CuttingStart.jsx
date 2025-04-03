@@ -15,8 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CircleCheck, Bluetooth, Printer, LoaderCircle } from "lucide-react";
 import QRCode from "qrcode";
-// Update the import for pdf-lib at the top of the file
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 // Import Dialog components
 import {
@@ -312,8 +310,6 @@ const CuttingStart = () => {
       // Store QR code data - correct storage format
       const qrDataBytes = encoder.encode(qrData);
       const qrDataLength = qrDataBytes.length;
-      const qrDataLengthLSB = qrDataLength % 256;
-      const qrDataLengthMSB = Math.floor(qrDataLength / 256);
 
       // pL pH store the length of the data + 3
       const pL = (qrDataLength + 3) % 256;
