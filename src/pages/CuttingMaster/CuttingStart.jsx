@@ -232,10 +232,9 @@ const CuttingStart = () => {
           ?.name || "";
 
       const categoryName =
-        order?.orderModel?.submodels
-          ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
-          ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
-          ?.name || "";
+        order?.orderModel?.submodels?.find(
+          (submodel) => submodel?.submodel?.id === selectedSubmodel
+        )?.submodel?.name || "";
 
       // QR code data - fix format to avoid issues
       const qrData = `${id}, ${selectedSpec}`;
@@ -251,7 +250,7 @@ const CuttingStart = () => {
       const center = new Uint8Array([ESC, 0x61, 0x01]); // ESC a 1
 
       // Text size - slightly larger
-      const normalText = new Uint8Array([GS, 0x21, 0x02]); // GS ! 0 - normal size
+      const normalText = new Uint8Array([GS, 0x21, 0x00]); // GS ! 0 - normal size
 
       // Line feed
       const LF = new Uint8Array([0x0a]); // Line feed
