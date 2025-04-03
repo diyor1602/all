@@ -380,7 +380,9 @@ const Scaner = () => {
                             </div>
 
                             <div className="text-sm text-muted-foreground mb-3">
-                              Kesgan odam:{" "}
+                              {cut?.status
+                                ? "Qabul qilgan xodim: "
+                                : "Kesgan xodim: "}{" "}
                               <span className="font-medium text-foreground">
                                 {cut?.user?.employee?.name || "Ma'lumot yo'q"}
                               </span>
