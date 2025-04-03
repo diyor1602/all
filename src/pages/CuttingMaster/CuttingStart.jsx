@@ -94,7 +94,11 @@ const CuttingStart = () => {
       setIsScanning(true);
       const device = await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: ["generic_access"],
+        optionalServices: [
+          "generic_access",
+          "000018f0-0000-1000-8000-00805f9b34fb",
+          "00002af1-0000-1000-8000-00805f9b34fb",
+        ],
       });
 
       setBluetoothDevices((prev) => {
