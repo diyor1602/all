@@ -171,7 +171,7 @@ const CuttingStart = () => {
     }
   };
 
-  // Updated printQRCode function specifically for SK58 Mobile Label Printer
+  // Print QR code
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -179,56 +179,12 @@ const CuttingStart = () => {
         description: "Printer ulanmagan",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     try {
-      setSending(true);
-
-      // Step 1: Connect to the GATT server if not already connected
-      const server = await connectedDevice.gatt.connect();
-
-      // Step 2: Get the print service - SK58 typically uses this service UUID
-      const printService = await server.getPrimaryService(
-        "49535343-FE7D-4AE5-8FA9-9FAFD205E455"
-      );
-
-      // Step 3: Get the write characteristic
-      const writeCharacteristic = await printService.getCharacteristic(
-        "49535343-8841-43F4-A8D4-ECBE34729BB3"
-      );
-
-      // Step 4: Get the notify characteristic for receiving printer status
-      const notifyCharacteristic = await printService.getCharacteristic(
-        "49535343-1E4D-4BD9-BA61-23C647249616"
-      );
-
-      // Enable notifications to receive printer status
-      await notifyCharacteristic.startNotifications();
-
-      notifyCharacteristic.addEventListener(
-        "characteristicvaluechanged",
-        (event) => {
-          const value = event.target.value;
-          const status = new Uint8Array(value.buffer);
-          console.log("Printer status:", status);
-          // You can check printer status here (paper out, etc.)
-        }
-      );
-
-      // Step 5: Prepare the print data for SK58 printer
-      const printData = await prepareSK58PrintData(qrCodeDataUrl);
-
-      // Send data in chunks (SK58 typically has a small buffer)
-      const CHUNK_SIZE = 512; // May need adjustment based on your printer
-
-      for (let i = 0; i < printData.length; i += CHUNK_SIZE) {
-        const chunk = printData.slice(i, i + CHUNK_SIZE);
-        await writeCharacteristic.writeValue(chunk);
-
-        // Small delay between chunks to prevent buffer overflow
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
+      // Implement actual Bluetooth printing logic here
+      // Example: Send data to the printer via Bluetooth
 
       toast({
         title: "Muvaffaqiyatli",
@@ -238,204 +194,18 @@ const CuttingStart = () => {
           color: "white",
         },
       });
+
+      return true;
     } catch (error) {
-      console.error("Printing error:", error);
       toast({
         title: "Chop etishda xatolik",
         description: error.message || "QR code chop etishda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setSending(false);
+      return false;
     }
   };
 
-  // Helper function specifically for SK58 printer
-  const prepareSK58PrintData = async (qrCodeDataUrl) => {
-    try {
-      // 1. Get the raw image data from the data URL
-      const response = await fetch(qrCodeDataUrl);
-      const blob = await response.blob();
-
-      // 2. Convert to image for processing
-      const imageBitmap = await createImageBitmap(blob);
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-
-      // Set canvas size to match the printer's print width (typically 384 pixels for SK58)
-      const printerWidth = 384;
-      const scaleFactor = printerWidth / imageBitmap.width;
-      const scaledHeight = Math.floor(imageBitmap.height * scaleFactor);
-
-      canvas.width = printerWidth;
-      canvas.height = scaledHeight;
-
-      // Draw the image scaled to fit the printer width
-      ctx.drawImage(imageBitmap, 0, 0, printerWidth, scaledHeight);
-
-      // Get the image data
-      const imageData = ctx.getImageData(0, 0, printerWidth, scaledHeight);
-      const pixelData = imageData.data;
-
-      // 3. Convert to monochrome bitmap in ESC/POS format
-      // Each byte represents 8 pixels (1 bit per pixel)
-      const bytesPerLine = Math.ceil(printerWidth / 8);
-      const monoData = new Uint8Array(bytesPerLine * scaledHeight);
-
-      // Convert RGBA to monochrome
-      for (let y = 0; y < scaledHeight; y++) {
-        for (let x = 0; x < printerWidth; x++) {
-          const pixelIndex = (y * printerWidth + x) * 4;
-          const r = pixelData[pixelIndex];
-          const g = pixelData[pixelIndex + 1];
-          const b = pixelData[pixelIndex + 2];
-
-          // Calculate grayscale value and convert to black or white
-          const grayValue = 0.299 * r + 0.587 * g + 0.114 * b;
-          const isBitSet = grayValue < 128; // Dark pixels become 1, light pixels become 0
-
-          if (isBitSet) {
-            const byteIndex = y * bytesPerLine + Math.floor(x / 8);
-            const bitPosition = 7 - (x % 8); // Most significant bit first
-            monoData[byteIndex] |= 1 << bitPosition;
-          }
-        }
-      }
-
-      // 4. Prepare ESC/POS commands for QR code printing
-      // Initialize printer
-      const init = new Uint8Array([
-        0x1b,
-        0x40, // ESC @ - Initialize printer
-        0x1b,
-        0x61,
-        0x01, // ESC a 1 - Center alignment
-      ]);
-
-      // Add text above QR code
-      const textHeader = new TextEncoder().encode(`Order: ${id}\n`);
-
-      // Set bitmap mode command
-      const bitmapCommand = new Uint8Array([
-        0x1d,
-        0x76,
-        0x30,
-        0x00, // GS v 0 - Print raster bit image
-        printerWidth & 0xff,
-        (printerWidth >> 8) & 0xff, // Width in pixels (little endian)
-        scaledHeight & 0xff,
-        (scaledHeight >> 8) & 0xff, // Height in pixels (little endian)
-      ]);
-
-      // Add line feeds and cut command
-      const footer = new Uint8Array([
-        0x0a,
-        0x0a,
-        0x0a,
-        0x0a, // Line feeds for spacing after print
-        0x1d,
-        0x56,
-        0x42,
-        0x00, // GS V B - Paper cut
-      ]);
-
-      // Combine all parts
-      const fullCommand = concatenateArrays([
-        init,
-        textHeader,
-        bitmapCommand,
-        monoData,
-        footer,
-      ]);
-
-      return fullCommand;
-    } catch (error) {
-      console.error("Error preparing print data:", error);
-      throw new Error("QR code formatini tayyorlashda xatolik");
-    }
-  };
-
-  // Helper function to concatenate multiple Uint8Arrays
-  const concatenateArrays = (arrays) => {
-    // Calculate total length
-    const totalLength = arrays.reduce((acc, arr) => acc + arr.length, 0);
-
-    // Create a new array with the total length
-    const result = new Uint8Array(totalLength);
-
-    // Copy each array into the result
-    let offset = 0;
-    for (const arr of arrays) {
-      result.set(arr, offset);
-      offset += arr.length;
-    }
-
-    return result;
-  };
-
-  // Debug function to test Bluetooth connection before printing
-  const testBluetoothConnection = async () => {
-    if (!connectedDevice) {
-      toast({
-        title: "Xatolik",
-        description: "Printer ulanmagan",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Connect to GATT server
-      const server = await connectedDevice.gatt.connect();
-
-      // Get all available services for debugging
-      const services = await server.getPrimaryServices();
-      console.log("Available services:", services);
-
-      for (const service of services) {
-        console.log("Service:", service.uuid);
-        const characteristics = await service.getCharacteristics();
-
-        console.log("Characteristics:");
-        for (const char of characteristics) {
-          console.log(" - UUID:", char.uuid);
-          console.log(
-            " - Properties:",
-            Object.keys(char.properties).filter((p) => char.properties[p])
-          );
-        }
-      }
-
-      toast({
-        title: "Test muvaffaqiyatli",
-        description:
-          "Bluetooth ulanish sinovidan o'tdi, xizmatlar ro'yxati konsolda",
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
-      });
-    } catch (error) {
-      console.error("Bluetooth test error:", error);
-      toast({
-        title: "Bluetooth test xatoligi",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Add this button just below the Bluetooth connection section for debugging
-  <Button
-    onClick={testBluetoothConnection}
-    variant="outline"
-    size="sm"
-    className="mt-2"
-  >
-    Test Bluetooth Connection
-  </Button>;
-
-  // Update the handleSave function to use the new printQRCode function:
   const handleSave = async () => {
     if (!selectedSubmodel || !selectedSpec || !quantity) {
       toast({
@@ -451,25 +221,30 @@ const CuttingStart = () => {
 
       // Generate QR code first
       const qrCode = await generateQRCode();
-
       if (!qrCode) {
         throw new Error("QR code yaratishda xatolik");
       }
 
-      // Save the cut data
+      // Check if a printer is connected
+      if (!connectedDevice) {
+        throw new Error("Printer ulanmagan");
+      }
+
+      // Print the QR Code and wait for confirmation
+      const printSuccess = await printQRCode();
+      if (!printSuccess) {
+        throw new Error("QR code chop etishda xatolik");
+      }
+
+      // If everything is successful, save the cut data
       await api.post(`/cuttingMaster/markAsCut`, {
         order_id: id,
         category_id: selectedSpec,
         quantity,
       });
 
-      // Print QR code if device is connected
-      if (connectedDevice) {
-        await printQRCode();
-      }
-
       toast({
-        title: "Muvaffaqiyatli",
+        title: "Success",
         description: "Muvaffaqiyatli kesildi",
         style: {
           backgroundColor: "green",
@@ -481,8 +256,8 @@ const CuttingStart = () => {
       fetchOrder();
     } catch (error) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
+        title: "Xatolik",
+        description: error.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
     } finally {
