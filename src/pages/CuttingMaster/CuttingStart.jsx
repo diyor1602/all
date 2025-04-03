@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CircleCheck, Bluetooth, Printer, LoaderCircle } from "lucide-react";
 import QRCode from "qrcode";
+// Update the import for pdf-lib at the top of the file
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 // Import Dialog components
@@ -186,7 +187,7 @@ const CuttingStart = () => {
     }
   };
 
-  // Print QR code
+  // Replace the printQRCode function with this updated version
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -247,7 +248,6 @@ const CuttingStart = () => {
     }
   };
 
-  // Add this new function to prepare the print data
   const preparePrintData = async () => {
     try {
       // Create a new PDF Document
