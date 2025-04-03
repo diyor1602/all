@@ -231,6 +231,12 @@ const CuttingStart = () => {
           ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
           ?.name || "";
 
+      const categoryName =
+        order?.orderModel?.submodels
+          ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
+          ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
+          ?.name || "";
+
       // QR code data - fix format to avoid issues
       const qrData = `${id}, ${selectedSpec}`;
 
@@ -245,11 +251,7 @@ const CuttingStart = () => {
       const center = new Uint8Array([ESC, 0x61, 0x01]); // ESC a 1
 
       // Text size - slightly larger
-      const largeText = new Uint8Array([GS, 0x21, 0x11]); // GS ! 17 - double width & height
-      const normalText = new Uint8Array([GS, 0x21, 0x00]); // GS ! 0 - normal size
-
-      // Bold on/off
-      const boldOn = new Uint8Array([ESC, 0x45, 0x01]); // ESC E 1
+      const normalText = new Uint8Array([GS, 0x21, 0x02]); // GS ! 0 - normal size
 
       // Line feed
       const LF = new Uint8Array([0x0a]); // Line feed
@@ -259,9 +261,9 @@ const CuttingStart = () => {
       const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut with feed
 
       // Text content
-      const orderIdText = `Order ID: ${id}`;
-      const categoryIdText = `Category ID: ${selectedSpec}`;
-      const specNameText = `Name: ${specName}`;
+      const orderIdText = `${(order?.id, order?.name)}`;
+      const categoryIdText = `${categoryName}`;
+      const specNameText = `${specName}`;
 
       // Convert text to bytes
       const encoder = new TextEncoder();
@@ -342,8 +344,7 @@ const CuttingStart = () => {
       const combinedLength =
         init.length +
         center.length +
-        largeText.length +
-        boldOn.length +
+        normalText.length +
         orderIdBytes.length +
         LF.length +
         normalText.length +
@@ -367,10 +368,8 @@ const CuttingStart = () => {
       offset += init.length;
       result.set(center, offset);
       offset += center.length;
-      result.set(largeText, offset);
-      offset += largeText.length;
-      result.set(boldOn, offset);
-      offset += boldOn.length;
+      result.set(normalText, offset);
+      offset += normalText.length;
       result.set(orderIdBytes, offset);
       offset += orderIdBytes.length;
       result.set(LF, offset);
