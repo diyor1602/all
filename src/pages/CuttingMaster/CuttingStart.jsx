@@ -187,7 +187,7 @@ const CuttingStart = () => {
     }
   };
 
-  // Updated printQRCode function to send PDF data directly
+  // Simple text printing approach that just sends formatted text commands to the printer
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -212,24 +212,24 @@ const CuttingStart = () => {
         "00002af1-0000-1000-8000-00805f9b34fb"
       );
 
-      // Prepare the PDF data
-      const pdfBytes = await preparePrintData();
+      // Prepare simple print data with ESC/POS commands
+      const printData = preparePrintData();
 
-      // Send PDF data to printer in chunks (Bluetooth has packet size limitations)
-      const CHUNK_SIZE = 512; // Most Bluetooth devices have a limit around 512 bytes
-      for (let i = 0; i < pdfBytes.length; i += CHUNK_SIZE) {
-        const chunk = pdfBytes.slice(
+      // Send data to printer in chunks
+      const CHUNK_SIZE = 512;
+      for (let i = 0; i < printData.length; i += CHUNK_SIZE) {
+        const chunk = printData.slice(
           i,
-          Math.min(i + CHUNK_SIZE, pdfBytes.length)
+          Math.min(i + CHUNK_SIZE, printData.length)
         );
         await characteristic.writeValue(chunk);
-        // Small delay between chunks to prevent buffer overflow
+        // Small delay between chunks
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       toast({
         title: "Muvaffaqiyatli",
-        description: "QR code printerga yuborildi",
+        description: "Ma'lumot printerga yuborildi",
         style: {
           backgroundColor: "green",
           color: "white",
@@ -241,35 +241,16 @@ const CuttingStart = () => {
       console.error("Printing error:", error);
       toast({
         title: "Chop etishda xatolik",
-        description: error.message || "QR code chop etishda xatolik",
+        description: error.message || "Chop etishda xatolik",
         variant: "destructive",
       });
       return false;
     }
   };
 
-  // Simplified preparePrintData function that returns PDF bytes directly
-  const preparePrintData = async () => {
+  // Simple ESC/POS command generation for text printing
+  const preparePrintData = () => {
     try {
-      // Create a new PDF Document
-      const pdfDoc = await PDFDocument.create();
-
-      // Add a page with appropriate size for thermal printer (58mm width)
-      const page = pdfDoc.addPage([226, 226]); // ~58mm at 96 DPI
-      const { width, height } = page.getSize();
-
-      // Add standard font
-      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-      // Fill background white
-      page.drawRectangle({
-        x: 0,
-        y: 0,
-        width,
-        height,
-        color: rgb(1, 1, 1), // White
-      });
-
       // Get specification name
       const specName =
         order?.orderModel?.submodels
@@ -277,55 +258,90 @@ const CuttingStart = () => {
           ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
           ?.name || "";
 
-      // Draw header text
-      page.drawText(`Order: ${id}`, {
-        x: width / 2 - 40,
-        y: height - 20,
-        size: 12,
-        font: helveticaBold,
-        color: rgb(0, 0, 0),
-      });
+      // ESC/POS commands
+      const ESC = 0x1b;
+      const GS = 0x1d;
 
-      // Generate QR code
-      const qrData = `${id}, ${selectedSpec}`;
-      const qrDataUrl = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: "H",
-        margin: 1,
-        scale: 8,
-      });
+      // Initialize printer
+      const init = new Uint8Array([ESC, 0x40]); // ESC @
 
-      // Convert data URL to bytes
-      const qrBytes = await (await fetch(qrDataUrl)).arrayBuffer();
-      const qrImage = await pdfDoc.embedPng(qrBytes);
+      // Center alignment
+      const center = new Uint8Array([ESC, 0x61, 0x01]); // ESC a 1
 
-      // Draw QR Code in center
-      const qrSize = 160;
-      const qrX = (width - qrSize) / 2;
-      const qrY = (height - qrSize) / 2 - 10;
+      // Text size - slightly larger
+      const largeText = new Uint8Array([GS, 0x21, 0x11]); // GS ! 17 - double width & height
+      const normalText = new Uint8Array([GS, 0x21, 0x00]); // GS ! 0 - normal size
 
-      page.drawImage(qrImage, {
-        x: qrX,
-        y: qrY,
-        width: qrSize,
-        height: qrSize,
-      });
+      // Bold on/off
+      const boldOn = new Uint8Array([ESC, 0x45, 0x01]); // ESC E 1
+      const boldOff = new Uint8Array([ESC, 0x45, 0x00]); // ESC E 0
 
-      // Draw specification text at bottom
-      page.drawText(specName, {
-        x: width / 2 - specName.length * 3,
-        y: 20,
-        size: 10,
-        font: helveticaBold,
-        color: rgb(0, 0, 0),
-      });
+      // Line feed
+      const LF = new Uint8Array([0x0a]); // Line feed
+      const lineFeed = new Uint8Array([0x0a, 0x0a]); // Double line feed
 
-      // Convert PDF to bytes and return directly
-      return await pdfDoc.save();
+      // Paper cut
+      const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut with feed
+
+      // Text content
+      const orderIdText = `Order ID: ${id}`;
+      const categoryIdText = `Category ID: ${selectedSpec}`;
+      const specNameText = `Name: ${specName}`;
+
+      // Convert text to bytes
+      const encoder = new TextEncoder();
+      const orderIdBytes = encoder.encode(orderIdText);
+      const categoryIdBytes = encoder.encode(categoryIdText);
+      const specNameBytes = encoder.encode(specNameText);
+
+      // Combine all commands and text
+      const combinedLength =
+        init.length +
+        center.length +
+        largeText.length +
+        boldOn.length +
+        orderIdBytes.length +
+        LF.length +
+        normalText.length +
+        categoryIdBytes.length +
+        LF.length +
+        specNameBytes.length +
+        lineFeed.length +
+        cut.length;
+
+      const result = new Uint8Array(combinedLength);
+
+      let offset = 0;
+      result.set(init, offset);
+      offset += init.length;
+      result.set(center, offset);
+      offset += center.length;
+      result.set(largeText, offset);
+      offset += largeText.length;
+      result.set(boldOn, offset);
+      offset += boldOn.length;
+      result.set(orderIdBytes, offset);
+      offset += orderIdBytes.length;
+      result.set(LF, offset);
+      offset += LF.length;
+      result.set(normalText, offset);
+      offset += normalText.length;
+      result.set(categoryIdBytes, offset);
+      offset += categoryIdBytes.length;
+      result.set(LF, offset);
+      offset += LF.length;
+      result.set(specNameBytes, offset);
+      offset += specNameBytes.length;
+      result.set(lineFeed, offset);
+      offset += lineFeed.length;
+      result.set(cut, offset);
+
+      return result;
     } catch (error) {
       console.error("Error preparing print data:", error);
       toast({
         title: "Xatolik",
-        description: "QR code tayyorlashda xatolik",
+        description: "Ma'lumot tayyorlashda xatolik",
         variant: "destructive",
       });
       throw error;
