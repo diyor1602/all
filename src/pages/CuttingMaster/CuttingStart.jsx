@@ -171,7 +171,7 @@ const CuttingStart = () => {
     }
   };
 
-  // Updated printQRCode function with actual Bluetooth printing logic
+  // Updated printQRCode function specifically for SK58 Mobile Label Printer
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -183,30 +183,52 @@ const CuttingStart = () => {
     }
 
     try {
+      setSending(true);
+
       // Step 1: Connect to the GATT server if not already connected
       const server = await connectedDevice.gatt.connect();
 
-      // Step 2: Get the print service - using a generic printing service UUID
-      // Note: You'll need to replace this with your specific printer's service UUID
+      // Step 2: Get the print service - SK58 typically uses this service UUID
       const printService = await server.getPrimaryService(
-        "000018f0-0000-1000-8000-00805f9b34fb"
+        "49535343-FE7D-4AE5-8FA9-9FAFD205E455"
       );
 
-      // Step 3: Get the characteristic that allows writing print data
-      // Note: Replace with your printer's specific characteristic UUID
-      const printCharacteristic = await printService.getCharacteristic(
-        "00002af1-0000-1000-8000-00805f9b34fb"
+      // Step 3: Get the write characteristic
+      const writeCharacteristic = await printService.getCharacteristic(
+        "49535343-8841-43F4-A8D4-ECBE34729BB3"
       );
 
-      // Step 4: Prepare the QR code data
-      // Convert the QR code image data URL to a binary format the printer can understand
-      // This depends on your printer's command language (ESC/POS, ZPL, etc.)
+      // Step 4: Get the notify characteristic for receiving printer status
+      const notifyCharacteristic = await printService.getCharacteristic(
+        "49535343-1E4D-4BD9-BA61-23C647249616"
+      );
 
-      // For example, with ESC/POS compatible printers:
-      const commandBuffer = await preparePrintData(qrCodeDataUrl);
+      // Enable notifications to receive printer status
+      await notifyCharacteristic.startNotifications();
 
-      // Step 5: Send the data to the printer
-      await printCharacteristic.writeValue(commandBuffer);
+      notifyCharacteristic.addEventListener(
+        "characteristicvaluechanged",
+        (event) => {
+          const value = event.target.value;
+          const status = new Uint8Array(value.buffer);
+          console.log("Printer status:", status);
+          // You can check printer status here (paper out, etc.)
+        }
+      );
+
+      // Step 5: Prepare the print data for SK58 printer
+      const printData = await prepareSK58PrintData(qrCodeDataUrl);
+
+      // Send data in chunks (SK58 typically has a small buffer)
+      const CHUNK_SIZE = 512; // May need adjustment based on your printer
+
+      for (let i = 0; i < printData.length; i += CHUNK_SIZE) {
+        const chunk = printData.slice(i, i + CHUNK_SIZE);
+        await writeCharacteristic.writeValue(chunk);
+
+        // Small delay between chunks to prevent buffer overflow
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
 
       toast({
         title: "Muvaffaqiyatli",
@@ -223,58 +245,118 @@ const CuttingStart = () => {
         description: error.message || "QR code chop etishda xatolik",
         variant: "destructive",
       });
+    } finally {
+      setSending(false);
     }
   };
 
-  // Helper function to prepare print data in the format your printer expects
-  const preparePrintData = async (qrCodeDataUrl) => {
-    // For this example, we'll convert the QR code to a binary format
-    // that most ESC/POS printers can understand
+  // Helper function specifically for SK58 printer
+  const prepareSK58PrintData = async (qrCodeDataUrl) => {
+    try {
+      // 1. Get the raw image data from the data URL
+      const response = await fetch(qrCodeDataUrl);
+      const blob = await response.blob();
 
-    // 1. Get the raw image data from the data URL
-    const response = await fetch(qrCodeDataUrl);
-    const blob = await response.blob();
-    const imageData = await blobToUint8Array(blob);
+      // 2. Convert to image for processing
+      const imageBitmap = await createImageBitmap(blob);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
 
-    // 2. Prepare the ESC/POS commands
-    // Standard ESC/POS init sequence + image printing commands
-    const init = new Uint8Array([
-      0x1b,
-      0x40, // ESC @ (initialize printer)
-      0x1b,
-      0x61,
-      0x01, // ESC a 1 (center alignment)
-    ]);
+      // Set canvas size to match the printer's print width (typically 384 pixels for SK58)
+      const printerWidth = 384;
+      const scaleFactor = printerWidth / imageBitmap.width;
+      const scaledHeight = Math.floor(imageBitmap.height * scaleFactor);
 
-    // Process the image data for the printer
-    // This is a simplified version - actual implementation depends on your printer model
-    const processedImageData = processImageForPrinter(imageData);
+      canvas.width = printerWidth;
+      canvas.height = scaledHeight;
 
-    // Add print and cut commands
-    const finalize = new Uint8Array([
-      0x0a,
-      0x0a,
-      0x0a, // Line feeds
-      0x1d,
-      0x56,
-      0x42,
-      0x00, // GS V B (cut paper)
-    ]);
+      // Draw the image scaled to fit the printer width
+      ctx.drawImage(imageBitmap, 0, 0, printerWidth, scaledHeight);
 
-    // Combine all commands
-    const result = concatUint8Arrays([init, processedImageData, finalize]);
+      // Get the image data
+      const imageData = ctx.getImageData(0, 0, printerWidth, scaledHeight);
+      const pixelData = imageData.data;
 
-    return result;
+      // 3. Convert to monochrome bitmap in ESC/POS format
+      // Each byte represents 8 pixels (1 bit per pixel)
+      const bytesPerLine = Math.ceil(printerWidth / 8);
+      const monoData = new Uint8Array(bytesPerLine * scaledHeight);
+
+      // Convert RGBA to monochrome
+      for (let y = 0; y < scaledHeight; y++) {
+        for (let x = 0; x < printerWidth; x++) {
+          const pixelIndex = (y * printerWidth + x) * 4;
+          const r = pixelData[pixelIndex];
+          const g = pixelData[pixelIndex + 1];
+          const b = pixelData[pixelIndex + 2];
+
+          // Calculate grayscale value and convert to black or white
+          const grayValue = 0.299 * r + 0.587 * g + 0.114 * b;
+          const isBitSet = grayValue < 128; // Dark pixels become 1, light pixels become 0
+
+          if (isBitSet) {
+            const byteIndex = y * bytesPerLine + Math.floor(x / 8);
+            const bitPosition = 7 - (x % 8); // Most significant bit first
+            monoData[byteIndex] |= 1 << bitPosition;
+          }
+        }
+      }
+
+      // 4. Prepare ESC/POS commands for QR code printing
+      // Initialize printer
+      const init = new Uint8Array([
+        0x1b,
+        0x40, // ESC @ - Initialize printer
+        0x1b,
+        0x61,
+        0x01, // ESC a 1 - Center alignment
+      ]);
+
+      // Add text above QR code
+      const textHeader = new TextEncoder().encode(`Order: ${id}\n`);
+
+      // Set bitmap mode command
+      const bitmapCommand = new Uint8Array([
+        0x1d,
+        0x76,
+        0x30,
+        0x00, // GS v 0 - Print raster bit image
+        printerWidth & 0xff,
+        (printerWidth >> 8) & 0xff, // Width in pixels (little endian)
+        scaledHeight & 0xff,
+        (scaledHeight >> 8) & 0xff, // Height in pixels (little endian)
+      ]);
+
+      // Add line feeds and cut command
+      const footer = new Uint8Array([
+        0x0a,
+        0x0a,
+        0x0a,
+        0x0a, // Line feeds for spacing after print
+        0x1d,
+        0x56,
+        0x42,
+        0x00, // GS V B - Paper cut
+      ]);
+
+      // Combine all parts
+      const fullCommand = concatenateArrays([
+        init,
+        textHeader,
+        bitmapCommand,
+        monoData,
+        footer,
+      ]);
+
+      return fullCommand;
+    } catch (error) {
+      console.error("Error preparing print data:", error);
+      throw new Error("QR code formatini tayyorlashda xatolik");
+    }
   };
 
-  // Helper to convert a Blob to Uint8Array
-  const blobToUint8Array = async (blob) => {
-    const buffer = await blob.arrayBuffer();
-    return new Uint8Array(buffer);
-  };
-
-  // Helper to concatenate multiple Uint8Arrays
-  const concatUint8Arrays = (arrays) => {
+  // Helper function to concatenate multiple Uint8Arrays
+  const concatenateArrays = (arrays) => {
     // Calculate total length
     const totalLength = arrays.reduce((acc, arr) => acc + arr.length, 0);
 
@@ -291,34 +373,67 @@ const CuttingStart = () => {
     return result;
   };
 
-  // Process image data for printer compatibility
-  const processImageForPrinter = (imageData) => {
-    // This function would convert the image data to a format specific to your printer
-    // For example, for many ESC/POS printers, you'd need to:
-    // 1. Resize the image to the printer's width
-    // 2. Convert to monochrome (1-bit per pixel)
-    // 3. Format according to the printer's image command
+  // Debug function to test Bluetooth connection before printing
+  const testBluetoothConnection = async () => {
+    if (!connectedDevice) {
+      toast({
+        title: "Xatolik",
+        description: "Printer ulanmagan",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // This is a placeholder - actual implementation depends on your printer model
-    // For a real implementation, you might need a library like EscPosEncoder
+    try {
+      // Connect to GATT server
+      const server = await connectedDevice.gatt.connect();
 
-    // Simplified example - assumes 8-bit monochrome, 384 pixels wide
-    const width = 384; // Common thermal printer width in pixels
-    const escPos = new Uint8Array([
-      0x1d,
-      0x76,
-      0x30,
-      0x00, // GS v 0 (print raster bit image)
-      width & 0xff,
-      (width >> 8) & 0xff, // width in pixels, little endian
-      (imageData.length / width) & 0xff,
-      ((imageData.length / width) >> 8) & 0xff, // height in pixels
-    ]);
+      // Get all available services for debugging
+      const services = await server.getPrimaryServices();
+      console.log("Available services:", services);
 
-    // In a real implementation, you would now add the properly formatted image data
-    // This is just a placeholder
-    return concatUint8Arrays([escPos, new Uint8Array(imageData)]);
+      for (const service of services) {
+        console.log("Service:", service.uuid);
+        const characteristics = await service.getCharacteristics();
+
+        console.log("Characteristics:");
+        for (const char of characteristics) {
+          console.log(" - UUID:", char.uuid);
+          console.log(
+            " - Properties:",
+            Object.keys(char.properties).filter((p) => char.properties[p])
+          );
+        }
+      }
+
+      toast({
+        title: "Test muvaffaqiyatli",
+        description:
+          "Bluetooth ulanish sinovidan o'tdi, xizmatlar ro'yxati konsolda",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+    } catch (error) {
+      console.error("Bluetooth test error:", error);
+      toast({
+        title: "Bluetooth test xatoligi",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
+
+  // Add this button just below the Bluetooth connection section for debugging
+  <Button
+    onClick={testBluetoothConnection}
+    variant="outline"
+    size="sm"
+    className="mt-2"
+  >
+    Test Bluetooth Connection
+  </Button>;
 
   // Update the handleSave function to use the new printQRCode function:
   const handleSave = async () => {
