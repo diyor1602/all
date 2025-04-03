@@ -187,7 +187,7 @@ const CuttingStart = () => {
     }
   };
 
-  // Replace the printQRCode function with this updated version
+  // Updated printQRCode function to send PDF data directly
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -212,15 +212,15 @@ const CuttingStart = () => {
         "00002af1-0000-1000-8000-00805f9b34fb"
       );
 
-      // Prepare the print data
-      const printData = await preparePrintData();
+      // Prepare the PDF data
+      const pdfBytes = await preparePrintData();
 
-      // Send data to printer in chunks (Bluetooth has packet size limitations)
+      // Send PDF data to printer in chunks (Bluetooth has packet size limitations)
       const CHUNK_SIZE = 512; // Most Bluetooth devices have a limit around 512 bytes
-      for (let i = 0; i < printData.length; i += CHUNK_SIZE) {
-        const chunk = printData.slice(
+      for (let i = 0; i < pdfBytes.length; i += CHUNK_SIZE) {
+        const chunk = pdfBytes.slice(
           i,
-          Math.min(i + CHUNK_SIZE, printData.length)
+          Math.min(i + CHUNK_SIZE, pdfBytes.length)
         );
         await characteristic.writeValue(chunk);
         // Small delay between chunks to prevent buffer overflow
@@ -248,6 +248,7 @@ const CuttingStart = () => {
     }
   };
 
+  // Simplified preparePrintData function that returns PDF bytes directly
   const preparePrintData = async () => {
     try {
       // Create a new PDF Document
@@ -318,79 +319,8 @@ const CuttingStart = () => {
         color: rgb(0, 0, 0),
       });
 
-      // Convert PDF to bytes
-      const pdfBytes = await pdfDoc.save();
-
-      // Convert PDF to printer commands for thermal printer
-      // ESC/POS commands
-      const escInit = new Uint8Array([
-        0x1b,
-        0x40, // ESC @ - Initialize printer
-        0x1b,
-        0x61,
-        0x01, // ESC a 1 - Center alignment
-      ]);
-
-      // Add paper cut command
-      const paperCut = new Uint8Array([
-        0x1d,
-        0x56,
-        0x41,
-        0x10, // GS V A - Paper cut
-      ]);
-
-      // Combine commands with PDF data
-      // For thermal printers, we need to convert the PDF to a bitmap
-      // This is a simplified approach - in production, you might need
-      // a more sophisticated PDF to ESC/POS conversion
-
-      // Create a temporary canvas to render the PDF
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-
-      // Create an image from the PDF bytes
-      const img = new Image();
-      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-
-      // Convert the first page of the PDF to an image
-      // Note: This is a simplified approach. In a production environment,
-      // you might want to use a library like pdf.js to render the PDF properly
-      return new Promise((resolve) => {
-        img.onload = () => {
-          // Draw the image on the canvas
-          ctx.fillStyle = "white";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-          // Get the image data
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-          // Convert to bitmap format for thermal printer
-          const bitmapData = imageData;
-
-          // Combine all commands
-          const finalBuffer = new Uint8Array(
-            escInit.length + bitmapData.length + paperCut.length
-          );
-
-          finalBuffer.set(escInit);
-          finalBuffer.set(bitmapData, escInit.length);
-          finalBuffer.set(paperCut, escInit.length + bitmapData.length);
-
-          // Clean up
-          URL.revokeObjectURL(pdfUrl);
-
-          resolve(finalBuffer);
-        };
-
-        // Set the image source to the PDF URL
-        // Note: This won't actually render the PDF, but we'll use the canvas
-        // to generate bitmap data for the printer
-        img.src = qrDataUrl; // Use the QR code directly instead
-      });
+      // Convert PDF to bytes and return directly
+      return await pdfDoc.save();
     } catch (error) {
       console.error("Error preparing print data:", error);
       toast({
