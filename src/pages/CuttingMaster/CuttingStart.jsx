@@ -233,8 +233,8 @@ const CuttingStart = () => {
           ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
           ?.name || "";
 
-      // QR code data
-      const qrData = `${id},${selectedSpec}`;
+      // QR code data - fix format to avoid issues
+      const qrData = `Order:${id},Category:${selectedSpec}`;
 
       // ESC/POS commands
       const ESC = 0x1b;
@@ -312,22 +312,26 @@ const CuttingStart = () => {
         0x33,
       ]); // GS ( k 3 0 49 69 51 - level H
 
-      // Store QR code data
-      const qrDataLengthLSB = qrData.length % 256;
-      const qrDataLengthMSB = Math.floor(qrData.length / 256);
+      // Store QR code data - correct storage format
+      const qrDataBytes = encoder.encode(qrData);
+      const qrDataLength = qrDataBytes.length;
+      const qrDataLengthLSB = qrDataLength % 256;
+      const qrDataLengthMSB = Math.floor(qrDataLength / 256);
+
+      // pL pH store the length of the data + 3
+      const pL = (qrDataLength + 3) % 256;
+      const pH = Math.floor((qrDataLength + 3) / 256);
 
       const qrStoreData = new Uint8Array([
         GS,
         0x28,
         0x6b,
-        qrDataLengthLSB,
-        qrDataLengthMSB,
+        pL,
+        pH,
         0x31,
         0x50,
         0x30,
       ]); // GS ( k pL pH 49 80 48
-
-      const qrDataBytes = encoder.encode(qrData);
 
       // Print QR code
       const qrPrint = new Uint8Array([
