@@ -245,8 +245,6 @@ const CuttingStart = () => {
 
       // Center alignment
       const center = new Uint8Array([ESC, 0x61, 0x01]); // ESC a 1
-      // Left alignment
-      const left = new Uint8Array([ESC, 0x61, 0x00]); // ESC a 0
 
       // Text size - slightly larger
       const largeText = new Uint8Array([GS, 0x21, 0x11]); // GS ! 17 - double width & height
@@ -254,7 +252,6 @@ const CuttingStart = () => {
 
       // Bold on/off
       const boldOn = new Uint8Array([ESC, 0x45, 0x01]); // ESC E 1
-      const boldOff = new Uint8Array([ESC, 0x45, 0x00]); // ESC E 0
 
       // Line feed
       const LF = new Uint8Array([0x0a]); // Line feed
