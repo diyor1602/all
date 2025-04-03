@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CircleCheck, Bluetooth, Printer, X, LoaderCircle } from "lucide-react";
 import QRCode from "qrcode";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+// No need for pdf-lib imports anymore
 
 // Import Dialog components
 import {
@@ -44,7 +44,7 @@ const CuttingStart = () => {
   const [connectedDevice, setConnectedDevice] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
-  const [pdfBytes, setPdfBytes] = useState(null);
+  // Removed pdfBytes state since we're not using PDFs anymore
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -174,10 +174,6 @@ const CuttingStart = () => {
         },
       });
       setQrCodeDataUrl(dataUrl);
-
-      // Generate PDF with QR code
-      await generateQRPDF(qrData);
-
       return dataUrl;
     } catch (error) {
       toast({
@@ -189,82 +185,9 @@ const CuttingStart = () => {
     }
   };
 
-  // Generate PDF with QR code
-  const generateQRPDF = async (qrData) => {
-    try {
-      // Create a new PDF Document
-      const pdfDoc = await PDFDocument.create();
+  // We're no longer using PDF generation, so this function is removed
 
-      // Add a page - small size for label printer
-      const page = pdfDoc.addPage([300, 200]);
-      const { width, height } = page.getSize();
-
-      // Add standard font
-      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-      // Generate QR code
-      const qrDataUrl = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: "H",
-        margin: 1,
-        scale: 10,
-        color: {
-          dark: "#000000",
-          light: "#FFFFFF",
-        },
-      });
-
-      // Convert data URL to bytes
-      const qrBytes = await (await fetch(qrDataUrl)).arrayBuffer();
-      const qrImage = await pdfDoc.embedPng(qrBytes);
-
-      // Draw QR Code
-      const qrSize = 150;
-      const qrX = (width - qrSize) / 2;
-      const qrY = height - qrSize - 15;
-
-      page.drawImage(qrImage, {
-        x: qrX,
-        y: qrY,
-        width: qrSize,
-        height: qrSize,
-      });
-
-      // Add order details text
-      // const specName =
-      //   order?.orderModel?.submodels
-      //     ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
-      //     ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
-      //     ?.name || "";
-
-      page.drawText(`Order: ${id}`, {
-        x: 20,
-        y: 30,
-        size: 14,
-        font: helveticaBold,
-      });
-
-      // page.drawText(`${specName}`, {
-      //   x: 20,
-      //   y: 10,
-      //   size: 12,
-      //   font: helvetica,
-      // });
-
-      // Save the PDF
-      const pdfBytes = await pdfDoc.save();
-      setPdfBytes(pdfBytes);
-
-      return pdfBytes;
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert(error);
-      alert(error.message);
-      return null;
-    }
-  };
-
-  // Print QR code using PDF approach
+  // Print QR code using direct Bluetooth approach
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -276,47 +199,145 @@ const CuttingStart = () => {
     }
 
     try {
-      if (!pdfBytes) {
+      // Connect to the printer's service
+      const server = await connectedDevice.gatt.connect();
+
+      // Get the printer service - SK58 typically uses a custom service
+      const service = await server.getPrimaryService(
+        "000018f0-0000-1000-8000-00805f9b34fb"
+      );
+
+      // Get the characteristic for writing data
+      const characteristic = await service.getCharacteristic(
+        "00002af1-0000-1000-8000-00805f9b34fb"
+      );
+
+      // Create simple ESC/POS commands for a clean print
+      const encoder = new TextEncoder();
+
+      // Initialize printer
+      let initCommand = new Uint8Array([
+        0x1b,
+        0x40, // ESC @ - Initialize printer
+        0x1b,
+        0x61,
+        0x01, // ESC a 1 - Center alignment
+      ]);
+      await characteristic.writeValue(initCommand);
+
+      // Header text - Order number
+      // const specName =
+      //   order?.orderModel?.submodels
+      //     ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
+      //     ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
+      //     ?.name || "";
+
+      // const orderText = encoder.encode(`Order: ${id}\n${specName}\n\n`);
+      // await characteristic.writeValue(orderText);
+
+      // Wait a bit for processing
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Now send the QR code data
+      if (!qrCodeDataUrl) {
         await generateQRCode();
       }
 
-      if (!pdfBytes) {
-        throw new Error("PDF yaratishda xatolik");
+      // Convert QR code image to printer-readable format
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = qrCodeDataUrl;
+      });
+
+      // Create a canvas to process the image
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Set size to ensure it fits on thermal paper (most are 384px wide)
+      canvas.width = 384;
+      canvas.height = 384;
+
+      // Fill with white and draw QR centered
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, (canvas.width - 350) / 2, 10, 350, 350);
+
+      // Send QR as image data
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      // Simplified ESC/POS image data format (bitmap mode)
+      // Set line spacing to 0
+      await characteristic.writeValue(new Uint8Array([0x1b, 0x33, 0]));
+
+      // For each line of the QR code
+      const byteWidth = Math.ceil(canvas.width / 8);
+      for (let y = 0; y < canvas.height; y += 24) {
+        // Limit height to remaining pixels (for the last row)
+        const printHeight = Math.min(24, canvas.height - y);
+        if (printHeight <= 0) break;
+
+        // ESC * - Print bitmap graphics
+        const header = new Uint8Array([
+          0x1b,
+          0x2a,
+          33, // ESC * mode
+          canvas.width & 0xff, // nL
+          (canvas.width >> 8) & 0xff, // nH
+        ]);
+        await characteristic.writeValue(header);
+
+        // Prepare dot data line by line
+        const lineData = new Uint8Array(byteWidth * printHeight);
+        let dataIndex = 0;
+
+        for (let subY = 0; subY < printHeight; subY++) {
+          for (let x = 0; x < canvas.width; x += 8) {
+            let b = 0;
+            for (let bit = 0; bit < 8; bit++) {
+              if (x + bit < canvas.width) {
+                const i = ((y + subY) * canvas.width + (x + bit)) * 4;
+                // Calculate grayscale value
+                const grayscale =
+                  imageData.data[i] * 0.299 +
+                  imageData.data[i + 1] * 0.587 +
+                  imageData.data[i + 2] * 0.114;
+
+                // Set bit if pixel is dark
+                if (grayscale < 128) {
+                  b |= 0x80 >> bit;
+                }
+              }
+            }
+            lineData[dataIndex++] = b;
+          }
+        }
+
+        // Send line data in chunks to prevent buffer overflows
+        for (let i = 0; i < lineData.length; i += 64) {
+          const chunk = lineData.slice(i, Math.min(i + 64, lineData.length));
+          await characteristic.writeValue(chunk);
+          // Small delay between chunks
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+
+        // Send line feed
+        await characteristic.writeValue(new Uint8Array([0x0a]));
       }
 
-      // Create a blob from the PDF bytes
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-
-      // Create a hidden iframe for printing
-      const printFrame = document.createElement("iframe");
-      printFrame.style.position = "fixed";
-      printFrame.style.right = "0";
-      printFrame.style.bottom = "0";
-      printFrame.style.width = "0";
-      printFrame.style.height = "0";
-      printFrame.style.border = "0";
-
-      printFrame.src = url;
-      document.body.appendChild(printFrame);
-
-      // Wait for iframe to load, then print
-      printFrame.onload = () => {
-        try {
-          setTimeout(() => {
-            printFrame.contentWindow.print();
-            // Clean up after printing
-            setTimeout(() => {
-              document.body.removeChild(printFrame);
-              URL.revokeObjectURL(url);
-            }, 1000);
-          }, 500);
-        } catch (err) {
-          console.error("Print error:", err);
-          document.body.removeChild(printFrame);
-          URL.revokeObjectURL(url);
-        }
-      };
+      // Reset line spacing and feed extra lines
+      await characteristic.writeValue(
+        new Uint8Array([
+          0x1b,
+          0x32, // Reset line spacing
+          0x0a,
+          0x0a, // Feed a couple of lines
+          0x1d,
+          0x56,
+          0x01, // GS V - Cut paper (partial cut)
+        ])
+      );
 
       toast({
         title: "Muvaffaqiyatli",
