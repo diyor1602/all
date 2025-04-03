@@ -231,11 +231,11 @@ const CuttingStart = () => {
       });
 
       // Add order details text
-      const specName =
-        order?.orderModel?.submodels
-          ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
-          ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
-          ?.name || "";
+      // const specName =
+      //   order?.orderModel?.submodels
+      //     ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
+      //     ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
+      //     ?.name || "";
 
       page.drawText(`Order: ${id}`, {
         x: 20,
@@ -244,12 +244,12 @@ const CuttingStart = () => {
         font: helveticaBold,
       });
 
-      page.drawText(`${specName}`, {
-        x: 20,
-        y: 10,
-        size: 12,
-        font: helvetica,
-      });
+      // page.drawText(`${specName}`, {
+      //   x: 20,
+      //   y: 10,
+      //   size: 12,
+      //   font: helvetica,
+      // });
 
       // Save the PDF
       const pdfBytes = await pdfDoc.save();
@@ -258,6 +258,8 @@ const CuttingStart = () => {
       return pdfBytes;
     } catch (error) {
       console.error("Error generating PDF:", error);
+      alert(error);
+      alert(error.message);
       return null;
     }
   };
