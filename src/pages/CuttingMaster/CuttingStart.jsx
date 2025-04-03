@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CircleCheck, Bluetooth, Printer, X, LoaderCircle } from "lucide-react";
 import QRCode from "qrcode";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 // Import Dialog components
 import {
@@ -43,6 +44,7 @@ const CuttingStart = () => {
   const [connectedDevice, setConnectedDevice] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
+  const [pdfBytes, setPdfBytes] = useState(null);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -158,12 +160,24 @@ const CuttingStart = () => {
     }
   };
 
-  // Generate QR code
+  // Generate QR code data URL
   const generateQRCode = async () => {
     try {
       const qrData = `${id}, ${selectedSpec}`;
-      const dataUrl = await QRCode.toDataURL(qrData);
+      const dataUrl = await QRCode.toDataURL(qrData, {
+        errorCorrectionLevel: "H",
+        margin: 1,
+        scale: 8,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
       setQrCodeDataUrl(dataUrl);
+
+      // Generate PDF with QR code
+      await generateQRPDF(qrData);
+
       return dataUrl;
     } catch (error) {
       toast({
@@ -175,7 +189,80 @@ const CuttingStart = () => {
     }
   };
 
-  // Print QR code
+  // Generate PDF with QR code
+  const generateQRPDF = async (qrData) => {
+    try {
+      // Create a new PDF Document
+      const pdfDoc = await PDFDocument.create();
+
+      // Add a page - small size for label printer
+      const page = pdfDoc.addPage([300, 200]);
+      const { width, height } = page.getSize();
+
+      // Add standard font
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+      // Generate QR code
+      const qrDataUrl = await QRCode.toDataURL(qrData, {
+        errorCorrectionLevel: "H",
+        margin: 1,
+        scale: 10,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
+
+      // Convert data URL to bytes
+      const qrBytes = await (await fetch(qrDataUrl)).arrayBuffer();
+      const qrImage = await pdfDoc.embedPng(qrBytes);
+
+      // Draw QR Code
+      const qrSize = 150;
+      const qrX = (width - qrSize) / 2;
+      const qrY = height - qrSize - 15;
+
+      page.drawImage(qrImage, {
+        x: qrX,
+        y: qrY,
+        width: qrSize,
+        height: qrSize,
+      });
+
+      // Add order details text
+      const specName =
+        order?.orderModel?.submodels
+          ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
+          ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
+          ?.name || "";
+
+      page.drawText(`Order: ${id}`, {
+        x: 20,
+        y: 30,
+        size: 14,
+        font: helveticaBold,
+      });
+
+      page.drawText(`${specName}`, {
+        x: 20,
+        y: 10,
+        size: 12,
+        font: helvetica,
+      });
+
+      // Save the PDF
+      const pdfBytes = await pdfDoc.save();
+      setPdfBytes(pdfBytes);
+
+      return pdfBytes;
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      return null;
+    }
+  };
+
+  // Print QR code using PDF approach
   const printQRCode = async () => {
     if (!connectedDevice) {
       toast({
@@ -187,30 +274,47 @@ const CuttingStart = () => {
     }
 
     try {
-      // Connect to the printer's service
-      const server = await connectedDevice.gatt.connect();
-
-      // Get the printer service - SK58 typically uses a custom service
-      // Common service UUID for thermal printers
-      const service = await server.getPrimaryService(
-        "000018f0-0000-1000-8000-00805f9b34fb"
-      );
-
-      // Get the characteristic for writing data
-      const characteristic = await service.getCharacteristic(
-        "00002af1-0000-1000-8000-00805f9b34fb"
-      );
-
-      // Prepare the print data
-      const printData = await preparePrintData();
-
-      // Send data to printer in chunks (Bluetooth has packet size limitations)
-      for (let i = 0; i < printData.length; i += 512) {
-        const chunk = printData.slice(i, i + 512);
-        await characteristic.writeValue(chunk);
-        // Small delay between chunks to prevent buffer overflow
-        await new Promise((resolve) => setTimeout(resolve, 50));
+      if (!pdfBytes) {
+        await generateQRCode();
       }
+
+      if (!pdfBytes) {
+        throw new Error("PDF yaratishda xatolik");
+      }
+
+      // Create a blob from the PDF bytes
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      // Create a hidden iframe for printing
+      const printFrame = document.createElement("iframe");
+      printFrame.style.position = "fixed";
+      printFrame.style.right = "0";
+      printFrame.style.bottom = "0";
+      printFrame.style.width = "0";
+      printFrame.style.height = "0";
+      printFrame.style.border = "0";
+
+      printFrame.src = url;
+      document.body.appendChild(printFrame);
+
+      // Wait for iframe to load, then print
+      printFrame.onload = () => {
+        try {
+          setTimeout(() => {
+            printFrame.contentWindow.print();
+            // Clean up after printing
+            setTimeout(() => {
+              document.body.removeChild(printFrame);
+              URL.revokeObjectURL(url);
+            }, 1000);
+          }, 500);
+        } catch (err) {
+          console.error("Print error:", err);
+          document.body.removeChild(printFrame);
+          URL.revokeObjectURL(url);
+        }
+      };
 
       toast({
         title: "Muvaffaqiyatli",
@@ -223,8 +327,7 @@ const CuttingStart = () => {
 
       return true;
     } catch (error) {
-      alert(error);
-      alert(error.message);
+      console.error("Print error:", error);
       toast({
         title: "Chop etishda xatolik",
         description: error.message || "QR code chop etishda xatolik",
@@ -232,126 +335,6 @@ const CuttingStart = () => {
       });
       return false;
     }
-  };
-
-  // Add this new function to prepare the print data
-  const preparePrintData = async () => {
-    // Get the QR code as a data URL
-    const qrDataUrl = await generateQRCode();
-
-    // Convert data URL to image data
-    const img = new Image();
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = qrDataUrl;
-      img.crossOrigin = "anonymous";
-    });
-
-    // Create a canvas to process the image
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    // SK58 printer typically has 384 dots per line (48mm width)
-    canvas.width = 384;
-    canvas.height = 384;
-
-    // Draw the QR code on canvas (centered)
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, (canvas.width - 300) / 2, 40, 300, 300);
-
-    // Add text information
-    ctx.fillStyle = "black";
-    ctx.font = "16px Arial";
-    ctx.textAlign = "center";
-
-    // Add order ID and spec info
-    const specName =
-      order?.orderModel?.submodels
-        ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
-        ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
-        ?.name || "";
-
-    ctx.fillText(`Order: ${id}`, canvas.width / 2, 20);
-    ctx.fillText(`${specName}`, canvas.width / 2, 360);
-
-    // Convert canvas to bitmap data for thermal printer
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // Prepare ESC/POS commands for thermal printer
-    // Initialize printer
-    let printBuffer = new Uint8Array([
-      0x1b,
-      0x40, // ESC @ - Initialize printer
-      0x1b,
-      0x61,
-      0x01, // ESC a 1 - Center alignment
-    ]);
-
-    // Add text header
-    const encoder = new TextEncoder();
-    const headerText = encoder.encode(`${order?.name || "Order"}\n`);
-
-    // Combine buffers
-    const combinedBuffer = new Uint8Array(
-      printBuffer.length + headerText.length
-    );
-    combinedBuffer.set(printBuffer);
-    combinedBuffer.set(headerText, printBuffer.length);
-    printBuffer = combinedBuffer;
-
-    // Convert image data to printer bitmap format
-    const bitmapData = convertToBitmapFormat(imageData);
-
-    // Combine all data
-    const finalBuffer = new Uint8Array(
-      printBuffer.length + bitmapData.length + 4
-    );
-    finalBuffer.set(printBuffer);
-    finalBuffer.set(bitmapData, printBuffer.length);
-
-    // Add paper cut command at the end
-    finalBuffer.set([0x1d, 0x56, 0x41, 0x10], finalBuffer.length - 4);
-
-    return finalBuffer;
-  };
-
-  // Add this function to convert image data to bitmap format for thermal printer
-  const convertToBitmapFormat = (imageData) => {
-    const { width, height, data } = imageData;
-    const bytesPerLine = Math.ceil(width / 8);
-    const result = new Uint8Array(height * (bytesPerLine + 4));
-
-    // For each line of the image
-    for (let y = 0; y < height; y++) {
-      // ESC * 0 n1 n2 - Print bitmap graphics
-      result[y * (bytesPerLine + 4)] = 0x1b;
-      result[y * (bytesPerLine + 4) + 1] = 0x2a;
-      result[y * (bytesPerLine + 4) + 2] = 0;
-      result[y * (bytesPerLine + 4) + 3] = width % 256;
-      result[y * (bytesPerLine + 4) + 4] = width / 256;
-
-      // Convert each line to bitmap
-      for (let x = 0; x < width; x += 8) {
-        let b = 0;
-        for (let bit = 0; bit < 8; bit++) {
-          if (x + bit < width) {
-            // Get pixel data (RGBA)
-            const i = (y * width + x + bit) * 4;
-            // Calculate grayscale value
-            const grayscale =
-              data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-            // Set bit if pixel is dark (thermal printers print dark pixels)
-            if (grayscale < 128) {
-              b |= 0x80 >> bit;
-            }
-          }
-        }
-        result[y * (bytesPerLine + 4) + 5 + x / 8] = b;
-      }
-    }
-    return result;
   };
 
   const handleSave = async () => {
