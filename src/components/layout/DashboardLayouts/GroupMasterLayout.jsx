@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { FilePlus, Home, ListChecks, Shirt } from "lucide-react";
+import { FilePlus, Home, ListChecks, QrCode, Shirt } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -19,6 +19,12 @@ const navigation = [
     name: "Natija",
     href: "/groupMaster/result",
     icon: FilePlus,
+    onMobile: true,
+  },
+  {
+    name: "Skaner",
+    href: "/groupMaster/scaner",
+    icon: QrCode,
     onMobile: true,
   },
 ];
