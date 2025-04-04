@@ -236,7 +236,7 @@ const CuttingStart = () => {
           (submodel) => submodel?.submodel?.id === selectedSubmodel
         )?.submodel?.name || "";
 
-      // QR code data - fix format to avoid issues
+      // QR code data
       const qrData = `${id}, ${selectedSpec}`;
 
       // ESC/POS commands
@@ -246,32 +246,31 @@ const CuttingStart = () => {
       // Initialize printer
       const init = new Uint8Array([ESC, 0x40]); // ESC @
 
+      // Select Cyrillic character set (CP1251 - Russian)
+      const selectCharset = new Uint8Array([ESC, 0x74, 17]); // ESC t 17
+
       // Center alignment
       const center = new Uint8Array([ESC, 0x61, 0x01]); // ESC a 1
 
-      // Text size - slightly larger
+      // Text size - normal
       const normalText = new Uint8Array([GS, 0x21, 0x00]); // GS ! 0 - normal size
 
       // Line feed
-      const LF = new Uint8Array([0x0a]); // Line feed
-      const lineFeed = new Uint8Array([0x0a, 0x0a]); // Double line feed
+      const LF = new Uint8Array([0x0a]);
+      const lineFeed = new Uint8Array([0x0a, 0x0a]);
 
       // Paper cut
-      const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut with feed
+      const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut
 
-      // Text content
-      const orderIdText = `${(order?.id, order?.name)}`;
-      const categoryIdText = `${categoryName}`;
-      const specNameText = `${specName}`;
+      // Convert text to bytes using CP1251 (Cyrillic encoding)
+      const encoder = new TextEncoder("windows-1251");
+      const orderIdBytes = encoder.encode(
+        order?.id ? order?.id.toString() : ""
+      );
+      const categoryIdBytes = encoder.encode(categoryName);
+      const specNameBytes = encoder.encode(specName);
 
-      // Convert text to bytes
-      const encoder = new TextEncoder();
-      const orderIdBytes = encoder.encode(orderIdText);
-      const categoryIdBytes = encoder.encode(categoryIdText);
-      const specNameBytes = encoder.encode(specNameText);
-
-      // QR Code commands for thermal printer - Standard ESC/POS
-      // Select model (model 2 - standard QR Code)
+      // QR Code commands for thermal printer
       const qrModelSelect = new Uint8Array([
         GS,
         0x28,
@@ -282,9 +281,7 @@ const CuttingStart = () => {
         0x41,
         0x32,
         0x00,
-      ]); // GS ( k 4 0 49 65 50 0 - select QR code, model 2
-
-      // Set QR code size (1-16) - choosing 8 here
+      ]);
       const qrSize = new Uint8Array([
         GS,
         0x28,
@@ -294,9 +291,7 @@ const CuttingStart = () => {
         0x31,
         0x43,
         0x08,
-      ]); // GS ( k 3 0 49 67 8 - size 8
-
-      // Set error correction level (48-51 for L,M,Q,H) - using H (51) for best
+      ]);
       const qrErrorCorrection = new Uint8Array([
         GS,
         0x28,
@@ -306,13 +301,11 @@ const CuttingStart = () => {
         0x31,
         0x45,
         0x33,
-      ]); // GS ( k 3 0 49 69 51 - level H
+      ]);
 
-      // Store QR code data - correct storage format
+      // Store QR code data
       const qrDataBytes = encoder.encode(qrData);
       const qrDataLength = qrDataBytes.length;
-
-      // pL pH store the length of the data + 3
       const pL = (qrDataLength + 3) % 256;
       const pH = Math.floor((qrDataLength + 3) / 256);
 
@@ -325,7 +318,7 @@ const CuttingStart = () => {
         0x31,
         0x50,
         0x30,
-      ]); // GS ( k pL pH 49 80 48
+      ]);
 
       // Print QR code
       const qrPrint = new Uint8Array([
@@ -337,16 +330,16 @@ const CuttingStart = () => {
         0x31,
         0x51,
         0x30,
-      ]); // GS ( k 3 0 49 81 48
+      ]);
 
-      // Calculate total length
+      // Combine all data
       const combinedLength =
         init.length +
+        selectCharset.length +
         center.length +
         normalText.length +
         orderIdBytes.length +
         LF.length +
-        normalText.length +
         categoryIdBytes.length +
         LF.length +
         specNameBytes.length +
@@ -365,6 +358,8 @@ const CuttingStart = () => {
       let offset = 0;
       result.set(init, offset);
       offset += init.length;
+      result.set(selectCharset, offset);
+      offset += selectCharset.length;
       result.set(center, offset);
       offset += center.length;
       result.set(normalText, offset);
@@ -373,8 +368,6 @@ const CuttingStart = () => {
       offset += orderIdBytes.length;
       result.set(LF, offset);
       offset += LF.length;
-      result.set(normalText, offset);
-      offset += normalText.length;
       result.set(categoryIdBytes, offset);
       offset += categoryIdBytes.length;
       result.set(LF, offset);
@@ -383,8 +376,6 @@ const CuttingStart = () => {
       offset += specNameBytes.length;
       result.set(lineFeed, offset);
       offset += lineFeed.length;
-
-      // Add QR code
       result.set(qrModelSelect, offset);
       offset += qrModelSelect.length;
       result.set(qrSize, offset);
