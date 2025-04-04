@@ -265,7 +265,7 @@ const CuttingStart = () => {
       // Convert text to bytes using CP1251 (Cyrillic encoding)
       const encoder = new TextEncoder("windows-1251");
       const orderIdBytes = encoder.encode(
-        order?.id ? order?.id.toString() : ""
+        order?.name ? order?.name.toString() : ""
       );
       const categoryIdBytes = encoder.encode(categoryName);
       const specNameBytes = encoder.encode(specName);
