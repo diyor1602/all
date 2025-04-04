@@ -221,7 +221,197 @@ const CuttingStart = () => {
     }
   };
 
-  // ESC/POS command generation for text and QR code printing
+  // Install this function in your code to handle CP1251 (Windows-1251) encoding
+  // This is a mapping table for Windows-1251 (Cyrillic) encoding
+  function encodeCP1251(str) {
+    const cp1251Table = {
+      "\u0410": 0xc0, // А
+      "\u0411": 0xc1, // Б
+      "\u0412": 0xc2, // В
+      "\u0413": 0xc3, // Г
+      "\u0414": 0xc4, // Д
+      "\u0415": 0xc5, // Е
+      "\u0416": 0xc6, // Ж
+      "\u0417": 0xc7, // З
+      "\u0418": 0xc8, // И
+      "\u0419": 0xc9, // Й
+      "\u041A": 0xca, // К
+      "\u041B": 0xcb, // Л
+      "\u041C": 0xcc, // М
+      "\u041D": 0xcd, // Н
+      "\u041E": 0xce, // О
+      "\u041F": 0xcf, // П
+      "\u0420": 0xd0, // Р
+      "\u0421": 0xd1, // С
+      "\u0422": 0xd2, // Т
+      "\u0423": 0xd3, // У
+      "\u0424": 0xd4, // Ф
+      "\u0425": 0xd5, // Х
+      "\u0426": 0xd6, // Ц
+      "\u0427": 0xd7, // Ч
+      "\u0428": 0xd8, // Ш
+      "\u0429": 0xd9, // Щ
+      "\u042A": 0xda, // Ъ
+      "\u042B": 0xdb, // Ы
+      "\u042C": 0xdc, // Ь
+      "\u042D": 0xdd, // Э
+      "\u042E": 0xde, // Ю
+      "\u042F": 0xdf, // Я
+      "\u0430": 0xe0, // а
+      "\u0431": 0xe1, // б
+      "\u0432": 0xe2, // в
+      "\u0433": 0xe3, // г
+      "\u0434": 0xe4, // д
+      "\u0435": 0xe5, // е
+      "\u0436": 0xe6, // ж
+      "\u0437": 0xe7, // з
+      "\u0438": 0xe8, // и
+      "\u0439": 0xe9, // й
+      "\u043A": 0xea, // к
+      "\u043B": 0xeb, // л
+      "\u043C": 0xec, // м
+      "\u043D": 0xed, // н
+      "\u043E": 0xee, // о
+      "\u043F": 0xef, // п
+      "\u0440": 0xf0, // р
+      "\u0441": 0xf1, // с
+      "\u0442": 0xf2, // т
+      "\u0443": 0xf3, // у
+      "\u0444": 0xf4, // ф
+      "\u0445": 0xf5, // х
+      "\u0446": 0xf6, // ц
+      "\u0447": 0xf7, // ч
+      "\u0448": 0xf8, // ш
+      "\u0449": 0xf9, // щ
+      "\u044A": 0xfa, // ъ
+      "\u044B": 0xfb, // ы
+      "\u044C": 0xfc, // ь
+      "\u044D": 0xfd, // э
+      "\u044E": 0xfe, // ю
+      "\u044F": 0xff, // я
+      "\u0401": 0xa8, // Ё
+      "\u0451": 0xb8, // ё
+      // Add other special characters as needed
+      " ": 0x20, // Space
+      "!": 0x21,
+      '"': 0x22,
+      "#": 0x23,
+      $: 0x24,
+      "%": 0x25,
+      "&": 0x26,
+      "'": 0x27,
+      "(": 0x28,
+      ")": 0x29,
+      "*": 0x2a,
+      "+": 0x2b,
+      ",": 0x2c,
+      "-": 0x2d,
+      ".": 0x2e,
+      "/": 0x2f,
+      0: 0x30,
+      1: 0x31,
+      2: 0x32,
+      3: 0x33,
+      4: 0x34,
+      5: 0x35,
+      6: 0x36,
+      7: 0x37,
+      8: 0x38,
+      9: 0x39,
+      ":": 0x3a,
+      ";": 0x3b,
+      "<": 0x3c,
+      "=": 0x3d,
+      ">": 0x3e,
+      "?": 0x3f,
+      "@": 0x40,
+      A: 0x41,
+      B: 0x42,
+      C: 0x43,
+      D: 0x44,
+      E: 0x45,
+      F: 0x46,
+      G: 0x47,
+      H: 0x48,
+      I: 0x49,
+      J: 0x4a,
+      K: 0x4b,
+      L: 0x4c,
+      M: 0x4d,
+      N: 0x4e,
+      O: 0x4f,
+      P: 0x50,
+      Q: 0x51,
+      R: 0x52,
+      S: 0x53,
+      T: 0x54,
+      U: 0x55,
+      V: 0x56,
+      W: 0x57,
+      X: 0x58,
+      Y: 0x59,
+      Z: 0x5a,
+      "[": 0x5b,
+      "\\": 0x5c,
+      "]": 0x5d,
+      "^": 0x5e,
+      _: 0x5f,
+      "`": 0x60,
+      a: 0x61,
+      b: 0x62,
+      c: 0x63,
+      d: 0x64,
+      e: 0x65,
+      f: 0x66,
+      g: 0x67,
+      h: 0x68,
+      i: 0x69,
+      j: 0x6a,
+      k: 0x6b,
+      l: 0x6c,
+      m: 0x6d,
+      n: 0x6e,
+      o: 0x6f,
+      p: 0x70,
+      q: 0x71,
+      r: 0x72,
+      s: 0x73,
+      t: 0x74,
+      u: 0x75,
+      v: 0x76,
+      w: 0x77,
+      x: 0x78,
+      y: 0x79,
+      z: 0x7a,
+      "{": 0x7b,
+      "|": 0x7c,
+      "}": 0x7d,
+      "~": 0x7e,
+    };
+
+    // Convert unicode string to CP1251 bytes
+    const bytes = [];
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charAt(i);
+      if (cp1251Table[char] !== undefined) {
+        bytes.push(cp1251Table[char]);
+      } else {
+        // For any character not in the table, use a question mark or space
+        bytes.push(0x3f); // Question mark
+      }
+    }
+
+    return new Uint8Array(bytes);
+  }
+
+  // Function to decode escaped Unicode characters (\u0428 etc.)
+  function decodeUnicodeEscapes(str) {
+    return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) => {
+      return String.fromCharCode(parseInt(hex, 16));
+    });
+  }
+
+  // Modified preparePrintData function that correctly handles Cyrillic text
   const preparePrintData = () => {
     try {
       // Get specification name
@@ -262,13 +452,15 @@ const CuttingStart = () => {
       // Paper cut
       const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut
 
-      // Convert text to bytes using CP1251 (Cyrillic encoding)
-      const encoder = new TextEncoder("windows-1251");
-      const orderIdBytes = encoder.encode(
+      // Decode any escaped Unicode characters in the order name
+      const decodedOrderName = decodeUnicodeEscapes(
         order?.name ? order?.name.toString() : ""
       );
-      const categoryIdBytes = encoder.encode(categoryName);
-      const specNameBytes = encoder.encode(specName);
+
+      // Convert text to CP1251 bytes using our custom encoder function
+      const orderIdBytes = encodeCP1251(decodedOrderName);
+      const categoryIdBytes = encodeCP1251(categoryName);
+      const specNameBytes = encodeCP1251(specName);
 
       // QR Code commands for thermal printer
       const qrModelSelect = new Uint8Array([
@@ -304,7 +496,7 @@ const CuttingStart = () => {
       ]);
 
       // Store QR code data
-      const qrDataBytes = encoder.encode(qrData);
+      const qrDataBytes = encodeCP1251(qrData);
       const qrDataLength = qrDataBytes.length;
       const pL = (qrDataLength + 3) % 256;
       const pH = Math.floor((qrDataLength + 3) / 256);
