@@ -14,6 +14,7 @@ import SuperHr from "./pages/SuperHR/SuperHr";
 import Technolog from "./pages/Technolog/Technolog";
 import CuttingMaster from "./pages/CuttingMaster/CuttingMaster";
 import GroupMaster from "./pages/GroupMaster/GroupMaster";
+import Tv from "./pages/Tv/Tv";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -48,6 +49,7 @@ function App() {
           <Route path="/technologist/*" element={<Technolog />} />
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />
           <Route path="/groupMaster/*" element={<GroupMaster />} />
+          <Route path="/tv/*" element={<Tv />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

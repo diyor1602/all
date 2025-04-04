@@ -2,6 +2,7 @@ import TechnologLayout from "./DashboardLayouts/TechnologLayout";
 import SuperHrLayout from "./DashboardLayouts/SuperHrLayout";
 import CuttingMasterLayout from "./DashboardLayouts/CuttingMasterLayout";
 import GroupMasterLayout from "./DashboardLayouts/GroupMasterLayout";
+import TvLayout from "./DashboardLayouts/TvLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -9,6 +10,7 @@ const layouts = {
   superhr: SuperHrLayout,
   cuttingMaster: CuttingMasterLayout,
   groupMaster: GroupMasterLayout,
+  tv: TvLayout,
 };
 
 const DashboardLayout = () => {
