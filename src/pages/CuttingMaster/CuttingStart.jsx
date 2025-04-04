@@ -220,8 +220,7 @@ const CuttingStart = () => {
     }
   };
 
-  // ESC/POS command generation for text and QR code printing
-  // ESC/POS command generation for text and QR code printing with proper Cyrillic support
+  // ESC/POS command generation for text and QR code printing with proper Unicode handling
   const preparePrintData = () => {
     try {
       // Get specification name
@@ -249,8 +248,8 @@ const CuttingStart = () => {
       // Center alignment
       const center = new Uint8Array([ESC, 0x61, 0x01]); // ESC a 1
 
-      // Set code page to support Cyrillic (CP866 - Russian)
-      const codePage = new Uint8Array([ESC, 0x74, 0x11]); // ESC t 17 for CP866
+      // Set code page to UTF-8
+      const setUTF8 = new Uint8Array([ESC, 0x74, 0x03]); // ESC t 3 (CP437 + international)
 
       // Text size - slightly larger
       const normalText = new Uint8Array([GS, 0x21, 0x00]); // GS ! 0 - normal size
@@ -262,47 +261,127 @@ const CuttingStart = () => {
       // Paper cut
       const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut with feed
 
-      // Text content
-      const orderIdText = `${(order?.id, order?.name)}`;
-      const categoryIdText = `${categoryName}`;
-      const specNameText = `${specName}`;
+      // Text content - first decode any Unicode escape sequences
+      const decodeUnicodeEscapes = (str) => {
+        return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) => {
+          return String.fromCharCode(parseInt(hex, 16));
+        });
+      };
 
-      // Convert text to bytes with a specialized function for Cyrillic
-      const cyrillicToBytes = (text) => {
-        // Handle CP866 encoding (Russian Cyrillic) manually
-        // This is a simple implementation - a full solution would map all Cyrillic characters
+      const orderIdText = decodeUnicodeEscapes(`${order?.id}, ${order?.name}`);
+      const categoryIdText = decodeUnicodeEscapes(`${categoryName}`);
+      const specNameText = decodeUnicodeEscapes(`${specName}`);
+
+      // For text encoding, use an alternative approach - encode to binary
+      // Many thermal printers only support certain code pages, so we'll use a simple mapping
+      // that will work with most standard code pages (including CP437, CP850, CP866)
+      const textToBytes = (text) => {
+        // Try to handle common Cyrillic characters with transliteration
+        const transliterate = (str) => {
+          const cyrillicToLatin = {
+            А: "A",
+            Б: "B",
+            В: "V",
+            Г: "G",
+            Д: "D",
+            Е: "E",
+            Ё: "YO",
+            Ж: "ZH",
+            З: "Z",
+            И: "I",
+            Й: "Y",
+            К: "K",
+            Л: "L",
+            М: "M",
+            Н: "N",
+            О: "O",
+            П: "P",
+            Р: "R",
+            С: "S",
+            Т: "T",
+            У: "U",
+            Ф: "F",
+            Х: "KH",
+            Ц: "TS",
+            Ч: "CH",
+            Ш: "SH",
+            Щ: "SCH",
+            Ъ: "",
+            Ы: "Y",
+            Ь: "",
+            Э: "E",
+            Ю: "YU",
+            Я: "YA",
+            а: "a",
+            б: "b",
+            в: "v",
+            г: "g",
+            д: "d",
+            е: "e",
+            ё: "yo",
+            ж: "zh",
+            з: "z",
+            и: "i",
+            й: "y",
+            к: "k",
+            л: "l",
+            м: "m",
+            н: "n",
+            о: "o",
+            п: "p",
+            р: "r",
+            с: "s",
+            т: "t",
+            у: "u",
+            ф: "f",
+            х: "kh",
+            ц: "ts",
+            ч: "ch",
+            ш: "sh",
+            щ: "sch",
+            ъ: "",
+            ы: "y",
+            ь: "",
+            э: "e",
+            ю: "yu",
+            я: "ya",
+          };
+
+          return str
+            .split("")
+            .map((char) => {
+              return cyrillicToLatin[char] || char;
+            })
+            .join("");
+        };
+
+        // Transliterate the text first
+        const transliterated = transliterate(text);
+
+        // Now convert to bytes using ASCII (which most printers support)
         const result = [];
-        for (let i = 0; i < text.length; i++) {
-          const char = text.charAt(i);
-          const code = text.charCodeAt(i);
-
-          // ASCII characters (0-127) pass through unchanged
+        for (let i = 0; i < transliterated.length; i++) {
+          const code = transliterated.charCodeAt(i);
+          // Only include ASCII codes 0-127 to ensure compatibility
           if (code < 128) {
             result.push(code);
-          }
-          // Basic Cyrillic mapping for CP866
-          else if (code >= 0x0410 && code <= 0x044f) {
-            // Russian alphabet (А-Я, а-я) with special mapping for CP866
-            // This is a simplified mapping - a complete solution would map all characters
-            if (code >= 0x0410 && code <= 0x042f) {
-              // Uppercase А-Я (0x0410-0x042F) -> CP866 (0x80-0x9F)
-              result.push(0x80 + (code - 0x0410));
-            } else {
-              // Lowercase а-я (0x0430-0x044F) -> CP866 (0xA0-0xBF)
-              result.push(0xa0 + (code - 0x0430));
-            }
-          }
-          // For other characters, use a fallback or '?'
-          else {
-            result.push(0x3f); // '?'
+          } else {
+            // Replace non-ASCII with '?'
+            result.push(0x3f);
           }
         }
         return new Uint8Array(result);
       };
 
-      const orderIdBytes = cyrillicToBytes(orderIdText);
-      const categoryIdBytes = cyrillicToBytes(categoryIdText);
-      const specNameBytes = cyrillicToBytes(specNameText);
+      // Convert text to bytes
+      const orderIdBytes = textToBytes(orderIdText);
+      const categoryIdBytes = textToBytes(categoryIdText);
+      const specNameBytes = textToBytes(specNameText);
+
+      // For QR code data, use standard UTF-8 encoding which is supported by QR
+      const encoder = new TextEncoder();
+      const qrDataBytes = encoder.encode(qrData);
+      const qrDataLength = qrDataBytes.length;
 
       // QR Code commands for thermal printer - Standard ESC/POS
       // Select model (model 2 - standard QR Code)
@@ -342,11 +421,6 @@ const CuttingStart = () => {
         0x33,
       ]); // GS ( k 3 0 49 69 51 - level H
 
-      // For QR code, we use standard UTF-8 encoding
-      const encoder = new TextEncoder();
-      const qrDataBytes = encoder.encode(qrData);
-      const qrDataLength = qrDataBytes.length;
-
       // pL pH store the length of the data + 3
       const pL = (qrDataLength + 3) % 256;
       const pH = Math.floor((qrDataLength + 3) / 256);
@@ -377,7 +451,7 @@ const CuttingStart = () => {
       // Calculate total length
       const combinedLength =
         init.length +
-        codePage.length + // Added code page command
+        setUTF8.length +
         center.length +
         normalText.length +
         orderIdBytes.length +
@@ -401,8 +475,8 @@ const CuttingStart = () => {
       let offset = 0;
       result.set(init, offset);
       offset += init.length;
-      result.set(codePage, offset); // Set code page for Cyrillic
-      offset += codePage.length;
+      result.set(setUTF8, offset);
+      offset += setUTF8.length;
       result.set(center, offset);
       offset += center.length;
       result.set(normalText, offset);
