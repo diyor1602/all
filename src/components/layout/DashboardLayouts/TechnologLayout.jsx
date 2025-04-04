@@ -1,18 +1,12 @@
 import BaseLayout from "./BaseLayout";
-import { Home, BadgeDollarSign, Sparkles } from "lucide-react";
+import { Home, Box } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
-    name: "TEXNOLOG",
-    href: "/technologist/spesification",
-    icon: BadgeDollarSign,
-    onMobile: true,
-  },
-  {
-    name: "Maosh",
-    href: "/technologist/tarification",
-    icon: Sparkles,
+    name: "Buyurtmalar",
+    href: "/technologist/orders",
+    icon: Box,
     onMobile: true,
   },
 ];
