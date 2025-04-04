@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { Key, KeyRound } from "lucide-react";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -14,7 +15,7 @@ export default function Login() {
     const result = await login(username, password);
     if (!result.success) {
       toast({
-        title: "Error",
+        title: "Diqqat",
         description: result.error,
         variant: "destructive",
       });
@@ -25,12 +26,12 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-white">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
         <h1 className="text-[#6C5CE7] text-2xl font-medium text-center mb-8">
-          Login
+          Vizzano
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
-            placeholder="Login"
+            placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -38,7 +39,7 @@ export default function Login() {
           />
           <input
             type="text"
-            placeholder="Password"
+            placeholder="Parol"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -49,22 +50,10 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-[#6C5CE7] text-white py-3 rounded-md hover:bg-[#5849e4] transition-colors flex items-center justify-center gap-2"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-              <polyline points="10 17 15 12 10 7" />
-              <line x1="15" y1="12" x2="3" y2="12" />
-            </svg>
-            {loading ? "Loading..." : "Login"}
+            <KeyRound size={20} />
+            <span className="font-semibold">
+              {loading ? "Tekshirilmoqda..." : "Kirish"}
+            </span>
           </button>
         </form>
       </div>
