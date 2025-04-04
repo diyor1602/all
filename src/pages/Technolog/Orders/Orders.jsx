@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Package, AlertCircle } from "lucide-react";
+import {
+  Search,
+  Package,
+  AlertCircle,
+  Tag,
+  Box,
+  Calendar,
+  ChevronRight,
+} from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +36,14 @@ const container = {
 const item = {
   hidden: { y: 20, opacity: 0 },
   show: { y: 0, opacity: 1 },
+};
+
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 const getStatusColor = (status) => {
@@ -180,41 +196,118 @@ const Orders = () => {
         >
           {filteredOrders.map((order) => (
             <motion.div key={order.id} variants={item} whileHover={{ y: -5 }}>
-              <Card
-                className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
-                onClick={() => navigate(`/technologist/orders/${order?.id}`)}
-              >
+              <Card className="overflow-hidden rounded-xl hover:shadow-xl transition-all duration-300 border-gray-200 shadow-md max-w-md bg-white">
+                {/* Status indicator with gradient */}
                 <div
                   className={`h-2 ${
                     getStatusColor(order.status).split(" ")[0]
                   }`}
                 />
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2 font-medium flex-wrap">
-                      <Package className="text-primary" size={18} />
-                      <span className="text-primary">#{order?.id}</span> /
-                      <span className="truncate max-w-[150px]">
-                        {order?.name}
+
+                <CardContent className="p-6">
+                  {/* Top section with ID badge - CHANGED FROM BLUE TO ORANGE */}
+                  <div className="flex justify-between items-center mb-4">
+                    <div
+                      className={`flex items-center gap-2 ${
+                        statuses[order.status]?.secondaryBg
+                      } px-3 py-1.5 rounded-lg`}
+                    >
+                      <Tag
+                        size={16}
+                        className={statuses[order.status]?.textColor}
+                      />
+                      <span
+                        className={`${
+                          statuses[order.status]?.textColor
+                        } font-bold`}
+                      >
+                        #{order.id}
                       </span>
                     </div>
-                    <Badge className={`${getStatusColor(order.status)} border`}>
-                      {statuses[order?.status]?.text || "Noma'lum"}
+
+                    <Badge
+                      className={`${getStatusColor(
+                        order.status
+                      )} px-3 py-1 font-medium rounded-full shadow-sm`}
+                    >
+                      {statuses[order.status]?.text || "Unknown"}
                     </Badge>
                   </div>
 
-                  <div className="mt-3 text-gray-600">
-                    {order?.order_model?.model?.name}
+                  {/* Order name with subtle background */}
+                  <div
+                    className={`${
+                      statuses[order.status]?.border
+                    } mb-4 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
+                  >
+                    <h3 className="text-lg font-bold text-gray-800 truncate">
+                      {order.name}
+                    </h3>
                   </div>
 
-                  <div className="mt-3 flex justify-between items-center">
-                    <Badge variant="outline" className="gap-1">
-                      <Package size={14} /> {order?.quantity} ta
+                  {/* Quantity with highlight - CHANGED FROM BLUE TO PURPLE */}
+                  <div className="flex justify-between items-center mb-4">
+                    <div
+                      className={`flex items-center gap-2 ${
+                        statuses[order.status]?.secondaryBg
+                      } px-4 py-2 rounded-full`}
+                    >
+                      <Package
+                        size={18}
+                        className={statuses[order.status]?.textColor}
+                      />
+                      <span
+                        className={`${
+                          statuses[order.status]?.textColor
+                        } font-bold text-lg`}
+                      >
+                        {order.quantity}
+                      </span>
+                      <span
+                        className={`${
+                          statuses[order.status]?.textColor
+                        } text-lg`}
+                      >
+                        ta
+                      </span>
+                    </div>
+
+                    {/* Model pill */}
+                    <Badge
+                      variant="outline"
+                      className="bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5"
+                    >
+                      <Box size={14} className="text-gray-500" />
+                      {order.order_model?.model?.name}
                     </Badge>
-                    <Button variant="ghost" size="sm">
-                      Batafsil
-                    </Button>
                   </div>
+
+                  {/* Date range with card effect */}
+                  <div className="flex mb-5 p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-2 w-full">
+                      <Calendar size={16} className="text-gray-500" />
+                      <div className="flex justify-between w-full text-sm">
+                        <span className="text-gray-700 font-medium">
+                          {formatDate(order.start_date)}
+                        </span>
+                        <span className="text-gray-400">→</span>
+                        <span className="text-gray-700 font-medium">
+                          {formatDate(order.end_date)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Button with gradient */}
+                  <Button
+                    className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${getStatusColor(
+                      order.status
+                    )} hover:opacity-90 hover:${getStatusColor(order.status)}`}
+                    onClick={() => navigate(`/technologist/orders/${order.id}`)}
+                  >
+                    Batafsil
+                    <ChevronRight size={18} />
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
