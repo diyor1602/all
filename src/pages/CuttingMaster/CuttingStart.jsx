@@ -223,7 +223,6 @@ const CuttingStart = () => {
   // ESC/POS command generation for text and QR code printing with proper Unicode handling
   const preparePrintData = () => {
     try {
-      // Get specification name
       const specName =
         order?.orderModel?.submodels
           ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
