@@ -211,7 +211,6 @@ const CuttingStart = () => {
 
       return true;
     } catch (error) {
-      console.error("Printing error:", error);
       toast({
         title: "Chop etishda xatolik",
         description: error.message || "Chop etishda xatolik",
@@ -221,37 +220,11 @@ const CuttingStart = () => {
     }
   };
 
-  // Add this function to your component to render text as images for the printer
-  const preparePrintData = async () => {
-    if (!connectedDevice) {
-      toast({
-        title: "Xatolik",
-        description: "Printer ulanmagan",
-        variant: "destructive",
-      });
-      return false;
-    }
-
+  // ESC/POS command generation for text and QR code printing
+  // ESC/POS command generation for text and QR code printing with proper Cyrillic support
+  const preparePrintData = () => {
     try {
-      // Connect to the printer's service
-      const server = await connectedDevice.gatt.connect();
-
-      // Get the printer service
-      const service = await server.getPrimaryService(
-        "000018f0-0000-1000-8000-00805f9b34fb"
-      );
-
-      // Get the characteristic for writing data
-      const characteristic = await service.getCharacteristic(
-        "00002af1-0000-1000-8000-00805f9b34fb"
-      );
-
-      // Decode Unicode escapes in the order name
-      const decodedOrderName = decodeUnicodeEscapes(
-        order?.name ? order?.name.toString() : ""
-      );
-
-      // Get submodel and spec names
+      // Get specification name
       const specName =
         order?.orderModel?.submodels
           ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
@@ -263,197 +236,219 @@ const CuttingStart = () => {
           (submodel) => submodel?.submodel?.id === selectedSubmodel
         )?.submodel?.name || "";
 
-      // Create a canvas to render the text
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      const width = 384; // Common thermal printer width in pixels
-      canvas.width = width;
-      canvas.height = 200; // Adjust height as needed
+      // QR code data - fix format to avoid issues
+      const qrData = `${id}, ${selectedSpec}`;
 
-      // Fill with white background
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, width, 200);
+      // ESC/POS commands
+      const ESC = 0x1b;
+      const GS = 0x1d;
 
-      // Set up text rendering
-      ctx.fillStyle = "black";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      // Initialize printer
+      const init = new Uint8Array([ESC, 0x40]); // ESC @
 
-      // Load Roboto font
-      const fontFace = new FontFace(
-        "Roboto",
-        "url(https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-medium-webfont.ttf)"
-      );
+      // Center alignment
+      const center = new Uint8Array([ESC, 0x61, 0x01]); // ESC a 1
 
-      try {
-        await fontFace.load();
-        document.fonts.add(fontFace);
+      // Set code page to support Cyrillic (CP866 - Russian)
+      const codePage = new Uint8Array([ESC, 0x74, 0x11]); // ESC t 17 for CP866
 
-        // Draw order name (larger)
-        ctx.font = "20px Roboto";
-        ctx.fillText(decodedOrderName, width / 2, 30);
+      // Text size - slightly larger
+      const normalText = new Uint8Array([GS, 0x21, 0x00]); // GS ! 0 - normal size
 
-        // Draw category name
-        ctx.font = "16px Roboto";
-        ctx.fillText(categoryName, width / 2, 60);
+      // Line feed
+      const LF = new Uint8Array([0x0a]); // Line feed
+      const lineFeed = new Uint8Array([0x0a, 0x0a]); // Double line feed
 
-        // Draw spec name
-        ctx.font = "16px Roboto";
-        ctx.fillText(specName, width / 2, 90);
+      // Paper cut
+      const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut with feed
 
-        // Generate QR code on canvas
-        const qrCodeData = `${id}, ${selectedSpec}`;
-        const qrCanvas = document.createElement("canvas");
-        await new Promise((resolve) => {
-          QRCode.toCanvas(
-            qrCanvas,
-            qrCodeData,
-            {
-              width: 150,
-              margin: 1,
-              errorCorrectionLevel: "H",
-            },
-            resolve
-          );
-        });
+      // Text content
+      const orderIdText = `${(order?.id, order?.name)}`;
+      const categoryIdText = `${categoryName}`;
+      const specNameText = `${specName}`;
 
-        // Draw QR code on main canvas
-        ctx.drawImage(qrCanvas, (width - 150) / 2, 110);
+      // Convert text to bytes with a specialized function for Cyrillic
+      const cyrillicToBytes = (text) => {
+        // Handle CP866 encoding (Russian Cyrillic) manually
+        // This is a simple implementation - a full solution would map all Cyrillic characters
+        const result = [];
+        for (let i = 0; i < text.length; i++) {
+          const char = text.charAt(i);
+          const code = text.charCodeAt(i);
 
-        // Convert canvas to bitmap data
-        const imageData = ctx.getImageData(0, 0, width, canvas.height);
-        const bitmap = convertCanvasTo1bit(imageData, width);
+          // ASCII characters (0-127) pass through unchanged
+          if (code < 128) {
+            result.push(code);
+          }
+          // Basic Cyrillic mapping for CP866
+          else if (code >= 0x0410 && code <= 0x044f) {
+            // Russian alphabet (А-Я, а-я) with special mapping for CP866
+            // This is a simplified mapping - a complete solution would map all characters
+            if (code >= 0x0410 && code <= 0x042f) {
+              // Uppercase А-Я (0x0410-0x042F) -> CP866 (0x80-0x9F)
+              result.push(0x80 + (code - 0x0410));
+            } else {
+              // Lowercase а-я (0x0430-0x044F) -> CP866 (0xA0-0xBF)
+              result.push(0xa0 + (code - 0x0430));
+            }
+          }
+          // For other characters, use a fallback or '?'
+          else {
+            result.push(0x3f); // '?'
+          }
+        }
+        return new Uint8Array(result);
+      };
 
-        // ESC/POS commands
-        const ESC = 0x1b;
-        const GS = 0x1d;
+      const orderIdBytes = cyrillicToBytes(orderIdText);
+      const categoryIdBytes = cyrillicToBytes(categoryIdText);
+      const specNameBytes = cyrillicToBytes(specNameText);
 
-        // Initialize printer
-        const init = new Uint8Array([ESC, 0x40]); // ESC @
+      // QR Code commands for thermal printer - Standard ESC/POS
+      // Select model (model 2 - standard QR Code)
+      const qrModelSelect = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        0x04,
+        0x00,
+        0x31,
+        0x41,
+        0x32,
+        0x00,
+      ]); // GS ( k 4 0 49 65 50 0 - select QR code, model 2
 
-        // Set line spacing
-        const lineSpacing = new Uint8Array([ESC, 0x33, 30]); // ESC 3 n
+      // Set QR code size (1-16) - choosing 8 here
+      const qrSize = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        0x03,
+        0x00,
+        0x31,
+        0x43,
+        0x08,
+      ]); // GS ( k 3 0 49 67 8 - size 8
 
-        // Line feed
-        const LF = new Uint8Array([0x0a]);
+      // Set error correction level (48-51 for L,M,Q,H) - using H (51) for best
+      const qrErrorCorrection = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        0x03,
+        0x00,
+        0x31,
+        0x45,
+        0x33,
+      ]); // GS ( k 3 0 49 69 51 - level H
 
-        // Paper cut
-        const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut
+      // For QR code, we use standard UTF-8 encoding
+      const encoder = new TextEncoder();
+      const qrDataBytes = encoder.encode(qrData);
+      const qrDataLength = qrDataBytes.length;
 
-        // Send initialization commands
-        await characteristic.writeValue(init);
-        await characteristic.writeValue(lineSpacing);
+      // pL pH store the length of the data + 3
+      const pL = (qrDataLength + 3) % 256;
+      const pH = Math.floor((qrDataLength + 3) / 256);
 
-        // Send bitmap data in chunks
-        await sendBitmapToPrinter(characteristic, bitmap, width, canvas.height);
+      const qrStoreData = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        pL,
+        pH,
+        0x31,
+        0x50,
+        0x30,
+      ]); // GS ( k pL pH 49 80 48
 
-        // Send line feeds and cut command
-        await characteristic.writeValue(LF);
-        await characteristic.writeValue(LF);
-        await characteristic.writeValue(cut);
+      // Print QR code
+      const qrPrint = new Uint8Array([
+        GS,
+        0x28,
+        0x6b,
+        0x03,
+        0x00,
+        0x31,
+        0x51,
+        0x30,
+      ]); // GS ( k 3 0 49 81 48
 
-        toast({
-          title: "Muvaffaqiyatli",
-          description: "Ma'lumot printerga yuborildi",
-          style: {
-            backgroundColor: "green",
-            color: "white",
-          },
-        });
+      // Calculate total length
+      const combinedLength =
+        init.length +
+        codePage.length + // Added code page command
+        center.length +
+        normalText.length +
+        orderIdBytes.length +
+        LF.length +
+        normalText.length +
+        categoryIdBytes.length +
+        LF.length +
+        specNameBytes.length +
+        lineFeed.length +
+        qrModelSelect.length +
+        qrSize.length +
+        qrErrorCorrection.length +
+        qrStoreData.length +
+        qrDataBytes.length +
+        qrPrint.length +
+        lineFeed.length +
+        cut.length;
 
-        return true;
-      } catch (fontError) {
-        console.error("Font loading error:", fontError);
-        // Fallback to default font if Roboto fails to load
-        ctx.font = "20px Arial";
-        ctx.fillText(decodedOrderName, width / 2, 30);
+      const result = new Uint8Array(combinedLength);
 
-        ctx.font = "16px Arial";
-        ctx.fillText(categoryName, width / 2, 60);
-        ctx.fillText(specName, width / 2, 90);
+      let offset = 0;
+      result.set(init, offset);
+      offset += init.length;
+      result.set(codePage, offset); // Set code page for Cyrillic
+      offset += codePage.length;
+      result.set(center, offset);
+      offset += center.length;
+      result.set(normalText, offset);
+      offset += normalText.length;
+      result.set(orderIdBytes, offset);
+      offset += orderIdBytes.length;
+      result.set(LF, offset);
+      offset += LF.length;
+      result.set(normalText, offset);
+      offset += normalText.length;
+      result.set(categoryIdBytes, offset);
+      offset += categoryIdBytes.length;
+      result.set(LF, offset);
+      offset += LF.length;
+      result.set(specNameBytes, offset);
+      offset += specNameBytes.length;
+      result.set(lineFeed, offset);
+      offset += lineFeed.length;
 
-        // Continue with QR code and printing...
-        // (similar to the code above)
-      }
+      // Add QR code
+      result.set(qrModelSelect, offset);
+      offset += qrModelSelect.length;
+      result.set(qrSize, offset);
+      offset += qrSize.length;
+      result.set(qrErrorCorrection, offset);
+      offset += qrErrorCorrection.length;
+      result.set(qrStoreData, offset);
+      offset += qrStoreData.length;
+      result.set(qrDataBytes, offset);
+      offset += qrDataBytes.length;
+      result.set(qrPrint, offset);
+      offset += qrPrint.length;
+      result.set(lineFeed, offset);
+      offset += lineFeed.length;
+      result.set(cut, offset);
+
+      return result;
     } catch (error) {
-      console.error("Printing error:", error);
       toast({
-        title: "Chop etishda xatolik",
-        description: error.message || "Chop etishda xatolik",
+        title: "Xatolik",
+        description: "Ma'lumot tayyorlashda xatolik",
         variant: "destructive",
       });
-      return false;
+      throw error;
     }
   };
-
-  // Helper function to convert canvas imageData to 1-bit bitmap format for thermal printer
-  function convertCanvasTo1bit(imageData, width) {
-    const pixels = imageData.data;
-    const height = imageData.height;
-    const widthBytes = Math.ceil(width / 8);
-    const result = new Uint8Array(widthBytes * height);
-
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const pixelIndex = (y * width + x) * 4;
-        // Get pixel brightness (0-255)
-        const r = pixels[pixelIndex];
-        const g = pixels[pixelIndex + 1];
-        const b = pixels[pixelIndex + 2];
-        const brightness = (r + g + b) / 3;
-
-        // If brightness is below threshold (darker than 50%), set bit to 1
-        if (brightness < 128) {
-          const byteIndex = y * widthBytes + Math.floor(x / 8);
-          const bitIndex = 7 - (x % 8);
-          result[byteIndex] |= 1 << bitIndex;
-        }
-      }
-    }
-
-    return result;
-  }
-
-  // Helper function to send bitmap data to printer in ESC/POS format
-  async function sendBitmapToPrinter(characteristic, bitmap, width, height) {
-    const ESC = 0x1b;
-    const GS = 0x1d;
-    const widthBytes = Math.ceil(width / 8);
-
-    // ESC * command for bitmap printing
-    // Format: ESC * m nL nH d1...dk
-    const m = 0; // 0 = 8-dot single density
-    const nL = widthBytes % 256;
-    const nH = Math.floor(widthBytes / 256);
-
-    // Send bitmap data in lines
-    const CHUNK_SIZE = 512;
-
-    for (let y = 0; y < height; y++) {
-      // Bitmap line header: ESC * m nL nH
-      const header = new Uint8Array([ESC, 0x2a, m, nL, nH]);
-      await characteristic.writeValue(header);
-
-      // Send one line of bitmap data
-      const lineStart = y * widthBytes;
-      const lineEnd = lineStart + widthBytes;
-      const lineData = bitmap.slice(lineStart, lineEnd);
-      await characteristic.writeValue(lineData);
-
-      // Line feed to advance to next bitmap line
-      await characteristic.writeValue(new Uint8Array([0x0a]));
-
-      // Small delay between lines
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-  }
-
-  // Function to decode escaped Unicode characters (\u0428 etc.)
-  function decodeUnicodeEscapes(str) {
-    return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) => {
-      return String.fromCharCode(parseInt(hex, 16));
-    });
-  }
 
   // Optional: Generate a QR code for preview only (not for printing)
   const generateQRCode = async () => {
@@ -695,7 +690,7 @@ const CuttingStart = () => {
 
             <DialogClose asChild>
               <Button variant="outline" className="w-full">
-                Yopish
+                Close
               </Button>
             </DialogClose>
           </DialogContent>
