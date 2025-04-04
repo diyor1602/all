@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, Trophy, Medal } from "lucide-react";
+import api from "@/utils/api";
 
 const Tv = () => {
-  // Authentication states
-  const [isLocked, setIsLocked] = useState(true);
-  const [pinInput, setPinInput] = useState("");
-  const [pinError, setPinError] = useState("");
-
   // App data states - these will only be used after authentication
   const [isPlaying, setIsPlaying] = useState(false);
   const [previousData, setPreviousData] = useState(null);
@@ -15,27 +11,11 @@ const Tv = () => {
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
-  // Define the PIN code
-  const pinCode = "1234"; // Replace with your actual PIN
-
   // Always define refs at the top level
   const radioRef = useRef(null);
   const dataIntervalRef = useRef(null);
   const dateTimerRef = useRef(null);
   const quoteTimerRef = useRef(null);
-
-  // PIN verification
-  const verifyPin = () => {
-    if (pinInput === pinCode) {
-      setPinError("");
-      setIsLocked(false);
-      // Only initialize data and timers after successful authentication
-      initializeApp();
-    } else {
-      setPinError("Xato PIN. Qayta urinib ko'ring.");
-      setPinInput("");
-    }
-  };
 
   // Initialize app data and timers after authentication
   const initializeApp = () => {
@@ -53,6 +33,10 @@ const Tv = () => {
     fetchData();
     dataIntervalRef.current = setInterval(fetchData, 60000);
   };
+
+  useEffect(() => {
+    initializeApp();
+  }, []);
 
   // Clean up all timers and resources on unmount
   useEffect(() => {
@@ -86,7 +70,7 @@ const Tv = () => {
 
   // Rotate quotes - only starts after quotes are loaded
   useEffect(() => {
-    if (motivations.length === 0 || isLocked) return;
+    if (motivations.length === 0) return;
 
     quoteTimerRef.current = setInterval(() => {
       setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % motivations.length);
@@ -95,15 +79,13 @@ const Tv = () => {
     return () => {
       if (quoteTimerRef.current) clearInterval(quoteTimerRef.current);
     };
-  }, [motivations, isLocked]);
+  }, [motivations]);
 
   // Fetch data
   const fetchData = async () => {
     try {
-      const response = await fetch(
-        "https://api.vizzano-apparel.uz/api/sewingOutputs"
-      );
-      const data = await response.json();
+      const response = await api.get("/tv/sewingOutputs");
+      const data = await response.data;
 
       // Check if this is the first load or if data has changed
       const isFirstLoad = previousData === null;
@@ -182,45 +164,6 @@ const Tv = () => {
     if (percentage >= 70) return "text-blue-600";
     return "text-yellow-600";
   };
-
-  // Render lock screen if locked
-  if (isLocked) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-          <h2 className="text-2xl font-bold mb-6 text-center text-indigo-600">
-            PIN kodni kiriting
-          </h2>
-          {pinError && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-center">
-              {pinError}
-            </div>
-          )}
-          <div className="space-y-4">
-            <input
-              type="password"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              placeholder="Pin kod"
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  verifyPin();
-                }
-              }}
-              autoFocus
-            />
-            <button
-              onClick={verifyPin}
-              className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition duration-200"
-            >
-              Kiritish
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Main app content
   return (

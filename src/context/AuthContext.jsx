@@ -30,7 +30,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("user_id", res.data.user.id);
         localStorage.setItem("name", res.data.user.employee.name);
         setUser({ username, role: res.data.user.role.name });
-        navigate("/home", { replace: true });
+        if (res.data.user.role.name == "tv") {
+          navigate("/tv", { replace: true });
+        } else {
+          navigate("/home", { replace: true });
+        }
         return { success: true };
       }
     } catch (error) {
