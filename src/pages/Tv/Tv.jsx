@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Pause, Trophy, Medal } from "lucide-react";
+import { Play, Pause, Trophy, Medal, LogOut } from "lucide-react";
 import api from "@/utils/api";
+import { useNavigate } from "react-router-dom";
 
 const Tv = () => {
   // App data states - these will only be used after authentication
@@ -16,6 +17,8 @@ const Tv = () => {
   const dataIntervalRef = useRef(null);
   const dateTimerRef = useRef(null);
   const quoteTimerRef = useRef(null);
+
+  const navigate = useNavigate();
 
   // Initialize app data and timers after authentication
   const initializeApp = () => {
@@ -169,6 +172,15 @@ const Tv = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Invisible element to keep screen awake */}
+      <div
+        className="absolute right-2 bottom-2 z-10 cursor-pointer bg-primary p-2 rounded-full hover:bg-primary/80"
+        onClick={() => {
+          localStorage.clear();
+          navigate("/");
+        }}
+      >
+        <LogOut className="text-white" size={16} />
+      </div>
       <div
         className="fixed top-0 left-0 w-1 h-1 bg-transparent z-[-1]"
         style={{ animation: "keepAwake 10s infinite" }}
