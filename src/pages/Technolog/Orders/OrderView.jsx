@@ -107,7 +107,7 @@ const OrderView = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Tarification yuklab bo‘lmadi",
+        description: "Tarification yuklab bo'lmadi",
         variant: "destructive",
       });
     } finally {
@@ -138,7 +138,7 @@ const OrderView = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Spesifikatsiyalarni yuklab bo‘lmadi",
+        description: "Spesifikatsiyalarni yuklab bo'lmadi",
         variant: "destructive",
       });
     } finally {
