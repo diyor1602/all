@@ -11,6 +11,7 @@ import {
   Loader2,
   Check,
   ChevronsUpDown,
+  ClipboardPaste,
   Timer,
 } from "lucide-react";
 import {
@@ -47,11 +48,10 @@ const NewTarif = () => {
     tarifications: [
       {
         name: "",
-        employee_id: null,
-        razryad_id: null,
-        typewriter_id: null,
+        employee: { id: null },
+        razryad: { id: null },
+        typewriter: { id: null },
         second: 0,
-        code: "",
         summa: 0,
       },
     ],
@@ -138,9 +138,7 @@ const NewTarif = () => {
     const updateTarifications = [...tarif.tarifications];
     updateTarifications[index] = {
       ...updateTarifications[index],
-      employee_id: workerId,
-      // Remove the employee object reference when directly setting employee_id
-      employee: null,
+      employee: { id: workerId },
     };
 
     setTarif({
@@ -157,8 +155,7 @@ const NewTarif = () => {
     const tarification = updateTarifications[index];
 
     // Update razryad_id and remove razryad object
-    tarification.razryad_id = razryadId;
-    tarification.razryad = null;
+    tarification.razryad = { id: razryadId };
 
     // Calculate new summa based on selected razryad and current second value
     if (razryadId) {
@@ -182,9 +179,7 @@ const NewTarif = () => {
     const updateTarifications = [...tarif.tarifications];
     updateTarifications[index] = {
       ...updateTarifications[index],
-      typewriter_id: machineId,
-      // Remove the typewriter object reference when directly setting typewriter_id
-      typewriter: null,
+      typewriter: { id: machineId },
     };
 
     setTarif({
@@ -219,6 +214,20 @@ const NewTarif = () => {
     });
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const parsedData = JSON.parse(text);
+      setTarif(parsedData);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Tarifikatsiyani nusxa olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Open the timer dialog for a specific row
   const openTimerDialog = (index) => {
     setActiveTimerRowIndex(index);
@@ -246,12 +255,10 @@ const NewTarif = () => {
   const addNewRow = () => {
     const newRow = {
       name: "",
-      employee_id: null,
-      razryad_id: null,
-      typewriter_id: null,
+      employee: { id: null },
+      razryad: { id: null },
+      typewriter: { id: null },
       second: 0,
-      // Preserve these fields as read-only
-      code: "",
       summa: 0,
     };
 
@@ -272,12 +279,20 @@ const NewTarif = () => {
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
     const hasEmptyRazryad = tarif?.tarifications?.some(
-      (item) => !item?.razryad_id
+      (item) => !item?.razryad?.id
     );
     const hasEmptyMachine = tarif?.tarifications?.some(
-      (item) => !item?.typewriter_id
+      (item) => !item?.typewriter?.id
     );
     const hasEmptySecond = tarif?.tarifications?.some((item) => !item?.second);
+
+    console.log(
+      hasEmptyNames,
+      hasEmptyRazryad,
+      hasEmptyMachine,
+      hasEmptySecond
+    );
+    console.log(tarif?.tarifications);
     if (hasEmptyNames || hasEmptyRazryad || hasEmptyMachine || hasEmptySecond) {
       toast({
         title: "Diqqat",
@@ -318,18 +333,11 @@ const NewTarif = () => {
           employee_id:
             item.employee_id || (item.employee ? item.employee.id : null),
           // Use razryad_id if available, otherwise use razryad.id if available
-          razryad_id:
-            item.razryad_id || (item.razryad ? item.razryad.id : null),
+          razryad_id: item?.razryad?.id,
           // Use typewriter_id if available, otherwise use typewriter.id if available
-          typewriter_id:
-            item.typewriter_id || (item.typewriter ? item.typewriter.id : null),
+          typewriter_id: item?.typewriter?.id,
           second: item.second || 0,
         };
-
-        // Only include code if it exists
-        if (item.code) {
-          preparedItem.code = item.code;
-        }
 
         // Include ID if it exists (for existing records)
         if (item.id) {
@@ -395,7 +403,6 @@ const NewTarif = () => {
           <thead>
             <tr>
               <th className="px-4 py-2 border">#</th>
-              <th className="px-4 py-2 border">Kodi</th>
               <th className="px-4 py-2 border">Nomi</th>
               <th className="px-4 py-2 border">Xodim</th>
               <th className="px-4 py-2 border">Razryad</th>
@@ -408,7 +415,6 @@ const NewTarif = () => {
             {tarif?.tarifications?.map((item, index) => (
               <tr key={index}>
                 <td className="px-4 py-2 border text-center">{index + 1}</td>
-                <td className="px-4 py-2 border">{item?.code || "-"}</td>
                 <td className="px-4 py-2 border">
                   <Input
                     placeholder="Nomi"
@@ -564,25 +570,34 @@ const NewTarif = () => {
           </tbody>
         </table>
       </div>
-      <div className="w-full flex justify-end mt-6 gap-4 flex-wrap">
-        <Button
-          className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
-          onClick={addNewRow}
-        >
-          <CirclePlus className="size-4" /> Qo'shish
-        </Button>
+      <div className="w-full flex justify-between mt-6 gap-4 flex-wrap">
         <Button
           className="flex items-center gap-2"
-          onClick={saveTarifications}
-          disabled={saving}
+          onClick={handlePaste}
+          variant="outline"
         >
-          {saving ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <CheckCheck className="size-4" />
-          )}
-          Saqlash
+          <ClipboardPaste className="size-4" /> Joylash
         </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
+            onClick={addNewRow}
+          >
+            <CirclePlus className="size-4" /> Qo'shish
+          </Button>
+          <Button
+            className="flex items-center gap-2"
+            onClick={saveTarifications}
+            disabled={saving}
+          >
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <CheckCheck className="size-4" />
+            )}
+            Saqlash
+          </Button>
+        </div>
       </div>
 
       {/* Timer Dialog Component */}

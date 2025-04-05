@@ -4,7 +4,13 @@ import api from "@/utils/api";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, CheckCheck, CirclePlus, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCheck,
+  CirclePlus,
+  ClipboardPaste,
+  Loader2,
+} from "lucide-react";
 
 const EditSpec = () => {
   const { id } = useParams();
@@ -130,6 +136,20 @@ const EditSpec = () => {
     }
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const parsedData = JSON.parse(text);
+      setSpec(parsedData);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Spesifikatsiyani nusxa olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <>
       <div className="flex items-center mb-4 gap-2 ">
@@ -218,25 +238,34 @@ const EditSpec = () => {
           </tbody>
         </table>
       </div>
-      <div className="w-full flex justify-end mt-6 gap-4 flex-wrap">
-        <Button
-          className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
-          onClick={addNewRow}
-        >
-          <CirclePlus className="size-4" /> Qo'shish
-        </Button>
+      <div className="w-full flex justify-between mt-6 gap-4 flex-wrap">
         <Button
           className="flex items-center gap-2"
-          onClick={saveSpecifications}
-          disabled={saving}
+          onClick={handlePaste}
+          variant="outline"
         >
-          {saving ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <CheckCheck className="size-4" />
-          )}
-          Saqlash
+          <ClipboardPaste className="size-4" /> Joylash
         </Button>
+        <div className="flex items-center gap-2 ">
+          <Button
+            className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
+            onClick={addNewRow}
+          >
+            <CirclePlus className="size-4" /> Qo'shish
+          </Button>
+          <Button
+            className="flex items-center gap-2"
+            onClick={saveSpecifications}
+            disabled={saving}
+          >
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <CheckCheck className="size-4" />
+            )}
+            Saqlash
+          </Button>
+        </div>
       </div>
     </>
   );

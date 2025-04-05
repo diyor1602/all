@@ -21,6 +21,7 @@ import {
   Hourglass,
   Bitcoin,
   Timer,
+  Files,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -202,6 +203,32 @@ const OrderView = () => {
     } finally {
       setTabLoading(false);
     }
+  };
+
+  const handleCopySpec = (spec) => {
+    const specString = JSON.stringify(spec, null, 2);
+    navigator.clipboard.writeText(specString);
+    toast({
+      title: "Nusxa olindi",
+      description: "Spesifikatsiyadan nusxa olindi",
+      style: {
+        backgroundColor: "green",
+        color: "white",
+      },
+    });
+  };
+
+  const handleCopyTarif = (tarif) => {
+    const tarifString = JSON.stringify(tarif, null, 2);
+    navigator.clipboard.writeText(tarifString);
+    toast({
+      title: "Nusxa olindi",
+      description: "Tarifikatsiyadan nusxa olindi",
+      style: {
+        backgroundColor: "green",
+        color: "white",
+      },
+    });
   };
 
   useEffect(() => {
@@ -457,7 +484,6 @@ const OrderView = () => {
                   <Button
                     size="icon"
                     className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
-                    disabled={tarifDownloading}
                     onClick={() =>
                       navigate(`/technologist/new-spec/${selectedSubmodel?.id}`)
                     }
@@ -498,28 +524,37 @@ const OrderView = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-wrap justify-between gap-2 mt-4">
+                        <div className="flex items-center gap-2 ">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                            onClick={() => {
+                              setSpecDialogOpen(true);
+                              setSelectedSpec(spec);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ko'rish
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                            onClick={() => {
+                              navigate(`/technologist/edit-spec/${spec?.id}`);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            O'zgartirish
+                          </Button>
+                        </div>
                         <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                          onClick={() => {
-                            setSpecDialogOpen(true);
-                            setSelectedSpec(spec);
-                          }}
+                          size="icon"
+                          className="h-8 w-8 rounded-full text-white"
+                          onClick={() => handleCopySpec(spec)}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Ko'rish
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-                          onClick={() => {
-                            navigate(`/technologist/edit-spec/${spec?.id}`);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          O'zgartirish
+                          <Files className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardContent>
@@ -535,7 +570,6 @@ const OrderView = () => {
                   <Button
                     size="icon"
                     className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
-                    disabled={tarifDownloading}
                     onClick={() =>
                       navigate(
                         `/technologist/new-tarif/${selectedSubmodel?.id}`
@@ -654,30 +688,39 @@ const OrderView = () => {
                             </div>
                           </div>
                           <div className="flex flex-wrap justify-between gap-2 mt-4">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                onClick={() => {
+                                  setTarifDialogOpen(true);
+                                  setSelectedTarification(tarification);
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Ko'rish
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                                onClick={() => {
+                                  navigate(
+                                    `/technologist/edit-tarif/${tarification?.id}`
+                                  );
+                                }}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                O'zgartirish
+                              </Button>
+                            </div>
                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                              onClick={() => {
-                                setTarifDialogOpen(true);
-                                setSelectedTarification(tarification);
-                              }}
+                              size="icon"
+                              className="h-8 w-8 rounded-full text-white"
+                              onClick={() => handleCopyTarif(tarification)}
                             >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Ko'rish
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-                              onClick={() => {
-                                navigate(
-                                  `/technologist/edit-tarif/${tarification?.id}`
-                                );
-                              }}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              O'zgartirish
+                              <Files className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
