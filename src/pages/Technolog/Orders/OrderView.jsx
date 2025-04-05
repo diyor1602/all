@@ -428,18 +428,30 @@ const OrderView = () => {
                 <h2 className="text-lg font-medium my-6 ml-2">
                   Spesifikatsiyalar
                 </h2>
-                <Button
-                  size="icon"
-                  className="h-8 w-8 rounded-full text-white"
-                  disabled={specDownloading}
-                  onClick={() => handleDownloadSpec(selectedSubmodel?.id)}
-                >
-                  {specDownloading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
+                    disabled={tarifDownloading}
+                    onClick={() =>
+                      navigate(`/technologist/new-spec/${selectedSubmodel?.id}`)
+                    }
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-white"
+                    disabled={specDownloading}
+                    onClick={() => handleDownloadSpec(selectedSubmodel?.id)}
+                  >
+                    {specDownloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
               {/* Specifications */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -460,7 +472,7 @@ const OrderView = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="flex flex-wrap justify-between gap-2 mt-4">
                         <Button
                           variant="outline"
                           size="sm"
@@ -484,16 +496,6 @@ const OrderView = () => {
                           <Edit className="h-4 w-4 mr-1" />
                           O'zgartirish
                         </Button>
-
-                        <div className="flex ml-auto gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -504,18 +506,32 @@ const OrderView = () => {
                 <h2 className="text-lg font-medium my-6 ml-2">
                   Tarifikatsiyalar
                 </h2>
-                <Button
-                  size="icon"
-                  className="h-8 w-8 rounded-full text-white"
-                  disabled={tarifDownloading}
-                  onClick={() => handleDownloadTarif(selectedSubmodel?.id)}
-                >
-                  {tarifDownloading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
+                    disabled={tarifDownloading}
+                    onClick={() => handleDownloadTarif(selectedSubmodel?.id)}
+                  >
+                    {tarifDownloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-white"
+                    disabled={tarifDownloading}
+                    onClick={() => handleDownloadTarif(selectedSubmodel?.id)}
+                  >
+                    {tarifDownloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {/* Tarifications */}
@@ -612,7 +628,7 @@ const OrderView = () => {
                               sekund
                             </div>
                           </div>
-                          <div className="flex flex-wrap gap-2 mt-4">
+                          <div className="flex flex-wrap justify-between gap-2 mt-4">
                             <Button
                               variant="outline"
                               size="sm"
@@ -633,16 +649,6 @@ const OrderView = () => {
                               <Edit className="h-4 w-4 mr-1" />
                               O'zgartirish
                             </Button>
-
-                            <div className="flex ml-auto gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
                           </div>
                         </div>
                       ))}
