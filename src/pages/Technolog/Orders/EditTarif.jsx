@@ -11,6 +11,7 @@ import {
   Loader2,
   Check,
   ChevronsUpDown,
+  Timer,
 } from "lucide-react";
 import {
   Command,
@@ -34,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import TimerDialog from "./TimerDialog";
 
 const EditTarif = () => {
   const { id } = useParams();
@@ -47,6 +49,10 @@ const EditTarif = () => {
   const [machines, setMachines] = useState([]);
   const [activePopoverIndex, setActivePopoverIndex] = useState(null);
   const newRowRef = useRef(null);
+
+  // Timer dialog state
+  const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
+  const [activeTimerRowIndex, setActiveTimerRowIndex] = useState(null);
 
   const fetchTarif = async () => {
     setLoading(true);
@@ -215,6 +221,30 @@ const EditTarif = () => {
       ...tarif,
       tarifications: updateTarifications,
     });
+  };
+
+  // Open the timer dialog for a specific row
+  const openTimerDialog = (index) => {
+    setActiveTimerRowIndex(index);
+    setIsTimerDialogOpen(true);
+  };
+
+  // Handle saving the timer value
+  const handleTimerSave = (averageTime) => {
+    if (activeTimerRowIndex !== null) {
+      handleSecondChange(activeTimerRowIndex, averageTime);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Vaqt o'lchovi muvaffaqiyatli saqlandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+    }
+    setIsTimerDialogOpen(false);
+    setActiveTimerRowIndex(null);
   };
 
   const addNewRow = () => {
@@ -502,14 +532,25 @@ const EditTarif = () => {
                   </Select>
                 </td>
                 <td className="px-4 py-2 border">
-                  <Input
-                    type="number"
-                    className="w-24"
-                    value={item?.second}
-                    onChange={(e) =>
-                      handleSecondChange(index, parseFloat(e.target.value))
-                    }
-                  />
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="number"
+                      className="w-24"
+                      value={item?.second}
+                      onChange={(e) =>
+                        handleSecondChange(index, parseFloat(e.target.value))
+                      }
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                      onClick={() => openTimerDialog(index)}
+                      title="Vaqtni o'lchash"
+                    >
+                      <Timer className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </td>
                 <td className="px-4 py-2 border">
                   {parseFloat(item?.summa).toLocaleString("en-US", {
@@ -541,6 +582,13 @@ const EditTarif = () => {
           Saqlash
         </Button>
       </div>
+
+      {/* Timer Dialog Component */}
+      <TimerDialog
+        isOpen={isTimerDialogOpen}
+        onClose={() => setIsTimerDialogOpen(false)}
+        onSave={handleTimerSave}
+      />
     </>
   );
 };
