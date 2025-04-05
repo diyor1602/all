@@ -30,10 +30,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 const formatDate = (dateString) => {
@@ -479,6 +477,9 @@ const OrderView = () => {
                           variant="outline"
                           size="sm"
                           className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                          onClick={() => {
+                            navigate(`/technologist/edit-spec/${spec?.id}`);
+                          }}
                         >
                           <Edit className="h-4 w-4 mr-1" />
                           O'zgartirish
@@ -660,7 +661,7 @@ const OrderView = () => {
             <DialogTitle>{selectedSpec?.name}</DialogTitle>
             <DialogDescription>{selectedSpec?.description}</DialogDescription>
             <div className="overflow-auto max-h-[90svh]">
-              <table className="w-full border border-collapse">
+              <table className="w-full border border-collapse whitespace-nowrap">
                 <thead>
                   <tr className="text-center">
                     <th className="border border-gray-300">#</th>
@@ -699,7 +700,7 @@ const OrderView = () => {
               {selectedTarification?.description}
             </DialogDescription>
             <div className="overflow-auto max-h-[90svh]">
-              <table className="w-full border border-collapse">
+              <table className="w-full border border-collapse whitespace-nowrap">
                 <thead>
                   <tr className="text-center">
                     <th className="border border-gray-300">#</th>
