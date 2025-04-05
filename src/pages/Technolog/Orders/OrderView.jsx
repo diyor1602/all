@@ -654,93 +654,97 @@ const OrderView = () => {
           )}
         </div>
       )}
-      {/* Spec Dialog */}
+      {/* Spec Dialog - Fixed */}
       <Dialog open={specDialogOpen} onOpenChange={setSpecDialogOpen}>
-        <DialogContent className="max-h-[100dvh] max-w-[100dvw]">
+        <DialogContent className="max-w-[90vw] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>{selectedSpec?.name}</DialogTitle>
             <DialogDescription>{selectedSpec?.description}</DialogDescription>
-            <div className="overflow-auto max-h-[90svh]">
-              <table className="w-full border border-collapse whitespace-nowrap">
-                <thead>
-                  <tr className="text-center">
-                    <th className="border border-gray-300">#</th>
-                    <th className="border border-gray-300">Kod</th>
-                    <th className="border border-gray-300">Nomi</th>
-                    <th className="border border-gray-300">Miqdor</th>
-                    <th className="border border-gray-300">Izoh</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedSpec?.specifications?.map((spec, index) => (
-                    <tr key={spec.id} className="text-center">
-                      <td className="border border-gray-300">{index + 1}</td>
-                      <td className="border border-gray-300">{spec?.code}</td>
-                      <td className="border border-gray-300">{spec?.name}</td>
-                      <td className="border border-gray-300">
-                        {spec?.quantity}
-                      </td>
-                      <td className="border border-gray-300">
-                        {spec?.comment}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </DialogHeader>
+          <div className="overflow-auto max-h-[70vh]">
+            <table className="w-full border border-collapse whitespace-nowrap">
+              <thead>
+                <tr className="text-center">
+                  <th className="border border-gray-300 p-1">#</th>
+                  <th className="border border-gray-300 p-1">Kod</th>
+                  <th className="border border-gray-300 p-1">Nomi</th>
+                  <th className="border border-gray-300 p-1">Miqdor</th>
+                  <th className="border border-gray-300 p-1">Izoh</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedSpec?.specifications?.map((spec, index) => (
+                  <tr key={spec.id} className="text-center">
+                    <td className="border border-gray-300 p-1">{index + 1}</td>
+                    <td className="border border-gray-300 p-1">{spec?.code}</td>
+                    <td className="border border-gray-300 p-1">{spec?.name}</td>
+                    <td className="border border-gray-300 p-1">
+                      {spec?.quantity}
+                    </td>
+                    <td className="border border-gray-300 p-1">
+                      {spec?.comment}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </DialogContent>
       </Dialog>
-      {/* Tarif Dialog */}
+
+      {/* Tarif Dialog - Fixed */}
       <Dialog open={tarifDialogOpen} onOpenChange={setTarifDialogOpen}>
-        <DialogContent className="max-h-[100dvh] max-w-[100dvw]">
+        <DialogContent className="max-w-[90vw] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>{selectedTarification?.name}</DialogTitle>
             <DialogDescription>
               {selectedTarification?.description}
             </DialogDescription>
-            <div className="overflow-auto max-h-[90svh]">
-              <table className="w-full border border-collapse whitespace-nowrap">
-                <thead>
-                  <tr className="text-center">
-                    <th className="border border-gray-300">#</th>
-                    <th className="border border-gray-300">Kod</th>
-                    <th className="border border-gray-300">Nomi</th>
-                    <th className="border border-gray-300">Xodim</th>
-                    <th className="border border-gray-300">Razryad</th>
-                    <th className="border border-gray-300">Mashina</th>
-                    <th className="border border-gray-300">Sekund</th>
-                    <th className="border border-gray-300">Summa (so'm)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedTarification?.tarifications?.map((tarif, index) => (
-                    <tr key={tarif.id} className="text-center">
-                      <td className="border border-gray-300">{index + 1}</td>
-                      <td className="border border-gray-300">{tarif?.code}</td>
-                      <td className="border border-gray-300">{tarif?.name}</td>
-                      <td className="border border-gray-300">
-                        {tarif?.employee?.name || "-"}
-                      </td>
-                      <td className="border border-gray-300">
-                        {tarif?.razryad?.name}
-                      </td>
-                      <td className="border border-gray-300">
-                        {tarif?.typewriter?.name}
-                      </td>
-                      <td className="border border-gray-300">
-                        {parseFloat(tarif?.second)?.toLocaleString()}
-                      </td>
-                      <td className="border border-gray-300">
-                        {" "}
-                        {parseFloat(tarif?.summa)?.toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </DialogHeader>
+          <div className="overflow-auto max-h-[70vh]">
+            <table className="w-full border border-collapse whitespace-nowrap">
+              <thead>
+                <tr className="text-center">
+                  <th className="border border-gray-300 p-1">#</th>
+                  <th className="border border-gray-300 p-1">Kod</th>
+                  <th className="border border-gray-300 p-1">Nomi</th>
+                  <th className="border border-gray-300 p-1">Xodim</th>
+                  <th className="border border-gray-300 p-1">Razryad</th>
+                  <th className="border border-gray-300 p-1">Mashina</th>
+                  <th className="border border-gray-300 p-1">Sekund</th>
+                  <th className="border border-gray-300 p-1">Summa (so'm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedTarification?.tarifications?.map((tarif, index) => (
+                  <tr key={tarif.id} className="text-center">
+                    <td className="border border-gray-300 p-1">{index + 1}</td>
+                    <td className="border border-gray-300 p-1">
+                      {tarif?.code}
+                    </td>
+                    <td className="border border-gray-300 p-1">
+                      {tarif?.name}
+                    </td>
+                    <td className="border border-gray-300 p-1">
+                      {tarif?.employee?.name || "-"}
+                    </td>
+                    <td className="border border-gray-300 p-1">
+                      {tarif?.razryad?.name}
+                    </td>
+                    <td className="border border-gray-300 p-1">
+                      {tarif?.typewriter?.name}
+                    </td>
+                    <td className="border border-gray-300 p-1">
+                      {parseFloat(tarif?.second)?.toLocaleString()}
+                    </td>
+                    <td className="border border-gray-300 p-1">
+                      {parseFloat(tarif?.summa)?.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
