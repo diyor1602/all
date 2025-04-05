@@ -327,17 +327,43 @@ const OrderView = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <BarChartIcon className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-bold">
+                  <BarChartIcon
+                    className={cn(
+                      "h-4 w-4",
+                      order?.order_model?.status
+                        ? "text-green-500"
+                        : "text-red-500"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-sm font-bold",
+                      order?.order_model?.status
+                        ? "text-green-500"
+                        : "text-red-500"
+                    )}
+                  >
                     Limit:{" "}
                     {parseFloat(
                       order?.order_model?.rasxod || 0
                     ).toLocaleString() || "N/A"}{" "}
                     so'm
+                    <span className="text-sm ml-1">
+                      {order?.order_model?.status
+                        ? "(Tasdiqlangan)"
+                        : "(Tasdiqlanmagan)"}
+                    </span>
                   </span>
                 </div>
                 <div className="flex gap-2 items-center">
-                  <Bitcoin className="h-4 w-4 text-gray-500" />
+                  <Bitcoin
+                    className={cn(
+                      "h-4 w-4",
+                      totalSpendSumma > order?.order_model?.rasxod
+                        ? "text-red-500"
+                        : "text-black"
+                    )}
+                  />
                   <span
                     className={cn(
                       "font-bold",
