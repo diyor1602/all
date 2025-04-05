@@ -705,11 +705,11 @@ const OrderView = () => {
                     <th className="border border-gray-300">#</th>
                     <th className="border border-gray-300">Kod</th>
                     <th className="border border-gray-300">Nomi</th>
-                    <th className="border border-gray-300">Sekund</th>
-                    <th className="border border-gray-300">Summa (so'm)</th>
                     <th className="border border-gray-300">Xodim</th>
                     <th className="border border-gray-300">Razryad</th>
                     <th className="border border-gray-300">Mashina</th>
+                    <th className="border border-gray-300">Sekund</th>
+                    <th className="border border-gray-300">Summa (so'm)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -719,13 +719,6 @@ const OrderView = () => {
                       <td className="border border-gray-300">{tarif?.code}</td>
                       <td className="border border-gray-300">{tarif?.name}</td>
                       <td className="border border-gray-300">
-                        {parseFloat(tarif?.second)?.toLocaleString()}
-                      </td>
-                      <td className="border border-gray-300">
-                        {" "}
-                        {parseFloat(tarif?.summa)?.toLocaleString()}
-                      </td>
-                      <td className="border border-gray-300">
                         {tarif?.employee?.name || "-"}
                       </td>
                       <td className="border border-gray-300">
@@ -733,6 +726,13 @@ const OrderView = () => {
                       </td>
                       <td className="border border-gray-300">
                         {tarif?.typewriter?.name}
+                      </td>
+                      <td className="border border-gray-300">
+                        {parseFloat(tarif?.second)?.toLocaleString()}
+                      </td>
+                      <td className="border border-gray-300">
+                        {" "}
+                        {parseFloat(tarif?.summa)?.toLocaleString()}
                       </td>
                     </tr>
                   ))}
