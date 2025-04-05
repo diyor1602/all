@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogDescription,
   DialogTitle,
   DialogFooter,
   DialogClose,
@@ -95,6 +96,7 @@ const TimerDialog = ({ isOpen, onClose, onSave }) => {
             <Clock className="h-5 w-5 text-blue-500" />
             <span>Vaqt O'lchovi</span>
           </DialogTitle>
+          <DialogDescription></DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col items-center space-y-4 py-4">

@@ -510,13 +510,13 @@ const OrderView = () => {
                     size="icon"
                     className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
                     disabled={tarifDownloading}
-                    onClick={() => handleDownloadTarif(selectedSubmodel?.id)}
+                    onClick={() =>
+                      navigate(
+                        `/technologist/new-tarif/${selectedSubmodel?.id}`
+                      )
+                    }
                   >
-                    {tarifDownloading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Plus className="h-4 w-4" />
-                    )}
+                    <Plus className="h-4 w-4" />
                   </Button>
                   <Button
                     size="icon"

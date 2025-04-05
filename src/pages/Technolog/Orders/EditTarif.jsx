@@ -291,6 +291,16 @@ const EditTarif = () => {
       return;
     }
 
+    // check second
+    if (tarif?.tarifications?.some((item) => parseFloat(item?.second) <= 0)) {
+      toast({
+        title: "Diqqat",
+        description: "Sekundni to'g'ri kiriting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // check tarif name
     if (!tarif?.name) {
       toast({
