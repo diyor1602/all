@@ -118,7 +118,6 @@ const EditSpec = () => {
       });
       navigate(-1);
     } catch (error) {
-      console.log(error);
       toast({
         title: "Xatolik",
         description:

@@ -276,11 +276,12 @@ const EditTarif = () => {
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
     const hasEmptyRazryad = tarif?.tarifications?.some(
-      (item) => !item?.razryad
+      (item) => !item?.razryad_id && !item?.razryad?.id
     );
     const hasEmptyMachine = tarif?.tarifications?.some(
-      (item) => !item?.typewriter
+      (item) => !item?.typewriter_id && !item?.typewriter?.id
     );
+
     const hasEmptySecond = tarif?.tarifications?.some((item) => !item?.second);
     if (hasEmptyNames || hasEmptyRazryad || hasEmptyMachine || hasEmptySecond) {
       toast({

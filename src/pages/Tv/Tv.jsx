@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, Trophy, Medal, LogOut } from "lucide-react";
 import api from "@/utils/api";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 const Tv = () => {
   // App data states - these will only be used after authentication
@@ -11,6 +12,8 @@ const Tv = () => {
   const [motivations, setMotivations] = useState([]);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  const { toast } = useToast();
 
   // Always define refs at the top level
   const radioRef = useRef(null);
@@ -64,9 +67,7 @@ const Tv = () => {
     } else {
       // Only set source when playing to prevent preloading
       radioRef.current.src = "https://live.qalbimnavosi.uz/qalbimnavosi";
-      radioRef.current
-        .play()
-        .catch((e) => console.error("Playback failed:", e));
+      radioRef.current.play();
     }
     setIsPlaying(!isPlaying);
   };
@@ -103,7 +104,11 @@ const Tv = () => {
         setMotivations(data.motivations || []);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      toast({
+        title: "Xatolik!",
+        description: "Data olishda xatolik",
+        variant: "destructive",
+      });
     }
   };
 

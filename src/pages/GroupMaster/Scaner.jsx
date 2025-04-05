@@ -76,10 +76,8 @@ const Scaner = () => {
           category_id: categoryId,
         },
       });
-      console.log("API Response:", response.data);
       setOrderCuts(response.data);
     } catch (error) {
-      console.error("API Error:", error);
       toast({
         title: "Xatolik!",
         description: "QR kodda xatolik",

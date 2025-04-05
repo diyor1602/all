@@ -299,7 +299,6 @@ const NewTarif = () => {
 
     // check second
     if (tarif?.tarifications?.some((item) => parseFloat(item?.second) <= 0)) {
-      console.log(tarif.second);
       toast({
         title: "Diqqat",
         description: "Sekundni to'g'ri kiriting",
