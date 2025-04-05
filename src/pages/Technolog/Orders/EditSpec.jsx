@@ -187,6 +187,7 @@ const EditSpec = () => {
                   <Input
                     placeholder="Kodi"
                     type="text"
+                    className="w-fit"
                     value={item?.code}
                     ref={
                       index === spec.specifications.length - 1
@@ -200,6 +201,7 @@ const EditSpec = () => {
                 </td>
                 <td className="px-4 py-2 border">
                   <Input
+                    className="w-fit"
                     placeholder="Nomi"
                     type="text"
                     value={item?.name}
@@ -211,6 +213,7 @@ const EditSpec = () => {
                 <td className="px-4 py-2 border">
                   <Input
                     type="number"
+                    className="w-fit"
                     placeholder="Miqdor"
                     step={1}
                     value={item?.quantity}
@@ -222,6 +225,7 @@ const EditSpec = () => {
                 </td>
                 <td className="px-4 py-2 border">
                   <Input
+                    className="w-fit"
                     placeholder="Izoh"
                     type="text"
                     value={item?.comment}
