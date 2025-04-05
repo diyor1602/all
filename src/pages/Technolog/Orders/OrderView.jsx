@@ -412,7 +412,7 @@ const OrderView = () => {
                 onClick={() => handleDownloadSpec(selectedSubmodel?.id)}
               >
                 {specDownloading ? (
-                  <Loader2 className="h-4 w-4" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
@@ -481,7 +481,7 @@ const OrderView = () => {
                 onClick={() => handleDownloadTarif(selectedSubmodel?.id)}
               >
                 {tarifDownloading ? (
-                  <Loader2 className="h-4 w-4" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
