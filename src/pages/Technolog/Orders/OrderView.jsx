@@ -298,10 +298,9 @@ const OrderView = () => {
                   <Timer className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-bold">
                     Jami:{" "}
-                    {totalSpends /
-                      60?.toLocaleString("ru-RU", {
-                        maximumFractionDigits: 2,
-                      })}{" "}
+                    {parseFloat(totalSpends / 60)?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
                     minut
                   </span>
                 </div>
@@ -645,6 +644,11 @@ const OrderView = () => {
                               variant="outline"
                               size="sm"
                               className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                              onClick={() => {
+                                navigate(
+                                  `/technologist/edit-tarif/${tarification?.id}`
+                                );
+                              }}
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               O'zgartirish

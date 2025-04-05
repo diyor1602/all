@@ -142,10 +142,11 @@ const EditSpec = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Orqaga
         </Button>
-        <div className="text-xl font-semibold">
+        <div className="text-xl font-semibold w-full">
           <Input
             type="text"
             placeholder="Spesifikatsiya nomi"
+            className="w-full"
             value={spec?.name}
             onChange={(e) => setSpec({ ...spec, name: e.target.value })}
           />
