@@ -26,6 +26,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -47,6 +56,11 @@ const OrderView = () => {
   const [specifications, setSpecifications] = useState([]);
   const [specDownloading, setSpecDownloading] = useState(false);
   const [tarifDownloading, setTarifDownloading] = useState(false);
+  const [tabLoading, setTabLoading] = useState(false);
+  const [specDialogOpen, setSpecDialogOpen] = useState(false);
+  const [tarifDialogOpen, setTarifDialogOpen] = useState(false);
+  const [selectedSpec, setSelectedSpec] = useState(null);
+  const [selectedTarification, setSelectedTarification] = useState(null);
 
   const totalSpends = order?.order_model?.submodels?.reduce(
     (acc, submodel) =>
@@ -157,6 +171,7 @@ const OrderView = () => {
   }, [id, navigate, toast]);
 
   const fetchTarifications = async () => {
+    setTabLoading(true);
     try {
       const response = await api.get(
         `/technologist/tarification/category/${selectedSubmodel?.id}`
@@ -168,10 +183,13 @@ const OrderView = () => {
         description: "Tariflarni olishda xatolik",
         variant: "destructive",
       });
+    } finally {
+      setTabLoading(false);
     }
   };
 
   const fetchSpecifications = async () => {
+    setTabLoading(true);
     try {
       const response = await api.get(
         `/technologist/specification/${selectedSubmodel?.id}`
@@ -183,6 +201,8 @@ const OrderView = () => {
         description: "Spesifikatsiyalarni olishda xatolik",
         variant: "destructive",
       });
+    } finally {
+      setTabLoading(false);
     }
   };
 
@@ -400,225 +420,328 @@ const OrderView = () => {
           </div>
 
           {/* Content for selected submodel */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <h2 className="text-lg font-medium my-6 ml-2">
-                Spesifikatsiyalar
-              </h2>
-              <Button
-                size="icon"
-                className="h-8 w-8 rounded-full text-white"
-                disabled={specDownloading}
-                onClick={() => handleDownloadSpec(selectedSubmodel?.id)}
-              >
-                {specDownloading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-              </Button>
+          {tabLoading ? (
+            <div className="mt-4 w-full flex items-center justify-center">
+              <Loader2 className="animate-spin text-primary" size={30} />
             </div>
-            {/* Specifications */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              {specifications.map((spec) => (
-                <Card
-                  key={spec.id}
-                  className="overflow-hidden border-none shadow-md bg-white hover:shadow-lg transition-all duration-300"
+          ) : (
+            <div className="mt-4">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h2 className="text-lg font-medium my-6 ml-2">
+                  Spesifikatsiyalar
+                </h2>
+                <Button
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-white"
+                  disabled={specDownloading}
+                  onClick={() => handleDownloadSpec(selectedSubmodel?.id)}
                 >
-                  <div className="h-2 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg text-gray-800">
-                        {spec.name}
-                      </CardTitle>
-                      <Badge className="bg-blue-500 hover:bg-blue-600">
-                        {spec.specifications.length} ta
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ko'rish
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        O'zgartirish
-                      </Button>
-
-                      <div className="flex ml-auto gap-1">
+                  {specDownloading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {/* Specifications */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                {specifications?.map((spec) => (
+                  <Card
+                    key={spec.id}
+                    className="overflow-hidden border-none shadow-md bg-white hover:shadow-lg transition-all duration-300"
+                  >
+                    <div className="h-2 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg text-gray-800">
+                          {spec.name}
+                        </CardTitle>
+                        <Badge className="bg-blue-500 hover:bg-blue-600">
+                          {spec.specifications.length} ta
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2 mt-4">
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                          variant="outline"
+                          size="sm"
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                          onClick={() => {
+                            setSpecDialogOpen(true);
+                            setSelectedSpec(spec);
+                          }}
                         >
-                          <Plus className="h-4 w-4" />
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ko'rish
                         </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          O'zgartirish
+                        </Button>
 
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <h2 className="text-lg font-medium my-6 ml-2">
-                Tarifikatsiyalar
-              </h2>
-              <Button
-                size="icon"
-                className="h-8 w-8 rounded-full text-white"
-                disabled={tarifDownloading}
-                onClick={() => handleDownloadTarif(selectedSubmodel?.id)}
-              >
-                {tarifDownloading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-
-            {/* Tarifications */}
-            {tarifications?.length > 0 && (
-              <Card className="border-none shadow-md bg-gradient-to-r from-indigo-50 to-purple-50">
-                <CardHeader>
-                  <CardTitle>
-                    <div className="flex items-center gap-2 justify-between flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <Coins size={20} />
-                        <div>
-                          {tarifications
-                            .reduce(
-                              (acc, item) =>
-                                acc +
-                                (item?.tarifications?.reduce(
-                                  (acc, subitem) =>
-                                    acc + parseFloat(subitem?.summa),
-                                  0
-                                ) || 0),
-                              0
-                            )
-                            ?.toLocaleString("ru-RU", {
-                              minimumFractionDigits: 2,
-                            })}{" "}
-                          so'm
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Hourglass size={20} />
-                        <div>
-                          {tarifications
-                            .reduce(
-                              (acc, item) =>
-                                acc +
-                                (item?.tarifications?.reduce(
-                                  (acc, subitem) =>
-                                    acc + parseFloat(subitem?.second),
-                                  0
-                                ) || 0),
-                              0
-                            )
-                            ?.toLocaleString("ru-RU", {
-                              minimumFractionDigits: 2,
-                            })}{" "}
-                          sekund
-                        </div>
-                      </div>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {tarifications.map((tarification) => (
-                      <div
-                        key={tarification.id}
-                        className="flex flex-col gap-2 p-3 bg-white rounded-md shadow-sm"
-                      >
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <span className="font-medium text-gray-700">
-                            {tarification?.name}{" "}
-                          </span>
-
-                          <Badge
-                            variant="outline"
-                            className="bg-indigo-100 text-indigo-800 border-indigo-200"
+                        <div className="flex ml-auto gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                           >
-                            {tarification?.tarifications?.length} ta
-                          </Badge>
+                            <Plus className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <div className="flex items-center justify-between gap-2 flex-wrap text-sm ">
-                          <div className="flex items-center gap-2">
-                            <Coins size={20} />
-                            {tarification?.tarifications
-                              ?.reduce(
-                                (acc, item) => acc + parseFloat(item?.summa),
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h2 className="text-lg font-medium my-6 ml-2">
+                  Tarifikatsiyalar
+                </h2>
+                <Button
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-white"
+                  disabled={tarifDownloading}
+                  onClick={() => handleDownloadTarif(selectedSubmodel?.id)}
+                >
+                  {tarifDownloading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Tarifications */}
+              {tarifications?.length > 0 && (
+                <Card className="border-none shadow-md bg-gradient-to-r from-indigo-50 to-purple-50">
+                  <CardHeader>
+                    <CardTitle>
+                      <div className="flex items-center gap-2 justify-between flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Coins size={20} />
+                          <div>
+                            {tarifications
+                              .reduce(
+                                (acc, item) =>
+                                  acc +
+                                  (item?.tarifications?.reduce(
+                                    (acc, subitem) =>
+                                      acc + parseFloat(subitem?.summa),
+                                    0
+                                  ) || 0),
                                 0
                               )
-                              ?.toLocaleString({
+                              ?.toLocaleString("ru-RU", {
                                 minimumFractionDigits: 2,
                               })}{" "}
                             so'm
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Hourglass size={20} />
-                            {tarification?.tarifications
-                              ?.reduce(
-                                (acc, item) => acc + parseFloat(item?.second),
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Hourglass size={20} />
+                          <div>
+                            {tarifications
+                              .reduce(
+                                (acc, item) =>
+                                  acc +
+                                  (item?.tarifications?.reduce(
+                                    (acc, subitem) =>
+                                      acc + parseFloat(subitem?.second),
+                                    0
+                                  ) || 0),
                                 0
                               )
-                              ?.toLocaleString({
+                              ?.toLocaleString("ru-RU", {
                                 minimumFractionDigits: 2,
                               })}{" "}
                             sekund
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Ko'rish
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            O'zgartirish
-                          </Button>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {tarifications.map((tarification) => (
+                        <div
+                          key={tarification.id}
+                          className="flex flex-col gap-2 p-3 bg-white rounded-md shadow-sm"
+                        >
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="font-medium text-gray-700">
+                              {tarification?.name}{" "}
+                            </span>
 
-                          <div className="flex ml-auto gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                            <Badge
+                              variant="outline"
+                              className="bg-indigo-100 text-indigo-800 border-indigo-200"
                             >
-                              <Plus className="h-4 w-4" />
+                              {tarification?.tarifications?.length} ta
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 flex-wrap text-sm ">
+                            <div className="flex items-center gap-2">
+                              <Coins size={20} />
+                              {tarification?.tarifications
+                                ?.reduce(
+                                  (acc, item) => acc + parseFloat(item?.summa),
+                                  0
+                                )
+                                ?.toLocaleString({
+                                  minimumFractionDigits: 2,
+                                })}{" "}
+                              so'm
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Hourglass size={20} />
+                              {tarification?.tarifications
+                                ?.reduce(
+                                  (acc, item) => acc + parseFloat(item?.second),
+                                  0
+                                )
+                                ?.toLocaleString({
+                                  minimumFractionDigits: 2,
+                                })}{" "}
+                              sekund
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                              onClick={() => {
+                                setTarifDialogOpen(true);
+                                setSelectedTarification(tarification);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Ko'rish
                             </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              O'zgartirish
+                            </Button>
+
+                            <div className="flex ml-auto gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
       )}
+      {/* Spec Dialog */}
+      <Dialog open={specDialogOpen} onOpenChange={setSpecDialogOpen}>
+        <DialogContent className="max-h-[100dvh] max-w-[100dvw]">
+          <DialogHeader>
+            <DialogTitle>{selectedSpec?.name}</DialogTitle>
+            <DialogDescription>{selectedSpec?.description}</DialogDescription>
+            <div className="overflow-auto max-h-[90svh]">
+              <table className="w-full border border-collapse">
+                <thead>
+                  <tr className="text-center">
+                    <th className="border border-gray-300">#</th>
+                    <th className="border border-gray-300">Kod</th>
+                    <th className="border border-gray-300">Nomi</th>
+                    <th className="border border-gray-300">Miqdor</th>
+                    <th className="border border-gray-300">Izoh</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedSpec?.specifications?.map((spec, index) => (
+                    <tr key={spec.id} className="text-center">
+                      <td className="border border-gray-300">{index + 1}</td>
+                      <td className="border border-gray-300">{spec?.code}</td>
+                      <td className="border border-gray-300">{spec?.name}</td>
+                      <td className="border border-gray-300">
+                        {spec?.quantity}
+                      </td>
+                      <td className="border border-gray-300">
+                        {spec?.comment}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+      {/* Tarif Dialog */}
+      <Dialog open={tarifDialogOpen} onOpenChange={setTarifDialogOpen}>
+        <DialogContent className="max-h-[100dvh] max-w-[100dvw]">
+          <DialogHeader>
+            <DialogTitle>{selectedTarification?.name}</DialogTitle>
+            <DialogDescription>
+              {selectedTarification?.description}
+            </DialogDescription>
+            <div className="overflow-auto max-h-[90svh]">
+              <table className="w-full border border-collapse">
+                <thead>
+                  <tr className="text-center">
+                    <th className="border border-gray-300">#</th>
+                    <th className="border border-gray-300">Kod</th>
+                    <th className="border border-gray-300">Nomi</th>
+                    <th className="border border-gray-300">Sekund</th>
+                    <th className="border border-gray-300">Summa (so'm)</th>
+                    <th className="border border-gray-300">Xodim</th>
+                    <th className="border border-gray-300">Razryad</th>
+                    <th className="border border-gray-300">Mashina</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedTarification?.tarifications?.map((tarif, index) => (
+                    <tr key={tarif.id} className="text-center">
+                      <td className="border border-gray-300">{index + 1}</td>
+                      <td className="border border-gray-300">{tarif?.code}</td>
+                      <td className="border border-gray-300">{tarif?.name}</td>
+                      <td className="border border-gray-300">
+                        {parseFloat(tarif?.second)?.toLocaleString()}
+                      </td>
+                      <td className="border border-gray-300">
+                        {" "}
+                        {parseFloat(tarif?.summa)?.toLocaleString()}
+                      </td>
+                      <td className="border border-gray-300">
+                        {tarif?.employee?.name || "-"}
+                      </td>
+                      <td className="border border-gray-300">
+                        {tarif?.razryad?.name}
+                      </td>
+                      <td className="border border-gray-300">
+                        {tarif?.typewriter?.name}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
