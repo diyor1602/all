@@ -332,7 +332,7 @@ const Printing = () => {
                             </div>
                             <div>Status: Konstruktorda</div>
                             <div>
-                              Bajarilganv vaqti:{" "}
+                              Bajarilgan vaqti:{" "}
                               {order?.order_printing_time?.actual_time ||
                                 "Bajarilmagan"}
                             </div>
