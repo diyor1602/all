@@ -286,13 +286,6 @@ const NewTarif = () => {
     );
     const hasEmptySecond = tarif?.tarifications?.some((item) => !item?.second);
 
-    console.log(
-      hasEmptyNames,
-      hasEmptyRazryad,
-      hasEmptyMachine,
-      hasEmptySecond
-    );
-    console.log(tarif?.tarifications);
     if (hasEmptyNames || hasEmptyRazryad || hasEmptyMachine || hasEmptySecond) {
       toast({
         title: "Diqqat",
