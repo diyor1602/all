@@ -401,7 +401,6 @@ const CuttingStart = () => {
         0x00,
       ]); // GS ( k 4 0 49 65 50 0 - select QR code, model 2
 
-      // Set QR code size (1-16) - choosing 12 here (can go up to 16)
       const qrSize = new Uint8Array([
         GS,
         0x28,
