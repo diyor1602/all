@@ -12,7 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-const EditSpec = () => {
+const NewSpec = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -275,4 +275,4 @@ const EditSpec = () => {
   );
 };
 
-export default EditSpec;
+export default NewSpec;

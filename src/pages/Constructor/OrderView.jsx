@@ -16,6 +16,8 @@ import {
   UserIcon,
   Files,
   Edit,
+  Plus,
+  Download,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +60,11 @@ const OrderView = () => {
   const [selectedSpec, setSelectedSpec] = useState(null);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [specDownloading, setSpecDownloading] = useState(false);
+
+  const canChange =
+    !order?.order_printing_times?.actual_time &&
+    order?.order_printing_times?.status == "printing";
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -127,6 +134,37 @@ const OrderView = () => {
         color: "white",
       },
     });
+  };
+
+  const handleDownloadSpec = async (id) => {
+    setSpecDownloading(true);
+    try {
+      const response = await api.get(`/constructor/export-specification`, {
+        params: { orderSubModelId: id },
+        responseType: "blob", // Important: Expect binary data
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${order?.id} ${order?.name} ${selectedSubmodel?.submodel?.name} spesifikatsiya.xlsx`;
+      document.body.appendChild(link); // Required for Firefox
+      link.click();
+      document.body.removeChild(link); // Cleanup
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Spesifikatsiyalarni yuklab bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setSpecDownloading(false);
+    }
   };
 
   if (loading) {
@@ -268,8 +306,7 @@ const OrderView = () => {
             </div>
           )}
 
-          {!order?.order_printing_times?.actual_time &&
-          order?.order_printing_times?.status == "printing" ? (
+          {canChange ? (
             <Button
               className="mt-4"
               variant="destructive"
@@ -382,6 +419,29 @@ const OrderView = () => {
               <h2 className="text-lg font-medium my-6 ml-2">
                 Spesifikatsiyalar
               </h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
+                  onClick={() =>
+                    navigate(`/constructor/new-spec/${selectedSubmodel?.id}`)
+                  }
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-white"
+                  disabled={specDownloading}
+                  onClick={() => handleDownloadSpec(selectedSubmodel?.id)}
+                >
+                  {specDownloading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
             {/* Specifications */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
