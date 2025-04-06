@@ -56,8 +56,8 @@ const Orders = () => {
       setFilteredOrders(response.data);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to fetch orders",
+        title: "Xatolik",
+        description: "Buyurtmalar yuklab olishda xatolik",
         variant: "destructive",
       });
     } finally {
@@ -321,7 +321,7 @@ const Orders = () => {
                     className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${
                       statuses[order.status]?.color
                     } hover:opacity-90 hover:${statuses[order.status]?.color}`}
-                    onClick={() => navigate(`/technologist/orders/${order.id}`)}
+                    onClick={() => navigate(`/constructor/orders/${order.id}`)}
                   >
                     Batafsil
                     <ChevronRight size={18} />
