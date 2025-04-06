@@ -211,6 +211,7 @@ const CuttingStart = () => {
 
       return true;
     } catch (error) {
+      alert(error);
       toast({
         title: "Chop etishda xatolik",
         description: error.message || "Chop etishda xatolik",
@@ -576,6 +577,7 @@ const CuttingStart = () => {
 
       // Print the QR Code and wait for confirmation
       const printSuccess = await printQRCode();
+      alert(printSuccess);
       if (!printSuccess) {
         throw new Error("QR code chop etishda xatolik");
       }
