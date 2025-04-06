@@ -410,7 +410,7 @@ const CuttingStart = () => {
         0x00,
         0x31,
         0x43,
-        0x12, // Changed to 14 (even larger size, max is 16)
+        0x08, // Changed to 14 (even larger size, max is 16)
       ]);
 
       // Set error correction level (48-51 for L,M,Q,H) - using H (51) for best
@@ -773,7 +773,7 @@ const CuttingStart = () => {
 
             <DialogClose asChild>
               <Button variant="outline" className="w-full">
-                Close
+                Yopish
               </Button>
             </DialogClose>
           </DialogContent>
