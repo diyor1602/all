@@ -124,10 +124,21 @@ const Printing = () => {
       className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 p-3 sm:p-6"
     >
       <div className="max-w-6xl mx-auto">
-        <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="mb-6">
+        <motion.div
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
+          className="mb-6 flex items-center justify-between gap-3 flex-wrap"
+        >
           <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
             Buyurtmalar ({filteredOrders?.length})
           </h1>
+          <div className="text-lg font-semibold text-purple-800">
+            {filteredOrders?.reduce(
+              (total, order) => total + parseInt(order?.quantity),
+              0
+            )}{" "}
+            ta
+          </div>
         </motion.div>
 
         <motion.div

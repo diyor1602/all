@@ -149,7 +149,9 @@ const Machines = () => {
   return (
     <div className="container mx-auto py-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Mashinalar</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Mashinalar ({filteredTypewriters?.length})
+        </h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-white hover:bg-primary/90 transition-colors">
