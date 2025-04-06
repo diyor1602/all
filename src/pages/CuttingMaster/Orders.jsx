@@ -49,7 +49,7 @@ const Orders = () => {
       setFilteredOrders(response.data);
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Xatolik",
         description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
@@ -66,9 +66,13 @@ const Orders = () => {
     const filtered = orders.filter(
       (order) =>
         order?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        order?.id.toString().includes(search) ||
         order?.quantity?.toString().includes(search) ||
         order?.comment?.toLowerCase().includes(search.toLowerCase()) ||
         order?.order_model?.model?.name
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        order?.order_model?.material?.name
           .toLowerCase()
           .includes(search.toLowerCase())
     );
@@ -104,7 +108,7 @@ const Orders = () => {
       fetchOrders();
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Xatolik",
         description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
@@ -167,7 +171,7 @@ const Orders = () => {
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="mb-6">
           <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
-            Buyurtmalar
+            Buyurtmalar ({filteredOrders?.length})
           </h1>
         </motion.div>
 
@@ -232,6 +236,9 @@ const Orders = () => {
                               aria-label="Buyurtma nomi"
                             >
                               {order?.name}
+                              <span className="text-primary ml-2">
+                                #{order?.id}
+                              </span>
                             </h3>
                             <div className="flex items-center text-sm text-gray-600 mt-1">
                               <Tag className="h-4 w-4 mr-1" />

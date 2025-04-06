@@ -42,7 +42,7 @@ const Tailoring = () => {
       setFilteredOrders(response.data);
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Xatolik",
         description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });

@@ -665,7 +665,8 @@ const CuttingStart = () => {
     <>
       <div className="flex flex-col gap-1 bg-white rounded-lg p-3">
         <div>
-          Buyurtma: <span className="font-semibold">{order?.name}</span>
+          Buyurtma: <span className="font-semibold">{order?.name}</span> #
+          {order?.id}
         </div>
         <div>
           Miqdor: <span className="font-semibold">{order?.quantity} ta</span>
