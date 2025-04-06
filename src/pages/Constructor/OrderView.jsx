@@ -101,6 +101,14 @@ const OrderView = () => {
   }, [selectedSubmodel]);
 
   const approveOrder = async () => {
+    if (!order?.order_printing_times?.id) {
+      toast({
+        title: "Diqqat!",
+        description: "Buyurtma allaqachon yakunlangan!",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       setApproving(true);
       await api.post(
@@ -282,13 +290,17 @@ const OrderView = () => {
                   {formatDateTime(order?.order_printing_times?.planned_time)}
                 </div>{" "}
               </div>
-              <div className="text-sm flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4 text-gray-500" />
-                <div>
-                  <span className="mr-1">Haqiqiy vaqt:</span>
-                  {formatDateTime(order?.order_printing_times?.actual_time)}
-                </div>{" "}
-              </div>
+              {order?.order_printing_times?.actual_time ? (
+                <div className="text-sm flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <span className="mr-1">Bajarilgan vaqt:</span>
+                    {formatDateTime(order?.order_printing_times?.actual_time)}
+                  </div>{" "}
+                </div>
+              ) : (
+                <div className="text-red-500 font-medium">Bajarilmagan</div>
+              )}
               <div className="text-sm flex items-center gap-2">
                 <MessageSquareIcon className="h-4 w-4 text-gray-500" />
                 <div>
