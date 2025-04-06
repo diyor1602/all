@@ -206,7 +206,6 @@ const Orders = () => {
                 />
 
                 <CardContent className="p-6">
-                  {/* Top section with ID badge - CHANGED FROM BLUE TO ORANGE */}
                   <div className="flex justify-between items-center mb-4">
                     <div
                       className={`flex items-center gap-2 ${
