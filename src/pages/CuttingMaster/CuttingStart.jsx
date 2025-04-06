@@ -396,7 +396,7 @@ const CuttingStart = () => {
         0x00,
       ]); // GS ( k 4 0 49 65 50 0 - select QR code, model 2
 
-      // Set QR code size (1-16) - choosing 8 here
+      // Set QR code size (1-16) - choosing 16 here
       const qrSize = new Uint8Array([
         GS,
         0x28,
@@ -405,8 +405,8 @@ const CuttingStart = () => {
         0x00,
         0x31,
         0x43,
-        0x08,
-      ]); // GS ( k 3 0 49 67 8 - size 8
+        0x12, // Changed from 8 to 12 (larger size, max is 16)
+      ]); // GS ( k 3 0 49 67 12 - size 12
 
       // Set error correction level (48-51 for L,M,Q,H) - using H (51) for best
       const qrErrorCorrection = new Uint8Array([
@@ -466,7 +466,7 @@ const CuttingStart = () => {
         qrStoreData.length +
         qrDataBytes.length +
         qrPrint.length +
-        lineFeed.length +
+        extraLineFeed.length + // Changed from lineFeed to extraLineFeed
         cut.length;
 
       const result = new Uint8Array(combinedLength);
@@ -498,8 +498,6 @@ const CuttingStart = () => {
       // Add QR code
       result.set(qrModelSelect, offset);
       offset += qrModelSelect.length;
-      result.set(qrSize, offset);
-      offset += qrSize.length;
       result.set(qrErrorCorrection, offset);
       offset += qrErrorCorrection.length;
       result.set(qrStoreData, offset);
@@ -508,8 +506,12 @@ const CuttingStart = () => {
       offset += qrDataBytes.length;
       result.set(qrPrint, offset);
       offset += qrPrint.length;
-      result.set(lineFeed, offset);
-      offset += lineFeed.length;
+      result.set(qrPrint, offset);
+      offset += qrPrint.length;
+
+      const extraLineFeed = new Uint8Array([0x0a, 0x0a, 0x0a, 0x0a, 0x0a]);
+      result.set(extraLineFeed, offset);
+      offset += extraLineFeed.length;
       result.set(cut, offset);
 
       return result;
