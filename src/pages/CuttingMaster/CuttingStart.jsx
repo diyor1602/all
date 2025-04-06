@@ -222,6 +222,8 @@ const CuttingStart = () => {
   };
 
   // ESC/POS command generation for text and QR code printing with proper Unicode handling
+  // Fix for the preparePrintData function
+
   const preparePrintData = () => {
     try {
       const specName =
@@ -257,6 +259,9 @@ const CuttingStart = () => {
       // Line feed
       const LF = new Uint8Array([0x0a]); // Line feed
       const lineFeed = new Uint8Array([0x0a, 0x0a]); // Double line feed
+
+      // Extra line feed - 5 line feeds for more space after QR code
+      const extraLineFeed = new Uint8Array([0x0a, 0x0a, 0x0a, 0x0a, 0x0a]);
 
       // Paper cut
       const cut = new Uint8Array([GS, 0x56, 0x41, 0x10]); // GS V A 16 - Full cut with feed
@@ -397,7 +402,7 @@ const CuttingStart = () => {
         0x00,
       ]); // GS ( k 4 0 49 65 50 0 - select QR code, model 2
 
-      // Set QR code size (1-16) - choosing 16 here
+      // Set QR code size (1-16) - choosing 12 here (can go up to 16)
       const qrSize = new Uint8Array([
         GS,
         0x28,
@@ -406,8 +411,8 @@ const CuttingStart = () => {
         0x00,
         0x31,
         0x43,
-        0x12, // Changed from 8 to 12 (larger size, max is 16)
-      ]); // GS ( k 3 0 49 67 12 - size 12
+        0x14, // Changed to 14 (even larger size, max is 16)
+      ]);
 
       // Set error correction level (48-51 for L,M,Q,H) - using H (51) for best
       const qrErrorCorrection = new Uint8Array([
@@ -467,7 +472,7 @@ const CuttingStart = () => {
         qrStoreData.length +
         qrDataBytes.length +
         qrPrint.length +
-        extraLineFeed.length + // Changed from lineFeed to extraLineFeed
+        extraLineFeed.length + // Using extraLineFeed here
         cut.length;
 
       const result = new Uint8Array(combinedLength);
@@ -499,6 +504,8 @@ const CuttingStart = () => {
       // Add QR code
       result.set(qrModelSelect, offset);
       offset += qrModelSelect.length;
+      result.set(qrSize, offset);
+      offset += qrSize.length;
       result.set(qrErrorCorrection, offset);
       offset += qrErrorCorrection.length;
       result.set(qrStoreData, offset);
@@ -507,12 +514,12 @@ const CuttingStart = () => {
       offset += qrDataBytes.length;
       result.set(qrPrint, offset);
       offset += qrPrint.length;
-      result.set(qrPrint, offset);
-      offset += qrPrint.length;
 
-      const extraLineFeed = new Uint8Array([0x0a, 0x0a, 0x0a, 0x0a, 0x0a]);
+      // Add extra line feed (more space after QR)
       result.set(extraLineFeed, offset);
       offset += extraLineFeed.length;
+
+      // Add cut command
       result.set(cut, offset);
 
       return result;
