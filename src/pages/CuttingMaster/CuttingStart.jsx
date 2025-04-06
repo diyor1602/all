@@ -211,7 +211,6 @@ const CuttingStart = () => {
 
       return true;
     } catch (error) {
-      alert(error);
       toast({
         title: "Chop etishda xatolik",
         description: error.message || "Chop etishda xatolik",
@@ -411,7 +410,7 @@ const CuttingStart = () => {
         0x00,
         0x31,
         0x43,
-        0x14, // Changed to 14 (even larger size, max is 16)
+        0x12, // Changed to 14 (even larger size, max is 16)
       ]);
 
       // Set error correction level (48-51 for L,M,Q,H) - using H (51) for best
@@ -584,7 +583,6 @@ const CuttingStart = () => {
 
       // Print the QR Code and wait for confirmation
       const printSuccess = await printQRCode();
-      alert(printSuccess);
       if (!printSuccess) {
         throw new Error("QR code chop etishda xatolik");
       }
