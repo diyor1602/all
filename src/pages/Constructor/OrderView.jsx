@@ -14,6 +14,8 @@ import {
   TagIcon,
   RulerIcon,
   UserIcon,
+  Files,
+  Edit,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -112,6 +114,19 @@ const OrderView = () => {
     } finally {
       setApproving(false);
     }
+  };
+
+  const handleCopySpec = (spec) => {
+    const specString = JSON.stringify(spec, null, 2);
+    navigator.clipboard.writeText(specString);
+    toast({
+      title: "Nusxa olindi",
+      description: "Spesifikatsiyadan nusxa olindi",
+      style: {
+        backgroundColor: "green",
+        color: "white",
+      },
+    });
   };
 
   if (loading) {
@@ -401,7 +416,25 @@ const OrderView = () => {
                           <Eye className="h-4 w-4 mr-1" />
                           Ko'rish
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                          onClick={() => {
+                            navigate(`/constructor/edit-spec/${spec?.id}`);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          O'zgartirish
+                        </Button>
                       </div>
+                      <Button
+                        size="icon"
+                        className="h-8 w-8 rounded-full text-white"
+                        onClick={() => handleCopySpec(spec)}
+                      >
+                        <Files className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
