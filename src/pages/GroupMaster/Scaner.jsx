@@ -291,7 +291,10 @@ const Scaner = () => {
                         >
                           Nomi
                         </Badge>
-                        <span className="font-medium">{orderCuts?.name}</span>
+                        <span className="font-medium">
+                          {orderCuts?.name}{" "}
+                          <span className="text-primary">#{orderCuts?.id}</span>
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">Miqdori</Badge>

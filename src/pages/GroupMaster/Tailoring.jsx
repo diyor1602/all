@@ -59,9 +59,13 @@ const Tailoring = () => {
     const filtered = orders.filter(
       (order) =>
         order?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        order?.id?.toString().includes(search) ||
         order?.quantity?.toString().includes(search) ||
         order?.comment?.toLowerCase().includes(search.toLowerCase()) ||
         order?.orderModel?.model?.name
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        order?.orderModel?.material?.name
           .toLowerCase()
           .includes(search.toLowerCase())
     );
@@ -122,7 +126,7 @@ const Tailoring = () => {
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="mb-6">
           <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
-            Buyurtmalar
+            Buyurtmalar ({filteredOrders.length})
           </h1>
         </motion.div>
 
@@ -186,7 +190,10 @@ const Tailoring = () => {
                               className="font-bold text-xl text-gray-800"
                               aria-label="Buyurtma nomi"
                             >
-                              {order?.name}
+                              {order?.name}{" "}
+                              <span className="text-primary ml-2">
+                                #{order?.id}
+                              </span>
                             </h3>
                             <div className="flex items-center text-sm text-gray-600 mt-1">
                               <Tag className="h-4 w-4 mr-1" />
