@@ -151,7 +151,7 @@ const Models = () => {
     if (!model) return null;
 
     return (
-      <Card className="bg-white hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 h-fit">
+      <Card className="bg-white hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 h-fit max-w-[330px] md:max-w-full w-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-bold text-gray-800">
             <div className="flex items-center gap-2">
@@ -341,7 +341,7 @@ const Models = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+    <div className="md:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
