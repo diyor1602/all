@@ -124,8 +124,13 @@ const Models = () => {
 
     // Filter by search term
     if (searchTerm.trim() !== "") {
-      filtered = filtered.filter((model) =>
-        (model.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (model) =>
+          (model.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (model.description || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (model.rasxod || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -159,12 +164,6 @@ const Models = () => {
   const clearFilters = () => {
     setSearchTerm("");
     setActiveSubmodelNames([]);
-  };
-
-  const handleEditModel = (id) => {
-    if (id) {
-      navigate(`/models/edit/${id}`);
-    }
   };
 
   const ModelCard = ({ model }) => {
@@ -217,7 +216,7 @@ const Models = () => {
               variant="outline"
               size="sm"
               className="border-blue-200 hover:bg-blue-50 flex items-center gap-1"
-              onClick={() => handleEditModel(model.id)}
+              onClick={() => navigate(`/orderManager/models/edit/${model.id}`)}
             >
               <Edit className="h-4 w-4 text-blue-600" />
               Tahrirlash

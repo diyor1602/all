@@ -218,6 +218,10 @@ const AddModel = () => {
       toast({
         title: "Muvaffaqiyatli",
         description: "Model muvaffaqiyatli qo'shildi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
       });
 
       navigate("/orderManager/models");
@@ -227,7 +231,6 @@ const AddModel = () => {
         description: "Modelni saqlashda xatolik yuz berdi",
         variant: "destructive",
       });
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -448,7 +451,7 @@ const AddModel = () => {
                         Rasmlarni yuklash uchun bosing yoki bu yerga tashlang
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        PNG, JPG, JPEG (max 5MB)
+                        PNG, JPG, JPEG
                       </p>
                       {uploading && (
                         <div className="flex items-center mt-2">
