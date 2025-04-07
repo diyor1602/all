@@ -13,6 +13,8 @@ import {
   Edit,
   Search,
   X,
+  Download,
+  Loader2,
 } from "lucide-react";
 import {
   Accordion,
@@ -56,6 +58,10 @@ const Models = () => {
   const [allSubmodels, setAllSubmodels] = useState([]);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState(null);
+  const [imageToggleOpen, setImageToggleOpen] = useState(false);
+  const [openModelMap, setOpenModelMap] = useState({});
 
   const fetchModels = async () => {
     try {
@@ -99,6 +105,20 @@ const Models = () => {
     filterModels();
   }, [searchTerm, activeSubmodelNames, models]);
 
+  const handleDownload = async (modelId) => {
+    console.log("Downloading");
+  };
+
+  const handleToggleImage = (modelId) => {
+    // Update the open state map for this specific model
+    setOpenModelMap((prevState) => ({
+      ...prevState,
+      [modelId]: !prevState[modelId], // Toggle the state for only this model
+    }));
+
+    // Still track the selected model (for other purposes if needed)
+    setSelectedModelId(modelId);
+  };
   const filterModels = () => {
     let filtered = [...models];
 
@@ -172,7 +192,27 @@ const Models = () => {
           </TooltipProvider>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-end space-x-2 mb-4">
+          <div className="text-gray-600">{model?.description || ""}</div>
+          <div className="flex justify-start space-x-2 mt-2 mb-4 gap-2">
+            {/* <Button
+              variant="outline"
+              size="sm"
+              className="border-blue-200 hover:bg-blue-50 flex items-center gap-1"
+              disabled={isDownloading}
+              onClick={() => handleDownload(model.id)}
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                  Yuklab olinmoqda...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 text-blue-600" />
+                  Yuklab olish
+                </>
+              )}
+            </Button> */}
             <Button
               variant="outline"
               size="sm"
@@ -248,7 +288,10 @@ const Models = () => {
             </AccordionItem>
 
             <AccordionItem value="images">
-              <AccordionTrigger className="hover:bg-blue-50 px-3 py-2 rounded-md transition-colors">
+              <AccordionTrigger
+                className="hover:bg-blue-50 px-3 py-2 rounded-md transition-colors"
+                onClick={() => handleToggleImage(model.id)}
+              >
                 <div className="flex items-center gap-2">
                   <ImageIcon className="text-rose-500" />
                   <span className="font-medium">
@@ -256,83 +299,85 @@ const Models = () => {
                   </span>
                 </div>
               </AccordionTrigger>
-              {(model.images || []).length > 0 ? (
-                (model.images || []).length > 2 ? (
-                  <Carousel className="w-full">
-                    <CarouselContent>
-                      {(model.images || []).map((img) => (
-                        <CarouselItem
-                          key={img?.id || Math.random()}
-                          className="md:basis-1/4"
-                        >
-                          <div className="p-1">
-                            <div
-                              className="relative aspect-square overflow-hidden rounded-xl"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                              }}
-                            >
-                              <img
-                                src={img?.image || NoImage}
-                                loading="lazy"
-                                alt={model.name || "Model rasmi"}
-                                className="object-cover w-full h-full transition-transform hover:scale-105 duration-300 cursor-pointer"
-                                onError={(e) => {
-                                  e.target.src = NoImage;
-                                }}
+              {openModelMap[model.id] ? (
+                (model.images || []).length > 0 ? (
+                  (model.images || []).length > 2 ? (
+                    <Carousel className="w-full">
+                      <CarouselContent>
+                        {(model.images || []).map((img) => (
+                          <CarouselItem
+                            key={img?.id || Math.random()}
+                            className="md:basis-1/4"
+                          >
+                            <div className="p-1">
+                              <div
+                                className="relative aspect-square overflow-hidden rounded-xl"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
-                                  setSelectedImage(img?.image || NoImage);
-                                  setImageDialogOpen(true);
-                                  return false;
                                 }}
-                              />
+                              >
+                                <img
+                                  src={img?.image || NoImage}
+                                  loading="lazy"
+                                  alt={model.name || "Model rasmi"}
+                                  className="object-cover w-full h-full transition-transform hover:scale-105 duration-300 cursor-pointer"
+                                  onError={(e) => {
+                                    e.target.src = NoImage;
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setSelectedImage(img?.image || NoImage);
+                                    setImageDialogOpen(true);
+                                    return false;
+                                  }}
+                                />
+                              </div>
                             </div>
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="left-2" />
-                    <CarouselNext className="right-2" />
-                  </Carousel>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4 mt-2">
-                    {(model.images || []).map((img) => (
-                      <div
-                        key={img?.id || Math.random()}
-                        className="relative aspect-square"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                        }}
-                      >
-                        <img
-                          src={img?.image || NoImage}
-                          loading="lazy"
-                          alt={model.name || "Model rasmi"}
-                          className="rounded-lg object-cover w-full h-full hover:opacity-90 transition-opacity cursor-pointer"
-                          onError={(e) => {
-                            e.target.src = NoImage;
-                          }}
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="left-2" />
+                      <CarouselNext className="right-2" />
+                    </Carousel>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      {(model.images || []).map((img) => (
+                        <div
+                          key={img?.id || Math.random()}
+                          className="relative aspect-square"
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            setSelectedImage(img?.image || NoImage);
-                            setImageDialogOpen(true);
-                            return false;
                           }}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                        >
+                          <img
+                            src={img?.image || NoImage}
+                            loading="lazy"
+                            alt={model.name || "Model rasmi"}
+                            className="rounded-lg object-cover w-full h-full hover:opacity-90 transition-opacity cursor-pointer"
+                            onError={(e) => {
+                              e.target.src = NoImage;
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setSelectedImage(img?.image || NoImage);
+                              setImageDialogOpen(true);
+                              return false;
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  <p className="text-gray-500 text-sm italic px-3">
+                    Rasmlar mavjud emas
+                  </p>
                 )
-              ) : (
-                <p className="text-gray-500 text-sm italic px-3">
-                  Rasmlar mavjud emas
-                </p>
-              )}
+              ) : null}
             </AccordionItem>
           </Accordion>
         </CardContent>
@@ -357,7 +402,7 @@ const Models = () => {
 
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => navigate("/models/add/new")}
+              onClick={() => navigate("/orderManager/models/add")}
               className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" />
@@ -475,7 +520,7 @@ const Models = () => {
               )}
               {models.length === 0 && (
                 <Button
-                  onClick={() => navigate("/models/add/new")}
+                  onClick={() => navigate("/orderManager/models/add")}
                   className="mt-4 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
                 >
                   <PlusCircle className="h-4 w-4" />
