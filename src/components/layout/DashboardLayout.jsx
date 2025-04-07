@@ -4,6 +4,7 @@ import CuttingMasterLayout from "./DashboardLayouts/CuttingMasterLayout";
 import GroupMasterLayout from "./DashboardLayouts/GroupMasterLayout";
 import TvLayout from "./DashboardLayouts/TvLayout";
 import ConstructorLayout from "./DashboardLayouts/ConstructorLayout";
+import OrderManagerLayout from "./DashboardLayouts/OrderManagerLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -13,6 +14,7 @@ const layouts = {
   groupMaster: GroupMasterLayout,
   tv: TvLayout,
   constructor: ConstructorLayout,
+  orderManager: OrderManagerLayout,
 };
 
 const DashboardLayout = () => {

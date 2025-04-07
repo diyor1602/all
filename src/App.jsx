@@ -15,6 +15,7 @@ import Technolog from "./pages/Technolog/Technolog";
 import CuttingMaster from "./pages/CuttingMaster/CuttingMaster";
 import GroupMaster from "./pages/GroupMaster/GroupMaster";
 import Constructor from "./pages/Constructor/Constructor";
+import OrderManager from "./pages/OrderManager/OrderManager";
 import Tv from "./pages/Tv/Tv";
 
 const ProtectedRoute = () => {
@@ -51,6 +52,7 @@ function App() {
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />
           <Route path="/groupMaster/*" element={<GroupMaster />} />
           <Route path="/constructor/*" element={<Constructor />} />
+          <Route path="/orderManager/*" element={<OrderManager />} />
           <Route path="/tv/*" element={<Tv />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
