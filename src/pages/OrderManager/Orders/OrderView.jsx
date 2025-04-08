@@ -294,14 +294,12 @@ const OrderView = () => {
               </div>
             </div>
           </div>
-
           {order?.comment && (
             <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
               <MessageSquareIcon className="h-4 w-4 text-gray-500 mt-1" />
               <span className="text-sm">{order?.comment}</span>
             </div>
           )}
-
           {order?.order_model?.sizes && order.order_model.sizes.length > 0 && (
             <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
               <h4 className="font-medium text-gray-700 mb-3 flex items-center">
@@ -322,7 +320,6 @@ const OrderView = () => {
               </div>
             </div>
           )}
-
           {order?.order_model?.sizes && order.order_model.sizes.length > 0 && (
             <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
               <h4 className="font-medium text-gray-700 mb-3 flex items-center">
@@ -348,7 +345,6 @@ const OrderView = () => {
               </div>
             </div>
           )}
-
           {order?.instructions && (
             <div className="mt-6">
               <h4 className="text-base font-bold text-gray-700 mb-3 flex items-center">
@@ -371,7 +367,6 @@ const OrderView = () => {
               </Card>
             </div>
           )}
-
           {order?.packageOutcomes?.length > 0 && (
             <div className="mt-6">
               <h4 className="text-base font-bold text-gray-700 mb-3 flex items-center">
@@ -449,7 +444,6 @@ const OrderView = () => {
               </Card>
             </div>
           )}
-
           {/* OTK Order Group Section */}
           {order?.order_model?.submodels?.some(
             (submodel) => submodel.otkOrderGroup
@@ -512,7 +506,6 @@ const OrderView = () => {
               </Tabs>
             </div>
           )}
-
           <div className="mt-6">
             <Accordion type="single" collapsible className="w-full">
               {/* Quality Checks Section */}
@@ -773,7 +766,6 @@ const OrderView = () => {
               )}
             </Accordion>
           </div>
-
           {hasSewingOutputs && (
             <div className="mt-6">
               <h4 className="text-base font-bold text-gray-700 mb-3 flex items-center">
@@ -865,99 +857,107 @@ const OrderView = () => {
                 </h4>
                 <Card className="bg-gradient-to-r from-teal-50 to-cyan-50 border-none shadow-sm">
                   <CardContent className="p-0">
-                    <div className="divide-y divide-teal-100">
+                    <Accordion type="multiple" className="w-full">
                       {order.specification_categories.map((category) => (
-                        <div key={category.id} className="p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h5 className="font-semibold text-gray-800 flex items-center">
-                              <TagIcon className="h-4 w-4 mr-2 text-teal-600" />
-                              {category.name}
-                            </h5>
-                            <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-200">
-                              {category.orderCuts.length} ta bichim
-                            </Badge>
-                          </div>
-
-                          {category.orderCuts.length > 0 ? (
-                            <div className="space-y-3">
-                              {category.orderCuts.map((cut) => (
-                                <div
-                                  key={cut.id}
-                                  className="bg-white bg-opacity-60 rounded-lg p-3 border border-teal-100"
-                                >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center">
-                                      <CheckCircle
-                                        className={`h-4 w-4 ${
-                                          cut.status
-                                            ? "text-green-500"
-                                            : "text-orange-500"
-                                        } mr-2`}
-                                      />
-                                      <span
-                                        className={`font-medium ${
-                                          cut.status
-                                            ? "text-green-700"
-                                            : "text-orange-700"
-                                        }`}
-                                      >
-                                        Status:{" "}
-                                        {cut.status
-                                          ? "Qabul qilingan"
-                                          : "Qabul qilinmagan"}
-                                      </span>
-                                    </div>
-                                    <Badge className="bg-blue-100 text-blue-800">
-                                      {cut.quantity} dona
-                                    </Badge>
-                                  </div>
-
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                    <div className="flex items-center">
-                                      <Calendar className="h-4 w-4 text-gray-500 mr-2" />
-                                      <span>
-                                        Bichilgan vaqt:{" "}
-                                        {new Date(cut.cut_at).toLocaleString(
-                                          "ru-RU"
-                                        )}
-                                      </span>
-                                    </div>
-
-                                    <div className="flex items-center">
-                                      <User className="h-4 w-4 text-gray-500 mr-2" />
-                                      <span>
-                                        Ma'sul:{" "}
-                                        {cut.user?.employee?.name ||
-                                          "Belgilanmagan"}
-                                      </span>
-                                    </div>
-
-                                    {cut.user?.group && (
-                                      <div className="flex items-center md:col-span-2">
-                                        <Users className="h-4 w-4 text-gray-500 mr-2" />
-                                        <span>
-                                          Guruh: {cut.user.group.name}
+                        <AccordionItem
+                          key={category.id}
+                          value={`category-${category.id}`}
+                          className="border-b border-teal-100 last:border-b-0"
+                        >
+                          <AccordionTrigger className="py-3 px-4 hover:no-underline hover:bg-teal-100/30">
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <div className="flex items-center">
+                                <TagIcon className="h-4 w-4 mr-2 text-teal-600" />
+                                <span className="font-semibold text-gray-800">
+                                  {category.name}
+                                </span>
+                              </div>
+                              <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-200">
+                                {category.orderCuts.length} ta bichim
+                              </Badge>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pb-4 pt-2">
+                            {category.orderCuts.length > 0 ? (
+                              <div className="space-y-3">
+                                {category.orderCuts.map((cut) => (
+                                  <div
+                                    key={cut.id}
+                                    className="bg-white bg-opacity-60 rounded-lg p-3 border border-teal-100 transition-all hover:shadow-sm"
+                                  >
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center">
+                                        <CheckCircle
+                                          className={`h-4 w-4 ${
+                                            cut.status
+                                              ? "text-green-500"
+                                              : "text-orange-500"
+                                          } mr-2`}
+                                        />
+                                        <span
+                                          className={`font-medium ${
+                                            cut.status
+                                              ? "text-green-700"
+                                              : "text-orange-700"
+                                          }`}
+                                        >
+                                          Status:{" "}
+                                          {cut.status
+                                            ? "Qabul qilingan"
+                                            : "Qabul qilinmagan"}
                                         </span>
                                       </div>
-                                    )}
+                                      <Badge className="bg-blue-100 text-blue-800">
+                                        {cut.quantity} dona
+                                      </Badge>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                      <div className="flex items-center">
+                                        <Calendar className="h-4 w-4 text-gray-500 mr-2" />
+                                        <span>
+                                          Bichilgan vaqt:{" "}
+                                          {new Date(cut.cut_at).toLocaleString(
+                                            "ru-RU"
+                                          )}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex items-center">
+                                        <User className="h-4 w-4 text-gray-500 mr-2" />
+                                        <span>
+                                          Ma'sul:{" "}
+                                          {cut.user?.employee?.name ||
+                                            "Belgilanmagan"}
+                                        </span>
+                                      </div>
+
+                                      {cut.user?.group && (
+                                        <div className="flex items-center md:col-span-2">
+                                          <Users className="h-4 w-4 text-gray-500 mr-2" />
+                                          <span>
+                                            Guruh: {cut.user.group.name}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="bg-white bg-opacity-50 rounded-lg p-4 text-center text-gray-500 border border-teal-100">
-                              <InboxIcon className="h-8 w-8 mx-auto mb-2 text-teal-300" />
-                              <p>Bichim ma'lumotlari mavjud emas</p>
-                            </div>
-                          )}
-                        </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="bg-white bg-opacity-50 rounded-lg p-4 text-center text-gray-500 border border-teal-100">
+                                <InboxIcon className="h-8 w-8 mx-auto mb-2 text-teal-300" />
+                                <p>Bichim ma'lumotlari mavjud emas</p>
+                              </div>
+                            )}
+                          </AccordionContent>
+                        </AccordionItem>
                       ))}
-                    </div>
+                    </Accordion>
                   </CardContent>
                 </Card>
               </div>
             )}
-
           {order?.orderPrintingTimes && (
             <div className="mt-6">
               <h4 className="text-base font-bold text-gray-700 mb-3 flex items-center">
