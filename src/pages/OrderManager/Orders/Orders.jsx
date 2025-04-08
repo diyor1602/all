@@ -9,6 +9,7 @@ import {
   Box,
   Calendar,
   ChevronRight,
+  CirclePlus,
 } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -125,13 +126,17 @@ const Orders = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <div className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <div>Buyurtmalar</div>
-            <Badge className="text-sm">{filteredOrders.length} ta</Badge>
+            <Badge className="text-sm">
+              <div className="flex items-center gap-1">
+                <span>{filteredOrders.length}</span> <span>ta</span>
+              </div>
+            </Badge>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col gap-2 w-full md:flex-row md:w-auto">
             <div className="relative">
               <Search
                 className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -141,12 +146,12 @@ const Orders = () => {
                 placeholder="Qidiruv..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 w-full sm:w-64"
+                className="pl-8 w-full md:w-64"
               />
             </div>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Holati" />
               </SelectTrigger>
               <SelectContent>
@@ -160,7 +165,7 @@ const Orders = () => {
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Saralash" />
               </SelectTrigger>
               <SelectContent>
@@ -170,6 +175,9 @@ const Orders = () => {
                 <SelectItem value="quantity-low">Eng kam miqdorda</SelectItem>
               </SelectContent>
             </Select>
+            <Button onClick={() => navigate("/orderManager/orders/new")}>
+              <CirclePlus /> Yangi buyurtma
+            </Button>
           </div>
         </div>
       </div>
