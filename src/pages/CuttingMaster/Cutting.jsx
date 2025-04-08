@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { statuses } from "@/lib/status";
 
 const Cutting = () => {
   const { toast } = useToast();
@@ -352,7 +353,13 @@ const Cutting = () => {
                                   "Izoh yo'q"}
                               </div>
                             </div>
-                            <div>Status: Konstruktorda</div>
+                            <div>
+                              Status:{" "}
+                              {
+                                statuses[order?.order_printing_time?.status]
+                                  .text
+                              }
+                            </div>
                             <div>
                               Bajarilgan vaqti:{" "}
                               {order?.order_printing_time?.actual_time ||
