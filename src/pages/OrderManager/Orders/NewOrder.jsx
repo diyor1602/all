@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
@@ -237,7 +239,9 @@ const NewOrder = () => {
   const handleSizeQuantityChange = (sizeId, quantity) => {
     setSizesWithQuantity((prev) =>
       prev.map((size) =>
-        size.id === sizeId ? { ...size, quantity: parseInt(quantity) } : size
+        size.id === sizeId
+          ? { ...size, quantity: Number.parseInt(quantity) }
+          : size
       )
     );
   };
@@ -691,7 +695,9 @@ const NewOrder = () => {
                       />
                       Buyurtma Narxi (
                       {formData.price
-                        ? parseFloat(formData.price).toLocaleString("en-EN")
+                        ? Number.parseFloat(formData.price).toLocaleString(
+                            "en-EN"
+                          )
                         : ""}{" "}
                       $)
                     </Label>
@@ -839,7 +845,9 @@ const NewOrder = () => {
                     <Label htmlFor="rasxod" className="font-medium">
                       Rasxod (
                       {formData.rasxod
-                        ? parseFloat(formData.rasxod).toLocaleString("en-EN")
+                        ? Number.parseFloat(formData.rasxod).toLocaleString(
+                            "en-EN"
+                          )
                         : ""}{" "}
                       $)
                     </Label>
