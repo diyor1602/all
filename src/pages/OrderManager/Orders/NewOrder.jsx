@@ -1209,52 +1209,54 @@ const NewOrder = () => {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-end flex-wrap gap-2 w-full">
               <Button type="button" variant="ghost" onClick={handlePaste}>
                 <ClipboardPaste />
                 Joylash
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  // Reset form
-                  setFormData({
-                    name: "",
-                    quantity: 1,
-                    price: "",
-                    start_date: "",
-                    end_date: "",
-                    rasxod: "",
-                    comment: "",
-                    model_id: null,
-                    material_id: null,
-                    contragent_id: null,
-                    contragent_name: "",
-                  });
-                  setSelectedModel(null);
-                  setSelectedMaterial(null);
-                  setSelectedContragent(null);
-                  setContragentInput("");
-                  setSelectedSubmodels([]);
-                  setSelectedSizes([]);
-                  setSizesWithQuantity([]);
-                }}
-              >
-                Bekor qilish
-              </Button>
-              <Button
-                type="submit"
-                disabled={
-                  submitting ||
-                  loading ||
-                  !selectedModel ||
-                  selectedSizes.length === 0
-                }
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {submitting ? "Yuborilmoqda..." : "Buyurtma yaratish"}
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    // Reset form
+                    setFormData({
+                      name: "",
+                      quantity: 1,
+                      price: "",
+                      start_date: "",
+                      end_date: "",
+                      rasxod: "",
+                      comment: "",
+                      model_id: null,
+                      material_id: null,
+                      contragent_id: null,
+                      contragent_name: "",
+                    });
+                    setSelectedModel(null);
+                    setSelectedMaterial(null);
+                    setSelectedContragent(null);
+                    setContragentInput("");
+                    setSelectedSubmodels([]);
+                    setSelectedSizes([]);
+                    setSizesWithQuantity([]);
+                  }}
+                >
+                  Bekor qilish
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    submitting ||
+                    loading ||
+                    !selectedModel ||
+                    selectedSizes.length === 0
+                  }
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {submitting ? "Yuborilmoqda..." : "Buyurtma yaratish"}
+                </Button>
+              </div>
             </div>
           </div>
         </form>

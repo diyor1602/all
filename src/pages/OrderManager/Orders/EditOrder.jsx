@@ -1057,7 +1057,7 @@ const EditOrder = () => {
             </TabsContent>
           </Tabs>
 
-          <div className="mt-8 flex justify-between">
+          <div className="mt-8 flex justify-between gap-3 items-center flex-wrap">
             <div>
               {selectedModel && selectedSizes.length > 0 && (
                 <div className="bg-blue-50 rounded-md px-4 py-2 text-blue-800">

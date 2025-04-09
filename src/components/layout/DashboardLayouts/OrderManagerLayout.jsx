@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Home, Box, Puzzle } from "lucide-react";
+import { Home, Box, Puzzle, Building2 } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -13,6 +13,12 @@ const navigation = [
     name: "Modellar",
     href: "/orderManager/models",
     icon: Puzzle,
+    onMobile: true,
+  },
+  {
+    name: "Kontragentlar",
+    href: "/orderManager/contragent",
+    icon: Building2,
     onMobile: true,
   },
 ];

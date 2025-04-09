@@ -10,6 +10,7 @@ import {
   Calendar,
   ChevronRight,
   CirclePlus,
+  FileSpreadsheet,
 } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -177,6 +178,12 @@ const Orders = () => {
             </Select>
             <Button onClick={() => navigate("/orderManager/orders/new")}>
               <CirclePlus /> Yangi buyurtma
+            </Button>
+            <Button
+              onClick={() => navigate("/orderManager/excel")}
+              className="bg-green-500 text-white hover:bg-green-600"
+            >
+              <FileSpreadsheet /> Excel
             </Button>
           </div>
         </div>
