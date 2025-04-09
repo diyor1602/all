@@ -15,6 +15,8 @@ import {
   PlusCircle,
   Tag,
   Ruler,
+  DollarSign,
+  ClipboardPaste,
 } from "lucide-react";
 import {
   Command,
@@ -62,6 +64,7 @@ const NewOrder = () => {
   const [contragentInput, setContragentInput] = useState("");
   const [isNewContragent, setIsNewContragent] = useState(false);
   const [filteredContragents, setFilteredContragents] = useState([]);
+  const [currentTab, setCurrentTab] = useState("general");
 
   // New states for submodels and sizes
   const [selectedSubmodels, setSelectedSubmodels] = useState([]);
@@ -70,6 +73,7 @@ const NewOrder = () => {
 
   const [formData, setFormData] = useState({
     name: "",
+    price: 0,
     quantity: 1,
     start_date: "",
     end_date: "",
@@ -250,6 +254,15 @@ const NewOrder = () => {
       return;
     }
 
+    if (isNaN(formData.price) || formData.price <= 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, narxni to'g'ri kiriting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!selectedMaterial) {
       toast({
         title: "Diqqat",
@@ -314,6 +327,7 @@ const NewOrder = () => {
       const orderData = {
         name: formData.name,
         quantity: totalQuantity,
+        price: formData.price,
         start_date: formData.start_date,
         end_date: formData.end_date,
         rasxod: formData.rasxod,
@@ -365,6 +379,297 @@ const NewOrder = () => {
     0
   );
 
+  const handlePaste = () => {
+    setCurrentTab("general");
+    navigator.clipboard
+      .readText()
+      .then(async (text) => {
+        try {
+          // Parse the pasted text as JSON
+          const pastedData = JSON.parse(text);
+
+          // Check if the pasted data has the expected structure
+          if (!pastedData || typeof pastedData !== "object") {
+            throw new Error("Invalid data format");
+          }
+
+          // Update form data with basic fields
+          const updatedFormData = {
+            name: pastedData.name || "",
+            price: pastedData.price || 0,
+            quantity: pastedData.quantity || 1,
+            start_date: pastedData.start_date || "",
+            end_date: pastedData.end_date || "",
+            rasxod: pastedData.rasxod || "",
+            comment: pastedData.comment || "",
+            model_id: pastedData.model?.id || null,
+            contragent_id: pastedData.contragent_id || null,
+            contragent_name: "",
+          };
+
+          setFormData(updatedFormData);
+
+          // Set contragent if exists
+          if (pastedData.contragent_id) {
+            const contragent = contragents.find(
+              (c) => c.id === pastedData.contragent_id
+            );
+            if (contragent) {
+              setSelectedContragent(contragent);
+              setContragentInput(contragent.name);
+              setContragentsOpen(false);
+            }
+          }
+
+          // Process model tab
+          const processModelTab = async () => {
+            console.log("Processing model tab...");
+            // Switch to model tab
+            if (document.querySelector('[value="model"]')) {
+              document.querySelector('[value="model"]').click();
+              // Wait for UI to update
+              await new Promise((resolve) => setTimeout(resolve, 200));
+            }
+
+            // Find and select the model
+            if (pastedData.model?.id) {
+              const model = models.find((m) => m.id === pastedData.model.id);
+              if (model) {
+                console.log("Setting model:", model.name);
+                setSelectedModel(model);
+                setModelsOpen(false);
+
+                // Wait for model selection to take effect
+                await new Promise((resolve) => setTimeout(resolve, 200));
+
+                // Find and select material
+                if (pastedData.model.material_id) {
+                  const material = materials.find(
+                    (m) => m.id === pastedData.model.material_id
+                  );
+                  if (material) {
+                    console.log("Setting material:", material.name);
+                    setSelectedMaterial(material);
+                    setMaterialsOpen(false);
+
+                    // Wait for material selection to take effect
+                    await new Promise((resolve) => setTimeout(resolve, 200));
+                  }
+                }
+
+                // Handle submodels
+                if (
+                  pastedData.model.submodels &&
+                  model.submodels &&
+                  model.submodels.length > 0
+                ) {
+                  // Make sure submodels is an array
+                  const submodelIds = Array.isArray(pastedData.model.submodels)
+                    ? pastedData.model.submodels
+                    : [pastedData.model.submodels];
+
+                  console.log("Submodel IDs:", submodelIds);
+
+                  // Find the submodel objects using their IDs
+                  const submodelsToSelect = model.submodels.filter((sm) =>
+                    submodelIds.includes(sm.id)
+                  );
+
+                  console.log(
+                    "Submodels to select:",
+                    submodelsToSelect.map((sm) => sm.name)
+                  );
+
+                  // Set the selected submodels
+                  setSelectedSubmodels(submodelsToSelect);
+
+                  // Wait for the submodels state to update
+                  await new Promise((resolve) => setTimeout(resolve, 200));
+
+                  // Find and click each submodel checkbox
+                  submodelIds.forEach((id) => {
+                    const checkbox = document.getElementById(`submodel-${id}`);
+                    console.log(
+                      `Looking for submodel checkbox #submodel-${id}:`,
+                      checkbox
+                    );
+                    if (checkbox && !checkbox.checked) {
+                      console.log(`Clicking checkbox for submodel-${id}`);
+                      checkbox.click();
+                    }
+                  });
+
+                  // Wait for checkbox clicks to take effect
+                  await new Promise((resolve) => setTimeout(resolve, 200));
+                }
+              }
+            }
+          };
+
+          // Process sizes tab
+          const processSizesTab = async () => {
+            console.log("Processing sizes tab...");
+            // Switch to sizes tab
+            if (document.querySelector('[value="sizes"]')) {
+              document.querySelector('[value="sizes"]').click();
+              // Wait for UI to update
+              await new Promise((resolve) => setTimeout(resolve, 200));
+            }
+
+            if (pastedData.model?.id && pastedData.model.sizes) {
+              const model = models.find((m) => m.id === pastedData.model.id);
+              if (model && model.sizes && model.sizes.length > 0) {
+                // Prepare sizes data
+                const sizesToSelect = [];
+                const sizesWithQuantityData = [];
+
+                pastedData.model.sizes.forEach((sizeData) => {
+                  const modelSize = model.sizes.find(
+                    (s) => s.id === sizeData.id
+                  );
+                  if (modelSize) {
+                    sizesToSelect.push(modelSize);
+                    sizesWithQuantityData.push({
+                      id: modelSize.id,
+                      name: modelSize.name,
+                      quantity: sizeData.quantity || 1,
+                    });
+                  }
+                });
+
+                console.log(
+                  "Sizes to select:",
+                  sizesToSelect.map((s) => s.name)
+                );
+                console.log("Sizes with quantity:", sizesWithQuantityData);
+
+                // Set state
+                setSelectedSizes(sizesToSelect);
+                setSizesWithQuantity(sizesWithQuantityData);
+
+                // Wait for state to update
+                await new Promise((resolve) => setTimeout(resolve, 200));
+
+                // Check all checkboxes
+                pastedData.model.sizes.forEach((sizeData) => {
+                  const checkbox = document.getElementById(
+                    `size-${sizeData.id}`
+                  );
+                  console.log(
+                    `Looking for size checkbox #size-${sizeData.id}:`,
+                    checkbox
+                  );
+                  if (checkbox && !checkbox.checked) {
+                    console.log(`Clicking checkbox for size-${sizeData.id}`);
+                    checkbox.click();
+                  }
+                });
+
+                // Wait for checkbox clicks to take effect
+                await new Promise((resolve) => setTimeout(resolve, 200));
+
+                // Now set quantities for each size
+                sizesWithQuantityData.forEach((size) => {
+                  // Find input field
+                  const inputs = document.querySelectorAll(
+                    'input[type="number"]'
+                  );
+                  inputs.forEach((input) => {
+                    // Find parent element with text that contains the size name
+                    const parent = input.closest("div");
+                    if (parent && parent.textContent.includes(size.name)) {
+                      console.log(
+                        `Setting quantity ${size.quantity} for size ${size.name}`
+                      );
+                      input.value = size.quantity;
+                      // Trigger input event to ensure React state updates
+                      const event = new Event("input", { bubbles: true });
+                      input.dispatchEvent(event);
+                    }
+                  });
+                });
+
+                // Wait for input events to take effect
+                await new Promise((resolve) => setTimeout(resolve, 200));
+              }
+            }
+          };
+
+          // Process general tab
+          const processGeneralTab = async () => {
+            console.log("Processing general tab...");
+            // Switch to general tab
+            if (document.querySelector('[value="general"]')) {
+              document.querySelector('[value="general"]').click();
+              // Wait for UI to update
+              await new Promise((resolve) => setTimeout(resolve, 200));
+            }
+
+            // Check and set all form inputs
+            const inputs = document.querySelectorAll("input, textarea");
+            inputs.forEach((input) => {
+              const name = input.name;
+              if (name && updatedFormData[name] !== undefined) {
+                console.log(`Setting ${name} to ${updatedFormData[name]}`);
+                input.value = updatedFormData[name];
+                // Trigger input event
+                const event = new Event("input", { bubbles: true });
+                input.dispatchEvent(event);
+              }
+            });
+          };
+
+          // Execute all tab processing in sequence
+          try {
+            await processModelTab();
+            await processSizesTab();
+            await processGeneralTab();
+
+            // Finally return to original tab
+            if (
+              currentTab &&
+              document.querySelector(`[value="${currentTab}"]`)
+            ) {
+              console.log(`Returning to original tab: ${currentTab}`);
+              document.querySelector(`[value="${currentTab}"]`).click();
+            }
+
+            toast({
+              title: "Ma'lumotlar joylandi",
+              description: "Buyurtma ma'lumotlari muvaffaqiyatli joylandi",
+              style: {
+                backgroundColor: "green",
+                color: "white",
+              },
+            });
+          } catch (processError) {
+            console.error("Error during tab processing:", processError);
+            toast({
+              title: "Xatolik",
+              description: "Ma'lumotlarni joylashda xatolik yuz berdi",
+              variant: "destructive",
+            });
+          }
+        } catch (parseError) {
+          console.error("Error parsing pasted data:", parseError);
+          toast({
+            title: "Xatolik",
+            description:
+              "Noto'g'ri formatdagi ma'lumotlar. Iltimos, to'g'ri formatdagi ma'lumotlarni joylashtiring.",
+            variant: "destructive",
+          });
+        }
+      })
+      .catch((clipboardError) => {
+        console.error("Clipboard error:", clipboardError);
+        toast({
+          title: "Xatolik",
+          description: "Clipboard ma'lumotlarini olishda xatolik yuz berdi",
+          variant: "destructive",
+        });
+      });
+  };
+
   return (
     <Card className="w-full max-w-5xl mx-auto shadow-md">
       <CardHeader className="bg-slate-50">
@@ -378,11 +683,20 @@ const NewOrder = () => {
       </CardHeader>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit}>
-          <Tabs defaultValue="general" className="w-full">
+          <Tabs value={currentTab} className="w-full">
             <TabsList className="overflow-x-auto w-full flex justify-start">
-              <TabsTrigger value="general">Asosiy Ma'lumotlar</TabsTrigger>
-              <TabsTrigger value="model">Model va Material</TabsTrigger>
-              <TabsTrigger value="sizes">O'lchamlar va Miqdorlar</TabsTrigger>
+              <TabsTrigger
+                value="general"
+                onClick={() => setCurrentTab("general")}
+              >
+                Asosiy Ma'lumotlar
+              </TabsTrigger>
+              <TabsTrigger value="model" onClick={() => setCurrentTab("model")}>
+                Model va Material
+              </TabsTrigger>
+              <TabsTrigger value="sizes" onClick={() => setCurrentTab("sizes")}>
+                O'lchamlar va Miqdorlar
+              </TabsTrigger>
             </TabsList>
 
             {/* Tab 1: General Information */}
@@ -399,6 +713,31 @@ const NewOrder = () => {
                       name="name"
                       placeholder="Buyurtma nomini kiriting"
                       value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="price" className="font-medium">
+                      <DollarSign
+                        className="inline-block mr-2 mb-1"
+                        size={16}
+                      />
+                      Buyurtma Narxi (
+                      {formData.price
+                        ? parseFloat(formData.price).toLocaleString("en-EN")
+                        : ""}{" "}
+                      $)
+                    </Label>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      step={0.001}
+                      placeholder="Buyurtma narxini kiriting"
+                      value={formData.price}
                       onChange={handleInputChange}
                       required
                       className="w-full"
@@ -535,7 +874,10 @@ const NewOrder = () => {
                   <div className="space-y-2">
                     <Label htmlFor="rasxod" className="font-medium">
                       Rasxod (
-                      {parseFloat(formData.rasxod).toLocaleString("ru-RU")})
+                      {formData.rasxod
+                        ? parseFloat(formData.rasxod).toLocaleString("en-EN")
+                        : ""}{" "}
+                      $)
                     </Label>
                     <Input
                       id="rasxod"
@@ -892,7 +1234,11 @@ const NewOrder = () => {
                 </div>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="ghost" onClick={handlePaste}>
+                <ClipboardPaste />
+                Joylash
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -901,6 +1247,7 @@ const NewOrder = () => {
                   setFormData({
                     name: "",
                     quantity: 1,
+                    price: "",
                     start_date: "",
                     end_date: "",
                     rasxod: "",

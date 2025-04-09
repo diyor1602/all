@@ -25,6 +25,8 @@ import {
   Clock,
   Filter,
   Package,
+  Files,
+  DollarSign,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -100,6 +102,42 @@ const OrderView = () => {
     fetchOrder();
   }, [id, navigate, toast]);
 
+  const handleCopy = () => {
+    // Create a new object with the required format
+    const formattedOrder = {
+      name: order.name,
+      quantity: order.quantity,
+      price: order.price.toString(),
+      start_date: order.start_date ? order.start_date.split(" ")[0] : null,
+      end_date: order.end_date ? order.end_date.split(" ")[0] : null,
+      rasxod: order.rasxod,
+      comment: order.comment,
+      model: {
+        id: order.order_model.model.id,
+        material_id: order.order_model.material.id,
+        submodels: order.order_model.submodels.map(
+          (submodel) => submodel.submodel.id
+        ),
+        sizes: order.order_model.sizes.map((size) => ({
+          id: size.size.id,
+          quantity: size.quantity,
+        })),
+      },
+      contragent_id: order.contragent ? order.contragent.id : null,
+    };
+
+    // Copy the formatted order to clipboard
+    navigator.clipboard.writeText(JSON.stringify(formattedOrder, null, 4));
+
+    toast({
+      title: "Nusxa olindi",
+      description: "Buyurtmadan nusxa olindi",
+      style: {
+        backgroundColor: "green",
+        color: "white",
+      },
+    });
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -129,6 +167,10 @@ const OrderView = () => {
         <h2 className="text-2xl font-bold text-gray-800">
           Buyurtma #{order?.id}
         </h2>
+        <Button className="flex items-center" onClick={handleCopy}>
+          <Files className="h-4 w-4" />
+          Nusxa olish
+        </Button>
       </div>
 
       {/* Order info card */}
@@ -175,6 +217,16 @@ const OrderView = () => {
                     <CalendarIcon className="h-4 w-4 text-gray-500" />
                     <span className="text-sm">
                       Miqdori: {order?.quantity || "0"} ta
+                    </span>
+                  </div>
+                )}
+                {order?.price && (
+                  <div className="flex gap-2 items-center">
+                    <DollarSign className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">
+                      Narxi:{" "}
+                      {parseFloat(order?.price)?.toLocaleString("en-EN") || "0"}{" "}
+                      $
                     </span>
                   </div>
                 )}
