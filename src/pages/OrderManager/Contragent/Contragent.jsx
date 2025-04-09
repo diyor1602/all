@@ -148,7 +148,7 @@ const Contragent = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h2 className="text-2xl font-bold tracking-tight">
           Kontragentlar ({filteredTypewriters?.length})
         </h2>
