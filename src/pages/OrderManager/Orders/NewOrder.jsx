@@ -962,7 +962,7 @@ const NewOrder = () => {
                       <div className="space-y-2 bg-slate-50 p-4 rounded-md">
                         <Label className="font-medium">
                           <Tag className="inline-block mr-2 mb-1" size={16} />
-                          Sub-modellarni Tanlang
+                          Sub-modellarni tanlang
                         </Label>
                         <div className="grid grid-cols-2 gap-2 mt-2">
                           {selectedModel.submodels.map((submodel) => (
@@ -1070,7 +1070,10 @@ const NewOrder = () => {
                         </p>
                         <p>
                           <span className="font-medium">Rasxod:</span>{" "}
-                          {selectedModel.rasxod || "Ko'rsatilmagan"}
+                          {parseFloat(selectedModel.rasxod).toLocaleString(
+                            "en-EN"
+                          ) || "-"}{" "}
+                          so'm
                         </p>
                         <p>
                           <span className="font-medium">Sub-modellar:</span>{" "}
