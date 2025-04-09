@@ -86,9 +86,9 @@ const Orders = () => {
       const matchesSearch =
         searchTerm === "" ||
         order?.id.toString().includes(searchTerm) ||
-        order?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order?.quantity.toString().includes(searchTerm) ||
-        order?.comment.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order?.quantity?.toString().includes(searchTerm) ||
+        order?.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (order?.order_model?.model?.name || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
