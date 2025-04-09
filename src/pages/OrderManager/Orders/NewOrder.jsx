@@ -43,6 +43,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 const NewOrder = () => {
   const [models, setModels] = useState([]);
@@ -51,6 +52,7 @@ const NewOrder = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [modelsOpen, setModelsOpen] = useState(false);
   const [contragentsOpen, setContragentsOpen] = useState(false);
@@ -193,7 +195,6 @@ const NewOrder = () => {
     setFormData({
       ...formData,
       model_id: model.id,
-      rasxod: model.rasxod || "",
     });
   };
 
@@ -232,9 +233,7 @@ const NewOrder = () => {
   const handleSizeQuantityChange = (sizeId, quantity) => {
     setSizesWithQuantity((prev) =>
       prev.map((size) =>
-        size.id === sizeId
-          ? { ...size, quantity: parseInt(quantity) || 0 }
-          : size
+        size.id === sizeId ? { ...size, quantity: parseInt(quantity) } : size
       )
     );
   };
@@ -244,7 +243,7 @@ const NewOrder = () => {
 
     if (!selectedModel) {
       toast({
-        title: "Xato",
+        title: "Diqqat",
         description: "Iltimos, modelni tanlang",
         variant: "destructive",
       });
@@ -253,7 +252,7 @@ const NewOrder = () => {
 
     if (!selectedMaterial) {
       toast({
-        title: "Xato",
+        title: "Diqqat",
         description: "Iltimos, materialni tanlang",
         variant: "destructive",
       });
@@ -262,8 +261,31 @@ const NewOrder = () => {
 
     if (selectedSizes.length === 0) {
       toast({
-        title: "Xato",
+        title: "Diqqat",
         description: "Iltimos, kamida bitta o'lchamni tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedSubmodels.length === 0 && selectedModel.submodels?.length > 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, kamida bitta sub-modelni tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // check sizes with quantity is number and greater than 0
+    if (
+      sizesWithQuantity.some(
+        (size) => isNaN(size.quantity) || size.quantity <= 0
+      )
+    ) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, miqdorni to'g'ri kiriting",
         variant: "destructive",
       });
       return;
@@ -271,7 +293,7 @@ const NewOrder = () => {
 
     if (!formData.contragent_id && !formData.contragent_name) {
       toast({
-        title: "Xato",
+        title: "Diqqat",
         description:
           "Iltimos, kontragentni tanlang yoki yangi kontragent nomini kiriting",
         variant: "destructive",
@@ -314,43 +336,24 @@ const NewOrder = () => {
         orderData.contragent_name = contragentInput;
       }
 
-      console.log("Buyurtma jo'natilmoqda:", orderData);
-
       const response = await api.post("/orderManager/orders", orderData);
 
       toast({
         title: "Muvaffaqiyatli",
         description: "Buyurtma muvaffaqiyatli yaratildi",
-        variant: "default",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
       });
 
-      // Reset form
-      setFormData({
-        name: "",
-        quantity: 1,
-        start_date: "",
-        end_date: "",
-        rasxod: "",
-        comment: "",
-        model_id: null,
-        material_id: null,
-        contragent_id: null,
-        contragent_name: "",
-      });
-      setSelectedModel(null);
-      setSelectedMaterial(null);
-      setSelectedContragent(null);
-      setContragentInput("");
-      setSelectedSubmodels([]);
-      setSelectedSizes([]);
-      setSizesWithQuantity([]);
+      navigate(`/orderManager/orders/${response.data.order.id}`);
     } catch (error) {
       toast({
         title: "Xato",
         description: "Buyurtmani yaratishda xatolik yuz berdi",
         variant: "destructive",
       });
-      console.error("Buyurtmani yaratishda xatolik:", error);
     } finally {
       setSubmitting(false);
     }
@@ -376,7 +379,7 @@ const NewOrder = () => {
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid grid-cols-3 mb-6">
+            <TabsList className="overflow-x-auto w-full flex justify-start">
               <TabsTrigger value="general">Asosiy Ma'lumotlar</TabsTrigger>
               <TabsTrigger value="model">Model va Material</TabsTrigger>
               <TabsTrigger value="sizes">O'lchamlar va Miqdorlar</TabsTrigger>
@@ -531,12 +534,13 @@ const NewOrder = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="rasxod" className="font-medium">
-                      Xarajatlar
+                      Rasxod (
+                      {parseFloat(formData.rasxod).toLocaleString("ru-RU")})
                     </Label>
                     <Input
                       id="rasxod"
                       name="rasxod"
-                      placeholder="Xarajatlarni kiriting"
+                      placeholder="Rasxodni kiriting"
                       value={formData.rasxod}
                       onChange={handleInputChange}
                       className="w-full"
@@ -596,7 +600,7 @@ const NewOrder = () => {
                               {models.map((model) => (
                                 <CommandItem
                                   key={model.id}
-                                  value={model.id.toString()}
+                                  value={model.id}
                                   onSelect={() => handleSelectModel(model)}
                                 >
                                   <Check
@@ -607,11 +611,11 @@ const NewOrder = () => {
                                         : "opacity-0"
                                     )}
                                   />
-                                  <div className="flex flex-col gap-1">
+                                  <div className="flex flex-col gap-1 cursor-pointer">
                                     <div>{model?.name}</div>
                                     <div className="text-gray-500 text-xs flex items-center">
                                       <span className="mr-2">
-                                        Xarajatlar:{" "}
+                                        Rasxod:{" "}
                                         {model?.rasxod || "Ko'rsatilmagan"}
                                       </span>
                                       {model?.submodels?.length > 0 && (
@@ -710,7 +714,7 @@ const NewOrder = () => {
                               {materials.map((material) => (
                                 <CommandItem
                                   key={material.id}
-                                  value={material.id.toString()}
+                                  value={material.id}
                                   onSelect={() => {
                                     setSelectedMaterial(material);
                                     setMaterialsOpen(false);
@@ -751,7 +755,7 @@ const NewOrder = () => {
                           {selectedModel.name}
                         </p>
                         <p>
-                          <span className="font-medium">Xarajatlar:</span>{" "}
+                          <span className="font-medium">Rasxod:</span>{" "}
                           {selectedModel.rasxod || "Ko'rsatilmagan"}
                         </p>
                         <p>
@@ -843,7 +847,6 @@ const NewOrder = () => {
                               </span>
                               <Input
                                 type="number"
-                                min="1"
                                 value={size.quantity}
                                 onChange={(e) =>
                                   handleSizeQuantityChange(
@@ -880,7 +883,7 @@ const NewOrder = () => {
             </TabsContent>
           </Tabs>
 
-          <div className="mt-8 flex justify-between">
+          <div className="mt-8 flex justify-between gap-2 flex-wrap">
             <div>
               {selectedModel && selectedSizes.length > 0 && (
                 <div className="bg-blue-50 rounded-md px-4 py-2 text-blue-800">

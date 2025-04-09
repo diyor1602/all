@@ -105,9 +105,9 @@ const Models = () => {
     filterModels();
   }, [searchTerm, activeSubmodelNames, models]);
 
-  const handleDownload = async (modelId) => {
-    console.log("Downloading");
-  };
+  // const handleDownload = async (modelId) => {
+  //   console.log("Downloading");
+  // };
 
   const handleToggleImage = (modelId) => {
     // Update the open state map for this specific model
