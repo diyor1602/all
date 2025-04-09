@@ -423,7 +423,6 @@ const NewOrder = () => {
 
           // Process model tab
           const processModelTab = async () => {
-            console.log("Processing model tab...");
             // Switch to model tab
             if (document.querySelector('[value="model"]')) {
               document.querySelector('[value="model"]').click();
@@ -435,7 +434,6 @@ const NewOrder = () => {
             if (pastedData.model?.id) {
               const model = models.find((m) => m.id === pastedData.model.id);
               if (model) {
-                console.log("Setting model:", model.name);
                 setSelectedModel(model);
                 setModelsOpen(false);
 
@@ -448,7 +446,6 @@ const NewOrder = () => {
                     (m) => m.id === pastedData.model.material_id
                   );
                   if (material) {
-                    console.log("Setting material:", material.name);
                     setSelectedMaterial(material);
                     setMaterialsOpen(false);
 
@@ -468,16 +465,9 @@ const NewOrder = () => {
                     ? pastedData.model.submodels
                     : [pastedData.model.submodels];
 
-                  console.log("Submodel IDs:", submodelIds);
-
                   // Find the submodel objects using their IDs
                   const submodelsToSelect = model.submodels.filter((sm) =>
                     submodelIds.includes(sm.id)
-                  );
-
-                  console.log(
-                    "Submodels to select:",
-                    submodelsToSelect.map((sm) => sm.name)
                   );
 
                   // Set the selected submodels
@@ -489,12 +479,7 @@ const NewOrder = () => {
                   // Find and click each submodel checkbox
                   submodelIds.forEach((id) => {
                     const checkbox = document.getElementById(`submodel-${id}`);
-                    console.log(
-                      `Looking for submodel checkbox #submodel-${id}:`,
-                      checkbox
-                    );
                     if (checkbox && !checkbox.checked) {
-                      console.log(`Clicking checkbox for submodel-${id}`);
                       checkbox.click();
                     }
                   });
@@ -508,7 +493,6 @@ const NewOrder = () => {
 
           // Process sizes tab
           const processSizesTab = async () => {
-            console.log("Processing sizes tab...");
             // Switch to sizes tab
             if (document.querySelector('[value="sizes"]')) {
               document.querySelector('[value="sizes"]').click();
@@ -537,12 +521,6 @@ const NewOrder = () => {
                   }
                 });
 
-                console.log(
-                  "Sizes to select:",
-                  sizesToSelect.map((s) => s.name)
-                );
-                console.log("Sizes with quantity:", sizesWithQuantityData);
-
                 // Set state
                 setSelectedSizes(sizesToSelect);
                 setSizesWithQuantity(sizesWithQuantityData);
@@ -555,12 +533,7 @@ const NewOrder = () => {
                   const checkbox = document.getElementById(
                     `size-${sizeData.id}`
                   );
-                  console.log(
-                    `Looking for size checkbox #size-${sizeData.id}:`,
-                    checkbox
-                  );
                   if (checkbox && !checkbox.checked) {
-                    console.log(`Clicking checkbox for size-${sizeData.id}`);
                     checkbox.click();
                   }
                 });
@@ -578,9 +551,6 @@ const NewOrder = () => {
                     // Find parent element with text that contains the size name
                     const parent = input.closest("div");
                     if (parent && parent.textContent.includes(size.name)) {
-                      console.log(
-                        `Setting quantity ${size.quantity} for size ${size.name}`
-                      );
                       input.value = size.quantity;
                       // Trigger input event to ensure React state updates
                       const event = new Event("input", { bubbles: true });
@@ -597,7 +567,6 @@ const NewOrder = () => {
 
           // Process general tab
           const processGeneralTab = async () => {
-            console.log("Processing general tab...");
             // Switch to general tab
             if (document.querySelector('[value="general"]')) {
               document.querySelector('[value="general"]').click();
@@ -610,7 +579,6 @@ const NewOrder = () => {
             inputs.forEach((input) => {
               const name = input.name;
               if (name && updatedFormData[name] !== undefined) {
-                console.log(`Setting ${name} to ${updatedFormData[name]}`);
                 input.value = updatedFormData[name];
                 // Trigger input event
                 const event = new Event("input", { bubbles: true });
@@ -630,7 +598,6 @@ const NewOrder = () => {
               currentTab &&
               document.querySelector(`[value="${currentTab}"]`)
             ) {
-              console.log(`Returning to original tab: ${currentTab}`);
               document.querySelector(`[value="${currentTab}"]`).click();
             }
 
@@ -643,7 +610,6 @@ const NewOrder = () => {
               },
             });
           } catch (processError) {
-            console.error("Error during tab processing:", processError);
             toast({
               title: "Xatolik",
               description: "Ma'lumotlarni joylashda xatolik yuz berdi",
@@ -651,7 +617,6 @@ const NewOrder = () => {
             });
           }
         } catch (parseError) {
-          console.error("Error parsing pasted data:", parseError);
           toast({
             title: "Xatolik",
             description:
@@ -661,7 +626,6 @@ const NewOrder = () => {
         }
       })
       .catch((clipboardError) => {
-        console.error("Clipboard error:", clipboardError);
         toast({
           title: "Xatolik",
           description: "Clipboard ma'lumotlarini olishda xatolik yuz berdi",

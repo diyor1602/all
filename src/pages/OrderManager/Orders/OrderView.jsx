@@ -27,6 +27,7 @@ import {
   Package,
   Files,
   DollarSign,
+  Pencil,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -155,7 +156,7 @@ const OrderView = () => {
   return (
     <div className="space-y-6">
       {/* Header with back button */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <Button
           variant="ghost"
           className="flex items-center text-gray-600 hover:text-blue-600"
@@ -167,10 +168,19 @@ const OrderView = () => {
         <h2 className="text-2xl font-bold text-gray-800">
           Buyurtma #{order?.id}
         </h2>
-        <Button className="flex items-center" onClick={handleCopy}>
-          <Files className="h-4 w-4" />
-          Nusxa olish
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button className="flex items-center" onClick={handleCopy}>
+            <Files className="h-4 w-4" />
+            Nusxa olish
+          </Button>
+          <Button
+            className="flex items-center"
+            onClick={() => navigate(`/orderManager/orders/edit/${id}`)}
+          >
+            <Pencil className="h-4 w-4" />
+            Tahrirlash
+          </Button>
+        </div>
       </div>
 
       {/* Order info card */}
@@ -397,7 +407,7 @@ const OrderView = () => {
               </div>
             </div>
           )}
-          {order?.instructions && (
+          {order?.instructions && order?.instructions?.length > 0 && (
             <div className="mt-6">
               <h4 className="text-base font-bold text-gray-700 mb-3 flex items-center">
                 <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
