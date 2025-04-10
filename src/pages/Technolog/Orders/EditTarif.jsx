@@ -421,7 +421,7 @@ const EditTarif = () => {
                 <td className="px-4 py-2 border">
                   <Input
                     placeholder="Nomi"
-                    className="w-fit"
+                    className="min-w-[400px]"
                     type="text"
                     value={item?.name || ""}
                     onChange={(e) =>
