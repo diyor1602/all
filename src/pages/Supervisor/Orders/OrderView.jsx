@@ -26,8 +26,8 @@ import {
   Filter,
   Package,
   Files,
-  DollarSign,
   Pencil,
+  Download,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -57,6 +57,7 @@ const OrderView = () => {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const totalSpends = order?.order_model?.submodels?.reduce(
     (acc, submodel) =>
@@ -81,6 +82,29 @@ const OrderView = () => {
       ),
     0
   );
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await api.get(`/supervisor/orders/${id}/pdf`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `order_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "PDF yuklanmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -170,6 +194,17 @@ const OrderView = () => {
           Buyurtma #{order?.id}
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            className="flex items-center bg-green-500 hover:bg-green-600"
+            onClick={handleDownload}
+            disabled={isDownloading}
+          >
+            {isDownloading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+          </Button>
           <Button className="flex items-center" onClick={handleCopy}>
             <Files className="h-4 w-4" />
             Nusxa olish
