@@ -5,6 +5,7 @@ import GroupMasterLayout from "./DashboardLayouts/GroupMasterLayout";
 import TvLayout from "./DashboardLayouts/TvLayout";
 import ConstructorLayout from "./DashboardLayouts/ConstructorLayout";
 import OrderManagerLayout from "./DashboardLayouts/OrderManagerLayout";
+import SupervisorLayout from "./DashboardLayouts/SupervisorLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -15,6 +16,7 @@ const layouts = {
   tv: TvLayout,
   constructor: ConstructorLayout,
   orderManager: OrderManagerLayout,
+  supervisor: SupervisorLayout,
 };
 
 const DashboardLayout = () => {

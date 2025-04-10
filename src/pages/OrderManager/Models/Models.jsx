@@ -58,9 +58,6 @@ const Models = () => {
   const [allSubmodels, setAllSubmodels] = useState([]);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState(null);
-  const [imageToggleOpen, setImageToggleOpen] = useState(false);
   const [openModelMap, setOpenModelMap] = useState({});
 
   const fetchModels = async () => {
@@ -115,9 +112,6 @@ const Models = () => {
       ...prevState,
       [modelId]: !prevState[modelId], // Toggle the state for only this model
     }));
-
-    // Still track the selected model (for other purposes if needed)
-    setSelectedModelId(modelId);
   };
   const filterModels = () => {
     let filtered = [...models];
