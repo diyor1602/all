@@ -10,7 +10,6 @@ export default function BaseLayout({ children, navigation }) {
   const { logout } = useAuth();
   const location = useLocation();
 
-  const IMGURL = import.meta.env.VITE_API_URL_Q_IMGPROFILE;
   const imageUrl = localStorage.getItem("imgUrl");
 
   return (
@@ -83,11 +82,11 @@ export default function BaseLayout({ children, navigation }) {
 
           {/* User section */}
           <div className="border-t bg-gray-50 p-4">
-            <div className="flex items-center gap-3 mb-4 px-2">
+            <Link to="/profile" className="flex items-center gap-3 mb-4 px-2">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                 {imageUrl ? (
                   <img
-                    src={`${IMGURL}/${imageUrl}`}
+                    src={imageUrl}
                     alt="User"
                     className="h-8 w-8 rounded-full object-cover"
                   />
@@ -103,7 +102,7 @@ export default function BaseLayout({ children, navigation }) {
                   {localStorage.getItem("name")}
                 </p>
               </div>
-            </div>
+            </Link>
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 text-gray-700 hover:bg-gray-200/60"

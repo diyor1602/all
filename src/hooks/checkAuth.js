@@ -14,7 +14,7 @@ const checkAuth = () => {
     return false;
   }
 
-  if (path !== "home") {
+  if (path !== "home" && path !== "profile") {
     if (role !== path) {
       localStorage.clear();
       return false;

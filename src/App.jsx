@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 import DashboardLayout from "./components/layout/DashboardLayout";
 import Home from "./pages/Home";
+import Profile from "./pages/Profile";
 import SuperHr from "./pages/SuperHR/SuperHr";
 import Technolog from "./pages/Technolog/Technolog";
 import CuttingMaster from "./pages/CuttingMaster/CuttingMaster";
@@ -46,8 +47,8 @@ function App() {
       <Routes>
         <Route path="/" element={<RootRoute />} />
         <Route element={<ProtectedRoute />}>
-          {/* Home */}
           <Route path="/home" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />
