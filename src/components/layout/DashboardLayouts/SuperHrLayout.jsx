@@ -1,13 +1,13 @@
 import BaseLayout from "./BaseLayout";
-import { Home, Users, BadgeDollarSign } from "lucide-react";
+import { Home, Users, BadgeDollarSign, Settings } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   { name: "Xodimlar", href: "/superhr/employees", icon: Users, onMobile: true },
   {
-    name: "Maosh",
-    href: "/superhr/salaries",
-    icon: BadgeDollarSign,
+    name: "Qo'shimcha",
+    href: "/superhr/settings",
+    icon: Settings,
     onMobile: true,
   },
 ];
