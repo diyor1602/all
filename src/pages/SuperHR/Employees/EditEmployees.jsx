@@ -64,59 +64,56 @@ const EditEmployees = () => {
     setFetchingData(true);
     try {
       const res = await api.get(`/superhr/employees/${id}`);
-      const employee = res.data;
+      const employee = res.data.data; // Data is nested under data property
 
       // Set image preview if exists
       if (employee.img) {
         setImagePreview(employee.img);
       }
 
-      // Find main department id based on department_id
+      // Find main department id based on department's main_department_id
       let mainDeptId = "";
-      for (const mainDept of departments) {
-        const subDept = mainDept.departments.find(
-          (dept) => dept.id.toString() === employee.department_id?.toString()
-        );
-        if (subDept) {
-          mainDeptId = mainDept.id.toString();
-          break;
-        }
+      if (employee.department && employee.department.main_department_id) {
+        mainDeptId = employee.department.main_department_id.toString();
       }
 
       setSelectedMainDepartmentId(mainDeptId);
 
-      // Format dates
-      const hireDateObj = employee.hiring_date
-        ? new Date(employee.hiring_date)
-        : null;
-      const birthdayObj = employee.birthday
-        ? new Date(employee.birthday)
-        : null;
-
-      // Convert date to YYYY-MM-DD format for input[type="date"]
-      const formatDateForInput = (dateObj) => {
-        if (!dateObj) return "";
-        return dateObj.toISOString().split("T")[0];
+      // Format dates - parse date strings to remove time part
+      const formatDateForInput = (dateString) => {
+        if (!dateString) return "";
+        // Handle different date formats, could be "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS+TZ"
+        return dateString.split(" ")[0].split("T")[0];
       };
+
+      let positionId = employee.position_id?.toString();
+      let departmentId = employee.department?.id.toString() || "";
+      let groupId = employee.group?.id.toString() || "";
+
+      let roleId = "";
+      if (employee.user && employee.user.role) {
+        roleId = employee.user.role.id.toString();
+      }
 
       setFormData({
         name: employee.name || "",
         address: employee.address || "",
-        phone: employee.phone ? formatPhoneNumber(employee.phone) : "+998",
-        department_id: employee.department_id?.toString() || "",
-        group_id: employee.group_id?.toString() || "",
-        hiring_date: formatDateForInput(hireDateObj),
+        phone: employee.phone || "+998", // Phone is already formatted
+        department_id: departmentId,
+        group_id: groupId,
+        hiring_date: formatDateForInput(employee.hiring_date),
         passport_number: employee.passport_number || "",
         passport_code: employee.passport_code || "",
         comment: employee.comment || "",
-        birthday: formatDateForInput(birthdayObj),
-        position_id: employee.position_id?.toString() || "",
-        role_id: employee.role_id?.toString() || "",
+        birthday: formatDateForInput(employee.birthday),
+        position_id: positionId,
+        role_id: roleId,
         payment_type: employee.payment_type || "piece_work",
         type: employee.type || "simple",
         status: employee.status || "working",
       });
     } catch (error) {
+      console.log(error);
       toast({
         title: "Xatolik",
         description: "Xodim ma'lumotlarini olishda xatolik",
@@ -168,9 +165,8 @@ const EditEmployees = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      await fetchDepartments();
-      await fetchPositions();
-      await fetchRoles();
+      await Promise.all([fetchDepartments(), fetchPositions(), fetchRoles()]);
+      // Only fetch employee data after all reference data is loaded
       await fetchEmployeeData();
     };
 
@@ -328,7 +324,8 @@ const EditEmployees = () => {
         formDataToSend.append("img", imageFile);
       }
 
-      await api.patch(`/superhr/employees/${id}`, formDataToSend, {
+      formDataToSend.append("_method", "PATCH");
+      await api.post(`/superhr/employees/${id}`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
