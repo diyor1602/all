@@ -243,11 +243,11 @@ const Positions = () => {
                 : "Lavozimlar mavjud emas"}
             </div>
           ) : (
-            <div className="flex items-center flex-wrap gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredRoles.map((role) => (
                 <Card
                   key={role.id}
-                  className="hover:shadow-md transition-all border-l-4 border-l-primary hover:scale-105"
+                  className="hover:shadow-md transition-all border-l-4 border-l-primary hover:scale-105 cursor-pointer"
                 >
                   <CardContent className="p-3">
                     <div className="flex items-center justify-between mb-2">

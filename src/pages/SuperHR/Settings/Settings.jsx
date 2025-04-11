@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import Positions from "../Positions/Positions";
+import Positions from "./Positions/Positions";
+import Deparments from "./Departments/Departments";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Blocks, UserCog } from "lucide-react";
@@ -9,6 +10,7 @@ const Settings = () => {
     <Routes>
       <Route path="*" element={<SettingsPage />} />
       <Route path="positions" element={<Positions />} />
+      <Route path="departments" element={<Deparments />} />
     </Routes>
   );
 };
