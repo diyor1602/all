@@ -261,7 +261,7 @@ const AddEmployees = () => {
         },
       });
 
-      navigate("/employees"); // Redirect to employees list
+      navigate("/superhr/employees"); // Redirect to employees list
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -285,7 +285,7 @@ const AddEmployees = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex items-center mb-6">
+      <div className="flex items-center mb-6 max-w-4xl mx-auto">
         <Button variant="outline" className="mr-4" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
         </Button>
@@ -599,7 +599,7 @@ const AddEmployees = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/employees")}
+              onClick={() => navigate("/superhr/employees")}
             >
               Bekor qilish
             </Button>

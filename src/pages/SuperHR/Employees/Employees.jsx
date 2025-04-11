@@ -378,10 +378,16 @@ const Employees = () => {
                     <Eye
                       size={16}
                       className="text-blue-500 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer"
+                      onClick={() =>
+                        navigate(`/superhr/employees/view/${employee.id}`)
+                      }
                     />
                     <Pencil
                       size={16}
                       className="text-amber-500 hover:text-amber-600 hover:scale-110 transition-all duration-200 cursor-pointer"
+                      onClick={() =>
+                        navigate(`/superhr/employees/edit/${employee.id}`)
+                      }
                     />
                     {employee?.status == "kicked" ? (
                       <UserPlus
