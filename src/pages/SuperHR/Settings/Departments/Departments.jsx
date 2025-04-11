@@ -81,7 +81,6 @@ const Deparments = () => {
       const res = await api.get(`/superhr/employees/aup/`);
       setEmployees(res.data);
     } catch (error) {
-      console.log(error);
       toast({
         title: "Xodimlarni yuklashda xatolik!",
         description: error.response?.data?.detail || "Xatolik yuz berdi",
@@ -189,7 +188,6 @@ const Deparments = () => {
       setOpenAddDialog(false);
       fetchDepartments();
     } catch (error) {
-      console.log(error);
       toast({
         title: "Xatolik!",
         description:
@@ -241,7 +239,6 @@ const Deparments = () => {
       setOpenEditDialog(false);
       fetchDepartments();
     } catch (error) {
-      console.log(error);
       toast({
         title: "Xatolik!",
         description:

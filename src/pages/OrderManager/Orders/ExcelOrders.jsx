@@ -249,7 +249,6 @@ const ExcelOrders = () => {
         setFormData(newFormData);
       }, 0);
     } catch (error) {
-      console.error("Error in drag and drop operation:", error);
       // Refresh the entire formData to reset any inconsistent state
       setFormData((prevData) => JSON.parse(JSON.stringify(prevData)));
     }

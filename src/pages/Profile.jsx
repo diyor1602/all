@@ -31,7 +31,6 @@ const Profile = () => {
       localStorage.setItem("username", response.data.username);
       setLoading(false);
     } catch (error) {
-      console.error("Profil ma'lumotlarini olishda xatolik:", error);
       toast({
         title: "Xatolik",
         description: "Profil ma'lumotlarini olib bo'lmadi",
@@ -134,7 +133,6 @@ const Profile = () => {
       setEditing(false);
       navigate(0);
     } catch (error) {
-      console.error("Profilni yangilashda xatolik:", error);
       toast({
         title: "Xatolik",
         description:

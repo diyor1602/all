@@ -34,6 +34,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
 
 const formatPhoneNumber = (phone) => {
   return phone
@@ -43,6 +44,7 @@ const formatPhoneNumber = (phone) => {
 
 const Employees = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // States
   const [departments, setDepartments] = useState([]);
@@ -221,81 +223,79 @@ const Employees = () => {
   return (
     <div className="space-y-2">
       {/* Filters */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-2">
-          <Select
-            value={selectValues.department_id}
-            onValueChange={handleDepartmentChange}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Bo'limni tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barcha bo'limlar</SelectItem>
-              {departments.flatMap((main) =>
-                main.departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id.toString()}>
-                    {dept.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Select
-            value={selectValues.group_id}
-            onValueChange={(value) => handleFilterChange("group_id", value)}
-            disabled={groups.length === 0}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Guruhni tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barcha guruhlar</SelectItem>
-              {groups.map((group) => (
-                <SelectItem key={group.id} value={group.id.toString()}>
-                  {group.name}
+      <div className="flex items-center gap-2 w-full flex-wrap md:flex-nowrap">
+        <Select
+          value={selectValues.department_id}
+          onValueChange={handleDepartmentChange}
+        >
+          <SelectTrigger className="bg-white">
+            <SelectValue placeholder="Bo'limni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barcha bo'limlar</SelectItem>
+            {departments.flatMap((main) =>
+              main.departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id.toString()}>
+                  {dept.name}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+              ))
+            )}
+          </SelectContent>
+        </Select>
 
-        <div className="space-y-2">
-          <Select
-            value={selectValues.status}
-            onValueChange={(value) => handleFilterChange("status", value)}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Holatni tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barcha holatlar</SelectItem>
-              <SelectItem value="working">Ishlamoqda</SelectItem>
-              <SelectItem value="kicked">Ishdan bo'shatilgan</SelectItem>
-              <SelectItem value="reserv">Zaxirada</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          value={selectValues.group_id}
+          onValueChange={(value) => handleFilterChange("group_id", value)}
+          disabled={groups.length === 0}
+        >
+          <SelectTrigger className="bg-white w-full">
+            <SelectValue placeholder="Guruhni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barcha guruhlar</SelectItem>
+            {groups.map((group) => (
+              <SelectItem key={group.id} value={group.id.toString()}>
+                {group.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div className="space-y-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Ism, telefon yoki username"
-              className="pl-8 bg-white"
-              value={filters.search}
-              onChange={(e) => handleFilterChange("search", e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  applyFilters();
-                }
-              }}
-            />
-          </div>
+        <Select
+          value={selectValues.status}
+          onValueChange={(value) => handleFilterChange("status", value)}
+        >
+          <SelectTrigger className="bg-white">
+            <SelectValue placeholder="Holatni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barcha holatlar</SelectItem>
+            <SelectItem value="working">Ishlamoqda</SelectItem>
+            <SelectItem value="kicked">Ishdan bo'shatilgan</SelectItem>
+            <SelectItem value="reserv">Zaxirada</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="relative w-full">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Ism, telefon yoki username"
+            className="pl-8 bg-white w-full"
+            value={filters.search}
+            onChange={(e) => handleFilterChange("search", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                applyFilters();
+              }
+            }}
+          />
         </div>
+        <Button
+          className="text-sm cursor-pointer"
+          onClick={() => navigate("/superhr/employees/add")}
+        >
+          <UserPlus /> Qo'shish
+        </Button>
       </div>
 
       <div className="flex justify-between gap-2 mt-2">
