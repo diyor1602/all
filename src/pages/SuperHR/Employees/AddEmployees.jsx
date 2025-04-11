@@ -246,7 +246,7 @@ const AddEmployees = () => {
         formDataToSend.append("img", imageFile);
       }
 
-      const response = await api.post("/superhr/employees", formDataToSend, {
+      await api.post("/superhr/employees", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

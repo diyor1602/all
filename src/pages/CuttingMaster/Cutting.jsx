@@ -357,7 +357,7 @@ const Cutting = () => {
                               Status:{" "}
                               {
                                 statuses[order?.order_printing_time?.status]
-                                  .text
+                                  ?.text
                               }
                             </div>
                             <div>
