@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ArrowLeft, Upload } from "lucide-react";
 
 const AddEmployees = () => {
   const { toast } = useToast();
@@ -32,6 +33,8 @@ const AddEmployees = () => {
   const [subDepartments, setSubDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedMainDepartmentId, setSelectedMainDepartmentId] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "", // required
@@ -43,13 +46,16 @@ const AddEmployees = () => {
     passport_number: "", // not required
     passport_code: "", // not required
     comment: "", // not required
-    birthday: "", // not required
+    birthday: "", // required now
     position_id: "", // required
     role_id: "", // not required
     payment_type: "piece_work", // send it withouth asking
     type: "simple", // send it without asking
     status: "working", // send it without asking
   });
+
+  // New state for the image file
+  const [imageFile, setImageFile] = useState(null);
 
   const fetchDepartments = async () => {
     try {
@@ -58,7 +64,7 @@ const AddEmployees = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Departamentlar ro'yxatini olishda xatolik",
+        description: "Bo'limlar ro'yxatini olishda xatolik",
         variant: "destructive",
       });
     }
@@ -84,7 +90,7 @@ const AddEmployees = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Rolalar ro'yxatini olishda xatolik",
+        description: "Dasturlar ro'yxatini olishda xatolik",
         variant: "destructive",
       });
     }
@@ -180,6 +186,26 @@ const AddEmployees = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle image selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -193,12 +219,13 @@ const AddEmployees = () => {
         "department_id",
         "position_id",
         "hiring_date",
+        "birthday", // Birthday is now required
       ];
       const missingFields = requiredFields.filter((field) => !formData[field]);
 
       if (missingFields.length > 0) {
         toast({
-          title: "Xatolik",
+          title: "Diqqat",
           description: "Iltimos, barcha majburiy maydonlarni to'ldiring",
           variant: "destructive",
         });
@@ -206,11 +233,32 @@ const AddEmployees = () => {
         return;
       }
 
-      const response = await api.post("/superhr/employees", formData);
+      // Create FormData object for multipart/form-data
+      const formDataToSend = new FormData();
+
+      // Add all form fields to FormData
+      Object.keys(formData).forEach((key) => {
+        formDataToSend.append(key, formData[key]);
+      });
+
+      // Add image file if exists
+      if (imageFile) {
+        formDataToSend.append("img", imageFile);
+      }
+
+      const response = await api.post("/superhr/employees", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       toast({
         title: "Muvaffaqiyatli",
         description: "Xodim muvaffaqiyatli qo'shildi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
       });
 
       navigate("/employees"); // Redirect to employees list
@@ -237,6 +285,13 @@ const AddEmployees = () => {
 
   return (
     <div className="container mx-auto py-6">
+      <div className="flex items-center mb-6">
+        <Button variant="outline" className="mr-4" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
+        </Button>
+        <h1 className="text-2xl font-bold">Yangi xodim qo'shish</h1>
+      </div>
+
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Yangi xodim qo'shish</CardTitle>
@@ -244,6 +299,45 @@ const AddEmployees = () => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
+            {/* Employee Image Upload */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Xodim rasmi</h3>
+              <div className="flex items-center justify-center flex-col">
+                <div
+                  className="w-40 h-40 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-4 overflow-hidden relative cursor-pointer"
+                  onClick={triggerFileInput}
+                >
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="Xodim rasmi"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center p-4 text-gray-500">
+                      <Upload className="mx-auto h-10 w-10 mb-2" />
+                      <p className="text-sm">Rasm yuklash</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={triggerFileInput}
+                >
+                  Rasmni tanlang
+                </Button>
+              </div>
+            </div>
+
             {/* Personal Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Shaxsiy ma'lumotlar</h3>
@@ -319,13 +413,16 @@ const AddEmployees = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="birthday">Tug'ilgan sana</Label>
+                  <Label htmlFor="birthday">
+                    Tug'ilgan sana <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="birthday"
                     name="birthday"
                     type="date"
                     value={formData.birthday}
                     onChange={handleDateChange}
+                    required
                   />
                 </div>
 
