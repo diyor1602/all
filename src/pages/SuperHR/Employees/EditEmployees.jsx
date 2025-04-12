@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -59,6 +61,11 @@ const EditEmployees = () => {
   // New state for the image file
   const [imageFile, setImageFile] = useState(null);
 
+  // Helper function to normalize IDs to strings
+  const normalizeId = (id) => {
+    return id !== null && id !== undefined ? String(id) : "";
+  };
+
   // Fetch employee data
   const fetchEmployeeData = async () => {
     setFetchingData(true);
@@ -79,37 +86,19 @@ const EditEmployees = () => {
       };
 
       // Get department ID and main department ID
-      let departmentId = employee.department?.id.toString() || "";
-
-      // We need to find which main department contains the employee's department
-      let mainDeptId = "";
-      if (employee.department?.main_department_id) {
-        // If main_department_id is directly available in API, use it
-        mainDeptId = employee.department.main_department_id.toString();
-      } else if (departmentId) {
-        // Otherwise find it in the departments data
-        for (const mainDept of departments) {
-          const foundSubDept = mainDept.departments.find(
-            (dept) => dept.id.toString() === departmentId
-          );
-
-          if (foundSubDept) {
-            mainDeptId = mainDept.id.toString();
-            break;
-          }
-        }
-      }
+      const departmentId = normalizeId(employee.department?.id);
+      const mainDeptId = normalizeId(employee.department?.main_department_id);
 
       // Set main department ID first before setting form data
       setSelectedMainDepartmentId(mainDeptId);
 
       // Now set the rest of the form data
-      let positionId = employee.position_id?.toString();
-      let groupId = employee.group?.id.toString() || "";
+      const positionId = normalizeId(employee.position_id);
+      const groupId = normalizeId(employee.group?.id);
 
       let roleId = "";
       if (employee.user && employee.user.role) {
-        roleId = employee.user.role.id.toString();
+        roleId = normalizeId(employee.user.role.id);
       }
 
       setFormData({
@@ -194,7 +183,7 @@ const EditEmployees = () => {
   useEffect(() => {
     if (selectedMainDepartmentId) {
       const mainDept = departments.find(
-        (dept) => dept.id.toString() == selectedMainDepartmentId
+        (dept) => normalizeId(dept.id) === selectedMainDepartmentId
       );
 
       if (mainDept && mainDept.departments) {
@@ -219,7 +208,7 @@ const EditEmployees = () => {
     if (formData.department_id) {
       // Find selected department object from the sub-departments array
       const department = subDepartments.find(
-        (dept) => dept.id.toString() == formData.department_id
+        (dept) => normalizeId(dept.id) === formData.department_id
       );
 
       if (department && department.groups) {
@@ -229,11 +218,15 @@ const EditEmployees = () => {
       }
 
       // Only reset group_id if it's not initial data loading
-      if (
-        !fetchingData &&
-        !department?.groups?.some((g) => g.id.toString() == formData.group_id)
-      ) {
-        setFormData((prev) => ({ ...prev, group_id: "" }));
+      if (!fetchingData) {
+        // Check if the current group_id is available in the new department
+        const groupExists = department?.groups?.some(
+          (g) => normalizeId(g.id) === formData.group_id
+        );
+
+        if (!groupExists) {
+          setFormData((prev) => ({ ...prev, group_id: "" }));
+        }
       }
     }
   }, [formData.department_id, subDepartments, fetchingData]);
@@ -421,7 +414,7 @@ const EditEmployees = () => {
                 >
                   {imagePreview ? (
                     <img
-                      src={imagePreview}
+                      src={imagePreview || "/placeholder.svg"}
                       alt="Xodim rasmi"
                       className="w-full h-full object-cover"
                     />
@@ -573,7 +566,7 @@ const EditEmployees = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {getMainDepartments().map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id.toString()}>
+                        <SelectItem key={dept.id} value={normalizeId(dept.id)}>
                           {dept.name}
                         </SelectItem>
                       ))}
@@ -591,7 +584,7 @@ const EditEmployees = () => {
                     }
                     value={formData.department_id}
                     disabled={
-                      !selectedMainDepartmentId || subDepartments.length == 0
+                      !selectedMainDepartmentId || subDepartments.length === 0
                     }
                   >
                     <SelectTrigger>
@@ -605,7 +598,7 @@ const EditEmployees = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {subDepartments.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id.toString()}>
+                        <SelectItem key={dept.id} value={normalizeId(dept.id)}>
                           {dept.name}
                         </SelectItem>
                       ))}
@@ -620,14 +613,14 @@ const EditEmployees = () => {
                       handleSelectChange("group_id", value)
                     }
                     value={formData.group_id}
-                    disabled={!formData.department_id || groups.length == 0}
+                    disabled={!formData.department_id || groups.length === 0}
                   >
                     <SelectTrigger>
                       <SelectValue
                         placeholder={
                           !formData.department_id
                             ? "Avval bo'limni tanlang"
-                            : groups.length == 0
+                            : groups.length === 0
                             ? "Guruh mavjud emas"
                             : "Guruhni tanlang"
                         }
@@ -635,7 +628,10 @@ const EditEmployees = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {groups.map((group) => (
-                        <SelectItem key={group.id} value={group.id.toString()}>
+                        <SelectItem
+                          key={group.id}
+                          value={normalizeId(group.id)}
+                        >
                           {group.name}
                         </SelectItem>
                       ))}
@@ -662,7 +658,7 @@ const EditEmployees = () => {
                       {positions.map((position) => (
                         <SelectItem
                           key={position.id}
-                          value={position.id.toString()}
+                          value={normalizeId(position.id)}
                         >
                           {position.name}
                         </SelectItem>
@@ -684,7 +680,7 @@ const EditEmployees = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id.toString()}>
+                        <SelectItem key={role.id} value={normalizeId(role.id)}>
                           {role.description}
                         </SelectItem>
                       ))}
