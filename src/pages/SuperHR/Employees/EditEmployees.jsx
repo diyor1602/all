@@ -40,6 +40,11 @@ const EditEmployees = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
 
+  // Use a ref instead of state to track initial setup
+  const isInitialSetupRef = useRef(true);
+  // Track if department was manually changed by user
+  const departmentChangedByUserRef = useRef(false);
+
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -68,10 +73,13 @@ const EditEmployees = () => {
 
   // Fetch employee data
   const fetchEmployeeData = async () => {
-    setFetchingData(true);
     try {
       const res = await api.get(`/superhr/employees/${id}`);
       const employee = res.data.data; // Data is nested under data property
+
+      console.log("🔍 Employee data loaded:", employee);
+      console.log("🔍 Department:", employee.department);
+      console.log("🔍 Group:", employee.group);
 
       // Set image preview if exists
       if (employee.img) {
@@ -88,19 +96,45 @@ const EditEmployees = () => {
       // Get department ID and main department ID
       const departmentId = normalizeId(employee.department?.id);
       const mainDeptId = normalizeId(employee.department?.main_department_id);
+      const groupId = normalizeId(employee.group?.id);
 
-      // Set main department ID first before setting form data
+      console.log("🔍 Department ID:", departmentId);
+      console.log("🔍 Main Department ID:", mainDeptId);
+      console.log("🔍 Group ID:", groupId);
+
+      // First, set up the main department
       setSelectedMainDepartmentId(mainDeptId);
+
+      // Find the main department and set up sub-departments
+      const mainDept = departments.find(
+        (dept) => normalizeId(dept.id) === mainDeptId
+      );
+      if (mainDept && mainDept.departments) {
+        console.log(
+          "🔍 Setting sub-departments from main department:",
+          mainDept.departments
+        );
+        setSubDepartments(mainDept.departments);
+
+        // Find the department and set up groups
+        const dept = mainDept.departments.find(
+          (d) => normalizeId(d.id) === departmentId
+        );
+        if (dept && dept.groups) {
+          console.log("🔍 Setting groups from department:", dept.groups);
+          setGroups(dept.groups);
+        }
+      }
 
       // Now set the rest of the form data
       const positionId = normalizeId(employee.position_id);
-      const groupId = normalizeId(employee.group?.id);
 
       let roleId = "";
       if (employee.user && employee.user.role) {
         roleId = normalizeId(employee.user.role.id);
       }
 
+      // Directly set form data with all values
       setFormData({
         name: employee.name || "",
         address: employee.address || "",
@@ -118,6 +152,12 @@ const EditEmployees = () => {
         type: employee.type || "simple",
         status: employee.status || "working",
       });
+
+      console.log("🔍 Form data set:", {
+        department_id: departmentId,
+        group_id: groupId,
+        main_department_id: mainDeptId,
+      });
     } catch (error) {
       console.log(error);
       toast({
@@ -125,21 +165,22 @@ const EditEmployees = () => {
         description: "Xodim ma'lumotlarini olishda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setFetchingData(false);
     }
   };
 
   const fetchDepartments = async () => {
     try {
       const res = await api.get("/superhr/departments");
+      console.log("🔍 Departments loaded:", res.data);
       setDepartments(res.data);
+      return res.data;
     } catch (error) {
       toast({
         title: "Xatolik",
         description: "Bo'limlar ro'yxatini olishda xatolik",
         variant: "destructive",
       });
+      return [];
     }
   };
 
@@ -169,65 +210,146 @@ const EditEmployees = () => {
     }
   };
 
+  // Initial data loading
   useEffect(() => {
     const fetchInitialData = async () => {
-      // First load all reference data
-      await Promise.all([fetchDepartments(), fetchPositions(), fetchRoles()]);
-      // Then load employee data after reference data is ready
-      await fetchEmployeeData();
+      setFetchingData(true);
+      isInitialSetupRef.current = true;
+      departmentChangedByUserRef.current = false;
+      console.log("🚀 Starting initial data fetch");
+
+      try {
+        // First load all reference data
+        const depts = await fetchDepartments();
+        await Promise.all([fetchPositions(), fetchRoles()]);
+        console.log("🚀 Reference data loaded");
+
+        // Set departments first so they're available for the employee data
+        setDepartments(depts);
+
+        // Then load employee data after reference data is ready
+        await fetchEmployeeData();
+        console.log("🚀 Employee data loaded");
+      } finally {
+        setFetchingData(false);
+        console.log("🚀 Initial data fetch complete");
+        // Keep isInitialSetupRef.current as true until effects have run
+        // We'll set it to false after a delay
+        setTimeout(() => {
+          isInitialSetupRef.current = false;
+          console.log(
+            "🚀 Initial setup complete, future changes will reset values"
+          );
+        }, 1000);
+      }
     };
 
     fetchInitialData();
   }, [id]);
 
+  // Handle main department changes
   useEffect(() => {
-    if (selectedMainDepartmentId) {
-      const mainDept = departments.find(
-        (dept) => normalizeId(dept.id) === selectedMainDepartmentId
-      );
+    console.log(
+      "🔄 Main Department Effect - Selected ID:",
+      selectedMainDepartmentId
+    );
+    console.log("🔄 Main Department Effect - Fetching Data:", fetchingData);
+    console.log(
+      "🔄 Main Department Effect - Is Initial Setup:",
+      isInitialSetupRef.current
+    );
+    console.log(
+      "🔄 Main Department Effect - Changed By User:",
+      departmentChangedByUserRef.current
+    );
 
-      if (mainDept && mainDept.departments) {
-        setSubDepartments(mainDept.departments);
-      } else {
-        setSubDepartments([]);
-      }
-
-      // Only reset department_id and group_id if it's not initial data loading
-      if (!fetchingData) {
-        setFormData((prev) => ({ ...prev, department_id: "", group_id: "" }));
-        setGroups([]);
-      }
-    } else {
-      // Clear sub-departments if no main department selected
+    if (!selectedMainDepartmentId) {
       setSubDepartments([]);
+      return;
+    }
+
+    const mainDept = departments.find(
+      (dept) => normalizeId(dept.id) === selectedMainDepartmentId
+    );
+
+    if (mainDept && mainDept.departments) {
+      setSubDepartments(mainDept.departments);
+      console.log("🔄 Sub Departments set:", mainDept.departments);
+    } else {
+      setSubDepartments([]);
+      console.log("🔄 No Sub Departments found");
+    }
+
+    // Only reset department_id and group_id if it's not initial data loading
+    // and the change was made by the user
+    if (
+      !fetchingData &&
+      !isInitialSetupRef.current &&
+      departmentChangedByUserRef.current
+    ) {
+      console.log(
+        "🔄 Resetting department and group IDs (user changed main department)"
+      );
+      setFormData((prev) => ({ ...prev, department_id: "", group_id: "" }));
+    } else {
+      console.log(
+        "🔄 Keeping department and group IDs (initial load or setup)"
+      );
     }
   }, [selectedMainDepartmentId, departments, fetchingData]);
 
   // Update groups when department changes
   useEffect(() => {
-    if (formData.department_id) {
-      // Find selected department object from the sub-departments array
-      const department = subDepartments.find(
-        (dept) => normalizeId(dept.id) === formData.department_id
+    console.log("🔄 Department Effect - Selected ID:", formData.department_id);
+    console.log("🔄 Department Effect - Fetching Data:", fetchingData);
+    console.log(
+      "🔄 Department Effect - Is Initial Setup:",
+      isInitialSetupRef.current
+    );
+    console.log("🔄 Department Effect - Sub Departments:", subDepartments);
+
+    if (!formData.department_id) return;
+
+    // Find selected department object from the sub-departments array
+    const department = subDepartments.find(
+      (dept) => normalizeId(dept.id) === formData.department_id
+    );
+
+    if (department && department.groups) {
+      setGroups(department.groups);
+      console.log("🔄 Groups set:", department.groups);
+    } else {
+      setGroups([]);
+      console.log("🔄 No Groups found");
+    }
+
+    // Only reset group_id if it's not initial data loading and not initial setup
+    // and the department was changed by the user
+    if (
+      !fetchingData &&
+      !isInitialSetupRef.current &&
+      departmentChangedByUserRef.current
+    ) {
+      // Check if the current group_id is available in the new department
+      const groupExists = department?.groups?.some(
+        (g) => normalizeId(g.id) === formData.group_id
+      );
+      console.log(
+        "🔄 Current group exists in new department:",
+        groupExists,
+        formData.group_id
       );
 
-      if (department && department.groups) {
-        setGroups(department.groups);
-      } else {
-        setGroups([]);
-      }
-
-      // Only reset group_id if it's not initial data loading
-      if (!fetchingData) {
-        // Check if the current group_id is available in the new department
-        const groupExists = department?.groups?.some(
-          (g) => normalizeId(g.id) === formData.group_id
+      if (!groupExists) {
+        console.log(
+          "🔄 Resetting group ID (group not found in new department)"
         );
-
-        if (!groupExists) {
-          setFormData((prev) => ({ ...prev, group_id: "" }));
-        }
+        setFormData((prev) => ({ ...prev, group_id: "" }));
+      } else {
+        console.log("🔄 Keeping group ID (group found in new department)");
       }
+    } else {
+      console.log("🔄 Keeping group ID (initial load or setup)");
     }
   }, [formData.department_id, subDepartments, fetchingData]);
 
@@ -265,10 +387,16 @@ const EditEmployees = () => {
   };
 
   const handleSelectChange = (name, value) => {
+    console.log("🔘 Select Changed:", name, value);
+    if (name === "department_id") {
+      departmentChangedByUserRef.current = true;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleMainDepartmentChange = (value) => {
+    console.log("🔘 Main Department Changed:", value);
+    departmentChangedByUserRef.current = true;
     setSelectedMainDepartmentId(value);
   };
 
