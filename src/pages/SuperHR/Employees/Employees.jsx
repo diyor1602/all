@@ -318,7 +318,7 @@ const Employees = () => {
       <Table className="bg-white border p-2 mb-2 whitespace-nowrap text-xs">
         <TableHeader>
           <TableRow>
-            <TableHead className="border">#</TableHead>
+            <TableHead className="border text-center">#</TableHead>
             <TableHead className="border">F.I.O</TableHead>
             <TableHead className="border">Harakatlar</TableHead>
             <TableHead className="border">Bo'lim</TableHead>
@@ -343,7 +343,9 @@ const Employees = () => {
           ) : (
             employees.data.map((employee, index) => (
               <TableRow key={employee.id}>
-                <TableCell className="border">{index + 1}</TableCell>
+                <TableCell className="border text-center">
+                  {index + 1}
+                </TableCell>
                 <TableCell className="border">
                   <div className="flex items-center gap-2 min-w-[200px] max-w-[250px] text-xs">
                     {employee.img ? (

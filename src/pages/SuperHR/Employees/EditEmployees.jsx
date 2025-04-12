@@ -71,14 +71,6 @@ const EditEmployees = () => {
         setImagePreview(employee.img);
       }
 
-      // Find main department id based on department's main_department_id
-      let mainDeptId = "";
-      if (employee.department && employee.department.main_department_id) {
-        mainDeptId = employee.department.main_department_id.toString();
-      }
-
-      setSelectedMainDepartmentId(mainDeptId);
-
       // Format dates - parse date strings to remove time part
       const formatDateForInput = (dateString) => {
         if (!dateString) return "";
@@ -86,8 +78,33 @@ const EditEmployees = () => {
         return dateString.split(" ")[0].split("T")[0];
       };
 
-      let positionId = employee.position_id?.toString();
+      // Get department ID and main department ID
       let departmentId = employee.department?.id.toString() || "";
+
+      // We need to find which main department contains the employee's department
+      let mainDeptId = "";
+      if (employee.department?.main_department_id) {
+        // If main_department_id is directly available in API, use it
+        mainDeptId = employee.department.main_department_id.toString();
+      } else if (departmentId) {
+        // Otherwise find it in the departments data
+        for (const mainDept of departments) {
+          const foundSubDept = mainDept.departments.find(
+            (dept) => dept.id.toString() === departmentId
+          );
+
+          if (foundSubDept) {
+            mainDeptId = mainDept.id.toString();
+            break;
+          }
+        }
+      }
+
+      // Set main department ID first before setting form data
+      setSelectedMainDepartmentId(mainDeptId);
+
+      // Now set the rest of the form data
+      let positionId = employee.position_id?.toString();
       let groupId = employee.group?.id.toString() || "";
 
       let roleId = "";
@@ -165,15 +182,15 @@ const EditEmployees = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
+      // First load all reference data
       await Promise.all([fetchDepartments(), fetchPositions(), fetchRoles()]);
-      // Only fetch employee data after all reference data is loaded
+      // Then load employee data after reference data is ready
       await fetchEmployeeData();
     };
 
     fetchInitialData();
   }, [id]);
 
-  // Update sub-departments when main department changes
   useEffect(() => {
     if (selectedMainDepartmentId) {
       const mainDept = departments.find(
@@ -191,6 +208,9 @@ const EditEmployees = () => {
         setFormData((prev) => ({ ...prev, department_id: "", group_id: "" }));
         setGroups([]);
       }
+    } else {
+      // Clear sub-departments if no main department selected
+      setSubDepartments([]);
     }
   }, [selectedMainDepartmentId, departments, fetchingData]);
 
