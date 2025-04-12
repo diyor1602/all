@@ -1,18 +1,18 @@
 import BaseLayout from "./BaseLayout";
-import { Home, Box, Bot } from "lucide-react";
+import { Home, Car, CalendarCheck } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
-    name: "Buyurtmalar",
-    href: "/transport/orders",
-    icon: Box,
+    name: "Davomat",
+    href: "/transport/attendance",
+    icon: CalendarCheck,
     onMobile: true,
   },
   {
-    name: "Mashinalar",
+    name: "Avtomobillar",
     href: "/transport/machines",
-    icon: Bot,
+    icon: Car,
     onMobile: true,
   },
 ];

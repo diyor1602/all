@@ -315,7 +315,7 @@ const Employees = () => {
         </div>
       </div>
 
-      <Table className="bg-white border p-2 mb-2 whitespace-nowrap text-xs">
+      <Table className="bg-white border p-2 mb-2 whitespace-nowrap text-xs shadow-lg">
         <TableHeader>
           <TableRow>
             <TableHead className="border text-center">#</TableHead>
