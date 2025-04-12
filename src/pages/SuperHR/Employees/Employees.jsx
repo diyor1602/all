@@ -34,6 +34,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 
 const formatPhoneNumber = (phone) => {
@@ -47,6 +54,8 @@ const Employees = () => {
   const navigate = useNavigate();
 
   // States
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [employees, setEmployees] = useState({
     data: [],
@@ -353,6 +362,10 @@ const Employees = () => {
                         src={employee.img}
                         alt="-"
                         className="h-8 w-8 rounded-full object-cover"
+                        onClick={() => {
+                          setSelectedImage(employee.img);
+                          setImageDialogOpen(true);
+                        }}
                       />
                     ) : null}
                     <div className="flex flex-col overflow-hidden">
@@ -494,7 +507,30 @@ const Employees = () => {
           </PaginationContent>
         </Pagination>
       )}
+      <ImageDialog
+        open={imageDialogOpen}
+        onOpenChange={setImageDialogOpen}
+        image={selectedImage}
+      />
     </div>
+  );
+};
+
+const ImageDialog = ({ open, onOpenChange, image }) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle></DialogTitle>
+          <DialogDescription></DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center justify-center">
+          {image && (
+            <img src={image} alt="" className="w-full h-auto max-h-[90vh]" />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
