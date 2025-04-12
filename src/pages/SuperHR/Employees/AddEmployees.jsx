@@ -238,7 +238,11 @@ const AddEmployees = () => {
 
       // Add all form fields to FormData
       Object.keys(formData).forEach((key) => {
-        formDataToSend.append(key, formData[key]);
+        if (key == "phone") {
+          formDataToSend.append(key, formData[key].replace(/\s/g, ""));
+        } else {
+          formDataToSend.append(key, formData[key]);
+        }
       });
 
       // Add image file if exists
