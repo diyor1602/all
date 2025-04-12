@@ -60,7 +60,7 @@ const Employees = () => {
   const [filters, setFilters] = useState({
     department_id: "",
     group_id: "",
-    status: "",
+    status: "working",
     search: "",
     page: 1,
   });
@@ -69,7 +69,7 @@ const Employees = () => {
   const [selectValues, setSelectValues] = useState({
     department_id: "all",
     group_id: "all",
-    status: "all",
+    status: "working",
   });
 
   const [groups, setGroups] = useState([]);
@@ -315,7 +315,7 @@ const Employees = () => {
         </div>
       </div>
 
-      <Table className="bg-white border p-2 mb-2 whitespace-nowrap text-xs shadow-lg">
+      <Table className="bg-white border p-2 mb-2 whitespace-nowrap text-xs shadow-md">
         <TableHeader>
           <TableRow>
             <TableHead className="border text-center">#</TableHead>
