@@ -6,6 +6,7 @@ import TvLayout from "./DashboardLayouts/TvLayout";
 import ConstructorLayout from "./DashboardLayouts/ConstructorLayout";
 import OrderManagerLayout from "./DashboardLayouts/OrderManagerLayout";
 import SupervisorLayout from "./DashboardLayouts/SupervisorLayout";
+import TransportLayout from "./DashboardLayouts/TransportLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -17,6 +18,7 @@ const layouts = {
   constructor: ConstructorLayout,
   orderManager: OrderManagerLayout,
   supervisor: SupervisorLayout,
+  transport: TransportLayout,
 };
 
 const DashboardLayout = () => {

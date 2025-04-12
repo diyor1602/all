@@ -18,6 +18,7 @@ import GroupMaster from "./pages/GroupMaster/GroupMaster";
 import Constructor from "./pages/Constructor/Constructor";
 import OrderManager from "./pages/OrderManager/OrderManager";
 import Supervisor from "./pages/Supervisor/Supervisor";
+import Transport from "./pages/Transport/Transport";
 import Tv from "./pages/Tv/Tv";
 
 const ProtectedRoute = () => {
@@ -56,6 +57,7 @@ function App() {
           <Route path="/constructor/*" element={<Constructor />} />
           <Route path="/orderManager/*" element={<OrderManager />} />
           <Route path="/supervisor/*" element={<Supervisor />} />
+          <Route path="/transport/*" element={<Transport />} />
           <Route path="/tv/*" element={<Tv />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
