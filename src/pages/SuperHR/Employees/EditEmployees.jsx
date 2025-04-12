@@ -194,7 +194,7 @@ const EditEmployees = () => {
   useEffect(() => {
     if (selectedMainDepartmentId) {
       const mainDept = departments.find(
-        (dept) => dept.id.toString() === selectedMainDepartmentId
+        (dept) => dept.id.toString() == selectedMainDepartmentId
       );
 
       if (mainDept && mainDept.departments) {
@@ -219,7 +219,7 @@ const EditEmployees = () => {
     if (formData.department_id) {
       // Find selected department object from the sub-departments array
       const department = subDepartments.find(
-        (dept) => dept.id.toString() === formData.department_id
+        (dept) => dept.id.toString() == formData.department_id
       );
 
       if (department && department.groups) {
@@ -231,7 +231,7 @@ const EditEmployees = () => {
       // Only reset group_id if it's not initial data loading
       if (
         !fetchingData &&
-        !department?.groups?.some((g) => g.id.toString() === formData.group_id)
+        !department?.groups?.some((g) => g.id.toString() == formData.group_id)
       ) {
         setFormData((prev) => ({ ...prev, group_id: "" }));
       }
@@ -591,7 +591,7 @@ const EditEmployees = () => {
                     }
                     value={formData.department_id}
                     disabled={
-                      !selectedMainDepartmentId || subDepartments.length === 0
+                      !selectedMainDepartmentId || subDepartments.length == 0
                     }
                   >
                     <SelectTrigger>
@@ -620,14 +620,14 @@ const EditEmployees = () => {
                       handleSelectChange("group_id", value)
                     }
                     value={formData.group_id}
-                    disabled={!formData.department_id || groups.length === 0}
+                    disabled={!formData.department_id || groups.length == 0}
                   >
                     <SelectTrigger>
                       <SelectValue
                         placeholder={
                           !formData.department_id
                             ? "Avval bo'limni tanlang"
-                            : groups.length === 0
+                            : groups.length == 0
                             ? "Guruh mavjud emas"
                             : "Guruhni tanlang"
                         }
