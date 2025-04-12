@@ -24,6 +24,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ArrowLeft, Upload } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 const EditEmployees = () => {
   const { id } = useParams();
@@ -38,6 +46,8 @@ const EditEmployees = () => {
   const [fetchingData, setFetchingData] = useState(true);
   const [selectedMainDepartmentId, setSelectedMainDepartmentId] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   // Use a ref instead of state to track initial setup
@@ -298,6 +308,30 @@ const EditEmployees = () => {
       formattedNumber += phoneNumber[i];
     }
     return formattedNumber;
+  };
+
+  const handleResetPassword = async () => {
+    setIsResetting(true);
+    try {
+      await api.post(`/superhr/resetPassword/${id}`);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Parol muvaffaqiyatli tiklandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Parol tiklashda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handlePhoneChange = (e) => {
@@ -786,6 +820,14 @@ const EditEmployees = () => {
           <CardFooter className="flex gap-2 justify-end">
             <Button
               type="button"
+              onClick={() => setIsDialogOpen(true)}
+              disabled={isResetting}
+              variant="destructive"
+            >
+              {isResetting ? "Tiklanmoqda..." : "Parolni tiklash"}
+            </Button>
+            <Button
+              type="button"
               variant="outline"
               onClick={() => navigate("/superhr/employees")}
             >
@@ -797,6 +839,34 @@ const EditEmployees = () => {
           </CardFooter>
         </form>
       </Card>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Parolni tiklash</DialogTitle>
+            <DialogDescription>
+              Xodimning parolini tiklashga ishonchingiz komilmi?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <div className="flex items-center gap-2 justify-end flex-wrap">
+              <Button
+                onClick={handleResetPassword}
+                disabled={isResetting}
+                variant="destructive"
+              >
+                {isResetting ? "Tiklanmoqda..." : "Parolni tiklash"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Bekor qilish
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
