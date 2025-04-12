@@ -27,7 +27,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Eye, Pencil, RotateCcw, Search, Trash, UserPlus } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  RotateCcw,
+  Search,
+  Trash,
+  UserPlus,
+  Download,
+  Loader2,
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -55,6 +64,7 @@ const Employees = () => {
 
   // States
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [employees, setEmployees] = useState({
@@ -196,14 +206,6 @@ const Employees = () => {
     }
   };
 
-  // Get pagination values from meta
-  const getCurrentPage = () => {
-    if (!employees.meta?.current_page) return 1;
-    return Array.isArray(employees.meta.current_page)
-      ? employees.meta.current_page[0]
-      : employees.meta.current_page;
-  };
-
   const getLastPage = () => {
     if (!employees.meta?.last_page) return 1;
     return Array.isArray(employees.meta.last_page)
@@ -216,6 +218,52 @@ const Employees = () => {
     return Array.isArray(employees.meta.total)
       ? employees.meta.total[0]
       : employees.meta.total;
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      // Create params without the page parameter
+      const params = new URLSearchParams();
+
+      // Add all non-empty filters to params except page
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== "" && key !== "page") {
+          params.append(key, value);
+        }
+      });
+
+      // Make the API call with the response type as blob to handle file download
+      const response = await api.get(
+        `/superhr/employees/export-excel?${params.toString()}`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Xodimlar ro'yxati yuklab olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Initial data load
@@ -309,10 +357,20 @@ const Employees = () => {
 
       <div className="flex justify-between gap-2 mt-2">
         {/* Page info */}
-        <div className="text-sm text-gray-500 text-center mt-2">
-          Jami:{" "}
-          <span className="text-black font-medium">{getTotalCount()}</span> ta
-          xodim
+        <div className="flex items-center gap-2">
+          <div className="text-sm text-gray-500 text-center">
+            Jami:{" "}
+            <span className="text-black font-medium">{getTotalCount()}</span> ta
+            xodim
+          </div>
+          <Button
+            variant="ghost"
+            className="text-sm"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
+          </Button>
         </div>
         <div className="flex gap-2 items-center">
           <Button variant="outline" onClick={resetFilters} className="text-sm">

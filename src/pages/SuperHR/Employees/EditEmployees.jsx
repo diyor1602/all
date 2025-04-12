@@ -563,6 +563,7 @@ const EditEmployees = () => {
                     value={formData.phone}
                     onChange={handlePhoneChange}
                     placeholder="+998 XX XXX XX XX"
+                    maxLength={17}
                     required
                   />
                 </div>
