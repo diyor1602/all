@@ -20,6 +20,13 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formatValue = (value) => {
   if (!value) return "";
@@ -61,6 +68,18 @@ const Attendance = () => {
   );
   const [transportSearchTerm, setTransportSearchTerm] = useState("");
   const [selectAll, setSelectAll] = useState(false);
+
+  // Small attendance dialog state (Kichik davomat)
+  const [smallDialogOpen, setSmallDialogOpen] = useState(false);
+  const [smallAttendance, setSmallAttendance] = useState({
+    transport_id: "",
+    dates: [],
+    attendance_type: 1,
+    salary: 0,
+    fuel_bonus: 0,
+  });
+  const [availableDates, setAvailableDates] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
 
   const getDaysInMonth = (year, monthIndex) =>
     new Date(year, monthIndex + 1, 0).getDate();
@@ -111,7 +130,18 @@ const Attendance = () => {
       ...prev,
       date: `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`,
     }));
-  }, [selectedMonth, selectedYear]);
+
+    // Generate available dates for the current month for small attendance dialog
+    const dates = [];
+    for (let i = 1; i <= daysInMonth; i++) {
+      const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(
+        2,
+        "0"
+      )}-${String(i).padStart(2, "0")}`;
+      dates.push(dateStr);
+    }
+    setAvailableDates(dates);
+  }, [selectedMonth, selectedYear, daysInMonth]);
 
   // When selectAll changes, update all transport IDs
   useEffect(() => {
@@ -128,6 +158,26 @@ const Attendance = () => {
       }));
     }
   }, [selectAll]);
+
+  // When a transport is selected in small attendance dialog, populate default values
+  useEffect(() => {
+    if (smallAttendance.transport_id) {
+      const selectedTransport = transports.find(
+        (t) => t.id === parseInt(smallAttendance.transport_id)
+      );
+      if (selectedTransport) {
+        setSmallAttendance((prev) => ({
+          ...prev,
+          salary: selectedTransport.salary
+            ? parseInt(selectedTransport.salary)
+            : 0,
+          fuel_bonus: selectedTransport.fuel_bonus
+            ? parseInt(selectedTransport.fuel_bonus)
+            : 0,
+        }));
+      }
+    }
+  }, [smallAttendance.transport_id, transports]);
 
   const filteredTransports = transports.filter((t) => {
     const value = searchTerm.toLowerCase();
@@ -185,6 +235,18 @@ const Attendance = () => {
     setTransportSearchTerm("");
     setSelectAll(false);
     setMassDialogOpen(true);
+  };
+
+  const openSmallAttendanceDialog = () => {
+    setSmallAttendance({
+      transport_id: "",
+      dates: [],
+      attendance_type: 1,
+      salary: 0,
+      fuel_bonus: 0,
+    });
+    setSelectedDates([]);
+    setSmallDialogOpen(true);
   };
 
   const handleAttendanceSubmit = async () => {
@@ -268,6 +330,56 @@ const Attendance = () => {
     }
   };
 
+  const handleSmallAttendanceSubmit = async () => {
+    setIsBulkUpdating(true);
+    try {
+      if (!smallAttendance.transport_id) {
+        toast({
+          title: "Xatolik",
+          description: "Transport tanlanmadi",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (selectedDates.length === 0) {
+        toast({
+          title: "Xatolik",
+          description: "Hech qanday sana tanlanmadi",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const payload = {
+        transport_id: parseInt(smallAttendance.transport_id),
+        dates: selectedDates,
+        attendance_type: smallAttendance.attendance_type,
+        salary: smallAttendance.salary,
+        fuel_bonus: smallAttendance.fuel_bonus,
+      };
+
+      await api.post("/transport/massStoreByDates", payload);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Kichik davomat muvaffaqiyatli qo'shildi",
+        style: { backgroundColor: "green", color: "white" },
+      });
+
+      fetchAttendances();
+      setSmallDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Kichik davomat qo'shishda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   const toggleTransportSelection = (transportId) => {
     setMassAttendance((prev) => {
       if (prev.transport_ids.includes(transportId)) {
@@ -282,6 +394,14 @@ const Attendance = () => {
         };
       }
     });
+  };
+
+  const toggleDateSelection = (date) => {
+    if (selectedDates.includes(date)) {
+      setSelectedDates((prev) => prev.filter((d) => d !== date));
+    } else {
+      setSelectedDates((prev) => [...prev, date]);
+    }
   };
 
   // Keep the old handleAttendance for context menu compatibility
@@ -357,9 +477,14 @@ const Attendance = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button onClick={openMassAttendanceDialog}>
-          Ommaviy Davomat Qo'shish
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={openSmallAttendanceDialog}>
+            Kichik davomat qo'shish
+          </Button>
+          <Button onClick={openMassAttendanceDialog}>
+            Ommaviy Davomat Qo'shish
+          </Button>
+        </div>
       </div>
 
       <div className="max-h-[85vh] overflow-auto mt-4">
@@ -714,6 +839,155 @@ const Attendance = () => {
               onClick={handleMassAttendanceSubmit}
               disabled={
                 massAttendance.transport_ids.length === 0 || isBulkUpdating
+              }
+            >
+              {isBulkUpdating ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Small Attendance Dialog (Kichik Davomat) */}
+      <Dialog open={smallDialogOpen} onOpenChange={setSmallDialogOpen}>
+        <DialogContent className="sm:max-w-md max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Kichik Davomat Qo'shish</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="transport-select">Transport tanlang</Label>
+              <Select
+                value={smallAttendance.transport_id.toString()}
+                onValueChange={(value) =>
+                  setSmallAttendance((prev) => ({
+                    ...prev,
+                    transport_id: value,
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Transport tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {transports.map((transport) => (
+                    <SelectItem
+                      key={transport.id}
+                      value={transport.id.toString()}
+                    >
+                      {transport.state_number} - {transport.name} -{" "}
+                      {transport.driver_full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="small-attendance-type">Davomat turi</Label>
+              <RadioGroup
+                id="small-attendance-type"
+                value={smallAttendance.attendance_type.toString()}
+                onValueChange={(val) =>
+                  setSmallAttendance((prev) => ({
+                    ...prev,
+                    attendance_type: parseFloat(val),
+                  }))
+                }
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="1" id="small-full-day" />
+                  <Label htmlFor="small-full-day">Keldi</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="0.5" id="small-half-day" />
+                  <Label htmlFor="small-half-day">Yarim kun</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="0" id="small-absent" />
+                  <Label htmlFor="small-absent">Kelmadi</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="small-salary">
+                Maosh ({formatValue(smallAttendance.salary)} so'm)
+              </Label>
+              <Input
+                id="small-salary"
+                type="number"
+                value={smallAttendance.salary}
+                onChange={(e) =>
+                  setSmallAttendance((prev) => ({
+                    ...prev,
+                    salary: parseInt(e.target.value) || 0,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="small-fuel-bonus">
+                Benzin uchun bonus ({formatValue(smallAttendance.fuel_bonus)}{" "}
+                so'm)
+              </Label>
+              <Input
+                id="small-fuel-bonus"
+                type="number"
+                value={smallAttendance.fuel_bonus}
+                onChange={(e) =>
+                  setSmallAttendance((prev) => ({
+                    ...prev,
+                    fuel_bonus: parseInt(e.target.value) || 0,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Sanalarni tanlang</Label>
+                <div className="text-xs text-gray-500">
+                  Tanlangan: {selectedDates.length} / {availableDates.length}
+                </div>
+              </div>
+              <ScrollArea className="h-40 border rounded-md p-2">
+                <div className="grid grid-cols-5 gap-2">
+                  {availableDates.map((date) => {
+                    const day = date.split("-")[2];
+                    return (
+                      <div key={date} className="flex items-center space-x-1">
+                        <Checkbox
+                          id={`date-${date}`}
+                          checked={selectedDates.includes(date)}
+                          onCheckedChange={() => toggleDateSelection(date)}
+                        />
+                        <Label
+                          htmlFor={`date-${date}`}
+                          className="text-xs cursor-pointer"
+                        >
+                          {day}
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSmallDialogOpen(false)}>
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={handleSmallAttendanceSubmit}
+              disabled={
+                !smallAttendance.transport_id ||
+                selectedDates.length === 0 ||
+                isBulkUpdating
               }
             >
               {isBulkUpdating ? "Saqlanmoqda..." : "Saqlash"}
