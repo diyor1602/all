@@ -20,13 +20,8 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { addDays, format } from "date-fns";
 
 const formatValue = (value) => {
   if (!value) return "";
@@ -78,8 +73,13 @@ const Attendance = () => {
     salary: 0,
     fuel_bonus: 0,
   });
-  const [availableDates, setAvailableDates] = useState([]);
-  const [selectedDates, setSelectedDates] = useState([]);
+  const [transportSearchResults, setTransportSearchResults] = useState([]);
+  const [selectedTransport, setSelectedTransport] = useState(null);
+  // Initialize dateRange with valid default values
+  const [dateRange, setDateRange] = useState({
+    from: new Date(selectedYear, selectedMonth, 1),
+    to: null,
+  });
 
   const getDaysInMonth = (year, monthIndex) =>
     new Date(year, monthIndex + 1, 0).getDate();
@@ -131,17 +131,12 @@ const Attendance = () => {
       date: `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`,
     }));
 
-    // Generate available dates for the current month for small attendance dialog
-    const dates = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-      const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(
-        2,
-        "0"
-      )}-${String(i).padStart(2, "0")}`;
-      dates.push(dateStr);
-    }
-    setAvailableDates(dates);
-  }, [selectedMonth, selectedYear, daysInMonth]);
+    // Update the date range for the calendar when month/year changes
+    setDateRange({
+      from: new Date(selectedYear, selectedMonth, 1),
+      to: null,
+    });
+  }, [selectedMonth, selectedYear]);
 
   // When selectAll changes, update all transport IDs
   useEffect(() => {
@@ -159,25 +154,38 @@ const Attendance = () => {
     }
   }, [selectAll]);
 
+  // Filter transports for search results
+  useEffect(() => {
+    if (transportSearchTerm.trim() === "") {
+      setTransportSearchResults([]);
+      return;
+    }
+
+    const value = transportSearchTerm.toLowerCase();
+    const results = transports.filter(
+      (t) =>
+        t.state_number?.toLowerCase().includes(value) ||
+        t.driver_full_name?.toLowerCase().includes(value) ||
+        t.name?.toLowerCase().includes(value)
+    );
+    setTransportSearchResults(results);
+  }, [transportSearchTerm, transports]);
+
   // When a transport is selected in small attendance dialog, populate default values
   useEffect(() => {
-    if (smallAttendance.transport_id) {
-      const selectedTransport = transports.find(
-        (t) => t.id === parseInt(smallAttendance.transport_id)
-      );
-      if (selectedTransport) {
-        setSmallAttendance((prev) => ({
-          ...prev,
-          salary: selectedTransport.salary
-            ? parseInt(selectedTransport.salary)
-            : 0,
-          fuel_bonus: selectedTransport.fuel_bonus
-            ? parseInt(selectedTransport.fuel_bonus)
-            : 0,
-        }));
-      }
+    if (selectedTransport) {
+      setSmallAttendance((prev) => ({
+        ...prev,
+        transport_id: selectedTransport.id,
+        salary: selectedTransport.salary
+          ? parseInt(selectedTransport.salary)
+          : 0,
+        fuel_bonus: selectedTransport.fuel_bonus
+          ? parseInt(selectedTransport.fuel_bonus)
+          : 0,
+      }));
     }
-  }, [smallAttendance.transport_id, transports]);
+  }, [selectedTransport]);
 
   const filteredTransports = transports.filter((t) => {
     const value = searchTerm.toLowerCase();
@@ -245,7 +253,13 @@ const Attendance = () => {
       salary: 0,
       fuel_bonus: 0,
     });
-    setSelectedDates([]);
+    setDateRange({
+      from: new Date(selectedYear, selectedMonth, 1),
+      to: null,
+    });
+    setTransportSearchTerm("");
+    setTransportSearchResults([]);
+    setSelectedTransport(null);
     setSmallDialogOpen(true);
   };
 
@@ -342,6 +356,7 @@ const Attendance = () => {
         return;
       }
 
+      const selectedDates = getSelectedDatesArray();
       if (selectedDates.length === 0) {
         toast({
           title: "Xatolik",
@@ -396,12 +411,20 @@ const Attendance = () => {
     });
   };
 
-  const toggleDateSelection = (date) => {
-    if (selectedDates.includes(date)) {
-      setSelectedDates((prev) => prev.filter((d) => d !== date));
-    } else {
-      setSelectedDates((prev) => [...prev, date]);
+  // Convert date range to array of date strings in YYYY-MM-DD format
+  const getSelectedDatesArray = () => {
+    if (!dateRange || !dateRange.from) return [];
+    if (!dateRange.to) return [format(dateRange.from, "yyyy-MM-dd")];
+
+    const dates = [];
+    let currentDate = dateRange.from;
+
+    while (currentDate <= dateRange.to) {
+      dates.push(format(currentDate, "yyyy-MM-dd"));
+      currentDate = addDays(currentDate, 1);
     }
+
+    return dates;
   };
 
   // Keep the old handleAttendance for context menu compatibility
@@ -849,38 +872,76 @@ const Attendance = () => {
 
       {/* Small Attendance Dialog (Kichik Davomat) */}
       <Dialog open={smallDialogOpen} onOpenChange={setSmallDialogOpen}>
-        <DialogContent className="sm:max-w-md max-h-[90vh]">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>Kichik Davomat Qo'shish</DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="transport-select">Transport tanlang</Label>
-              <Select
-                value={smallAttendance.transport_id.toString()}
-                onValueChange={(value) =>
-                  setSmallAttendance((prev) => ({
-                    ...prev,
-                    transport_id: value,
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Transport tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {transports.map((transport) => (
-                    <SelectItem
-                      key={transport.id}
-                      value={transport.id.toString()}
+              <Label>Transport tanlang</Label>
+              <div className="flex flex-col space-y-4">
+                {/* Fix for Command component error */}
+                <div className="relative">
+                  <Input
+                    placeholder="Qidirish: davlat raqami, rusumi, haydovchi"
+                    value={transportSearchTerm}
+                    onChange={(e) => setTransportSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
+
+                  {transportSearchTerm.trim() !== "" &&
+                    transportSearchResults.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                        {transportSearchResults.map((transport) => (
+                          <div
+                            key={transport.id}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              setSelectedTransport(transport);
+                              setTransportSearchTerm("");
+                            }}
+                          >
+                            <div className="font-medium">
+                              {transport.state_number}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {transport.name} - {transport.driver_full_name}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                  {transportSearchTerm.trim() !== "" &&
+                    transportSearchResults.length === 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg p-2 text-gray-500">
+                        Hech qanday transport topilmadi
+                      </div>
+                    )}
+                </div>
+
+                {selectedTransport && (
+                  <div className="flex justify-between items-center p-2 border rounded-md bg-gray-50">
+                    <div>
+                      <div className="font-medium">
+                        {selectedTransport.state_number}
+                      </div>
+                      <div className="text-sm">{selectedTransport.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {selectedTransport.driver_full_name}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTransport(null)}
                     >
-                      {transport.state_number} - {transport.name} -{" "}
-                      {transport.driver_full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                      ❌
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -950,31 +1011,32 @@ const Attendance = () => {
               <div className="flex items-center justify-between">
                 <Label>Sanalarni tanlang</Label>
                 <div className="text-xs text-gray-500">
-                  Tanlangan: {selectedDates.length} / {availableDates.length}
+                  {dateRange && dateRange.from && dateRange.to
+                    ? `${format(dateRange.from, "dd.MM.yyyy")} - ${format(
+                        dateRange.to,
+                        "dd.MM.yyyy"
+                      )}`
+                    : dateRange && dateRange.from
+                    ? `${format(dateRange.from, "dd.MM.yyyy")}`
+                    : "Sana tanlanmagan"}
                 </div>
               </div>
-              <ScrollArea className="h-40 border rounded-md p-2">
-                <div className="grid grid-cols-5 gap-2">
-                  {availableDates.map((date) => {
-                    const day = date.split("-")[2];
-                    return (
-                      <div key={date} className="flex items-center space-x-1">
-                        <Checkbox
-                          id={`date-${date}`}
-                          checked={selectedDates.includes(date)}
-                          onCheckedChange={() => toggleDateSelection(date)}
-                        />
-                        <Label
-                          htmlFor={`date-${date}`}
-                          className="text-xs cursor-pointer"
-                        >
-                          {day}
-                        </Label>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
+
+              <div className="w-full flex items-center justify-center">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  className="border rounded-md"
+                  month={new Date(selectedYear, selectedMonth)}
+                  disabled={[
+                    {
+                      before: new Date(selectedYear, selectedMonth, 1),
+                      after: new Date(selectedYear, selectedMonth + 1, 0),
+                    },
+                  ]}
+                />
+              </div>
             </div>
           </div>
 
@@ -985,8 +1047,9 @@ const Attendance = () => {
             <Button
               onClick={handleSmallAttendanceSubmit}
               disabled={
-                !smallAttendance.transport_id ||
-                selectedDates.length === 0 ||
+                !selectedTransport ||
+                !dateRange ||
+                !dateRange.from ||
                 isBulkUpdating
               }
             >
