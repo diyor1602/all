@@ -701,7 +701,7 @@ const Attendance = () => {
                 onChange={(e) =>
                   setCurrentAttendance((prev) => ({
                     ...prev,
-                    salary: parseInt(e.target.value) || 0,
+                    salary: parseInt(e.target.value),
                   }))
                 }
               />
@@ -719,7 +719,7 @@ const Attendance = () => {
                 onChange={(e) =>
                   setCurrentAttendance((prev) => ({
                     ...prev,
-                    fuel_bonus: parseInt(e.target.value) || 0,
+                    fuel_bonus: parseInt(e.target.value),
                   }))
                 }
               />
@@ -983,7 +983,7 @@ const Attendance = () => {
                 onChange={(e) =>
                   setSmallAttendance((prev) => ({
                     ...prev,
-                    salary: parseInt(e.target.value) || 0,
+                    salary: parseInt(e.target.value),
                   }))
                 }
               />
@@ -1001,7 +1001,7 @@ const Attendance = () => {
                 onChange={(e) =>
                   setSmallAttendance((prev) => ({
                     ...prev,
-                    fuel_bonus: parseInt(e.target.value) || 0,
+                    fuel_bonus: parseInt(e.target.value),
                   }))
                 }
               />
