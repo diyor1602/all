@@ -18,6 +18,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const formatValue = (value) => {
   if (!value) return "";
@@ -33,6 +35,7 @@ const Attendance = () => {
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
   const [searchTerm, setSearchTerm] = useState("");
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -45,6 +48,19 @@ const Attendance = () => {
     attendanceId: null,
     hasAttendance: false,
   });
+
+  // Mass attendance dialog state
+  const [massDialogOpen, setMassDialogOpen] = useState(false);
+  const [massAttendance, setMassAttendance] = useState({
+    date: `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`,
+    attendance_type: 1,
+    transport_ids: [],
+  });
+  const [selectedDate, setSelectedDate] = useState(
+    `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`
+  );
+  const [transportSearchTerm, setTransportSearchTerm] = useState("");
+  const [selectAll, setSelectAll] = useState(false);
 
   const getDaysInMonth = (year, monthIndex) =>
     new Date(year, monthIndex + 1, 0).getDate();
@@ -86,11 +102,47 @@ const Attendance = () => {
     fetchTransports();
   }, [selectedMonth, selectedYear]);
 
+  useEffect(() => {
+    // Update the mass attendance date when month/year changes
+    setSelectedDate(
+      `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`
+    );
+    setMassAttendance((prev) => ({
+      ...prev,
+      date: `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`,
+    }));
+  }, [selectedMonth, selectedYear]);
+
+  // When selectAll changes, update all transport IDs
+  useEffect(() => {
+    if (selectAll) {
+      const filteredIds = filteredTransportsForSelection.map((t) => t.id);
+      setMassAttendance((prev) => ({
+        ...prev,
+        transport_ids: filteredIds,
+      }));
+    } else {
+      setMassAttendance((prev) => ({
+        ...prev,
+        transport_ids: [],
+      }));
+    }
+  }, [selectAll]);
+
   const filteredTransports = transports.filter((t) => {
     const value = searchTerm.toLowerCase();
     return (
       t.state_number?.toLowerCase().includes(value) ||
       t.driver_full_name?.toLowerCase().includes(value)
+    );
+  });
+
+  const filteredTransportsForSelection = transports.filter((t) => {
+    const value = transportSearchTerm.toLowerCase();
+    return (
+      t.state_number?.toLowerCase().includes(value) ||
+      t.driver_full_name?.toLowerCase().includes(value) ||
+      t.name?.toLowerCase().includes(value)
     );
   });
 
@@ -122,6 +174,17 @@ const Attendance = () => {
     });
 
     setDialogOpen(true);
+  };
+
+  const openMassAttendanceDialog = () => {
+    setMassAttendance({
+      date: selectedDate,
+      attendance_type: 1,
+      transport_ids: [],
+    });
+    setTransportSearchTerm("");
+    setSelectAll(false);
+    setMassDialogOpen(true);
   };
 
   const handleAttendanceSubmit = async () => {
@@ -166,6 +229,59 @@ const Attendance = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleMassAttendanceSubmit = async () => {
+    setIsBulkUpdating(true);
+    try {
+      if (massAttendance.transport_ids.length === 0) {
+        toast({
+          title: "Xatolik",
+          description: "Hech qanday transport tanlanmadi",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await api.post("/transport/massStore", {
+        date: massAttendance.date,
+        attendance_type: massAttendance.attendance_type,
+        transport_ids: massAttendance.transport_ids,
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Ommaviy davomat muvaffaqiyatli qo'shildi",
+        style: { backgroundColor: "green", color: "white" },
+      });
+
+      fetchAttendances();
+      setMassDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Ommaviy davomat qo'shishda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const toggleTransportSelection = (transportId) => {
+    setMassAttendance((prev) => {
+      if (prev.transport_ids.includes(transportId)) {
+        return {
+          ...prev,
+          transport_ids: prev.transport_ids.filter((id) => id !== transportId),
+        };
+      } else {
+        return {
+          ...prev,
+          transport_ids: [...prev.transport_ids, transportId],
+        };
+      }
+    });
   };
 
   // Keep the old handleAttendance for context menu compatibility
@@ -218,27 +334,32 @@ const Attendance = () => {
 
   return (
     <div>
-      <div className="flex items-center gap-3">
-        <Input
-          type="month"
-          value={`${selectedYear}-${String(selectedMonth + 1).padStart(
-            2,
-            "0"
-          )}`}
-          onChange={(e) => {
-            const [year, month] = e.target.value.split("-");
-            setSelectedYear(parseInt(year));
-            setSelectedMonth(parseInt(month) - 1);
-          }}
-          className="px-2 py-1 rounded w-fit bg-white"
-        />
-        <Input
-          type="text"
-          placeholder="Qidiring: davlat raqami yoki haydovchi"
-          className="px-2 py-1 rounded bg-white"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <Input
+            type="month"
+            value={`${selectedYear}-${String(selectedMonth + 1).padStart(
+              2,
+              "0"
+            )}`}
+            onChange={(e) => {
+              const [year, month] = e.target.value.split("-");
+              setSelectedYear(parseInt(year));
+              setSelectedMonth(parseInt(month) - 1);
+            }}
+            className="px-2 py-1 rounded w-fit bg-white"
+          />
+          <Input
+            type="text"
+            placeholder="Qidirish"
+            className="px-2 py-1 rounded bg-white"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <Button onClick={openMassAttendanceDialog}>
+          Ommaviy Davomat Qo'shish
+        </Button>
       </div>
 
       <div className="max-h-[85vh] overflow-auto mt-4">
@@ -385,7 +506,7 @@ const Attendance = () => {
         </table>
       </div>
 
-      {/* Attendance Dialog */}
+      {/* Individual Attendance Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -462,6 +583,141 @@ const Attendance = () => {
               Bekor qilish
             </Button>
             <Button onClick={handleAttendanceSubmit}>Saqlash</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mass Attendance Dialog */}
+      <Dialog open={massDialogOpen} onOpenChange={setMassDialogOpen}>
+        <DialogContent className="sm:max-w-md max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Ommaviy Davomat Qo'shish</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="mass-date">Sana</Label>
+              <Input
+                id="mass-date"
+                type="date"
+                value={massAttendance.date}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  setMassAttendance((prev) => ({
+                    ...prev,
+                    date: e.target.value,
+                  }));
+                }}
+                min={`${selectedYear}-${String(selectedMonth + 1).padStart(
+                  2,
+                  "0"
+                )}-01`}
+                max={`${selectedYear}-${String(selectedMonth + 1).padStart(
+                  2,
+                  "0"
+                )}-${String(daysInMonth).padStart(2, "0")}`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mass-attendance-type">Davomat turi</Label>
+              <RadioGroup
+                id="mass-attendance-type"
+                value={massAttendance.attendance_type.toString()}
+                onValueChange={(val) =>
+                  setMassAttendance((prev) => ({
+                    ...prev,
+                    attendance_type: parseFloat(val),
+                  }))
+                }
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="1" id="mass-full-day" />
+                  <Label htmlFor="mass-full-day">Keldi</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="0.5" id="mass-half-day" />
+                  <Label htmlFor="mass-half-day">Yarim kun</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="0" id="mass-absent" />
+                  <Label htmlFor="mass-absent">Kelmadi</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="transport-search">Transportlarni tanlang</Label>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectAll}
+                    onCheckedChange={setSelectAll}
+                  />
+                  <Label htmlFor="select-all" className="text-sm">
+                    Hammasini tanlash
+                  </Label>
+                </div>
+              </div>
+              <Input
+                id="transport-search"
+                type="text"
+                placeholder="Qidiring: davlat raqami, rusumi yoki haydovchi"
+                value={transportSearchTerm}
+                onChange={(e) => setTransportSearchTerm(e.target.value)}
+              />
+
+              <div className="text-xs mt-1 text-gray-500">
+                Tanlangan: {massAttendance.transport_ids.length} /{" "}
+                {filteredTransportsForSelection.length}
+              </div>
+
+              <ScrollArea className="h-60 border rounded-md p-2">
+                <div className="space-y-2">
+                  {filteredTransportsForSelection.map((transport) => (
+                    <div
+                      key={transport.id}
+                      className="flex items-center space-x-2 p-1 hover:bg-gray-100 rounded"
+                    >
+                      <Checkbox
+                        id={`transport-${transport.id}`}
+                        checked={massAttendance.transport_ids.includes(
+                          transport.id
+                        )}
+                        onCheckedChange={() =>
+                          toggleTransportSelection(transport.id)
+                        }
+                      />
+                      <Label
+                        htmlFor={`transport-${transport.id}`}
+                        className="text-sm cursor-pointer flex-1"
+                      >
+                        <span className="font-medium">
+                          {transport.state_number}
+                        </span>{" "}
+                        - {transport.name} - {transport.driver_full_name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMassDialogOpen(false)}>
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={handleMassAttendanceSubmit}
+              disabled={
+                massAttendance.transport_ids.length === 0 || isBulkUpdating
+              }
+            >
+              {isBulkUpdating ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
