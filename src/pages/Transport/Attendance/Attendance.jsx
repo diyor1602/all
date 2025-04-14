@@ -774,37 +774,33 @@ const Attendance = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <Input
-            type="month"
-            value={`${selectedYear}-${String(selectedMonth + 1).padStart(
-              2,
-              "0"
-            )}`}
-            onChange={(e) => {
-              const [year, month] = e.target.value.split("-");
-              setSelectedYear(Number.parseInt(year));
-              setSelectedMonth(Number.parseInt(month) - 1);
-            }}
-            className="px-2 py-1 rounded w-fit bg-white"
-          />
-          <Input
-            type="text"
-            placeholder="Qidirish"
-            className="px-2 py-1 rounded bg-white"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={openSmallAttendanceDialog}>
-            Kichik davomat qo'shish
-          </Button>
-          <Button onClick={openMassAttendanceDialog}>
-            Ommaviy Davomat Qo'shish
-          </Button>
-        </div>
+      <div className="flex items-center gap-4 flex-wrap">
+        <Input
+          type="month"
+          value={`${selectedYear}-${String(selectedMonth + 1).padStart(
+            2,
+            "0"
+          )}`}
+          onChange={(e) => {
+            const [year, month] = e.target.value.split("-");
+            setSelectedYear(Number.parseInt(year));
+            setSelectedMonth(Number.parseInt(month) - 1);
+          }}
+          className="px-2 py-1 rounded w-fit bg-white"
+        />
+        <Input
+          type="text"
+          placeholder="Qidirish"
+          className="px-2 py-1 rounded bg-white w-fit"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Button onClick={openSmallAttendanceDialog} className="w-fit">
+          Kichik davomat qo'shish
+        </Button>
+        <Button onClick={openMassAttendanceDialog} className="w-fit">
+          Ommaviy Davomat Qo'shish
+        </Button>
       </div>
 
       <div className="max-h-[84vh] overflow-auto mt-4">
@@ -1062,6 +1058,7 @@ const Attendance = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Davomat ma'lumotlari</DialogTitle>
+            <DialogDescription>{currentAttendance?.date}</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
