@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -29,7 +31,7 @@ const formatValue = (value) => {
     return 0;
   }
   if (!value) return "";
-  return parseInt(value).toLocaleString("en-EN");
+  return Number.parseInt(value).toLocaleString("en-EN");
 };
 
 const Attendance = () => {
@@ -44,14 +46,11 @@ const Attendance = () => {
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
   const [salaryDialogOpen, setSalaryDialogOpen] = useState(false);
-  const [currentSubmitAdvance, setCurrentSubmitAdvance] = useState(0);
-  const [currentSubmitAdvanceDate, setCurrentSubmitAdvanceDate] = useState(
-    new Date()
-  );
-  const [currentSubmitSalaryDate, setCurrentSubmitSalaryDate] = useState(
-    new Date()
-  );
-  const [currentSubmitSalary, setCurrentSubmitSalary] = useState(0);
+  const [currentSubmitPayment, setCurrentSubmitPayment] = useState({
+    amount: 0,
+    date: new Date(),
+    type: "",
+  });
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -196,10 +195,10 @@ const Attendance = () => {
         ...prev,
         transport_id: selectedTransport.id,
         salary: selectedTransport.salary
-          ? parseInt(selectedTransport.salary)
+          ? Number.parseInt(selectedTransport.salary)
           : 0,
         fuel_bonus: selectedTransport.fuel_bonus
-          ? parseInt(selectedTransport.fuel_bonus)
+          ? Number.parseInt(selectedTransport.fuel_bonus)
           : 0,
       }));
     }
@@ -222,6 +221,162 @@ const Attendance = () => {
     );
   });
 
+  // Memoized calculations to avoid repetitive calculations
+  const transportCalculations = useMemo(() => {
+    const calculations = {};
+
+    // Add daily attendance totals
+    const dailyTotals = Array.from({ length: daysInMonth }).map(() => 0);
+
+    filteredTransports.forEach((transport) => {
+      const transportId = transport.id;
+      const workDays = Array.from({ length: daysInMonth }).reduce(
+        (total, _, dayIndex) => {
+          const attendance = attendances.find(
+            (a) =>
+              a.date ===
+                `${selectedYear}-${String(selectedMonth + 1).padStart(
+                  2,
+                  "0"
+                )}-${String(dayIndex + 1).padStart(2, "0")}` &&
+              a.transport.id === transportId
+          );
+
+          // Add to daily totals
+          const attendanceValue = attendance?.attendance_type || 0;
+          dailyTotals[dayIndex] += attendanceValue;
+
+          return total + attendanceValue;
+        },
+        0
+      );
+
+      const totalSalary = Array.from({ length: daysInMonth }).reduce(
+        (total, _, dayIndex) => {
+          const attendance = attendances.find(
+            (a) =>
+              a.date ===
+                `${selectedYear}-${String(selectedMonth + 1).padStart(
+                  2,
+                  "0"
+                )}-${String(dayIndex + 1).padStart(2, "0")}` &&
+              a.transport.id === transportId
+          );
+          return (
+            total +
+            (attendance?.salary * (attendance?.attendance_type || 0) || 0)
+          );
+        },
+        0
+      );
+
+      const fuelDays = Array.from({ length: daysInMonth }).reduce(
+        (total, _, dayIndex) => {
+          const attendance = attendances.find(
+            (a) =>
+              a.date ===
+                `${selectedYear}-${String(selectedMonth + 1).padStart(
+                  2,
+                  "0"
+                )}-${String(dayIndex + 1).padStart(2, "0")}` &&
+              a.transport.id === transportId
+          );
+          return (
+            total +
+            (attendance?.fuel_bonus > 0 ? attendance?.attendance_type || 0 : 0)
+          );
+        },
+        0
+      );
+
+      const totalFuelBonus = Array.from({ length: daysInMonth }).reduce(
+        (total, _, dayIndex) => {
+          const attendance = attendances.find(
+            (a) =>
+              a.date ===
+                `${selectedYear}-${String(selectedMonth + 1).padStart(
+                  2,
+                  "0"
+                )}-${String(dayIndex + 1).padStart(2, "0")}` &&
+              a.transport.id === transportId
+          );
+          return (
+            total +
+            (attendance?.fuel_bonus * (attendance?.attendance_type || 0) || 0)
+          );
+        },
+        0
+      );
+
+      const totalTransportMoney = totalSalary + totalFuelBonus;
+
+      const totalPaid =
+        transport?.payment?.reduce(
+          (total, payment) => total + (Number.parseInt(payment?.amount) || 0),
+          0
+        ) || 0;
+
+      const debt = totalTransportMoney - totalPaid;
+
+      const advance = Number.parseInt(
+        transport?.payment?.find((p) => p.type === "advance")?.amount || 0
+      );
+      const salary = Number.parseInt(
+        transport?.payment?.find((p) => p.type === "salary")?.amount || 0
+      );
+
+      calculations[transportId] = {
+        workDays,
+        totalSalary,
+        fuelDays,
+        totalFuelBonus,
+        totalTransportMoney,
+        totalPaid,
+        debt,
+        advance,
+        salary,
+        balance: Number.parseInt(transport?.balance || 0),
+      };
+    });
+
+    // Calculate totals for the summary row
+    const totals = {
+      workDays: 0,
+      totalSalary: 0,
+      fuelDays: 0,
+      totalFuelBonus: 0,
+      totalTransportMoney: 0,
+      totalPaid: 0,
+      debt: 0,
+      advance: 0,
+      salary: 0,
+      balance: 0,
+      dailyTotals,
+    };
+
+    Object.values(calculations).forEach((calc) => {
+      totals.workDays += calc.workDays;
+      totals.totalSalary += calc.totalSalary;
+      totals.fuelDays += calc.fuelDays;
+      totals.totalFuelBonus += calc.totalFuelBonus;
+      totals.totalTransportMoney += calc.totalTransportMoney;
+      totals.totalPaid += calc.totalPaid;
+      totals.debt += calc.debt;
+      totals.advance += calc.advance;
+      totals.salary += calc.salary;
+      totals.balance += calc.balance;
+    });
+
+    return { transportData: calculations, totals };
+  }, [
+    attendances,
+    transports,
+    filteredTransports,
+    daysInMonth,
+    selectedYear,
+    selectedMonth,
+  ]);
+
   const openAttendanceDialog = (transportId, day, attendance) => {
     const formattedDate = `${selectedYear}-${String(selectedMonth + 1).padStart(
       2,
@@ -238,12 +393,12 @@ const Attendance = () => {
       salary: attendance
         ? attendance.salary || 0
         : transport?.salary
-        ? parseInt(transport.salary)
+        ? Number.parseInt(transport.salary)
         : 0,
       fuel_bonus: attendance
         ? attendance.fuel_bonus || 0
         : transport?.fuel_bonus
-        ? parseInt(transport.fuel_bonus)
+        ? Number.parseInt(transport.fuel_bonus)
         : 0,
       attendanceId: attendance ? attendance.id : null,
       hasAttendance: !!attendance,
@@ -314,7 +469,10 @@ const Attendance = () => {
         });
       }
 
-      fetchAttendances();
+      // Fetch updated data and update the UI
+      await fetchAttendances();
+      await fetchTransports();
+
       setDialogOpen(false);
     } catch (error) {
       toast({
@@ -349,7 +507,10 @@ const Attendance = () => {
         style: { backgroundColor: "green", color: "white" },
       });
 
-      fetchAttendances();
+      // Fetch updated data and update the UI
+      await fetchAttendances();
+      await fetchTransports();
+
       setMassDialogOpen(false);
     } catch (error) {
       toast({
@@ -385,7 +546,7 @@ const Attendance = () => {
       }
 
       const payload = {
-        transport_id: parseInt(smallAttendance.transport_id),
+        transport_id: Number.parseInt(smallAttendance.transport_id),
         dates: selectedDates,
         attendance_type: smallAttendance.attendance_type,
         salary: smallAttendance.salary,
@@ -400,7 +561,10 @@ const Attendance = () => {
         style: { backgroundColor: "green", color: "white" },
       });
 
-      fetchAttendances();
+      // Fetch updated data and update the UI
+      await fetchAttendances();
+      await fetchTransports();
+
       setSmallDialogOpen(false);
     } catch (error) {
       toast({
@@ -445,31 +609,27 @@ const Attendance = () => {
     return dates;
   };
 
-  const handleAdvanceSubmit = async (method, id, date) => {
-    const maxBalance = Array.from({ length: daysInMonth }).reduce(
-      (total, _, dayIndex) => {
-        const attendance = attendances.find(
-          (a) =>
-            a.date ===
-              `${selectedYear}-${String(selectedMonth + 1).padStart(
-                2,
-                "0"
-              )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-            a.transport?.id === selectedTransport?.id
-        );
-        return (
-          total +
-          (attendance?.salary * (attendance?.attendance_type || 0) +
-            attendance?.fuel_bonus * (attendance?.attendance_type || 0) || 0)
-        );
-      },
-      0
-    );
+  // Unified payment handler for both advance and salary
+  const handlePaymentSubmit = async (type) => {
+    const isAdvance = type === "advance";
+    const dialogSetter = isAdvance ? setAdvanceDialogOpen : setSalaryDialogOpen;
 
-    if (parseInt(currentSubmitAdvance) > maxBalance) {
+    // Calculate max balance for validation based on payment type
+    const transportData =
+      transportCalculations.transportData[selectedTransport?.id] || {};
+    const totalMoney = transportData.totalTransportMoney || 0;
+    const otherPaymentAmount = isAdvance
+      ? transportData.salary || 0
+      : transportData.advance || 0;
+
+    const maxBalance = totalMoney - otherPaymentAmount;
+
+    if (Number.parseInt(currentSubmitPayment.amount) > maxBalance) {
       toast({
         title: "Diqqat",
-        description: "Avans miqdori balansdan kam bo'lishi kerak",
+        description: `${
+          isAdvance ? "Avans" : "Maosh"
+        } miqdori balansdan kam bo'lishi kerak`,
         variant: "destructive",
       });
       return;
@@ -477,15 +637,20 @@ const Attendance = () => {
 
     setIsBulkUpdating(true);
     try {
+      const existingPayment = selectedTransport?.payment?.find(
+        (payment) => payment?.type === type
+      );
+
+      const method = existingPayment ? "patch" : "post";
       const payload = {
-        transport_id: parseInt(selectedTransport.id),
-        amount: parseInt(currentSubmitAdvance),
-        type: "advance",
+        transport_id: Number.parseInt(selectedTransport.id),
+        amount: Number.parseInt(currentSubmitPayment.amount),
+        type: type,
       };
 
       if (method === "post") {
-        payload.date = date;
-        if (!date) {
+        payload.date = format(currentSubmitPayment.date, "yyyy-MM-dd");
+        if (!currentSubmitPayment.date) {
           toast({
             title: "Diqqat",
             description: "Sanani tanlang!",
@@ -496,27 +661,38 @@ const Attendance = () => {
         await api.post("/transport/payment/", payload);
         toast({
           title: "Muvaffaqiyatli",
-          description: "Avans muvaffaqiyatli qo'shildi",
+          description: `${
+            isAdvance ? "Avans" : "Maosh"
+          } muvaffaqiyatli qo'shildi`,
           style: { backgroundColor: "green", color: "white" },
         });
       } else {
-        payload.date = selectedTransport?.payment?.find(
-          (payment) => payment?.type === "advance"
-        )?.date;
-        await api.patch(`/transport/payment/${id}`, payload);
+        payload.date = existingPayment?.date;
+        await api.patch(`/transport/payment/${existingPayment.id}`, payload);
         toast({
           title: "Muvaffaqiyatli",
-          description: "Avans muvaffaqiyatli yangilandi",
+          description: `${
+            isAdvance ? "Avans" : "Maosh"
+          } muvaffaqiyatli yangilandi`,
           style: { backgroundColor: "green", color: "white" },
         });
       }
 
-      fetchAttendances();
-      setAdvanceDialogOpen(false);
+      // Fetch updated data and update the UI
+      await fetchAttendances();
+      await fetchTransports();
+
+      // Force a re-render by updating a state value
+      setCurrentSubmitPayment((prev) => ({ ...prev }));
+
+      dialogSetter(false);
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: error.response.data.message || error.response.data.error,
+        description:
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
@@ -524,82 +700,25 @@ const Attendance = () => {
     }
   };
 
-  const handleSalarySubmit = async (method, id, date) => {
-    const maxBalance = Array.from({ length: daysInMonth }).reduce(
-      (total, _, dayIndex) => {
-        const attendance = attendances.find(
-          (a) =>
-            a.date ===
-              `${selectedYear}-${String(selectedMonth + 1).padStart(
-                2,
-                "0"
-              )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-            a.transport?.id === selectedTransport?.id
-        );
-        return (
-          total +
-          (attendance?.salary * (attendance?.attendance_type || 0) +
-            attendance?.fuel_bonus * (attendance?.attendance_type || 0) || 0)
-        );
-      },
-      0
-    );
+  const openPaymentDialog = (transport, type) => {
+    setSelectedTransport(transport);
 
-    if (parseInt(currentSubmitSalary) > maxBalance) {
-      toast({
-        title: "Diqqat",
-        description: "Maosh miqdori balansdan kam bo'lishi kerak",
-        variant: "destructive",
-      });
-      return;
-    }
+    const existingPayment = transport?.payment?.find((p) => p.type === type);
+    const amount = existingPayment?.amount || 0;
+    const date = existingPayment?.date
+      ? new Date(existingPayment.date)
+      : new Date();
 
-    setIsBulkUpdating(true);
-    try {
-      const payload = {
-        transport_id: parseInt(selectedTransport.id),
-        amount: parseInt(currentSubmitSalary),
-        type: "salary",
-      };
+    setCurrentSubmitPayment({
+      amount,
+      date,
+      type,
+    });
 
-      if (method === "post") {
-        payload.date = date;
-        if (!date) {
-          toast({
-            title: "Diqqat",
-            description: "Sanani tanlang!",
-            variant: "destructive",
-          });
-          return;
-        }
-        await api.post("/transport/payment/", payload);
-        toast({
-          title: "Muvaffaqiyatli",
-          description: "Maosh muvaffaqiyatli qo'shildi",
-          style: { backgroundColor: "green", color: "white" },
-        });
-      } else {
-        payload.date = selectedTransport?.payment?.find(
-          (payment) => payment?.type === "salary"
-        )?.date;
-        await api.patch(`/transport/payment/${id}`, payload);
-        toast({
-          title: "Muvaffaqiyatli",
-          description: "Maosh muvaffaqiyatli yangilandi",
-          style: { backgroundColor: "green", color: "white" },
-        });
-      }
-
-      fetchAttendances();
-      setSalaryDialogOpen(false);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: error.response.data.message || error.response.data.error,
-        variant: "destructive",
-      });
-    } finally {
-      setIsBulkUpdating(false);
+    if (type === "advance") {
+      setAdvanceDialogOpen(true);
+    } else {
+      setSalaryDialogOpen(true);
     }
   };
 
@@ -641,7 +760,9 @@ const Attendance = () => {
         });
       }
 
-      fetchAttendances();
+      // Fetch updated data and update the UI
+      await fetchAttendances();
+      await fetchTransports();
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -663,8 +784,8 @@ const Attendance = () => {
             )}`}
             onChange={(e) => {
               const [year, month] = e.target.value.split("-");
-              setSelectedYear(parseInt(year));
-              setSelectedMonth(parseInt(month) - 1);
+              setSelectedYear(Number.parseInt(year));
+              setSelectedMonth(Number.parseInt(month) - 1);
             }}
             className="px-2 py-1 rounded w-fit bg-white"
           />
@@ -736,300 +857,202 @@ const Attendance = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredTransports.map((transport, index) => (
-              <tr key={index} className="text-center">
-                <td className="border-2 p-1 min-w-[40px] sticky left-0 bg-white z-10">
-                  {index + 1}
+            {filteredTransports.map((transport, index) => {
+              const calculations =
+                transportCalculations.transportData[transport.id] || {};
+              return (
+                <tr key={index} className="text-center">
+                  <td className="border-2 p-1 min-w-[40px] sticky left-0 bg-white z-10">
+                    {index + 1}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px] sticky left-[38px] bg-white z-10">
+                    {transport?.name}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px] sticky left-[106px] bg-white z-10">
+                    {transport?.state_number}
+                  </td>
+                  <td className="border-2 p-1 min-w-[150px] sticky left-[174px] bg-white z-10">
+                    {transport?.driver_full_name
+                      ?.split(" ")
+                      .slice(0, 2)
+                      .join(" ")}
+                  </td>
+                  {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
+                    const date = `${selectedYear}-${String(
+                      selectedMonth + 1
+                    ).padStart(2, "0")}-${String(dayIndex + 1).padStart(
+                      2,
+                      "0"
+                    )}`;
+                    const attendance = attendances.find(
+                      (a) => a.date === date && a.transport.id === transport.id
+                    );
+                    return (
+                      <td key={dayIndex} className="border-2 min-w-[40px]">
+                        <ContextMenu>
+                          <ContextMenuTrigger className="block w-full h-full cursor-context-menu">
+                            <div
+                              onClick={() =>
+                                openAttendanceDialog(
+                                  transport.id,
+                                  dayIndex + 1,
+                                  attendance
+                                )
+                              }
+                              className="cursor-pointer w-full h-full flex items-center justify-center"
+                            >
+                              <span className="font-bold">
+                                {attendance
+                                  ? attendance.attendance_type
+                                  : "\u00A0"}
+                              </span>
+                            </div>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent>
+                            <ContextMenuItem
+                              onClick={() =>
+                                handleAttendance(
+                                  transport.id,
+                                  dayIndex + 1,
+                                  !!attendance,
+                                  1,
+                                  attendance?.id
+                                )
+                              }
+                            >
+                              Keldi
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                              onClick={() =>
+                                handleAttendance(
+                                  transport.id,
+                                  dayIndex + 1,
+                                  !!attendance,
+                                  0.5,
+                                  attendance?.id
+                                )
+                              }
+                            >
+                              Yarim kun
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                              onClick={() =>
+                                handleAttendance(
+                                  transport.id,
+                                  dayIndex + 1,
+                                  !!attendance,
+                                  0,
+                                  attendance?.id
+                                )
+                              }
+                            >
+                              Kelmadi
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      </td>
+                    );
+                  })}
+                  <td className="border-2 p-1 min-w-[100px]">
+                    {formatValue(transport?.salary)}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    {calculations.workDays || 0}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    {formatValue(calculations.totalSalary || 0)}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    {calculations.fuelDays || 0}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    {formatValue(calculations.totalFuelBonus || 0)}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    <span className="text-red-500 font-semibold">
+                      {formatValue(calculations.debt || 0)}
+                    </span>
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    {formatValue(calculations.totalTransportMoney || 0)}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    {formatValue(calculations.totalPaid || 0)}
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={() => openPaymentDialog(transport, "advance")}
+                    >
+                      {formatValue(calculations.advance) || 0}
+                    </Button>
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={() => openPaymentDialog(transport, "salary")}
+                    >
+                      {formatValue(calculations.salary) || 0}
+                    </Button>
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    {formatValue(transport?.balance || 0)}
+                  </td>
+                </tr>
+              );
+            })}
+            {/* Summary row with totals */}
+            <tr className="text-center font-bold bg-gray-100">
+              <td
+                className="border-2 p-1 sticky left-0 bg-gray-100 z-10"
+                colSpan={4}
+              >
+                Jami:
+              </td>
+              {/* Daily attendance totals */}
+              {Array.from({ length: daysInMonth }).map((_, index) => (
+                <td key={index} className="border-2 min-w-[40px] bg-gray-100">
+                  {transportCalculations.totals.dailyTotals[index].toFixed(1)}
                 </td>
-                <td className="border-2 p-1 min-w-[70px] sticky left-[38px] bg-white z-10">
-                  {transport?.name}
-                </td>
-                <td className="border-2 p-1 min-w-[70px] sticky left-[106px] bg-white z-10">
-                  {transport?.state_number}
-                </td>
-                <td className="border-2 p-1 min-w-[150px] sticky left-[174px] bg-white z-10">
-                  {transport?.driver_full_name
-                    ?.split(" ")
-                    .slice(0, 2)
-                    .join(" ")}
-                </td>
-                {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
-                  const date = `${selectedYear}-${String(
-                    selectedMonth + 1
-                  ).padStart(2, "0")}-${String(dayIndex + 1).padStart(2, "0")}`;
-                  const attendance = attendances.find(
-                    (a) => a.date === date && a.transport.id === transport.id
-                  );
-                  return (
-                    <td key={dayIndex} className="border-2 min-w-[40px]">
-                      <ContextMenu>
-                        <ContextMenuTrigger className="block w-full h-full cursor-context-menu">
-                          <div
-                            onClick={() =>
-                              openAttendanceDialog(
-                                transport.id,
-                                dayIndex + 1,
-                                attendance
-                              )
-                            }
-                            className="cursor-pointer w-full h-full flex items-center justify-center"
-                          >
-                            <span className="font-bold">
-                              {attendance
-                                ? attendance.attendance_type
-                                : "\u00A0"}
-                            </span>
-                          </div>
-                        </ContextMenuTrigger>
-                        <ContextMenuContent>
-                          <ContextMenuItem
-                            onClick={() =>
-                              handleAttendance(
-                                transport.id,
-                                dayIndex + 1,
-                                !!attendance,
-                                1,
-                                attendance?.id
-                              )
-                            }
-                          >
-                            Keldi
-                          </ContextMenuItem>
-                          <ContextMenuItem
-                            onClick={() =>
-                              handleAttendance(
-                                transport.id,
-                                dayIndex + 1,
-                                !!attendance,
-                                0.5,
-                                attendance?.id
-                              )
-                            }
-                          >
-                            Yarim kun
-                          </ContextMenuItem>
-                          <ContextMenuItem
-                            onClick={() =>
-                              handleAttendance(
-                                transport.id,
-                                dayIndex + 1,
-                                !!attendance,
-                                0,
-                                attendance?.id
-                              )
-                            }
-                          >
-                            Kelmadi
-                          </ContextMenuItem>
-                        </ContextMenuContent>
-                      </ContextMenu>
-                    </td>
-                  );
-                })}
-                <td className="border-2 p-1 min-w-[100px]">
-                  {formatValue(transport?.salary)}
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  {Array.from({ length: daysInMonth }).reduce(
-                    (total, _, dayIndex) => {
-                      const attendance = attendances.find(
-                        (a) =>
-                          a.date ===
-                            `${selectedYear}-${String(
-                              selectedMonth + 1
-                            ).padStart(2, "0")}-${String(dayIndex + 1).padStart(
-                              2,
-                              "0"
-                            )}` && a.transport.id === transport.id
-                      );
-                      return total + (attendance?.attendance_type || 0);
-                    },
-                    0
-                  )}
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  {formatValue(
-                    Array.from({ length: daysInMonth }).reduce(
-                      (total, _, dayIndex) => {
-                        const attendance = attendances.find(
-                          (a) =>
-                            a.date ===
-                              `${selectedYear}-${String(
-                                selectedMonth + 1
-                              ).padStart(2, "0")}-${String(
-                                dayIndex + 1
-                              ).padStart(2, "0")}` &&
-                            a.transport.id === transport.id
-                        );
-                        return (
-                          total +
-                          (attendance?.salary *
-                            (attendance?.attendance_type || 0) || 0)
-                        );
-                      },
-                      0
-                    )
-                  )}
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  {
-                    Array.from({ length: daysInMonth }).filter(
-                      (_, dayIndex) => {
-                        const attendance = attendances.find(
-                          (a) =>
-                            a.date ===
-                              `${selectedYear}-${String(
-                                selectedMonth + 1
-                              ).padStart(2, "0")}-${String(
-                                dayIndex + 1
-                              ).padStart(2, "0")}` &&
-                            a.transport.id === transport.id
-                        );
-                        return attendance?.fuel_bonus > 0;
-                      }
-                    ).length
-                  }
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  {formatValue(
-                    Array.from({ length: daysInMonth }).reduce(
-                      (total, _, dayIndex) => {
-                        const attendance = attendances.find(
-                          (a) =>
-                            a.date ===
-                              `${selectedYear}-${String(
-                                selectedMonth + 1
-                              ).padStart(2, "0")}-${String(
-                                dayIndex + 1
-                              ).padStart(2, "0")}` &&
-                            a.transport.id === transport.id
-                        );
-                        return (
-                          total +
-                          (attendance?.fuel_bonus *
-                            (attendance?.attendance_type || 0) || 0)
-                        );
-                      },
-                      0
-                    )
-                  )}
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  <span className="text-red-500 font-semibold">
-                    {formatValue(
-                      Array.from({ length: daysInMonth }).reduce(
-                        (total, _, dayIndex) => {
-                          const attendance = attendances.find(
-                            (a) =>
-                              a.date ===
-                                `${selectedYear}-${String(
-                                  selectedMonth + 1
-                                ).padStart(2, "0")}-${String(
-                                  dayIndex + 1
-                                ).padStart(2, "0")}` &&
-                              a.transport.id === transport.id
-                          );
-                          return (
-                            total +
-                            (attendance?.salary *
-                              (attendance?.attendance_type || 0) +
-                              attendance?.fuel_bonus *
-                                (attendance?.attendance_type || 0) || 0)
-                          );
-                        },
-                        0
-                      ) -
-                        transport?.payment?.reduce(
-                          (total, payment) =>
-                            total + (parseInt(payment?.amount) || 0),
-                          0
-                        )
-                    )}
-                  </span>
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  {/* add jami yo'l kira haqqi and jami benzin uchun */}
-                  {formatValue(
-                    Array.from({ length: daysInMonth }).reduce(
-                      (total, _, dayIndex) => {
-                        const attendance = attendances.find(
-                          (a) =>
-                            a.date ===
-                              `${selectedYear}-${String(
-                                selectedMonth + 1
-                              ).padStart(2, "0")}-${String(
-                                dayIndex + 1
-                              ).padStart(2, "0")}` &&
-                            a.transport.id === transport.id
-                        );
-                        return (
-                          total +
-                          (attendance?.salary *
-                            (attendance?.attendance_type || 0) +
-                            attendance?.fuel_bonus *
-                              (attendance?.attendance_type || 0) || 0)
-                        );
-                      },
-                      0
-                    )
-                  )}
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  {formatValue(
-                    transport?.payment?.reduce(
-                      (total, payment) =>
-                        total + (parseInt(payment?.amount) || 0),
-                      0
-                    )
-                  )}
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedTransport(transport);
-                      setCurrentSubmitAdvance(
-                        transport?.payment?.find((p) => p.type === "advance")
-                          ?.amount || 0
-                      );
-                      setAdvanceDialogOpen(true);
-                    }}
-                  >
-                    {formatValue(
-                      transport?.payment?.find((p) => p.type === "advance")
-                        ?.amount
-                    ) || 0}
-                  </Button>
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    onClick={() => {
-                      setCurrentSubmitSalary(
-                        transport?.payment?.find((p) => p.type === "salary")
-                          ?.amount || 0
-                      );
-                      setCurrentSubmitAdvanceDate(
-                        transport?.payment?.find((p) => p.type === "salary")
-                          ?.date || ""
-                      );
-                      setSelectedTransport(transport);
-                      setSalaryDialogOpen(true);
-                    }}
-                  >
-                    {formatValue(
-                      transport?.payment?.find((p) => p.type === "salary")
-                        ?.amount
-                    ) || 0}
-                  </Button>
-                </td>
-                <td className="border-2 p-1 min-w-[70px]">
-                  {formatValue(transport?.balance || 0)}
-                </td>
-              </tr>
-            ))}
+              ))}
+              <td className="border-2 p-1 min-w-[100px]"></td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {transportCalculations.totals.workDays.toFixed(1)}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {formatValue(transportCalculations.totals.totalSalary || 0)}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {transportCalculations.totals.fuelDays.toFixed(1)}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {formatValue(transportCalculations.totals.totalFuelBonus || 0)}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                <span className="text-red-500">
+                  {formatValue(transportCalculations.totals.debt || 0)}
+                </span>
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {formatValue(
+                  transportCalculations.totals.totalTransportMoney || 0
+                )}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {formatValue(transportCalculations.totals.totalPaid || 0)}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {formatValue(transportCalculations.totals.advance || 0)}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {formatValue(transportCalculations.totals.salary || 0)}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                {formatValue(transportCalculations.totals.balance || 0)}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1050,7 +1073,7 @@ const Attendance = () => {
                 onValueChange={(val) =>
                   setCurrentAttendance((prev) => ({
                     ...prev,
-                    attendance_type: parseFloat(val),
+                    attendance_type: Number.parseFloat(val),
                   }))
                 }
                 className="flex space-x-4"
@@ -1081,7 +1104,7 @@ const Attendance = () => {
                 onChange={(e) =>
                   setCurrentAttendance((prev) => ({
                     ...prev,
-                    salary: parseInt(e.target.value),
+                    salary: Number.parseInt(e.target.value),
                   }))
                 }
               />
@@ -1099,7 +1122,7 @@ const Attendance = () => {
                 onChange={(e) =>
                   setCurrentAttendance((prev) => ({
                     ...prev,
-                    fuel_bonus: parseInt(e.target.value),
+                    fuel_bonus: Number.parseInt(e.target.value),
                   }))
                 }
               />
@@ -1155,7 +1178,7 @@ const Attendance = () => {
                 onValueChange={(val) =>
                   setMassAttendance((prev) => ({
                     ...prev,
-                    attendance_type: parseFloat(val),
+                    attendance_type: Number.parseFloat(val),
                   }))
                 }
                 className="flex space-x-4"
@@ -1332,7 +1355,7 @@ const Attendance = () => {
                 onValueChange={(val) =>
                   setSmallAttendance((prev) => ({
                     ...prev,
-                    attendance_type: parseFloat(val),
+                    attendance_type: Number.parseFloat(val),
                   }))
                 }
                 className="flex space-x-4"
@@ -1363,7 +1386,7 @@ const Attendance = () => {
                 onChange={(e) =>
                   setSmallAttendance((prev) => ({
                     ...prev,
-                    salary: parseInt(e.target.value),
+                    salary: Number.parseInt(e.target.value),
                   }))
                 }
               />
@@ -1381,7 +1404,7 @@ const Attendance = () => {
                 onChange={(e) =>
                   setSmallAttendance((prev) => ({
                     ...prev,
-                    fuel_bonus: parseInt(e.target.value),
+                    fuel_bonus: Number.parseInt(e.target.value),
                   }))
                 }
               />
@@ -1438,72 +1461,77 @@ const Attendance = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={salaryDialogOpen} onOpenChange={setSalaryDialogOpen}>
+
+      {/* Unified Payment Dialog for both Salary and Advance */}
+      <Dialog
+        open={advanceDialogOpen || salaryDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAdvanceDialogOpen(false);
+            setSalaryDialogOpen(false);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Maosh</DialogTitle>
+            <DialogTitle>
+              {currentSubmitPayment.type === "advance" ? "Avans" : "Maosh"}
+            </DialogTitle>
             <DialogDescription></DialogDescription>
             <div className="flex items-center gap-2">
               Belgilangan transport:
               <div>{selectedTransport?.name}</div>
               <div>{selectedTransport?.state_number}</div>
             </div>
-            {selectedTransport?.payment?.find((p) => p.type === "salary")
-              ?.date && (
+            {selectedTransport?.payment?.find(
+              (p) => p.type === currentSubmitPayment.type
+            )?.date && (
               <div>
-                Maosh berilgan sana:{" "}
+                {currentSubmitPayment.type === "advance" ? "Avans" : "Maosh"}{" "}
+                berilgan sana:{" "}
                 {
-                  selectedTransport?.payment?.find((p) => p.type === "salary")
-                    ?.date
+                  selectedTransport?.payment?.find(
+                    (p) => p.type === currentSubmitPayment.type
+                  )?.date
                 }
               </div>
             )}
             <div className="flex items-center gap-2">
               <div>Balansi:</div>
               {formatValue(
-                Array.from({ length: daysInMonth }).reduce(
-                  (total, _, dayIndex) => {
-                    const attendance = attendances.find(
-                      (a) =>
-                        a.date ===
-                          `${selectedYear}-${String(selectedMonth + 1).padStart(
-                            2,
-                            "0"
-                          )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-                        a.transport?.id === selectedTransport?.id
-                    );
-                    return (
-                      total +
-                      (attendance?.salary * (attendance?.attendance_type || 0) +
-                        attendance?.fuel_bonus *
-                          (attendance?.attendance_type || 0) || 0)
-                    );
-                  },
-                  0
-                )
+                (transportCalculations.transportData[selectedTransport?.id]
+                  ?.totalTransportMoney || 0) -
+                  (currentSubmitPayment.type === "advance"
+                    ? transportCalculations.transportData[selectedTransport?.id]
+                        ?.salary || 0
+                    : transportCalculations.transportData[selectedTransport?.id]
+                        ?.advance || 0)
               )}{" "}
               so'm
             </div>
             <div className="text-sm text-muted-foreground">
-              Miqdori: {formatValue(currentSubmitSalary)} so'm
+              Miqdori: {formatValue(currentSubmitPayment.amount)} so'm
             </div>
             <Input
-              value={currentSubmitSalary}
-              onChange={(e) => setCurrentSubmitSalary(e.target.value)}
+              value={currentSubmitPayment.amount}
+              onChange={(e) =>
+                setCurrentSubmitPayment((prev) => ({
+                  ...prev,
+                  amount: e.target.value,
+                }))
+              }
               className="mb-4"
             />
-            {selectedTransport?.payment?.find(
-              (payment) => payment?.type === "salary"
-            )?.date ? (
-              ""
-            ) : (
+            {!selectedTransport?.payment?.find(
+              (payment) => payment?.type === currentSubmitPayment.type
+            )?.date && (
               <div className="w-full flex items-center justify-center">
                 <Calendar
                   mode="single"
                   className="mb-4"
-                  selected={currentSubmitSalaryDate}
+                  selected={currentSubmitPayment.date}
                   onSelect={(date) => {
-                    setCurrentSubmitSalaryDate(date);
+                    setCurrentSubmitPayment((prev) => ({ ...prev, date }));
                   }}
                   disabled={[
                     {
@@ -1517,129 +1545,15 @@ const Attendance = () => {
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
-                onClick={() => setSalaryDialogOpen(false)}
+                onClick={() => {
+                  setAdvanceDialogOpen(false);
+                  setSalaryDialogOpen(false);
+                }}
               >
                 Yopish
               </Button>
               <Button
-                onClick={() => {
-                  handleSalarySubmit(
-                    selectedTransport?.payment?.find(
-                      (payment) => payment?.type === "salary"
-                    )
-                      ? "patch"
-                      : "post",
-                    selectedTransport?.payment?.find(
-                      (payment) => payment?.type === "salary"
-                    )?.id,
-                    format(currentSubmitSalaryDate || new Date(), "yyyy-MM-dd")
-                  );
-                }}
-                disabled={isBulkUpdating}
-              >
-                {isBulkUpdating ? "Saqlanmoqda..." : "Saqlash"}
-              </Button>
-            </div>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={advanceDialogOpen} onOpenChange={setAdvanceDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Avans</DialogTitle>
-            <DialogDescription></DialogDescription>
-            <div className="flex items-center gap-2">
-              Belgilangan transport:
-              <div>{selectedTransport?.name}</div>
-              <div>{selectedTransport?.state_number}</div>
-            </div>
-            {selectedTransport?.payment?.find((p) => p.type === "advance")
-              ?.date && (
-              <div>
-                Avans berilgan sana:{" "}
-                {
-                  selectedTransport?.payment?.find((p) => p.type === "advance")
-                    ?.date
-                }
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <div>Balansi:</div>
-              {formatValue(
-                Array.from({ length: daysInMonth }).reduce(
-                  (total, _, dayIndex) => {
-                    const attendance = attendances.find(
-                      (a) =>
-                        a.date ===
-                          `${selectedYear}-${String(selectedMonth + 1).padStart(
-                            2,
-                            "0"
-                          )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-                        a.transport?.id === selectedTransport?.id
-                    );
-                    return (
-                      total +
-                      (attendance?.salary * (attendance?.attendance_type || 0) +
-                        attendance?.fuel_bonus *
-                          (attendance?.attendance_type || 0) || 0)
-                    );
-                  },
-                  0
-                )
-              )}{" "}
-              so'm
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Miqdori: {formatValue(currentSubmitAdvance)} so'm
-            </div>
-            <Input
-              value={currentSubmitAdvance}
-              onChange={(e) => setCurrentSubmitAdvance(e.target.value)}
-              className="mb-4"
-            />
-            {selectedTransport?.payment?.find(
-              (payment) => payment?.type === "advance"
-            )?.date ? (
-              ""
-            ) : (
-              <div className="w-full flex items-center justify-center">
-                <Calendar
-                  mode="single"
-                  className="mb-4"
-                  selected={currentSubmitAdvanceDate}
-                  onSelect={(date) => {
-                    setCurrentSubmitAdvanceDate(date);
-                  }}
-                  disabled={[
-                    {
-                      before: new Date(selectedYear, selectedMonth, 1),
-                      after: new Date(selectedYear, selectedMonth + 1, 0),
-                    },
-                  ]}
-                />
-              </div>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setAdvanceDialogOpen(false)}
-              >
-                Yopish
-              </Button>
-              <Button
-                onClick={() => {
-                  handleAdvanceSubmit(
-                    selectedTransport?.payment?.find(
-                      (payment) => payment?.type === "advance"
-                    )
-                      ? "patch"
-                      : "post",
-                    selectedTransport?.payment?.find(
-                      (payment) => payment?.type === "advance"
-                    )?.id,
-                    format(currentSubmitAdvanceDate || new Date(), "yyyy-MM-dd")
-                  );
-                }}
+                onClick={() => handlePaymentSubmit(currentSubmitPayment.type)}
                 disabled={isBulkUpdating}
               >
                 {isBulkUpdating ? "Saqlanmoqda..." : "Saqlash"}
