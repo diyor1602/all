@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Search } from "lucide-react";
+import { Eye, Pencil, PlusCircle, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import Add from "./Add";
+import Edit from "./Edit";
 
 const formatPhoneNumber = (phone) => {
   return phone
@@ -37,6 +38,7 @@ const Machine = () => {
     <Routes>
       <Route path="*" element={<MachineWrapper />} />
       <Route path="new" element={<Add />} />
+      <Route path="edit/:id" element={<Edit />} />
     </Routes>
   );
 };
@@ -156,6 +158,7 @@ const MachineWrapper = () => {
                   ID
                 </TableHead>
                 <TableHead className="text-xs border-2">Nomi</TableHead>
+                <TableHead className="text-xs border-2">Amallar</TableHead>
                 <TableHead className="text-xs border-2">
                   Davlat raqami
                 </TableHead>
@@ -175,6 +178,28 @@ const MachineWrapper = () => {
                     </TableCell>
                     <TableCell className="text-xs border-2">
                       {transport.name}
+                    </TableCell>
+                    <TableCell className="text-xs border-2">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() =>
+                            navigate(`/transport/machines/view/${transport.id}`)
+                          }
+                        >
+                          <Eye className="h-4 w-4 text-blue-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() =>
+                            navigate(`/transport/machines/edit/${transport.id}`)
+                          }
+                        >
+                          <Pencil className="h-4 w-4 text-orange-500" />
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs border-2">
                       {transport.state_number}
@@ -215,7 +240,7 @@ const MachineWrapper = () => {
             </TableBody>
             <TableFooter className="bg-gray-100">
               <TableRow>
-                <TableCell colSpan={5} className="text-xs font-bold border-2">
+                <TableCell colSpan={6} className="text-xs font-bold border-2">
                   Jami:
                 </TableCell>
                 <TableCell className="text-xs font-bold border-2">
