@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { PlusCircle, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,6 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useNavigate, Routes, Route } from "react-router-dom";
+import Add from "./Add";
 
 const formatPhoneNumber = (phone) => {
   return phone
@@ -30,12 +33,22 @@ const formatPhoneNumber = (phone) => {
 };
 
 const Machine = () => {
+  return (
+    <Routes>
+      <Route path="*" element={<MachineWrapper />} />
+      <Route path="new" element={<Add />} />
+    </Routes>
+  );
+};
+
+const MachineWrapper = () => {
   const [transports, setTransports] = useState([]);
   const [filteredTransports, setFilteredTransports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchTransports = async () => {
     setLoading(true);
@@ -97,9 +110,14 @@ const Machine = () => {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-6">
-        Transportlar ({filteredTransports.length})
-      </h1>
+      <div className="flex items-center gap-2 justify-between mb-3 flex-wrap">
+        <h1 className="text-2xl font-bold">
+          Transportlar ({filteredTransports.length})
+        </h1>
+        <Button onClick={() => navigate("/transport/machines/new")}>
+          <PlusCircle /> Yangi Transport
+        </Button>
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <div className="relative flex-1">
