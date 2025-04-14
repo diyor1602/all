@@ -8,6 +8,21 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+const formatValue = (value) => {
+  if (!value) return "";
+  return parseInt(value).toLocaleString("en-EN");
+};
 
 const Attendance = () => {
   const { toast } = useToast();
@@ -18,6 +33,18 @@ const Attendance = () => {
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentAttendance, setCurrentAttendance] = useState({
+    transport_id: null,
+    date: "",
+    attendance_type: 1,
+    salary: 0,
+    fuel_bonus: 0,
+    attendanceId: null,
+    hasAttendance: false,
+  });
 
   const getDaysInMonth = (year, monthIndex) =>
     new Date(year, monthIndex + 1, 0).getDate();
@@ -67,6 +94,81 @@ const Attendance = () => {
     );
   });
 
+  const openAttendanceDialog = (transportId, day, attendance) => {
+    const formattedDate = `${selectedYear}-${String(selectedMonth + 1).padStart(
+      2,
+      "0"
+    )}-${String(day).padStart(2, "0")}`;
+
+    // Find the transport to get its default salary and fuel_bonus
+    const transport = transports.find((t) => t.id === transportId);
+
+    setCurrentAttendance({
+      transport_id: transportId,
+      date: formattedDate,
+      attendance_type: attendance ? attendance.attendance_type : 1,
+      salary: attendance
+        ? attendance.salary || 0
+        : transport?.salary
+        ? parseInt(transport.salary)
+        : 0,
+      fuel_bonus: attendance
+        ? attendance.fuel_bonus || 0
+        : transport?.fuel_bonus
+        ? parseInt(transport.fuel_bonus)
+        : 0,
+      attendanceId: attendance ? attendance.id : null,
+      hasAttendance: !!attendance,
+    });
+
+    setDialogOpen(true);
+  };
+
+  const handleAttendanceSubmit = async () => {
+    try {
+      if (currentAttendance.hasAttendance && currentAttendance.attendanceId) {
+        await api.patch(
+          `/transport/attendances/${currentAttendance.attendanceId}`,
+          {
+            transport_id: currentAttendance.transport_id,
+            date: currentAttendance.date,
+            attendance_type: currentAttendance.attendance_type,
+            salary: currentAttendance.salary,
+            fuel_bonus: currentAttendance.fuel_bonus,
+          }
+        );
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Davomat muvaffaqiyatli yangilandi",
+          style: { backgroundColor: "green", color: "white" },
+        });
+      } else {
+        await api.post("/transport/attendances", {
+          transport_id: currentAttendance.transport_id,
+          date: currentAttendance.date,
+          attendance_type: currentAttendance.attendance_type,
+          salary: currentAttendance.salary,
+          fuel_bonus: currentAttendance.fuel_bonus,
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Davomat muvaffaqiyatli qo'shildi",
+          style: { backgroundColor: "green", color: "white" },
+        });
+      }
+
+      fetchAttendances();
+      setDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Ma'lumotlar bilan ishlashda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Keep the old handleAttendance for context menu compatibility
   const handleAttendance = async (
     transportId,
     day,
@@ -215,9 +317,22 @@ const Attendance = () => {
                     <td key={dayIndex} className="border-2 min-w-[40px]">
                       <ContextMenu>
                         <ContextMenuTrigger className="block w-full h-full cursor-context-menu">
-                          <span className="font-bold">
-                            {attendance ? attendance.attendance_type : "\u00A0"}
-                          </span>
+                          <div
+                            onClick={() =>
+                              openAttendanceDialog(
+                                transport.id,
+                                dayIndex + 1,
+                                attendance
+                              )
+                            }
+                            className="cursor-pointer w-full h-full flex items-center justify-center"
+                          >
+                            <span className="font-bold">
+                              {attendance
+                                ? attendance.attendance_type
+                                : "\u00A0"}
+                            </span>
+                          </div>
                         </ContextMenuTrigger>
                         <ContextMenuContent>
                           <ContextMenuItem
@@ -269,6 +384,87 @@ const Attendance = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Attendance Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Davomat ma'lumotlari</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="attendance-type">Davomat turi</Label>
+              <RadioGroup
+                id="attendance-type"
+                value={currentAttendance.attendance_type.toString()}
+                onValueChange={(val) =>
+                  setCurrentAttendance((prev) => ({
+                    ...prev,
+                    attendance_type: parseFloat(val),
+                  }))
+                }
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="1" id="full-day" />
+                  <Label htmlFor="full-day">Keldi</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="0.5" id="half-day" />
+                  <Label htmlFor="half-day">Yarim kun</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="0" id="absent" />
+                  <Label htmlFor="absent">Kelmadi</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="salary">
+                Maosh ({formatValue(currentAttendance.salary)} so'm)
+              </Label>
+              <Input
+                id="salary"
+                type="number"
+                value={currentAttendance.salary}
+                onChange={(e) =>
+                  setCurrentAttendance((prev) => ({
+                    ...prev,
+                    salary: parseInt(e.target.value) || 0,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fuel-bonus">
+                Benzin uchun bonus ({formatValue(currentAttendance.fuel_bonus)}{" "}
+                so'm)
+              </Label>
+              <Input
+                id="fuel-bonus"
+                type="number"
+                value={currentAttendance.fuel_bonus}
+                onChange={(e) =>
+                  setCurrentAttendance((prev) => ({
+                    ...prev,
+                    fuel_bonus: parseInt(e.target.value) || 0,
+                  }))
+                }
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Bekor qilish
+            </Button>
+            <Button onClick={handleAttendanceSubmit}>Saqlash</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
