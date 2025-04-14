@@ -22,8 +22,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar";
 import { addDays, format } from "date-fns";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 const formatValue = (value) => {
+  if (value === 0) {
+    return 0;
+  }
   if (!value) return "";
   return parseInt(value).toLocaleString("en-EN");
 };
@@ -38,6 +42,16 @@ const Attendance = () => {
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
   const [searchTerm, setSearchTerm] = useState("");
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
+  const [salaryDialogOpen, setSalaryDialogOpen] = useState(false);
+  const [currentSubmitAdvance, setCurrentSubmitAdvance] = useState(0);
+  const [currentSubmitAdvanceDate, setCurrentSubmitAdvanceDate] = useState(
+    new Date()
+  );
+  const [currentSubmitSalaryDate, setCurrentSubmitSalaryDate] = useState(
+    new Date()
+  );
+  const [currentSubmitSalary, setCurrentSubmitSalary] = useState(0);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -105,7 +119,11 @@ const Attendance = () => {
 
   const fetchTransports = async () => {
     try {
-      const response = await api.get("/transport/transports");
+      const response = await api.get("/transport/transports", {
+        params: {
+          date: `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`,
+        },
+      });
       setTransports(response.data.filter((transport) => transport.is_active));
     } catch (error) {
       toast({
@@ -427,6 +445,164 @@ const Attendance = () => {
     return dates;
   };
 
+  const handleAdvanceSubmit = async (method, id, date) => {
+    const maxBalance = Array.from({ length: daysInMonth }).reduce(
+      (total, _, dayIndex) => {
+        const attendance = attendances.find(
+          (a) =>
+            a.date ===
+              `${selectedYear}-${String(selectedMonth + 1).padStart(
+                2,
+                "0"
+              )}-${String(dayIndex + 1).padStart(2, "0")}` &&
+            a.transport?.id === selectedTransport?.id
+        );
+        return (
+          total +
+          (attendance?.salary * (attendance?.attendance_type || 0) +
+            attendance?.fuel_bonus * (attendance?.attendance_type || 0) || 0)
+        );
+      },
+      0
+    );
+
+    if (parseInt(currentSubmitAdvance) > maxBalance) {
+      toast({
+        title: "Diqqat",
+        description: "Avans miqdori balansdan kam bo'lishi kerak",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsBulkUpdating(true);
+    try {
+      const payload = {
+        transport_id: parseInt(selectedTransport.id),
+        amount: parseInt(currentSubmitAdvance),
+        type: "advance",
+      };
+
+      if (method === "post") {
+        payload.date = date;
+        if (!date) {
+          toast({
+            title: "Diqqat",
+            description: "Sanani tanlang!",
+            variant: "destructive",
+          });
+          return;
+        }
+        await api.post("/transport/payment/", payload);
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Avans muvaffaqiyatli qo'shildi",
+          style: { backgroundColor: "green", color: "white" },
+        });
+      } else {
+        payload.date = selectedTransport?.payment?.find(
+          (payment) => payment?.type === "advance"
+        )?.date;
+        await api.patch(`/transport/payment/${id}`, payload);
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Avans muvaffaqiyatli yangilandi",
+          style: { backgroundColor: "green", color: "white" },
+        });
+      }
+
+      fetchAttendances();
+      setAdvanceDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response.data.message || error.response.data.error,
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const handleSalarySubmit = async (method, id, date) => {
+    const maxBalance = Array.from({ length: daysInMonth }).reduce(
+      (total, _, dayIndex) => {
+        const attendance = attendances.find(
+          (a) =>
+            a.date ===
+              `${selectedYear}-${String(selectedMonth + 1).padStart(
+                2,
+                "0"
+              )}-${String(dayIndex + 1).padStart(2, "0")}` &&
+            a.transport?.id === selectedTransport?.id
+        );
+        return (
+          total +
+          (attendance?.salary * (attendance?.attendance_type || 0) +
+            attendance?.fuel_bonus * (attendance?.attendance_type || 0) || 0)
+        );
+      },
+      0
+    );
+
+    if (parseInt(currentSubmitSalary) > maxBalance) {
+      toast({
+        title: "Diqqat",
+        description: "Maosh miqdori balansdan kam bo'lishi kerak",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsBulkUpdating(true);
+    try {
+      const payload = {
+        transport_id: parseInt(selectedTransport.id),
+        amount: parseInt(currentSubmitSalary),
+        type: "salary",
+      };
+
+      if (method === "post") {
+        payload.date = date;
+        if (!date) {
+          toast({
+            title: "Diqqat",
+            description: "Sanani tanlang!",
+            variant: "destructive",
+          });
+          return;
+        }
+        await api.post("/transport/payment/", payload);
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Maosh muvaffaqiyatli qo'shildi",
+          style: { backgroundColor: "green", color: "white" },
+        });
+      } else {
+        payload.date = selectedTransport?.payment?.find(
+          (payment) => payment?.type === "salary"
+        )?.date;
+        await api.patch(`/transport/payment/${id}`, payload);
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Maosh muvaffaqiyatli yangilandi",
+          style: { backgroundColor: "green", color: "white" },
+        });
+      }
+
+      fetchAttendances();
+      setSalaryDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response.data.message || error.response.data.error,
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   // Keep the old handleAttendance for context menu compatibility
   const handleAttendance = async (
     transportId,
@@ -510,7 +686,7 @@ const Attendance = () => {
         </div>
       </div>
 
-      <div className="max-h-[85vh] overflow-auto mt-4">
+      <div className="max-h-[84vh] overflow-auto mt-4">
         <table className="border w-full text-xs bg-white">
           <thead className="sticky top-0 bg-white shadow z-20">
             <tr>
@@ -554,7 +730,9 @@ const Attendance = () => {
               <th className="border-2 p-1 min-w-[70px]">Jami to'langan pul</th>
               <th className="border-2 p-1 min-w-[70px]">Avans</th>
               <th className="border-2 p-1 min-w-[70px]">Maosh</th>
-              <th className="border-2 p-1 min-w-[70px]">Boshqa to'lov</th>
+              <th className="border-2 p-1 min-w-[70px]">
+                Transport umumiy balansi
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -648,6 +826,208 @@ const Attendance = () => {
                     </td>
                   );
                 })}
+                <td className="border-2 p-1 min-w-[100px]">
+                  {formatValue(transport?.salary)}
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  {Array.from({ length: daysInMonth }).reduce(
+                    (total, _, dayIndex) => {
+                      const attendance = attendances.find(
+                        (a) =>
+                          a.date ===
+                            `${selectedYear}-${String(
+                              selectedMonth + 1
+                            ).padStart(2, "0")}-${String(dayIndex + 1).padStart(
+                              2,
+                              "0"
+                            )}` && a.transport.id === transport.id
+                      );
+                      return total + (attendance?.attendance_type || 0);
+                    },
+                    0
+                  )}
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  {formatValue(
+                    Array.from({ length: daysInMonth }).reduce(
+                      (total, _, dayIndex) => {
+                        const attendance = attendances.find(
+                          (a) =>
+                            a.date ===
+                              `${selectedYear}-${String(
+                                selectedMonth + 1
+                              ).padStart(2, "0")}-${String(
+                                dayIndex + 1
+                              ).padStart(2, "0")}` &&
+                            a.transport.id === transport.id
+                        );
+                        return (
+                          total +
+                          (attendance?.salary *
+                            (attendance?.attendance_type || 0) || 0)
+                        );
+                      },
+                      0
+                    )
+                  )}
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  {
+                    Array.from({ length: daysInMonth }).filter(
+                      (_, dayIndex) => {
+                        const attendance = attendances.find(
+                          (a) =>
+                            a.date ===
+                              `${selectedYear}-${String(
+                                selectedMonth + 1
+                              ).padStart(2, "0")}-${String(
+                                dayIndex + 1
+                              ).padStart(2, "0")}` &&
+                            a.transport.id === transport.id
+                        );
+                        return attendance?.fuel_bonus > 0;
+                      }
+                    ).length
+                  }
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  {formatValue(
+                    Array.from({ length: daysInMonth }).reduce(
+                      (total, _, dayIndex) => {
+                        const attendance = attendances.find(
+                          (a) =>
+                            a.date ===
+                              `${selectedYear}-${String(
+                                selectedMonth + 1
+                              ).padStart(2, "0")}-${String(
+                                dayIndex + 1
+                              ).padStart(2, "0")}` &&
+                            a.transport.id === transport.id
+                        );
+                        return (
+                          total +
+                          (attendance?.fuel_bonus *
+                            (attendance?.attendance_type || 0) || 0)
+                        );
+                      },
+                      0
+                    )
+                  )}
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  <span className="text-red-500 font-semibold">
+                    {formatValue(
+                      Array.from({ length: daysInMonth }).reduce(
+                        (total, _, dayIndex) => {
+                          const attendance = attendances.find(
+                            (a) =>
+                              a.date ===
+                                `${selectedYear}-${String(
+                                  selectedMonth + 1
+                                ).padStart(2, "0")}-${String(
+                                  dayIndex + 1
+                                ).padStart(2, "0")}` &&
+                              a.transport.id === transport.id
+                          );
+                          return (
+                            total +
+                            (attendance?.salary *
+                              (attendance?.attendance_type || 0) +
+                              attendance?.fuel_bonus *
+                                (attendance?.attendance_type || 0) || 0)
+                          );
+                        },
+                        0
+                      ) -
+                        transport?.payment?.reduce(
+                          (total, payment) =>
+                            total + (parseInt(payment?.amount) || 0),
+                          0
+                        )
+                    )}
+                  </span>
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  {/* add jami yo'l kira haqqi and jami benzin uchun */}
+                  {formatValue(
+                    Array.from({ length: daysInMonth }).reduce(
+                      (total, _, dayIndex) => {
+                        const attendance = attendances.find(
+                          (a) =>
+                            a.date ===
+                              `${selectedYear}-${String(
+                                selectedMonth + 1
+                              ).padStart(2, "0")}-${String(
+                                dayIndex + 1
+                              ).padStart(2, "0")}` &&
+                            a.transport.id === transport.id
+                        );
+                        return (
+                          total +
+                          (attendance?.salary *
+                            (attendance?.attendance_type || 0) +
+                            attendance?.fuel_bonus *
+                              (attendance?.attendance_type || 0) || 0)
+                        );
+                      },
+                      0
+                    )
+                  )}
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  {formatValue(
+                    transport?.payment?.reduce(
+                      (total, payment) =>
+                        total + (parseInt(payment?.amount) || 0),
+                      0
+                    )
+                  )}
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedTransport(transport);
+                      setCurrentSubmitAdvance(
+                        transport?.payment?.find((p) => p.type === "advance")
+                          ?.amount || 0
+                      );
+                      setAdvanceDialogOpen(true);
+                    }}
+                  >
+                    {formatValue(
+                      transport?.payment?.find((p) => p.type === "advance")
+                        ?.amount
+                    ) || 0}
+                  </Button>
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => {
+                      setCurrentSubmitSalary(
+                        transport?.payment?.find((p) => p.type === "salary")
+                          ?.amount || 0
+                      );
+                      setCurrentSubmitAdvanceDate(
+                        transport?.payment?.find((p) => p.type === "salary")
+                          ?.date || ""
+                      );
+                      setSelectedTransport(transport);
+                      setSalaryDialogOpen(true);
+                    }}
+                  >
+                    {formatValue(
+                      transport?.payment?.find((p) => p.type === "salary")
+                        ?.amount
+                    ) || 0}
+                  </Button>
+                </td>
+                <td className="border-2 p-1 min-w-[70px]">
+                  {formatValue(transport?.balance || 0)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -1056,6 +1436,216 @@ const Attendance = () => {
               {isBulkUpdating ? "Saqlanmoqda..." : "Saqlash"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={salaryDialogOpen} onOpenChange={setSalaryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Maosh</DialogTitle>
+            <DialogDescription></DialogDescription>
+            <div className="flex items-center gap-2">
+              Belgilangan transport:
+              <div>{selectedTransport?.name}</div>
+              <div>{selectedTransport?.state_number}</div>
+            </div>
+            {selectedTransport?.payment?.find((p) => p.type === "salary")
+              ?.date && (
+              <div>
+                Maosh berilgan sana:{" "}
+                {
+                  selectedTransport?.payment?.find((p) => p.type === "salary")
+                    ?.date
+                }
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <div>Balansi:</div>
+              {formatValue(
+                Array.from({ length: daysInMonth }).reduce(
+                  (total, _, dayIndex) => {
+                    const attendance = attendances.find(
+                      (a) =>
+                        a.date ===
+                          `${selectedYear}-${String(selectedMonth + 1).padStart(
+                            2,
+                            "0"
+                          )}-${String(dayIndex + 1).padStart(2, "0")}` &&
+                        a.transport?.id === selectedTransport?.id
+                    );
+                    return (
+                      total +
+                      (attendance?.salary * (attendance?.attendance_type || 0) +
+                        attendance?.fuel_bonus *
+                          (attendance?.attendance_type || 0) || 0)
+                    );
+                  },
+                  0
+                )
+              )}{" "}
+              so'm
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Miqdori: {formatValue(currentSubmitSalary)} so'm
+            </div>
+            <Input
+              value={currentSubmitSalary}
+              onChange={(e) => setCurrentSubmitSalary(e.target.value)}
+              className="mb-4"
+            />
+            {selectedTransport?.payment?.find(
+              (payment) => payment?.type === "salary"
+            )?.date ? (
+              ""
+            ) : (
+              <div className="w-full flex items-center justify-center">
+                <Calendar
+                  mode="single"
+                  className="mb-4"
+                  selected={currentSubmitSalaryDate}
+                  onSelect={(date) => {
+                    setCurrentSubmitSalaryDate(date);
+                  }}
+                  disabled={[
+                    {
+                      before: new Date(selectedYear, selectedMonth, 1),
+                      after: new Date(selectedYear, selectedMonth + 1, 0),
+                    },
+                  ]}
+                />
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setSalaryDialogOpen(false)}
+              >
+                Yopish
+              </Button>
+              <Button
+                onClick={() => {
+                  handleSalarySubmit(
+                    selectedTransport?.payment?.find(
+                      (payment) => payment?.type === "salary"
+                    )
+                      ? "patch"
+                      : "post",
+                    selectedTransport?.payment?.find(
+                      (payment) => payment?.type === "salary"
+                    )?.id,
+                    format(currentSubmitSalaryDate || new Date(), "yyyy-MM-dd")
+                  );
+                }}
+                disabled={isBulkUpdating}
+              >
+                {isBulkUpdating ? "Saqlanmoqda..." : "Saqlash"}
+              </Button>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={advanceDialogOpen} onOpenChange={setAdvanceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Avans</DialogTitle>
+            <DialogDescription></DialogDescription>
+            <div className="flex items-center gap-2">
+              Belgilangan transport:
+              <div>{selectedTransport?.name}</div>
+              <div>{selectedTransport?.state_number}</div>
+            </div>
+            {selectedTransport?.payment?.find((p) => p.type === "advance")
+              ?.date && (
+              <div>
+                Avans berilgan sana:{" "}
+                {
+                  selectedTransport?.payment?.find((p) => p.type === "advance")
+                    ?.date
+                }
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <div>Balansi:</div>
+              {formatValue(
+                Array.from({ length: daysInMonth }).reduce(
+                  (total, _, dayIndex) => {
+                    const attendance = attendances.find(
+                      (a) =>
+                        a.date ===
+                          `${selectedYear}-${String(selectedMonth + 1).padStart(
+                            2,
+                            "0"
+                          )}-${String(dayIndex + 1).padStart(2, "0")}` &&
+                        a.transport?.id === selectedTransport?.id
+                    );
+                    return (
+                      total +
+                      (attendance?.salary * (attendance?.attendance_type || 0) +
+                        attendance?.fuel_bonus *
+                          (attendance?.attendance_type || 0) || 0)
+                    );
+                  },
+                  0
+                )
+              )}{" "}
+              so'm
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Miqdori: {formatValue(currentSubmitAdvance)} so'm
+            </div>
+            <Input
+              value={currentSubmitAdvance}
+              onChange={(e) => setCurrentSubmitAdvance(e.target.value)}
+              className="mb-4"
+            />
+            {selectedTransport?.payment?.find(
+              (payment) => payment?.type === "advance"
+            )?.date ? (
+              ""
+            ) : (
+              <div className="w-full flex items-center justify-center">
+                <Calendar
+                  mode="single"
+                  className="mb-4"
+                  selected={currentSubmitAdvanceDate}
+                  onSelect={(date) => {
+                    setCurrentSubmitAdvanceDate(date);
+                  }}
+                  disabled={[
+                    {
+                      before: new Date(selectedYear, selectedMonth, 1),
+                      after: new Date(selectedYear, selectedMonth + 1, 0),
+                    },
+                  ]}
+                />
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setAdvanceDialogOpen(false)}
+              >
+                Yopish
+              </Button>
+              <Button
+                onClick={() => {
+                  handleAdvanceSubmit(
+                    selectedTransport?.payment?.find(
+                      (payment) => payment?.type === "advance"
+                    )
+                      ? "patch"
+                      : "post",
+                    selectedTransport?.payment?.find(
+                      (payment) => payment?.type === "advance"
+                    )?.id,
+                    format(currentSubmitAdvanceDate || new Date(), "yyyy-MM-dd")
+                  );
+                }}
+                disabled={isBulkUpdating}
+              >
+                {isBulkUpdating ? "Saqlanmoqda..." : "Saqlash"}
+              </Button>
+            </div>
+          </DialogHeader>
         </DialogContent>
       </Dialog>
     </div>
