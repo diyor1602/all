@@ -884,7 +884,7 @@ const Attendance = () => {
             checked={showOnlyActive}
             onCheckedChange={setShowOnlyActive}
           />
-          <Label htmlFor="activeSwitch">Faqat aktiv transportlar</Label>
+          <Label htmlFor="activeSwitch">Faqat aktiv</Label>
         </div>
       </div>
 
