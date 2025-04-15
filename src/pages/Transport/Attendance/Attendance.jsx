@@ -1098,7 +1098,15 @@ const Attendance = () => {
                   {transportCalculations.totals.dailyTotals[index].toFixed(1)}
                 </td>
               ))}
-              <td className="border-2 p-1 min-w-[100px]"></td>
+              <td className="border-2 p-1 min-w-[100px]">
+                {formatValue(
+                  filteredTransports.reduce(
+                    (total, transport) =>
+                      total + (parseInt(transport?.salary) || 0),
+                    0
+                  )
+                )}
+              </td>
               <td className="border-2 p-1 min-w-[70px]">
                 {transportCalculations.totals.workDays.toFixed(1)}
               </td>
