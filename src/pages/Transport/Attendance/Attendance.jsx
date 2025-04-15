@@ -13,6 +13,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -24,7 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar";
 import { addDays, format } from "date-fns";
-import { DialogDescription } from "@radix-ui/react-dialog";
+import { Switch } from "@/components/ui/switch";
 
 const formatValue = (value) => {
   if (value === 0) {
@@ -94,6 +95,9 @@ const Attendance = () => {
     to: null,
   });
 
+  const [showOnlyWithAttendance, setShowOnlyWithAttendance] = useState(false);
+  const [showOnlyActive, setShowOnlyActive] = useState(true);
+
   const getDaysInMonth = (year, monthIndex) =>
     new Date(year, monthIndex + 1, 0).getDate();
 
@@ -123,7 +127,8 @@ const Attendance = () => {
           date: `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`,
         },
       });
-      setTransports(response.data.filter((transport) => transport.is_active));
+      // Store all transports without filtering
+      setTransports(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -204,13 +209,31 @@ const Attendance = () => {
     }
   }, [selectedTransport]);
 
-  const filteredTransports = transports.filter((t) => {
-    const value = searchTerm.toLowerCase();
-    return (
-      t.state_number?.toLowerCase().includes(value) ||
-      t.driver_full_name?.toLowerCase().includes(value)
-    );
-  });
+  const filteredTransports = useMemo(() => {
+    return transports.filter((t) => {
+      // Apply search filter
+      const matchesSearch =
+        searchTerm === "" ||
+        t.state_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.driver_full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Apply active filter
+      const isActiveMatch = !showOnlyActive || t.is_active;
+
+      // Apply attendance filter - show only transports that have attendance records
+      const hasAttendance =
+        !showOnlyWithAttendance ||
+        attendances.some((a) => a.transport.id === t.id);
+
+      return matchesSearch && isActiveMatch && hasAttendance;
+    });
+  }, [
+    transports,
+    searchTerm,
+    showOnlyActive,
+    showOnlyWithAttendance,
+    attendances,
+  ]);
 
   const filteredTransportsForSelection = transports.filter((t) => {
     const value = transportSearchTerm.toLowerCase();
@@ -801,6 +824,22 @@ const Attendance = () => {
         <Button onClick={openMassAttendanceDialog} className="w-fit">
           Ommaviy Davomat Qo'shish
         </Button>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="attendanceSwitch"
+            checked={showOnlyWithAttendance}
+            onCheckedChange={setShowOnlyWithAttendance}
+          />
+          <Label htmlFor="attendanceSwitch">Davomati borlar</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="activeSwitch"
+            checked={showOnlyActive}
+            onCheckedChange={setShowOnlyActive}
+          />
+          <Label htmlFor="activeSwitch">Faqat aktiv transportlar</Label>
+        </div>
       </div>
 
       <div className="max-h-[84vh] overflow-auto mt-4">
