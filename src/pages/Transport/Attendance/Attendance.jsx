@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -38,11 +36,28 @@ const formatValue = (value) => {
 const Attendance = () => {
   const { toast } = useToast();
 
+  // Function to get URL parameters
+  const getUrlParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      year: params.get("year"),
+      month: params.get("month"),
+    };
+  };
+
+  // Get year and month from URL params or use current date as fallback
   const today = new Date();
+  const urlParams = getUrlParams();
+
+  const [selectedYear, setSelectedYear] = useState(
+    urlParams.year ? parseInt(urlParams.year) : today.getFullYear()
+  );
+  const [selectedMonth, setSelectedMonth] = useState(
+    urlParams.month ? parseInt(urlParams.month) - 1 : today.getMonth()
+  );
+
   const [attendances, setAttendances] = useState([]);
   const [transports, setTransports] = useState([]);
-  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
   const [searchTerm, setSearchTerm] = useState("");
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
@@ -97,6 +112,41 @@ const Attendance = () => {
 
   const [showOnlyWithAttendance, setShowOnlyWithAttendance] = useState(true);
   const [showOnlyActive, setShowOnlyActive] = useState(false);
+
+  const updateUrlParams = (year, month) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("year", year.toString());
+    params.set("month", (month + 1).toString()); // +1 because months are 0-indexed in JS
+
+    // Update URL without causing full page reload
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.pushState({ path: newUrl }, "", newUrl);
+  };
+
+  // Handle month/year change
+  const handleDateChange = (e) => {
+    const [year, month] = e.target.value.split("-");
+    const yearInt = parseInt(year);
+    const monthInt = parseInt(month) - 1; // Convert to 0-based index
+
+    setSelectedYear(yearInt);
+    setSelectedMonth(monthInt);
+    updateUrlParams(yearInt, monthInt);
+  };
+
+  // Add event listener for popstate (back/forward browser navigation)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = getUrlParams();
+      if (params.year && params.month) {
+        setSelectedYear(parseInt(params.year));
+        setSelectedMonth(parseInt(params.month) - 1);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const getDaysInMonth = (year, monthIndex) =>
     new Date(year, monthIndex + 1, 0).getDate();
@@ -804,11 +854,7 @@ const Attendance = () => {
             2,
             "0"
           )}`}
-          onChange={(e) => {
-            const [year, month] = e.target.value.split("-");
-            setSelectedYear(Number.parseInt(year));
-            setSelectedMonth(Number.parseInt(month) - 1);
-          }}
+          onChange={handleDateChange}
           className="px-2 py-1 rounded w-fit bg-white"
         />
         <Input
