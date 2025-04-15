@@ -24,6 +24,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar";
 import { addDays, format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
+import { Download, Loader2 } from "lucide-react";
+import ExcelJS from "exceljs";
 
 const formatValue = (value) => {
   if (value === 0) {
@@ -67,6 +69,8 @@ const Attendance = () => {
     date: new Date(),
     type: "",
   });
+
+  const [isExporting, setIsExporting] = useState(false);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -449,6 +453,176 @@ const Attendance = () => {
     selectedYear,
     selectedMonth,
   ]);
+
+  const exportToExcel = async () => {
+    setIsExporting(true);
+
+    try {
+      // Create a new workbook and worksheet
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(
+        `Davomat ${selectedMonth + 1}-${selectedYear}`
+      );
+
+      // Add headers
+      const headers = ["№", "Rusumi", "Davlat raqami", "Haydovchi"];
+
+      // Add day columns
+      for (let day = 1; day <= daysInMonth; day++) {
+        headers.push(
+          `${String(day).padStart(2, "0")}.${String(selectedMonth + 1).padStart(
+            2,
+            "0"
+          )}.${selectedYear}`
+        );
+      }
+
+      // Add summary columns
+      headers.push(
+        "Kunlik yo'l kira",
+        "Jami ish kuni",
+        "Jami yo'l kira haqqi",
+        "Jami benzinli kun",
+        "Jami benzin uchun",
+        "Qarzdorlik",
+        "Jami transport puli",
+        "Jami to'langan pul",
+        "Avans",
+        "Maosh",
+        "Transport umumiy balansi"
+      );
+
+      // Add header row
+      worksheet.addRow(headers);
+
+      // Format header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).alignment = {
+        vertical: "middle",
+        horizontal: "center",
+      };
+
+      // Add data rows
+      filteredTransports.forEach((transport, index) => {
+        const calculations =
+          transportCalculations.transportData[transport.id] || {};
+
+        const row = [
+          index + 1,
+          transport?.name || "",
+          transport?.state_number || "",
+          transport?.driver_full_name?.split(" ").slice(0, 2).join(" ") || "",
+        ];
+
+        // Add attendance data for each day
+        for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex++) {
+          const date = `${selectedYear}-${String(selectedMonth + 1).padStart(
+            2,
+            "0"
+          )}-${String(dayIndex + 1).padStart(2, "0")}`;
+          const attendance = attendances.find(
+            (a) => a.date === date && a.transport.id === transport.id
+          );
+          row.push(attendance ? attendance.attendance_type : "");
+        }
+
+        // Add summary data
+        row.push(
+          transport?.salary || 0,
+          calculations.workDays || 0,
+          calculations.totalSalary || 0,
+          calculations.fuelDays || 0,
+          calculations.totalFuelBonus || 0,
+          calculations.debt || 0,
+          calculations.totalTransportMoney || 0,
+          calculations.totalPaid || 0,
+          calculations.advance || 0,
+          calculations.salary || 0,
+          transport?.balance || 0
+        );
+
+        worksheet.addRow(row);
+      });
+
+      // Add totals row
+      const totalsRow = ["", "Jami:", "", ""];
+
+      // Add daily totals
+      for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex++) {
+        totalsRow.push(
+          transportCalculations.totals.dailyTotals[dayIndex].toFixed(1)
+        );
+      }
+
+      // Add summary totals
+      totalsRow.push(
+        filteredTransports.reduce(
+          (total, transport) => total + (parseInt(transport?.salary) || 0),
+          0
+        ),
+        transportCalculations.totals.workDays.toFixed(1),
+        transportCalculations.totals.totalSalary || 0,
+        transportCalculations.totals.fuelDays.toFixed(1),
+        transportCalculations.totals.totalFuelBonus || 0,
+        transportCalculations.totals.debt || 0,
+        transportCalculations.totals.totalTransportMoney || 0,
+        transportCalculations.totals.totalPaid || 0,
+        transportCalculations.totals.advance || 0,
+        transportCalculations.totals.salary || 0,
+        transportCalculations.totals.balance || 0
+      );
+
+      worksheet.addRow(totalsRow);
+
+      // Format totals row
+      const lastRow = worksheet.rowCount;
+      worksheet.getRow(lastRow).font = { bold: true };
+      worksheet.getRow(lastRow).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F2F2F2" },
+      };
+
+      // Auto-fit columns
+      worksheet.columns.forEach((column) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const columnLength = cell.value ? cell.value.toString().length : 10;
+          if (columnLength > maxLength) {
+            maxLength = columnLength;
+          }
+        });
+        column.width = maxLength < 10 ? 10 : maxLength;
+      });
+
+      // Generate file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Davomat_${selectedMonth + 1}_${selectedYear}.xlsx`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Excel fayl yuklandi",
+        style: { backgroundColor: "green", color: "white" },
+      });
+    } catch (error) {
+      console.error("Excel export error:", error);
+      toast({
+        title: "Xatolik",
+        description: "Excel faylni yuklashda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const openAttendanceDialog = (transportId, day, attendance) => {
     const formattedDate = `${selectedYear}-${String(selectedMonth + 1).padStart(
@@ -886,6 +1060,13 @@ const Attendance = () => {
           />
           <Label htmlFor="activeSwitch">Faqat aktiv</Label>
         </div>
+        <Button
+          onClick={exportToExcel}
+          className="w-fit ml-auto"
+          variant="ghost"
+        >
+          {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
+        </Button>
       </div>
 
       <div className="max-h-[84vh] overflow-auto mt-4">
