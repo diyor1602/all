@@ -95,8 +95,8 @@ const Attendance = () => {
     to: null,
   });
 
-  const [showOnlyWithAttendance, setShowOnlyWithAttendance] = useState(false);
-  const [showOnlyActive, setShowOnlyActive] = useState(true);
+  const [showOnlyWithAttendance, setShowOnlyWithAttendance] = useState(true);
+  const [showOnlyActive, setShowOnlyActive] = useState(false);
 
   const getDaysInMonth = (year, monthIndex) =>
     new Date(year, monthIndex + 1, 0).getDate();
