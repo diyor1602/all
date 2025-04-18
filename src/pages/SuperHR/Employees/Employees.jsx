@@ -58,6 +58,23 @@ const formatPhoneNumber = (phone) => {
     .replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
 };
 
+// Custom debounce hook
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const Employees = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -92,6 +109,12 @@ const Employees = () => {
   });
 
   const [groups, setGroups] = useState([]);
+
+  // Setup debounced values
+  const debouncedSearch = useDebounce(filters.search, 500);
+  const debouncedDepartment = useDebounce(filters.department_id, 300);
+  const debouncedGroup = useDebounce(filters.group_id, 300);
+  const debouncedStatus = useDebounce(filters.status, 300);
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -185,10 +208,6 @@ const Employees = () => {
       status: "all",
     });
     setGroups([]);
-  };
-
-  // Apply filters
-  const applyFilters = () => {
     fetchEmployees();
   };
 
@@ -277,6 +296,11 @@ const Employees = () => {
     fetchEmployees();
   }, [filters.page]);
 
+  // Fetch employees when debounced values change
+  useEffect(() => {
+    fetchEmployees();
+  }, [debouncedSearch, debouncedDepartment, debouncedGroup, debouncedStatus]);
+
   return (
     <div className="space-y-2">
       {/* Filters */}
@@ -340,13 +364,11 @@ const Employees = () => {
             className="pl-8 bg-white w-full"
             value={filters.search}
             onChange={(e) => handleFilterChange("search", e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                applyFilters();
-              }
-            }}
           />
         </div>
+        <Button variant="ghost" onClick={resetFilters} className="text-sm">
+          <RotateCcw />
+        </Button>
         <Button
           className="text-sm cursor-pointer"
           onClick={() => navigate("/superhr/employees/add")}
@@ -370,14 +392,6 @@ const Employees = () => {
             disabled={isExporting}
           >
             {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
-          </Button>
-        </div>
-        <div className="flex gap-2 items-center">
-          <Button variant="outline" onClick={resetFilters} className="text-sm">
-            <RotateCcw /> Tozalash
-          </Button>
-          <Button onClick={applyFilters} className="text-sm">
-            <Search /> Qidirish
           </Button>
         </div>
       </div>
@@ -417,7 +431,7 @@ const Employees = () => {
                   <div className="flex items-center gap-2 min-w-[200px] max-w-[250px] text-xs">
                     {employee.img ? (
                       <img
-                        src={employee.img}
+                        src={employee.img || "/placeholder.svg"}
                         alt="-"
                         className="h-8 w-8 rounded-full object-cover"
                         onClick={() => {
@@ -584,7 +598,11 @@ const ImageDialog = ({ open, onOpenChange, image }) => {
         </DialogHeader>
         <div className="flex items-center justify-center">
           {image && (
-            <img src={image} alt="" className="w-full h-auto max-h-[90vh]" />
+            <img
+              src={image || "/placeholder.svg"}
+              alt=""
+              className="w-full h-auto max-h-[90vh]"
+            />
           )}
         </div>
       </DialogContent>
