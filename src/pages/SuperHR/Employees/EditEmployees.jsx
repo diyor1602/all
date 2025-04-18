@@ -190,6 +190,10 @@ const EditEmployees = () => {
     try {
       const res = await api.get("/superhr/roles");
       setRoles(res.data);
+      setRoles((prev) => [
+        ...prev,
+        { id: "none", name: "No Role", description: "O'chirish" },
+      ]);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -418,6 +422,11 @@ const EditEmployees = () => {
       Object.keys(formData).forEach((key) => {
         if (key == "phone") {
           formDataToSend.append(key, formData[key].replace(/\s/g, ""));
+        } else if (key == "role_id") {
+          formDataToSend.append(
+            key,
+            formData[key] === "none" ? null : formData[key]
+          );
         } else {
           formDataToSend.append(key, formData[key]);
         }
