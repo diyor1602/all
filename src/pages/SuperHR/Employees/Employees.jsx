@@ -385,15 +385,14 @@ const Employees = () => {
             <span className="text-black font-medium">{getTotalCount()}</span> ta
             xodim
           </div>
-          <Button
-            variant="ghost"
-            className="text-sm"
-            onClick={handleExport}
-            disabled={isExporting}
-          >
-            {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
-          </Button>
         </div>
+        <Button
+          className="text-sm bg-green-500 hover:bg-green-600  "
+          onClick={handleExport}
+          disabled={isExporting}
+        >
+          {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
+        </Button>
       </div>
 
       <Table className="bg-white border p-2 mb-2 whitespace-nowrap text-xs shadow-md">
