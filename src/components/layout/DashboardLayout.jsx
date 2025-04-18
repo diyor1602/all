@@ -1,3 +1,4 @@
+import NoLayout from "./DashboardLayouts/NoLayout";
 import TechnologLayout from "./DashboardLayouts/TechnologLayout";
 import SuperHrLayout from "./DashboardLayouts/SuperHrLayout";
 import CuttingMasterLayout from "./DashboardLayouts/CuttingMasterLayout";
@@ -19,17 +20,12 @@ const layouts = {
   orderManager: OrderManagerLayout,
   supervisor: SupervisorLayout,
   transport: TransportLayout,
+  nolayout: NoLayout,
 };
 
 const DashboardLayout = () => {
   const role = localStorage.getItem("role");
-  const LayoutComponent =
-    layouts[role] ||
-    (() => (
-      <div className="text-2xl w-screen h-screen flex items-center justify-center">
-        404 Sahifa topilmadi
-      </div>
-    ));
+  const LayoutComponent = layouts[role] || NoLayout;
 
   return (
     <LayoutComponent>
