@@ -1,6 +1,6 @@
+import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +12,23 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Pencil, Plus, Search } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Positions = () => {
   const [roles, setRoles] = useState([]);
-  const [filteredRoles, setFilteredRoles] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [newRole, setNewRole] = useState({ name: "" });
+  const [departments, setDepartments] = useState([]);
+  const [newRole, setNewRole] = useState({
+    name: "",
+    main_department_id: "",
+    department_id: 0,
+  });
   const [editingRole, setEditingRole] = useState(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -33,34 +43,35 @@ const Positions = () => {
 
   useEffect(() => {
     fetchRoles();
+    fetchDepartments();
   }, []);
-
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredRoles(roles);
-    } else {
-      const lowercaseQuery = searchQuery.toLowerCase();
-      const filtered = roles.filter((role) =>
-        role.name.toLowerCase().includes(lowercaseQuery)
-      );
-      setFilteredRoles(filtered);
-    }
-  }, [searchQuery, roles]);
 
   const fetchRoles = async () => {
     setIsLoading(true);
     try {
       const response = await api.get("/superhr/positions");
       setRoles(response.data);
-      setFilteredRoles(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
-        name: "Lavozimlar olishda xatolik",
+        description: "Lavozimlar olishda xatolik",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await api.get("/superhr/departments");
+      setDepartments(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Departamentlar olishda xatolik",
+        variant: "destructive",
+      });
     }
   };
 
@@ -76,10 +87,30 @@ const Positions = () => {
       return;
     }
 
+    if (!newRole.main_department_id) {
+      toast({
+        title: "Xatolik",
+        description: "Asosiy bo'lim tanlanmagan",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newRole.main_department_id !== "0" && !newRole.department_id) {
+      toast({
+        title: "Xatolik",
+        description: "Bo'lim tanlanmagan",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await api.post("/superhr/positions", {
         name: newRole.name,
+        department_id:
+          newRole.main_department_id === "0" ? 0 : newRole.department_id,
       });
 
       setRoles([...roles, response.data]);
@@ -122,6 +153,7 @@ const Positions = () => {
     try {
       await api.patch(`/superhr/positions/${editingRole.id}`, {
         name: editingRole.name,
+        department_id: editingRole.department_id,
       });
 
       const updatedRoles = roles.map((role) =>
@@ -129,6 +161,7 @@ const Positions = () => {
           ? {
               ...role,
               name: editingRole.name,
+              department_id: editingRole.department_id,
             }
           : role
       );
@@ -155,6 +188,39 @@ const Positions = () => {
     }
   };
 
+  // Get all subdepartments in a flat array
+  const getAllDepartments = () => {
+    const allDeps = [];
+    departments.forEach((mainDep) => {
+      mainDep.departments.forEach((dep) => {
+        allDeps.push(dep);
+      });
+    });
+    return allDeps;
+  };
+
+  const handleEditClick = (role) => {
+    // Find the main department for this role
+    let mainDepartmentId = "0";
+    departments.forEach((mainDep) => {
+      mainDep.departments.forEach((dep) => {
+        if (dep.id === role.department_id) {
+          mainDepartmentId = String(mainDep.id);
+        }
+      });
+    });
+
+    setEditingRole({
+      ...role,
+      main_department_id: mainDepartmentId,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const getUnassignedRoles = () => {
+    return roles.filter((role) => role.department_id === 0);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <Card className="shadow-md">
@@ -164,15 +230,6 @@ const Positions = () => {
               Lavozimlar Boshqaruvi
             </CardTitle>
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="relative flex-1 md:w-64">
-                <Input
-                  placeholder="Qidirish..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button
@@ -204,14 +261,81 @@ const Positions = () => {
                             name: e.target.value,
                           })
                         }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            addRole();
-                          }
-                        }}
                       />
                     </div>
+                    <div>
+                      <label
+                        htmlFor="mainDepartment"
+                        className="block text-sm font-medium mb-1"
+                      >
+                        Asosiy bo'lim
+                      </label>
+                      <Select
+                        value={String(newRole?.main_department_id || "")}
+                        onValueChange={(value) => {
+                          setNewRole({
+                            ...newRole,
+                            main_department_id: value,
+                            department_id: 0,
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Asosiy bo'limni tanlang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">
+                            Bo'linmaga biriktirilmagan
+                          </SelectItem>
+                          {departments.map((dep) => (
+                            <SelectItem key={dep.id} value={String(dep.id)}>
+                              {dep.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {newRole?.main_department_id &&
+                      newRole.main_department_id !== "0" && (
+                        <div>
+                          <label
+                            htmlFor="subDepartment"
+                            className="block text-sm font-medium mb-1"
+                          >
+                            Bo'lim
+                          </label>
+                          <Select
+                            value={String(newRole?.department_id || "0")}
+                            onValueChange={(value) =>
+                              setNewRole({
+                                ...newRole,
+                                department_id: parseInt(value),
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Bo'limni tanlang" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {departments
+                                .find(
+                                  (dep) =>
+                                    dep.id ===
+                                    parseInt(newRole.main_department_id)
+                                )
+                                ?.departments.map((subdep) => (
+                                  <SelectItem
+                                    key={subdep.id}
+                                    value={String(subdep.id)}
+                                  >
+                                    {subdep.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                   </div>
                   <DialogFooter>
                     <Button
@@ -234,101 +358,212 @@ const Positions = () => {
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          {isLoading && roles.length === 0 ? (
-            <div className="text-center py-6">Lavozimlar yuklanmoqda...</div>
-          ) : filteredRoles.length === 0 ? (
-            <div className="text-center py-6 text-gray-500">
-              {searchQuery
-                ? "Qidiruv bo'yicha natijalar topilmadi"
-                : "Lavozimlar mavjud emas"}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredRoles.map((role) => (
-                <Card
-                  key={role.id}
-                  className="hover:shadow-md transition-all border-l-4 border-l-primary hover:scale-105 cursor-pointer"
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium truncate" title={role.name}>
-                        {role.name}
-                      </div>
-                      <Dialog
-                        open={isEditDialogOpen && editingRole?.id === role.id}
-                        onOpenChange={(open) => {
-                          if (!open) setIsEditDialogOpen(false);
-                        }}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0"
-                            onClick={() => {
-                              setEditingRole(role);
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Lavozimni tahrirlash</DialogTitle>
-                          </DialogHeader>
-                          <div className="py-4 space-y-4">
-                            <div>
-                              <label
-                                htmlFor="edit-name"
-                                className="block text-sm font-medium mb-1"
-                              >
-                                Lavozim tavsifi
-                              </label>
-                              <Input
-                                id="edit-name"
-                                placeholder="Lavozim tavsifi"
-                                value={editingRole?.name || ""}
-                                onChange={(e) =>
-                                  setEditingRole({
-                                    ...editingRole,
-                                    name: e.target.value,
-                                  })
-                                }
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    updateRole();
-                                  }
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <DialogFooter>
-                            <Button
-                              variant="outline"
-                              onClick={() => setIsEditDialogOpen(false)}
-                            >
-                              Bekor qilish
-                            </Button>
-                            <Button
-                              onClick={updateRole}
-                              disabled={isLoading}
-                              className="bg-primary text-white hover:bg-primary-dark"
-                            >
-                              {isLoading ? "Yuborilmoqda..." : "Saqlash"}
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+          <div className="flex flex-col gap-2">
+            {departments?.map((department, index) => (
+              <Card
+                key={index}
+                className="hover:shadow-md transition-all border-l-4 border-l-primary cursor-pointer"
+              >
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-center mb-2 border-b-2 pb-2">
+                    <div
+                      className="font-semibold text-2xl truncate"
+                      title={department.name}
+                    >
+                      {department.name}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                  </div>
+                  {department?.departments?.map((subdep, subIndex) => (
+                    <div key={subIndex}>
+                      <div className="flex items-center justify-center mb-2">
+                        <div
+                          className="font-medium truncate"
+                          title={subdep.name}
+                        >
+                          {subdep.name}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="ml-2 flex flex-col">
+                          {roles
+                            ?.filter((r) => r.department_id === subdep.id)
+                            .map((role, roleIndex) => (
+                              <div
+                                key={roleIndex}
+                                className="flex items-center gap-2"
+                              >
+                                <span>{role.name}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditClick(role)}
+                                  className="p-1"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Unassigned Roles Section */}
+            {getUnassignedRoles().length > 0 && (
+              <Card className="hover:shadow-md transition-all border-l-4 border-l-yellow-500 mt-4">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-center mb-2 border-b-2 pb-2">
+                    <div className="font-semibold text-2xl truncate">
+                      Bo'linmaga biriktirilmagan lavozimlar
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getUnassignedRoles().map((role, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                      >
+                        <span className="truncate">{role.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditClick(role)}
+                          className="p-1"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </CardContent>
       </Card>
+
+      {/* Edit Role Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lavozimni tahrirlash</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <label
+                htmlFor="edit-name"
+                className="block text-sm font-medium mb-1"
+              >
+                Lavozim nomi
+              </label>
+              <Input
+                id="edit-name"
+                placeholder="Lavozim nomi"
+                value={editingRole?.name || ""}
+                onChange={(e) =>
+                  setEditingRole({
+                    ...editingRole,
+                    name: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="mainDepartment"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Asosiy bo'lim
+                </label>
+                <Select
+                  value={String(editingRole?.main_department_id || "")}
+                  onValueChange={(value) => {
+                    setEditingRole({
+                      ...editingRole,
+                      main_department_id: value,
+                      department_id: 0, // Reset sub-department when main department changes
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Asosiy bo'limni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">
+                      Bo'linmaga biriktirilmagan
+                    </SelectItem>
+                    {departments.map((dep) => (
+                      <SelectItem key={dep.id} value={String(dep.id)}>
+                        {dep.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {editingRole?.main_department_id &&
+                editingRole.main_department_id !== "0" && (
+                  <div>
+                    <label
+                      htmlFor="subDepartment"
+                      className="block text-sm font-medium mb-1"
+                    >
+                      Bo'lim
+                    </label>
+                    <Select
+                      value={String(editingRole?.department_id || "0")}
+                      onValueChange={(value) =>
+                        setEditingRole({
+                          ...editingRole,
+                          department_id: parseInt(value),
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Bo'limni tanlang" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments
+                          .find(
+                            (dep) =>
+                              dep.id ===
+                              parseInt(editingRole.main_department_id)
+                          )
+                          ?.departments.map((subdep) => (
+                            <SelectItem
+                              key={subdep.id}
+                              value={String(subdep.id)}
+                            >
+                              {subdep.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={updateRole}
+              disabled={isLoading}
+              className="bg-primary text-white hover:bg-primary-dark"
+            >
+              {isLoading ? "Yuborilmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
