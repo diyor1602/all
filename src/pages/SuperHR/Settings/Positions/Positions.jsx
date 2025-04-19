@@ -188,17 +188,6 @@ const Positions = () => {
     }
   };
 
-  // Get all subdepartments in a flat array
-  const getAllDepartments = () => {
-    const allDeps = [];
-    departments.forEach((mainDep) => {
-      mainDep.departments.forEach((dep) => {
-        allDeps.push(dep);
-      });
-    });
-    return allDeps;
-  };
-
   const handleEditClick = (role) => {
     // Find the main department for this role
     let mainDepartmentId = "0";
@@ -218,7 +207,9 @@ const Positions = () => {
   };
 
   const getUnassignedRoles = () => {
-    return roles.filter((role) => role.department_id === 0);
+    return roles.filter(
+      (role) => role.department_id === 0 || role.department_id === null
+    );
   };
 
   return (
@@ -373,40 +364,36 @@ const Positions = () => {
                       {department.name}
                     </div>
                   </div>
-                  {department?.departments?.map((subdep, subIndex) => (
-                    <div key={subIndex}>
-                      <div className="flex items-center justify-center mb-2">
-                        <div
-                          className="font-medium truncate"
-                          title={subdep.name}
-                        >
-                          {subdep.name}
+                  {department?.departments
+                    ?.sort((a, b) => a.name.localeCompare(b.name))
+                    .map((subdep, subIndex) => (
+                      <div key={subIndex}>
+                        <div className="flex items-center justify-center my-4 text-xl">
+                          <div
+                            className="font-medium truncate"
+                            title={subdep.name}
+                          >
+                            {subdep.name}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="ml-2 flex flex-col">
-                          {roles
-                            ?.filter((r) => r.department_id === subdep.id)
-                            .map((role, roleIndex) => (
-                              <div
-                                key={roleIndex}
-                                className="flex items-center gap-2"
-                              >
-                                <span>{role.name}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="ml-2 flex flex-wrap gap-3">
+                            {roles
+                              ?.filter((r) => r.department_id === subdep.id)
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map((role, roleIndex) => (
                                 <Button
-                                  variant="ghost"
-                                  size="sm"
+                                  key={roleIndex}
+                                  className="flex items-center gap-2 rounded p-2 text-sm"
                                   onClick={() => handleEditClick(role)}
-                                  className="p-1"
                                 >
-                                  <Pencil className="h-4 w-4" />
+                                  {role.name}
                                 </Button>
-                              </div>
-                            ))}
+                              ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </CardContent>
               </Card>
             ))}
