@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -39,6 +37,7 @@ const EditEmployees = () => {
   const navigate = useNavigate();
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [allPositions, setAllPositions] = useState([]); // Store all positions
   const [roles, setRoles] = useState([]);
   const [groups, setGroups] = useState([]);
   const [subDepartments, setSubDepartments] = useState([]);
@@ -176,7 +175,8 @@ const EditEmployees = () => {
   const fetchPositions = async () => {
     try {
       const res = await api.get("/superhr/positions");
-      setPositions(res.data);
+      setAllPositions(res.data); // Store all positions
+      setPositions(res.data); // Initially show all positions
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -293,6 +293,30 @@ const EditEmployees = () => {
       }
     }
   }, [formData.department_id, subDepartments, fetchingData]);
+
+  // Filter positions when department changes using the original allPositions
+  useEffect(() => {
+    if (!formData.department_id) {
+      setPositions(allPositions); // Reset to all positions when no department selected
+      return;
+    }
+
+    // Filter from the complete list of positions
+    const filteredPositions = allPositions.filter(
+      (position) => position.department_id.toString() === formData.department_id
+    );
+
+    setPositions(filteredPositions);
+
+    // Clear position selection if current selection doesn't belong to the new department
+    if (
+      formData.position_id &&
+      !isInitialSetupRef.current &&
+      !filteredPositions.some((p) => normalizeId(p.id) === formData.position_id)
+    ) {
+      setFormData((prev) => ({ ...prev, position_id: "" }));
+    }
+  }, [formData.department_id, allPositions]);
 
   const formatPhoneNumber = (value) => {
     if (!value) return "+998";
