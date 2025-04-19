@@ -28,6 +28,7 @@ const AddEmployees = () => {
   const navigate = useNavigate();
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [allPositions, setAllPositions] = useState([]); // Store all positions
   const [roles, setRoles] = useState([]);
   const [groups, setGroups] = useState([]);
   const [subDepartments, setSubDepartments] = useState([]);
@@ -73,7 +74,8 @@ const AddEmployees = () => {
   const fetchPositions = async () => {
     try {
       const res = await api.get("/superhr/positions");
-      setPositions(res.data);
+      setAllPositions(res.data); // Store all positions
+      setPositions(res.data); // Initially show all positions
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -101,6 +103,29 @@ const AddEmployees = () => {
     fetchPositions();
     fetchRoles();
   }, []);
+
+  // Fix: Filter positions when department changes using the original allPositions
+  useEffect(() => {
+    if (!formData.department_id) {
+      setPositions(allPositions); // Reset to all positions when no department selected
+      return;
+    }
+
+    // Filter from the complete list of positions
+    const filteredPositions = allPositions.filter(
+      (position) => position.department_id.toString() === formData.department_id
+    );
+
+    setPositions(filteredPositions);
+
+    // Clear position selection if current selection doesn't belong to the new department
+    if (
+      formData.position_id &&
+      !filteredPositions.some((p) => p.id.toString() === formData.position_id)
+    ) {
+      setFormData((prev) => ({ ...prev, position_id: "" }));
+    }
+  }, [formData.department_id, allPositions]);
 
   // Update sub-departments when main department changes
   useEffect(() => {
@@ -552,14 +577,20 @@ const AddEmployees = () => {
                       <SelectValue placeholder="Lavozimni tanlang" />
                     </SelectTrigger>
                     <SelectContent>
-                      {positions.map((position) => (
-                        <SelectItem
-                          key={position.id}
-                          value={position.id.toString()}
-                        >
-                          {position.name}
-                        </SelectItem>
-                      ))}
+                      {positions.length === 0 ? (
+                        <div className="px-2 py-4 text-sm text-center text-gray-500">
+                          Bo'limga oid lavozimlar topilmadi
+                        </div>
+                      ) : (
+                        positions.map((position) => (
+                          <SelectItem
+                            key={position.id}
+                            value={position.id.toString()}
+                          >
+                            {position.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
