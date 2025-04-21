@@ -447,7 +447,13 @@ const Employees = () => {
                             <TooltipTrigger asChild>
                               <div className="truncate cursor-pointer flex flex-col">
                                 <div>{employee.name}</div>
-                                <div>{employee.id}</div>
+                                <div>
+                                  Id:{" "}
+                                  <span className="font-semibold">
+                                    {employee.id}
+                                  </span>{" "}
+                                  Username: {employee.user.username}
+                                </div>
                               </div>
                             </TooltipTrigger>
                             <TooltipContent>
