@@ -183,7 +183,7 @@ const Add = () => {
         description: "Mahsulot qo'shildi",
         style: {
           backgroundColor: "green",
-          color: "text",
+          color: "white",
         },
       });
 

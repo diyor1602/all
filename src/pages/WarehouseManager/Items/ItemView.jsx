@@ -207,7 +207,14 @@ const ItemView = () => {
                             index +
                             1}
                         </td>
-                        <td className="border-2 p-1">{item?.name}</td>
+                        <td
+                          className="border-2 p-1 cursor-pointer"
+                          onClick={() =>
+                            navigate(`/warehouseManager/items/edit/${item?.id}`)
+                          }
+                        >
+                          {item?.name}
+                        </td>
                         <td className="border-2 p-1">
                           {item?.image ? (
                             <img
