@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
-import { CirclePlus, Loader2, Search } from "lucide-react";
+import { CirclePlus, Download, Loader2, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,7 @@ const ItemView = () => {
   const [loading, setLoading] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [image, setImage] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -124,6 +125,53 @@ const ItemView = () => {
     setSelectedTypeId("all");
   };
 
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      const response = await api.get("/warehouseManager/items-export");
+
+      // If response has fileUrl, open it in a new window or initiate download
+      if (response.data.fileUrl) {
+        // Create an anchor element and trigger download
+        const link = document.createElement("a");
+        link.href = response.data.fileUrl;
+        link.setAttribute("download", "materiallar.xlsx"); // Optional: set filename
+        link.setAttribute("target", "_blank"); // Open in new tab
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Show success toast
+        toast({
+          title: "Muvaffaqiyatli",
+          description: response.data.message || "Excel fayl yuklab olindi",
+          style: {
+            backgroundColor: "green",
+            color: "white",
+          },
+        });
+      } else {
+        // Handle case where fileUrl is not provided
+        toast({
+          title: "Ogohlantirish",
+          description: response.data.message || "Excel fayl manzili topilmadi",
+          style: {
+            backgroundColor: "#4ade80",
+            color: "white",
+          },
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Excel fayl yuklashda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   // Initial load and when filters change
   useEffect(() => {
     fetchItems(1);
@@ -138,10 +186,18 @@ const ItemView = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Mahsulotlar</h1>
         <Button
+          variant="outline"
+          disabled={downloading}
+          onClick={handleDownload}
+        >
+          {downloading ? <Loader2 /> : <Download />}
+          Excel
+        </Button>
+        <Button
           variant="default"
           onClick={() => navigate("/warehouseManager/items/new")}
         >
-          <CirclePlus className="h-4 w-4 mr-2" /> Yangi
+          <CirclePlus /> Yangi
         </Button>
       </div>
 
