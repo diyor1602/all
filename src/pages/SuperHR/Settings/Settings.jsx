@@ -3,7 +3,8 @@ import Positions from "./Positions/Positions";
 import Deparments from "./Departments/Departments";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Blocks, UserCog } from "lucide-react";
+import { Blocks, History, UserCog } from "lucide-react";
+import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 
 const Settings = () => {
   return (
@@ -11,6 +12,7 @@ const Settings = () => {
       <Route path="*" element={<SettingsPage />} />
       <Route path="positions" element={<Positions />} />
       <Route path="departments" element={<Deparments />} />
+      <Route path="attendance-history" element={<AttendanceHistory />} />
     </Routes>
   );
 };
@@ -28,6 +30,12 @@ const SettingsPage = () => {
       icon: UserCog,
       link: "/superhr/settings/positions",
       color: "bg-slate-500",
+    },
+    {
+      name: "Davomat tarixi",
+      icon: History,
+      link: "/superhr/settings/attendance-history",
+      color: "bg-green-500",
     },
   ];
 
