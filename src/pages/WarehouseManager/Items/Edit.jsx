@@ -23,9 +23,9 @@ const Edit = () => {
   const [units, setUnits] = useState([]);
   const [colors, setColors] = useState([]);
   const [types, setTypes] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
-  const [item, setItem] = useState(null);
   const [isNewImage, setIsNewImage] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -35,7 +35,7 @@ const Edit = () => {
     color_id: "",
     type_id: "",
     price: "",
-    currency: "so'm",
+    currency_id: "",
     image: null,
   });
 
@@ -78,10 +78,22 @@ const Edit = () => {
     }
   };
 
+  const fetchCurrencies = async () => {
+    try {
+      const response = await api.get("/warehouseManager/currencies");
+      setCurrencies(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Valuta olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchItem = async (id) => {
     try {
       const response = await api.get(`/warehouseManager/items/${id}`);
-      setItem(response.data);
 
       // Set form data from fetched item, handling nested objects
       setFormData({
@@ -91,7 +103,7 @@ const Edit = () => {
         color_id: response.data.color?.id || "", // Extract ID from nested color object
         type_id: response.data.type?.id || "", // Extract ID from nested type object
         price: response.data.price,
-        currency: response.data.currency,
+        currency_id: response.data.currency?.id || "",
         image: response.data.image,
       });
 
@@ -115,6 +127,7 @@ const Edit = () => {
     fetchUnits();
     fetchColors();
     fetchTypes();
+    fetchCurrencies();
     if (id) {
       fetchItem(id);
     }
@@ -184,7 +197,7 @@ const Edit = () => {
         color_id: formData.color_id,
         type_id: formData.type_id,
         price: formData.price,
-        currency: formData.currency,
+        currency_id: formData.currency_id,
       };
 
       // Validation
@@ -195,7 +208,7 @@ const Edit = () => {
         !formData.price ||
         !formData.code ||
         !formData.name ||
-        !formData.currency
+        !formData.currency_id
       ) {
         toast({
           title: "Xatolik",
@@ -213,7 +226,7 @@ const Edit = () => {
       formPayload.append("color_id", data.color_id);
       formPayload.append("type_id", data.type_id);
       formPayload.append("price", data.price);
-      formPayload.append("currency", data.currency);
+      formPayload.append("currency_id", data.currency_id);
       formPayload.append("_method", "PATCH");
 
       // Handle image upload
@@ -401,19 +414,34 @@ const Edit = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="currency" className="text-sm font-medium">
+            <Label htmlFor="currency_id" className="text-sm font-medium">
               Valyuta
             </Label>
-            <Input
-              type="text"
-              id="currency"
-              name="currency"
-              value={formData.currency}
-              onChange={handleInputChange}
-              placeholder="UZS"
-              className="w-full focus:ring-2 focus:ring-blue-500"
+            <Select
+              name="currency_id"
+              value={formData.currency_id?.toString()}
+              onValueChange={(value) =>
+                handleSelectChange(value, "currency_id")
+              }
               required
-            />
+            >
+              <SelectTrigger
+                id="currency"
+                className="w-full focus:ring-2 focus:ring-blue-500"
+              >
+                <SelectValue placeholder="Valyuta tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {currencies?.map((currency) => (
+                  <SelectItem
+                    key={currency?.id}
+                    value={currency?.id.toString()}
+                  >
+                    {currency?.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2 md:col-span-2">

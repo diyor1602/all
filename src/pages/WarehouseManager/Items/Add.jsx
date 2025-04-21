@@ -22,6 +22,7 @@ const Add = () => {
   const [units, setUnits] = useState([]);
   const [colors, setColors] = useState([]);
   const [types, setTypes] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -32,7 +33,7 @@ const Add = () => {
     color_id: "",
     type_id: "",
     price: "",
-    currency: "so'm",
+    currency_id: "",
     image: null,
   });
 
@@ -75,10 +76,24 @@ const Add = () => {
     }
   };
 
+  const fetchCurrencies = async () => {
+    try {
+      const response = await api.get("/warehouseManager/currencies");
+      setCurrencies(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Valuta olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchUnits();
     fetchColors();
     fetchTypes();
+    fetchCurrencies();
   }, []);
 
   const handleInputChange = (e) => {
@@ -144,7 +159,7 @@ const Add = () => {
         color_id: formData.color_id,
         type_id: formData.type_id,
         price: formData.price,
-        currency: formData.currency,
+        currency_id: formData.currency_id,
       };
 
       if (
@@ -154,7 +169,7 @@ const Add = () => {
         !formData.price ||
         !formData.code ||
         !formData.name ||
-        !formData.currency
+        !formData.currency_id
       ) {
         toast({
           title: "Xatolik",
@@ -349,16 +364,31 @@ const Add = () => {
             <Label htmlFor="currency" className="text-sm font-medium">
               Valyuta
             </Label>
-            <Input
-              type="text"
-              id="currency"
-              name="currency"
-              value={formData.currency}
-              onChange={handleInputChange}
-              placeholder="UZS"
-              className="w-full focus:ring-2 focus:ring-blue-500"
+            <Select
+              name="currency_id"
+              value={formData.currency_id}
+              onValueChange={(value) =>
+                handleSelectChange(value, "currency_id")
+              }
               required
-            />
+            >
+              <SelectTrigger
+                id="currency"
+                className="w-full focus:ring-2 focus:ring-blue-500"
+              >
+                <SelectValue placeholder="Valyuta tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {currencies?.map((currency) => (
+                  <SelectItem
+                    key={currency?.id}
+                    value={currency?.id.toString()}
+                  >
+                    {currency?.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2 md:col-span-2">
