@@ -132,9 +132,18 @@ const Attendance = () => {
       const checkInDate = new Date(selectedDate);
       checkInDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0);
 
+      // Add Uzbekistan timezone offset (GMT+5) by specifying proper ISO format with timezone
+      // Use the timezone offset for Uzbekistan (+05:00)
+      const localDate = new Date(checkInDate);
+      const isoWithTimezone = new Date(
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .replace("Z", "+05:00");
+
       await api.post("/superhr/attendances", {
         employee_id: selectedEmployeeId,
-        check_in: checkInDate.toISOString(),
+        check_in: isoWithTimezone,
         date: selectedDate,
       });
 
@@ -263,56 +272,75 @@ const Attendance = () => {
 
   return (
     <>
-      <div className="flex items-center gap-2 flex-wrap">
-        <Button variant="outline" onClick={() => changeDateBy(-1)}>
-          <ChevronLeft />
-        </Button>
-        <Input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="w-fit bg-white"
-        />
-        <Button variant="outline" onClick={() => changeDateBy(1)}>
-          <ChevronRight />
-        </Button>
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+        {/* Date navigation - make full width on mobile */}
+        <div className="flex items-center w-full sm:w-auto mb-2 sm:mb-0">
+          <Button
+            variant="outline"
+            onClick={() => changeDateBy(-1)}
+            className="rounded-r-none"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="rounded-none border-x-0 w-full bg-white"
+          />
+          <Button
+            variant="outline"
+            onClick={() => changeDateBy(1)}
+            className="rounded-l-none"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
 
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-[180px] bg-white">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Barchasi</SelectItem>
-            <SelectItem value="no_attendance">Davomat olinmagan</SelectItem>
-            <SelectItem value="present">Kelganlar</SelectItem>
-            <SelectItem value="absent">Kelmaganlar</SelectItem>
-            <SelectItem value="late">Kech kelganlar</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Filters row - each item full width on mobile */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <Select
+            value={selectedStatus}
+            onValueChange={setSelectedStatus}
+            className="w-full sm:w-[180px]"
+          >
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barchasi</SelectItem>
+              <SelectItem value="no_attendance">Davomat olinmagan</SelectItem>
+              <SelectItem value="present">Kelganlar</SelectItem>
+              <SelectItem value="absent">Kelmaganlar</SelectItem>
+              <SelectItem value="late">Kech kelganlar</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select
-          value={selectedDepartment}
-          onValueChange={setSelectedDepartment}
-        >
-          <SelectTrigger className="w-[180px] bg-white">
-            <SelectValue placeholder="Bo'lim" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Barcha bo'limlar</SelectItem>
-            {departments.map((dept) => (
-              <SelectItem key={dept.id} value={dept.id.toString()}>
-                {dept.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select
+            value={selectedDepartment}
+            onValueChange={setSelectedDepartment}
+            className="w-full sm:w-[180px]"
+          >
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Bo'lim" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha bo'limlar</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id.toString()}>
+                  {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Input
-          placeholder="ID yoki ism bo'yicha qidirish"
-          className="w-fit ml-auto bg-white"
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-        />
+          <Input
+            placeholder="ID yoki ism bo'yicha qidirish"
+            className="w-full bg-white"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </div>
       </div>
 
       <div className="mt-4 overflow-auto max-h-[84vh]">
