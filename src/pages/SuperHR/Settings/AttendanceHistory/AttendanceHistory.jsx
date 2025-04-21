@@ -269,126 +269,120 @@ const AttendanceHistory = () => {
       </div>
 
       <div className="mt-4 overflow-auto max-h-[84vh]">
-        {loading ? (
-          <div className="flex justify-center items-center h-32">
-            <p>Ma'lumotlar yuklanmoqda...</p>
-          </div>
-        ) : (
-          <table className="w-full border-2 border-collapse whitespace-nowrap bg-white text-sm">
-            <thead>
-              <tr>
-                <th className="p-1 border-2">ID</th>
-                <th className="p-1 border-2">
-                  Xodimlar ({filteredAttendance?.length})
-                </th>
-                <th className="p-1 border-2">Status</th>
-                <th className="p-1 border-2">Kelgan vaqti</th>
-                <th className="p-1 border-2">Ketgan vaqti</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAttendance?.map((record) => {
-                const employee = record.employee;
-                return (
-                  <tr key={record.id}>
-                    <td className="p-1 border-2 text-center">{employee?.id}</td>
-                    <td className="p-1 border-2">{employee?.name}</td>
-                    <td className="p-1 border-2 text-center">
-                      {statusTranslation[record.status] || "-"}
-                    </td>
-                    <td className="p-1 border-2 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        {record?.check_in ? (
-                          <>
-                            <span>
-                              {new Date(record.check_in).toLocaleTimeString(
-                                "ru-RU",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </span>
-                            {record.check_in_image && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 p-0"
-                                onClick={() =>
-                                  openImageDialog(
-                                    record.check_in_image,
-                                    `${employee?.name} - Keldi rasmi`,
-                                    `${new Date(record.date).toLocaleDateString(
-                                      "ru-RU"
-                                    )} -
+        <table className="w-full border-2 border-collapse whitespace-nowrap bg-white text-sm">
+          <thead>
+            <tr>
+              <th className="p-1 border-2">ID</th>
+              <th className="p-1 border-2">
+                Xodimlar ({filteredAttendance?.length})
+              </th>
+              <th className="p-1 border-2">Status</th>
+              <th className="p-1 border-2">Kelgan vaqti</th>
+              <th className="p-1 border-2">Ketgan vaqti</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredAttendance?.map((record) => {
+              const employee = record.employee;
+              return (
+                <tr key={record.id}>
+                  <td className="p-1 border-2 text-center">{employee?.id}</td>
+                  <td className="p-1 border-2">{employee?.name}</td>
+                  <td className="p-1 border-2 text-center">
+                    {statusTranslation[record.status] || "-"}
+                  </td>
+                  <td className="p-1 border-2 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      {record?.check_in ? (
+                        <>
+                          <span>
+                            {new Date(record.check_in).toLocaleTimeString(
+                              "ru-RU",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </span>
+                          {record.check_in_image && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 p-0"
+                              onClick={() =>
+                                openImageDialog(
+                                  record.check_in_image,
+                                  `${employee?.name} - Keldi rasmi`,
+                                  `${new Date(record.date).toLocaleDateString(
+                                    "ru-RU"
+                                  )} -
                                     ${new Date(
                                       record.check_in
                                     ).toLocaleTimeString("ru-RU")}`
-                                  )
-                                }
-                              >
-                                <ImageIcon className="h-4 w-4" />
-                              </Button>
+                                )
+                              }
+                            >
+                              <ImageIcon className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-1 border-2 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      {record?.check_out ? (
+                        <>
+                          <span>
+                            {new Date(record.check_out).toLocaleTimeString(
+                              "ru-RU",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
                             )}
-                          </>
-                        ) : (
-                          "-"
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-1 border-2 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        {record?.check_out ? (
-                          <>
-                            <span>
-                              {new Date(record.check_out).toLocaleTimeString(
-                                "ru-RU",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </span>
-                            {record.check_out_image && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 p-0"
-                                onClick={() =>
-                                  openImageDialog(
-                                    record.check_out_image,
-                                    `${employee?.name} - Ketdi rasmi`,
-                                    `${new Date(record.date).toLocaleDateString(
-                                      "ru-RU"
-                                    )} -
+                          </span>
+                          {record.check_out_image && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 p-0"
+                              onClick={() =>
+                                openImageDialog(
+                                  record.check_out_image,
+                                  `${employee?.name} - Ketdi rasmi`,
+                                  `${new Date(record.date).toLocaleDateString(
+                                    "ru-RU"
+                                  )} -
                                     ${new Date(
                                       record.check_out
                                     ).toLocaleTimeString("ru-RU")}`
-                                  )
-                                }
-                              >
-                                <ImageIcon className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </>
-                        ) : (
-                          "-"
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {filteredAttendance.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="p-4 text-center">
-                    Ma'lumot topilmadi
+                                )
+                              }
+                            >
+                              <ImageIcon className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </div>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        )}
+              );
+            })}
+            {filteredAttendance.length === 0 && (
+              <tr>
+                <td colSpan="5" className="p-4 text-center">
+                  Ma'lumot topilmadi
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Image Dialog */}
