@@ -8,10 +8,12 @@ import ConstructorLayout from "./DashboardLayouts/ConstructorLayout";
 import OrderManagerLayout from "./DashboardLayouts/OrderManagerLayout";
 import SupervisorLayout from "./DashboardLayouts/SupervisorLayout";
 import TransportLayout from "./DashboardLayouts/TransportLayout";
+import WarehouseManagerLayout from "./DashboardLayouts/WarehouseManagerLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
   technologist: TechnologLayout,
+  warehouseManager: WarehouseManagerLayout,
   superhr: SuperHrLayout,
   cuttingMaster: CuttingMasterLayout,
   groupMaster: GroupMasterLayout,
