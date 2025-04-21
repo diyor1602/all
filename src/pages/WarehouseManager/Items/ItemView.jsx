@@ -237,7 +237,9 @@ const ItemView = () => {
                         <td className="border-2 p-1 text-center">
                           {item?.price}
                         </td>
-                        <td className="border-2 p-1">{item?.currency}</td>
+                        <td className="border-2 p-1 text-center">
+                          {item?.currency}
+                        </td>
                       </tr>
                     ))
                   ) : (
