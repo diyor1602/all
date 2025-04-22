@@ -33,7 +33,6 @@ import { statuses } from "@/lib/status";
 const New = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [items, setItems] = useState([]);
   const [allSources, setAllSources] = useState([]);
@@ -72,7 +71,6 @@ const New = () => {
     }
 
     try {
-      setLoading(true);
       const response = await api.get("/warehouseManager/items/search", {
         params: {
           search: searchTerm,
@@ -96,14 +94,11 @@ const New = () => {
         description: "Mahsulotlar olishda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchAllSources = async () => {
     try {
-      setLoading(true);
       const response = await api.get("/warehouseManager/sources");
       setAllSources(response.data);
       setFilteredSources(response.data);
@@ -113,14 +108,11 @@ const New = () => {
         description: "Ishlab chiqarishlar olishda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchCurrencies = async () => {
     try {
-      setLoading(true);
       const response = await api.get("/warehouseManager/currencies");
       setCurrencies(response.data);
     } catch (error) {
@@ -129,14 +121,11 @@ const New = () => {
         description: "Valutaralar olishda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchWarehouses = async () => {
     try {
-      setLoading(true);
       const response = await api.get("/warehouseManager/warehouses");
       setWarehouses(response.data);
     } catch (error) {
@@ -145,14 +134,11 @@ const New = () => {
         description: "Sotuvchilar olishda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchOrders = async () => {
     try {
-      setLoading(true);
       const response = await api.get("/warehouseManager/orders");
       setOrders(response.data);
       return response.data;
@@ -163,8 +149,6 @@ const New = () => {
         variant: "destructive",
       });
       return [];
-    } finally {
-      setLoading(false);
     }
   };
 
