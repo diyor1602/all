@@ -195,7 +195,7 @@ const ItemView = () => {
         </Button>
         <Button
           variant="default"
-          onClick={() => navigate("/warehouseManager/items/new")}
+          onClick={() => navigate("/warehouseManager/settings/items/new")}
         >
           <CirclePlus /> Yangi
         </Button>
@@ -252,6 +252,7 @@ const ItemView = () => {
                     <th className="border-2 p-1">Turi</th>
                     <th className="border-2 p-1">Narxi</th>
                     <th className="border-2 p-1">Valyuta</th>
+                    <th className="border-2 p-1">Min. miqdor</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -266,7 +267,9 @@ const ItemView = () => {
                         <td
                           className="border-2 p-1 cursor-pointer"
                           onClick={() =>
-                            navigate(`/warehouseManager/items/edit/${item?.id}`)
+                            navigate(
+                              `/warehouseManager/settings/items/edit/${item?.id}`
+                            )
                           }
                         >
                           {item?.name}
@@ -295,6 +298,9 @@ const ItemView = () => {
                         </td>
                         <td className="border-2 p-1 text-center">
                           {item?.currency?.name}
+                        </td>
+                        <td className="border-2 p-1 text-center">
+                          {item?.min_quantity}
                         </td>
                       </tr>
                     ))

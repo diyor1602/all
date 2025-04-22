@@ -34,6 +34,7 @@ const Add = () => {
     type_id: "",
     price: "",
     currency_id: "",
+    min_quantity: "",
     image: null,
   });
 
@@ -159,6 +160,7 @@ const Add = () => {
         type_id: formData.type_id,
         price: formData.price,
         currency_id: formData.currency_id,
+        min_quantity: formData.min_quantity,
       };
 
       if (
@@ -168,7 +170,8 @@ const Add = () => {
         !formData.price ||
         !formData.code ||
         !formData.name ||
-        !formData.currency_id
+        !formData.currency_id ||
+        !formData.min_quantity
       ) {
         toast({
           title: "Xatolik",
@@ -201,7 +204,7 @@ const Add = () => {
         },
       });
 
-      navigate("/warehouseManager/items");
+      navigate("/warehouseManager/settings/items");
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -390,6 +393,25 @@ const Add = () => {
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="min_quantity" className="text-sm font-medium">
+              Minimal miqdor (
+              {parseFloat(formData.min_quantity)?.toLocaleString("en-GB")})
+            </Label>
+            <Input
+              type="number"
+              id="min_quantity"
+              name="min_quantity"
+              value={formData.min_quantity}
+              onChange={handleInputChange}
+              placeholder="0.00"
+              className="w-full focus:ring-2 focus:ring-blue-500"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="image" className="text-sm font-medium">
               Rasmi
@@ -439,7 +461,7 @@ const Add = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/warehouseManager/items")}
+            onClick={() => navigate("/warehouseManager/settings/items")}
             className="mr-2"
             disabled={isSubmitting}
           >

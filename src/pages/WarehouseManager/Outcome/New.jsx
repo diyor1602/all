@@ -399,7 +399,8 @@ const New = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Chiqim yaratishda xatolik yuz berdi",
+        description:
+          error.response.data.error || "Chiqim yaratishda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
@@ -487,7 +488,7 @@ const New = () => {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="p-4">
       <h1 className="text-2xl font-bold mb-6">Yangi chiqim</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">

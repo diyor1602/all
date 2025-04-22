@@ -36,6 +36,7 @@ const Edit = () => {
     type_id: "",
     price: "",
     currency_id: "",
+    min_quantity: "",
     image: null,
   });
 
@@ -105,6 +106,7 @@ const Edit = () => {
         price: response.data.price,
         currency_id: response.data.currency?.id || "",
         image: response.data.image,
+        min_quantity: response.data.min_quantity || 0,
       });
 
       // If the item has an image, set the image preview
@@ -198,6 +200,7 @@ const Edit = () => {
         type_id: formData.type_id,
         price: formData.price,
         currency_id: formData.currency_id,
+        min_quantity: formData.min_quantity,
       };
 
       // Validation
@@ -208,7 +211,8 @@ const Edit = () => {
         !formData.price ||
         !formData.code ||
         !formData.name ||
-        !formData.currency_id
+        !formData.currency_id ||
+        !formData.min_quantity
       ) {
         toast({
           title: "Xatolik",
@@ -227,6 +231,7 @@ const Edit = () => {
       formPayload.append("type_id", data.type_id);
       formPayload.append("price", data.price);
       formPayload.append("currency_id", data.currency_id);
+      formPayload.append("min_quantity", data.min_quantity);
       formPayload.append("_method", "PATCH");
 
       // Handle image upload
@@ -255,7 +260,7 @@ const Edit = () => {
         },
       });
 
-      navigate("/warehouseManager/items");
+      navigate("/warehouseManager/settings/items");
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -444,6 +449,25 @@ const Edit = () => {
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="min_quantity" className="text-sm font-medium">
+              Minimal miqdor (
+              {parseFloat(formData.min_quantity)?.toLocaleString("en-GB")})
+            </Label>
+            <Input
+              type="number"
+              id="min_quantity"
+              name="min_quantity"
+              value={formData.min_quantity}
+              onChange={handleInputChange}
+              placeholder="0.00"
+              className="w-full focus:ring-2 focus:ring-blue-500"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="image" className="text-sm font-medium">
               Rasmi
@@ -493,7 +517,7 @@ const Edit = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/warehouseManager/items")}
+            onClick={() => navigate("/warehouseManager/settings/items")}
             className="mr-2"
             disabled={isSubmitting}
           >

@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Home, BadgeMinus, BadgePlus, Box } from "lucide-react";
+import { Home, BadgeMinus, BadgePlus, Box, Settings } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -16,9 +16,9 @@ const navigation = [
     onMobile: true,
   },
   {
-    name: "Mahsulotlar",
-    href: "/warehouseManager/items",
-    icon: Box,
+    name: "Qo'chimcha",
+    href: "/warehouseManager/settings",
+    icon: Settings,
     onMobile: true,
   },
 ];
