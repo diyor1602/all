@@ -180,14 +180,21 @@ const IncomePage = () => {
 
   const handleDownload = async (id) => {
     try {
-      setDownloadingIds((prev) => [...prev, id]); // Add ID to downloading state
-      const response = await api.get(`/warehouseManager/stockEntry/${id}`);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      setDownloadingIds((prev) => [...prev, id]);
+
+      const response = await api.get(`/warehouseManager/stockEntry/${id}`, {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], { type: "application/pdf" })
+      );
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `kirim_${id}.xlsx`);
+      link.setAttribute("download", `kirim_${id}.pdf`);
       document.body.appendChild(link);
       link.click();
+      link.remove();
       toast({
         title: "Muvaffaqiyatli",
         description: "Fayl yuklab olindi",
