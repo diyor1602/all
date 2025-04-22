@@ -297,7 +297,7 @@ const IncomePage = () => {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Comment, ID bo'yicha qidirish..."
+                  placeholder="Qidirish..."
                   className="pl-8"
                   value={filters.search}
                   onChange={handleSearchChange}
