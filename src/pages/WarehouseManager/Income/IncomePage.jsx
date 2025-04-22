@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
@@ -5,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import {
   CirclePlus,
   Search,
-  Loader2,
   ChevronDown,
   ChevronUp,
   Package,
-  Eye,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,10 +61,13 @@ const IncomePage = () => {
   const [sources, setSources] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [downloadingIds, setDownloadingIds] = useState([]);
   const [filters, setFilters] = useState({
     search: "",
     warehouse_id: "",
     source_id: "",
+    start_date: "",
+    end_date: "",
   });
   const [expandedRows, setExpandedRows] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,6 +98,10 @@ const IncomePage = () => {
         params.append("warehouse_id", filterParams.warehouse_id);
       if (filterParams.source_id)
         params.append("source_id", filterParams.source_id);
+      if (filterParams.start_date)
+        params.append("start_date", filterParams.start_date);
+      if (filterParams.end_date)
+        params.append("end_date", filterParams.end_date);
 
       const response = await api.get(
         `/warehouseManager/incoming?${params.toString()}`
@@ -160,10 +169,9 @@ const IncomePage = () => {
       search: "",
       warehouse_id: "",
       source_id: "",
+      start_date: "",
+      end_date: "",
     });
-    // Update the select inputs to show "Barcha" options
-    document.getElementById("warehouse").value = "all";
-    document.getElementById("source").value = "all";
     fetchIncomes(1, {});
   };
 
@@ -172,6 +180,31 @@ const IncomePage = () => {
       ...prevState,
       [id]: !prevState[id],
     }));
+  };
+
+  const handleDownload = async (id) => {
+    try {
+      setDownloadingIds((prev) => [...prev, id]); // Add ID to downloading state
+      const response = await api.get(`/warehouseManager/stockEntry/${id}`);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `kirim_${id}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Fayl yuklab olindi",
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Kirimlar export qilishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingIds((prev) => prev.filter((item) => item !== id));
+    }
   };
 
   useEffect(() => {
@@ -259,7 +292,7 @@ const IncomePage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-4 md:grid-cols-3">
+          <form className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
             <div className="space-y-2">
               <label htmlFor="search" className="text-sm font-medium">
                 Qidirish
@@ -326,6 +359,32 @@ const IncomePage = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <label htmlFor="start_date" className="text-sm font-medium">
+                Boshlanish sana
+              </label>
+              <Input
+                id="start_date"
+                type="date"
+                value={filters.start_date}
+                onChange={(e) =>
+                  handleFilterChange("start_date", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="end_date" className="text-sm font-medium">
+                Tugash sana
+              </label>
+              <Input
+                id="end_date"
+                type="date"
+                value={filters.end_date}
+                onChange={(e) => handleFilterChange("end_date", e.target.value)}
+              />
+            </div>
           </form>
         </CardContent>
         <CardFooter>
@@ -367,7 +426,7 @@ const IncomePage = () => {
                     <TableHead>Mahsulotlar</TableHead>
                     <TableHead>Buyurtma</TableHead>
                     <TableHead>Xodim</TableHead>
-                    <TableHead className="text-right">Harakatlar</TableHead>
+                    <TableHead className="text-right">Yuklab olish</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -435,10 +494,15 @@ const IncomePage = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/warehouseManager/income/${income.id}`);
+                              handleDownload(income.id);
                             }}
+                            disabled={downloadingIds.includes(income.id)}
                           >
-                            <Eye className="h-4 w-4 text-blue-500" />
+                            {downloadingIds.includes(income.id) ? (
+                              <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4 text-blue-500" />
+                            )}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -448,7 +512,7 @@ const IncomePage = () => {
                         income.items &&
                         income.items.length > 0 && (
                           <TableRow className="bg-muted/30">
-                            <TableCell colSpan={8} className="py-2 px-4">
+                            <TableCell colSpan={9} className="py-2 px-4">
                               <div className="rounded-md border border-border">
                                 <Table>
                                   <TableHeader>
@@ -467,7 +531,10 @@ const IncomePage = () => {
                                           {item.item.image ? (
                                             <div className="w-8 h-8 rounded overflow-hidden">
                                               <img
-                                                src={item.item.image}
+                                                src={
+                                                  item.item.image ||
+                                                  "/placeholder.svg"
+                                                }
                                                 alt={item.item.name}
                                                 className="w-full h-full object-cover"
                                               />
