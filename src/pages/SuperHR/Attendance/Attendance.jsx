@@ -249,7 +249,6 @@ const Attendance = () => {
 
       setDepartments(allSubDepartments);
     } catch (error) {
-      console.log(error);
       toast({
         title: "Diqqat",
         description: error.response?.data?.message || "Xatolik yuz berdi",

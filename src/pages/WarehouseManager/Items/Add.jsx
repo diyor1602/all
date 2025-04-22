@@ -105,7 +105,6 @@ const Add = () => {
   };
 
   const handleSelectChange = (value, name) => {
-    console.log(`Setting ${name} to:`, value);
     setFormData((prev) => ({
       ...prev,
       [name]: value,

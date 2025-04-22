@@ -613,7 +613,6 @@ const Attendance = () => {
         style: { backgroundColor: "green", color: "white" },
       });
     } catch (error) {
-      console.error("Excel export error:", error);
       toast({
         title: "Xatolik",
         description: "Excel faylni yuklashda xatolik yuz berdi",
