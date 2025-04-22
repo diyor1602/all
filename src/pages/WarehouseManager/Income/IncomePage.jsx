@@ -481,14 +481,14 @@ const IncomePage = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {income.user?.employee?.name ? (
+                          {income?.employee?.name ? (
                             <div className="flex items-center gap-2">
                               <span className="text-sm">
-                                {income.user.employee.name}
+                                {income?.employee.name}
                               </span>
                             </div>
                           ) : (
-                            income.user?.username || "-"
+                            income?.employee?.id || "-"
                           )}
                         </TableCell>
                         <TableCell className="text-right">
