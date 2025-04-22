@@ -50,10 +50,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
 
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString("ru-Ru");
-};
-
 const IncomePage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
