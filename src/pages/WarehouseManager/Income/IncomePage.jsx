@@ -40,7 +40,6 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -48,6 +47,10 @@ import {
 } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString("ru-Ru");
+};
 
 const IncomePage = () => {
   const { toast } = useToast();
@@ -227,7 +230,7 @@ const IncomePage = () => {
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat("uz-UZ", {
+    return new Intl.DateTimeFormat("ru-RU", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -360,6 +363,7 @@ const IncomePage = () => {
                     <TableHead>Ombor</TableHead>
                     <TableHead>Kirim turi</TableHead>
                     <TableHead>Izoh</TableHead>
+                    <TableHead>Sana</TableHead>
                     <TableHead>Mahsulotlar</TableHead>
                     <TableHead>Buyurtma</TableHead>
                     <TableHead>Xodim</TableHead>
@@ -402,6 +406,7 @@ const IncomePage = () => {
                             )}
                           </div>
                         </TableCell>
+                        <TableCell>{formatDate(income.created_at)}</TableCell>
                         <TableCell>
                           {income.order ? (
                             <span className="text-xs">
