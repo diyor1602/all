@@ -430,7 +430,7 @@ const OutcomePage = () => {
                     <TableHead>Sana</TableHead>
                     <TableHead>Mahsulotlar</TableHead>
                     <TableHead>Buyurtma</TableHead>
-                    <TableHead>Xodim</TableHead>
+                    <TableHead>Mas'ul Xodim</TableHead>
                     <TableHead className="text-right">Yuklab olish</TableHead>
                   </TableRow>
                 </TableHeader>
