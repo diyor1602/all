@@ -552,7 +552,9 @@ const New = () => {
                           )}
                         />
                         <div className="flex flex-col">
-                          <span>{order?.name}</span>
+                          <span>
+                            {order?.id} {order?.name}
+                          </span>
                           <span className="text-xs text-muted-foreground">
                             {order?.comment} ({order?.quantity}) (
                             {statuses[order?.status]?.text})
