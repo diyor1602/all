@@ -39,6 +39,7 @@ const New = () => {
   const [filteredSources, setFilteredSources] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [contragents, setContragents] = useState([]);
   const [currencies, setCurrencies] = useState([]);
   const [openSourceCombobox, setOpenSourceCombobox] = useState(false);
   const [itemSearches, setItemSearches] = useState([""]);
@@ -46,6 +47,7 @@ const New = () => {
   const [openOrderCombobox, setOpenOrderCombobox] = useState(false);
   const [newSourceName, setNewSourceName] = useState("");
   const itemRefs = useRef([]);
+  const [openContragentCombobox, setOpenContragentCombobox] = useState(false);
 
   const [formData, setFormData] = useState({
     warehouse_id: "",
@@ -53,6 +55,7 @@ const New = () => {
     source_name: "",
     comment: "",
     order_id: "",
+    contragent_id: "", // Add contragent_id to formData
     items: [
       {
         item_id: "",
@@ -124,6 +127,19 @@ const New = () => {
     }
   };
 
+  const fetchContragents = async () => {
+    try {
+      const response = await api.get("/warehouseManager/contragents");
+      setContragents(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Ishlab chiqarishlar olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchWarehouses = async () => {
     try {
       const response = await api.get("/warehouseManager/warehouses");
@@ -156,6 +172,7 @@ const New = () => {
     fetchWarehouses();
     fetchOrders();
     fetchCurrencies();
+    fetchContragents();
     fetchAllSources();
   }, []);
 
@@ -312,11 +329,16 @@ const New = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.warehouse_id ||
-      !formData.order_id ||
-      !formData.items.length
-    ) {
+    if (!formData.source_id && !formData.source_name) {
+      toast({
+        title: "Diqqat",
+        description: "Kirim turini tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.warehouse_id || !formData.items.length) {
       toast({
         title: "Diqqat",
         description: "Barcha maydonlarni to'ldiring",
@@ -351,7 +373,7 @@ const New = () => {
           color: "white",
         },
       });
-      navigate("/warehouseManager/incoming");
+      navigate("/warehouseManager/income");
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -416,6 +438,17 @@ const New = () => {
     if (!selectedSource) return "";
 
     return selectedSource.name;
+  };
+
+  const getSelectedContragentText = () => {
+    if (!formData.contragent_id) return "";
+
+    const selectedContragent = contragents.find(
+      (contragent) => contragent.id.toString() === formData.contragent_id
+    );
+    if (!selectedContragent) return "";
+
+    return selectedContragent.name;
   };
 
   return (
@@ -542,10 +575,17 @@ const New = () => {
                         key={order.id}
                         value={order.id}
                         onSelect={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            order_id: order.id.toString(),
-                          }));
+                          setFormData((prev) => {
+                            // Check if order has a contragent and set contragent_id if it does
+                            const contragentId = order.contragent
+                              ? order.contragent.id.toString()
+                              : prev.contragent_id;
+                            return {
+                              ...prev,
+                              order_id: order.id.toString(),
+                              contragent_id: contragentId,
+                            };
+                          });
                           setOpenOrderCombobox(false);
                         }}
                       >
@@ -565,6 +605,68 @@ const New = () => {
                             {order?.comment} ({order?.quantity}) (
                             {statuses[order?.status]?.text})
                           </span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Kontragent</label>
+          <Popover
+            open={openContragentCombobox}
+            onOpenChange={setOpenContragentCombobox}
+          >
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openContragentCombobox}
+                className="w-full justify-between"
+              >
+                {formData.contragent_id
+                  ? getSelectedContragentText()
+                  : "Kontragentni tanlang"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Kontragentni qidirish..." />
+                <CommandEmpty>Kontragent topilmadi</CommandEmpty>
+                <CommandList>
+                  <CommandGroup>
+                    {contragents.map((contragent) => (
+                      <CommandItem
+                        key={contragent.id}
+                        value={contragent.id}
+                        onSelect={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            contragent_id: contragent.id.toString(),
+                          }));
+                          setOpenContragentCombobox(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            formData.contragent_id === contragent.id.toString()
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        <div className="flex flex-col">
+                          <span>{contragent.name}</span>
+                          {contragent.description && (
+                            <span className="text-xs text-muted-foreground">
+                              {contragent.description}
+                            </span>
+                          )}
                         </div>
                       </CommandItem>
                     ))}
@@ -701,7 +803,7 @@ const New = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/warehouseManager/incoming")}
+            onClick={() => navigate("/warehouseManager/income")}
           >
             Bekor qilish
           </Button>
