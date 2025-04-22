@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -76,7 +78,18 @@ const New = () => {
           search: searchTerm,
         },
       });
-      setItems(response.data);
+
+      // Get all currently selected item IDs except the current one being edited
+      const selectedItemIds = formData.items
+        .filter((item) => item.item_id)
+        .map((item) => item.item_id);
+
+      // Filter out already selected items
+      const filteredItems = response.data.filter(
+        (item) => !selectedItemIds.includes(item.id.toString())
+      );
+
+      setItems(filteredItems);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -239,6 +252,7 @@ const New = () => {
     setShowItemResults(newShowResults);
   };
 
+  // Fix the handleSourceSelect function to properly handle source selection
   const handleSourceSelect = (sourceId) => {
     // If sourceId is "new", we're creating a new source
     if (sourceId === "new") {
@@ -248,12 +262,15 @@ const New = () => {
         source_name: newSourceName,
       }));
     } else {
-      const source = allSources.find((s) => s.id.toString() === sourceId);
+      // Find the source by ID - convert both to strings for comparison
+      const source = allSources.find(
+        (s) => s.id.toString() === sourceId.toString()
+      );
       if (source) {
         setFormData((prev) => ({
           ...prev,
-          source_id: source.id.toString(),
-          source_name: "",
+          source_id: sourceId.toString(), // Ensure it's stored as string
+          source_name: "", // Clear source_name when selecting existing source
         }));
       }
     }
@@ -261,6 +278,11 @@ const New = () => {
   };
 
   const addItem = () => {
+    // Get all currently selected item IDs
+    const selectedItemIds = formData.items
+      .filter((item) => item.item_id)
+      .map((item) => item.item_id);
+
     setFormData((prev) => ({
       ...prev,
       items: [
@@ -487,8 +509,8 @@ const New = () => {
                       {filteredSources.map((source) => (
                         <CommandItem
                           key={source.id}
-                          value={source.id}
-                          onSelect={handleSourceSelect}
+                          value={source.id.toString()}
+                          onSelect={(value) => handleSourceSelect(value)}
                         >
                           <Check
                             className={cn(
