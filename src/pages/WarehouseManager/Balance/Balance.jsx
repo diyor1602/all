@@ -30,19 +30,29 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, RefreshCw, Filter, Warehouse } from "lucide-react";
+import {
+  Search,
+  RefreshCw,
+  Filter,
+  Warehouse,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { statuses } from "@/lib/status";
 
-const Balance = () => {
+const GroupedBalance = () => {
   const { toast } = useToast();
 
   const [balances, setBalances] = useState([]);
-  const [filteredBalances, setFilteredBalances] = useState([]);
+  const [groupedItems, setGroupedItems] = useState({});
+  const [filteredGroupedItems, setFilteredGroupedItems] = useState({});
   const [warehouses, setWarehouses] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState("all");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedItems, setExpandedItems] = useState({});
   const itemsPerPage = 10;
 
   const fetchWarehouses = async () => {
@@ -69,8 +79,26 @@ const Balance = () => {
           warehouse_id: selectedWarehouse === "all" ? "" : selectedWarehouse,
         },
       });
+
       setBalances(response.data);
-      setFilteredBalances(response.data);
+
+      // Group balances by item ID
+      const grouped = {};
+      response.data.forEach((balance) => {
+        const itemId = balance.item.id;
+        if (!grouped[itemId]) {
+          grouped[itemId] = {
+            item: balance.item,
+            totalQuantity: 0,
+            balances: [],
+          };
+        }
+        grouped[itemId].totalQuantity += parseFloat(balance.quantity);
+        grouped[itemId].balances.push(balance);
+      });
+
+      setGroupedItems(grouped);
+      setFilteredGroupedItems(grouped);
       setCurrentPage(1);
     } catch (error) {
       toast({
@@ -93,36 +121,60 @@ const Balance = () => {
   }, [selectedWarehouse]);
 
   useEffect(() => {
-    // Filter balances based on search query
-    const filtered = balances.filter((balance) => {
-      const searchTerm = searchQuery.toLowerCase();
-      return (
-        balance?.item?.name?.toLowerCase().includes(searchTerm) ||
-        balance?.item?.code?.toLowerCase().includes(searchTerm) ||
-        String(balance?.quantity).includes(searchTerm) ||
-        (balance?.order?.name &&
-          balance?.order?.name.toLowerCase().includes(searchTerm))
+    // Filter grouped items based on search query
+    const searchTerm = searchQuery.toLowerCase();
+    const filtered = {};
+
+    Object.entries(groupedItems).forEach(([itemId, group]) => {
+      const { item, balances } = group;
+
+      // Check if any item property matches search
+      const itemMatches =
+        item.name.toLowerCase().includes(searchTerm) ||
+        item.code.toLowerCase().includes(searchTerm);
+
+      // Check if any order property matches search
+      const orderMatches = balances.some(
+        (balance) =>
+          balance.order &&
+          ((balance.order.name &&
+            balance.order.name.toLowerCase().includes(searchTerm)) ||
+            (balance.order.id && String(balance.order.id).includes(searchTerm)))
       );
+
+      // Check if quantity matches search
+      const quantityMatches = String(group.totalQuantity).includes(searchTerm);
+
+      if (itemMatches || orderMatches || quantityMatches) {
+        filtered[itemId] = group;
+      }
     });
 
-    setFilteredBalances(filtered);
+    setFilteredGroupedItems(filtered);
     setCurrentPage(1);
-  }, [searchQuery, balances]);
+  }, [searchQuery, groupedItems]);
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredBalances.length / itemsPerPage);
+  const groupedItemsList = Object.values(filteredGroupedItems);
+  const totalPages = Math.ceil(groupedItemsList.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentBalances = filteredBalances.slice(startIndex, endIndex);
+  const currentItems = groupedItemsList.slice(startIndex, endIndex);
 
   // Get low stock count
-  const lowStockCount = balances.filter(
-    (balance) =>
-      parseFloat(balance?.quantity) <= parseFloat(balance?.item?.min_quantity)
+  const lowStockCount = Object.values(groupedItems).filter(
+    (group) => group.totalQuantity <= parseFloat(group.item.min_quantity)
   ).length;
 
   const handleRefresh = () => {
     fetchBalances();
+  };
+
+  const toggleExpand = (itemId) => {
+    setExpandedItems((prev) => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }));
   };
 
   const renderPagination = () => {
@@ -282,13 +334,14 @@ const Balance = () => {
                   <Skeleton key={i} className="h-12 w-full bg-slate-200" />
                 ))}
               </div>
-            ) : filteredBalances.length > 0 ? (
+            ) : groupedItemsList.length > 0 ? (
               <>
                 <div className="rounded-lg border border-slate-200 overflow-hidden">
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader className="bg-slate-100">
                         <TableRow>
+                          <TableHead className="w-8"></TableHead>
                           <TableHead className="font-medium text-slate-700">
                             Mahsulot
                           </TableHead>
@@ -296,7 +349,7 @@ const Balance = () => {
                             Kodi
                           </TableHead>
                           <TableHead className="font-medium text-slate-700 text-center">
-                            Miqdori
+                            Jami miqdor
                           </TableHead>
                           <TableHead className="font-medium text-slate-700 text-center">
                             Min. miqdor
@@ -305,64 +358,177 @@ const Balance = () => {
                             Birlik
                           </TableHead>
                           <TableHead className="font-medium text-slate-700">
-                            Buyurtma
+                            Buyurtmalar
                           </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {currentBalances
+                        {currentItems
                           .sort((a, b) =>
-                            a?.item?.name.localeCompare(b?.item?.name)
+                            a.item.name.localeCompare(b.item.name)
                           )
-                          .map((balance) => {
+                          .map((group) => {
                             const isLowStock =
-                              parseFloat(balance?.quantity) <=
-                              parseFloat(balance?.item?.min_quantity);
+                              group.totalQuantity <=
+                              parseFloat(group.item.min_quantity);
+                            const isExpanded = expandedItems[group.item.id];
+
+                            // Count orders
+                            const orderCount = group.balances.filter(
+                              (b) => b.order
+                            ).length;
 
                             return (
-                              <TableRow
-                                key={balance?.id}
-                                className={cn({
-                                  "bg-red-300": isLowStock,
-                                  "hover:bg-slate-50": !isLowStock,
-                                })}
-                              >
-                                <TableCell className="font-medium">
-                                  {balance?.item?.name}
-                                </TableCell>
-                                <TableCell>{balance?.item?.code}</TableCell>
-                                <TableCell className="text-center">
-                                  <Badge
-                                    variant={
-                                      isLowStock ? "destructive" : "outline"
-                                    }
-                                    className={cn(
-                                      "px-3 py-1",
-                                      isLowStock
-                                        ? "bg-red-50 text-red-700 hover:bg-red-100"
-                                        : ""
-                                    )}
-                                  >
-                                    {balance?.quantity}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {balance?.item?.min_quantity}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {balance?.item?.unit?.name}
-                                </TableCell>
-                                <TableCell>
-                                  {balance?.order ? (
-                                    <Badge className="font-normal">
-                                      {balance?.order?.id}{" "}
-                                      {balance?.order?.name}
-                                    </Badge>
-                                  ) : (
-                                    <span>-</span>
+                              <>
+                                <TableRow
+                                  key={group.item.id}
+                                  className={cn(
+                                    {
+                                      "bg-red-300": isLowStock,
+                                      "hover:bg-slate-50": !isLowStock,
+                                      "border-b-0": isExpanded,
+                                    },
+                                    "cursor-pointer"
                                   )}
-                                </TableCell>
-                              </TableRow>
+                                  onClick={() => toggleExpand(group.item.id)}
+                                >
+                                  <TableCell className="w-8 p-2">
+                                    {isExpanded ? (
+                                      <ChevronDown
+                                        size={18}
+                                        className="text-slate-600"
+                                      />
+                                    ) : (
+                                      <ChevronRight
+                                        size={18}
+                                        className="text-slate-600"
+                                      />
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="font-medium">
+                                    {group.item.name}
+                                  </TableCell>
+                                  <TableCell>{group.item.code}</TableCell>
+                                  <TableCell className="text-center">
+                                    <Badge
+                                      variant={
+                                        isLowStock ? "destructive" : "outline"
+                                      }
+                                      className={cn(
+                                        "px-3 py-1",
+                                        isLowStock
+                                          ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                          : ""
+                                      )}
+                                    >
+                                      {group.totalQuantity}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {group.item.min_quantity}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {group.item.unit.name}
+                                  </TableCell>
+                                  <TableCell>
+                                    {orderCount > 0 ? (
+                                      <Badge className="font-normal">
+                                        {orderCount} ta buyurtma
+                                      </Badge>
+                                    ) : (
+                                      <span>-</span>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+
+                                {isExpanded && (
+                                  <TableRow className="bg-slate-50">
+                                    <TableCell colSpan={7} className="p-0">
+                                      <div className="p-4">
+                                        <div className="text-sm font-medium mb-2 text-slate-700">
+                                          Barcha {group.item.name} balanslari:
+                                        </div>
+                                        <Table>
+                                          <TableHeader className="bg-slate-200">
+                                            <TableRow>
+                                              <TableHead className="font-medium text-slate-700">
+                                                Ombor
+                                              </TableHead>
+                                              <TableHead className="font-medium text-slate-700 text-center">
+                                                Miqdor
+                                              </TableHead>
+                                              <TableHead className="font-medium text-slate-700">
+                                                Buyurtma
+                                              </TableHead>
+                                              <TableHead className="font-medium text-slate-700">
+                                                Buyurtma holati
+                                              </TableHead>
+                                            </TableRow>
+                                          </TableHeader>
+                                          <TableBody>
+                                            {group.balances.map((balance) => (
+                                              <TableRow key={balance.id}>
+                                                <TableCell>
+                                                  {balance.warehouse.name}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                  {balance.quantity}{" "}
+                                                  {group.item.unit.name}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {balance.order ? (
+                                                    <div className="text-sm">
+                                                      <div className="font-medium">
+                                                        {balance.order.name}
+                                                      </div>
+                                                      <div className="text-slate-500">
+                                                        ID: {balance.order.id}{" "}
+                                                        Miqdor:{" "}
+                                                        {balance.order
+                                                          .quantity || 0}
+                                                      </div>
+                                                    </div>
+                                                  ) : (
+                                                    <span className="text-slate-500">
+                                                      Buyurtmasiz
+                                                    </span>
+                                                  )}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {balance.order && (
+                                                    <Badge
+                                                      variant="outline"
+                                                      className={cn(
+                                                        "capitalize",
+                                                        {
+                                                          "bg-yellow-50 text-yellow-700 border-yellow-200":
+                                                            balance.order
+                                                              .status ===
+                                                            "cutting",
+                                                          "bg-blue-50 text-blue-700 border-blue-200":
+                                                            balance.order
+                                                              .status ===
+                                                            "tailoring",
+                                                        }
+                                                      )}
+                                                    >
+                                                      {
+                                                        statuses[
+                                                          balance.order.status
+                                                        ]?.text
+                                                      }
+                                                    </Badge>
+                                                  )}
+                                                </TableCell>
+                                              </TableRow>
+                                            ))}
+                                          </TableBody>
+                                        </Table>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                              </>
                             );
                           })}
                       </TableBody>
@@ -372,7 +538,7 @@ const Balance = () => {
 
                 <div className="py-2 flex items-center justify-between">
                   <div className="text-sm text-slate-500">
-                    Jami {filteredBalances.length} ta mahsulot
+                    Jami {groupedItemsList.length} ta mahsulot
                   </div>
                   <div>{totalPages > 1 && renderPagination()}</div>
                 </div>
@@ -399,4 +565,4 @@ const Balance = () => {
   );
 };
 
-export default Balance;
+export default GroupedBalance;
