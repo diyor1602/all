@@ -321,9 +321,13 @@ const ItemShow = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Sana</TableHead>
-                        <TableHead>Xodim</TableHead>
+                        <TableHead>Omborchi</TableHead>
                         <TableHead>Miqdor</TableHead>
                         <TableHead>Narx</TableHead>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Mas'ul xodim</TableHead>
+                        <TableHead>Ombor</TableHead>
+                        <TableHead>Turi</TableHead>
                         <TableHead>Izoh</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -362,6 +366,16 @@ const ItemShow = () => {
                           </TableCell>
                           <TableCell>
                             {entry.price} {itemData.currency.name}
+                          </TableCell>
+                          <TableCell>{entry.id}</TableCell>
+                          <TableCell>
+                            {entry.responsibleUser?.employee?.name || "-"}
+                          </TableCell>
+                          <TableCell>{entry.warehouse?.name || "-"}</TableCell>
+                          <TableCell>
+                            {entry.destination?.name ||
+                              entry.source?.name ||
+                              "-"}
                           </TableCell>
                           <TableCell>
                             {entry.comment || (
