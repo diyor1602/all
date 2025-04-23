@@ -98,22 +98,22 @@ const Edit = () => {
 
       // Set form data from fetched item, handling nested objects
       setFormData({
-        name: response.data.name,
-        code: response.data.code,
-        unit_id: response.data.unit?.id || "", // Extract ID from nested unit object
-        color_id: response.data.color?.id || "", // Extract ID from nested color object
-        type_id: response.data.type?.id || "", // Extract ID from nested type object
-        price: response.data.price,
-        currency_id: response.data.currency?.id || "",
-        image: response.data.image,
-        min_quantity: response.data.min_quantity || 0,
+        name: response.data.item.name,
+        code: response.data.item.code,
+        unit_id: response.data.item.unit?.id || "", // Extract ID from nested unit object
+        color_id: response.data.item.color?.id || "", // Extract ID from nested color object
+        type_id: response.data.item.type?.id || "", // Extract ID from nested type object
+        price: response.data.item.price,
+        currency_id: response.data.item.currency?.id || "",
+        image: response.data.item.image,
+        min_quantity: response.data.item.min_quantity || 0,
       });
 
       // If the item has an image, set the image preview
-      if (response.data.image) {
+      if (response.data.item.image) {
         // Check if the image is a URL or a base64 string
-        if (typeof response.data.image === "string") {
-          setImagePreview(response.data.image);
+        if (typeof response.data.item.image === "string") {
+          setImagePreview(response.data.item.image);
         }
       }
     } catch (error) {
