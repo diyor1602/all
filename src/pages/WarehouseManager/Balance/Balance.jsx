@@ -44,7 +44,6 @@ import { statuses } from "@/lib/status";
 const GroupedBalance = () => {
   const { toast } = useToast();
 
-  const [balances, setBalances] = useState([]);
   const [groupedItems, setGroupedItems] = useState({});
   const [filteredGroupedItems, setFilteredGroupedItems] = useState({});
   const [warehouses, setWarehouses] = useState([]);
@@ -79,8 +78,6 @@ const GroupedBalance = () => {
           warehouse_id: selectedWarehouse === "all" ? "" : selectedWarehouse,
         },
       });
-
-      setBalances(response.data);
 
       // Group balances by item ID
       const grouped = {};
@@ -500,16 +497,15 @@ const GroupedBalance = () => {
                                                       variant="outline"
                                                       className={cn(
                                                         "capitalize",
-                                                        {
-                                                          "bg-yellow-50 text-yellow-700 border-yellow-200":
-                                                            balance.order
-                                                              .status ===
-                                                            "cutting",
-                                                          "bg-blue-50 text-blue-700 border-blue-200":
-                                                            balance.order
-                                                              .status ===
-                                                            "tailoring",
-                                                        }
+                                                        statuses[
+                                                          balance.order.status
+                                                        ]?.secondaryBg,
+                                                        statuses[
+                                                          balance.order.status
+                                                        ]?.textColor,
+                                                        statuses[
+                                                          balance.order.status
+                                                        ]?.border
                                                       )}
                                                     >
                                                       {

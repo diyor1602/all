@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
-import { CirclePlus, Download, Loader2, Search } from "lucide-react";
+import { CirclePlus, Download, Edit, Eye, Loader2, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -245,6 +245,7 @@ const ItemView = () => {
                   <tr>
                     <th className="border-2 p-1">N</th>
                     <th className="border-2 p-1">Nomi</th>
+                    <th className="border-2 p-1">Amallar</th>
                     <th className="border-2 p-1">Rasmi</th>
                     <th className="border-2 p-1">Kodi</th>
                     <th className="border-2 p-1">Birligi</th>
@@ -264,15 +265,26 @@ const ItemView = () => {
                             index +
                             1}
                         </td>
-                        <td
-                          className="border-2 p-1 cursor-pointer"
-                          onClick={() =>
-                            navigate(
-                              `/warehouseManager/settings/items/edit/${item?.id}`
-                            )
-                          }
-                        >
-                          {item?.name}
+                        <td className="border-2 p-1">{item?.name}</td>
+                        <td className="border-2 p-1">
+                          <div className="flex gap-3 items-center w-full justify-center">
+                            <Eye
+                              className="w-4 h-4 text-blue-500 cursor-pointer"
+                              onClick={() =>
+                                navigate(
+                                  `/warehouseManager/settings/items/show/${item?.id}`
+                                )
+                              }
+                            />
+                            <Edit
+                              className="w-4 h-4 text-orange-500 cursor-pointer"
+                              onClick={() =>
+                                navigate(
+                                  `/warehouseManager/settings/items/edit/${item?.id}`
+                                )
+                              }
+                            />
+                          </div>
                         </td>
                         <td className="border-2 p-1">
                           {item?.image ? (
