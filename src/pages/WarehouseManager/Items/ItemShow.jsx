@@ -30,7 +30,6 @@ import {
   History,
   DollarSign,
   Boxes,
-  QrCode,
   Tag,
   ChevronLeft,
   CalendarDays,
