@@ -137,8 +137,10 @@ const Scaner = () => {
         transition={{ duration: 0.5 }}
         className="text-center mb-6"
       >
-        <h1 className="text-3xl font-bold text-primary mb-2">QR Scanner</h1>
-        <p className="text-muted-foreground">Scan QR codes to manage orders</p>
+        <h1 className="text-3xl font-bold text-primary mb-2">QR Skaner</h1>
+        <p className="text-muted-foreground">
+          Buyurtmani boshqarish uchun QR kodni skaner qiling
+        </p>
       </motion.div>
 
       <div className="grid grid-cols-1  gap-6">
