@@ -1,9 +1,11 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Box, ChartPie } from "lucide-react";
+import { Box, ChartPie, Star } from "lucide-react";
 import Item from "./Items/Item";
 import Balance from "./Balance/Balance";
+import Orders from "./Orders/Orders";
+import OrderView from "./Orders/OrderView";
 
 const Settings = () => {
   return (
@@ -11,6 +13,8 @@ const Settings = () => {
       <Route path="*" element={<SettingsPage />} />
       <Route path="items/*" element={<Item />} />
       <Route path="balance/*" element={<Balance />} />
+      <Route path="orders/" element={<Orders />} />
+      <Route path="orders/:id" element={<OrderView />} />
     </Routes>
   );
 };
@@ -28,6 +32,12 @@ const SettingsPage = () => {
       icon: Box,
       link: "/warehouseManager/settings/items",
       color: "bg-blue-500",
+    },
+    {
+      name: "Buyurtmalar",
+      icon: Star,
+      link: "/warehouseManager/settings/orders",
+      color: "bg-yellow-500",
     },
   ];
 
