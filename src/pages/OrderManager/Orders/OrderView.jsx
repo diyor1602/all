@@ -920,10 +920,10 @@ const OrderView = () => {
                 <Card className="bg-gradient-to-r from-teal-50 to-cyan-50 border-none shadow-sm">
                   <CardContent className="p-0">
                     <Accordion type="multiple" className="w-full">
-                      {order.specification_categories.map((category) => (
+                      {order.specification_categories.map((category, index) => (
                         <AccordionItem
-                          key={category.id}
-                          value={`category-${category.id}`}
+                          key={index}
+                          value={`category-${index}`}
                           className="border-b border-teal-100 last:border-b-0"
                         >
                           <AccordionTrigger className="py-3 px-4 hover:no-underline hover:bg-teal-100/30">
