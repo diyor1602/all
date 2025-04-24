@@ -40,6 +40,13 @@ import {
 } from "lucide-react";
 import api from "@/utils/api";
 import { statuses } from "@/lib/status";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const OrderView = () => {
   const { id } = useParams();
@@ -47,6 +54,7 @@ const OrderView = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
+  const [filteredStockBalance, setFilteredStockBalance] = useState([]);
 
   const fetchOrder = async () => {
     setLoading(true);
@@ -67,6 +75,12 @@ const OrderView = () => {
   useEffect(() => {
     fetchOrder();
   }, [id]);
+
+  useEffect(() => {
+    if (order?.stock_balance) {
+      setFilteredStockBalance(order.stock_balance);
+    }
+  }, [order]);
 
   const chartData = useMemo(() => {
     if (!order?.stock_entry) return [];
@@ -132,7 +146,6 @@ const OrderView = () => {
   const status = statuses[order.status];
   const incomingTotal = chartData.reduce((sum, item) => sum + item.incoming, 0);
   const outgoingTotal = chartData.reduce((sum, item) => sum + item.outgoing, 0);
-  const balance = incomingTotal - outgoingTotal;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-12 dark:from-slate-900 dark:to-slate-800">
@@ -208,20 +221,6 @@ const OrderView = () => {
                           </p>
                         </div>
                       </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                          <TrendingUp className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                            Rasxod
-                          </p>
-                          <p className="font-medium text-slate-800 dark:text-slate-100">
-                            {order.rasxod}
-                          </p>
-                        </div>
-                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -270,6 +269,178 @@ const OrderView = () => {
                         {order.comment}
                       </p>
                     </div>
+                  </div>
+
+                  <Separator className="my-6" />
+
+                  <div>
+                    <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                        Ombor qoldiqlari
+                      </h3>
+
+                      {order.stock_balance &&
+                        order.stock_balance.length > 0 && (
+                          <div className="mt-2 sm:mt-0">
+                            <Select
+                              defaultValue="all"
+                              onValueChange={(value) => {
+                                if (value === "all") {
+                                  setFilteredStockBalance(order.stock_balance);
+                                } else {
+                                  setFilteredStockBalance(
+                                    order.stock_balance.filter(
+                                      (item) =>
+                                        item.warehouse.id.toString() === value
+                                    )
+                                  );
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Ombor tanlang" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">
+                                  Barcha omborlar
+                                </SelectItem>
+                                {Array.from(
+                                  new Set(
+                                    order.stock_balance.map(
+                                      (item) => item.warehouse.id
+                                    )
+                                  )
+                                ).map((warehouseId) => {
+                                  const warehouse = order.stock_balance.find(
+                                    (item) => item.warehouse.id === warehouseId
+                                  ).warehouse;
+                                  return (
+                                    <SelectItem
+                                      key={warehouseId}
+                                      value={warehouseId.toString()}
+                                    >
+                                      {warehouse.name}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                    </div>
+
+                    {order.stock_balance && order.stock_balance.length > 0 ? (
+                      <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400">
+                                  Mahsulot
+                                </th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400">
+                                  Kod
+                                </th>
+                                <th className="px-4 py-3 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
+                                  Miqdor
+                                </th>
+                                <th className="px-4 py-3 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
+                                  Narx
+                                </th>
+                                <th className="px-4 py-3 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
+                                  Min. miqdor
+                                </th>
+                                <th className="px-4 py-3 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
+                                  Holat
+                                </th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400">
+                                  Ombor
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                              {filteredStockBalance.map((item) => (
+                                <tr
+                                  key={item.id}
+                                  className="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60"
+                                >
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center gap-3">
+                                      {item.item.image ? (
+                                        <div className="h-10 w-10 overflow-hidden rounded-md flex-shrink-0">
+                                          <img
+                                            src={
+                                              item.item.image ||
+                                              "/placeholder.svg"
+                                            }
+                                            alt={item.item.name}
+                                            className="h-full w-full object-cover"
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-700">
+                                          <Package2 className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                                        </div>
+                                      )}
+                                      <span className="font-medium text-slate-800 dark:text-slate-200">
+                                        {item.item.name}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                                    {item.item.code}
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <span className="inline-block min-w-[60px] rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-800 dark:bg-slate-700 dark:text-slate-200">
+                                      {Number.parseFloat(item.quantity).toFixed(
+                                        2
+                                      )}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
+                                    {Number.parseFloat(item.item.price).toFixed(
+                                      2
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
+                                    {item.item.min_quantity}
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <span
+                                      className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${
+                                        Number(item.quantity) <
+                                        Number(item.item.min_quantity)
+                                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                          : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                      }`}
+                                    >
+                                      {Number(item.quantity) <
+                                      Number(item.item.min_quantity)
+                                        ? "Kam qoldiq"
+                                        : "Yetarli"}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center gap-1.5">
+                                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                                      <span className="text-sm text-slate-600 dark:text-slate-400">
+                                        {item.warehouse.name}
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg bg-slate-50 p-4 text-center dark:bg-slate-800/50">
+                        <p className="text-slate-700 dark:text-slate-300">
+                          Ombor qoldiqlari mavjud emas
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -476,6 +647,7 @@ const OrderView = () => {
                                           <img
                                             src={
                                               item.item.image ||
+                                              "/placeholder.svg" ||
                                               "/placeholder.svg"
                                             }
                                             alt={item.item.name}
