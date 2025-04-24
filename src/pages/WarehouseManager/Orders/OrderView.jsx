@@ -144,8 +144,6 @@ const OrderView = () => {
   }
 
   const status = statuses[order.status];
-  const incomingTotal = chartData.reduce((sum, item) => sum + item.incoming, 0);
-  const outgoingTotal = chartData.reduce((sum, item) => sum + item.outgoing, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-12 dark:from-slate-900 dark:to-slate-800">
