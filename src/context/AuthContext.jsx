@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "@/utils/api";
 
 const AuthContext = createContext(null);
 
@@ -11,12 +11,11 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const APIURL = import.meta.env.VITE_API_URL_J;
 
   const login = async (username, password) => {
     setLoading(true);
     try {
-      const res = await axios.post(`${APIURL}/login/`, {
+      const res = await api.post(`/login/`, {
         username,
         password,
       });
