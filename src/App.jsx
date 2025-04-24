@@ -20,6 +20,7 @@ import OrderManager from "./pages/OrderManager/OrderManager";
 import Supervisor from "./pages/Supervisor/Supervisor";
 import Transport from "./pages/Transport/Transport";
 import WarehouseManager from "./pages/WarehouseManager/WarehouseManager";
+import QualityControllerMaster from "./pages/QualityControllerMaster/QualityControllerMaster";
 import Tv from "./pages/Tv/Tv";
 
 const ProtectedRoute = () => {
@@ -60,6 +61,10 @@ function App() {
           <Route path="/supervisor/*" element={<Supervisor />} />
           <Route path="/transport/*" element={<Transport />} />
           <Route path="/warehouseManager/*" element={<WarehouseManager />} />
+          <Route
+            path="/qualityControllerMaster/*"
+            element={<QualityControllerMaster />}
+          />
           <Route path="/tv/*" element={<Tv />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />

@@ -11,6 +11,7 @@ export default function BaseLayout({ children, navigation }) {
   const location = useLocation();
 
   const imageUrl = localStorage.getItem("imgUrl");
+  const hasValidImage = imageUrl && imageUrl !== "null";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,10 +85,10 @@ export default function BaseLayout({ children, navigation }) {
           <div className="border-t bg-gray-50 p-4">
             <Link to="/profile" className="flex items-center gap-3 mb-4 px-2">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                {imageUrl ? (
+                {hasValidImage ? (
                   <img
                     src={imageUrl}
-                    alt="User"
+                    alt=""
                     className="h-8 w-8 rounded-full object-cover"
                   />
                 ) : (
