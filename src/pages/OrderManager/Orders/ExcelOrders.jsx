@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,9 +30,16 @@ import {
   Package,
   Tag,
   Users,
-  Image,
+  ImageIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ExcelOrders = () => {
   const [contragents, setContragents] = useState([]);
@@ -182,8 +191,12 @@ const ExcelOrders = () => {
     try {
       // Extract model indices from droppable IDs
       // Format is now "model-{modelIndex}-images"
-      const sourceModelIndex = parseInt(source.droppableId.split("-")[1]);
-      const destModelIndex = parseInt(destination.droppableId.split("-")[1]);
+      const sourceModelIndex = Number.parseInt(
+        source.droppableId.split("-")[1]
+      );
+      const destModelIndex = Number.parseInt(
+        destination.droppableId.split("-")[1]
+      );
 
       // Check if indices are valid
       if (isNaN(sourceModelIndex) || isNaN(destModelIndex)) return;
@@ -532,32 +545,34 @@ const ExcelOrders = () => {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 items-center bg-gray-50 p-4 rounded-lg">
+          <div className="flex flex-col md:flex-row gap-4 items-end bg-gray-50 p-4 rounded-lg">
             <div className="w-full md:w-3/4">
               <label className="block text-sm font-medium mb-2 text-gray-700">
                 <Users className="h-4 w-4 inline mr-1" /> Kontragentni tanlang:
               </label>
-              <select
+              <Select
                 value={selectedContragent}
-                onChange={(e) => setSelectedContragent(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                onValueChange={(value) => setSelectedContragent(value)}
               >
-                <option value="">Kontragentni tanlang</option>
-                {contragents.map((contragent) => (
-                  <option
-                    key={contragent.id || `contragent-${Math.random()}`}
-                    value={contragent.id}
-                  >
-                    {contragent.name || "Nomsiz kontragent"}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                  <SelectValue placeholder="Kontragentni tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contragents.map((contragent) => (
+                    <SelectItem
+                      key={contragent.id || `contragent-${Math.random()}`}
+                      value={contragent.id || `contragent-${Math.random()}`}
+                    >
+                      {contragent.name || "Nomsiz kontragent"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <Button
               onClick={applyContragentToAll}
               disabled={!selectedContragent || !formData.data?.length}
-              className="w-full md:w-1/4 py-6 bg-indigo-600 hover:bg-indigo-700 transition-colors self-end"
             >
               Barchasi uchun qo'llash
             </Button>
@@ -682,37 +697,41 @@ const ExcelOrders = () => {
                         <Users className="h-4 w-4 text-indigo-500" />
                         Kontragent:
                       </label>
-                      <select
-                        value={model.contragent_id || ""}
-                        onChange={(e) =>
-                          handleModelContragentChange(
-                            modelIndex,
-                            e.target.value
-                          )
+                      <Select
+                        value={model.contragent_id || undefined}
+                        onValueChange={(value) =>
+                          handleModelContragentChange(modelIndex, value)
                         }
-                        className={`w-full p-2 border rounded transition-colors ${
-                          model.contragent_id
-                            ? "border-green-300 bg-green-50"
-                            : "border-red-300 bg-red-50"
-                        }`}
                       >
-                        <option value="">Kontragentni tanlang</option>
-                        {contragents.map((contragent) => (
-                          <option
-                            key={`${model.modelKey}-${
-                              contragent.id || Math.random()
-                            }`}
-                            value={contragent.id}
-                          >
-                            {contragent.name || "Nomsiz kontragent"}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger
+                          className={`w-full p-2 transition-colors ${
+                            model.contragent_id
+                              ? "border-green-300 bg-green-50"
+                              : "border-red-300 bg-red-50"
+                          }`}
+                        >
+                          <SelectValue placeholder="Kontragentni tanlang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contragents.map((contragent) => (
+                            <SelectItem
+                              key={`${model.modelKey}-${
+                                contragent.id || Math.random()
+                              }`}
+                              value={
+                                contragent.id || `contragent-${Math.random()}`
+                              }
+                            >
+                              {contragent.name || "Nomsiz kontragent"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
                       <label className="text-sm font-medium mb-2 flex items-center gap-1">
-                        <Image className="h-4 w-4 text-blue-500" />
+                        <ImageIcon className="h-4 w-4 text-blue-500" />
                         Rasmlar{" "}
                         <Badge variant="secondary" className="ml-1">
                           {model.images.length}
@@ -746,7 +765,7 @@ const ExcelOrders = () => {
                                       className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white rounded overflow-hidden flex-shrink-0 relative border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
                                     >
                                       <img
-                                        src={img.url}
+                                        src={img.url || "/placeholder.svg"}
                                         alt={`${model.model}-${imgIndex}`}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
@@ -764,7 +783,7 @@ const ExcelOrders = () => {
                             ) : (
                               <div className="w-full h-16 sm:h-24 flex items-center justify-center text-gray-400">
                                 <p className="text-center text-xs sm:text-sm">
-                                  <Image className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-1 sm:mb-2 text-gray-300" />
+                                  <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-1 sm:mb-2 text-gray-300" />
                                   Bu yerga rasmlarni tashlash mumkin
                                 </p>
                               </div>
