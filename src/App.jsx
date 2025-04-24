@@ -21,6 +21,7 @@ import Supervisor from "./pages/Supervisor/Supervisor";
 import Transport from "./pages/Transport/Transport";
 import WarehouseManager from "./pages/WarehouseManager/WarehouseManager";
 import QualityControllerMaster from "./pages/QualityControllerMaster/QualityControllerMaster";
+import QualityController from "./pages/QualityController/QualityController";
 import Tv from "./pages/Tv/Tv";
 
 const ProtectedRoute = () => {
@@ -65,6 +66,7 @@ function App() {
             path="/qualityControllerMaster/*"
             element={<QualityControllerMaster />}
           />
+          <Route path="/qualityController/*" element={<QualityController />} />
           <Route path="/tv/*" element={<Tv />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
