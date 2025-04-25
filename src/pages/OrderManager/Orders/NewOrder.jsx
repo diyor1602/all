@@ -80,7 +80,7 @@ const NewOrder = () => {
     start_date: "",
     end_date: "",
     rasxod: "",
-    comment: "",
+    comment: "-",
     model_id: null,
     material_id: null,
     contragent_id: null,
