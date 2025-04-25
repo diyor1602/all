@@ -34,7 +34,6 @@ const Deparments = () => {
   const { toast } = useToast();
 
   const [departments, setDepartments] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -76,24 +75,9 @@ const Deparments = () => {
     }
   };
 
-  const fetchEmployees = async () => {
-    try {
-      const res = await api.get(`/superhr/employees/aup/`);
-      setEmployees(res.data);
-    } catch (error) {
-      toast({
-        title: "Xodimlarni yuklashda xatolik!",
-        description: error.response?.data?.detail || "Xatolik yuz berdi",
-        variant: "destructive",
-        duration: 2000,
-      });
-    }
-  };
-
   // Initialize the component
   useEffect(() => {
     fetchDepartments();
-    fetchEmployees();
   }, []);
 
   // Handle input changes for adding a new department
@@ -250,25 +234,6 @@ const Deparments = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Format time to display HH:MM
-  const formatTime = (timeString) => {
-    return timeString.substring(0, 5);
-  };
-
-  // Format break time from minutes to hours and minutes
-  const formatBreakTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours} soat ${mins} daqiqa` : `${mins} daqiqa`;
-  };
-
-  // Get employee name by user_id
-  const getEmployeeName = (user_id) => {
-    if (!user_id || user_id === 0) return "-";
-    const employee = employees.find((emp) => emp.user_id === user_id);
-    return employee ? employee.name : "-";
   };
 
   return (
