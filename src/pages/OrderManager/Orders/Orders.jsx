@@ -61,22 +61,23 @@ const Orders = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/orderManager/orders");
+      setOrders(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Buyurtmalar ro'yxati olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get("/orderManager/orders");
-        setOrders(response.data);
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Buyurtmalar ro'yxati olishda xatolik",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchOrders();
   }, []);
 
@@ -107,6 +108,34 @@ const Orders = () => {
       if (sortBy === "quantity-low") return a.quantity - b.quantity;
       return 0;
     });
+
+  const handleStatusActive = async (id) => {
+    if (orders.find((order) => order.id === id).status === "inactive") {
+      if (!window.confirm("Buyurtmani aktiv qilishni tasdiqlaysizmi?")) {
+        return;
+      }
+      try {
+        await api.patch(`/orderManager/orders/change/${id}`, {
+          status: "active",
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Buyurtma aktiv qilindi!",
+          style: {
+            backgroundColor: "green",
+            color: "white",
+          },
+        });
+        fetchOrders();
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Holat o'zgartirishda xatolik",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -244,8 +273,12 @@ const Orders = () => {
                       className={`${getStatusColor(
                         order.status
                       )} px-3 py-1 font-medium rounded-full shadow-sm`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusActive(order.id);
+                      }}
                     >
-                      {statuses[order.status]?.text || "Unknown"}
+                      {statuses[order.status]?.text || "Noma'lum"}
                     </Badge>
                   </div>
 
