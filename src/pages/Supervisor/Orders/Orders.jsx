@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -119,6 +120,30 @@ const Orders = () => {
         toast({
           title: "Muvaffaqiyatli",
           description: "Buyurtma aktiv qilindi!",
+          style: {
+            backgroundColor: "green",
+            color: "white",
+          },
+        });
+        fetchOrders();
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Holat o'zgartirishda xatolik",
+          variant: "destructive",
+        });
+      }
+    } else if (orders.find((order) => order.id === id).status === "active") {
+      if (!window.confirm("Buyurtmani aktiv emasga o'zgartirasizmi?")) {
+        return;
+      }
+      try {
+        await api.patch(`/supervisor/orders/change/${id}`, {
+          status: "inactive",
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Buyurtma statusi aktiv emasga o'zgartirildi!",
           style: {
             backgroundColor: "green",
             color: "white",
