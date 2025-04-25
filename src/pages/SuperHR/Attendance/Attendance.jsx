@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
@@ -91,6 +93,16 @@ const Attendance = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [checkInTime, setCheckInTime] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
+  const [bulkCheckInTime, setBulkCheckInTime] = useState("");
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState({
+    processing: false,
+    total: 0,
+    current: 0,
+    success: [],
+    failed: [],
+  });
 
   const formatDate = (date) => {
     return date.toISOString().split("T")[0];
@@ -210,6 +222,117 @@ const Attendance = () => {
     }
 
     return filtered;
+  };
+
+  const handleCheckboxChange = (employeeId) => {
+    setSelectedEmployees((prev) => {
+      if (prev.includes(employeeId)) {
+        return prev.filter((id) => id !== employeeId);
+      } else {
+        return [...prev, employeeId];
+      }
+    });
+  };
+
+  const handleBulkAttendance = async () => {
+    if (selectedEmployees.length === 0 || !bulkCheckInTime) return;
+
+    try {
+      setProcessingStatus({
+        processing: true,
+        total: selectedEmployees.length,
+        current: 0,
+        success: [],
+        failed: [],
+      });
+
+      // Create date from selected date and time
+      const [hours, minutes] = bulkCheckInTime.split(":");
+      const checkInDate = new Date(selectedDate);
+      checkInDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0);
+
+      // Use the timezone offset for Uzbekistan (+05:00)
+      const localDate = new Date(checkInDate);
+      const isoWithTimezone = new Date(
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .replace("Z", "+05:00");
+
+      // Process each employee one by one
+      for (let i = 0; i < selectedEmployees.length; i++) {
+        const employeeId = selectedEmployees[i];
+        setProcessingStatus((prev) => ({
+          ...prev,
+          current: i + 1,
+        }));
+
+        try {
+          await api.post("/superhr/attendances", {
+            employee_id: employeeId,
+            check_in: isoWithTimezone,
+            date: selectedDate,
+          });
+
+          setProcessingStatus((prev) => ({
+            ...prev,
+            success: [...prev.success, employeeId],
+          }));
+        } catch (error) {
+          const employee = employees.find((emp) => emp.id === employeeId);
+          setProcessingStatus((prev) => ({
+            ...prev,
+            failed: [
+              ...prev.failed,
+              {
+                id: employeeId,
+                name: employee?.name,
+                error: error.response?.data?.message || "Xatolik yuz berdi",
+              },
+            ],
+          }));
+        }
+      }
+
+      // After all processing is done
+      fetchAttendance();
+
+      // Don't close dialog yet - user needs to see results
+      // setBulkDialogOpen(false);
+      // setSelectedEmployees([]);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: `Davomat muvaffaqiyatli belgilandi`,
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingStatus((prev) => ({
+        ...prev,
+        processing: false,
+      }));
+    }
+  };
+
+  const resetBulkAttendance = () => {
+    setBulkDialogOpen(false);
+    setSelectedEmployees([]);
+    setProcessingStatus({
+      processing: false,
+      total: 0,
+      current: 0,
+      success: [],
+      failed: [],
+    });
   };
 
   const fetchEmployees = async () => {
@@ -346,6 +469,25 @@ const Attendance = () => {
         <table className="w-full border-2 border-collapse whitespace-nowrap bg-white text-sm">
           <thead>
             <tr>
+              <th className="p-1 border-2 w-10">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={
+                    selectedEmployees.length > 0 &&
+                    selectedEmployees.length === filteredEmployees.length
+                  }
+                  onChange={() => {
+                    if (selectedEmployees.length === filteredEmployees.length) {
+                      setSelectedEmployees([]);
+                    } else {
+                      setSelectedEmployees(
+                        filteredEmployees.map((emp) => emp.id)
+                      );
+                    }
+                  }}
+                />
+              </th>
               <th className="p-1 border-2">ID</th>
               <th className="p-1 border-2">
                 Xodimlar ({filteredEmployees?.length})
@@ -362,6 +504,14 @@ const Attendance = () => {
               );
               return (
                 <tr key={employee.id}>
+                  <td className="p-1 border-2 text-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={selectedEmployees.includes(employee.id)}
+                      onChange={() => handleCheckboxChange(employee.id)}
+                    />
+                  </td>
                   <td className="p-1 border-2 text-center">{employee?.id}</td>
                   <td className="p-1 border-2">{employee?.name}</td>
                   <td className="p-1 border-2 text-center">
@@ -426,6 +576,7 @@ const Attendance = () => {
                                   <img
                                     src={
                                       attendanceRecord.check_in_image ||
+                                      "/placeholder.svg" ||
                                       "/placeholder.svg"
                                     }
                                     alt="Check-in image"
@@ -483,6 +634,7 @@ const Attendance = () => {
                                   <img
                                     src={
                                       attendanceRecord.check_out_image ||
+                                      "/placeholder.svg" ||
                                       "/placeholder.svg"
                                     }
                                     alt="Check-out image"
@@ -504,6 +656,22 @@ const Attendance = () => {
           </tbody>
         </table>
       </div>
+      {selectedEmployees.length > 0 && isToday && (
+        <div className="mt-4 flex justify-end">
+          <Button
+            onClick={() => {
+              // Set default time to current time
+              const now = new Date();
+              const hours = now.getHours().toString().padStart(2, "0");
+              const minutes = now.getMinutes().toString().padStart(2, "0");
+              setBulkCheckInTime(`${hours}:${minutes}`);
+              setBulkDialogOpen(true);
+            }}
+          >
+            {selectedEmployees.length} ta xodim uchun "Keldi" belgisini qo'yish
+          </Button>
+        </div>
+      )}
 
       {/* Attendance Dialog */}
       <Dialog
@@ -544,6 +712,140 @@ const Attendance = () => {
             >
               {loading ? "Saqlanmoqda..." : "Saqlash"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Attendance Dialog */}
+      <Dialog
+        open={bulkDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && !processingStatus.processing) {
+            resetBulkAttendance();
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ommaviy davomat belgilash</DialogTitle>
+            <DialogDescription>
+              {selectedEmployees.length} ta xodim uchun kelgan vaqtni kiriting
+            </DialogDescription>
+          </DialogHeader>
+
+          {!processingStatus.processing &&
+            processingStatus.success.length === 0 &&
+            processingStatus.failed.length === 0 && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label
+                    htmlFor="bulk-check-in-time"
+                    className="text-right col-span-1"
+                  >
+                    Kelgan vaqti
+                  </label>
+                  <Input
+                    id="bulk-check-in-time"
+                    type="time"
+                    value={bulkCheckInTime}
+                    onChange={(e) => setBulkCheckInTime(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+            )}
+
+          {processingStatus.processing && (
+            <div className="py-4">
+              <div className="mb-2 flex justify-between">
+                <span>
+                  Jarayon: {processingStatus.current} / {processingStatus.total}
+                </span>
+                <span>
+                  {Math.round(
+                    (processingStatus.current / processingStatus.total) * 100
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full"
+                  style={{
+                    width: `${
+                      (processingStatus.current / processingStatus.total) * 100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {!processingStatus.processing &&
+            (processingStatus.success.length > 0 ||
+              processingStatus.failed.length > 0) && (
+              <div className="py-4 max-h-[300px] overflow-auto">
+                {processingStatus.success.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="font-medium text-green-600 mb-2">
+                      Muvaffaqiyatli ({processingStatus.success.length})
+                    </h3>
+                    <ul className="text-sm space-y-1">
+                      {processingStatus.success.map((id) => {
+                        const employee = employees.find((emp) => emp.id === id);
+                        return (
+                          <li key={`success-${id}`} className="text-gray-700">
+                            {employee?.name || `ID: ${id}`}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+
+                {processingStatus.failed.length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-red-600 mb-2">
+                      Muvaffaqiyatsiz ({processingStatus.failed.length})
+                    </h3>
+                    <ul className="text-sm space-y-2">
+                      {processingStatus.failed.map((item) => (
+                        <li key={`failed-${item.id}`} className="text-gray-700">
+                          <div className="font-medium">
+                            {item.name || `ID: ${item.id}`}
+                          </div>
+                          <div className="text-red-500 text-xs">
+                            {item.error}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+          <DialogFooter>
+            {!processingStatus.processing && (
+              <>
+                <Button variant="outline" onClick={resetBulkAttendance}>
+                  {processingStatus.success.length > 0 ||
+                  processingStatus.failed.length > 0
+                    ? "Yopish"
+                    : "Bekor qilish"}
+                </Button>
+
+                {processingStatus.success.length === 0 &&
+                  processingStatus.failed.length === 0 && (
+                    <Button
+                      onClick={handleBulkAttendance}
+                      disabled={!bulkCheckInTime}
+                    >
+                      Saqlash
+                    </Button>
+                  )}
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
