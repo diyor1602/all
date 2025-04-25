@@ -269,11 +269,13 @@ const AddFastUser = () => {
                   <SelectValue placeholder="Guruhni tanlang" />
                 </SelectTrigger>
                 <SelectContent>
-                  {groups.map((group) => (
-                    <SelectItem key={group.id} value={group.id.toString()}>
-                      {group.name}
-                    </SelectItem>
-                  ))}
+                  {groups
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((group) => (
+                      <SelectItem key={group.id} value={group.id.toString()}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
