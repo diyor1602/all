@@ -86,9 +86,11 @@ const Attendance = () => {
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedGroup, setSelectedGroup] = useState("all");
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [checkInTime, setCheckInTime] = useState("");
@@ -190,6 +192,12 @@ const Attendance = () => {
         (employee) =>
           employee.department_id === Number.parseInt(selectedDepartment)
       );
+
+      if (selectedGroup !== "all") {
+        filtered = filtered.filter(
+          (employee) => employee.group_id === Number.parseInt(selectedGroup)
+        );
+      }
     }
 
     if (selectedStatus === "no_attendance") {
@@ -381,6 +389,23 @@ const Attendance = () => {
   };
 
   useEffect(() => {
+    if (selectedDepartment === "all") {
+      setGroups([]);
+      setSelectedGroup("all");
+    } else {
+      const selectedDept = departments.find(
+        (dept) => dept.id === Number.parseInt(selectedDepartment)
+      );
+      if (selectedDept && selectedDept.groups) {
+        setGroups(selectedDept.groups);
+      } else {
+        setGroups([]);
+      }
+      setSelectedGroup("all");
+    }
+  }, [selectedDepartment, departments]);
+
+  useEffect(() => {
     fetchEmployees();
     fetchAttendance();
     fetchDepartments();
@@ -388,7 +413,14 @@ const Attendance = () => {
 
   useEffect(() => {
     setFilteredEmployees(filterEmployees());
-  }, [employees, attendance, selectedStatus, selectedDepartment, searchQuery]);
+  }, [
+    employees,
+    attendance,
+    selectedStatus,
+    selectedDepartment,
+    selectedGroup,
+    searchQuery,
+  ]);
 
   const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
@@ -451,6 +483,25 @@ const Attendance = () => {
               {departments.map((dept) => (
                 <SelectItem key={dept.id} value={dept.id.toString()}>
                   {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={selectedGroup}
+            onValueChange={setSelectedGroup}
+            className="w-full sm:w-[180px]"
+            disabled={selectedDepartment === "all" || groups.length === 0}
+          >
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Guruh" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha guruhlar</SelectItem>
+              {groups.map((group) => (
+                <SelectItem key={group.id} value={group.id.toString()}>
+                  {group.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -577,6 +628,7 @@ const Attendance = () => {
                                     src={
                                       attendanceRecord.check_in_image ||
                                       "/placeholder.svg" ||
+                                      "/placeholder.svg" ||
                                       "/placeholder.svg"
                                     }
                                     alt="Check-in image"
@@ -634,6 +686,7 @@ const Attendance = () => {
                                   <img
                                     src={
                                       attendanceRecord.check_out_image ||
+                                      "/placeholder.svg" ||
                                       "/placeholder.svg" ||
                                       "/placeholder.svg"
                                     }
