@@ -752,14 +752,16 @@ const EditEmployees = () => {
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {groups.map((group) => (
-                        <SelectItem
-                          key={group.id}
-                          value={normalizeId(group.id)}
-                        >
-                          {group.name}
-                        </SelectItem>
-                      ))}
+                      {groups
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((group) => (
+                          <SelectItem
+                            key={group.id}
+                            value={normalizeId(group.id)}
+                          >
+                            {group.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
