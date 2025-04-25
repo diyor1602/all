@@ -36,6 +36,7 @@ const EditModel = () => {
   const [model, setModel] = useState({
     name: "",
     description: "",
+    rasxod: "",
     submodels: [],
     sizes: [],
     images: [],
@@ -55,6 +56,7 @@ const EditModel = () => {
           description: modelData.description || "",
           sizes: modelData.sizes || [],
           submodels: modelData.submodels || [],
+          rasxod: parseFloat(modelData.rasxod / 250).toFixed(3) || "",
           images: modelData.images || [],
         });
       } catch (error) {
@@ -211,6 +213,15 @@ const EditModel = () => {
       return false;
     }
 
+    if (!model.rasxod || isNaN(parseFloat(model.rasxod))) {
+      toast({
+        title: "Xato",
+        description: "Rasxod kiritilishi shart va raqam bo'lishi kerak",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     if (model.sizes.length === 0) {
       toast({
         title: "Xato",
@@ -253,6 +264,7 @@ const EditModel = () => {
             id: submodel.id > 10000000 ? null : submodel.id,
             name: submodel.name,
           })),
+          rasxod: parseFloat(model.rasxod) * 250,
           images: existingImages.map((image) => ({ id: image.id })),
         })
       );
@@ -340,6 +352,22 @@ const EditModel = () => {
                     value={model.name}
                     onChange={handleInputChange}
                     placeholder="Model nomini kiriting"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rasxod">
+                    Daqiqa (bitish minuti)
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="rasxod"
+                    name="rasxod"
+                    type="number"
+                    step="0.01"
+                    value={model.rasxod}
+                    onChange={handleInputChange}
+                    placeholder="0"
                     required
                   />
                 </div>
