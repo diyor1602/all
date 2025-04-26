@@ -72,7 +72,7 @@ const CuttingStart = () => {
       setcuts(response.data);
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Diqqat",
         description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
@@ -226,13 +226,13 @@ const CuttingStart = () => {
   const preparePrintData = () => {
     try {
       const specName =
-        order?.orderModel?.submodels
+        order?.order_model?.submodels
           ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
           ?.specification_categories?.find((spec) => spec?.id === selectedSpec)
           ?.name || "";
 
       const categoryName =
-        order?.orderModel?.submodels?.find(
+        order?.order_model?.submodels?.find(
           (submodel) => submodel?.submodel?.id === selectedSubmodel
         )?.submodel?.name || "";
 
@@ -682,13 +682,13 @@ const CuttingStart = () => {
         <div>
           Model:{" "}
           <span className="font-semibold">
-            {order?.orderModel?.model?.name}
+            {order?.order_model?.model?.name}
           </span>
         </div>
         <div>
           Material:{" "}
           <span className="font-semibold">
-            {order?.orderModel?.material?.name}
+            {order?.order_model?.material?.name || "-"}
           </span>
         </div>
       </div>
@@ -791,7 +791,7 @@ const CuttingStart = () => {
             <SelectValue placeholder="Submodelni tanlang" />
           </SelectTrigger>
           <SelectContent>
-            {order?.orderModel?.submodels?.map((submodel) => (
+            {order?.order_model?.submodels?.map((submodel) => (
               <SelectItem
                 key={submodel?.submodel?.id}
                 value={submodel?.submodel?.id}
@@ -806,7 +806,7 @@ const CuttingStart = () => {
             <SelectValue placeholder="Spetsifikatsiyani tanlang" />
           </SelectTrigger>
           <SelectContent>
-            {order?.orderModel?.submodels
+            {order?.order_model?.submodels
               ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
               ?.specification_categories?.map((spec) => (
                 <SelectItem key={spec?.id} value={spec?.id}>
