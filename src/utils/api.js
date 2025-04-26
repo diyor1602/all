@@ -22,11 +22,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    const originalRequest = error.config;
+
+    // Ignore redirect if it was a login request
+    if (
+      (error.response?.status === 401 || error.response?.status === 403) &&
+      !originalRequest.url.includes("/login/")
+    ) {
       // Clear local storage
       localStorage.clear();
 
-      // Redirect using window.location
+      // Redirect to login page
       setTimeout(() => {
         window.location.href = "/";
       }, 100);

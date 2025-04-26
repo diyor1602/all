@@ -92,26 +92,6 @@ export const AuthProvider = ({ children }) => {
     navigate("/");
   };
 
-  useEffect(() => {
-    const checkToken = () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const decodedToken = JSON.parse(atob(token.split(".")[1]));
-          if (decodedToken.exp * 1000 <= Date.now()) {
-            logout();
-          }
-        } catch {
-          logout();
-        }
-      }
-    };
-
-    checkToken(); // Check immediately
-    const interval = setInterval(checkToken, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
