@@ -69,9 +69,9 @@ const Orders = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 py-4">
-        <div className="relative">
+    <div className="container mx-auto space-y-6">
+      <div className="sticky top-0 z-10 py-4">
+        <div className="relative bg-white rounded-md">
           <Search
             className="absolute left-3 top-2.5 text-muted-foreground"
             size={15}
@@ -80,7 +80,7 @@ const Orders = () => {
             placeholder="Qidirish..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 w-full"
+            className="pl-10 w-full bg-white"
           />
         </div>
       </div>
