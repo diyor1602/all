@@ -18,6 +18,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString("ru-RU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const item = {
   hidden: { y: 20, opacity: 0 },
   show: { y: 0, opacity: 1 },
@@ -139,114 +149,137 @@ const Orders = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredOrders.map((order) => (
-            <motion.div key={order.id} variants={item} whileHover={{ y: -5 }}>
-              <Card className="overflow-hidden rounded-xl hover:shadow-xl transition-all duration-300 border-gray-200 shadow-md max-w-md bg-white">
-                {/* Status indicator with gradient */}
-                <div className={`h-2 ${statuses[order.status]?.color}`} />
+          {filteredOrders
+            .sort((b, a) => {
+              // First, prioritize printing status
+              if (b.status === "printing" && a.status !== "printing") return -1;
+              if (a.status === "printing" && b.status !== "printing") return 1;
 
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <div
-                      className={`flex items-center gap-2 ${
-                        statuses[order?.status]?.secondaryBg
-                      } px-3 py-1.5 rounded-lg`}
-                    >
-                      <Tag
-                        size={16}
-                        className={statuses[order?.status]?.textColor}
-                      />
-                      <span
-                        className={`${
-                          statuses[order?.status]?.textColor
-                        } font-bold`}
+              // Then sort by planned time
+              return (
+                new Date(b.orderPrintingTimes?.planned_time) -
+                new Date(a.orderPrintingTimes?.planned_time)
+              );
+            })
+            .map((order) => (
+              <motion.div key={order.id} variants={item} whileHover={{ y: -5 }}>
+                <Card className="overflow-hidden rounded-xl hover:shadow-xl transition-all duration-300 border-gray-200 shadow-md max-w-md bg-white">
+                  {/* Status indicator with gradient */}
+                  <div className={`h-2 ${statuses[order.status]?.color}`} />
+
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <div
+                        className={`flex items-center gap-2 ${
+                          statuses[order?.status]?.secondaryBg
+                        } px-3 py-1.5 rounded-lg`}
                       >
-                        #{order?.id}
-                      </span>
+                        <Tag
+                          size={16}
+                          className={statuses[order?.status]?.textColor}
+                        />
+                        <span
+                          className={`${
+                            statuses[order?.status]?.textColor
+                          } font-bold`}
+                        >
+                          #{order?.id}
+                        </span>
+                      </div>
+
+                      <Badge
+                        className={`${
+                          statuses[order?.status]?.color
+                        } px-3 py-1 font-medium rounded-full shadow-sm hover:${
+                          statuses[order?.status]?.color
+                        } hover:opacity-90`}
+                      >
+                        {statuses[order?.status]?.text || "Unknown"}
+                      </Badge>
                     </div>
 
-                    <Badge
+                    {/* Order name with subtle background */}
+                    <div
                       className={`${
-                        statuses[order?.status]?.color
-                      } px-3 py-1 font-medium rounded-full shadow-sm hover:${
-                        statuses[order?.status]?.color
-                      } hover:opacity-90`}
+                        statuses[order?.status]?.border
+                      } mb-4 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
                     >
-                      {statuses[order?.status]?.text || "Unknown"}
-                    </Badge>
-                  </div>
-
-                  {/* Order name with subtle background */}
-                  <div
-                    className={`${
-                      statuses[order?.status]?.border
-                    } mb-4 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
-                  >
-                    <h3 className="text-lg font-bold text-gray-800 truncate">
-                      {order?.name}
-                    </h3>
-                  </div>
-                  <div
-                    className={`${
-                      statuses[order?.status]?.border
-                    } mb-4 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
-                  >
-                    <h3 className="text-lg font-bold text-gray-800 truncate">
-                      {order?.orderModel?.material?.name || "-"}
-                    </h3>
-                  </div>
-
-                  {/* Quantity with highlight - CHANGED FROM BLUE TO PURPLE */}
-                  <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold text-gray-800 truncate">
+                        {order?.name}
+                      </h3>
+                    </div>
                     <div
-                      className={`flex items-center gap-2 ${
-                        statuses[order?.status]?.secondaryBg
-                      } px-4 py-2 rounded-full`}
+                      className={`${
+                        statuses[order?.status]?.border
+                      } mb-4 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
                     >
-                      <Package
-                        size={18}
-                        className={statuses[order?.status]?.textColor}
-                      />
-                      <span
-                        className={`${
-                          statuses[order?.status]?.textColor
-                        } font-bold text-lg`}
-                      >
-                        {order?.quantity}
-                      </span>
-                      <span
-                        className={`${
-                          statuses[order?.status]?.textColor
-                        } text-lg`}
-                      >
-                        ta
-                      </span>
+                      <h3 className="text-lg font-bold text-gray-800 truncate">
+                        {order?.orderModel?.material?.name || "-"}
+                      </h3>
                     </div>
 
-                    {/* Model pill */}
-                    <Badge
-                      variant="outline"
-                      className="bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5"
-                    >
-                      <Box size={14} className="text-gray-500" />
-                      {order.orderModel?.model?.name}
-                    </Badge>
-                  </div>
+                    {/* Quantity with highlight - CHANGED FROM BLUE TO PURPLE */}
+                    <div className="flex justify-between items-center mb-4">
+                      <div
+                        className={`flex items-center gap-2 ${
+                          statuses[order?.status]?.secondaryBg
+                        } px-4 py-2 rounded-full`}
+                      >
+                        <Package
+                          size={18}
+                          className={statuses[order?.status]?.textColor}
+                        />
+                        <span
+                          className={`${
+                            statuses[order?.status]?.textColor
+                          } font-bold text-lg`}
+                        >
+                          {order?.quantity}
+                        </span>
+                        <span
+                          className={`${
+                            statuses[order?.status]?.textColor
+                          } text-lg`}
+                        >
+                          ta
+                        </span>
+                      </div>
 
-                  {/* Button with gradient */}
-                  <Button
-                    className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${
-                      statuses[order.status]?.color
-                    } hover:opacity-90 hover:${statuses[order.status]?.color}`}
-                    onClick={() => navigate(`/constructor/orders/${order.id}`)}
-                  >
-                    Batafsil
-                    <ChevronRight size={18} />
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                      {/* Model pill */}
+                      <Badge
+                        variant="outline"
+                        className="bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5"
+                      >
+                        <Box size={14} className="text-gray-500" />
+                        {order.orderModel?.model?.name}
+                      </Badge>
+                    </div>
+
+                    <div className="text-gray-500 bg-gray-50 p-3 rounded-lg flex items-center justify-between">
+                      <div>Muddat:</div>
+                      <div>
+                        {formatDate(order?.orderPrintingTimes?.planned_time)}
+                      </div>
+                    </div>
+
+                    {/* Button with gradient */}
+                    <Button
+                      className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${
+                        statuses[order.status]?.color
+                      } hover:opacity-90 hover:${
+                        statuses[order.status]?.color
+                      }`}
+                      onClick={() =>
+                        navigate(`/constructor/orders/${order.id}`)
+                      }
+                    >
+                      Batafsil
+                      <ChevronRight size={18} />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
         </div>
       )}
     </div>
