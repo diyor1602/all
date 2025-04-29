@@ -20,14 +20,25 @@ import {
   XCircle,
   Edit2,
   Loader2,
-  ImagePlus,
   X,
   ChevronDown,
   Camera,
-  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+
+const fullScreenStyle = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: "black",
+  zIndex: 50,
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+};
 
 const OrderView = () => {
   const { toast } = useToast();
@@ -658,32 +669,51 @@ const OrderView = () => {
                     )}
                   </div>
                 ) : isCameraOpen ? (
-                  <div className="relative rounded-lg overflow-hidden">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                    <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="bg-white hover:bg-gray-100"
-                        onClick={takePhoto}
-                      >
-                        Rasmga olish
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={stopCamera}
-                      >
-                        Bekor qilish
-                      </Button>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={fullScreenStyle}
+                  >
+                    <div className="relative h-full flex flex-col">
+                      {/* Close button */}
+                      <div className="absolute top-4 right-4 z-10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full bg-black/50 text-white hover:bg-black/70"
+                          onClick={stopCamera}
+                        >
+                          <X className="h-6 w-6" />
+                        </Button>
+                      </div>
+
+                      {/* Camera preview */}
+                      <div className="flex-1 relative">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Camera controls */}
+                      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                        <div className="flex items-center justify-center gap-4">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className="rounded-full w-16 h-16 p-0 border-4 border-white text-white hover:bg-white/20 backdrop-blur-sm"
+                            onClick={takePhoto}
+                          >
+                            <div className="w-10 h-10 rounded-full bg-white" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ) : (
                   <div className="relative rounded-lg overflow-hidden group">
                     <img
