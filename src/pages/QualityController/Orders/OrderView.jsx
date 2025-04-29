@@ -598,7 +598,7 @@ const OrderView = () => {
                         size="sm"
                         onClick={removeImage}
                       >
-                        O'chirihs
+                        O'chirish
                       </Button>
                     </div>
                     <input
