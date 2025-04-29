@@ -49,6 +49,7 @@ const OrderView = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isCameraInitializing, setIsCameraInitializing] = useState(false);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
@@ -268,6 +269,7 @@ const OrderView = () => {
   };
 
   const startCamera = async () => {
+    setIsCameraInitializing(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -276,15 +278,40 @@ const OrderView = () => {
           height: { ideal: 720 },
         },
       });
-      videoRef.current.srcObject = stream;
+
       streamRef.current = stream;
       setIsCameraOpen(true);
+
+      // Wait for next render when video element will be available
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+
+        // Wait for video to be ready
+        await new Promise((resolve) => {
+          videoRef.current.onloadedmetadata = () => {
+            resolve();
+          };
+        });
+      } else {
+        // If video element is still not available, cleanup
+        stream.getTracks().forEach((track) => track.stop());
+        throw new Error("Video element not available after stream");
+      }
     } catch (err) {
+      console.error("Camera error:", err);
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description: "Kamerani ishga tushirishda xatolik yuz berdi",
+        description:
+          err.name === "NotAllowedError"
+            ? "Kamerani ishlatish uchun ruxsat berilmadi"
+            : "Kamerani ishga tushirishda xatolik yuz berdi",
       });
+      stopCamera();
+    } finally {
+      setIsCameraInitializing(false);
     }
   };
 
@@ -292,9 +319,11 @@ const OrderView = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
-      videoRef.current.srcObject = null;
-      setIsCameraOpen(false);
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraOpen(false);
   };
 
   const takePhoto = () => {
@@ -612,10 +641,21 @@ const OrderView = () => {
                     className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
                     onClick={startCamera}
                   >
-                    <Camera className="w-10 h-10 mx-auto mb-2 text-gray-400" />
-                    <p className="text-sm text-gray-500">
-                      Rasmga olish uchun bosing
-                    </p>
+                    {isCameraInitializing ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="w-10 h-10 animate-spin text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">
+                          Kamera ishga tushmoqda...
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <Camera className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-gray-500">
+                          Rasmga olish uchun bosing
+                        </p>
+                      </>
+                    )}
                   </div>
                 ) : isCameraOpen ? (
                   <div className="relative rounded-lg overflow-hidden">
@@ -623,6 +663,7 @@ const OrderView = () => {
                       ref={videoRef}
                       autoPlay
                       playsInline
+                      muted
                       className="w-full h-48 object-cover rounded-lg"
                     />
                     <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
