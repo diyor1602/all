@@ -196,7 +196,7 @@ const OrderView = () => {
           <CardContent>
             <div className="grid gap-4">
               {order?.package_outcomes?.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[300px] overflow-y-auto">
                   {order.package_outcomes.map((outcome, index) => (
                     <div key={index} className="p-4 rounded-lg border bg-card">
                       <div className="text-sm text-muted-foreground">
