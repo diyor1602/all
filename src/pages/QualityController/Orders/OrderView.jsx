@@ -174,6 +174,23 @@ const OrderView = () => {
     }
   };
 
+  const resetImageAndForm = () => {
+    setImagePreview(null);
+    setMinusForm({
+      order_sub_model_id: null,
+      descriptions: [],
+      comment: "",
+      status: false,
+    });
+  };
+
+  const handleDialogClose = (open) => {
+    setMinusDialogOpen(open);
+    if (!open) {
+      resetImageAndForm();
+    }
+  };
+
   const handleMinus = async () => {
     minusForm.order_sub_model_id = order?.order_model?.submodels[0]?.id;
     if (!minusForm.order_sub_model_id || !minusForm.descriptions.length) {
@@ -230,15 +247,8 @@ const OrderView = () => {
         },
       });
 
-      // Reset form state
-      setMinusForm({
-        order_sub_model_id: null,
-        descriptions: [],
-        comment: "",
-        status: false,
-      });
-
-      // Close dialog only after successful submission
+      // Reset form and close dialog
+      resetImageAndForm();
       setMinusDialogOpen(false);
 
       // Refresh data
@@ -592,7 +602,7 @@ const OrderView = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={minusDialogOpen} onOpenChange={setMinusDialogOpen}>
+      <Dialog open={minusDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">Nosozlik qo'shish</DialogTitle>
