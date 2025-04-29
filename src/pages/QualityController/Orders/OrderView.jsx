@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,6 +23,8 @@ import {
   ImagePlus,
   X,
   ChevronDown,
+  Camera,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,6 +48,9 @@ const OrderView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
 
   const [minusForm, setMinusForm] = useState({
     order_sub_model_id: null,
@@ -262,16 +267,59 @@ const OrderView = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setMinusForm({ ...minusForm, image: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      });
+      videoRef.current.srcObject = stream;
+      streamRef.current = stream;
+      setIsCameraOpen(true);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Kamerani ishga tushirishda xatolik yuz berdi",
+      });
     }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      videoRef.current.srcObject = null;
+      setIsCameraOpen(false);
+    }
+  };
+
+  const takePhoto = () => {
+    if (!videoRef.current) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(videoRef.current, 0, 0);
+
+    canvas.toBlob(
+      (blob) => {
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+        setMinusForm({ ...minusForm, image: file });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+        stopCamera();
+      },
+      "image/jpeg",
+      0.8
+    );
   };
 
   const removeImage = () => {
@@ -281,6 +329,12 @@ const OrderView = () => {
 
   useEffect(() => {
     fetchOrderAndQuality();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
   }, []);
 
   if (isLoading) {
@@ -553,27 +607,41 @@ const OrderView = () => {
             />
             <div className="mt-6 space-y-4">
               <div className="relative">
-                {!imagePreview ? (
+                {!imagePreview && !isCameraOpen ? (
                   <div
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer group"
-                    onClick={() =>
-                      document.getElementById("image-input").click()
-                    }
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
+                    onClick={startCamera}
                   >
-                    <ImagePlus className="w-10 h-10 mx-auto mb-2 text-gray-400 group-hover:text-primary transition-colors" />
-                    <p className="text-sm text-gray-500 group-hover:text-gray-600">
-                      Click to upload image
+                    <Camera className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-500">
+                      Rasmga olish uchun bosing
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      PNG, JPG up to 10MB
-                    </p>
-                    <input
-                      id="image-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
+                  </div>
+                ) : isCameraOpen ? (
+                  <div className="relative rounded-lg overflow-hidden">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-48 object-cover rounded-lg"
                     />
+                    <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="bg-white hover:bg-gray-100"
+                        onClick={takePhoto}
+                      >
+                        Rasmga olish
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={stopCamera}
+                      >
+                        Bekor qilish
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="relative rounded-lg overflow-hidden group">
@@ -587,11 +655,9 @@ const OrderView = () => {
                         variant="secondary"
                         size="sm"
                         className="bg-white hover:bg-gray-100"
-                        onClick={() =>
-                          document.getElementById("image-input").click()
-                        }
+                        onClick={startCamera}
                       >
-                        O'zgartirish
+                        Qayta olish
                       </Button>
                       <Button
                         variant="destructive"
@@ -601,13 +667,6 @@ const OrderView = () => {
                         O'chirish
                       </Button>
                     </div>
-                    <input
-                      id="image-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
                   </div>
                 )}
               </div>
