@@ -7,7 +7,7 @@ const PackageMaster = () => {
     <Routes>
       <Route path="*" element={<Navigate to="/home" replace />} />
       <Route path="orders" element={<Orders />} />
-      <Route path="orderView" element={<OrderView />} />
+      <Route path="order/view/:id" element={<OrderView />} />
     </Routes>
   );
 };

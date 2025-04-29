@@ -123,7 +123,7 @@ const Orders = () => {
           filteredOrders.map((order, i) => (
             <motion.div key={i} variants={item}>
               <Link
-                to={`/package-master/orders/${order.id}`}
+                to={`/packageMaster/order/view/${order.id}`}
                 className="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-100 transform transition-all duration-200 hover:-translate-y-1"
               >
                 <div className="flex items-center justify-between mb-4">
