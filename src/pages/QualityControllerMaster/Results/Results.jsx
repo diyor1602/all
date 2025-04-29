@@ -80,10 +80,10 @@ const Results = () => {
 
       <div className="space-y-4">
         {loading ? (
-          <div className="flex justify-center items-center h-[90vh]">
+          <div className="flex justify-center items-center h-[70vh]">
             <Loader2 className="text-primary animate-spin" size={40} />
           </div>
-        ) : (
+        ) : results.length > 0 ? (
           results.map((result) => (
             <Card key={result.id} className="w-full">
               <CardHeader className="pb-2">
@@ -183,6 +183,10 @@ const Results = () => {
               </CardContent>
             </Card>
           ))
+        ) : (
+          <div className="flex justify-center items-center h-[70vh]">
+            <p className="text-gray-500">Natijalar topilmadi</p>
+          </div>
         )}
       </div>
     </div>
