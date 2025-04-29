@@ -14,8 +14,18 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { PlusCircle } from "lucide-react";
+import {
+  PlusCircle,
+  CheckCircle,
+  XCircle,
+  Edit2,
+  Loader2,
+  ImagePlus,
+  X,
+  ChevronDown,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 const OrderView = () => {
   const { toast } = useToast();
@@ -33,6 +43,9 @@ const OrderView = () => {
   const [editingQualityId, setEditingQualityId] = useState(null);
   const [qualityName, setQualityName] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const [minusForm, setMinusForm] = useState({
     order_sub_model_id: null,
@@ -43,6 +56,7 @@ const OrderView = () => {
 
   const fetchOrderAndQuality = async () => {
     try {
+      setIsLoading(true);
       const [orderRes, descRes] = await Promise.all([
         api.get(`/qualityController/orders/${id}`),
         api.get(`/qualityController/qualityDescription`),
@@ -64,6 +78,8 @@ const OrderView = () => {
         title: "Error",
         description: "Failed to fetch data",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -246,106 +262,210 @@ const OrderView = () => {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setMinusForm({ ...minusForm, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setMinusForm({ ...minusForm, image: null });
+    setImagePreview(null);
+  };
+
   useEffect(() => {
     fetchOrderAndQuality();
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <div className="bg-white rounded-2xl shadow-md p-6 mt-6">
-        <h2 className="text-xl font-semibold mb-4">Buyurtma Tafsilotlari</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4 text-sm text-gray-700">
-          <div>
-            <span className="font-medium">Nomi:</span> {order?.name}
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl shadow-lg mt-6"
+      >
+        <motion.div
+          className="p-6 cursor-pointer select-none"
+          onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-gray-800">
+              Buyurtma Tafsilotlari
+            </h2>
+            <motion.div
+              animate={{ rotate: isDetailsOpen ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="w-6 h-6 text-gray-500" />
+            </motion.div>
           </div>
-          <div>
-            <span className="font-medium">Submodel:</span>{" "}
-            {order?.order_model?.submodels[0]?.submodel?.name}
-          </div>
-          <div>
-            <span className="font-medium">Status:</span>{" "}
-            {statuses[order?.status]?.text}
-          </div>
-          <div>
-            <span className="font-medium">Miqdori:</span> {order?.quantity}
-          </div>
-          <div>
-            note: null,
-            <span className="font-medium">Model:</span>{" "}
-            {order?.order_model?.model?.name}
-          </div>
-          <div>
-            <span className="font-medium">Material:</span>{" "}
-            {order?.order_model?.material?.name || "-"}
-          </div>
-          <div>
-            <span className="font-medium">Tikkan gurux:</span>{" "}
-            {order?.order_model?.submodels[0]?.group?.group?.name || "-"}
-          </div>
-          <div>
-            <span className="font-medium">O'lchamlar:</span>{" "}
-            {order?.order_model?.sizes
-              ?.map((size) => size.size.name)
-              .join(", ")}
-          </div>
-        </div>
-      </div>
+        </motion.div>
 
-      <div className="mt-10 py-10 bg-white flex items-center justify-center gap-3">
-        <div className="flex items-center justify-center w-full">
-          <div
-            onClick={() => setPlusDialogOpen(true)}
-            className="flex items-center justify-center bg-green-100 text-green-500 px-10 min-w-40 h-40 text-7xl font-bold cursor-pointer"
+        <AnimatePresence initial={false}>
+          {isDetailsOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="px-6 pb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                  {[
+                    { label: "Nomi", value: order?.name },
+                    {
+                      label: "Submodel",
+                      value: order?.order_model?.submodels[0]?.submodel?.name,
+                    },
+                    { label: "Status", value: statuses[order?.status]?.text },
+                    { label: "Miqdori", value: order?.quantity },
+                    { label: "Model", value: order?.order_model?.model?.name },
+                    {
+                      label: "Material",
+                      value: order?.order_model?.material?.name || "-",
+                    },
+                    {
+                      label: "Tikkan gurux",
+                      value:
+                        order?.order_model?.submodels[0]?.group?.group?.name ||
+                        "-",
+                    },
+                    {
+                      label: "O'lchamlar",
+                      value: order?.order_model?.sizes
+                        ?.map((size) => size.size.name)
+                        .join(", "),
+                    },
+                  ].map((item, index) => (
+                    <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                      <span className="font-medium text-gray-600 block mb-1">
+                        {item.label}:
+                      </span>
+                      <span className="text-gray-800">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mt-8 py-8 bg-white rounded-2xl shadow-lg"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-6">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="relative"
           >
-            {qualityCheckResults?.qualityChecksTrue ?? 0}
-          </div>
-        </div>
+            <button
+              onClick={() => setPlusDialogOpen(true)}
+              className="w-full h-32 sm:h-40 bg-green-50 hover:bg-green-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
+            >
+              <CheckCircle className="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" />
+              <span className="text-4xl sm:text-5xl font-bold text-green-500">
+                {qualityCheckResults?.qualityChecksTrue ?? 0}
+              </span>
+              <span className="text-sm text-green-600">Sifatli</span>
+            </button>
+          </motion.div>
 
-        <div className="flex items-center justify-center w-full">
-          <div
-            className="flex items-center justify-center bg-red-100 text-red-500 px-10 min-w-40 h-40 text-7xl font-bold cursor-pointer"
-            onClick={() => setMinusDialogOpen(true)}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="relative"
           >
-            {qualityCheckResults?.qualityChecksFalse ?? 0}
-          </div>
+            <button
+              onClick={() => setMinusDialogOpen(true)}
+              className="w-full h-32 sm:h-40 bg-red-50 hover:bg-red-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
+            >
+              <XCircle className="w-8 h-8 text-red-500 group-hover:scale-110 transition-transform" />
+              <span className="text-4xl sm:text-5xl font-bold text-red-500">
+                {qualityCheckResults?.qualityChecksFalse ?? 0}
+              </span>
+              <span className="text-sm text-red-600">Nosoz</span>
+            </button>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="mt-10 pt-10 pb-4 px-4 bg-white flex flex-col gap-2">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Nosozliklar</h2>
-          <Button onClick={() => setQualityDescriptionDialogOpen(true)}>
-            <PlusCircle /> Qo'shish
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mt-8 p-6 bg-white rounded-2xl shadow-lg"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-800">Nosozliklar</h2>
+          <Button
+            onClick={() => setQualityDescriptionDialogOpen(true)}
+            className="flex items-center gap-2"
+            size="sm"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span className="hidden sm:inline">Qo'shish</span>
           </Button>
         </div>
-        <div className="flex flex-wrap gap-3 items-center">
-          {qualityDescription?.map((item, i) => (
-            <div
-              key={i}
-              className="px-2 py-1 bg-gray-100 rounded flex items-center gap-2"
-              onClick={() => handleEditClick(item)}
-            >
-              {item.description}
-            </div>
-          ))}
+        <div className="flex flex-wrap gap-3">
+          <AnimatePresence>
+            {qualityDescription?.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                whileHover={{ scale: 1.05 }}
+                className="group relative"
+              >
+                <div
+                  onClick={() => handleEditClick(item)}
+                  className="px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <span>{item.description}</span>
+                  <Edit2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Tahrirlash</DialogTitle>
-            <div>
+            <DialogTitle className="text-xl">Tahrirlash</DialogTitle>
+            <div className="mt-4">
               <Input
                 type="text"
                 placeholder="Yangi nomi"
                 value={editQualityName}
                 onChange={(e) => setEditQualityName(e.target.value)}
+                className="w-full"
               />
             </div>
           </DialogHeader>
-          <DialogFooter>
-            <div className="flex items-center gap-2 justify-end">
+          <DialogFooter className="mt-6">
+            <div className="flex items-center gap-2 justify-end w-full">
               <DialogClose asChild>
                 <Button variant="outline">Bekor qilish</Button>
               </DialogClose>
@@ -358,13 +478,15 @@ const OrderView = () => {
       </Dialog>
 
       <Dialog open={plusDialogOpen} onOpenChange={setPlusDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Tasdiqlaysizmi?</DialogTitle>
-            <div>Mahsulot sifatli ekanligini tasdiqlashga rozimisiz?</div>
+            <DialogTitle className="text-xl">Tasdiqlaysizmi?</DialogTitle>
+            <DialogDescription className="mt-2">
+              Mahsulot sifatli ekanligini tasdiqlashga rozimisiz?
+            </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <div className="flex items-center gap-2 justify-end">
+          <DialogFooter className="mt-6">
+            <div className="flex items-center gap-2 justify-end w-full">
               <DialogClose asChild>
                 <Button variant="outline">Yo'q</Button>
               </DialogClose>
@@ -377,39 +499,47 @@ const OrderView = () => {
       </Dialog>
 
       <Dialog open={minusDialogOpen} onOpenChange={setMinusDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Nosozlik qo'shish</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl">Nosozlik qo'shish</DialogTitle>
+            <DialogDescription className="mt-2">
               Brak mahsulotlar shu yerda kiritiladi
             </DialogDescription>
-            <div className="flex flex-wrap gap-2 py-4">
+          </DialogHeader>
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2">
               {qualityDescription?.map((item, i) => (
-                <div
+                <motion.div
                   key={i}
-                  className={cn(
-                    "px-2 py-1 bg-gray-100 rounded flex items-center gap-2",
-                    minusForm.descriptions.includes(item) &&
-                      "bg-primary text-white"
-                  )}
-                  onClick={() => {
-                    if (minusForm.descriptions.includes(item)) {
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div
+                    className={cn(
+                      "px-3 py-2 rounded-lg flex items-center gap-2 cursor-pointer transition-all",
+                      minusForm.descriptions.includes(item)
+                        ? "bg-primary text-white"
+                        : "bg-gray-50 hover:bg-gray-100"
+                    )}
+                    onClick={() => {
+                      if (minusForm.descriptions.includes(item)) {
+                        setMinusForm({
+                          ...minusForm,
+                          descriptions: minusForm.descriptions.filter(
+                            (desc) => desc !== item
+                          ),
+                        });
+                        return;
+                      }
                       setMinusForm({
                         ...minusForm,
-                        descriptions: minusForm.descriptions.filter(
-                          (desc) => desc !== item
-                        ),
+                        descriptions: [...minusForm.descriptions, item],
                       });
-                      return;
-                    }
-                    setMinusForm({
-                      ...minusForm,
-                      descriptions: [...minusForm.descriptions, item],
-                    });
-                  }}
-                >
-                  <div>{item.description}</div>
-                </div>
+                    }}
+                  >
+                    <div>{item.description}</div>
+                  </div>
+                </motion.div>
               ))}
             </div>
             <Input
@@ -421,25 +551,86 @@ const OrderView = () => {
                 setMinusForm({ ...minusForm, comment: e.target.value })
               }
             />
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                setMinusForm({ ...minusForm, image: e.target.files[0] })
-              }
-            />
-          </DialogHeader>
-          <DialogFooter>
-            <div className="flex items-center gap-2 justify-end">
+            <div className="mt-6 space-y-4">
+              <div className="relative">
+                {!imagePreview ? (
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer group"
+                    onClick={() =>
+                      document.getElementById("image-input").click()
+                    }
+                  >
+                    <ImagePlus className="w-10 h-10 mx-auto mb-2 text-gray-400 group-hover:text-primary transition-colors" />
+                    <p className="text-sm text-gray-500 group-hover:text-gray-600">
+                      Click to upload image
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      PNG, JPG up to 10MB
+                    </p>
+                    <input
+                      id="image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </div>
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden group">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="bg-white hover:bg-gray-100"
+                        onClick={() =>
+                          document.getElementById("image-input").click()
+                        }
+                      >
+                        O'zgartirish
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={removeImage}
+                      >
+                        O'chirihs
+                      </Button>
+                    </div>
+                    <input
+                      id="image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="mt-6">
+            <div className="flex items-center gap-2 justify-end w-full">
               <DialogClose asChild>
                 <Button variant="outline">Bekor qilish</Button>
               </DialogClose>
               <Button
-                type="submit"
                 onClick={() => handleMinus()}
                 disabled={isSending}
+                className="min-w-[120px]"
               >
-                {isSending ? "Yuborilmoqda..." : "Qo'shish"}
+                {isSending ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Yuborilmoqda...</span>
+                  </div>
+                ) : (
+                  "Qo'shish"
+                )}
               </Button>
             </div>
           </DialogFooter>
@@ -450,21 +641,21 @@ const OrderView = () => {
         open={qualityDescriptionDialogOpen}
         onOpenChange={setQualityDescriptionDialogOpen}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Qo'shish</DialogTitle>
-            <DialogDescription>{""}</DialogDescription>
-            <div>
-              <Input
-                type="text"
-                placeholder="Nomi"
-                value={qualityName}
-                onChange={(e) => setQualityName(e.target.value)}
-              />
-            </div>
+            <DialogTitle className="text-xl">Qo'shish</DialogTitle>
           </DialogHeader>
-          <DialogFooter>
-            <div className="flex items-center gap-2 justify-end">
+          <div className="mt-4">
+            <Input
+              type="text"
+              placeholder="Nomi"
+              value={qualityName}
+              onChange={(e) => setQualityName(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter className="mt-6">
+            <div className="flex items-center gap-2 justify-end w-full">
               <DialogClose asChild>
                 <Button variant="outline">Bekor qilish</Button>
               </DialogClose>
