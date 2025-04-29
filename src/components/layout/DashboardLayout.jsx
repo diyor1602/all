@@ -11,6 +11,7 @@ import TransportLayout from "./DashboardLayouts/TransportLayout";
 import WarehouseManagerLayout from "./DashboardLayouts/WarehouseManagerLayout";
 import QualityControllerMasterLayout from "./DashboardLayouts/QualityControllerMasterLayout";
 import QualityControllerLayout from "./DashboardLayouts/QualityControllerLayout";
+import PackageMasterLayout from "./DashboardLayouts/PackageMasterLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -26,6 +27,7 @@ const layouts = {
   transport: TransportLayout,
   qualityControllerMaster: QualityControllerMasterLayout,
   qualityController: QualityControllerLayout,
+  packageMaster: PackageMasterLayout,
   nolayout: NoLayout,
 };
 

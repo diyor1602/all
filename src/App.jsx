@@ -22,6 +22,7 @@ import Transport from "./pages/Transport/Transport";
 import WarehouseManager from "./pages/WarehouseManager/WarehouseManager";
 import QualityControllerMaster from "./pages/QualityControllerMaster/QualityControllerMaster";
 import QualityController from "./pages/QualityController/QualityController";
+import PackageMaster from "./pages/PackageMaster/PackageMaster";
 import Tv from "./pages/Tv/Tv";
 
 const ProtectedRoute = () => {
@@ -67,6 +68,7 @@ function App() {
             element={<QualityControllerMaster />}
           />
           <Route path="/qualityController/*" element={<QualityController />} />
+          <Route path="/packageMaster/*" element={<PackageMaster />} />
           <Route path="/tv/*" element={<Tv />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
