@@ -36,7 +36,8 @@ const OrderView = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: error.response.data.message,
+        description:
+          error.response.data.message || "Buyurtma olishda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
