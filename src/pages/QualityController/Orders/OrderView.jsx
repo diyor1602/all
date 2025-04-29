@@ -408,7 +408,7 @@ const OrderView = () => {
         >
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold text-gray-800">
-              Buyurtma Tafsilotlari
+              {order?.order_model?.submodels[0]?.submodel?.name || "Buyurtma"}
             </h2>
             <motion.div
               animate={{ rotate: isDetailsOpen ? 180 : 0 }}
