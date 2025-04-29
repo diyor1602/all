@@ -5,6 +5,7 @@ import { statuses } from "@/lib/status";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "react-router-dom";
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("ru-RU", {
@@ -98,7 +99,8 @@ const Orders = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredOrders.map((order, i) => (
-            <div
+            <Link
+              to={`/qualityController/orders/${order.id}`}
               key={i}
               className="flex flex-col gap-3 bg-white p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow"
             >
@@ -164,7 +166,7 @@ const Orders = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
