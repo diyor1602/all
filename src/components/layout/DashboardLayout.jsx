@@ -12,6 +12,7 @@ import WarehouseManagerLayout from "./DashboardLayouts/WarehouseManagerLayout";
 import QualityControllerMasterLayout from "./DashboardLayouts/QualityControllerMasterLayout";
 import QualityControllerLayout from "./DashboardLayouts/QualityControllerLayout";
 import PackageMasterLayout from "./DashboardLayouts/PackageMasterLayout";
+import InternalAccountantLayout from "./DashboardLayouts/InternalAccountantLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -28,6 +29,7 @@ const layouts = {
   qualityControllerMaster: QualityControllerMasterLayout,
   qualityController: QualityControllerLayout,
   packageMaster: PackageMasterLayout,
+  internalAccountant: InternalAccountantLayout,
   nolayout: NoLayout,
 };
 

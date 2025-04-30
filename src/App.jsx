@@ -23,6 +23,7 @@ import WarehouseManager from "./pages/WarehouseManager/WarehouseManager";
 import QualityControllerMaster from "./pages/QualityControllerMaster/QualityControllerMaster";
 import QualityController from "./pages/QualityController/QualityController";
 import PackageMaster from "./pages/PackageMaster/PackageMaster";
+import InternalAccountant from "./pages/InternalAccountant/InternalAccountant";
 import Tv from "./pages/Tv/Tv";
 
 const ProtectedRoute = () => {
@@ -69,6 +70,10 @@ function App() {
           />
           <Route path="/qualityController/*" element={<QualityController />} />
           <Route path="/packageMaster/*" element={<PackageMaster />} />
+          <Route
+            path="/internalAccountant/*"
+            element={<InternalAccountant />}
+          />
           <Route path="/tv/*" element={<Tv />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />

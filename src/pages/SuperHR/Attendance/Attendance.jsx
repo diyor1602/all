@@ -549,163 +549,165 @@ const Attendance = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredEmployees?.map((employee) => {
-              const attendanceRecord = attendance?.find(
-                (item) => item?.employee_id === employee?.id
-              );
-              return (
-                <tr key={employee.id}>
-                  <td className="p-1 border-2 text-center">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
-                      checked={selectedEmployees.includes(employee.id)}
-                      onChange={() => handleCheckboxChange(employee.id)}
-                    />
-                  </td>
-                  <td className="p-1 border-2 text-center">{employee?.id}</td>
-                  <td className="p-1 border-2">{employee?.name}</td>
-                  <td className="p-1 border-2 text-center">
-                    {attendanceRecord ? (
+            {filteredEmployees
+              ?.sort((a, b) => a.name.localeCompare(b.name))
+              ?.map((employee) => {
+                const attendanceRecord = attendance?.find(
+                  (item) => item?.employee_id === employee?.id
+                );
+                return (
+                  <tr key={employee.id}>
+                    <td className="p-1 border-2 text-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={selectedEmployees.includes(employee.id)}
+                        onChange={() => handleCheckboxChange(employee.id)}
+                      />
+                    </td>
+                    <td className="p-1 border-2 text-center">{employee?.id}</td>
+                    <td className="p-1 border-2">{employee?.name}</td>
+                    <td className="p-1 border-2 text-center">
+                      {attendanceRecord ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <span>
+                            {statusTranslation[attendanceRecord.status]}
+                          </span>
+                        </div>
+                      ) : // Only show "Keldi" button for today's date
+                      isToday ? (
+                        <Button
+                          size="sm"
+                          disabled={loading}
+                          onClick={() => openAttendanceDialog(employee.id)}
+                        >
+                          Keldi
+                        </Button>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="p-1 border-2 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <span>
-                          {statusTranslation[attendanceRecord.status]}
-                        </span>
+                        {attendanceRecord?.check_in ? (
+                          <>
+                            <span>
+                              {new Date(
+                                attendanceRecord.check_in
+                              ).toLocaleTimeString("ru-RU", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            {attendanceRecord.check_in_image && (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <ImageIcon className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                  <DialogHeader>
+                                    <DialogTitle>
+                                      {employee?.name} - Keldi rasmi
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                      {new Date(
+                                        attendanceRecord.date
+                                      ).toLocaleDateString("ru-RU")}{" "}
+                                      -
+                                      {new Date(
+                                        attendanceRecord.check_in
+                                      ).toLocaleTimeString("ru-RU")}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div>
+                                    <img
+                                      src={
+                                        attendanceRecord.check_in_image ||
+                                        "/placeholder.svg" ||
+                                        "/placeholder.svg" ||
+                                        "/placeholder.svg"
+                                      }
+                                      alt="Check-in image"
+                                      className="w-full rounded-md border"
+                                    />
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+                          </>
+                        ) : (
+                          "-"
+                        )}
                       </div>
-                    ) : // Only show "Keldi" button for today's date
-                    isToday ? (
-                      <Button
-                        size="sm"
-                        disabled={loading}
-                        onClick={() => openAttendanceDialog(employee.id)}
-                      >
-                        Keldi
-                      </Button>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className="p-1 border-2 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      {attendanceRecord?.check_in ? (
-                        <>
-                          <span>
-                            {new Date(
-                              attendanceRecord.check_in
-                            ).toLocaleTimeString("ru-RU", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          {attendanceRecord.check_in_image && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <ImageIcon className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                  <DialogTitle>
-                                    {employee?.name} - Keldi rasmi
-                                  </DialogTitle>
-                                  <DialogDescription>
-                                    {new Date(
-                                      attendanceRecord.date
-                                    ).toLocaleDateString("ru-RU")}{" "}
-                                    -
-                                    {new Date(
-                                      attendanceRecord.check_in
-                                    ).toLocaleTimeString("ru-RU")}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div>
-                                  <img
-                                    src={
-                                      attendanceRecord.check_in_image ||
-                                      "/placeholder.svg" ||
-                                      "/placeholder.svg" ||
-                                      "/placeholder.svg"
-                                    }
-                                    alt="Check-in image"
-                                    className="w-full rounded-md border"
-                                  />
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          )}
-                        </>
-                      ) : (
-                        "-"
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-1 border-2 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      {attendanceRecord?.check_out ? (
-                        <>
-                          <span>
-                            {new Date(
-                              attendanceRecord.check_out
-                            ).toLocaleTimeString("ru-RU", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          {attendanceRecord.check_out_image && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <ImageIcon className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                  <DialogTitle>
-                                    {employee?.name} - Ketdi rasmi
-                                  </DialogTitle>
-                                  <DialogDescription>
-                                    {new Date(
-                                      attendanceRecord.date
-                                    ).toLocaleDateString("ru-RU")}{" "}
-                                    -
-                                    {new Date(
-                                      attendanceRecord.check_out
-                                    ).toLocaleTimeString("ru-RU")}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div>
-                                  <img
-                                    src={
-                                      attendanceRecord.check_out_image ||
-                                      "/placeholder.svg" ||
-                                      "/placeholder.svg" ||
-                                      "/placeholder.svg"
-                                    }
-                                    alt="Check-out image"
-                                    className="w-full rounded-md border"
-                                  />
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          )}
-                        </>
-                      ) : (
-                        "-"
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td className="p-1 border-2 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        {attendanceRecord?.check_out ? (
+                          <>
+                            <span>
+                              {new Date(
+                                attendanceRecord.check_out
+                              ).toLocaleTimeString("ru-RU", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            {attendanceRecord.check_out_image && (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <ImageIcon className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                  <DialogHeader>
+                                    <DialogTitle>
+                                      {employee?.name} - Ketdi rasmi
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                      {new Date(
+                                        attendanceRecord.date
+                                      ).toLocaleDateString("ru-RU")}{" "}
+                                      -
+                                      {new Date(
+                                        attendanceRecord.check_out
+                                      ).toLocaleTimeString("ru-RU")}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div>
+                                    <img
+                                      src={
+                                        attendanceRecord.check_out_image ||
+                                        "/placeholder.svg" ||
+                                        "/placeholder.svg" ||
+                                        "/placeholder.svg"
+                                      }
+                                      alt="Check-out image"
+                                      className="w-full rounded-md border"
+                                    />
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+                          </>
+                        ) : (
+                          "-"
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
