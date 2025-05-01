@@ -243,7 +243,7 @@ const ItemView = () => {
               <table className="border-2 border-collapse whitespace-nowrap w-full bg-white shadow-md">
                 <thead>
                   <tr>
-                    <th className="border-2 p-1">N</th>
+                    <th className="border-2 p-1">Nº</th>
                     <th className="border-2 p-1">Nomi</th>
                     <th className="border-2 p-1">Amallar</th>
                     <th className="border-2 p-1">Rasmi</th>
@@ -318,7 +318,7 @@ const ItemView = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="9" className="border-2 p-4 text-center">
+                      <td colSpan="11" className="border-2 p-4 text-center">
                         Mahsulotlar topilmadi
                       </td>
                     </tr>
