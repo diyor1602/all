@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,45 +15,8 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  CheckCircle,
-  XCircle,
-  Loader2,
-  X,
-  ChevronDown,
-  Camera,
-  ChevronsUpDown,
-  Check,
-} from "lucide-react";
+import { CheckCircle, XCircle, Loader2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-
-const fullScreenStyle = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: "black",
-  zIndex: 50,
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-};
 
 const OrderView = () => {
   const { toast } = useToast();
@@ -63,24 +26,8 @@ const OrderView = () => {
   const [order, setOrder] = useState(null);
   const [plusDialogOpen, setPlusDialogOpen] = useState(false);
   const [qualityCheckResults, setQualityCheckResults] = useState(null);
-  const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [imagePreview, setImagePreview] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [isCameraInitializing, setIsCameraInitializing] = useState(false);
-  const [tarifications, setTarifications] = useState([]);
-  const [tarifOpen, setTarifOpen] = useState(false);
-  const [tarifValue, setTarifValue] = useState("");
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-
-  const [minusForm, setMinusForm] = useState({
-    order_sub_model_id: null,
-    tarification_id: null,
-    comment: "",
-    status: false,
-  });
 
   const fetchOrderAndQuality = async () => {
     try {
@@ -105,8 +52,8 @@ const OrderView = () => {
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch data",
+        title: "Xatolik",
+        description: "Ma'lumotlarni yuklashda xatolik",
       });
     } finally {
       setIsLoading(false);
@@ -148,117 +95,8 @@ const OrderView = () => {
     }
   };
 
-  const resetImageAndForm = () => {
-    setImagePreview(null);
-    setMinusForm({
-      order_sub_model_id: null,
-      tarification_id: null,
-      comment: "",
-      status: false,
-    });
-  };
-
-  const handleDialogClose = (open) => {
-    if (!open) {
-      resetImageAndForm();
-    }
-  };
-
-  const startCamera = async () => {
-    setIsCameraInitializing(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
-
-      streamRef.current = stream;
-      setIsCameraOpen(true);
-
-      // Wait for next render when video element will be available
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-
-        // Wait for video to be ready
-        await new Promise((resolve) => {
-          videoRef.current.onloadedmetadata = () => {
-            resolve();
-          };
-        });
-      } else {
-        // If video element is still not available, cleanup
-        stream.getTracks().forEach((track) => track.stop());
-        throw new Error("Video element not available after stream");
-      }
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description:
-          err.name === "NotAllowedError"
-            ? "Kamerani ishlatish uchun ruxsat berilmadi"
-            : "Kamerani ishga tushirishda xatolik yuz berdi",
-      });
-      stopCamera();
-    } finally {
-      setIsCameraInitializing(false);
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setIsCameraOpen(false);
-  };
-
-  const takePhoto = () => {
-    if (!videoRef.current) return;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(videoRef.current, 0, 0);
-
-    canvas.toBlob(
-      (blob) => {
-        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-        setMinusForm({ ...minusForm, image: file });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-        stopCamera();
-      },
-      "image/jpeg",
-      0.8
-    );
-  };
-
-  const removeImage = () => {
-    setMinusForm({ ...minusForm, image: null });
-    setImagePreview(null);
-  };
-
   useEffect(() => {
     fetchOrderAndQuality();
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
   }, []);
 
   if (isLoading) {

@@ -6,27 +6,7 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Loader2,
-  X,
-  Camera,
-  ChevronsUpDown,
-  Check,
-  Search,
-} from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Loader2, X, Camera, Check, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
