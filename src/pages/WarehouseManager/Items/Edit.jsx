@@ -37,6 +37,7 @@ const Edit = () => {
     price: "",
     currency_id: "",
     min_quantity: "",
+    lot: "",
     image: null,
   });
 
@@ -107,6 +108,7 @@ const Edit = () => {
         currency_id: response.data.item.currency?.id || "",
         image: response.data.item.image,
         min_quantity: response.data.item.min_quantity || 0,
+        lot: response.data.item.lot || "",
       });
 
       // If the item has an image, set the image preview
@@ -217,6 +219,7 @@ const Edit = () => {
         price: formData.price,
         currency_id: formData.currency_id,
         min_quantity: formData.min_quantity,
+        lot: formData.lot,
       };
 
       // Validation
@@ -248,6 +251,7 @@ const Edit = () => {
       formPayload.append("price", data.price);
       formPayload.append("currency_id", data.currency_id);
       formPayload.append("min_quantity", data.min_quantity);
+      formPayload.append("lot", data.lot);
       formPayload.append("_method", "PATCH");
 
       // Handle image upload
@@ -388,6 +392,21 @@ const Edit = () => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lot" className="text-sm font-medium">
+              Lot
+            </Label>
+            <Input
+              type="number"
+              id="lot"
+              name="lot"
+              value={formData.lot}
+              onChange={handleInputChange}
+              placeholder="Lot raqami"
+              className="w-full focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           <div className="space-y-2">

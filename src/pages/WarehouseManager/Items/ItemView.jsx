@@ -250,6 +250,7 @@ const ItemView = () => {
                     <th className="border-2 p-1">Kodi</th>
                     <th className="border-2 p-1">Birligi</th>
                     <th className="border-2 p-1">Rangi</th>
+                    <th className="border-2 p-1">Lot</th>
                     <th className="border-2 p-1">Turi</th>
                     <th className="border-2 p-1">Narxi</th>
                     <th className="border-2 p-1">Valyuta</th>
@@ -304,6 +305,9 @@ const ItemView = () => {
                         <td className="border-2 p-1">{item?.code}</td>
                         <td className="border-2 p-1">{item?.unit?.name}</td>
                         <td className="border-2 p-1">{item?.color?.name}</td>
+                        <td className="border-2 p-1 text-center">
+                          {item?.lot || "-"}
+                        </td>
                         <td className="border-2 p-1">{item?.type?.name}</td>
                         <td className="border-2 p-1 text-center">
                           {item?.price}

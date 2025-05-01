@@ -219,6 +219,13 @@ const ItemShow = () => {
                   <span>{itemData.color.name}</span>
                 </div>
               </div>
+
+              <Separator />
+
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Lot:</span>
+                <span className="font-medium">{itemData.lot || "-"}</span>
+              </div>
             </div>
           </CardContent>
           <CardFooter className="bg-muted/50 rounded-b-lg">

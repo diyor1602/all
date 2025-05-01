@@ -35,6 +35,7 @@ const Add = () => {
     price: "",
     currency_id: "",
     min_quantity: "",
+    lot: "",
     image: null,
   });
 
@@ -161,6 +162,7 @@ const Add = () => {
         price: formData.price,
         currency_id: formData.currency_id,
         min_quantity: formData.min_quantity,
+        lot: formData.lot,
       };
 
       if (
@@ -316,6 +318,22 @@ const Add = () => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lot" className="text-sm font-medium">
+              Lot
+            </Label>
+            <Input
+              type="number"
+              id="lot"
+              step="0.5"
+              name="lot"
+              value={formData.lot}
+              onChange={handleInputChange}
+              placeholder="Lot raqami"
+              className="w-full focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           <div className="space-y-2">
