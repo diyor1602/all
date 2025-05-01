@@ -239,7 +239,7 @@ const ItemView = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-auto max-h-[67vh]">
+            <div className="overflow-auto">
               <table className="border-2 border-collapse whitespace-nowrap w-full bg-white shadow-md">
                 <thead>
                   <tr>
