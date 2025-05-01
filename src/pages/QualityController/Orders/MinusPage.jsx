@@ -36,7 +36,6 @@ const MinusPage = () => {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isCameraInitializing, setIsCameraInitializing] = useState(false);
   const [tarifications, setTarifications] = useState([]);
-  const [tarifOpen, setTarifOpen] = useState(false);
   const [selectedTarifications, setSelectedTarifications] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
