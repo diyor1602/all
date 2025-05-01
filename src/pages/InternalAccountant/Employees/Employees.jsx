@@ -27,16 +27,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Eye,
-  Pencil,
-  RotateCcw,
-  Search,
-  Trash,
-  UserPlus,
-  Download,
-  Loader2,
-} from "lucide-react";
+import { Eye, RotateCcw, Search, Download, Loader2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
