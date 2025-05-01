@@ -321,7 +321,6 @@ const OrderView = () => {
         throw new Error("Video element not available after stream");
       }
     } catch (err) {
-      console.error("Camera error:", err);
       toast({
         variant: "destructive",
         title: "Xatolik",
