@@ -832,6 +832,9 @@ const New = () => {
                             <span className="text-xs text-muted-foreground">
                               {product.code}
                             </span>
+                            <span className="text-xs text-muted-foreground">
+                              {product.color?.name} {product.lot}
+                            </span>
                           </div>
                         </div>
                       ))}
