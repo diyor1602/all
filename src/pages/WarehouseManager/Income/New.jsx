@@ -63,6 +63,9 @@ const New = () => {
         quantity: "",
         price: "",
         currency_id: "",
+        code: "", // Add code
+        color: "", // Add color
+        lot: "", // Add lot
       },
     ],
   });
@@ -235,6 +238,9 @@ const New = () => {
         item_name: item.name,
         price: item.price || "",
         currency_id: item.currency?.id ? item.currency.id.toString() : "",
+        code: item.code || "",
+        color: item.color?.name || "",
+        lot: item.lot || "",
       };
       return {
         ...prev,
@@ -294,6 +300,9 @@ const New = () => {
           quantity: "",
           price: "",
           currency_id: "",
+          code: "",
+          color: "",
+          lot: "",
         },
       ],
     }));
@@ -715,6 +724,30 @@ const New = () => {
                     }
                   }}
                 />
+                {item.item_id && (
+                  <div className="mt-2 p-2 border rounded-md bg-muted/30">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Kod:</span>
+                        <span className="text-sm text-muted-foreground">
+                          {item.code || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Rang:</span>
+                        <span className="text-sm text-muted-foreground">
+                          {item.color || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Lot:</span>
+                        <span className="text-sm text-muted-foreground">
+                          {item.lot || "-"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {showItemResults[index] && items.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
                     <div className="py-1 flex flex-col gap-2">
