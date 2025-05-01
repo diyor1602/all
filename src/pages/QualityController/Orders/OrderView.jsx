@@ -1,5 +1,7 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { statuses } from "@/lib/status";
@@ -15,17 +17,30 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  PlusCircle,
   CheckCircle,
   XCircle,
-  Edit2,
   Loader2,
   X,
   ChevronDown,
   Camera,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const fullScreenStyle = {
   position: "fixed",
@@ -43,30 +58,26 @@ const fullScreenStyle = {
 const OrderView = () => {
   const { toast } = useToast();
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [order, setOrder] = useState(null);
   const [plusDialogOpen, setPlusDialogOpen] = useState(false);
-  const [minusDialogOpen, setMinusDialogOpen] = useState(false);
   const [qualityCheckResults, setQualityCheckResults] = useState(null);
-  const [qualityDescription, setQualityDescription] = useState(null);
-  const [qualityDescriptionDialogOpen, setQualityDescriptionDialogOpen] =
-    useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editQualityName, setEditQualityName] = useState("");
-  const [editingQualityId, setEditingQualityId] = useState(null);
-  const [qualityName, setQualityName] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isCameraInitializing, setIsCameraInitializing] = useState(false);
+  const [tarifications, setTarifications] = useState([]);
+  const [tarifOpen, setTarifOpen] = useState(false);
+  const [tarifValue, setTarifValue] = useState("");
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
   const [minusForm, setMinusForm] = useState({
     order_sub_model_id: null,
-    descriptions: [],
+    tarification_id: null,
     comment: "",
     status: false,
   });
@@ -74,13 +85,11 @@ const OrderView = () => {
   const fetchOrderAndQuality = async () => {
     try {
       setIsLoading(true);
-      const [orderRes, descRes] = await Promise.all([
+      const [orderRes] = await Promise.all([
         api.get(`/qualityController/orders/${id}`),
-        api.get(`/qualityController/qualityDescription`),
       ]);
 
       setOrder(orderRes.data);
-      setQualityDescription(descRes.data);
 
       const submodelId = orderRes.data?.order_model?.submodels[0]?.id;
       if (submodelId) {
@@ -88,6 +97,10 @@ const OrderView = () => {
           params: { order_sub_model_id: submodelId },
         });
         setQualityCheckResults(qualityRes.data);
+        setTarifications(
+          orderRes.data?.order_model?.submodels[0]?.tarification_categories ||
+            []
+        );
       }
     } catch (error) {
       toast({
@@ -97,45 +110,6 @@ const OrderView = () => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleEditClick = (item) => {
-    setEditingQualityId(item.id);
-    setEditQualityName(item.description);
-    setEditDialogOpen(true);
-  };
-
-  const handleQualityDescriptionEdit = async () => {
-    try {
-      await api.post(
-        `/qualityController/qualityDescription/${editingQualityId}`,
-        {
-          _method: "PATCH",
-          description: editQualityName,
-        }
-      );
-
-      toast({
-        title: "Muvaffaqiyatli!",
-        description: "Tahrirlandi",
-        duration: 2000,
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
-      });
-
-      setEditDialogOpen(false);
-      setEditQualityName("");
-      setEditingQualityId(null);
-      fetchOrderAndQuality();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Tahrirlashda xatolik yuz berdi",
-      });
     }
   };
 
@@ -178,114 +152,15 @@ const OrderView = () => {
     setImagePreview(null);
     setMinusForm({
       order_sub_model_id: null,
-      descriptions: [],
+      tarification_id: null,
       comment: "",
       status: false,
     });
   };
 
   const handleDialogClose = (open) => {
-    setMinusDialogOpen(open);
     if (!open) {
       resetImageAndForm();
-    }
-  };
-
-  const handleMinus = async () => {
-    minusForm.order_sub_model_id = order?.order_model?.submodels[0]?.id;
-    if (!minusForm.order_sub_model_id || !minusForm.descriptions.length) {
-      toast({
-        variant: "destructive",
-        title: "Diqqat",
-        description: "Ma'lumotlar to'liq emas",
-      });
-      return;
-    }
-
-    if (!minusForm.image) {
-      toast({
-        variant: "destructive",
-        title: "Diqqat",
-        description: "Rasm yuklanmagan",
-      });
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append(
-        "descriptions",
-        JSON.stringify(minusForm.descriptions.map((desc) => desc.id))
-      );
-      formData.append("comment", minusForm.comment);
-      formData.append("status", false);
-      formData.append("order_sub_model_id", minusForm.order_sub_model_id);
-      if (minusForm.image) {
-        formData.append("image", minusForm.image);
-      }
-      setIsSending(true);
-
-      await api.post("/qualityController/qualityFailureCheck", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      // Update the quality check results count
-      setQualityCheckResults((prev) => ({
-        ...prev,
-        qualityChecksFalse: (prev?.qualityChecksFalse || 0) + 1,
-      }));
-
-      toast({
-        title: "Muvaffaqiyatli!",
-        description: "Sifat nazoratidan nosozlik qo'shildi",
-        duration: 2000,
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
-      });
-
-      // Reset form and close dialog
-      resetImageAndForm();
-      setMinusDialogOpen(false);
-
-      // Refresh data
-      fetchOrderAndQuality();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Sifat nazoratidan o'tishda xatolik",
-      });
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const handleQualityDescriptionPlus = async () => {
-    try {
-      await api.post(`/qualityController/qualityDescription`, {
-        description: qualityName,
-      });
-      toast({
-        title: "Muvaffaqiyatli!",
-        description: "Qo'shildi",
-        duration: 2000,
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
-      });
-      setQualityName("");
-      fetchOrderAndQuality();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Qo'shishda xatolik",
-      });
     }
   };
 
@@ -499,7 +374,7 @@ const OrderView = () => {
             className="relative"
           >
             <button
-              onClick={() => setMinusDialogOpen(true)}
+              onClick={() => navigate(`/qualityController/orders/${id}/minus`)}
               className="w-full h-32 sm:h-40 bg-red-50 hover:bg-red-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
             >
               <XCircle className="w-8 h-8 text-red-500 group-hover:scale-110 transition-transform" />
@@ -511,74 +386,6 @@ const OrderView = () => {
           </motion.div>
         </div>
       </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="mt-8 p-6 bg-white rounded-2xl shadow-lg"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">Nosozliklar</h2>
-          <Button
-            onClick={() => setQualityDescriptionDialogOpen(true)}
-            className="flex items-center gap-2"
-            size="sm"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Qo'shish</span>
-          </Button>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <AnimatePresence>
-            {qualityDescription?.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                whileHover={{ scale: 1.05 }}
-                className="group relative"
-              >
-                <div
-                  onClick={() => handleEditClick(item)}
-                  className="px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <span>{item.description}</span>
-                  <Edit2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </motion.div>
-
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Tahrirlash</DialogTitle>
-            <div className="mt-4">
-              <Input
-                type="text"
-                placeholder="Yangi nomi"
-                value={editQualityName}
-                onChange={(e) => setEditQualityName(e.target.value)}
-                className="w-full"
-              />
-            </div>
-          </DialogHeader>
-          <DialogFooter className="mt-6">
-            <div className="flex items-center gap-2 justify-end w-full">
-              <DialogClose asChild>
-                <Button variant="outline">Bekor qilish</Button>
-              </DialogClose>
-              <DialogClose asChild>
-                <Button onClick={handleQualityDescriptionEdit}>Saqlash</Button>
-              </DialogClose>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={plusDialogOpen} onOpenChange={setPlusDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -595,213 +402,6 @@ const OrderView = () => {
               </DialogClose>
               <DialogClose asChild>
                 <Button onClick={handlePlus}>Roziman</Button>
-              </DialogClose>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={minusDialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Nosozlik qo'shish</DialogTitle>
-            <DialogDescription className="mt-2">
-              Brak mahsulotlar shu yerda kiritiladi
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4">
-            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2">
-              {qualityDescription?.map((item, i) => (
-                <motion.div
-                  key={i}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div
-                    className={cn(
-                      "px-3 py-2 rounded-lg flex items-center gap-2 cursor-pointer transition-all",
-                      minusForm.descriptions.includes(item)
-                        ? "bg-primary text-white"
-                        : "bg-gray-50 hover:bg-gray-100"
-                    )}
-                    onClick={() => {
-                      if (minusForm.descriptions.includes(item)) {
-                        setMinusForm({
-                          ...minusForm,
-                          descriptions: minusForm.descriptions.filter(
-                            (desc) => desc !== item
-                          ),
-                        });
-                        return;
-                      }
-                      setMinusForm({
-                        ...minusForm,
-                        descriptions: [...minusForm.descriptions, item],
-                      });
-                    }}
-                  >
-                    <div>{item.description}</div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-            <Input
-              className="mt-4"
-              type="text"
-              placeholder="Izoh"
-              value={minusForm.comment}
-              onChange={(e) =>
-                setMinusForm({ ...minusForm, comment: e.target.value })
-              }
-            />
-            <div className="mt-6 space-y-4">
-              <div className="relative">
-                {!imagePreview && !isCameraOpen ? (
-                  <div
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
-                    onClick={startCamera}
-                  >
-                    {isCameraInitializing ? (
-                      <div className="flex flex-col items-center">
-                        <Loader2 className="w-10 h-10 animate-spin text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">
-                          Kamera ishga tushmoqda...
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <Camera className="w-10 h-10 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm text-gray-500">
-                          Rasmga olish uchun bosing
-                        </p>
-                      </>
-                    )}
-                  </div>
-                ) : isCameraOpen ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={fullScreenStyle}
-                  >
-                    <div className="relative h-full flex flex-col">
-                      {/* Close button */}
-                      <div className="absolute top-4 right-4 z-10">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="rounded-full bg-black/50 text-white hover:bg-black/70"
-                          onClick={stopCamera}
-                        >
-                          <X className="h-6 w-6" />
-                        </Button>
-                      </div>
-
-                      {/* Camera preview */}
-                      <div className="flex-1 relative">
-                        <video
-                          ref={videoRef}
-                          autoPlay
-                          playsInline
-                          muted
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
-                      </div>
-
-                      {/* Camera controls */}
-                      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-                        <div className="flex items-center justify-center gap-4">
-                          <Button
-                            variant="outline"
-                            size="lg"
-                            className="rounded-full w-16 h-16 p-0 border-4 border-white text-white hover:bg-white/20 backdrop-blur-sm"
-                            onClick={takePhoto}
-                          >
-                            <div className="w-10 h-10 rounded-full bg-white" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <div className="relative rounded-lg overflow-hidden group">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="bg-white hover:bg-gray-100"
-                        onClick={startCamera}
-                      >
-                        Qayta olish
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={removeImage}
-                      >
-                        O'chirish
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="mt-6">
-            <div className="flex items-center gap-2 justify-end w-full">
-              <DialogClose asChild>
-                <Button variant="outline">Bekor qilish</Button>
-              </DialogClose>
-              <Button
-                onClick={() => handleMinus()}
-                disabled={isSending}
-                className="min-w-[120px]"
-              >
-                {isSending ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Yuborilmoqda...</span>
-                  </div>
-                ) : (
-                  "Qo'shish"
-                )}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={qualityDescriptionDialogOpen}
-        onOpenChange={setQualityDescriptionDialogOpen}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Qo'shish</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            <Input
-              type="text"
-              placeholder="Nomi"
-              value={qualityName}
-              onChange={(e) => setQualityName(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <DialogFooter className="mt-6">
-            <div className="flex items-center gap-2 justify-end w-full">
-              <DialogClose asChild>
-                <Button variant="outline">Bekor qilish</Button>
-              </DialogClose>
-              <DialogClose asChild>
-                <Button onClick={() => handleQualityDescriptionPlus()}>
-                  Qo'shish
-                </Button>
               </DialogClose>
             </div>
           </DialogFooter>
