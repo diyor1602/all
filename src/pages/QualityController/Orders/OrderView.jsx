@@ -44,10 +44,6 @@ const OrderView = () => {
           params: { order_sub_model_id: submodelId },
         });
         setQualityCheckResults(qualityRes.data);
-        setTarifications(
-          orderRes.data?.order_model?.submodels[0]?.tarification_categories ||
-            []
-        );
       }
     } catch (error) {
       toast({
