@@ -96,6 +96,15 @@ const Results = () => {
                       Buyurtma: {result.order.name} ({result.order.quantity}{" "}
                       dona)
                     </CardDescription>
+                    <CardDescription className="text-xs">
+                      Status: {result.order.status} | Rasxod:{" "}
+                      {result.order.rasxod}
+                    </CardDescription>
+                    {result.order.comment && (
+                      <CardDescription className="text-xs mt-1">
+                        {result.order.comment}
+                      </CardDescription>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -155,12 +164,77 @@ const Results = () => {
                                 )}
                                 {check.quality_check_descriptions.length >
                                   0 && (
-                                  <div className="flex flex-wrap gap-2 mb-2">
+                                  <div className="space-y-2 mb-2">
                                     {check.quality_check_descriptions.map(
                                       (desc) => (
-                                        <Badge key={desc.id} variant="outline">
-                                          {desc.quality_description.description}
-                                        </Badge>
+                                        <div
+                                          key={desc.id}
+                                          className="p-2 bg-white rounded border"
+                                        >
+                                          {desc.tarification ? (
+                                            <>
+                                              <div className="flex justify-between items-start mb-1">
+                                                <span className="font-medium">
+                                                  {desc.tarification.name}
+                                                </span>
+                                                <Badge variant="secondary">
+                                                  {desc.tarification.code}
+                                                </Badge>
+                                              </div>
+                                              <div className="text-xs text-gray-500 space-y-1">
+                                                <div className="flex justify-between">
+                                                  <span>Vaqt:</span>
+                                                  <span>
+                                                    {desc.tarification.second}{" "}
+                                                    sek
+                                                  </span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                  <span>Summa:</span>
+                                                  <span>
+                                                    {desc.tarification.summa}{" "}
+                                                    so'm
+                                                  </span>
+                                                </div>
+                                                {desc.tarification.razryad && (
+                                                  <div className="flex justify-between">
+                                                    <span>Razryad:</span>
+                                                    <span>
+                                                      {
+                                                        desc.tarification
+                                                          .razryad.name
+                                                      }{" "}
+                                                      (
+                                                      {
+                                                        desc.tarification
+                                                          .razryad.salary
+                                                      }
+                                                      )
+                                                    </span>
+                                                  </div>
+                                                )}
+                                                {desc.tarification
+                                                  .typewriter && (
+                                                  <div className="flex justify-between">
+                                                    <span>Mashina:</span>
+                                                    <span>
+                                                      {
+                                                        desc.tarification
+                                                          .typewriter.name
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </>
+                                          ) : (
+                                            <span className="text-sm">
+                                              {desc.quality_description
+                                                ?.description ||
+                                                "No description"}
+                                            </span>
+                                          )}
+                                        </div>
                                       )
                                     )}
                                   </div>

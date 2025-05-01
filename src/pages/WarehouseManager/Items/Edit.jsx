@@ -125,14 +125,30 @@ const Edit = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUnits();
-    fetchColors();
-    fetchTypes();
-    fetchCurrencies();
-    if (id) {
-      fetchItem(id);
+  const fetchAllRequiredData = async () => {
+    try {
+      await Promise.all([
+        fetchUnits(),
+        fetchColors(),
+        fetchTypes(),
+        fetchCurrencies(),
+      ]);
+
+      // Only fetch item after all required data is loaded
+      if (id) {
+        await fetchItem(id);
+      }
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Ma'lumotlarni yuklashda xatolik yuz berdi",
+        variant: "destructive",
+      });
     }
+  };
+
+  useEffect(() => {
+    fetchAllRequiredData();
   }, [id]);
 
   const handleInputChange = (e) => {
