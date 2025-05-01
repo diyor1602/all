@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
@@ -11,15 +11,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -39,14 +30,11 @@ const ItemView = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [image, setImage] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   // Pagination state
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    perPage: 10,
-  });
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Search and filter params
   const [searchText, setSearchText] = useState("");
@@ -63,13 +51,13 @@ const ItemView = () => {
   }, [searchText]);
 
   // Fetch items with pagination and filters
-  const fetchItems = async (page = 1) => {
+  const fetchItems = async (pageNum = 1, shouldAccumulate = false) => {
     try {
       setLoading(true);
 
       // Prepare query params
       const params = new URLSearchParams();
-      params.append("page", page);
+      params.append("page", pageNum);
 
       if (debouncedSearchText) {
         params.append("search", debouncedSearchText);
@@ -83,13 +71,15 @@ const ItemView = () => {
         `/warehouseManager/items?${params.toString()}`
       );
 
-      setItems(response.data.data);
-      setPagination({
-        currentPage: response.data.current_page,
-        totalPages: response.data.last_page,
-        totalItems: response.data.total,
-        perPage: response.data.per_page,
-      });
+      setTotalItems(response.data.total);
+
+      if (shouldAccumulate) {
+        setItems((prev) => [...prev, ...response.data.data]);
+      } else {
+        setItems(response.data.data);
+      }
+
+      setHasMore(pageNum < response.data.last_page);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -100,6 +90,33 @@ const ItemView = () => {
       setLoading(false);
     }
   };
+
+  // Reset all data when filters change
+  useEffect(() => {
+    setPage(1);
+    setItems([]);
+    setHasMore(true);
+    fetchItems(1, false);
+  }, [debouncedSearchText, selectedTypeId]);
+
+  // Intersection Observer setup for infinite scroll
+  const observer = useRef();
+  const lastItemRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prevPage) => prevPage + 1);
+          fetchItems(page + 1, true);
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
 
   const fetchTypes = async () => {
     try {
@@ -114,15 +131,13 @@ const ItemView = () => {
     }
   };
 
-  // Handle page change
-  const handlePageChange = (page) => {
-    fetchItems(page);
-  };
-
   // Reset filters
   const resetFilters = () => {
     setSearchText("");
     setSelectedTypeId("all");
+    setPage(1);
+    setItems([]);
+    setHasMore(true);
   };
 
   const handleDownload = async () => {
@@ -130,18 +145,15 @@ const ItemView = () => {
       setDownloading(true);
       const response = await api.get("/warehouseManager/items-export");
 
-      // If response has fileUrl, open it in a new window or initiate download
       if (response.data.fileUrl) {
-        // Create an anchor element and trigger download
         const link = document.createElement("a");
         link.href = response.data.fileUrl;
-        link.setAttribute("download", "materiallar.xlsx"); // Optional: set filename
-        link.setAttribute("target", "_blank"); // Open in new tab
+        link.setAttribute("download", "materiallar.xlsx");
+        link.setAttribute("target", "_blank");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
-        // Show success toast
         toast({
           title: "Muvaffaqiyatli",
           description: response.data.message || "Excel fayl yuklab olindi",
@@ -151,7 +163,6 @@ const ItemView = () => {
           },
         });
       } else {
-        // Handle case where fileUrl is not provided
         toast({
           title: "Ogohlantirish",
           description: response.data.message || "Excel fayl manzili topilmadi",
@@ -171,11 +182,6 @@ const ItemView = () => {
       setDownloading(false);
     }
   };
-
-  // Initial load and when filters change
-  useEffect(() => {
-    fetchItems(1);
-  }, [debouncedSearchText, selectedTypeId]);
 
   useEffect(() => {
     fetchTypes();
@@ -233,216 +239,106 @@ const ItemView = () => {
       </div>
 
       <div className="mt-4">
-        {loading ? (
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <Loader2 size={40} className="animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            <div className="overflow-auto">
-              <table className="border-2 border-collapse whitespace-nowrap w-full bg-white shadow-md">
-                <thead>
-                  <tr>
-                    <th className="border-2 p-1">Nº</th>
-                    <th className="border-2 p-1">Nomi</th>
-                    <th className="border-2 p-1">Amallar</th>
-                    <th className="border-2 p-1">Rasmi</th>
-                    <th className="border-2 p-1">Kodi</th>
-                    <th className="border-2 p-1">Birligi</th>
-                    <th className="border-2 p-1">Rangi</th>
-                    <th className="border-2 p-1">Lot</th>
-                    <th className="border-2 p-1">Turi</th>
-                    <th className="border-2 p-1">Narxi</th>
-                    <th className="border-2 p-1">Valyuta</th>
-                    <th className="border-2 p-1">Min. miqdor</th>
+        <div className="overflow-auto">
+          <table className="border-2 border-collapse whitespace-nowrap w-full bg-white shadow-md">
+            <thead>
+              <tr>
+                <th className="border-2 p-1">Nº</th>
+                <th className="border-2 p-1">Nomi</th>
+                <th className="border-2 p-1">Amallar</th>
+                <th className="border-2 p-1">Rasmi</th>
+                <th className="border-2 p-1">Kodi</th>
+                <th className="border-2 p-1">Birligi</th>
+                <th className="border-2 p-1">Rangi</th>
+                <th className="border-2 p-1">Lot</th>
+                <th className="border-2 p-1">Turi</th>
+                <th className="border-2 p-1">Narxi</th>
+                <th className="border-2 p-1">Valyuta</th>
+                <th className="border-2 p-1">Min. miqdor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.length > 0 ? (
+                items.map((item, index) => (
+                  <tr
+                    key={item.id}
+                    ref={index === items.length - 1 ? lastItemRef : null}
+                  >
+                    <td className="border-2 p-1 text-center">{index + 1}</td>
+                    <td className="border-2 p-1">{item?.name}</td>
+                    <td className="border-2 p-1">
+                      <div className="flex gap-3 items-center w-full justify-center">
+                        <Eye
+                          className="w-4 h-4 text-blue-500 cursor-pointer"
+                          onClick={() =>
+                            navigate(
+                              `/warehouseManager/settings/items/show/${item?.id}`
+                            )
+                          }
+                        />
+                        <Edit
+                          className="w-4 h-4 text-orange-500 cursor-pointer"
+                          onClick={() =>
+                            navigate(
+                              `/warehouseManager/settings/items/edit/${item?.id}`
+                            )
+                          }
+                        />
+                      </div>
+                    </td>
+                    <td className="border-2 p-1">
+                      {item?.image ? (
+                        <img
+                          src={item?.image}
+                          alt={item?.name}
+                          className="w-10 h-10 object-cover cursor-pointer"
+                          onClick={() => {
+                            setImageDialogOpen(true);
+                            setImage(item?.image);
+                          }}
+                        />
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="border-2 p-1">{item?.code}</td>
+                    <td className="border-2 p-1">{item?.unit?.name}</td>
+                    <td className="border-2 p-1">{item?.color?.name}</td>
+                    <td className="border-2 p-1 text-center">
+                      {item?.lot || "-"}
+                    </td>
+                    <td className="border-2 p-1">{item?.type?.name}</td>
+                    <td className="border-2 p-1 text-center">{item?.price}</td>
+                    <td className="border-2 p-1 text-center">
+                      {item?.currency?.name}
+                    </td>
+                    <td className="border-2 p-1 text-center">
+                      {item?.min_quantity}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {items.length > 0 ? (
-                    items.map((item, index) => (
-                      <tr key={index}>
-                        <td className="border-2 p-1 text-center">
-                          {(pagination.currentPage - 1) * pagination.perPage +
-                            index +
-                            1}
-                        </td>
-                        <td className="border-2 p-1">{item?.name}</td>
-                        <td className="border-2 p-1">
-                          <div className="flex gap-3 items-center w-full justify-center">
-                            <Eye
-                              className="w-4 h-4 text-blue-500 cursor-pointer"
-                              onClick={() =>
-                                navigate(
-                                  `/warehouseManager/settings/items/show/${item?.id}`
-                                )
-                              }
-                            />
-                            <Edit
-                              className="w-4 h-4 text-orange-500 cursor-pointer"
-                              onClick={() =>
-                                navigate(
-                                  `/warehouseManager/settings/items/edit/${item?.id}`
-                                )
-                              }
-                            />
-                          </div>
-                        </td>
-                        <td className="border-2 p-1">
-                          {item?.image ? (
-                            <img
-                              src={item?.image}
-                              alt={item?.name}
-                              className="w-10 h-10 object-cover cursor-pointer"
-                              onClick={() => {
-                                setImageDialogOpen(true);
-                                setImage(item?.image);
-                              }}
-                            />
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                        <td className="border-2 p-1">{item?.code}</td>
-                        <td className="border-2 p-1">{item?.unit?.name}</td>
-                        <td className="border-2 p-1">{item?.color?.name}</td>
-                        <td className="border-2 p-1 text-center">
-                          {item?.lot || "-"}
-                        </td>
-                        <td className="border-2 p-1">{item?.type?.name}</td>
-                        <td className="border-2 p-1 text-center">
-                          {item?.price}
-                        </td>
-                        <td className="border-2 p-1 text-center">
-                          {item?.currency?.name}
-                        </td>
-                        <td className="border-2 p-1 text-center">
-                          {item?.min_quantity}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="11" className="border-2 p-4 text-center">
-                        Mahsulotlar topilmadi
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="11" className="border-2 p-4 text-center">
+                    Mahsulotlar topilmadi
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="mt-4 flex justify-center">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          pagination.currentPage > 1 &&
-                          handlePageChange(pagination.currentPage - 1)
-                        }
-                        className={
-                          pagination.currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-
-                    {/* First page */}
-                    {pagination.currentPage > 2 && (
-                      <PaginationItem>
-                        <PaginationLink onClick={() => handlePageChange(1)}>
-                          1
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-
-                    {/* Ellipsis if needed */}
-                    {pagination.currentPage > 3 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-
-                    {/* Previous page */}
-                    {pagination.currentPage > 1 && (
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() =>
-                            handlePageChange(pagination.currentPage - 1)
-                          }
-                        >
-                          {pagination.currentPage - 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-
-                    {/* Current page */}
-                    <PaginationItem>
-                      <PaginationLink isActive>
-                        {pagination.currentPage}
-                      </PaginationLink>
-                    </PaginationItem>
-
-                    {/* Next page */}
-                    {pagination.currentPage < pagination.totalPages && (
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() =>
-                            handlePageChange(pagination.currentPage + 1)
-                          }
-                        >
-                          {pagination.currentPage + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-
-                    {/* Ellipsis if needed */}
-                    {pagination.currentPage < pagination.totalPages - 2 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-
-                    {/* Last page */}
-                    {pagination.currentPage < pagination.totalPages - 1 && (
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() =>
-                            handlePageChange(pagination.totalPages)
-                          }
-                        >
-                          {pagination.totalPages}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          pagination.currentPage < pagination.totalPages &&
-                          handlePageChange(pagination.currentPage + 1)
-                        }
-                        className={
-                          pagination.currentPage === pagination.totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
-
-            {/* Items count info */}
-            <div className="mt-2 text-center text-sm text-muted-foreground">
-              Jami: {pagination.totalItems} ta mahsulot
-            </div>
-          </>
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex justify-center items-center py-4">
+            <Loader2 size={30} className="animate-spin text-primary" />
+          </div>
         )}
+
+        {/* Items count info */}
+        <div className="mt-2 text-center text-sm text-muted-foreground">
+          Jami: {totalItems} ta mahsulot
+        </div>
       </div>
 
       {/* Image dialog */}
