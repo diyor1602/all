@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Download,
@@ -22,6 +22,7 @@ import {
   Bitcoin,
   Timer,
   Files,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -60,61 +62,78 @@ const OrderView = () => {
   const [tarifDialogOpen, setTarifDialogOpen] = useState(false);
   const [selectedSpec, setSelectedSpec] = useState(null);
   const [selectedTarification, setSelectedTarification] = useState(null);
+  const [excelDialogOpen, setExcelDialogOpen] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
+  const [isExcelLoading, setIsExcelLoading] = useState(false);
+  const [tarifExcelDialogOpen, setTarifExcelDialogOpen] = useState(false);
+  const [tarifExcelFile, setTarifExcelFile] = useState(null);
+  const [isTarifExcelLoading, setIsTarifExcelLoading] = useState(false);
 
-  const totalSpends = order?.order_model?.submodels?.reduce(
-    (acc, submodel) =>
-      acc +
-      parseFloat(
-        submodel?.spends?.reduce(
-          (acc, spend) => acc + parseFloat(spend?.seconds),
-          0
-        )
+  const totalSpends = useMemo(
+    () =>
+      order?.order_model?.submodels?.reduce(
+        (acc, submodel) =>
+          acc +
+          parseFloat(
+            submodel?.spends?.reduce(
+              (acc, spend) => acc + parseFloat(spend?.seconds),
+              0
+            )
+          ),
+        0
       ),
-    0
+    [order?.order_model?.submodels]
   );
 
-  const totalSpendSumma = order?.order_model?.submodels?.reduce(
-    (acc, submodel) =>
-      acc +
-      parseFloat(
-        submodel?.spends?.reduce(
-          (acc, spend) => acc + parseFloat(spend?.summa),
-          0
-        )
+  const totalSpendSumma = useMemo(
+    () =>
+      order?.order_model?.submodels?.reduce(
+        (acc, submodel) =>
+          acc +
+          parseFloat(
+            submodel?.spends?.reduce(
+              (acc, spend) => acc + parseFloat(spend?.summa),
+              0
+            )
+          ),
+        0
       ),
-    0
+    [order?.order_model?.submodels]
   );
 
-  const handleDownloadTarif = async (id) => {
-    setTarifDownloading(true);
-    try {
-      const response = await api.get(`/technologist/export-tarification`, {
-        params: { orderSubModelId: id },
-        responseType: "blob", // Important: Expect binary data
-      });
+  const handleDownloadTarif = useCallback(
+    async (id) => {
+      setTarifDownloading(true);
+      try {
+        const response = await api.get(`/technologist/export-tarification`, {
+          params: { orderSubModelId: id },
+          responseType: "blob",
+        });
 
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
+        const blob = new Blob([response.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
 
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${order?.id} ${order?.name} ${selectedSubmodel?.submodel?.name} tarifikatsiya.xlsx`;
-      document.body.appendChild(link); // Required for Firefox
-      link.click();
-      document.body.removeChild(link); // Cleanup
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Tarification yuklab bo'lmadi",
-        variant: "destructive",
-      });
-    } finally {
-      setTarifDownloading(false);
-    }
-  };
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${order?.id} ${order?.name} ${selectedSubmodel?.submodel?.name} tarifikatsiya.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Tarification yuklab bo'lmadi",
+          variant: "destructive",
+        });
+      } finally {
+        setTarifDownloading(false);
+      }
+    },
+    [order?.id, order?.name, selectedSubmodel?.submodel?.name, toast]
+  );
 
   const handleDownloadSpec = async (id) => {
     setSpecDownloading(true);
@@ -235,6 +254,92 @@ const OrderView = () => {
     selectedSubmodel?.id && fetchTarifications();
     selectedSubmodel?.id && fetchSpecifications();
   }, [selectedSubmodel]);
+
+  const handleUploadExcel = useCallback(async () => {
+    if (!excelFile) {
+      toast({
+        title: "Diqqat",
+        description: "Excel fayl tanlanmagan",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsExcelLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", excelFile);
+      formData.append("submodel_id", selectedSubmodel?.id);
+
+      await api.post("/technologist/import-specification", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Excel fayl yuklandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+      setExcelFile(null);
+      setExcelDialogOpen(false);
+      fetchSpecifications();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Excel fayl yuklab bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExcelLoading(false);
+    }
+  }, [excelFile, selectedSubmodel?.id, toast]);
+
+  const handleUploadTarifExcel = useCallback(async () => {
+    if (!tarifExcelFile) {
+      toast({
+        title: "Diqqat",
+        description: "Excel fayl tanlanmagan",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsTarifExcelLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", tarifExcelFile);
+      formData.append("submodel_id", selectedSubmodel?.id);
+
+      await api.post("/technologist/import-tarification", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Excel fayl yuklandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+      setTarifExcelFile(null);
+      setTarifExcelDialogOpen(false);
+      fetchTarifications();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Excel fayl yuklab bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTarifExcelLoading(false);
+    }
+  }, [tarifExcelFile, selectedSubmodel?.id, toast]);
 
   if (loading) {
     return (
@@ -483,6 +588,13 @@ const OrderView = () => {
                 <div className="flex items-center gap-2">
                   <Button
                     size="icon"
+                    className="h-8 w-8 rounded-full text-white bg-green-500 hover:bg-green-600"
+                    onClick={() => setExcelDialogOpen(true)}
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
                     className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
                     onClick={() =>
                       navigate(`/technologist/new-spec/${selectedSubmodel?.id}`)
@@ -567,6 +679,13 @@ const OrderView = () => {
                   Tarifikatsiyalar
                 </h2>
                 <div className="flex items-center gap-2">
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-white bg-green-500 hover:bg-green-600"
+                    onClick={() => setTarifExcelDialogOpen(true)}
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                  </Button>
                   <Button
                     size="icon"
                     className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
@@ -823,6 +942,52 @@ const OrderView = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={excelDialogOpen} onOpenChange={setExcelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Spesifikatsiya Excel fayli</DialogTitle>
+            <DialogDescription>
+              Dasturga spesifikatsiya qo'shish uchun excel fayl yuklang
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center gap-2">
+            <Input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={(e) => setExcelFile(e.target.files[0])}
+            />
+            <Button onClick={handleUploadExcel} disabled={isExcelLoading}>
+              {isExcelLoading ? "Yuklanmoqda..." : "Yuklash"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={tarifExcelDialogOpen}
+        onOpenChange={setTarifExcelDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tarifikatsiya Excel fayli</DialogTitle>
+            <DialogDescription>
+              Dasturga tarifikatsiya qo'shish uchun excel fayl yuklang
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center gap-2">
+            <Input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={(e) => setTarifExcelFile(e.target.files[0])}
+            />
+            <Button
+              onClick={handleUploadTarifExcel}
+              disabled={isTarifExcelLoading}
+            >
+              {isTarifExcelLoading ? "Yuklanmoqda..." : "Yuklash"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
