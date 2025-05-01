@@ -820,14 +820,19 @@ const New = () => {
                 />
                 {showItemResults[index] && items.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                    <div className="py-1">
+                    <div className="py-1 flex flex-col gap-2">
                       {items.map((product) => (
                         <div
                           key={product.id}
-                          className="px-4 py-2 hover:bg-muted cursor-pointer"
+                          className="px-4 py-2 hover:bg-muted cursor-pointer border"
                           onClick={() => handleItemSelect(index, product)}
                         >
-                          {product.name}
+                          <div className="flex flex-col gap-2">
+                            <span>{product.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {product.code}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
