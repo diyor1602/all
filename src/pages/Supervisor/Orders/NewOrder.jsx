@@ -1007,7 +1007,7 @@ const NewOrder = () => {
                             ? materials.find(
                                 (material) =>
                                   material.id === selectedMaterial.id
-                              )?.name
+                              )?.name + ` (${selectedMaterial?.code})`
                             : "Materialni tanlang"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -1037,8 +1037,25 @@ const NewOrder = () => {
                                   />
                                   <div className="flex flex-col gap-1">
                                     <div>{material?.name}</div>
-                                    <div className="text-gray-500">
-                                      {material?.description}
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Kod:
+                                        {material?.code}
+                                      </span>{" "}
+                                      <span
+                                        className={cn(
+                                          "font-medium",
+                                          material?.color?.hex &&
+                                            `text-[#${material?.color?.hex}]`
+                                        )}
+                                      >
+                                        Rangi:
+                                        {material?.color?.name}
+                                      </span>{" "}
+                                      <span className="font-medium">
+                                        Lot:
+                                        {material?.lot}
+                                      </span>{" "}
                                     </div>
                                   </div>
                                 </CommandItem>
