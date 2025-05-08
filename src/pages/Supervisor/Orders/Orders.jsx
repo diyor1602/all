@@ -56,7 +56,7 @@ const Orders = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
