@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,21 @@ const OutcomePage = () => {
   });
   const [expandedRows, setExpandedRows] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef();
+  const lastOutcomeElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setCurrentPage((prevPage) => prevPage + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
 
   const debouncedFetchOutcomes = useCallback(
     (() => {
@@ -101,8 +116,17 @@ const OutcomePage = () => {
       const response = await api.get(
         `/warehouseManager/outcome?${params.toString()}`
       );
-      setOutcomesData(response.data);
-      setCurrentPage(response.data.current_page);
+
+      if (page === 1) {
+        setOutcomesData(response.data);
+      } else {
+        setOutcomesData((prevData) => ({
+          ...response.data,
+          data: [...prevData.data, ...response.data.data],
+        }));
+      }
+
+      setHasMore(response.data.current_page < response.data.last_page);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -150,12 +174,14 @@ const OutcomePage = () => {
     const apiValue = value === "all" ? "" : value;
     const newFilters = { ...filters, [key]: apiValue };
     setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filters change
     debouncedFetchOutcomes(1, newFilters);
   };
 
   const handleSearchChange = (e) => {
     const newValue = e.target.value;
     setFilters({ ...filters, search: newValue });
+    setCurrentPage(1); // Reset to first page when search changes
     debouncedFetchOutcomes(1, { ...filters, search: newValue });
   };
 
@@ -167,6 +193,7 @@ const OutcomePage = () => {
       start_date: "",
       end_date: "",
     });
+    setCurrentPage(1); // Reset to first page when filters are reset
     fetchOutcomes(1, {});
   };
 
@@ -210,57 +237,16 @@ const OutcomePage = () => {
   };
 
   useEffect(() => {
-    fetchOutcomes();
+    if (currentPage > 1) {
+      fetchOutcomes(currentPage, filters);
+    }
+  }, [currentPage]);
+
+  useEffect(() => {
+    fetchOutcomes(1);
     fetchDestinations();
     fetchWarehouses();
   }, []);
-
-  const renderPagination = () => {
-    if (!outcomesData) return null;
-
-    return (
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() =>
-                outcomesData.prev_page_url && handlePageChange(currentPage - 1)
-              }
-              className={
-                !outcomesData.prev_page_url
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer"
-              }
-            />
-          </PaginationItem>
-
-          {Array.from({ length: outcomesData.last_page }).map((_, i) => (
-            <PaginationItem key={i + 1}>
-              <PaginationLink
-                isActive={currentPage === i + 1}
-                onClick={() => handlePageChange(i + 1)}
-              >
-                {i + 1}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-
-          <PaginationItem>
-            <PaginationNext
-              onClick={() =>
-                outcomesData.next_page_url && handlePageChange(currentPage + 1)
-              }
-              className={
-                !outcomesData.next_page_url
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer"
-              }
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    );
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";
@@ -412,7 +398,7 @@ const OutcomePage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {loading && currentPage === 1 ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="w-full h-16" />
@@ -438,6 +424,11 @@ const OutcomePage = () => {
                   {outcomesData.data.map((outcome, index) => (
                     <React.Fragment key={index}>
                       <TableRow
+                        ref={
+                          index === outcomesData.data.length - 1
+                            ? lastOutcomeElementRef
+                            : null
+                        }
                         key={outcome.id}
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => toggleRowExpansion(outcome.id)}
@@ -571,6 +562,11 @@ const OutcomePage = () => {
                   ))}
                 </TableBody>
               </Table>
+              {loading && currentPage > 1 && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
             </div>
           ) : (
             <div className="py-12 text-center">
@@ -584,9 +580,6 @@ const OutcomePage = () => {
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex justify-center">
-          {renderPagination()}
-        </CardFooter>
       </Card>
     </div>
   );
