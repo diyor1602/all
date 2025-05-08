@@ -545,7 +545,10 @@ const OutcomePage = () => {
                                         <TableCell>
                                           {item.item.code || "-"}
                                         </TableCell>
-                                        <TableCell>{item.quantity}</TableCell>
+                                        <TableCell>
+                                          {item.quantity}{" "}
+                                          {item.item?.unit?.name}
+                                        </TableCell>
                                         <TableCell>{item.price}</TableCell>
                                         <TableCell>
                                           {item.currency?.name || "-"}
