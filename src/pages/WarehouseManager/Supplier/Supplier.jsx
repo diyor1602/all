@@ -349,7 +349,7 @@ const Supplier = () => {
                         onClick={() => toggleRowExpansion(income.id)}
                       >
                         <TableCell className="font-medium">
-                          {income.id}
+                          {income.code}
                         </TableCell>
                         <TableCell>{income.comment || "-"}</TableCell>
                         <TableCell>
