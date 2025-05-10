@@ -7,6 +7,7 @@ import Balance from "./Balance/Balance";
 import Orders from "./Orders/Orders";
 import OrderView from "./Orders/OrderView";
 import Colors from "./Additional/Colors";
+import CreateOrder from "./Supplier/Order/CreateOrder";
 
 const Settings = () => {
   return (
@@ -17,6 +18,7 @@ const Settings = () => {
       <Route path="orders/" element={<Orders />} />
       <Route path="orders/:id" element={<OrderView />} />
       <Route path="colors/" element={<Colors />} />
+      <Route path="supplier/create-order/" element={<CreateOrder />} />
     </Routes>
   );
 };
@@ -50,7 +52,7 @@ const SettingsPage = () => {
     {
       name: "Ta'minot",
       icon: Truck,
-      link: "/warehouseManager/settings/delivery",
+      link: "/warehouseManager/settings/supplier/create-order",
       color: "bg-green-500",
     },
   ];
