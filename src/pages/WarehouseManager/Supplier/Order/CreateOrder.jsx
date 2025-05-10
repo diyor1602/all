@@ -292,6 +292,7 @@ const CreateOrder = () => {
             <Input
               type="datetime-local"
               name="deadline"
+              min={new Date().toISOString().slice(0, 16)}
               value={formData.deadline}
               onChange={handleInputChange}
               className="bg-white"
