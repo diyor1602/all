@@ -12,6 +12,8 @@ import {
   Package,
   Loader2,
   Trash2,
+  CheckCheck,
+  CircleCheckBig,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -230,7 +232,7 @@ const Orders = () => {
           onClick={() => navigate("/supplier/supplier/create-order/")}
         >
           <Link to="/supplier/settings/supplier/create-order/">
-            <CirclePlus className="h-4 w-4 mr-2" /> Yangi buyurtma qo'shish
+            <CirclePlus className="h-4 w-4 mr-2" /> Yangi buyurtma
           </Link>
         </Button>
       </div>
@@ -329,7 +331,7 @@ const Orders = () => {
                     <TableHead>Status</TableHead>
                     <TableHead>Muddat</TableHead>
                     <TableHead>Mahsulotlar</TableHead>
-                    <TableHead>Xodim</TableHead>
+                    <TableHead>Buyurtmachi</TableHead>
                     <TableHead className="text-right">Amallar</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -371,10 +373,10 @@ const Orders = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {income?.supplier?.employee?.name ? (
+                          {income?.created_by?.employee?.name ? (
                             <div className="flex items-center gap-2">
                               <span className="text-sm">
-                                {income?.supplier?.employee.name}
+                                {income?.created_by?.employee.name}
                               </span>
                             </div>
                           ) : (
@@ -382,20 +384,22 @@ const Orders = () => {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          {income?.status === "new" ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(income.id);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          ) : (
-                            "-"
-                          )}
+                          <div className="flex justify-end">
+                            {income?.status === "new" ? (
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(income.id);
+                                }}
+                                className="flex items-center justify-center"
+                              >
+                                <CircleCheckBig />
+                              </Button>
+                            ) : (
+                              "-"
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
 
@@ -484,25 +488,23 @@ const Orders = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Buyurtmani o'chirish</DialogTitle>
+            <DialogTitle>Buyurtmani tasdiqlash</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            {`${deleteId} - raqamli buyurtmani o'chirishga rozimisiz?`}
+            {`${deleteId} - raqamli buyurtmani qabul qilishga rozimisiz?`}
           </DialogDescription>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Bekor qilish
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "O'chirilmoqda..." : "O'chirish"}
-            </Button>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Yo'q
+              </Button>
+              <Button onClick={handleConfirmDelete} disabled={isDeleting}>
+                {isDeleting ? "Tasdiqlanmoqda..." : "Tasdiqlash"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
