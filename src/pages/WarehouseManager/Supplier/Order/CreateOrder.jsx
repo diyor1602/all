@@ -246,7 +246,7 @@ const CreateOrder = () => {
           color: "white",
         },
       });
-      navigate("/warehouseManager/supplier/orders");
+      navigate("/warehouseManager/settings/supplier/");
     } catch (error) {
       toast({
         title: "Xatolik!",
@@ -411,7 +411,7 @@ const CreateOrder = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/warehouseManager/supplier/orders")}
+            onClick={() => navigate("/warehouseManager/settings/supplier/")}
           >
             Bekor qilish
           </Button>
