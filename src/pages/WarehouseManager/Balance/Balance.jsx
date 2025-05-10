@@ -34,9 +34,25 @@ import { cn } from "@/lib/utils";
 import { statuses } from "@/lib/status";
 import React from "react";
 
+// Add debounce hook
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const Balance = () => {
   const { toast } = useToast();
-  const loadingRef = useRef(null);
 
   const [groupedItems, setGroupedItems] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -47,6 +63,10 @@ const Balance = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [expandedItems, setExpandedItems] = useState({});
+  const [totalQuantity, setTotalQuantity] = useState(0);
+
+  // Add debounced search query
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const fetchWarehouses = async () => {
     try {
@@ -76,7 +96,7 @@ const Balance = () => {
         params: {
           warehouse_id: selectedWarehouse === "all" ? "" : selectedWarehouse,
           page,
-          search: searchQuery,
+          search: debouncedSearchQuery,
         },
       });
 
@@ -84,7 +104,7 @@ const Balance = () => {
       const grouped = [];
       const itemMap = new Map();
 
-      response.data.data.forEach((balance) => {
+      response.data.data.data.forEach((balance) => {
         const itemId = balance.item.id;
         let groupIndex = itemMap.get(itemId);
 
@@ -101,6 +121,8 @@ const Balance = () => {
         grouped[groupIndex].totalQuantity += parseFloat(balance.quantity);
         grouped[groupIndex].balances.push(balance);
       });
+
+      setTotalQuantity(response.data.total_quantity);
 
       setGroupedItems((prev) => {
         if (append) {
@@ -128,9 +150,10 @@ const Balance = () => {
         return grouped;
       });
 
-      setHasMore(page < response.data.last_page);
+      setHasMore(page < response.data.data.last_page);
       setCurrentPage(page);
     } catch (error) {
+      console.log(error);
       toast({
         variant: "destructive",
         title: "Xatolik",
@@ -151,7 +174,7 @@ const Balance = () => {
     setCurrentPage(1);
     setHasMore(true);
     fetchBalances(1);
-  }, [selectedWarehouse, searchQuery]);
+  }, [selectedWarehouse, debouncedSearchQuery]);
 
   // Intersection Observer setup
   const observer = useRef();
@@ -211,7 +234,7 @@ const Balance = () => {
 
         <CardContent className="p-6">
           <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex flex-wrap w-full gap-4 items-center">
               <div className="relative">
                 <Select
                   value={selectedWarehouse}
@@ -241,7 +264,7 @@ const Balance = () => {
                 <Input
                   type="text"
                   placeholder="Qidirish..."
-                  className="pl-10 bg-white shadow-sm border-slate-200"
+                  className="pl-10 bg-white shadow-sm border-slate-200 md:min-w-[400px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -260,6 +283,9 @@ const Balance = () => {
                   />
                   Yangilash
                 </Button>
+              </div>
+              <div className="text-sm text-slate-500 ml-auto">
+                Jami: {parseFloat(totalQuantity).toLocaleString()}
               </div>
             </div>
 
@@ -470,13 +496,6 @@ const Balance = () => {
                       </TableBody>
                     </Table>
                   </div>
-                </div>
-                <div>
-                  Jami:{" "}
-                  {groupedItems.reduce(
-                    (acc, group) => acc + group.totalQuantity,
-                    0
-                  )}
                 </div>
               </>
             ) : (
