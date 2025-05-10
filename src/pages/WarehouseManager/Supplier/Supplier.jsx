@@ -11,7 +11,7 @@ import {
   ChevronUp,
   Package,
   Loader2,
-  Eye,
+  Trash2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,6 +40,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const statuses = {
   new: { text: "Yangi", color: "bg-blue-500" },
@@ -63,6 +71,9 @@ const Supplier = () => {
   });
   const [expandedRows, setExpandedRows] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef();
   const lastIncomeElementRef = useCallback(
@@ -183,6 +194,32 @@ const Supplier = () => {
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
+  };
+
+  const handleDelete = (id) => {
+    setDeleteDialogOpen(true);
+    setDeleteId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await api.delete(`/warehouseManager/supplierOrders/${deleteId}`);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Buyurtma o'chirildi",
+      });
+      setDeleteDialogOpen(false);
+      fetchIncomes(1, filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Buyurtma o'chirishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -347,15 +384,20 @@ const Supplier = () => {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                            }}
-                          >
-                            <Eye className="h-4 w-4 text-blue-500" />
-                          </Button>
+                          {income?.status === "new" ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(income.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          ) : (
+                            "-"
+                          )}
                         </TableCell>
                       </TableRow>
 
@@ -407,7 +449,7 @@ const Supplier = () => {
                                         </TableCell>
                                         <TableCell>{item.price}</TableCell>
                                         <TableCell>
-                                          {item.currency?.name || "-"}
+                                          {item.item?.currency?.name || "-"}
                                         </TableCell>
                                       </TableRow>
                                     ))}
@@ -432,14 +474,40 @@ const Supplier = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
                 <Search className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium">Kirimlar topilmadi</h3>
+              <h3 className="text-lg font-medium">Buyurtmalar topilmadi</h3>
               <p className="text-muted-foreground mt-2">
-                Yangi kirim qo'shish uchun yuqoridagi "Yangi" tugmasini bosing
+                Yangi buyurtma qo'shish uchun yuqoridagi "Yangi buyurtma"
+                tugmasini bosing
               </p>
             </div>
           )}
         </CardContent>
       </Card>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Buyurtmani o'chirish</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            {`${deleteId} - raqamli buyurtmani o'chirishga rozimisiz?`}
+          </DialogDescription>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "O'chirilmoqda..." : "O'chirish"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
