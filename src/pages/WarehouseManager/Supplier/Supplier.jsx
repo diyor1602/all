@@ -331,7 +331,8 @@ const Supplier = () => {
                     <TableHead>Status</TableHead>
                     <TableHead>Muddat</TableHead>
                     <TableHead>Mahsulotlar</TableHead>
-                    <TableHead>Xodim</TableHead>
+                    <TableHead>Buyurtmachi</TableHead>
+                    <TableHead>Ta'minotchi</TableHead>
                     <TableHead className="text-right">Amallar</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -371,6 +372,17 @@ const Supplier = () => {
                               <ChevronDown className="h-4 w-4 text-muted-foreground" />
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {income?.created_by?.employee?.name ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">
+                                {income?.created_by?.employee.name}
+                              </span>
+                            </div>
+                          ) : (
+                            income?.employee?.id || "-"
+                          )}
                         </TableCell>
                         <TableCell>
                           {income?.supplier?.employee?.name ? (
