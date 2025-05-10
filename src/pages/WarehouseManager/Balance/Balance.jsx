@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,37 +22,31 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
   Search,
   RefreshCw,
   Filter,
   Warehouse,
   ChevronDown,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statuses } from "@/lib/status";
+import React from "react";
 
-const GroupedBalance = () => {
+const Balance = () => {
   const { toast } = useToast();
+  const loadingRef = useRef(null);
 
-  const [groupedItems, setGroupedItems] = useState({});
-  const [filteredGroupedItems, setFilteredGroupedItems] = useState({});
+  const [groupedItems, setGroupedItems] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState("all");
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [expandedItems, setExpandedItems] = useState({});
-  const itemsPerPage = 10;
 
   const fetchWarehouses = async () => {
     try {
@@ -70,33 +64,72 @@ const GroupedBalance = () => {
     }
   };
 
-  const fetchBalances = async () => {
+  const fetchBalances = async (page = 1, append = false) => {
     try {
-      setLoading(true);
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
       const response = await api.get("/warehouseManager/balances", {
         params: {
           warehouse_id: selectedWarehouse === "all" ? "" : selectedWarehouse,
+          page,
+          search: searchQuery,
         },
       });
 
-      // Group balances by item ID
-      const grouped = {};
-      response.data.forEach((balance) => {
+      // Group balances by item ID while maintaining order
+      const grouped = [];
+      const itemMap = new Map();
+
+      response.data.data.forEach((balance) => {
         const itemId = balance.item.id;
-        if (!grouped[itemId]) {
-          grouped[itemId] = {
+        let groupIndex = itemMap.get(itemId);
+
+        if (groupIndex === undefined) {
+          groupIndex = grouped.length;
+          itemMap.set(itemId, groupIndex);
+          grouped.push({
             item: balance.item,
             totalQuantity: 0,
             balances: [],
-          };
+          });
         }
-        grouped[itemId].totalQuantity += parseFloat(balance.quantity);
-        grouped[itemId].balances.push(balance);
+
+        grouped[groupIndex].totalQuantity += parseFloat(balance.quantity);
+        grouped[groupIndex].balances.push(balance);
       });
 
-      setGroupedItems(grouped);
-      setFilteredGroupedItems(grouped);
-      setCurrentPage(1);
+      setGroupedItems((prev) => {
+        if (append) {
+          // Merge new items while maintaining order
+          const mergedGroups = [...prev];
+          const existingItemMap = new Map(
+            prev.map((group, index) => [group.item.id, index])
+          );
+
+          grouped.forEach((newGroup) => {
+            const existingIndex = existingItemMap.get(newGroup.item.id);
+            if (existingIndex !== undefined) {
+              // Update existing group
+              mergedGroups[existingIndex].totalQuantity +=
+                newGroup.totalQuantity;
+              mergedGroups[existingIndex].balances.push(...newGroup.balances);
+            } else {
+              // Add new group
+              mergedGroups.push(newGroup);
+            }
+          });
+
+          return mergedGroups;
+        }
+        return grouped;
+      });
+
+      setHasMore(page < response.data.last_page);
+      setCurrentPage(page);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -105,6 +138,7 @@ const GroupedBalance = () => {
       });
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -114,57 +148,38 @@ const GroupedBalance = () => {
   }, []);
 
   useEffect(() => {
-    fetchBalances();
-  }, [selectedWarehouse]);
-
-  useEffect(() => {
-    // Filter grouped items based on search query
-    const searchTerm = searchQuery.toLowerCase();
-    const filtered = {};
-
-    Object.entries(groupedItems).forEach(([itemId, group]) => {
-      const { item, balances } = group;
-
-      // Check if any item property matches search
-      const itemMatches =
-        item.name.toLowerCase().includes(searchTerm) ||
-        item.code.toLowerCase().includes(searchTerm);
-
-      // Check if any order property matches search
-      const orderMatches = balances.some(
-        (balance) =>
-          balance.order &&
-          ((balance.order.name &&
-            balance.order.name.toLowerCase().includes(searchTerm)) ||
-            (balance.order.id && String(balance.order.id).includes(searchTerm)))
-      );
-
-      // Check if quantity matches search
-      const quantityMatches = String(group.totalQuantity).includes(searchTerm);
-
-      if (itemMatches || orderMatches || quantityMatches) {
-        filtered[itemId] = group;
-      }
-    });
-
-    setFilteredGroupedItems(filtered);
     setCurrentPage(1);
-  }, [searchQuery, groupedItems]);
+    setHasMore(true);
+    fetchBalances(1);
+  }, [selectedWarehouse, searchQuery]);
 
-  // Calculate pagination
-  const groupedItemsList = Object.values(filteredGroupedItems);
-  const totalPages = Math.ceil(groupedItemsList.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentItems = groupedItemsList.slice(startIndex, endIndex);
+  // Intersection Observer setup
+  const observer = useRef();
+  const lastItemRef = useCallback(
+    (node) => {
+      if (loading || loadingMore) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          fetchBalances(currentPage + 1, true);
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, loadingMore, hasMore, currentPage]
+  );
 
   // Get low stock count
-  const lowStockCount = Object.values(groupedItems).filter(
+  const lowStockCount = groupedItems.filter(
     (group) => group.totalQuantity <= parseFloat(group.item.min_quantity)
   ).length;
 
   const handleRefresh = () => {
-    fetchBalances();
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchBalances(1);
   };
 
   const toggleExpand = (itemId) => {
@@ -174,85 +189,8 @@ const GroupedBalance = () => {
     }));
   };
 
-  const renderPagination = () => {
-    const pages = [];
-    const maxPagesToShow = 5;
-
-    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
-    if (endPage - startPage + 1 < maxPagesToShow) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(
-        <PaginationItem key={i}>
-          <PaginationLink
-            onClick={() => setCurrentPage(i)}
-            isActive={currentPage === i}
-          >
-            {i}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    return (
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              className={
-                currentPage === 1 ? "pointer-events-none opacity-50" : ""
-              }
-            />
-          </PaginationItem>
-
-          {startPage > 1 && (
-            <>
-              <PaginationItem>
-                <PaginationLink onClick={() => setCurrentPage(1)}>
-                  1
-                </PaginationLink>
-              </PaginationItem>
-              {startPage > 2 && <PaginationEllipsis />}
-            </>
-          )}
-
-          {pages}
-
-          {endPage < totalPages && (
-            <>
-              {endPage < totalPages - 1 && <PaginationEllipsis />}
-              <PaginationItem>
-                <PaginationLink onClick={() => setCurrentPage(totalPages)}>
-                  {totalPages}
-                </PaginationLink>
-              </PaginationItem>
-            </>
-          )}
-
-          <PaginationItem>
-            <PaginationNext
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
-              className={
-                currentPage === totalPages
-                  ? "pointer-events-none opacity-50"
-                  : ""
-              }
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    );
-  };
-
   return (
-    <div className="flex flex-col gap-6 p-0 md:p-6 bg-slate-50 min-h-screen">
+    <div className="flex flex-col gap-6 p-0 bg-slate-50">
       <Card className="border-none shadow-lg">
         <CardHeader className="bg-gradient-to-r from-primary to-primary/60 text-white rounded-t-lg">
           <div className="flex items-center justify-between">
@@ -331,7 +269,7 @@ const GroupedBalance = () => {
                   <Skeleton key={i} className="h-12 w-full bg-slate-200" />
                 ))}
               </div>
-            ) : groupedItemsList.length > 0 ? (
+            ) : groupedItems.length > 0 ? (
               <>
                 <div className="rounded-lg border border-slate-200 overflow-hidden">
                   <div className="overflow-x-auto">
@@ -360,183 +298,185 @@ const GroupedBalance = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {currentItems
-                          .sort((a, b) =>
-                            a.item.name.localeCompare(b.item.name)
-                          )
-                          .map((group) => {
-                            const isLowStock =
-                              group.totalQuantity <=
-                              parseFloat(group.item.min_quantity);
-                            const isExpanded = expandedItems[group.item.id];
+                        {groupedItems.map((group, index, array) => {
+                          const isLowStock =
+                            group.totalQuantity <=
+                            parseFloat(group.item.min_quantity);
+                          const isExpanded = expandedItems[group.item.id];
+                          const isLastItem = index === array.length - 1;
 
-                            // Count orders
-                            const orderCount = group.balances.filter(
-                              (b) => b.order
-                            ).length;
+                          // Count orders
+                          const orderCount = group.balances.filter(
+                            (b) => b.order
+                          ).length;
 
-                            return (
-                              <>
-                                <TableRow
-                                  key={group.item.id}
-                                  className={cn(
-                                    {
-                                      "bg-red-300": isLowStock,
-                                      "hover:bg-slate-50": !isLowStock,
-                                      "border-b-0": isExpanded,
-                                    },
-                                    "cursor-pointer"
+                          return (
+                            <React.Fragment key={group.item.id}>
+                              <TableRow
+                                ref={isLastItem ? lastItemRef : null}
+                                className={cn(
+                                  {
+                                    "bg-red-300": isLowStock,
+                                    "hover:bg-slate-50": !isLowStock,
+                                    "border-b-0": isExpanded,
+                                  },
+                                  "cursor-pointer"
+                                )}
+                                onClick={() => toggleExpand(group.item.id)}
+                              >
+                                <TableCell className="w-8 p-2">
+                                  {isExpanded ? (
+                                    <ChevronDown
+                                      size={18}
+                                      className="text-slate-600"
+                                    />
+                                  ) : (
+                                    <ChevronRight
+                                      size={18}
+                                      className="text-slate-600"
+                                    />
                                   )}
-                                  onClick={() => toggleExpand(group.item.id)}
-                                >
-                                  <TableCell className="w-8 p-2">
-                                    {isExpanded ? (
-                                      <ChevronDown
-                                        size={18}
-                                        className="text-slate-600"
-                                      />
-                                    ) : (
-                                      <ChevronRight
-                                        size={18}
-                                        className="text-slate-600"
-                                      />
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  {group.item.name}
+                                </TableCell>
+                                <TableCell>{group.item.code}</TableCell>
+                                <TableCell className="text-center">
+                                  <Badge
+                                    variant={
+                                      isLowStock ? "destructive" : "outline"
+                                    }
+                                    className={cn(
+                                      "px-3 py-1",
+                                      isLowStock
+                                        ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                        : ""
                                     )}
-                                  </TableCell>
-                                  <TableCell className="font-medium">
-                                    {group.item.name}
-                                  </TableCell>
-                                  <TableCell>{group.item.code}</TableCell>
-                                  <TableCell className="text-center">
-                                    <Badge
-                                      variant={
-                                        isLowStock ? "destructive" : "outline"
-                                      }
-                                      className={cn(
-                                        "px-3 py-1",
-                                        isLowStock
-                                          ? "bg-red-50 text-red-700 hover:bg-red-100"
-                                          : ""
-                                      )}
-                                    >
-                                      {group.totalQuantity}
+                                  >
+                                    {group.totalQuantity}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  {group.item.min_quantity}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  {group.item.unit.name}
+                                </TableCell>
+                                <TableCell>
+                                  {orderCount > 0 ? (
+                                    <Badge className="font-normal">
+                                      {orderCount} ta buyurtma
                                     </Badge>
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    {group.item.min_quantity}
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    {group.item.unit.name}
-                                  </TableCell>
-                                  <TableCell>
-                                    {orderCount > 0 ? (
-                                      <Badge className="font-normal">
-                                        {orderCount} ta buyurtma
-                                      </Badge>
-                                    ) : (
-                                      <span>-</span>
-                                    )}
+                                  ) : (
+                                    <span>-</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+
+                              {isExpanded && (
+                                <TableRow className="bg-slate-50">
+                                  <TableCell colSpan={7} className="p-0">
+                                    <div className="p-4">
+                                      <div className="text-sm font-medium mb-2 text-slate-700">
+                                        Barcha {group.item.name} balanslari:
+                                      </div>
+                                      <Table>
+                                        <TableHeader className="bg-slate-200">
+                                          <TableRow>
+                                            <TableHead className="font-medium text-slate-700">
+                                              Ombor
+                                            </TableHead>
+                                            <TableHead className="font-medium text-slate-700 text-center">
+                                              Miqdor
+                                            </TableHead>
+                                            <TableHead className="font-medium text-slate-700">
+                                              Buyurtma
+                                            </TableHead>
+                                            <TableHead className="font-medium text-slate-700">
+                                              Buyurtma holati
+                                            </TableHead>
+                                          </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                          {group.balances.map((balance) => (
+                                            <TableRow key={balance.id}>
+                                              <TableCell className="max-w-10">
+                                                {balance.warehouse.name}
+                                              </TableCell>
+                                              <TableCell className="text-center">
+                                                {balance.quantity}{" "}
+                                                {group.item.unit.name}
+                                              </TableCell>
+                                              <TableCell>
+                                                {balance.order ? (
+                                                  <div className="text-sm">
+                                                    <div className="font-medium">
+                                                      {balance.order.name}
+                                                    </div>
+                                                    <div className="text-slate-500">
+                                                      ID: {balance.order.id}{" "}
+                                                      Miqdor:{" "}
+                                                      {balance.order.quantity ||
+                                                        0}
+                                                    </div>
+                                                  </div>
+                                                ) : (
+                                                  <span className="text-slate-500">
+                                                    Buyurtmasiz
+                                                  </span>
+                                                )}
+                                              </TableCell>
+                                              <TableCell>
+                                                {balance.order && (
+                                                  <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                      "capitalize",
+                                                      statuses[
+                                                        balance.order.status
+                                                      ]?.secondaryBg,
+                                                      statuses[
+                                                        balance.order.status
+                                                      ]?.textColor,
+                                                      statuses[
+                                                        balance.order.status
+                                                      ]?.border
+                                                    )}
+                                                  >
+                                                    {
+                                                      statuses[
+                                                        balance.order.status
+                                                      ]?.text
+                                                    }
+                                                  </Badge>
+                                                )}
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                      </Table>
+                                    </div>
                                   </TableCell>
                                 </TableRow>
-
-                                {isExpanded && (
-                                  <TableRow className="bg-slate-50">
-                                    <TableCell colSpan={7} className="p-0">
-                                      <div className="p-4">
-                                        <div className="text-sm font-medium mb-2 text-slate-700">
-                                          Barcha {group.item.name} balanslari:
-                                        </div>
-                                        <Table>
-                                          <TableHeader className="bg-slate-200">
-                                            <TableRow>
-                                              <TableHead className="font-medium text-slate-700">
-                                                Ombor
-                                              </TableHead>
-                                              <TableHead className="font-medium text-slate-700 text-center">
-                                                Miqdor
-                                              </TableHead>
-                                              <TableHead className="font-medium text-slate-700">
-                                                Buyurtma
-                                              </TableHead>
-                                              <TableHead className="font-medium text-slate-700">
-                                                Buyurtma holati
-                                              </TableHead>
-                                            </TableRow>
-                                          </TableHeader>
-                                          <TableBody>
-                                            {group.balances.map((balance) => (
-                                              <TableRow key={balance.id}>
-                                                <TableCell>
-                                                  {balance.warehouse.name}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                  {balance.quantity}{" "}
-                                                  {group.item.unit.name}
-                                                </TableCell>
-                                                <TableCell>
-                                                  {balance.order ? (
-                                                    <div className="text-sm">
-                                                      <div className="font-medium">
-                                                        {balance.order.name}
-                                                      </div>
-                                                      <div className="text-slate-500">
-                                                        ID: {balance.order.id}{" "}
-                                                        Miqdor:{" "}
-                                                        {balance.order
-                                                          .quantity || 0}
-                                                      </div>
-                                                    </div>
-                                                  ) : (
-                                                    <span className="text-slate-500">
-                                                      Buyurtmasiz
-                                                    </span>
-                                                  )}
-                                                </TableCell>
-                                                <TableCell>
-                                                  {balance.order && (
-                                                    <Badge
-                                                      variant="outline"
-                                                      className={cn(
-                                                        "capitalize",
-                                                        statuses[
-                                                          balance.order.status
-                                                        ]?.secondaryBg,
-                                                        statuses[
-                                                          balance.order.status
-                                                        ]?.textColor,
-                                                        statuses[
-                                                          balance.order.status
-                                                        ]?.border
-                                                      )}
-                                                    >
-                                                      {
-                                                        statuses[
-                                                          balance.order.status
-                                                        ]?.text
-                                                      }
-                                                    </Badge>
-                                                  )}
-                                                </TableCell>
-                                              </TableRow>
-                                            ))}
-                                          </TableBody>
-                                        </Table>
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                )}
-                              </>
-                            );
-                          })}
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                        {loadingMore && (
+                          <div className="flex justify-center py-4 w-full">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                          </div>
+                        )}
                       </TableBody>
                     </Table>
                   </div>
                 </div>
-
-                <div className="py-2 flex items-center justify-between">
-                  <div className="text-sm text-slate-500">
-                    Jami {groupedItemsList.length} ta mahsulot
-                  </div>
-                  <div>{totalPages > 1 && renderPagination()}</div>
+                <div>
+                  Jami:{" "}
+                  {groupedItems.reduce(
+                    (acc, group) => acc + group.totalQuantity,
+                    0
+                  )}
                 </div>
               </>
             ) : (
@@ -561,4 +501,4 @@ const GroupedBalance = () => {
   );
 };
 
-export default GroupedBalance;
+export default Balance;
