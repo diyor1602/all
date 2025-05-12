@@ -366,6 +366,9 @@ const Balance = () => {
                           <TableHead className="font-medium text-slate-700">
                             Kodi
                           </TableHead>
+                          <TableHead className="font-medium text-slate-700">
+                            Rangi
+                          </TableHead>
                           <TableHead className="font-medium text-slate-700 text-center">
                             Jami miqdor
                           </TableHead>
@@ -424,6 +427,10 @@ const Balance = () => {
                                   {group.item.name}
                                 </TableCell>
                                 <TableCell>{group.item.code}</TableCell>
+                                <TableCell>
+                                  {group.item.color?.name}
+                                  {group.item.lot && ` lot: ${group.item.lot}`}
+                                </TableCell>
                                 <TableCell className="text-center">
                                   <Badge
                                     variant={
@@ -458,7 +465,7 @@ const Balance = () => {
 
                               {isExpanded && (
                                 <TableRow className="bg-slate-50">
-                                  <TableCell colSpan={7} className="p-0">
+                                  <TableCell colSpan={8} className="p-0">
                                     <div className="p-4">
                                       <div className="text-sm font-medium mb-2 text-slate-700">
                                         Barcha {group.item.name} balanslari:
