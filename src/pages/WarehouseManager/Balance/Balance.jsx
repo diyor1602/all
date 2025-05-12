@@ -29,6 +29,7 @@ import {
   ChevronDown,
   ChevronRight,
   Loader2,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statuses } from "@/lib/status";
@@ -64,6 +65,7 @@ const Balance = () => {
   const [hasMore, setHasMore] = useState(true);
   const [expandedItems, setExpandedItems] = useState({});
   const [totalQuantity, setTotalQuantity] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Add debounced search query
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -212,6 +214,46 @@ const Balance = () => {
     }));
   };
 
+  const handleDownlod = () => {
+    setIsDownloading(true);
+    api
+      .get("/warehouseManager/balances/pdf", {
+        responseType: "blob",
+      })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        const now = new Date();
+        const formattedDate = `${now.getDate().toString().padStart(2, "0")}-${(
+          now.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0")}-${now.getFullYear()}_${now
+          .getHours()
+          .toString()
+          .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
+        link.setAttribute("download", `balanslar_${formattedDate}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        toast({
+          title: "Fayl yuklab olindi",
+          description: "Balanslar muvaffaqiyatli yuklab olindi",
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        toast({
+          variant: "destructive",
+          title: "Xatolik",
+          description: "Faylni yuklab olishda xatolik",
+        });
+      })
+      .finally(() => {
+        setIsDownloading(false);
+      });
+  };
+
   return (
     <div className="flex flex-col gap-6 p-0 bg-slate-50">
       <Card className="border-none shadow-lg">
@@ -282,6 +324,21 @@ const Balance = () => {
                     className={`mr-2 ${loading ? "animate-spin" : ""}`}
                   />
                   Yangilash
+                </Button>
+              </div>
+              <div>
+                <Button
+                  variant="outline"
+                  className="w-full md:w-auto bg-white shadow-sm border-slate-200 hover:bg-slate-200 transition-all"
+                  onClick={handleDownlod}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Download size={18} />
+                  )}
+                  Yuklab olish
                 </Button>
               </div>
               <div className="text-sm text-slate-500 ml-auto">
