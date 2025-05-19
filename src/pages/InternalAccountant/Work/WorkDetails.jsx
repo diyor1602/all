@@ -6,8 +6,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Edit,
-  Eye,
   ArrowLeft,
   Loader2,
   BoxIcon,
@@ -22,6 +20,7 @@ import {
   Bitcoin,
   Timer,
   FileDigit,
+  Pencil,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -471,9 +470,21 @@ const WorkDetails = () => {
                               sekund
                             </div>
                           </div>
-                          <div className="flex flex-wrap justify-between gap-2 mt-4"></div>
+                          <div className="flex flex-wrap justify-end gap-2 mt-4">
+                            <Button
+                              title="Tahrirlash"
+                              onClick={() =>
+                                navigate(
+                                  `/internalAccountant/work/${tarification?.id}/edit`
+                                )
+                              }
+                            >
+                              <Pencil className="h-4 w-4" />
+                              Tahrirlash
+                            </Button>
+                          </div>
                           <div className="overflow-auto max-h-[70vh]">
-                            <table className="w-full border border-collapse whitespace-nowrap">
+                            <table className="w-full border border-collapse whitespace-nowrap md:whitespace-normal">
                               <thead>
                                 <tr className="text-center">
                                   <th className="border border-gray-300 p-1">
