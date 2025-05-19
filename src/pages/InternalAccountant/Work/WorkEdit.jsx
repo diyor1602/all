@@ -146,15 +146,8 @@ const WorkEdit = () => {
       const tarificationsToSubmit = tarif.tarifications.map((item) => {
         const preparedItem = {
           name: item.name || "",
-          // Use employee_id if available, otherwise use employee.id if available
           employee_id:
             item.employee_id || (item.employee ? item.employee.id : null),
-          // Use razryad_id if available, otherwise use razryad.id if available
-          razryad_id:
-            item.razryad_id || (item.razryad ? item.razryad.id : null),
-          // Use typewriter_id if available, otherwise use typewriter.id if available
-          typewriter_id:
-            item.typewriter_id || (item.typewriter ? item.typewriter.id : null),
           second: item.second || 0,
         };
 
@@ -227,92 +220,92 @@ const WorkEdit = () => {
               <th className="px-4 py-2 border">Nomi</th>
               <th className="px-4 py-2 border">Xodim</th>
               <th className="px-4 py-2 border">Razryad</th>
-              <th className="px-4 py-2 border">Mashina</th>
               <th className="px-4 py-2 border">Sekund</th>
               <th className="px-4 py-2 border">Summa (so'm)</th>
             </tr>
           </thead>
           <tbody>
-            {tarif?.tarifications?.map((item, index) => (
-              <tr key={index}>
-                <td className="px-4 py-2 border text-center">{index + 1}</td>
-                <td className="px-4 py-2 border">{item?.code || "-"}</td>
-                <td className="px-4 py-2 border">{item?.name || "-"}</td>
-                <td className="px-4 py-2 border">
-                  <Popover
-                    open={activePopoverIndex === `worker-${index}`}
-                    onOpenChange={(open) =>
-                      setActivePopoverIndex(open ? `worker-${index}` : null)
-                    }
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={activePopoverIndex === `worker-${index}`}
-                        className="w-[200px] justify-between"
-                      >
-                        {item?.employee?.id
-                          ? workers.find(
-                              (worker) => worker.id === item.employee.id
-                            )?.name || "Xodimni tanlang"
-                          : item?.employee_id
-                          ? workers.find(
-                              (worker) => worker.id === item.employee_id
-                            )?.name || "Xodimni tanlang"
-                          : "Xodimni tanlang"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
-                      <Command>
-                        <CommandInput
-                          placeholder="Qidirish..."
-                          className="h-9"
-                        />
-                        <CommandList>
-                          <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
-                          <CommandGroup>
-                            {workers.map((worker) => (
-                              <CommandItem
-                                key={worker.id}
-                                value={worker.name}
-                                onSelect={() =>
-                                  handleWorkerSelect(index, worker.id)
-                                }
-                              >
-                                {worker.name}
-                                <Check
-                                  className={cn(
-                                    "ml-auto h-4 w-4",
-                                    item?.employee?.id === worker.id ||
-                                      item?.employee_id === worker.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </td>
-                <td className="px-4 py-2 border text-center">
-                  {item?.razryad?.name || "-"}
-                </td>
-                <td className="px-4 py-2 border text-center">
-                  {item?.typewriter?.name || "-"}
-                </td>
-                <td className="px-4 py-2 border">{item?.second || "-"}</td>
-                <td className="px-4 py-2 border">
-                  {parseFloat(item?.summa).toLocaleString("en-US", {
-                    maximumFractionDigits: 2,
-                  })}
-                </td>
-              </tr>
-            ))}
+            {tarif?.tarifications
+              ?.sort((a, b) => a?.code.localeCompare(b?.code))
+              ?.map((item, index) => (
+                <tr key={index}>
+                  <td className="px-4 py-2 border text-center">{index + 1}</td>
+                  <td className="px-4 py-2 border">{item?.code || "-"}</td>
+                  <td className="px-4 py-2 border">{item?.name || "-"}</td>
+                  <td className="px-4 py-2 border">
+                    <Popover
+                      open={activePopoverIndex === `worker-${index}`}
+                      onOpenChange={(open) =>
+                        setActivePopoverIndex(open ? `worker-${index}` : null)
+                      }
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={
+                            activePopoverIndex === `worker-${index}`
+                          }
+                          className="w-[200px] justify-between"
+                        >
+                          {item?.employee?.id
+                            ? workers.find(
+                                (worker) => worker.id === item.employee.id
+                              )?.name || "Xodimni tanlang"
+                            : item?.employee_id
+                            ? workers.find(
+                                (worker) => worker.id === item.employee_id
+                              )?.name || "Xodimni tanlang"
+                            : "Xodimni tanlang"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[200px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Qidirish..."
+                            className="h-9"
+                          />
+                          <CommandList>
+                            <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
+                            <CommandGroup>
+                              {workers.map((worker) => (
+                                <CommandItem
+                                  key={worker.id}
+                                  value={worker.name}
+                                  onSelect={() =>
+                                    handleWorkerSelect(index, worker.id)
+                                  }
+                                >
+                                  {worker.name}
+                                  <Check
+                                    className={cn(
+                                      "ml-auto h-4 w-4",
+                                      item?.employee?.id === worker.id ||
+                                        item?.employee_id === worker.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {item?.razryad?.name || "-"}
+                  </td>
+                  <td className="px-4 py-2 border">{item?.second || "-"}</td>
+                  <td className="px-4 py-2 border">
+                    {parseFloat(item?.summa).toLocaleString("en-US", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
