@@ -313,7 +313,7 @@ const WorkPage = () => {
                       order.status
                     )} hover:opacity-90 hover:${getStatusColor(order.status)}`}
                     onClick={() =>
-                      navigate(`/internalAccountant/orders/${order.id}`)
+                      navigate(`/internalAccountant/work/${order.id}`)
                     }
                   >
                     Batafsil

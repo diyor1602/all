@@ -402,7 +402,9 @@ const OrderView = () => {
                 {order?.quantity && (
                   <div className="flex gap-2 items-center">
                     <FileDigit className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">Miqdor: {order?.quantity}</span>
+                    <span className="text-sm">
+                      Miqdor: {order?.quantity} ta
+                    </span>
                   </div>
                 )}
                 {order?.start_date && (
