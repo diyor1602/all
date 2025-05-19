@@ -67,9 +67,10 @@ const EditEmployees = () => {
     birthday: "",
     position_id: "",
     role_id: "",
-    payment_type: "piece_work",
+    payment_type: "",
     type: "simple",
-    status: "working",
+    status: "",
+    salary: "",
   });
 
   // New state for the image file
@@ -145,6 +146,7 @@ const EditEmployees = () => {
         position_id: positionId,
         role_id: roleId,
         payment_type: employee.payment_type || "piece_work",
+        salary: employee.salary || "",
         type: employee.type || "simple",
         status: employee.status || "working",
       });
@@ -426,6 +428,7 @@ const EditEmployees = () => {
         "position_id",
         "hiring_date",
         "birthday",
+        "payment_type",
       ];
       const missingFields = requiredFields.filter((field) => !formData[field]);
 
@@ -433,6 +436,16 @@ const EditEmployees = () => {
         toast({
           title: "Diqqat",
           description: "Iltimos, barcha majburiy maydonlarni to'ldiring",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (formData.payment_type === "monthly" && !formData.salary) {
+        toast({
+          title: "Diqqat",
+          description: "Iltimos, oylik summani kiriting",
           variant: "destructive",
         });
         setLoading(false);
@@ -459,6 +472,12 @@ const EditEmployees = () => {
       // Add image file if exists
       if (imageFile) {
         formDataToSend.append("img", imageFile);
+      }
+
+      if (formData.payment_type === "monthly") {
+        formDataToSend.append("salary", formData.salary);
+      } else {
+        formDataToSend.delete("salary");
       }
 
       formDataToSend.append("_method", "PATCH");
@@ -837,7 +856,45 @@ const EditEmployees = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="payment_type">
+                    To'lov turi <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    onValueChange={(value) =>
+                      handleSelectChange("payment_type", value)
+                    }
+                    value={formData.payment_type}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="To'lov turi tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="piece_work">Ishbay</SelectItem>
+                      <SelectItem value="monthly">Oylik</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
+              {formData.payment_type === "monthly" && (
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="salary">
+                      Oylik summa <span className="text-red-500">*</span> (
+                      {parseFloat(formData.salary).toLocaleString("en")} so'm)
+                    </Label>
+                    <Input
+                      id="salary"
+                      name="salary"
+                      type="number"
+                      value={formData.salary}
+                      onChange={handleInputChange}
+                      placeholder="Oylik summa"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="comment">Izoh</Label>
