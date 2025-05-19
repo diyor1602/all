@@ -512,8 +512,14 @@ const WorkDetails = () => {
                               </thead>
                               <tbody>
                                 {Array.isArray(tarification?.tarifications) ? (
-                                  tarification.tarifications.map(
-                                    (tarif, index) => (
+                                  tarification.tarifications
+                                    ?.sort((a, b) =>
+                                      a.code.localeCompare(b.code, undefined, {
+                                        numeric: true,
+                                        sensitivity: "base",
+                                      })
+                                    )
+                                    ?.map((tarif, index) => (
                                       <tr
                                         key={tarif.id}
                                         className="text-center"
@@ -544,8 +550,7 @@ const WorkDetails = () => {
                                           )?.toLocaleString()}
                                         </td>
                                       </tr>
-                                    )
-                                  )
+                                    ))
                                 ) : (
                                   <tr>
                                     <td
