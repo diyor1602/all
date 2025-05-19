@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { History } from "lucide-react";
+import { BriefcaseBusiness, History } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 
 const Settings = () => {
@@ -20,6 +20,12 @@ const SettingsPage = () => {
       icon: History,
       link: "/internalAccountant/settings/attendance-history",
       color: "bg-green-500",
+    },
+    {
+      name: "Ish",
+      icon: BriefcaseBusiness,
+      link: "/internalAccountant/work",
+      color: "bg-yellow-500",
     },
   ];
 
