@@ -146,8 +146,15 @@ const WorkEdit = () => {
       const tarificationsToSubmit = tarif.tarifications.map((item) => {
         const preparedItem = {
           name: item.name || "",
+          // Use employee_id if available, otherwise use employee.id if available
           employee_id:
             item.employee_id || (item.employee ? item.employee.id : null),
+          // Use razryad_id if available, otherwise use razryad.id if available
+          razryad_id:
+            item.razryad_id || (item.razryad ? item.razryad.id : null),
+          // Use typewriter_id if available, otherwise use typewriter.id if available
+          typewriter_id:
+            item.typewriter_id || (item.typewriter ? item.typewriter.id : null),
           second: item.second || 0,
         };
 
