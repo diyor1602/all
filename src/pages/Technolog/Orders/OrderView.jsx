@@ -923,32 +923,41 @@ const OrderView = () => {
                 </tr>
               </thead>
               <tbody>
-                {selectedTarification?.tarifications?.map((tarif, index) => (
-                  <tr key={tarif.id} className="text-center">
-                    <td className="border border-gray-300 p-1">{index + 1}</td>
-                    <td className="border border-gray-300 p-1">
-                      {tarif?.code}
-                    </td>
-                    <td className="border border-gray-300 p-1">
-                      {tarif?.name}
-                    </td>
-                    <td className="border border-gray-300 p-1">
-                      {tarif?.employee?.name || "-"}
-                    </td>
-                    <td className="border border-gray-300 p-1">
-                      {tarif?.razryad?.name}
-                    </td>
-                    <td className="border border-gray-300 p-1">
-                      {tarif?.typewriter?.name}
-                    </td>
-                    <td className="border border-gray-300 p-1">
-                      {parseFloat(tarif?.second)?.toLocaleString()}
-                    </td>
-                    <td className="border border-gray-300 p-1">
-                      {parseFloat(tarif?.summa)?.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
+                {selectedTarification?.tarifications
+                  ?.sort((a, b) =>
+                    a.code.localeCompare(b.code, undefined, {
+                      numeric: true,
+                      sensitivity: "base",
+                    })
+                  )
+                  ?.map((tarif, index) => (
+                    <tr key={tarif.id} className="text-center">
+                      <td className="border border-gray-300 p-1">
+                        {index + 1}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.code}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.name}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.employee?.name || "-"}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.razryad?.name}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.typewriter?.name}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {parseFloat(tarif?.second)?.toLocaleString()}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {parseFloat(tarif?.summa)?.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

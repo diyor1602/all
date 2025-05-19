@@ -415,7 +415,12 @@ const EditTarif = () => {
           </thead>
           <tbody>
             {tarif?.tarifications
-              ?.sort((a, b) => a.id - b.id)
+              ?.sort((a, b) =>
+                a.code.localeCompare(b.code, undefined, {
+                  numeric: true,
+                  sensitivity: "base",
+                })
+              )
               .map((item, index) => (
                 <tr key={index}>
                   <td className="px-4 py-2 border text-center">{index + 1}</td>
