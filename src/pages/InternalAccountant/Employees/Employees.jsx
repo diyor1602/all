@@ -355,7 +355,7 @@ const Employees = () => {
         <div className="relative w-full">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Ism, telefon yoki username"
+            placeholder="Ism, id yoki username"
             className="pl-8 bg-white w-full"
             value={filters.search}
             onChange={(e) => handleFilterChange("search", e.target.value)}
