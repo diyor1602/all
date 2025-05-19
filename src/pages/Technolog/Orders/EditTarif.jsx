@@ -414,162 +414,171 @@ const EditTarif = () => {
             </tr>
           </thead>
           <tbody>
-            {tarif?.tarifications?.map((item, index) => (
-              <tr key={index}>
-                <td className="px-4 py-2 border text-center">{index + 1}</td>
-                <td className="px-4 py-2 border">{item?.code || "-"}</td>
-                <td className="px-4 py-2 border">
-                  <Input
-                    placeholder="Nomi"
-                    className="min-w-[400px]"
-                    type="text"
-                    value={item?.name || ""}
-                    onChange={(e) =>
-                      handleInputChange(index, "name", e.target.value)
-                    }
-                    ref={
-                      index === tarif.tarifications.length - 1
-                        ? newRowRef
-                        : null
-                    }
-                  />
-                </td>
-                <td className="px-4 py-2 border">
-                  <Popover
-                    open={activePopoverIndex === `worker-${index}`}
-                    onOpenChange={(open) =>
-                      setActivePopoverIndex(open ? `worker-${index}` : null)
-                    }
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={activePopoverIndex === `worker-${index}`}
-                        className="w-[200px] justify-between"
-                      >
-                        {item?.employee?.id
-                          ? workers.find(
-                              (worker) => worker.id === item.employee.id
-                            )?.name || "Xodimni tanlang"
-                          : item?.employee_id
-                          ? workers.find(
-                              (worker) => worker.id === item.employee_id
-                            )?.name || "Xodimni tanlang"
-                          : "Xodimni tanlang"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
-                      <Command>
-                        <CommandInput
-                          placeholder="Qidirish..."
-                          className="h-9"
-                        />
-                        <CommandList>
-                          <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
-                          <CommandGroup>
-                            {workers.map((worker) => (
-                              <CommandItem
-                                key={worker.id}
-                                value={worker.name}
-                                onSelect={() =>
-                                  handleWorkerSelect(index, worker.id)
-                                }
-                              >
-                                {worker.name}
-                                <Check
-                                  className={cn(
-                                    "ml-auto h-4 w-4",
-                                    item?.employee?.id === worker.id ||
-                                      item?.employee_id === worker.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </td>
-                <td className="px-4 py-2 border">
-                  <Select
-                    value={(item?.razryad_id || item?.razryad?.id)?.toString()}
-                    onValueChange={(value) =>
-                      handleRazryadSelect(index, parseInt(value))
-                    }
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Razryadni tanlang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {ranks.map((rank) => (
-                          <SelectItem key={rank.id} value={rank.id.toString()}>
-                            {rank.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </td>
-                <td className="px-4 py-2 border">
-                  <Select
-                    value={(
-                      item?.typewriter_id || item?.typewriter?.id
-                    )?.toString()}
-                    onValueChange={(value) =>
-                      handleMachineSelect(index, parseInt(value))
-                    }
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Mashinani tanlang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {machines.map((machine) => (
-                          <SelectItem
-                            key={machine.id}
-                            value={machine.id.toString()}
-                          >
-                            {machine.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </td>
-                <td className="px-4 py-2 border">
-                  <div className="flex items-center space-x-2">
+            {tarif?.tarifications
+              ?.sort((a, b) => a.id - b.id)
+              .map((item, index) => (
+                <tr key={index}>
+                  <td className="px-4 py-2 border text-center">{index + 1}</td>
+                  <td className="px-4 py-2 border">{item?.code || "-"}</td>
+                  <td className="px-4 py-2 border">
                     <Input
-                      type="number"
-                      className="w-24"
-                      value={item?.second}
+                      placeholder="Nomi"
+                      className="min-w-[400px]"
+                      type="text"
+                      value={item?.name || ""}
                       onChange={(e) =>
-                        handleSecondChange(index, parseFloat(e.target.value))
+                        handleInputChange(index, "name", e.target.value)
+                      }
+                      ref={
+                        index === tarif.tarifications.length - 1
+                          ? newRowRef
+                          : null
                       }
                     />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                      onClick={() => openTimerDialog(index)}
-                      title="Vaqtni o'lchash"
+                  </td>
+                  <td className="px-4 py-2 border">
+                    <Popover
+                      open={activePopoverIndex === `worker-${index}`}
+                      onOpenChange={(open) =>
+                        setActivePopoverIndex(open ? `worker-${index}` : null)
+                      }
                     >
-                      <Timer className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </td>
-                <td className="px-4 py-2 border">
-                  {parseFloat(item?.summa).toLocaleString("en-US", {
-                    maximumFractionDigits: 2,
-                  })}
-                </td>
-              </tr>
-            ))}
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={
+                            activePopoverIndex === `worker-${index}`
+                          }
+                          className="w-[200px] justify-between"
+                        >
+                          {item?.employee?.id
+                            ? workers.find(
+                                (worker) => worker.id === item.employee.id
+                              )?.name || "Xodimni tanlang"
+                            : item?.employee_id
+                            ? workers.find(
+                                (worker) => worker.id === item.employee_id
+                              )?.name || "Xodimni tanlang"
+                            : "Xodimni tanlang"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[200px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Qidirish..."
+                            className="h-9"
+                          />
+                          <CommandList>
+                            <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
+                            <CommandGroup>
+                              {workers.map((worker) => (
+                                <CommandItem
+                                  key={worker.id}
+                                  value={worker.name}
+                                  onSelect={() =>
+                                    handleWorkerSelect(index, worker.id)
+                                  }
+                                >
+                                  {worker.name}
+                                  <Check
+                                    className={cn(
+                                      "ml-auto h-4 w-4",
+                                      item?.employee?.id === worker.id ||
+                                        item?.employee_id === worker.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </td>
+                  <td className="px-4 py-2 border">
+                    <Select
+                      value={(
+                        item?.razryad_id || item?.razryad?.id
+                      )?.toString()}
+                      onValueChange={(value) =>
+                        handleRazryadSelect(index, parseInt(value))
+                      }
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Razryadni tanlang" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {ranks.map((rank) => (
+                            <SelectItem
+                              key={rank.id}
+                              value={rank.id.toString()}
+                            >
+                              {rank.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-4 py-2 border">
+                    <Select
+                      value={(
+                        item?.typewriter_id || item?.typewriter?.id
+                      )?.toString()}
+                      onValueChange={(value) =>
+                        handleMachineSelect(index, parseInt(value))
+                      }
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Mashinani tanlang" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {machines.map((machine) => (
+                            <SelectItem
+                              key={machine.id}
+                              value={machine.id.toString()}
+                            >
+                              {machine.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-4 py-2 border">
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="number"
+                        className="w-24"
+                        value={item?.second}
+                        onChange={(e) =>
+                          handleSecondChange(index, parseFloat(e.target.value))
+                        }
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => openTimerDialog(index)}
+                        title="Vaqtni o'lchash"
+                      >
+                        <Timer className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 border">
+                    {parseFloat(item?.summa).toLocaleString("en-US", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
