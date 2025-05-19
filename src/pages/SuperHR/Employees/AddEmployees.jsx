@@ -50,7 +50,8 @@ const AddEmployees = () => {
     birthday: "", // required now
     position_id: "", // required
     role_id: "", // not required
-    payment_type: "piece_work", // send it withouth asking
+    payment_type: "", // piece_work or monthly
+    salary: "", // required if payment_type is monthly
     type: "simple", // send it without asking
     status: "working", // send it without asking
   });
@@ -244,7 +245,8 @@ const AddEmployees = () => {
         "department_id",
         "position_id",
         "hiring_date",
-        "birthday", // Birthday is now required
+        "birthday",
+        "payment_type",
       ];
       const missingFields = requiredFields.filter((field) => !formData[field]);
 
@@ -252,6 +254,16 @@ const AddEmployees = () => {
         toast({
           title: "Diqqat",
           description: "Iltimos, barcha majburiy maydonlarni to'ldiring",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (formData.payment_type === "monthly" && !formData.salary) {
+        toast({
+          title: "Diqqat",
+          description: "Iltimos, oylik summani kiriting",
           variant: "destructive",
         });
         setLoading(false);
@@ -273,6 +285,12 @@ const AddEmployees = () => {
       // Add image file if exists
       if (imageFile) {
         formDataToSend.append("img", imageFile);
+      }
+
+      if (formData.payment_type === "monthly") {
+        formDataToSend.append("salary", formData.salary);
+      } else {
+        formDataToSend.delete("salary");
       }
 
       await api.post("/superhr/employees", formDataToSend, {
@@ -621,6 +639,43 @@ const AddEmployees = () => {
                   </Select>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="payment_type">
+                  To'lov turi <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleSelectChange("payment_type", value)
+                  }
+                  value={formData.payment_type}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="To'lov turi tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="piece_work">Ishbay</SelectItem>
+                    <SelectItem value="monthly">Oylik</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.payment_type === "monthly" && (
+                <div className="space-y-2">
+                  <Label htmlFor="salary">
+                    Oylik summa <span className="text-red-500">*</span> (
+                    {parseFloat(formData.salary).toLocaleString("en")} so'm)
+                  </Label>
+                  <Input
+                    id="salary"
+                    name="salary"
+                    type="number"
+                    value={formData.salary}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="comment">Izoh</Label>
