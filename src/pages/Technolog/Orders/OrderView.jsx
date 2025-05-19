@@ -23,6 +23,7 @@ import {
   Timer,
   Files,
   FileSpreadsheet,
+  FileDigit,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -398,6 +399,12 @@ const OrderView = () => {
               <h4 className="font-medium text-gray-700">Buyurtma haqida</h4>
 
               <div className="space-y-2">
+                {order?.quantity && (
+                  <div className="flex gap-2 items-center">
+                    <FileDigit className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">Miqdor: {order?.quantity}</span>
+                  </div>
+                )}
                 {order?.start_date && (
                   <div className="flex gap-2 items-center">
                     <CalendarIcon className="h-4 w-4 text-gray-500" />
