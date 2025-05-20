@@ -585,6 +585,22 @@ const CuttingStart = () => {
           if (!printSuccess) {
             throw new Error("QR code chop etishda xatolik");
           }
+        } else {
+          // download qr code
+          const qrData = `${id}, ${selectedSpec}`;
+          const dataUrl = await QRCode.toDataURL(qrData, {
+            errorCorrectionLevel: "H",
+            margin: 1,
+            scale: 16,
+            color: {
+              dark: "#000000",
+              light: "#FFFFFF",
+            },
+          });
+          const link = document.createElement("a");
+          link.href = dataUrl;
+          link.download = `${id}, ${selectedSpec}.png`;
+          link.click();
         }
       }
 
