@@ -3,6 +3,7 @@ import Attendance from "./Attendance/Attendance";
 import Employees from "./Employees/Employees";
 import Settings from "./Settings/Settings";
 import Work from "./Work/Work";
+import Scaner from "./Scaner/Scaner";
 
 const InternalAccountant = () => {
   return (
@@ -11,6 +12,7 @@ const InternalAccountant = () => {
       <Route path="employees" element={<Employees />} />
       <Route path="settings/*" element={<Settings />} />
       <Route path="work/*" element={<Work />} />
+      <Route path="scaner" element={<Scaner />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
