@@ -14,9 +14,10 @@ const Scaner = () => {
     if (!scannedData) return; // Don't fetch if scannedData is empty
 
     setIsLoading(true);
+    const sendingData = scannedData.split("A")[1] || scannedData;
     try {
       const response = await api.get(
-        `/internalAccountant/dailyPlan/${scannedData.split("A")[1]}`
+        `/internalAccountant/dailyPlan/${sendingData}`
       );
       setData(response.data);
     } catch (error) {
