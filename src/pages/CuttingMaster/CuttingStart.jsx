@@ -162,14 +162,14 @@ const CuttingStart = () => {
 
   // Simple text printing approach that just sends formatted text commands to the printer
   const printQRCode = async () => {
-    if (!connectedDevice) {
-      toast({
-        title: "Xatolik",
-        description: "Printer ulanmagan",
-        variant: "destructive",
-      });
-      return false;
-    }
+    // if (!connectedDevice) {
+    //   toast({
+    //     title: "Xatolik",
+    //     description: "Printer ulanmagan",
+    //     variant: "destructive",
+    //   });
+    //   return false;
+    // }
 
     try {
       // Connect to the printer's service
@@ -577,13 +577,15 @@ const CuttingStart = () => {
 
       // Check if a printer is connected
       if (!connectedDevice) {
-        throw new Error("Printer ulanmagan");
-      }
-
-      // Print the QR Code and wait for confirmation
-      const printSuccess = await printQRCode();
-      if (!printSuccess) {
-        throw new Error("QR code chop etishda xatolik");
+        if (
+          !window.confirm("Printer ulanmagan. Qo'lda chop etishni xohlaysizmi?")
+        ) {
+          // Print the QR Code and wait for confirmation
+          const printSuccess = await printQRCode();
+          if (!printSuccess) {
+            throw new Error("QR code chop etishda xatolik");
+          }
+        }
       }
 
       // If everything is successful, save the cut data

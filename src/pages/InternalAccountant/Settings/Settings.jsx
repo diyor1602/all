@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, History } from "lucide-react";
+import { BriefcaseBusiness, History, QrCode } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 
 const Settings = () => {
@@ -25,7 +25,13 @@ const SettingsPage = () => {
       name: "Ish",
       icon: BriefcaseBusiness,
       link: "/internalAccountant/work",
-      color: "bg-yellow-500",
+      color: "bg-red-500",
+    },
+    {
+      name: "Skaner",
+      icon: QrCode,
+      link: "/internalAccountant/scaner",
+      color: "bg-gray-500",
     },
   ];
 
