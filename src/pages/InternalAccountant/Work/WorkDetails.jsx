@@ -44,6 +44,7 @@ const WorkDetails = () => {
   const [loading, setLoading] = useState(false);
   const [selectedSubmodel, setSelectedSubmodel] = useState(null);
   const [tarifications, setTarifications] = useState([]);
+  const [planLoader, setPlanLoader] = useState(false);
 
   const totalSpends = useMemo(
     () =>
@@ -107,6 +108,49 @@ const WorkDetails = () => {
       setTarifications(foundSubmodel?.tarification_categories || []);
     }
   }, [selectedSubmodel, order]);
+
+  const handlePlan = async () => {
+    setPlanLoader(true);
+    try {
+      const response = await api.get(`/internalAccountant/dailyPlan/`, {
+        params: {
+          submodel_id: selectedSubmodel?.id,
+          group_id: selectedSubmodel?.group?.group?.id,
+        },
+        responseType: "blob", // Important: tells Axios to expect binary data
+      });
+
+      // Create a blob URL
+      const blob = new Blob([response.data], { type: "application/pdf" }); // Change type if it's not PDF
+      const blobURL = URL.createObjectURL(blob);
+
+      // Create an invisible iframe to trigger print
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = blobURL;
+      document.body.appendChild(iframe);
+
+      iframe.onload = function () {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      };
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Plan yaratildi va chop etildi",
+        variant: "default",
+        duration: 2000,
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Plan yaratishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setPlanLoader(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -357,6 +401,17 @@ const WorkDetails = () => {
               <h2 className="text-lg font-medium my-6 ml-2">
                 Tarifikatsiyalar
               </h2>
+              <Button
+                type="button"
+                disabled={planLoader}
+                onClick={() => handlePlan()}
+              >
+                {planLoader ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Plan chiqarish"
+                )}
+              </Button>
             </div>
             <div className="flex flex-col gap-2">
               {tarifications?.length > 0 && (
