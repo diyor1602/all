@@ -189,77 +189,71 @@ const ConnectToWork = () => {
               {submodel?.submodel?.name}
             </div>
             <div className="space-y-6">
-              {submodel?.tarification_categories
-                ?.sort((a, b) =>
-                  a?.code?.localeCompare(b?.code, undefined, {
-                    numeric: true,
-                    sensitivity: "base",
-                  })
-                )
-                ?.map((category) => (
-                  <div key={category.id} className="mb-4">
-                    <div className="font-semibold text-lg mb-3 bg-gray-50 p-2 rounded">
-                      {category?.name}
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full border-collapse">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 border">
-                              Ish nomi
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 border">
-                              Ishchi
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {category?.tarifications
-                            ?.sort((a, b) =>
-                              a?.code?.localeCompare(b?.code, undefined, {
-                                numeric: true,
-                                sensitivity: "base",
-                              })
-                            )
-                            ?.map((item) => (
-                              <tr key={item.id} className="hover:bg-gray-50">
-                                <td className="border px-4 py-3 max-w-[50%] w-full">
-                                  <div className="flex gap-1 flex-col">
-                                    <div>{item.name}</div>
-                                    <div className="text-gray-600 text-xs">
-                                      {item.code}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="border px-4 py-3 max-w-[50%] w-full">
-                                  <Select
-                                    value={selectedEmployees[item.id] || ""}
-                                    onValueChange={(value) =>
-                                      handleEmployeeSelect(item.id, value)
-                                    }
-                                  >
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue placeholder="Tanlang" />
-                                    </SelectTrigger>
-                                    <SelectContent className="max-h-60">
-                                      {data.employees?.map((employee) => (
-                                        <SelectItem
-                                          key={employee.id}
-                                          value={employee.id}
-                                        >
-                                          {employee?.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
+              {console.log(submodel)}
+              {submodel?.tarification_categories?.map((category) => (
+                <div key={category.id} className="mb-4">
+                  <div className="font-semibold text-lg mb-3 bg-gray-50 p-2 rounded">
+                    {category?.name}
                   </div>
-                ))}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border-collapse">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 border">
+                            Ish nomi
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 border">
+                            Ishchi
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {category?.tarifications
+                          ?.sort((a, b) =>
+                            a?.code?.localeCompare(b?.code, undefined, {
+                              numeric: true,
+                              sensitivity: "base",
+                            })
+                          )
+                          ?.map((item) => (
+                            <tr key={item.id} className="hover:bg-gray-50">
+                              <td className="border px-4 py-3 max-w-[50%] w-full">
+                                <div className="flex gap-1 flex-col">
+                                  <div>{item.name}</div>
+                                  <div className="text-gray-600 text-xs">
+                                    {item.code}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="border px-4 py-3 max-w-[50%] w-full">
+                                <Select
+                                  value={selectedEmployees[item.id] || ""}
+                                  onValueChange={(value) =>
+                                    handleEmployeeSelect(item.id, value)
+                                  }
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Tanlang" />
+                                  </SelectTrigger>
+                                  <SelectContent className="max-h-60">
+                                    {data.employees?.map((employee) => (
+                                      <SelectItem
+                                        key={employee.id}
+                                        value={employee.id}
+                                      >
+                                        {employee?.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
