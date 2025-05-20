@@ -191,7 +191,7 @@ const ConnectToWork = () => {
             <div className="space-y-6">
               {submodel?.tarification_categories
                 ?.sort((a, b) =>
-                  a.code.localeCompare(b.code, undefined, {
+                  a?.code?.localeCompare(b?.code, undefined, {
                     numeric: true,
                     sensitivity: "base",
                   })
