@@ -189,7 +189,6 @@ const ConnectToWork = () => {
               {submodel?.submodel?.name}
             </div>
             <div className="space-y-6">
-              {console.log(submodel)}
               {submodel?.tarification_categories?.map((category) => (
                 <div key={category.id} className="mb-4">
                   <div className="font-semibold text-lg mb-3 bg-gray-50 p-2 rounded">

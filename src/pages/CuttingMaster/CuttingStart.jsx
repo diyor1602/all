@@ -765,7 +765,6 @@ const CuttingStart = () => {
                 description: "QR code yaratishda xatolik",
                 variant: "destructive",
               });
-              console.error("QR code error:", err);
             });
         }
       }

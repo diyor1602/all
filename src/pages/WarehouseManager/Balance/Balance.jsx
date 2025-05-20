@@ -155,7 +155,6 @@ const Balance = () => {
       setHasMore(page < response.data.data.last_page);
       setCurrentPage(page);
     } catch (error) {
-      console.log(error);
       toast({
         variant: "destructive",
         title: "Xatolik",
@@ -242,7 +241,6 @@ const Balance = () => {
         });
       })
       .catch((error) => {
-        console.error(error);
         toast({
           variant: "destructive",
           title: "Xatolik",
