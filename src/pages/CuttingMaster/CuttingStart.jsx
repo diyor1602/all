@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CircleCheck, Bluetooth, Printer, LoaderCircle } from "lucide-react";
 import QRCode from "qrcode";
+import jsPDF from "jspdf";
 
 // Import Dialog components
 import {
@@ -48,6 +49,87 @@ const CuttingStart = () => {
 
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Transliteration function for converting Cyrillic to Latin
+  const transliterate = (str) => {
+    if (!str) return "";
+
+    const cyrillicToLatin = {
+      А: "A",
+      Б: "B",
+      В: "V",
+      Г: "G",
+      Д: "D",
+      Е: "E",
+      Ё: "YO",
+      Ж: "ZH",
+      З: "Z",
+      И: "I",
+      Й: "Y",
+      К: "K",
+      Л: "L",
+      М: "M",
+      Н: "N",
+      О: "O",
+      П: "P",
+      Р: "R",
+      С: "S",
+      Т: "T",
+      У: "U",
+      Ф: "F",
+      Х: "KH",
+      Ц: "TS",
+      Ч: "CH",
+      Ш: "SH",
+      Щ: "SCH",
+      Ъ: "",
+      Ы: "Y",
+      Ь: "",
+      Э: "E",
+      Ю: "YU",
+      Я: "YA",
+      а: "a",
+      б: "b",
+      в: "v",
+      г: "g",
+      д: "d",
+      е: "e",
+      ё: "yo",
+      ж: "zh",
+      з: "z",
+      и: "i",
+      й: "y",
+      к: "k",
+      л: "l",
+      м: "m",
+      н: "n",
+      о: "o",
+      п: "p",
+      р: "r",
+      с: "s",
+      т: "t",
+      у: "u",
+      ф: "f",
+      х: "kh",
+      ц: "ts",
+      ч: "ch",
+      ш: "sh",
+      щ: "sch",
+      ъ: "",
+      ы: "y",
+      ь: "",
+      э: "e",
+      ю: "yu",
+      я: "ya",
+    };
+
+    return str
+      .split("")
+      .map((char) => {
+        return cyrillicToLatin[char] || char;
+      })
+      .join("");
+  };
 
   const fetchOrder = async () => {
     setLoading(true);
@@ -268,7 +350,7 @@ const CuttingStart = () => {
       // Text content - first decode any Unicode escape sequences
       const decodeUnicodeEscapes = (str) => {
         return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) => {
-          return String.fromCharCode(parseInt(hex, 16));
+          return String.fromCharCode(Number.parseInt(hex, 16));
         });
       };
 
@@ -280,85 +362,6 @@ const CuttingStart = () => {
       // Many thermal printers only support certain code pages, so we'll use a simple mapping
       // that will work with most standard code pages (including CP437, CP850, CP866)
       const textToBytes = (text) => {
-        // Try to handle common Cyrillic characters with transliteration
-        const transliterate = (str) => {
-          const cyrillicToLatin = {
-            А: "A",
-            Б: "B",
-            В: "V",
-            Г: "G",
-            Д: "D",
-            Е: "E",
-            Ё: "YO",
-            Ж: "ZH",
-            З: "Z",
-            И: "I",
-            Й: "Y",
-            К: "K",
-            Л: "L",
-            М: "M",
-            Н: "N",
-            О: "O",
-            П: "P",
-            Р: "R",
-            С: "S",
-            Т: "T",
-            У: "U",
-            Ф: "F",
-            Х: "KH",
-            Ц: "TS",
-            Ч: "CH",
-            Ш: "SH",
-            Щ: "SCH",
-            Ъ: "",
-            Ы: "Y",
-            Ь: "",
-            Э: "E",
-            Ю: "YU",
-            Я: "YA",
-            а: "a",
-            б: "b",
-            в: "v",
-            г: "g",
-            д: "d",
-            е: "e",
-            ё: "yo",
-            ж: "zh",
-            з: "z",
-            и: "i",
-            й: "y",
-            к: "k",
-            л: "l",
-            м: "m",
-            н: "n",
-            о: "o",
-            п: "p",
-            р: "r",
-            с: "s",
-            т: "t",
-            у: "u",
-            ф: "f",
-            х: "kh",
-            ц: "ts",
-            ч: "ch",
-            ш: "sh",
-            щ: "sch",
-            ъ: "",
-            ы: "y",
-            ь: "",
-            э: "e",
-            ю: "yu",
-            я: "ya",
-          };
-
-          return str
-            .split("")
-            .map((char) => {
-              return cyrillicToLatin[char] || char;
-            })
-            .join("");
-        };
-
         // Transliterate the text first
         const transliterated = transliterate(text);
 
@@ -586,21 +589,184 @@ const CuttingStart = () => {
             throw new Error("QR code chop etishda xatolik");
           }
         } else {
-          // download qr code
+          // download qr code with text as PDF
           const qrData = `${id}, ${selectedSpec}`;
-          const dataUrl = await QRCode.toDataURL(qrData, {
+
+          // Get specification and category names
+          const specName =
+            order?.order_model?.submodels
+              ?.find((submodel) => submodel?.submodel?.id === selectedSubmodel)
+              ?.specification_categories?.find(
+                (spec) => spec?.id === selectedSpec
+              )?.name || "";
+
+          const categoryName =
+            order?.order_model?.submodels?.find(
+              (submodel) => submodel?.submodel?.id === selectedSubmodel
+            )?.submodel?.name || "";
+
+          // Generate QR code
+          QRCode.toDataURL(qrData, {
             errorCorrectionLevel: "H",
             margin: 1,
-            scale: 16,
+            scale: 8,
             color: {
               dark: "#000000",
               light: "#FFFFFF",
             },
-          });
-          const link = document.createElement("a");
-          link.href = dataUrl;
-          link.download = `${id}, ${selectedSpec}.png`;
-          link.click();
+          })
+            .then((dataUrl) => {
+              // Create a new PDF document in A4 format
+              const pdf = new jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4",
+              });
+
+              // Transliterate all text for PDF
+              const orderName = transliterate(order?.name || "");
+              const modelName = transliterate(
+                order?.order_model?.model?.name || ""
+              );
+              const materialName = transliterate(
+                order?.order_model?.material?.name || "-"
+              );
+              const transliteratedCategoryName = transliterate(categoryName);
+              const transliteratedSpecName = transliterate(specName);
+
+              // Add title
+              pdf.setFontSize(20);
+              pdf.setFont("helvetica", "bold");
+              pdf.text(
+                "BUYURTMA MA'LUMOTLARI",
+                pdf.internal.pageSize.getWidth() / 2,
+                20,
+                { align: "center" }
+              );
+
+              // Add order details with more information
+              pdf.setFontSize(12);
+              pdf.setFont("helvetica", "normal");
+
+              // Left margin for text
+              const leftMargin = 20;
+              let yPosition = 40;
+
+              // Add order information
+              pdf.setFont("helvetica", "bold");
+              pdf.text("Buyurtma ma'lumotlari:", leftMargin, yPosition);
+              pdf.setFont("helvetica", "normal");
+              yPosition += 8;
+
+              pdf.text(`Buyurtma ID: ${id}`, leftMargin, yPosition);
+              yPosition += 8;
+
+              pdf.text(`Buyurtma nomi: ${orderName}`, leftMargin, yPosition);
+              yPosition += 8;
+
+              pdf.text(
+                `Miqdor: ${order?.quantity || ""} ta`,
+                leftMargin,
+                yPosition
+              );
+              yPosition += 8;
+
+              pdf.text(`Model: ${modelName}`, leftMargin, yPosition);
+              yPosition += 8;
+
+              pdf.text(`Material: ${materialName}`, leftMargin, yPosition);
+              yPosition += 15;
+
+              // Add specification information
+              pdf.setFont("helvetica", "bold");
+              pdf.text("Spetsifikatsiya ma'lumotlari:", leftMargin, yPosition);
+              pdf.setFont("helvetica", "normal");
+              yPosition += 8;
+
+              pdf.text(
+                `Kategoriya: ${transliteratedCategoryName}`,
+                leftMargin,
+                yPosition
+              );
+              yPosition += 8;
+
+              pdf.text(
+                `Spetsifikatsiya: ${transliteratedSpecName}`,
+                leftMargin,
+                yPosition
+              );
+              yPosition += 8;
+
+              pdf.text(
+                `Kesilgan miqdor: ${quantity} ta`,
+                leftMargin,
+                yPosition
+              );
+              yPosition += 8;
+
+              pdf.text(
+                `Sana: ${new Date().toLocaleDateString("ru-RU")}`,
+                leftMargin,
+                yPosition
+              );
+              yPosition += 20;
+
+              // Create an image element to get dimensions
+              const qrImage = new Image();
+              qrImage.crossOrigin = "anonymous";
+              qrImage.src = dataUrl;
+
+              qrImage.onload = () => {
+                // Calculate dimensions to maintain aspect ratio
+                const imgWidth = 80; // mm
+                const imgHeight = (qrImage.height * imgWidth) / qrImage.width;
+
+                // Add QR code to PDF (centered)
+                const xPosition =
+                  (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
+                pdf.addImage(
+                  dataUrl,
+                  "PNG",
+                  xPosition,
+                  yPosition,
+                  imgWidth,
+                  imgHeight
+                );
+
+                // Add QR code description below the image
+                const qrBottomY = yPosition + imgHeight + 10;
+                pdf.setFontSize(10);
+                pdf.text(
+                  `QR kod ma'lumotlari: ${qrData}`,
+                  pdf.internal.pageSize.getWidth() / 2,
+                  qrBottomY,
+                  {
+                    align: "center",
+                  }
+                );
+
+                // Add footer
+                const footerY = pdf.internal.pageSize.getHeight() - 10;
+                pdf.setFontSize(8);
+                pdf.text(
+                  `Yaratilgan vaqt: ${new Date().toLocaleString("ru-RU")}`,
+                  pdf.internal.pageSize.getWidth() / 2,
+                  footerY,
+                  { align: "center" }
+                );
+
+                // Save the PDF
+                pdf.save(`Buyurtma-${id}-${selectedSpec}.pdf`);
+              };
+            })
+            .catch((err) => {
+              toast({
+                title: "QR Code xatolik",
+                description: "QR code yaratishda xatolik",
+                variant: "destructive",
+              });
+              console.error("QR code error:", err);
+            });
         }
       }
 
@@ -914,7 +1080,7 @@ const CuttingStart = () => {
           <DialogHeader>
             <DialogTitle>Buyurtmani tugatish</DialogTitle>
             <DialogDescription>
-              Buyurtmani yakunlashga tayyorsizmi?
+              Buyurtmani yakunlashga tayyormizmi?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
