@@ -391,9 +391,19 @@ const Scanner = () => {
   return (
     <Card className="w-full shadow-md rounded-none">
       <CardHeader className="bg-slate-50">
-        <CardTitle className="flex items-center text-xl font-semibold text-slate-800">
-          <Barcode className="mr-2 h-5 w-5 text-primary" />
-          Kunlik reja skaneri
+        <CardTitle className="flex items-center justify-between gap-4 text-xl font-semibold text-slate-800">
+          <div className="flex items-center gap-2">
+            <div>Kunlik reja skaneri</div>
+          </div>
+          {data?.plan?.status && (
+            <div>
+              {data?.plan?.status === "1" ? (
+                <span className="text-red-500 uppercase font-bold">O'tgan</span>
+              ) : (
+                <span className="text-green-500 uppercase">O'tmagan</span>
+              )}
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
@@ -566,6 +576,9 @@ const Scanner = () => {
             </div>
 
             <div className="border border-slate-200 overflow-hidden shadow-md">
+              <div className="p-2 bg-slate-50 font-medium">
+                Biriktirilgan ishlar:
+              </div>
               <Table className="border-collapse">
                 <TableHeader className="bg-slate-50">
                   <TableRow>
@@ -660,6 +673,9 @@ const Scanner = () => {
 
             {data?.extra_logs?.length > 0 && (
               <div className="border border-slate-200 overflow-hidden shadow-md">
+                <div className="p-2 bg-slate-50 font-medium">
+                  Qo'shimcha ishlar:
+                </div>
                 <Table className="border-collapse">
                   <TableHeader className="bg-slate-50">
                     <TableRow>
