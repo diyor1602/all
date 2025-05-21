@@ -26,6 +26,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -45,6 +52,8 @@ const WorkDetails = () => {
   const [selectedSubmodel, setSelectedSubmodel] = useState(null);
   const [tarifications, setTarifications] = useState([]);
   const [planLoader, setPlanLoader] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState("all");
 
   const totalSpends = useMemo(
     () =>
@@ -101,6 +110,27 @@ const WorkDetails = () => {
   }, [id, navigate, toast]);
 
   useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await api.get(`/internalAccountant/users`, {
+          params: {
+            id: selectedSubmodel?.id,
+          },
+        });
+        setEmployees(response.data);
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Bunday ishchilar topilmadi",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchEmployees();
+  }, [selectedSubmodel]);
+
+  useEffect(() => {
     if (selectedSubmodel) {
       const foundSubmodel = order?.order_model?.submodels?.find(
         (submodel) => submodel?.id === selectedSubmodel?.id
@@ -111,12 +141,27 @@ const WorkDetails = () => {
 
   const handlePlan = async () => {
     setPlanLoader(true);
+
+    const planType = selectedEmployee === "all" ? "all" : "employee";
+    const planUrl =
+      planType === "all"
+        ? `/internalAccountant/dailyPlan/`
+        : `/internalAccountant/dailyPlan/employee`;
+
+    const params =
+      planType === "all"
+        ? {
+            submodel_id: selectedSubmodel?.id,
+            group_id: selectedSubmodel?.group?.group?.id,
+          }
+        : {
+            submodel_id: selectedSubmodel?.id,
+            employee_id: selectedEmployee,
+          };
+
     try {
-      const response = await api.get(`/internalAccountant/dailyPlan/`, {
-        params: {
-          submodel_id: selectedSubmodel?.id,
-          group_id: selectedSubmodel?.group?.group?.id,
-        },
+      const response = await api.get(planUrl, {
+        params,
         responseType: "blob", // Important: tells Axios to expect binary data
       });
 
@@ -398,20 +443,43 @@ const WorkDetails = () => {
 
           <div className="mt-4">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <h2 className="text-lg font-medium my-6 ml-2">
-                Tarifikatsiyalar
-              </h2>
-              <Button
-                type="button"
-                disabled={planLoader}
-                onClick={() => handlePlan()}
-              >
-                {planLoader ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "Plan chiqarish"
-                )}
-              </Button>
+              <h2 className="text-lg font-medium my-6 ml-2">Xodimlar</h2>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={selectedEmployee}
+                  onValueChange={setSelectedEmployee}
+                  className="w-fit"
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Xodimni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Barchasi uchun</SelectItem>
+                    {employees
+                      ?.sort((a, b) => a?.name.localeCompare(b?.name))
+                      ?.map((employee) => (
+                        <SelectItem
+                          key={employee?.id}
+                          value={employee?.id}
+                          onClick={() => setSelectedEmployee(employee)}
+                        >
+                          {employee?.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  disabled={planLoader}
+                  onClick={() => handlePlan()}
+                >
+                  {planLoader ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "Plan chiqarish"
+                  )}
+                </Button>
+              </div>
             </div>
             <div className="flex flex-col gap-2">
               {tarifications?.length > 0 && (
