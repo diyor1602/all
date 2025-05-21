@@ -24,6 +24,7 @@ import {
   Files,
   FileSpreadsheet,
   FileDigit,
+  Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -443,6 +444,12 @@ const OrderView = () => {
                       maximumFractionDigits: 2,
                     })}{" "}
                     minut
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-bold">
+                    Tikayotgan guruh: {selectedSubmodel?.group?.group?.name}
                   </span>
                 </div>
               </div>

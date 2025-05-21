@@ -53,9 +53,15 @@ const getStatusColor = (status) => {
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
+  const [searchTerm, setSearchTerm] = useState(
+    localStorage.getItem("searchTerm") || ""
+  );
+  const [statusFilter, setStatusFilter] = useState(
+    localStorage.getItem("statusFilter") || "all"
+  );
+  const [sortBy, setSortBy] = useState(
+    localStorage.getItem("sortBy") || "newest"
+  );
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -140,13 +146,22 @@ const Orders = () => {
               <Input
                 placeholder="Qidiruv..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 w-full sm:w-64"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  localStorage.setItem("searchTerm", e.target.value);
+                }}
+                className="pl-8 w-full sm:w-64 bg-white"
               />
             </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                localStorage.setItem("statusFilter", value);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-40 bg-white">
                 <SelectValue placeholder="Holati" />
               </SelectTrigger>
               <SelectContent>
@@ -159,8 +174,14 @@ const Orders = () => {
               </SelectContent>
             </Select>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-40">
+            <Select
+              value={sortBy}
+              onValueChange={(value) => {
+                setSortBy(value);
+                localStorage.setItem("sortBy", value);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-40 bg-white">
                 <SelectValue placeholder="Saralash" />
               </SelectTrigger>
               <SelectContent>
