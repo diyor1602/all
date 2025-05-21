@@ -32,7 +32,7 @@ const Scaner = () => {
       // Initialize results state with current values
       const initialResults = {};
       response.data?.items?.forEach((item) => {
-        initialResults[item.id] = item.result || "";
+        initialResults[item.id] = item?.actual || "";
       });
       setResults(initialResults);
     } catch (error) {
@@ -67,12 +67,15 @@ const Scaner = () => {
         daily_plan_id: data.id || Number.parseInt(scannedData),
         tarifications: data.items.map((item) => ({
           id: item.tarification.id,
-          quantity: Number.parseInt(results[item.id] || item.result || 0),
+          quantity: Number.parseInt(results[item.id] || item.actual || 0),
         })),
       };
 
       // Send data to API
-      await api.post("/internalAccountant/employeeSalaryCalculation", formData);
+      await api.patch(
+        "/internalAccountant/employeeSalaryCalculation",
+        formData
+      );
 
       toast({
         title: "Success",
@@ -132,6 +135,64 @@ const Scaner = () => {
       ) : (
         data && (
           <div className="mt-4">
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div>
+                Xodim:{" "}
+                <span className="font-medium">{data.employee?.name}</span>
+              </div>
+              <div>
+                Sana:{" "}
+                <span className="font-medium">
+                  {data.date?.split("-").reverse().join(".")}
+                </span>
+              </div>
+              <div>
+                Umumiy vaqt:{" "}
+                <span className="font-medium">{data?.total_work_minutes}</span>{" "}
+                daqiqa
+              </div>
+              <div>
+                Umumiy summa:{" "}
+                <span className="font-medium">
+                  {Number.parseFloat(data?.total_earned).toLocaleString(
+                    "ru-RU"
+                  )}{" "}
+                </span>
+                so'm
+              </div>
+              <div>
+                Ishga ketadigan vaqt:{" "}
+                <span className="font-medium">
+                  {Number.parseFloat(data?.used_minutes).toLocaleString(
+                    "ru-RU"
+                  )}{" "}
+                </span>
+                daqiqa
+              </div>
+              <div>
+                Qo'shimcha vaqt:{" "}
+                <span className="font-medium">
+                  {(
+                    Number.parseFloat(data?.total_work_minutes) -
+                    Number.parseFloat(data?.used_minutes)
+                  ).toLocaleString("ru-RU")}{" "}
+                </span>
+                daqiqa
+              </div>
+              <div>
+                Xodim topgan pul:{" "}
+                <span className="font-medium">
+                  {Number.parseFloat(
+                    data?.items?.reduce(
+                      (acc, item) =>
+                        acc + item?.actual * item?.tarification?.summa,
+                      0
+                    )
+                  ).toLocaleString("ru-RU")}{" "}
+                </span>
+                so'm
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse border border-gray-300">
                 <thead className="bg-gray-50">
@@ -203,11 +264,7 @@ const Scaner = () => {
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <Input
-                          value={
-                            results[item.id] !== undefined
-                              ? results[item.id]
-                              : item?.result || ""
-                          }
+                          value={results[item.id] || ""}
                           onChange={(e) =>
                             handleResultChange(item.id, e.target.value)
                           }
