@@ -28,6 +28,8 @@ import {
   Files,
   Pencil,
   Download,
+  Building2,
+  FileDigit,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -252,7 +254,7 @@ const OrderView = () => {
               <div className="space-y-2">
                 {order?.contragent && (
                   <div className="flex gap-2 items-center">
-                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <Building2 className="h-4 w-4 text-gray-500" />
                     <span className="text-sm">
                       Kontragent: {order?.contragent?.name || "Kontragent"}
                     </span>
@@ -260,7 +262,7 @@ const OrderView = () => {
                 )}
                 {order?.quantity && (
                   <div className="flex gap-2 items-center">
-                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <FileDigit className="h-4 w-4 text-gray-500" />
                     <span className="text-sm">
                       Miqdori: {order?.quantity || "0"} ta
                     </span>
