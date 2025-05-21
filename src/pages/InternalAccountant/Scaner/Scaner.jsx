@@ -1,14 +1,40 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import api from "@/utils/api";
-import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Clock,
+  CreditCard,
+  AlertCircle,
+  Loader2,
+  Calendar,
+  User,
+  ClipboardList,
+  DollarSign,
+  TimerOff,
+  Timer,
+  Barcode,
+  Save,
+  FileDigit,
+} from "lucide-react";
+import api from "@/utils/api";
 
-const Scaner = () => {
+const Scanner = () => {
   const { toast } = useToast();
+  const debounceTimerRef = useRef(null);
 
   const [scannedData, setScannedData] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +63,7 @@ const Scaner = () => {
       setResults(initialResults);
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Xatolik",
         description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
@@ -45,6 +71,42 @@ const Scaner = () => {
       setIsLoading(false);
     }
   }, [scannedData, toast]);
+
+  // Handle input change with proper debounce
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setScannedData(value);
+
+    // Clear any existing timeout
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Only set debounce timer if there's a value and it's not being actively changed
+    if (value) {
+      debounceTimerRef.current = setTimeout(() => {
+        fetchData();
+      }, 800);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && scannedData) {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      fetchData();
+    }
+  };
+
+  // Cleanup the debounce timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Handle input change for result fields
   const handleResultChange = (id, value) => {
@@ -72,23 +134,28 @@ const Scaner = () => {
       };
 
       // Send data to API
-      await api.patch(
+      const response = await api.post(
         "/internalAccountant/employeeSalaryCalculation",
         formData
       );
 
       toast({
-        title: "Success",
-        description: "Ma'lumotlar muvaffaqiyatli saqlandi",
+        title: "Muvaffaqiyatli",
+        description:
+          response.data.message || "Ma'lumotlar muvaffaqiyatli saqlandi",
+        style: {
+          background: "green",
+          color: "white",
+        },
       });
 
-      // Reset form after successful submission
-      setScannedData("");
+      // Reset form after successful submission, but keep the scanned data
       setData(null);
+      fetchData();
       setResults({});
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Xatolik",
         description:
           error.response?.data?.message ||
           "Ma'lumotlarni saqlashda xatolik yuz berdi",
@@ -99,206 +166,320 @@ const Scaner = () => {
     }
   };
 
-  // Debounced input handler
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setScannedData(value);
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    return dateString.split("-").reverse().join(".");
+  };
 
-    // Use setTimeout to debounce the API call
-    if (value) {
-      const debounceTimeout = setTimeout(() => {
-        fetchData();
-      }, 300);
-
-      return () => clearTimeout(debounceTimeout);
-    }
+  const formatNumber = (number) => {
+    if (number === undefined || number === null) return "0";
+    return Number.parseFloat(number).toLocaleString("ru-RU");
   };
 
   return (
-    <div className="p-4 bg-white shadow-lg rounded-lg">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="font-medium">ID:</span>
-        <Input
-          autoFocus
-          onChange={handleInputChange}
-          value={scannedData}
-          disabled={isLoading || isSubmitting}
-          placeholder={isLoading ? "Loading..." : "Scan ID"}
-          className="flex-1"
-        />
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <Card className="w-full shadow-md">
+      <CardHeader className="bg-slate-50">
+        <CardTitle className="flex items-center text-xl font-semibold text-slate-800">
+          <Barcode className="mr-2 h-5 w-5 text-primary" />
+          Kunlik reja skaneri
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="relative flex-1">
+            <Input
+              autoFocus
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              value={scannedData}
+              disabled={isLoading || isSubmitting}
+              placeholder="ID ni skaner qiling"
+              className="pl-10"
+            />
+            <Barcode className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={fetchData}
+            disabled={!scannedData || isLoading || isSubmitting}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ClipboardList className="h-4 w-4" />
+            )}
+          </Button>
         </div>
-      ) : (
-        data && (
-          <div className="mt-4">
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div>
-                Xodim:{" "}
-                <span className="font-medium">{data.employee?.name}</span>
-              </div>
-              <div>
-                Sana:{" "}
-                <span className="font-medium">
-                  {data.date?.split("-").reverse().join(".")}
-                </span>
-              </div>
-              <div>
-                Umumiy vaqt:{" "}
-                <span className="font-medium">{data?.total_work_minutes}</span>{" "}
-                daqiqa
-              </div>
-              <div>
-                Umumiy summa:{" "}
-                <span className="font-medium">
-                  {Number.parseFloat(data?.total_earned).toLocaleString(
-                    "ru-RU"
-                  )}{" "}
-                </span>
-                so'm
-              </div>
-              <div>
-                Ishga ketadigan vaqt:{" "}
-                <span className="font-medium">
-                  {Number.parseFloat(data?.used_minutes).toLocaleString(
-                    "ru-RU"
-                  )}{" "}
-                </span>
-                daqiqa
-              </div>
-              <div>
-                Qo'shimcha vaqt:{" "}
-                <span className="font-medium">
-                  {(
-                    Number.parseFloat(data?.total_work_minutes) -
-                    Number.parseFloat(data?.used_minutes)
-                  ).toLocaleString("ru-RU")}{" "}
-                </span>
-                daqiqa
-              </div>
-              <div>
-                Xodim topgan pul:{" "}
-                <span className="font-medium">
-                  {Number.parseFloat(
-                    data?.items?.reduce(
-                      (acc, item) =>
-                        acc + item?.actual * item?.tarification?.summa,
-                      0
-                    )
-                  ).toLocaleString("ru-RU")}{" "}
-                </span>
-                so'm
-              </div>
+
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse border border-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="border border-gray-300 px-4 py-2 text-sm font-medium">
+            <Skeleton className="h-64 w-full" />
+          </div>
+        ) : data ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-l-4 border-l-primary shadow-sm hover:shadow transition-shadow">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 bg-primary/10 rounded-full">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">
+                      Xodim:
+                    </span>
+                    <span className="font-semibold">
+                      {data.employee?.name || ""}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-primary/10 rounded-full">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">
+                      Sana:
+                    </span>
+                    <span className="font-semibold">
+                      {formatDate(data.date)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-l-4 border-l-amber-500 shadow-sm hover:shadow transition-shadow">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 bg-amber-500/10 rounded-full">
+                      <Clock className="h-4 w-4 text-amber-500" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">
+                      Umumiy vaqt:
+                    </span>
+                    <span className="font-semibold">
+                      {formatNumber(data?.total_work_minutes)} daqiqa
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-2">
+                    <div className="p-1.5 bg-emerald-500/10 rounded-full">
+                      <Timer className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">
+                      Ishga ketadigan vaqt:
+                    </span>
+                    <span className="font-semibold">
+                      {formatNumber(data?.used_minutes)} daqiqa
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-l-4 border-l-indigo-500 shadow-sm hover:shadow transition-shadow">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 bg-indigo-500/10 rounded-full">
+                      <FileDigit className="h-4 w-4 text-indigo-500" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">
+                      ID:
+                    </span>
+                    <span className="font-semibold">{data?.id}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 bg-indigo-500/10 rounded-full">
+                      <TimerOff className="h-4 w-4 text-indigo-500" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">
+                      Qo'shimcha vaqt:
+                    </span>
+                    <span className="font-semibold">
+                      {formatNumber(
+                        Number.parseFloat(data?.total_work_minutes) -
+                          Number.parseFloat(data?.used_minutes)
+                      )}{" "}
+                      daqiqa
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-l-4 border-l-emerald-500 shadow-sm hover:shadow transition-shadow">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 bg-emerald-500/10 rounded-full">
+                      <DollarSign className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">
+                      Umumiy summa:
+                    </span>
+                    <span className="font-semibold">
+                      {formatNumber(data?.total_earned)} so'm
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-blue-500/10 rounded-full">
+                      <CreditCard className="h-4 w-4 text-blue-500" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">
+                      Xodim topgan pul:
+                    </span>
+                    <span className="font-semibold">
+                      {formatNumber(
+                        data?.items?.reduce(
+                          (acc, item) =>
+                            acc + item?.actual * item?.tarification?.summa,
+                          0
+                        )
+                      )}{" "}
+                      so'm
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="rounded-md border border-slate-200 overflow-hidden shadow-md">
+              <Table className="border-collapse">
+                <TableHeader className="bg-slate-50">
+                  <TableRow>
+                    <TableHead className="font-medium text-center border border-slate-200">
                       Kod
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="font-medium border border-slate-200">
                       Ish nomi
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="font-medium text-center border border-slate-200">
                       Vaqt (sekund)
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="font-medium text-center border border-slate-200">
                       Narxi (so'm)
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="font-medium text-center border border-slate-200">
                       Reja
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="font-medium text-center border border-slate-200">
                       Natija
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data?.items?.map((item, index) => (
-                    <tr
-                      key={index}
-                      className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                    >
-                      <td className="border border-gray-300 px-4 py-2 text-center">
-                        {item?.tarification?.code}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        {item?.tarification?.name}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        <div className="flex flex-col items-center gap-1">
-                          <div>
-                            {Number.parseFloat(
-                              item?.tarification?.second
-                            ).toLocaleString("ru-RU")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data?.items
+                    ?.sort((a, b) =>
+                      a.tarification.code.localeCompare(
+                        b.tarification.code,
+                        undefined,
+                        {
+                          numeric: true,
+                          sensitivity: "base",
+                        }
+                      )
+                    )
+                    .map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="text-center font-medium border border-slate-200">
+                          <Badge variant="outline">
+                            {item?.tarification?.code}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="border border-slate-200">
+                          {item?.tarification?.name}
+                        </TableCell>
+                        <TableCell className="text-center border border-slate-200">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="text-sm">
+                              {formatNumber(item?.tarification?.second)}
+                            </div>
+                            <div className="w-full h-[1px] bg-slate-200"></div>
+                            <div className="text-sm font-medium">
+                              {formatNumber(
+                                item?.tarification?.second * item?.count
+                              )}
+                            </div>
                           </div>
-                          <div className="w-full h-[1px] bg-gray-300"></div>
-                          <div>
-                            {Number.parseFloat(
-                              item?.tarification?.second * item?.count
-                            ).toLocaleString("ru-RU")}
+                        </TableCell>
+                        <TableCell className="text-center border border-slate-200">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="text-sm">
+                              {formatNumber(item?.tarification?.summa)}
+                            </div>
+                            <div className="w-full h-[1px] bg-slate-200"></div>
+                            <div className="text-sm font-medium">
+                              {formatNumber(
+                                item?.tarification?.summa * item?.count
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        <div className="flex flex-col items-center gap-1">
-                          <div>
-                            {Number.parseFloat(
-                              item?.tarification?.summa
-                            ).toLocaleString("ru-RU")}
-                          </div>
-                          <div className="w-full h-[1px] bg-gray-300"></div>
-                          <div>
-                            {Number.parseFloat(
-                              item?.tarification?.summa * item?.count
-                            ).toLocaleString("ru-RU")}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
-                        {item?.count}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        <Input
-                          value={results[item.id] || ""}
-                          onChange={(e) =>
-                            handleResultChange(item.id, e.target.value)
-                          }
-                          disabled={isSubmitting}
-                          type="number"
-                          min="0"
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="flex justify-end mt-4">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="px-6"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saqlanmoqda...
-                    </>
-                  ) : (
-                    "Saqlash"
-                  )}
-                </Button>
-              </div>
+                        </TableCell>
+                        <TableCell className="text-center font-medium border border-slate-200">
+                          {item?.count}
+                        </TableCell>
+                        <TableCell className="border border-slate-200">
+                          <Input
+                            value={results[item.id] || ""}
+                            onChange={(e) =>
+                              handleResultChange(item.id, e.target.value)
+                            }
+                            disabled={isSubmitting}
+                            type="number"
+                            min="0"
+                            className="text-center"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saqlanmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Saqlash
+                  </>
+                )}
+              </Button>
             </div>
           </div>
-        )
-      )}
-    </div>
+        ) : scannedData && !isLoading ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="p-4 bg-red-50 rounded-full mb-3">
+              <AlertCircle className="h-12 w-12 text-red-400" />
+            </div>
+            <p className="text-slate-700 font-medium">Ma'lumot topilmadi</p>
+            <p className="text-sm text-slate-500 mt-1">
+              Boshqa ID ni skaner qilib ko'ring
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="p-4 bg-slate-50 rounded-full mb-3">
+              <Barcode className="h-12 w-12 text-primary/70" />
+            </div>
+            <p className="text-slate-700 font-medium">ID skanerdan o'tkazing</p>
+            <p className="text-sm text-slate-500 mt-1">
+              Natijalarni ko'rish uchun ID ni kiriting
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
-export default Scaner;
+export default Scanner;
