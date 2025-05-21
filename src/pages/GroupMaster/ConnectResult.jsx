@@ -207,31 +207,48 @@ const ConnectResult = () => {
               <AccordionContent>
                 <div className="flex flex-col gap-2">
                   {(() => {
+                    let foundFirstEmpty = false;
+
                     const buttons = data.times?.map((time) => {
                       const output = submodel?.sewingOutputs?.find(
                         (output) => output?.time?.time === time?.time
                       );
                       const hasQuantity = output?.quantity > 0;
-                      const disabled = isFutureTime(time?.time) || hasQuantity;
+                      const isFuture = isFutureTime(time?.time);
 
-                      return { time, output, disabled };
+                      let show = true;
+                      let enabled = false;
+
+                      if (hasQuantity) {
+                        // Show buttons with quantity
+                        show = true;
+                        enabled = false;
+                      } else if (!foundFirstEmpty && !isFuture) {
+                        // First button without quantity and not in the future
+                        foundFirstEmpty = true;
+                        show = true;
+                        enabled = true;
+                      } else {
+                        // Hide the rest
+                        show = false;
+                      }
+
+                      return { time, output, show, enabled };
                     });
 
-                    // Find the first button without quantity to enable
-                    const buttonToEnable = buttons.find((btn) => !btn.disabled);
-
-                    return buttons.map(({ time, output, disabled }) => {
-                      const isEnabled =
-                        buttonToEnable && buttonToEnable.time === time;
-                      return (
+                    return buttons
+                      .filter((btn) => btn.show)
+                      .map(({ time, output, enabled }) => (
                         <Button
                           key={time.id}
-                          className={`flex items-center w-full justify-between bg-gray-400 text-black ${
-                            !isEnabled ? "bg-gray-200 cursor-not-allowed" : ""
+                          className={`flex items-center w-full justify-between ${
+                            enabled
+                              ? "bg-gray-400 text-black"
+                              : "bg-gray-200 text-black cursor-not-allowed"
                           }`}
-                          disabled={!isEnabled}
+                          disabled={!enabled}
                           onClick={() =>
-                            isEnabled && handleOpenDialog(submodel, time)
+                            enabled && handleOpenDialog(submodel, time)
                           }
                         >
                           <div>{time?.time?.slice(0, 5)}</div>
@@ -246,8 +263,7 @@ const ConnectResult = () => {
                             <Check strokeWidth={2} size={30} />
                           )}
                         </Button>
-                      );
-                    });
+                      ));
                   })()}
                 </div>
               </AccordionContent>
