@@ -179,8 +179,8 @@ const Scanner = () => {
     try {
       // Prepare data for submission
       const formData = {
-        employee_id: data.employee_id || 1725, // Fallback to example value if not available
-        daily_plan_id: data.id || Number.parseInt(scannedData),
+        employee_id: data?.plan?.employee_id, // Fallback to example value if not available
+        daily_plan_id: data?.plan?.id || Number.parseInt(scannedData),
         tarifications: [
           // Include regular tarifications
           ...data.plan.items.map((item) => ({
