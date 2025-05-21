@@ -180,13 +180,6 @@ const WorkDetails = () => {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
       };
-
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Plan yaratildi va chop etildi",
-        variant: "default",
-        duration: 2000,
-      });
     } catch (error) {
       toast({
         title: "Xatolik",
