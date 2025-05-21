@@ -11,6 +11,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -469,9 +470,19 @@ const Scanner = () => {
                       <FileDigit className="h-4 w-4 text-indigo-500" />
                     </div>
                     <span className="text-sm font-medium text-slate-600">
-                      ID:
+                      Jami qo'shimcha so'mma:
                     </span>
-                    <span className="font-semibold">{data?.plan?.id}</span>
+                    <span className="font-semibold">
+                      {formatNumber(
+                        data?.extra_logs?.reduce(
+                          (acc, item) =>
+                            acc +
+                            (item?.tarification?.summa * item?.quantity || 0),
+                          0
+                        )
+                      )}{" "}
+                      so'm
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="p-1.5 bg-indigo-500/10 rounded-full">
@@ -691,6 +702,21 @@ const Scanner = () => {
                           </TableCell>
                         </TableRow>
                       ))}
+                    <TableRow>
+                      <TableCell className="text-center">Jami:</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-center">
+                        {formatNumber(
+                          data?.extra_logs?.reduce(
+                            (acc, item) =>
+                              acc +
+                              (item?.tarification?.summa * item?.quantity || 0),
+                            0
+                          )
+                        )}
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </div>
