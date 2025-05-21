@@ -55,9 +55,15 @@ const getStatusColor = (status) => {
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
+  const [searchTerm, setSearchTerm] = useState(
+    localStorage.getItem("searchTerm") || ""
+  );
+  const [statusFilter, setStatusFilter] = useState(
+    localStorage.getItem("statusFilter") || "all"
+  );
+  const [sortBy, setSortBy] = useState(
+    localStorage.getItem("sortBy") || "newest"
+  );
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -147,12 +153,21 @@ const Orders = () => {
               <Input
                 placeholder="Qidiruv..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  localStorage.setItem("searchTerm", e.target.value);
+                }}
                 className="pl-8 w-full md:w-64"
               />
             </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                localStorage.setItem("statusFilter", value);
+              }}
+            >
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Holati" />
               </SelectTrigger>
@@ -166,7 +181,13 @@ const Orders = () => {
               </SelectContent>
             </Select>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select
+              value={sortBy}
+              onValueChange={(value) => {
+                setSortBy(value);
+                localStorage.setItem("sortBy", value);
+              }}
+            >
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Saralash" />
               </SelectTrigger>
@@ -312,6 +333,18 @@ const Orders = () => {
                         </span>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap mb-5 p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
+                    {order.order_model?.submodels?.map((submodel) => (
+                      <Badge
+                        key={submodel.id}
+                        className="bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5 hover:bg-gray-100"
+                      >
+                        <Box size={14} className="text-gray-500" />
+                        {submodel?.submodel?.name}
+                      </Badge>
+                    ))}
                   </div>
 
                   {/* Button with gradient */}
