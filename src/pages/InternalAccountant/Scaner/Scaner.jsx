@@ -43,33 +43,34 @@ const Scanner = () => {
   const [results, setResults] = useState({});
 
   // Fetch data when ID is scanned
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(() => {
     if (!scannedData) return;
 
     setIsLoading(true);
     const sendingData = scannedData.split("A")[1] || scannedData;
 
-    try {
-      const response = await api.get(
-        `/internalAccountant/dailyPlan/${sendingData}`
-      );
-      setData(response.data);
+    api
+      .get(`/internalAccountant/dailyPlan/${sendingData}`)
+      .then((response) => {
+        setData(response.data);
 
-      // Initialize results state with current values
-      const initialResults = {};
-      response.data?.items?.forEach((item) => {
-        initialResults[item.id] = item?.actual || "";
+        // Initialize results state with current values
+        const initialResults = {};
+        response.data?.items?.forEach((item) => {
+          initialResults[item.id] = item?.actual || "";
+        });
+        setResults(initialResults);
+      })
+      .catch((error) => {
+        toast({
+          title: "Xatolik",
+          description: error.response?.data?.message || "Nimadir xato ketdi",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-      setResults(initialResults);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   }, [scannedData, toast]);
 
   // Handle input change with proper debounce
@@ -82,10 +83,37 @@ const Scanner = () => {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Only set debounce timer if there's a value and it's not being actively changed
+    // Only set debounce timer if there's a value
     if (value) {
       debounceTimerRef.current = setTimeout(() => {
-        fetchData();
+        // Use a closure to capture the current value
+        const currentValue = value;
+        const sendingData = currentValue.split("A")[1] || currentValue;
+
+        setIsLoading(true);
+        api
+          .get(`/internalAccountant/dailyPlan/${sendingData}`)
+          .then((response) => {
+            setData(response.data);
+
+            // Initialize results state with current values
+            const initialResults = {};
+            response.data?.items?.forEach((item) => {
+              initialResults[item.id] = item?.actual || "";
+            });
+            setResults(initialResults);
+          })
+          .catch((error) => {
+            toast({
+              title: "Xatolik",
+              description:
+                error.response?.data?.message || "Nimadir xato ketdi",
+              variant: "destructive",
+            });
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
       }, 800);
     }
   };
@@ -201,7 +229,7 @@ const Scanner = () => {
           <Button
             variant="outline"
             size="icon"
-            onClick={fetchData}
+            onClick={() => fetchData(scannedData)}
             disabled={!scannedData || isLoading || isSubmitting}
           >
             {isLoading ? (
@@ -427,7 +455,7 @@ const Scanner = () => {
                             disabled={isSubmitting}
                             type="number"
                             min="0"
-                            className="text-center"
+                            className="text-center min-w-[100px]"
                           />
                         </TableCell>
                       </TableRow>
