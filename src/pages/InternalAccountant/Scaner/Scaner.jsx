@@ -175,6 +175,29 @@ const Scanner = () => {
   const handleSubmit = async () => {
     if (!data) return;
 
+    const otherWorkTarifIds = othersWork.map((work) => work.code);
+    const planTarifIds = data.plan.items.map((item) => item.tarification.code);
+    const extraTarifIds = data.extra_logs.map((item) => item.tarification.code);
+
+    // Merge existing IDs for fast lookup
+    const existingTarifIds = new Set([...planTarifIds, ...extraTarifIds]);
+
+    // Find duplicates
+    const duplicateTarifIds = otherWorkTarifIds.filter((id) =>
+      existingTarifIds.has(id)
+    );
+
+    if (duplicateTarifIds.length > 0) {
+      toast({
+        title: "Diqqat!",
+        description:
+          "Bunday tarifikatisiyalar allaqachon mavjud: " +
+          duplicateTarifIds.join(", "),
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -256,6 +279,8 @@ const Scanner = () => {
       {
         tarification_id: "",
         name: "",
+        second: "",
+        summa: "",
         quantity: "",
       },
     ]);
@@ -307,6 +332,8 @@ const Scanner = () => {
                   ...updated[index],
                   tarification_id: response.data.id,
                   name: response.data?.name,
+                  second: response.data?.second,
+                  summa: response.data?.summa,
                   code: value,
                 };
                 return updated;
@@ -319,6 +346,8 @@ const Scanner = () => {
                 updated[index] = {
                   ...updated[index],
                   name: "Topilmadi",
+                  second: "",
+                  summa: "",
                 };
                 return updated;
               });
@@ -731,10 +760,16 @@ const Scanner = () => {
                         Kod
                       </TableHead>
                       <TableHead className="font-medium border border-slate-200">
-                        Nomi
+                        Ish nomi
+                      </TableHead>
+                      <TableHead className="font-medium border border-slate-200">
+                        Vaqt (sekund)
+                      </TableHead>
+                      <TableHead className="font-medium border border-slate-200">
+                        Narxi (so'm)
                       </TableHead>
                       <TableHead className="font-medium text-center border border-slate-200">
-                        Miqdori
+                        Natija
                       </TableHead>
                       <TableHead className="font-medium text-center border border-slate-200 w-24">
                         Amallar
@@ -760,6 +795,12 @@ const Scanner = () => {
                         </TableCell>
                         <TableCell className="border border-slate-200">
                           {item.name || ""}
+                        </TableCell>
+                        <TableCell className="border border-slate-200">
+                          {item.second || ""}
+                        </TableCell>
+                        <TableCell className="border border-slate-200">
+                          {item.summa || ""}
                         </TableCell>
                         <TableCell className="border border-slate-200">
                           <Input
