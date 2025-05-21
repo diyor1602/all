@@ -250,7 +250,6 @@ const Scanner = () => {
       setExtraResults({});
       setOthersWork([]); // Clear other works after submission
     } catch (error) {
-      console.log(error);
       toast({
         title: "Xatolik",
         description:
