@@ -196,6 +196,7 @@ const ConnectResult = () => {
       <Accordion
         type="single"
         collapsible
+        defaultValue={data.order?.orderModel?.submodels?.[0]?.id.toString()}
         className="bg-white rounded-xl shadow-md p-6 mb-6 flex flex-col gap-2"
       >
         {data.order?.orderModel?.submodels?.map((submodel) => {
