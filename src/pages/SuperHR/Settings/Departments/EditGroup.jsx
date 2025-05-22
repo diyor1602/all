@@ -14,21 +14,89 @@ import { ArrowLeft, Loader2, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const EditGroup = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { toast } = useToast();
 
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
   const [usersSearch, setUsersSearch] = useState("");
-  const [newGroup, setNewGroup] = useState({
+  const [group, setGroup] = useState({
     name: "",
     department_id: "",
     responsible_user_id: "",
   });
+  const [currentResponsibleUser, setCurrentResponsibleUser] = useState(null);
+  const [debugInfo, setDebugInfo] = useState({});
+
+  // Fetch group details on component mount
+  const fetchGroupDetails = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get(`/superhr/groups/${id}/`);
+
+      setDebugInfo((prev) => ({
+        ...prev,
+        groupData: res.data,
+      }));
+
+      setGroup({
+        name: res.data.name,
+        department_id: res.data.department_id.toString(),
+        responsible_user_id: res.data.responsible_user_id.toString(),
+      });
+
+      // Fetch responsible user details
+      try {
+        const userRes = await api.get(
+          `/superhr/employees/${res.data.responsible_user_id}/`
+        );
+
+        setDebugInfo((prev) => ({
+          ...prev,
+          responsibleUserData: userRes.data,
+        }));
+
+        // Extract the user data from the nested structure
+        const userData = userRes.data.data || userRes.data;
+
+        setCurrentResponsibleUser(userData);
+
+        // Add the current user to the users array so they can be selected
+        setUsers((prevUsers) => {
+          // Check if the user is already in the array
+          const userExists = prevUsers.some((user) => user.id === userData.id);
+          if (!userExists) {
+            return [...prevUsers, userData];
+          }
+          return prevUsers;
+        });
+      } catch (error) {
+        toast({
+          title: "Xatolik!",
+          description:
+            "Mas'ul xodim ma'lumotlarini yuklashda xatolik yuz berdi",
+          variant: "destructive",
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ma'lumotlarni yuklashda xatolik!",
+        description: error.response?.data?.detail || "Xatolik yuz berdi",
+        variant: "destructive",
+        duration: 2000,
+      });
+      navigate(-1);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Fetch departments on component mount
   const fetchDepartments = async () => {
@@ -46,19 +114,35 @@ const EditGroup = () => {
   };
 
   useEffect(() => {
+    fetchGroupDetails();
     fetchDepartments();
-  }, []);
+  }, [id]);
 
   // Search users when the search term changes
   const searchUsers = async () => {
     if (usersSearch.length < 3) {
-      setUsers([]);
+      // Don't clear users array to keep the current responsible user
       return;
     }
 
     try {
       const res = await api.get(`/superhr/employees/?search=${usersSearch}`);
-      setUsers(res.data?.data || []);
+      const searchResults = res.data?.data || [];
+
+      // Preserve the current responsible user in the list
+      if (currentResponsibleUser) {
+        const currentUserInResults = searchResults.some(
+          (user) => user.id === currentResponsibleUser.id
+        );
+
+        if (!currentUserInResults) {
+          setUsers([currentResponsibleUser, ...searchResults]);
+        } else {
+          setUsers(searchResults);
+        }
+      } else {
+        setUsers(searchResults);
+      }
     } catch (error) {
       toast({
         title: "Ma'lumotlarni yuklashda xatolik!",
@@ -75,13 +159,13 @@ const EditGroup = () => {
       searchUsers();
     }, 500);
     return () => clearTimeout(timer);
-  }, [usersSearch]); // Changed from users to usersSearch to avoid infinite loop
+  }, [usersSearch]);
 
   // Validate form data
   const validateForm = () => {
     let isValid = true;
 
-    if (!newGroup.name.trim()) {
+    if (!group.name.trim()) {
       toast({
         title: "Xatolik!",
         description: "Guruh nomini kiriting",
@@ -91,7 +175,7 @@ const EditGroup = () => {
       isValid = false;
     }
 
-    if (!newGroup.department_id) {
+    if (!group.department_id) {
       toast({
         title: "Xatolik!",
         description: "Bo'limni tanlang",
@@ -101,13 +185,12 @@ const EditGroup = () => {
       isValid = false;
     }
 
-    if (!newGroup.responsible_user_id) {
+    if (!group.responsible_user_id) {
       toast({
         title: "Xatolik!",
-        description:
-          "Mas'ul xodimni tanlang. Avval qidirib, keyin ro'yxatdan tanlang.",
+        description: "Mas'ul xodimni tanlang",
         variant: "destructive",
-        duration: 3000,
+        duration: 2000,
       });
       isValid = false;
     }
@@ -116,7 +199,7 @@ const EditGroup = () => {
   };
 
   // Handle form submission
-  const handleAddGroupSubmit = async (e) => {
+  const handleEditGroupSubmit = async (e) => {
     e.preventDefault();
 
     // Validate form before submission
@@ -128,16 +211,16 @@ const EditGroup = () => {
 
     try {
       const payload = {
-        name: newGroup.name,
-        department_id: Number.parseInt(newGroup.department_id),
-        responsible_user_id: Number.parseInt(newGroup.responsible_user_id),
+        name: group.name,
+        department_id: Number.parseInt(group.department_id),
+        responsible_user_id: Number.parseInt(group.responsible_user_id),
       };
 
-      await api.post(`/superhr/groups/`, payload);
+      await api.patch(`/superhr/groups/${id}/`, payload);
 
       toast({
         title: "Muvaffaqiyatli!",
-        description: "Guruh muvaffaqiyatli qo'shildi",
+        description: "Guruh muvaffaqiyatli tahrirlandi",
         style: {
           background: "green",
           color: "white",
@@ -150,7 +233,8 @@ const EditGroup = () => {
       toast({
         title: "Xatolik!",
         description:
-          error.response?.data?.detail || "Guruh qo'shishda xatolik yuz berdi",
+          error.response?.data?.detail ||
+          "Guruhni tahrirlashda xatolik yuz berdi",
         variant: "destructive",
         duration: 2000,
       });
@@ -159,27 +243,35 @@ const EditGroup = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <form
-      onSubmit={handleAddGroupSubmit}
+      onSubmit={handleEditGroupSubmit}
       className="bg-white p-6 shadow-sm rounded-lg"
     >
       <div className="flex items-center justify-between mb-5 gap-4">
         <Button variant="outline" type="button" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
         </Button>
-        <div className="text-2xl font-bold">Yangi guruh qo'shish</div>
+        <div className="text-2xl font-bold">Guruhni tahrirlash</div>
       </div>
 
       <div className="flex flex-col gap-5 w-full">
         {/* Group Name */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="new_group_name">Nomi</Label>
+          <Label htmlFor="group_name">Nomi</Label>
           <Input
-            id="new_group_name"
+            id="group_name"
             name="name"
-            value={newGroup.name}
-            onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
+            value={group.name}
+            onChange={(e) => setGroup({ ...group, name: e.target.value })}
             className="col-span-3"
             required
           />
@@ -187,15 +279,15 @@ const EditGroup = () => {
 
         {/* Department Selection */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="new_group_department">Bo'lim</Label>
+          <Label htmlFor="group_department">Bo'lim</Label>
           <Select
-            value={newGroup.department_id}
+            value={group.department_id}
             onValueChange={(value) =>
-              setNewGroup({ ...newGroup, department_id: value })
+              setGroup({ ...group, department_id: value })
             }
             required
           >
-            <SelectTrigger id="new_group_department" className="col-span-3">
+            <SelectTrigger id="group_department" className="col-span-3">
               <SelectValue placeholder="Bo'limni tanlang" />
             </SelectTrigger>
             <SelectContent>
@@ -210,12 +302,19 @@ const EditGroup = () => {
           </Select>
         </div>
 
+        {/* Current Responsible User Display */}
+        {currentResponsibleUser && (
+          <div className="flex flex-col gap-2">
+            <Label>Joriy mas'ul xodim</Label>
+            <div className="p-3 border rounded-md bg-gray-50">
+              {currentResponsibleUser.name}
+            </div>
+          </div>
+        )}
+
         {/* Responsible User Search */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="user_search">
-            Mas'ul xodimni qidirish
-            <span className="text-red-500 ml-1">*</span>
-          </Label>
+          <Label htmlFor="user_search">Boshqa mas'ul xodimni qidirish</Label>
           <div className="relative">
             <Input
               id="user_search"
@@ -241,7 +340,7 @@ const EditGroup = () => {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            1. Qidiruv uchun kamida 3 ta harf kiriting
+            Qidiruv uchun kamida 3 ta harf kiriting
             {usersSearch.length >= 3 && users.length === 0 && (
               <span className="text-amber-500 block mt-1">
                 Xodim topilmadi. Boshqa so'z bilan qidirib ko'ring.
@@ -252,45 +351,29 @@ const EditGroup = () => {
 
         {/* Responsible User Selection */}
         <div className="flex flex-col gap-2">
-          <Label
-            htmlFor="responsible_user_select"
-            className={users.length > 0 ? "" : "text-gray-400"}
+          <Label htmlFor="responsible_user_select">Mas'ul xodim</Label>
+          <Select
+            value={group.responsible_user_id}
+            onValueChange={(value) =>
+              setGroup({ ...group, responsible_user_id: value })
+            }
+            required
           >
-            2. Mas'ul xodimni tanlang
-            <span className="text-red-500 ml-1">*</span>
-          </Label>
-          {users.length > 0 ? (
-            <Select
-              value={newGroup.responsible_user_id}
-              onValueChange={(value) =>
-                setNewGroup({ ...newGroup, responsible_user_id: value })
-              }
-              required
-            >
-              <SelectTrigger
-                id="responsible_user_select"
-                className="col-span-3"
-              >
-                <SelectValue placeholder="Ro'yxatdan mas'ul xodimni tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <div className="border rounded-md p-2 bg-gray-50 text-gray-400">
-              Avval xodimni qidiring, keyin tanlang
-            </div>
-          )}
-          {!newGroup.responsible_user_id && users.length > 0 && (
-            <p className="text-xs text-amber-500">
-              Ro'yxatdan mas'ul xodimni tanlang
-            </p>
-          )}
+            <SelectTrigger id="responsible_user_select" className="col-span-3">
+              <SelectValue placeholder="Mas'ul xodimni tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {users.map((user) => (
+                <SelectItem key={user.id} value={user.id.toString()}>
+                  {user.name}{" "}
+                  {currentResponsibleUser &&
+                  user.id === currentResponsibleUser.id
+                    ? "(Joriy mas'ul)"
+                    : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

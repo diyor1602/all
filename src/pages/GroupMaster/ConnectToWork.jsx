@@ -181,7 +181,6 @@ const WorkDetails = () => {
         iframe.contentWindow?.print();
       };
     } catch (error) {
-      console.log(error);
       toast({
         title: "Xatolik",
         description:
