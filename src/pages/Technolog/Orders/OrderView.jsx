@@ -26,6 +26,7 @@ import {
   FileDigit,
   Users,
   FileText,
+  Scissors,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +73,7 @@ const OrderView = () => {
   const [tarifExcelFile, setTarifExcelFile] = useState(null);
   const [isTarifExcelLoading, setIsTarifExcelLoading] = useState(false);
   const [tarifPdfDownloading, setTarifPdfDownloading] = useState(false);
+  const [scissorsPdfDownloading, setScissorsPdfDownloading] = useState(false);
 
   const totalSpends = useMemo(
     () =>
@@ -374,6 +376,40 @@ const OrderView = () => {
       });
     } finally {
       setTarifPdfDownloading(false);
+    }
+  }, [selectedSubmodel]);
+
+  const handleDownloadScissorsPdf = useCallback(async () => {
+    setScissorsPdfDownloading(true);
+    try {
+      const response = await api.get(`/technologist/tarification/pdf`, {
+        params: {
+          submodel_id: selectedSubmodel?.id,
+          quantity: 15,
+          size: 128,
+        },
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${order?.id} ${order?.name} ${selectedSubmodel?.submodel?.name} tarifikatsiya.pdf`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url); // optional cleanup
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Tarification PDF fayl yuklab bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setScissorsPdfDownloading(false);
     }
   }, [selectedSubmodel]);
 
@@ -729,6 +765,20 @@ const OrderView = () => {
                   Tarifikatsiyalar
                 </h2>
                 <div className="flex items-center gap-2">
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-white bg-gray-500 hover:bg-gray-600"
+                    onClick={() =>
+                      handleDownloadScissorsPdf(selectedSubmodel?.id)
+                    }
+                    disabled={scissorsPdfDownloading}
+                  >
+                    {scissorsPdfDownloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Scissors className="h-4 w-4" />
+                    )}
+                  </Button>
                   <Button
                     size="icon"
                     className="h-8 w-8 rounded-full text-white bg-red-500 hover:bg-red-600"
