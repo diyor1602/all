@@ -183,7 +183,9 @@ const WorkDetails = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Plan yaratishda xatolik",
+        description:
+          error.response?.data?.message ||
+          "Plan yaratishda xatolik, xodimga ish biriktirilmagan bo'lishi mumkin",
         variant: "destructive",
       });
     } finally {
