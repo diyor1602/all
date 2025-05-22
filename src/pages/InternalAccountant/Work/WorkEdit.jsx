@@ -68,6 +68,7 @@ const WorkEdit = () => {
   const [assignedWorks, setAssignedWorks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [openWorkDialog, setOpenWorkDialog] = useState(false);
+  const [activePopoverIndex, setActivePopoverIndex] = useState(null);
 
   // Temporary state for works being assigned in the dialog
   const [tempAssignedWorks, setTempAssignedWorks] = useState([]);
@@ -249,6 +250,49 @@ const WorkEdit = () => {
     }
   };
 
+  const handleDirectEmployeeChange = (workId, employeeId) => {
+    // Create a copy of tarifications
+    const updatedTarifications = [...tarif.tarifications];
+
+    // Find the work in the tarifications array
+    const workIndex = updatedTarifications.findIndex(
+      (item) => item.id === workId
+    );
+
+    if (workIndex !== -1) {
+      // Update the work with the new employee
+      updatedTarifications[workIndex] = {
+        ...updatedTarifications[workIndex],
+        employee_id: employeeId,
+        employee: null, // Remove the employee object reference when directly setting employee_id
+      };
+
+      // Update the tarif state
+      setTarif({
+        ...tarif,
+        tarifications: updatedTarifications,
+      });
+
+      // If the selected employee is affected, update their assigned works
+      if (selectedEmployee) {
+        if (employeeId === selectedEmployee.id) {
+          // Work was assigned to the selected employee, add to their assigned works
+          if (!assignedWorks.some((work) => work.id === workId)) {
+            setAssignedWorks([
+              ...assignedWorks,
+              updatedTarifications[workIndex],
+            ]);
+          }
+        } else if (assignedWorks.some((work) => work.id === workId)) {
+          // Work was removed from the selected employee, remove from their assigned works
+          setAssignedWorks(assignedWorks.filter((work) => work.id !== workId));
+        }
+      }
+    }
+
+    setActivePopoverIndex(null);
+  };
+
   const saveTarifications = async () => {
     setSaving(true);
 
@@ -389,25 +433,23 @@ const WorkEdit = () => {
                   <CommandList className="max-h-[300px]">
                     <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
                     <CommandGroup>
-                      {workers
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map((worker) => (
-                          <CommandItem
-                            key={worker.id}
-                            value={worker.name}
-                            onSelect={() => handleSelectEmployee(worker)}
-                          >
-                            {worker.name}
-                            <Check
-                              className={cn(
-                                "ml-auto h-4 w-4",
-                                selectedEmployee?.id === worker.id
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                          </CommandItem>
-                        ))}
+                      {workers.map((worker) => (
+                        <CommandItem
+                          key={worker.id}
+                          value={worker.name}
+                          onSelect={() => handleSelectEmployee(worker)}
+                        >
+                          {worker.name}
+                          <Check
+                            className={cn(
+                              "ml-auto h-4 w-4",
+                              selectedEmployee?.id === worker.id
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
                     </CommandGroup>
                   </CommandList>
                 </Command>
@@ -659,15 +701,16 @@ const WorkEdit = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {allWorksSorted.map((work) => {
+                    {allWorksSorted.map((work, index) => {
                       // Determine if work is assigned to someone
                       const assignedToId =
                         work.employee_id || (work.employee && work.employee.id);
 
                       // Find the employee name if assigned
                       let assignedToName = "";
+                      let assignedWorker = null;
                       if (assignedToId) {
-                        const assignedWorker = workers.find(
+                        assignedWorker = workers.find(
                           (w) => w.id === assignedToId
                         );
                         assignedToName = assignedWorker
@@ -682,13 +725,88 @@ const WorkEdit = () => {
                           </TableCell>
                           <TableCell>{work.name || "-"}</TableCell>
                           <TableCell>
-                            {assignedToId ? (
-                              <span className="text-gray-700 text-sm">
-                                {assignedToName}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400 text-sm">-</span>
-                            )}
+                            <Popover
+                              open={activePopoverIndex === `worker-${index}`}
+                              onOpenChange={(open) =>
+                                setActivePopoverIndex(
+                                  open ? `worker-${index}` : null
+                                )
+                              }
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 justify-start p-2 text-left font-normal"
+                                  size="sm"
+                                  role="combobox"
+                                  aria-expanded={
+                                    activePopoverIndex === `worker-${index}`
+                                  }
+                                >
+                                  {assignedToId ? (
+                                    <span className="text-gray-700 text-sm">
+                                      {assignedToName}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400 text-sm">
+                                      Xodim tanlanmagan
+                                    </span>
+                                  )}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[200px] p-0">
+                                <Command>
+                                  <CommandInput placeholder="Qidirish..." />
+                                  <CommandList>
+                                    <CommandEmpty>Xodim topilmadi</CommandEmpty>
+                                    <CommandGroup>
+                                      <CommandItem
+                                        onSelect={() =>
+                                          handleDirectEmployeeChange(
+                                            work.id,
+                                            null
+                                          )
+                                        }
+                                        className="text-sm"
+                                      >
+                                        <span>Xodim tanlanmagan</span>
+                                        <Check
+                                          className={cn(
+                                            "ml-auto h-4 w-4",
+                                            !assignedToId
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                      </CommandItem>
+                                      {workers.map((worker) => (
+                                        <CommandItem
+                                          key={worker.id}
+                                          onSelect={() =>
+                                            handleDirectEmployeeChange(
+                                              work.id,
+                                              worker.id
+                                            )
+                                          }
+                                          className="text-sm"
+                                        >
+                                          {worker.name}
+                                          <Check
+                                            className={cn(
+                                              "ml-auto h-4 w-4",
+                                              assignedToId === worker.id
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                            )}
+                                          />
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                           </TableCell>
                           <TableCell>{work.razryad?.name || "-"}</TableCell>
                           <TableCell>{work.second || "-"}</TableCell>
