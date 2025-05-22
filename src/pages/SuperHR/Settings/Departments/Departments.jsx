@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
@@ -29,8 +31,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Deparments = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const [departments, setDepartments] = useState([]);
@@ -135,8 +139,8 @@ const Deparments = () => {
     try {
       const payload = {
         ...newDepartment,
-        break_time: parseInt(newDepartment.break_time),
-        main_department_id: parseInt(newDepartment.main_department_id),
+        break_time: Number.parseInt(newDepartment.break_time),
+        main_department_id: Number.parseInt(newDepartment.main_department_id),
       };
 
       if (!newDepartment.main_department_id) {
@@ -192,10 +196,10 @@ const Deparments = () => {
     try {
       const payload = {
         name: editDepartment.name,
-        main_department_id: parseInt(editDepartment.main_department_id),
+        main_department_id: Number.parseInt(editDepartment.main_department_id),
         start_time: editDepartment.start_time,
         end_time: editDepartment.end_time,
-        break_time: parseInt(editDepartment.break_time),
+        break_time: Number.parseInt(editDepartment.break_time),
       };
 
       if (!editDepartment.main_department_id) {
@@ -325,6 +329,7 @@ const Deparments = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nomi</TableHead>
+                    <TableHead>Guruhlar</TableHead>
                     <TableHead className="text-right">Amallar</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -334,6 +339,33 @@ const Deparments = () => {
                       <TableRow key={dept.id}>
                         <TableCell className="font-medium">
                           {dept.name}
+                        </TableCell>
+                        <TableCell className="text-center max-w-[200px]">
+                          <div className="flex flex-col items-start gap-2">
+                            {dept.groups
+                              ?.sort((a, b) => a.name.localeCompare(b.name))
+                              .map((group) => (
+                                <Button
+                                  key={group.id}
+                                  onClick={() =>
+                                    navigate(
+                                      `/superhr/settings/edit-group/${group.id}`
+                                    )
+                                  }
+                                >
+                                  {group.name}
+                                </Button>
+                              ))}
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() =>
+                                navigate(`/superhr/settings/add-group`)
+                              }
+                            >
+                              <Plus className="h-4 w-4 cursor-pointer" />
+                            </Button>
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button

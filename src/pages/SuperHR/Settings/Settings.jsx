@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { Blocks, History, UserCog, UserPlus } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddFastUser from "./AddFastUser/AddFastUser";
+import AddGroup from "./Departments/AddGroup";
+import EditGroup from "./Departments/EditGroup";
 
 const Settings = () => {
   return (
@@ -15,6 +17,8 @@ const Settings = () => {
       <Route path="departments" element={<Deparments />} />
       <Route path="attendance-history" element={<AttendanceHistory />} />
       <Route path="add-fast-user" element={<AddFastUser />} />
+      <Route path="add-group" element={<AddGroup />} />
+      <Route path="edit-group/:id" element={<EditGroup />} />
     </Routes>
   );
 };
