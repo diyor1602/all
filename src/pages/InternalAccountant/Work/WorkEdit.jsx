@@ -499,10 +499,14 @@ const WorkEdit = () => {
                       <Table>
                         <TableHeader className="sticky top-0 bg-white">
                           <TableRow>
-                            <TableHead className="w-[80px]">Kodi</TableHead>
-                            <TableHead>Nomi</TableHead>
-                            <TableHead>Xodim</TableHead>
-                            <TableHead className="w-[80px]">Amallar</TableHead>
+                            <TableHead className="w-[80px] border">
+                              Kod
+                            </TableHead>
+                            <TableHead className="border">Nomi</TableHead>
+                            <TableHead className="border">Xodim</TableHead>
+                            <TableHead className="w-[80px] border">
+                              Amallar
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -548,14 +552,16 @@ const WorkEdit = () => {
                                       "bg-gray-50"
                                   )}
                                 >
-                                  <TableCell className="font-medium">
+                                  <TableCell className="font-medium border text-center">
                                     {work.code || "-"}
                                   </TableCell>
-                                  <TableCell>{work.name || "-"}</TableCell>
-                                  <TableCell>
+                                  <TableCell className="border">
+                                    {work.name || "-"}
+                                  </TableCell>
+                                  <TableCell className="border text-center">
                                     {isInTempAssigned ? (
                                       <span className="text-green-600 text-sm font-medium">
-                                        Tanlanmoqda
+                                        Tanlandi
                                       </span>
                                     ) : assignedToCurrentUser ? (
                                       <span className="text-green-600 text-sm font-medium">
@@ -571,7 +577,7 @@ const WorkEdit = () => {
                                       </span>
                                     )}
                                   </TableCell>
-                                  <TableCell>
+                                  <TableCell className="border text-center">
                                     {isInTempAssigned ? (
                                       <Button
                                         variant="ghost"
@@ -631,28 +637,42 @@ const WorkEdit = () => {
                   Hozircha biriktirilgan ishlar yo'q
                 </div>
               ) : (
-                <div className="rounded-md border">
+                <div className="rounded-md">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[80px]">Kodi</TableHead>
-                        <TableHead>Nomi</TableHead>
-                        <TableHead>Razryad</TableHead>
-                        <TableHead>Sekund</TableHead>
-                        <TableHead>Summa</TableHead>
-                        <TableHead className="w-[80px]">Amallar</TableHead>
+                        <TableHead className="w-[80px] text-center border">
+                          Kodi
+                        </TableHead>
+                        <TableHead className="border">Nomi</TableHead>
+                        <TableHead className="border">Razryad</TableHead>
+                        <TableHead className="text-center border">
+                          Sekund
+                        </TableHead>
+                        <TableHead className="text-center border">
+                          Summa
+                        </TableHead>
+                        <TableHead className="w-[80px] border">
+                          Amallar
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {assignedWorks.map((work) => (
                         <TableRow key={work.id}>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium border text-center">
                             {work.code || "-"}
                           </TableCell>
-                          <TableCell>{work.name || "-"}</TableCell>
-                          <TableCell>{work.razryad?.name || "-"}</TableCell>
-                          <TableCell>{work.second || "-"}</TableCell>
-                          <TableCell>
+                          <TableCell className="border">
+                            {work.name || "-"}
+                          </TableCell>
+                          <TableCell className="border">
+                            {work.razryad?.name || "-"}
+                          </TableCell>
+                          <TableCell className="border text-center">
+                            {work.second || "-"}
+                          </TableCell>
+                          <TableCell className="border text-center">
                             {Number.parseFloat(work.summa).toLocaleString(
                               "en-US",
                               {
@@ -660,7 +680,7 @@ const WorkEdit = () => {
                               }
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="border text-center">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -687,17 +707,19 @@ const WorkEdit = () => {
             <CardDescription>Mavjud barcha ishlar ro'yxati</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border overflow-hidden">
+            <div className="overflow-hidden">
               <div className="max-h-[400px] overflow-auto">
                 <Table>
                   <TableHeader className="sticky top-0 bg-white">
                     <TableRow>
-                      <TableHead className="w-[80px]">Kodi</TableHead>
-                      <TableHead>Nomi</TableHead>
-                      <TableHead>Xodim</TableHead>
-                      <TableHead>Razryad</TableHead>
-                      <TableHead>Sekund</TableHead>
-                      <TableHead>Summa</TableHead>
+                      <TableHead className="w-[80px] text-center border">
+                        Kodi
+                      </TableHead>
+                      <TableHead className="border">Nomi</TableHead>
+                      <TableHead className="border">Xodim</TableHead>
+                      <TableHead className="border">Razryad</TableHead>
+                      <TableHead className="border">Sekund</TableHead>
+                      <TableHead className="border">Summa</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -720,11 +742,13 @@ const WorkEdit = () => {
 
                       return (
                         <TableRow key={work.id}>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium border text-center">
                             {work.code || "-"}
                           </TableCell>
-                          <TableCell>{work.name || "-"}</TableCell>
-                          <TableCell>
+                          <TableCell className="border">
+                            {work.name || "-"}
+                          </TableCell>
+                          <TableCell className="border">
                             <Popover
                               open={activePopoverIndex === `worker-${index}`}
                               onOpenChange={(open) =>
@@ -780,37 +804,45 @@ const WorkEdit = () => {
                                           )}
                                         />
                                       </CommandItem>
-                                      {workers.map((worker) => (
-                                        <CommandItem
-                                          key={worker.id}
-                                          onSelect={() =>
-                                            handleDirectEmployeeChange(
-                                              work.id,
-                                              worker.id
-                                            )
-                                          }
-                                          className="text-sm"
-                                        >
-                                          {worker.name}
-                                          <Check
-                                            className={cn(
-                                              "ml-auto h-4 w-4",
-                                              assignedToId === worker.id
-                                                ? "opacity-100"
-                                                : "opacity-0"
-                                            )}
-                                          />
-                                        </CommandItem>
-                                      ))}
+                                      {workers
+                                        .sort((a, b) =>
+                                          a.name.localeCompare(b.name)
+                                        )
+                                        .map((worker) => (
+                                          <CommandItem
+                                            key={worker.id}
+                                            onSelect={() =>
+                                              handleDirectEmployeeChange(
+                                                work.id,
+                                                worker.id
+                                              )
+                                            }
+                                            className="text-sm"
+                                          >
+                                            {worker.name}
+                                            <Check
+                                              className={cn(
+                                                "ml-auto h-4 w-4",
+                                                assignedToId === worker.id
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              )}
+                                            />
+                                          </CommandItem>
+                                        ))}
                                     </CommandGroup>
                                   </CommandList>
                                 </Command>
                               </PopoverContent>
                             </Popover>
                           </TableCell>
-                          <TableCell>{work.razryad?.name || "-"}</TableCell>
-                          <TableCell>{work.second || "-"}</TableCell>
-                          <TableCell>
+                          <TableCell className="border text-center">
+                            {work.razryad?.name || "-"}
+                          </TableCell>
+                          <TableCell className="border text-center">
+                            {work.second || "-"}
+                          </TableCell>
+                          <TableCell className="border text-center">
                             {Number.parseFloat(work.summa).toLocaleString(
                               "en-US",
                               {
