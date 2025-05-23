@@ -192,6 +192,21 @@ const ConnectResult = () => {
           Miqdor:{" "}
           <span className="font-semibold">{data.order?.quantity} ta</span>
         </div>
+        <div>
+          Qoldiq:{" "}
+          <span className="font-semibold">{data.order?.remainAmount} ta</span>
+        </div>
+        <div>
+          Bajarildi:{" "}
+          <span className="font-semibold">
+            {parseFloat(
+              ((data.order?.quantity - data.order?.remainAmount) /
+                data.order?.quantity) *
+                100
+            ).toFixed(2)}{" "}
+            %
+          </span>
+        </div>
       </div>
       <Accordion
         type="single"
