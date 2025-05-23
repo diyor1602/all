@@ -74,7 +74,7 @@ const Result = () => {
 
   const calculateProgress = (quantity, remainAmount) => {
     if (!quantity || quantity === 0) return 0;
-    const completed = quantity - (remainAmount || 0);
+    const completed = remainAmount || 0;
     return Math.round((completed / quantity) * 100);
   };
 
@@ -235,14 +235,13 @@ const Result = () => {
                           <div className="flex justify-between text-xs text-gray-600 mb-1">
                             <span>Jarayon</span>
                             <span className="font-medium">
-                              {order?.quantity - (order?.remainAmount || 0)} /{" "}
-                              {order?.quantity}
+                              {order?.remainAmount || 0} / {order?.quantity}
                             </span>
                           </div>
                           <Progress
                             value={progress}
                             className="h-2"
-                            indicatorClassName={`${
+                            indicatorclassname={`${
                               progress < 30
                                 ? "bg-red-500"
                                 : progress < 70

@@ -61,7 +61,6 @@ const CuttingStart = () => {
         setSelectedSubmodel(response.data.order_model.submodels[0].id);
       }
     } catch (error) {
-      console.log(error);
       toast({
         variant: "destructive",
         title: "Xatolik",
