@@ -301,6 +301,80 @@ const Employees = () => {
     fetchEmployees();
   }, [debouncedSearch, debouncedDepartment, debouncedGroup, debouncedStatus]);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Xodimni ishdan ketkazishni xohlaysizmi?")) return;
+    // ask user to enter a comment
+    const comment = prompt("Ketish sababini kiriting:");
+    if (!comment) {
+      toast({
+        title: "Diqqat",
+        description: "Sababni kiritish shart",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    try {
+      await api.patch(`/superhr/employees/${id}`, {
+        status: "kicked",
+        comment,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Xodim ishdan ketkazildi",
+        style: {
+          background: "green",
+          color: "white",
+        },
+        duration: 1500,
+      });
+      fetchEmployees();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Xodim o'chirilmadi",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRestore = async (id) => {
+    if (!window.confirm("Xodimni ishga qaytarishni xohlaysizmi?")) return;
+    // ask user to enter a comment
+    const comment = prompt("Qaytarish sababini kiriting:");
+    if (!comment) {
+      toast({
+        title: "Diqqat",
+        description: "Sababni kiritish shart",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    try {
+      await api.patch(`/superhr/employees/${id}`, {
+        status: "working",
+        comment,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Xodim ishga qaytdi!",
+        style: {
+          background: "green",
+          color: "white",
+        },
+        duration: 1500,
+      });
+      fetchEmployees();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Xodim qayta ishlashga o'tkazilmadi",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-2">
       {/* Filters */}
@@ -487,9 +561,15 @@ const Employees = () => {
                       <UserPlus
                         size={16}
                         className="text-green-500 hover:text-green-600 hover:scale-110 transition-all duration-200 cursor-pointer"
+                        onClick={() => {
+                          handleRestore(employee.id);
+                        }}
                       />
                     ) : (
                       <Trash
+                        onClick={() => {
+                          handleDelete(employee.id);
+                        }}
                         size={16}
                         className="text-red-500 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer"
                       />
