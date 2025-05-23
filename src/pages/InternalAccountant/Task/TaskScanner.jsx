@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,7 +12,46 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertCircle,
+  ArrowRight,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  QrCode,
+  RefreshCw,
+  Search,
+  User,
+  Users,
+  Zap,
+} from "lucide-react";
+import { format } from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const TaskScanner = () => {
   const { toast } = useToast();
@@ -20,6 +61,9 @@ const TaskScanner = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [code, setCode] = useState("");
   const [data, setData] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [activeTab, setActiveTab] = useState("tarification");
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
@@ -35,13 +79,16 @@ const TaskScanner = () => {
   const fetchEmployees = async (term) => {
     if (!term || term.length <= 2) return;
     try {
+      setIsSearching(true);
       const response = await api.get("/internalAccountant/employees", {
         params: {
           search: term,
         },
       });
       setEmployees(response.data.data);
+      setIsSearching(false);
     } catch (error) {
+      setIsSearching(false);
       toast({
         variant: "destructive",
         title: "Xatolik",
@@ -65,7 +112,12 @@ const TaskScanner = () => {
   };
 
   const handleScan = async () => {
+    if (!code || !selectedEmployee) return;
+
     try {
+      setIsScanning(true);
+      console.log("Scanning with code:", code, "employee:", selectedEmployee);
+
       const response = await api.get(
         `/internalAccountant/boxTarifications/${code}`,
         {
@@ -74,57 +126,372 @@ const TaskScanner = () => {
           },
         }
       );
-      setData(response.data.data);
+
+      console.log("API Response:", response.data);
+
+      // Make sure we're setting the correct data
+      const taskData = response.data.data || response.data;
+      console.log("Setting data:", taskData);
+
+      setData(taskData);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Ma'lumotlar muvaffaqiyatli yuklandi",
+        variant: "default",
+      });
     } catch (error) {
+      console.error("Scan error:", error);
       toast({
         variant: "destructive",
         title: "Xatolik",
         description: "Kodni o'qishda xatolik",
       });
+    } finally {
+      setIsScanning(false);
     }
   };
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (code) {
+      if (code && selectedEmployee) {
         handleScan();
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [code]);
+  }, [code, selectedEmployee]);
+
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), "dd MMM yyyy, HH:mm");
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const resetForm = () => {
+    setCode("");
+    setData(null);
+  };
 
   return (
-    <div className="flex flex-col gap-3 bg-white shadow-sm md:p-6">
-      <Input
-        placeholder="Xodimni qidirish"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onBlur={handleBlur}
-      />
-      <Select
-        value={selectedEmployee}
-        disabled={!employees?.length}
-        onValueChange={(value) => setSelectedEmployee(value)}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Xodimni tanlang" />
-        </SelectTrigger>
-        <SelectContent>
-          {employees
-            ?.sort((a, b) => a.name.localeCompare(b.name))
-            .map((employee) => (
-              <SelectItem key={employee?.id} value={employee?.id}>
-                {employee?.name}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-      <Input
-        disabled={!selectedEmployee}
-        placeholder="Kodni kiriting"
-        value={code}
-        onChange={(e) => setCode(e.target.value)}
-      />
+    <div className="flex flex-col space-y-6 p-4 md:p-6 max-w-5xl mx-auto">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-2xl font-bold tracking-tight">Vazifa Skaneri</h1>
+        <p className="text-muted-foreground">
+          Xodimlar va vazifalarni skanerlash va ma'lumotlarni ko'rish uchun
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            <span>Xodimni tanlash</span>
+          </CardTitle>
+          <CardDescription>
+            Vazifani tekshirish uchun avval xodimni tanlang
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Xodimni qidirish"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onBlur={handleBlur}
+              className="pl-10"
+            />
+            {isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            )}
+          </div>
+
+          <Select
+            value={selectedEmployee}
+            disabled={!employees?.length}
+            onValueChange={(value) => setSelectedEmployee(value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Xodimni tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees
+                ?.sort((a, b) => a.name.localeCompare(b.name))
+                .map((employee) => (
+                  <SelectItem key={employee?.id} value={employee?.id}>
+                    {employee?.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5 text-primary" />
+            <span>Vazifa kodi</span>
+          </CardTitle>
+          <CardDescription>
+            Vazifa kodini kiriting yoki skaner orqali o'qiting
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Input
+              disabled={!selectedEmployee}
+              placeholder="Kodni kiriting"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className={!selectedEmployee ? "opacity-60" : ""}
+            />
+            {isScanning && (
+              <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            )}
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={resetForm}
+            disabled={!code && !data}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Tozalash
+          </Button>
+          <Button
+            onClick={handleScan}
+            disabled={!code || !selectedEmployee || isScanning}
+          >
+            {isScanning ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Skanerlanmoqda...
+              </>
+            ) : (
+              <>
+                <Zap className="mr-2 h-4 w-4" />
+                Skanerlash
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {data ? (
+        <Card className="overflow-hidden border-t-4 border-t-primary">
+          <CardHeader className="bg-muted/40">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                Vazifa ma'lumotlari
+              </CardTitle>
+              <Badge
+                variant={data.status === "completed" ? "success" : "default"}
+              >
+                {data.status === "completed" ? "Bajarilgan" : data.status}
+              </Badge>
+            </div>
+            <CardDescription>
+              Buyurtma:{" "}
+              <span className="font-medium">
+                {data.submodel?.order_model?.order?.name}
+              </span>
+            </CardDescription>
+          </CardHeader>
+
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <div className="px-6 pt-2">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="tarification">Tarifikatsiya</TabsTrigger>
+                <TabsTrigger value="order">Buyurtma</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="details" className="m-0">
+              <CardContent className="p-6"></CardContent>
+            </TabsContent>
+
+            <TabsContent value="tarification" className="m-0">
+              <CardContent className="p-6">
+                <div className="w-full overflow-x-auto">
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-1/2 border">Nomi</TableHead>
+                        <TableHead className="w-1/2 border">Qiymati</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Nomi
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.tarification?.name}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Kod
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.tarification?.code}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Razryad
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.tarification?.razryad?.name}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Mashina
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.tarification?.typewriter?.name}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Vaqt (sekund)
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.tarification?.second} sekund
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Summa
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.tarification?.summa} so'm
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Miqdori
+                        </TableCell>
+                        <TableCell className="border">
+                          {data?.quantity} ta
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Jami narxi
+                        </TableCell>
+                        <TableCell className="border">
+                          {data?.price} so'm
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </TabsContent>
+
+            <TabsContent value="order" className="m-0">
+              <CardContent className="p-6">
+                <div className="w-full overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-1/2 border">Nomi</TableHead>
+                        <TableHead className="w-1/2 border">Qiymati</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Buyurtma ID
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.order_id}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Buyurtma nomi
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.submodel?.order_model?.order?.name}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Model
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.submodel?.order_model?.model?.name}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Submodel
+                        </TableCell>
+                        <TableCell className="border">
+                          {data.submodel?.submodel?.name}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </TabsContent>
+          </Tabs>
+        </Card>
+      ) : isScanning ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <h3 className="mt-4 text-lg font-medium">
+                Ma'lumotlar yuklanmoqda...
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Iltimos, kuting. Ma'lumotlar yuklanmoqda.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : selectedEmployee ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <QrCode className="h-10 w-10 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-medium">
+                Vazifa kodini kiriting
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Vazifa ma'lumotlarini ko'rish uchun kodni kiriting yoki
+                skanerlang
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <User className="h-10 w-10 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-medium">Xodimni tanlang</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Vazifa ma'lumotlarini ko'rish uchun avval xodimni tanlang
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
