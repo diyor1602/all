@@ -54,6 +54,7 @@ const TaskScanner = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [activeTab, setActiveTab] = useState("tarification");
+  const [savedData, setSavedData] = useState([]);
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [readCode, setReadCode] = useState("");
@@ -128,6 +129,19 @@ const TaskScanner = () => {
         variant: "default",
       });
       setReadCode(code.split("A")[1] || code);
+      setSavedData((prev) => [
+        {
+          code: code.split("A")[1] || code,
+          tarif_code: taskData.box_tarification.tarification?.code,
+          vaqt: taskData.box_tarification.tarification?.second,
+          summa: taskData.box_tarification.tarification?.summa,
+          miqdori: taskData.box_tarification?.quantity,
+          jami_summa: taskData.box_tarification?.total,
+          employee: taskData.employee?.name || "-",
+          timestamp: new Date().toISOString(),
+        },
+        ...(Array.isArray(prev) ? prev : []),
+      ]);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -540,6 +554,68 @@ const TaskScanner = () => {
               <p className="mt-2 text-sm text-muted-foreground">
                 Vazifa ma'lumotlarini ko'rish uchun avval xodimni tanlang
               </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {savedData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <span>Skanerlangan ma'lumotlar tarixi</span>
+            </CardTitle>
+            <CardDescription>
+              Oxirgi skanerlangan ma'lumotlar ({savedData.length})
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="w-full overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="border">Kod</TableHead>
+                    <TableHead className="border">Tarif kodi</TableHead>
+                    <TableHead className="border">Vaqt (sekund)</TableHead>
+                    <TableHead className="border">Summa</TableHead>
+                    <TableHead className="border">Miqdori</TableHead>
+                    <TableHead className="border">Jami summa</TableHead>
+                    <TableHead className="border">Bajargan xodim</TableHead>
+                    <TableHead className="border">Skanerlangan vaqt</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {savedData.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="border font-medium">
+                        {item.code}
+                      </TableCell>
+                      <TableCell className="border">
+                        {item.tarif_code}
+                      </TableCell>
+                      <TableCell className="border">
+                        {item.vaqt} sekund
+                      </TableCell>
+                      <TableCell className="border">
+                        {item.summa} so'm
+                      </TableCell>
+                      <TableCell className="border">
+                        {item.miqdori} ta
+                      </TableCell>
+                      <TableCell className="border">
+                        {Number.parseFloat(item.jami_summa).toLocaleString(
+                          "ru-RU"
+                        )}{" "}
+                        so'm
+                      </TableCell>
+                      <TableCell className="border">{item.employee}</TableCell>
+                      <TableCell className="border">
+                        {new Date(item.timestamp).toLocaleString("ru-RU")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
