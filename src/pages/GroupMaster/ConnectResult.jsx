@@ -199,6 +199,12 @@ const ConnectResult = () => {
         <div>
           Bajarildi:{" "}
           <span className="font-semibold">
+            {data.order?.quantity - data.order?.remainAmount} ta
+          </span>
+        </div>
+        <div>
+          Foizda:{" "}
+          <span className="font-semibold">
             {parseFloat(
               ((data.order?.quantity - data.order?.remainAmount) /
                 data.order?.quantity) *
