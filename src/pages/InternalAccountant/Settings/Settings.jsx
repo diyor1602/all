@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, History, QrCode } from "lucide-react";
+import { BaggageClaim, Box, History, QrCode } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 
 const Settings = () => {
@@ -22,15 +22,21 @@ const SettingsPage = () => {
       color: "bg-green-500",
     },
     {
-      name: "Ish",
-      icon: BriefcaseBusiness,
+      name: "Buyurtmalar",
+      icon: Box,
       link: "/internalAccountant/work",
       color: "bg-red-500",
     },
     {
+      name: "Ish",
+      icon: BaggageClaim,
+      link: "/internalAccountant/task",
+      color: "bg-sky-500",
+    },
+    {
       name: "Skaner",
       icon: QrCode,
-      link: "/internalAccountant/scaner",
+      link: "/internalAccountant/scanner",
       color: "bg-gray-500",
     },
   ];

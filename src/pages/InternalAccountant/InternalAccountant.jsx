@@ -3,7 +3,8 @@ import Attendance from "./Attendance/Attendance";
 import Employees from "./Employees/Employees";
 import Settings from "./Settings/Settings";
 import Work from "./Work/Work";
-import Scaner from "./Scaner/Scaner";
+import Scanner from "./Scanner/Scanner";
+import Task from "./Task/Task";
 
 const InternalAccountant = () => {
   return (
@@ -12,7 +13,8 @@ const InternalAccountant = () => {
       <Route path="employees" element={<Employees />} />
       <Route path="settings/*" element={<Settings />} />
       <Route path="work/*" element={<Work />} />
-      <Route path="scaner" element={<Scaner />} />
+      <Route path="scanner" element={<Scanner />} />
+      <Route path="task/*" element={<Task />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

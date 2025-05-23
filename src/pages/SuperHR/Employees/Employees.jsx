@@ -332,7 +332,7 @@ const Employees = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Xodim o'chirilmadi",
+        description: "Xodim ishdan ketkazilmadi",
         variant: "destructive",
       });
     }
