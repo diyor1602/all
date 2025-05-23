@@ -275,7 +275,10 @@ const AddGroup = () => {
               </SelectTrigger>
               <SelectContent>
                 {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
+                  <SelectItem
+                    key={user.user_id}
+                    value={user.user_id.toString()}
+                  >
                     {user.name}
                   </SelectItem>
                 ))}
