@@ -1,11 +1,39 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  Box,
+  Calendar,
+  CheckCircle2,
+  ClipboardList,
+  Download,
+  FileText,
+  Loader2,
+  PackageOpen,
+  Ruler,
+  Scissors,
+  ShoppingBag,
+  Tag,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const CuttingStart = () => {
   const { id } = useParams();
@@ -18,6 +46,12 @@ const CuttingStart = () => {
   const [isSending, setIsSending] = useState(false);
   const [cuttingCount, setCuttingCount] = useState("");
   const [boxCount, setBoxCount] = useState("");
+  const [errors, setErrors] = useState({
+    submodel: false,
+    size: false,
+    cuttingCount: false,
+    boxCount: false,
+  });
 
   const getOrder = async () => {
     try {
@@ -43,40 +77,34 @@ const CuttingStart = () => {
     getOrder();
   }, [id]);
 
+  const validateForm = () => {
+    const newErrors = {
+      submodel: !selectedSubmodel,
+      size: !selectedSize,
+      cuttingCount: !cuttingCount,
+      boxCount: !boxCount,
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some((error) => error)) {
+      return false;
+    }
+
+    return true;
+  };
+
   const handleCutting = async () => {
-    // check if selectedSubmodel and selectedSize are not empty
-    if (!selectedSubmodel) {
+    if (!validateForm()) {
       toast({
         variant: "destructive",
         title: "Diqqat",
-        description: "Submodelni tanlang",
+        description: "Barcha maydonlarni to'ldiring",
+        icon: <AlertCircle className="h-4 w-4" />,
       });
       return;
     }
-    if (!selectedSize) {
-      toast({
-        variant: "destructive",
-        title: "Diqqat",
-        description: "O'lchamni tanlang",
-      });
-      return;
-    }
-    if (!cuttingCount) {
-      toast({
-        variant: "destructive",
-        title: "Diqqat",
-        description: "Kesish sonini kiriting",
-      });
-      return;
-    }
-    if (!boxCount) {
-      toast({
-        variant: "destructive",
-        title: "Diqqat",
-        description: "Quti sig'imi kiriting",
-      });
-      return;
-    }
+
     try {
       setIsSending(true);
       const response = await api.get(`/cuttingMaster/markAsCut`, {
@@ -97,130 +125,296 @@ const CuttingStart = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url); // optional cleanup
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Kesish PDF fayli yuklab olindi",
+        variant: "default",
+        duration: 1500,
+      });
     } catch (error) {
       toast({
         title: "Xatolik",
         description: "Kesish PDF fayl yuklab bo'lmadi",
         variant: "destructive",
+        icon: <AlertCircle className="h-4 w-4" />,
       });
     } finally {
       setIsSending(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4">
-      {loading ? (
-        <div className="flex items-center justify-center w-full h-screen">
-          <Loader2 size={32} className="animate-spin text-primary" />
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-col gap-4 bg-white p-4 rounded-lg border shadow-sm">
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <div>Buyurtma nomi: {order?.name}</div>
-              <div>Buyurtma raqami: {order?.id}</div>
-              <div>Izoh: {order?.comment}</div>
-              <div>Miqdori: {order?.quantity} ta</div>
-              <div>Model: {order?.order_model?.model?.name}</div>
-              <div>Material: {order?.order_model?.material?.name || "-"}</div>
-              {order?.start_date && (
-                <div>
-                  Boshlanish vaqti:{" "}
-                  {order?.start_date
-                    ?.split(" ")[0]
-                    .split("-")
-                    .reverse()
-                    .join(".")}
-                </div>
-              )}
-              {order?.end_date && (
-                <div>
-                  Tugash vaqti:{" "}
-                  {order?.end_date
-                    ?.split(" ")[0]
-                    .split("-")
-                    .reverse()
-                    .join(".")}
-                </div>
-              )}
-              <div>
-                Submodellar:{" "}
-                <div className="flex flex-wrap gap-2">
-                  {order?.order_model?.submodels.map((submodel) => (
-                    <span key={submodel.id}>{submodel.submodel?.name}</span>
-                  ))}
-                </div>
+    <div className="flex flex-col gap-6 p-4 max-w-4xl mx-auto">
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-bold flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              Buyurtma #{order?.id}
+            </CardTitle>
+          </div>
+          <CardDescription>{order?.name}</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Buyurtma nomi:</span>
+                <span className="font-medium">{order?.name}</span>
               </div>
-              <div>
-                O'lchamlar:{" "}
-                <div className="flex flex-wrap gap-2">
-                  {order?.order_model?.sizes.map((size) => (
-                    <span key={size.id}>
-                      {size.size?.name} & {size?.quantity} ta
-                    </span>
-                  ))}
+
+              <div className="flex items-center gap-2 text-sm">
+                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Miqdori:</span>
+                <span className="font-medium">{order?.quantity} ta</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm">
+                <Box className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Model:</span>
+                <span className="font-medium">
+                  {order?.order_model?.model?.name}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm">
+                <PackageOpen className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Material:</span>
+                <span className="font-medium">
+                  {order?.order_model?.material?.name || "-"}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {order?.comment && (
+                <div className="flex items-start gap-2 text-sm">
+                  <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <span className="text-muted-foreground">Izoh:</span>
+                  <span className="font-medium">{order?.comment}</span>
                 </div>
+              )}
+
+              {order?.start_date && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    Boshlanish vaqti:
+                  </span>
+                  <span className="font-medium">
+                    {order?.start_date
+                      ?.split(" ")[0]
+                      .split("-")
+                      .reverse()
+                      .join(".")}
+                  </span>
+                </div>
+              )}
+
+              {order?.end_date && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Tugash vaqti:</span>
+                  <span className="font-medium">
+                    {order?.end_date
+                      ?.split(" ")[0]
+                      .split("-")
+                      .reverse()
+                      .join(".")}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator className="my-4" />
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium flex items-center gap-2 mb-2">
+                <Scissors className="h-4 w-4 text-muted-foreground" />
+                Submodellar:
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {order?.order_model?.submodels.map((submodel) => (
+                  <Badge key={submodel.id} variant="secondary">
+                    {submodel.submodel?.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium flex items-center gap-2 mb-2">
+                <Ruler className="h-4 w-4 text-muted-foreground" />
+                O'lchamlar:
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {order?.order_model?.sizes.map((size) => (
+                  <Badge key={size.id} variant="secondary">
+                    {size.size?.name} ({size?.quantity} ta)
+                  </Badge>
+                ))}
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-4 bg-white p-4 rounded-lg border shadow-sm">
-            <div className="flex flex-col gap-4">
-              <div>Submodellar:</div>
-              <div className="flex flex-wrap gap-2 items-center">
-                {order?.order_model?.submodels.map((submodel) => (
-                  <Button
-                    key={submodel.id}
-                    onClick={() => setSelectedSubmodel(submodel.id)}
-                    variant={
-                      selectedSubmodel === submodel.id ? "default" : "outline"
-                    }
-                  >
-                    {submodel.submodel?.name}
-                  </Button>
-                ))}
-              </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-bold flex items-center gap-2">
+            <Scissors className="h-5 w-5 text-primary" />
+            Kesish ma'lumotlari
+          </CardTitle>
+          <CardDescription>
+            Kesish uchun kerakli ma'lumotlarni kiriting
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="submodel" className="text-sm font-medium">
+              Submodelni tanlang
+              {errors.submodel && (
+                <span className="text-destructive ml-1">*</span>
+              )}
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {order?.order_model?.submodels.map((submodel) => (
+                <Button
+                  key={submodel.id}
+                  onClick={() => {
+                    setSelectedSubmodel(submodel.id);
+                    setErrors({ ...errors, submodel: false });
+                  }}
+                  variant={
+                    selectedSubmodel === submodel.id ? "default" : "outline"
+                  }
+                  size="sm"
+                  className="rounded-full"
+                >
+                  {submodel.submodel?.name}
+                </Button>
+              ))}
             </div>
-            <div className="flex flex-col gap-4">
-              <div>O'lchamlar:</div>
-              <div className="flex flex-wrap gap-2 items-center">
-                {order?.order_model?.sizes.map((size) => (
-                  <Button
-                    key={size.id}
-                    onClick={() => setSelectedSize(size.id)}
-                    variant={selectedSize === size.id ? "default" : "outline"}
-                  >
-                    {size.size?.name}
-                  </Button>
-                ))}
-              </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="size" className="text-sm font-medium">
+              O'lchamni tanlang
+              {errors.size && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {order?.order_model?.sizes.map((size) => (
+                <Button
+                  key={size.id}
+                  onClick={() => {
+                    setSelectedSize(size.id);
+                    setErrors({ ...errors, size: false });
+                  }}
+                  variant={selectedSize === size.id ? "default" : "outline"}
+                  size="sm"
+                  className="rounded-full"
+                >
+                  {size.size?.name} ({size?.quantity} ta)
+                </Button>
+              ))}
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="cutting_count">Kesish soni</Label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="cutting_count" className="text-sm font-medium">
+                Kesish soni
+                {errors.cuttingCount && (
+                  <span className="text-destructive ml-1">*</span>
+                )}
+              </Label>
               <Input
                 id="cutting_count"
-                placeholder="Kesish soni"
+                type="number"
+                placeholder="Kesish sonini kiriting"
                 value={cuttingCount}
-                onChange={(e) => setCuttingCount(e.target.value)}
+                onChange={(e) => {
+                  setCuttingCount(e.target.value);
+                  setErrors({ ...errors, cuttingCount: false });
+                }}
+                className={errors.cuttingCount ? "border-destructive" : ""}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="box_count">Quti sig'imi</Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="box_count" className="text-sm font-medium">
+                Quti sig'imi
+                {errors.boxCount && (
+                  <span className="text-destructive ml-1">*</span>
+                )}
+              </Label>
               <Input
                 id="box_count"
-                placeholder="Quti sig'imi"
+                type="number"
+                placeholder="Quti sig'imini kiriting"
                 value={boxCount}
-                onChange={(e) => setBoxCount(e.target.value)}
+                onChange={(e) => {
+                  setBoxCount(e.target.value);
+                  setErrors({ ...errors, boxCount: false });
+                }}
+                className={errors.boxCount ? "border-destructive" : ""}
               />
             </div>
           </div>
-          <Button onClick={handleCutting} disabled={isSending}>
-            {isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : ""}
-            {isSending ? "Yuklanmoqda" : "Kesish"}
+
+          {Object.values(errors).some((error) => error) && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Diqqat!</AlertTitle>
+              <AlertDescription>
+                Barcha kerakli maydonlarni to'ldiring
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button
+            onClick={handleCutting}
+            disabled={isSending}
+            className="w-full sm:w-auto"
+            size="lg"
+          >
+            {isSending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Yuklanmoqda...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Kesish PDF yuklab olish
+              </>
+            )}
           </Button>
-        </>
-      )}
+        </CardFooter>
+      </Card>
     </div>
   );
 };
