@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -21,14 +21,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  AlertCircle,
-  ArrowRight,
-  Calendar,
   CheckCircle2,
-  Clock,
   Loader2,
   QrCode,
   RefreshCw,
@@ -37,7 +32,6 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { format } from "date-fns";
 import {
   Table,
   TableBody,
@@ -46,12 +40,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const TaskScanner = () => {
@@ -61,12 +49,14 @@ const TaskScanner = () => {
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [code, setCode] = useState("");
+  const inputRef = useRef(null);
   const [data, setData] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [activeTab, setActiveTab] = useState("tarification");
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [readCode, setReadCode] = useState("");
 
   // Debounce effect
   useEffect(() => {
@@ -119,7 +109,7 @@ const TaskScanner = () => {
       setIsScanning(true);
 
       const response = await api.get(
-        `/internalAccountant/boxTarifications/${code?.split("A")[1]}`,
+        `/internalAccountant/boxTarifications/${code?.split("A")[1] || code}`,
         {
           params: {
             employee_id: selectedEmployee,
@@ -137,6 +127,7 @@ const TaskScanner = () => {
         description: "Ma'lumotlar muvaffaqiyatli yuklandi",
         variant: "default",
       });
+      setReadCode(code.split("A")[1] || code);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -148,19 +139,39 @@ const TaskScanner = () => {
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (code && selectedEmployee) {
-        handleScan();
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [code]);
-
   const resetForm = () => {
     setCode("");
     setData(null);
   };
+
+  const handleCodeChange = (e) => {
+    const value = e.target.value;
+
+    // If the value contains multiple A prefixes, only keep the first complete entry
+    if (value.indexOf("A", 1) !== -1) {
+      const firstCompleteEntry = value.substring(0, value.indexOf("A", 1));
+      setCode(firstCompleteEntry);
+    } else {
+      setCode(value);
+    }
+
+    // Always keep the input focused
+    inputRef.current?.focus();
+  };
+
+  useEffect(() => {
+    // Focus the input when component mounts or selectedEmployee changes
+    if (selectedEmployee && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [selectedEmployee]);
+
+  useEffect(() => {
+    if (data) {
+      setCode("");
+      inputRef.current?.focus();
+    }
+  }, [data]);
 
   return (
     <div className="flex flex-col space-y-6 p-4 md:p-6 max-w-5xl mx-auto">
@@ -230,11 +241,18 @@ const TaskScanner = () => {
         <CardContent>
           <div className="relative">
             <Input
+              ref={inputRef}
               disabled={!selectedEmployee}
               placeholder="Kodni kiriting"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={handleCodeChange}
               className={!selectedEmployee ? "opacity-60" : ""}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleScan();
+                }
+              }}
+              autoFocus
             />
             {isScanning && (
               <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
@@ -334,6 +352,12 @@ const TaskScanner = () => {
                     <TableBody>
                       <TableRow>
                         <TableCell className="font-medium border">
+                          O'qilgan kod
+                        </TableCell>
+                        <TableCell className="border">{readCode}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
                           Nomi
                         </TableCell>
                         <TableCell className="border">
@@ -393,7 +417,7 @@ const TaskScanner = () => {
                           Jami narxi
                         </TableCell>
                         <TableCell className="border">
-                          {parseFloat(
+                          {Number.parseFloat(
                             data?.box_tarification?.total
                           ).toLocaleString("ru-RU")}{" "}
                           so'm
