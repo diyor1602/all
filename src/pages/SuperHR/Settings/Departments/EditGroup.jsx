@@ -32,18 +32,11 @@ const EditGroup = () => {
     responsible_user_id: "",
   });
   const [currentResponsibleUser, setCurrentResponsibleUser] = useState(null);
-  const [debugInfo, setDebugInfo] = useState({});
 
-  // Fetch group details on component mount
   const fetchGroupDetails = async () => {
     try {
       setIsLoading(true);
       const res = await api.get(`/superhr/groups/${id}/`);
-
-      setDebugInfo((prev) => ({
-        ...prev,
-        groupData: res.data,
-      }));
 
       setGroup({
         name: res.data.name,
@@ -51,26 +44,18 @@ const EditGroup = () => {
         responsible_user_id: res.data.responsible_user_id.toString(),
       });
 
-      // Fetch responsible user details
       try {
         const userRes = await api.get(
-          `/superhr/employees/${res.data.responsible_user_id}/`
+          `/superhr/users/${res.data.responsible_user_id}/`
         );
 
-        setDebugInfo((prev) => ({
-          ...prev,
-          responsibleUserData: userRes.data,
-        }));
-
-        // Extract the user data from the nested structure
         const userData = userRes.data.data || userRes.data;
 
         setCurrentResponsibleUser(userData);
-
-        // Add the current user to the users array so they can be selected
         setUsers((prevUsers) => {
-          // Check if the user is already in the array
-          const userExists = prevUsers.some((user) => user.id === userData.id);
+          const userExists = prevUsers.some(
+            (user) => user.user_id === userData.user_id
+          );
           if (!userExists) {
             return [...prevUsers, userData];
           }
@@ -98,7 +83,6 @@ const EditGroup = () => {
     }
   };
 
-  // Fetch departments on component mount
   const fetchDepartments = async () => {
     try {
       const res = await api.get(`/superhr/departments/`);
@@ -118,10 +102,8 @@ const EditGroup = () => {
     fetchDepartments();
   }, [id]);
 
-  // Search users when the search term changes
   const searchUsers = async () => {
     if (usersSearch.length < 3) {
-      // Don't clear users array to keep the current responsible user
       return;
     }
 
@@ -129,10 +111,9 @@ const EditGroup = () => {
       const res = await api.get(`/superhr/employees/?search=${usersSearch}`);
       const searchResults = res.data?.data || [];
 
-      // Preserve the current responsible user in the list
       if (currentResponsibleUser) {
         const currentUserInResults = searchResults.some(
-          (user) => user.id === currentResponsibleUser.id
+          (user) => user.user_id === currentResponsibleUser.user_id
         );
 
         if (!currentUserInResults) {
@@ -153,7 +134,6 @@ const EditGroup = () => {
     }
   };
 
-  // Debounce search to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
       searchUsers();
@@ -161,7 +141,6 @@ const EditGroup = () => {
     return () => clearTimeout(timer);
   }, [usersSearch]);
 
-  // Validate form data
   const validateForm = () => {
     let isValid = true;
 
@@ -198,11 +177,9 @@ const EditGroup = () => {
     return isValid;
   };
 
-  // Handle form submission
   const handleEditGroupSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate form before submission
     if (!validateForm()) {
       return;
     }
@@ -363,11 +340,11 @@ const EditGroup = () => {
               <SelectValue placeholder="Mas'ul xodimni tanlang" />
             </SelectTrigger>
             <SelectContent>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.id.toString()}>
+              {users.map((user, i) => (
+                <SelectItem key={i} value={user.user_id.toString()}>
                   {user.name}{" "}
                   {currentResponsibleUser &&
-                  user.id === currentResponsibleUser.id
+                  user.user_id === currentResponsibleUser.user_id
                     ? "(Joriy mas'ul)"
                     : ""}
                 </SelectItem>

@@ -8,7 +8,6 @@ import {
   AlertCircle,
   Box,
   Calendar,
-  CheckCircle2,
   ClipboardList,
   Download,
   FileText,
