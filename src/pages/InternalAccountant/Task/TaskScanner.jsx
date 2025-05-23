@@ -52,6 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 const TaskScanner = () => {
   const { toast } = useToast();
@@ -116,10 +117,9 @@ const TaskScanner = () => {
 
     try {
       setIsScanning(true);
-      console.log("Scanning with code:", code, "employee:", selectedEmployee);
 
       const response = await api.get(
-        `/internalAccountant/boxTarifications/${code}`,
+        `/internalAccountant/boxTarifications/${code?.split("A")[1]}`,
         {
           params: {
             employee_id: selectedEmployee,
@@ -127,11 +127,8 @@ const TaskScanner = () => {
         }
       );
 
-      console.log("API Response:", response.data);
-
       // Make sure we're setting the correct data
       const taskData = response.data.data || response.data;
-      console.log("Setting data:", taskData);
 
       setData(taskData);
 
@@ -141,7 +138,6 @@ const TaskScanner = () => {
         variant: "default",
       });
     } catch (error) {
-      console.error("Scan error:", error);
       toast({
         variant: "destructive",
         title: "Xatolik",
@@ -159,15 +155,7 @@ const TaskScanner = () => {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [code, selectedEmployee]);
-
-  const formatDate = (dateString) => {
-    try {
-      return format(new Date(dateString), "dd MMM yyyy, HH:mm");
-    } catch (error) {
-      return dateString;
-    }
-  };
+  }, [code]);
 
   const resetForm = () => {
     setCode("");
@@ -290,9 +278,23 @@ const TaskScanner = () => {
                 Vazifa ma'lumotlari
               </CardTitle>
               <Badge
-                variant={data.status === "completed" ? "success" : "default"}
+                variant={
+                  data.box_tarification?.status === "completed"
+                    ? "success"
+                    : data.box_tarification?.status === "inactive"
+                    ? "destructive"
+                    : data.box_tarification?.status === "active"
+                    ? "default"
+                    : "default"
+                }
               >
-                {data.status === "completed" ? "Bajarilgan" : data.status}
+                {data.box_tarification?.status === "completed"
+                  ? "Bajarilgan"
+                  : data.box_tarification?.status === "inactive"
+                  ? "Faol emas"
+                  : data.box_tarification?.status === "active"
+                  ? "Faol"
+                  : "Noma'lum"}
               </Badge>
             </div>
             <CardDescription>
@@ -335,7 +337,7 @@ const TaskScanner = () => {
                           Nomi
                         </TableCell>
                         <TableCell className="border">
-                          {data.tarification?.name}
+                          {data.box_tarification.tarification?.name}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -343,7 +345,7 @@ const TaskScanner = () => {
                           Kod
                         </TableCell>
                         <TableCell className="border">
-                          {data.tarification?.code}
+                          {data.box_tarification.tarification?.code}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -351,7 +353,7 @@ const TaskScanner = () => {
                           Razryad
                         </TableCell>
                         <TableCell className="border">
-                          {data.tarification?.razryad?.name}
+                          {data.box_tarification.tarification?.razryad?.name}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -359,7 +361,7 @@ const TaskScanner = () => {
                           Mashina
                         </TableCell>
                         <TableCell className="border">
-                          {data.tarification?.typewriter?.name}
+                          {data.box_tarification.tarification?.typewriter?.name}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -367,7 +369,7 @@ const TaskScanner = () => {
                           Vaqt (sekund)
                         </TableCell>
                         <TableCell className="border">
-                          {data.tarification?.second} sekund
+                          {data.box_tarification.tarification?.second} sekund
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -375,7 +377,7 @@ const TaskScanner = () => {
                           Summa
                         </TableCell>
                         <TableCell className="border">
-                          {data.tarification?.summa} so'm
+                          {data.box_tarification.tarification?.summa} so'm
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -383,7 +385,7 @@ const TaskScanner = () => {
                           Miqdori
                         </TableCell>
                         <TableCell className="border">
-                          {data?.quantity} ta
+                          {data?.box_tarification?.quantity} ta
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -391,7 +393,27 @@ const TaskScanner = () => {
                           Jami narxi
                         </TableCell>
                         <TableCell className="border">
-                          {data?.price} so'm
+                          {parseFloat(
+                            data?.box_tarification?.total
+                          ).toLocaleString("ru-RU")}{" "}
+                          so'm
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium border">
+                          Bajargan xodim
+                        </TableCell>
+                        <TableCell className="border">
+                          <div
+                            className={cn(
+                              "font-medium",
+                              data?.employee?.id === selectedEmployee
+                                ? "text-green-500"
+                                : "text-red-500"
+                            )}
+                          >
+                            {data?.employee?.name || "-"}
+                          </div>
                         </TableCell>
                       </TableRow>
                     </TableBody>
@@ -416,7 +438,7 @@ const TaskScanner = () => {
                           Buyurtma ID
                         </TableCell>
                         <TableCell className="border">
-                          {data.order_id}
+                          {data?.box_tarification?.order_id}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -424,7 +446,10 @@ const TaskScanner = () => {
                           Buyurtma nomi
                         </TableCell>
                         <TableCell className="border">
-                          {data.submodel?.order_model?.order?.name}
+                          {
+                            data?.box_tarification?.submodel?.order_model?.order
+                              ?.name
+                          }
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -432,7 +457,10 @@ const TaskScanner = () => {
                           Model
                         </TableCell>
                         <TableCell className="border">
-                          {data.submodel?.order_model?.model?.name}
+                          {
+                            data.box_tarification?.submodel?.order_model?.model
+                              ?.name
+                          }
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -440,7 +468,7 @@ const TaskScanner = () => {
                           Submodel
                         </TableCell>
                         <TableCell className="border">
-                          {data.submodel?.submodel?.name}
+                          {data.box_tarification?.submodel?.submodel?.name}
                         </TableCell>
                       </TableRow>
                     </TableBody>
