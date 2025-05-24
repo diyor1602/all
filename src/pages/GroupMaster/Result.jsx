@@ -251,6 +251,21 @@ const Result = () => {
                           />
                         </div>
 
+                        {order?.orderModel?.submodels?.length > 0 && (
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap gap-1 bg-violet-50 p-1.5 rounded-lg">
+                              {order?.orderModel?.submodels?.map((submodel) => (
+                                <Badge
+                                  key={submodel.id}
+                                  className="bg-white text-violet-700 border border-violet-200 text-xs hover:bg-violet-50"
+                                >
+                                  {submodel?.submodel?.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-between mt-3">
                           <Button
                             size="sm"
@@ -362,27 +377,6 @@ const Result = () => {
                                         )}
                                       </Badge>
                                     ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {order?.orderModel?.submodels?.length > 0 && (
-                                <div className="space-y-1">
-                                  <div className="text-xs font-medium text-gray-500 flex items-center">
-                                    <Tag className="h-3 w-3 mr-1 text-violet-600" />
-                                    Submodellar
-                                  </div>
-                                  <div className="flex flex-wrap gap-1 bg-violet-50 p-1.5 rounded-lg">
-                                    {order?.orderModel?.submodels?.map(
-                                      (submodel) => (
-                                        <Badge
-                                          key={submodel.id}
-                                          className="bg-white text-violet-700 border border-violet-200 text-xs"
-                                        >
-                                          {submodel?.submodel?.name}
-                                        </Badge>
-                                      )
-                                    )}
                                   </div>
                                 </div>
                               )}
