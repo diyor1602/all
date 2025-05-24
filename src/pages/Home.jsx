@@ -235,6 +235,45 @@ const Home = () => {
                     </tr>
                   );
                 })}
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-medium text-center"
+                  >
+                    Jami
+                  </td>
+                  <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
+                    {outputs.reduce(
+                      (total, output) => total + output.today_plan,
+                      0
+                    )}
+                  </td>
+                  <td
+                    className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
+                      outputs.reduce(
+                        (total, output) => total + output.today_quantity,
+                        0
+                      ) >=
+                      outputs.reduce(
+                        (total, output) => total + output.today_plan,
+                        0
+                      )
+                        ? "text-green-600"
+                        : "text-blue-600"
+                    }`}
+                  >
+                    {outputs.reduce(
+                      (total, output) => total + output.today_quantity,
+                      0
+                    )}
+                  </td>
+                  <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
+                    {outputs.reduce(
+                      (total, output) => total + output.total_quantity,
+                      0
+                    )}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
