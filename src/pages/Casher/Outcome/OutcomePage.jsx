@@ -46,7 +46,7 @@ const OutcomePage = () => {
       setLoading(true);
       const response = await api.get("/casher/transactions", {
         params: {
-          type: "outcome",
+          type: "expense",
           ...debouncedFilters,
         },
       });

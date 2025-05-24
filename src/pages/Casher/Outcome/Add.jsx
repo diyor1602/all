@@ -97,7 +97,7 @@ const Add = () => {
         ...(matchedVia ? { via_id: matchedVia.id } : { via_name: form.via_id }),
       };
 
-      await api.post("/casher/outcomes", payload);
+      await api.post("/casher/expenses", payload);
 
       toast({
         title: "Muvaffaqiyatli!",
