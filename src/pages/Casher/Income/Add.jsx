@@ -31,7 +31,6 @@ const Add = () => {
 
   const [currencies, setCurrencies] = useState([]);
   const [sources, setSources] = useState([]);
-  const [vias, setVias] = useState([]);
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeOptions, setEmployeeOptions] = useState([]);
 
@@ -54,15 +53,12 @@ const Add = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [currenciesResponse, sourcesResponse, viasResponse] =
-          await Promise.all([
-            api.get("/casher/currencies"),
-            api.get("/casher/sources"),
-            api.get("/casher/via"),
-          ]);
+        const [currenciesResponse, sourcesResponse] = await Promise.all([
+          api.get("/casher/currencies"),
+          api.get("/casher/sources"),
+        ]);
         setCurrencies(currenciesResponse.data);
         setSources(sourcesResponse.data);
-        setVias(viasResponse.data);
       } catch (error) {
         toast({
           variant: "destructive",

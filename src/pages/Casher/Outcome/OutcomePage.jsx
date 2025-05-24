@@ -165,8 +165,8 @@ const OutcomePage = () => {
               <th className="px-4 py-3 border">№</th>
               <th className="px-4 py-3 border">Sana</th>
               <th className="px-4 py-3 border">Miqdori</th>
-              <th className="px-4 py-3 border">Qayerga</th>
               <th className="px-4 py-3 border">Kim orqali</th>
+              <th className="px-4 py-3 border">Kimga</th>
               <th className="px-4 py-3 border">Sabab</th>
               <th className="px-4 py-3 border">Izoh</th>
             </tr>
@@ -204,10 +204,10 @@ const OutcomePage = () => {
                     <td className="px-4 py-2 border">
                       {item?.amount} {item?.currency?.name}
                     </td>
+                    <td className="px-4 py-2 border">{item?.via?.name}</td>
                     <td className="px-4 py-2 border">
                       {item?.destination?.name}
                     </td>
-                    <td className="px-4 py-2 border">{item?.via?.name}</td>
                     <td className="px-4 py-2 border text-center">
                       {item?.purpose || "-"}
                     </td>

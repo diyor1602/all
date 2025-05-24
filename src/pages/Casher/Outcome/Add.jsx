@@ -30,22 +30,51 @@ const Add = () => {
   });
 
   const [currencies, setCurrencies] = useState([]);
-  const [destinations, setDestinations] = useState([]);
-  const [vias, setVias] = useState([]);
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [employeeOptions, setEmployeeOptions] = useState([]);
+  const [destinationSearch, setDestinationSearch] = useState("");
+  const [destinationOptions, setDestinationOptions] = useState([]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (employeeSearch.trim().length < 3) return;
+
+      try {
+        const res = await api.get(`/casher/employees?search=${employeeSearch}`);
+        setEmployeeOptions(res.data.data || []);
+      } catch (error) {
+        console.error("Employee search error:", error);
+      }
+    }, 500); // debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [employeeSearch]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (destinationSearch.trim().length < 3) return;
+
+      try {
+        const res = await api.get(
+          `/casher/employees?search=${destinationSearch}`
+        );
+        setDestinationOptions(res.data.data || []);
+      } catch (error) {
+        console.error("Destination search error:", error);
+      }
+    }, 500); // debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [destinationSearch]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [currenciesResponse, destinationsResponse, viasResponse] =
-          await Promise.all([
-            api.get("/casher/currencies"),
-            api.get("/casher/destinations"),
-            api.get("/casher/via"),
-          ]);
+        const [currenciesResponse] = await Promise.all([
+          api.get("/casher/currencies"),
+        ]);
         setCurrencies(currenciesResponse.data);
-        setDestinations(destinationsResponse.data);
-        setVias(viasResponse.data);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -65,12 +94,7 @@ const Add = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !form.amount ||
-      !form.currency_id ||
-      !form.destination_id ||
-      !form.via_id
-    ) {
+    if (!form.amount || !form.currency_id || !form.destination_id) {
       toast({
         variant: "destructive",
         title: "Diqqat!",
@@ -81,20 +105,14 @@ const Add = () => {
 
     try {
       setLoading(true);
-      const matchedDestination = destinations.find(
-        (d) => d.name === form.destination_id
-      );
-      const matchedVia = vias.find((v) => v.name === form.via_id);
 
       const payload = {
         amount: form.amount,
         currency_id: form.currency_id,
         purpose: form.purpose,
         comment: form.comment,
-        ...(matchedDestination
-          ? { destination_id: matchedDestination.id }
-          : { destination_name: form.destination_id }),
-        ...(matchedVia ? { via_id: matchedVia.id } : { via_name: form.via_id }),
+        destination_id: form.destination_id,
+        via_id: form.via_id,
       };
 
       await api.post("/casher/expenses", payload);
@@ -147,6 +165,7 @@ const Add = () => {
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
               />
             </div>
+
             <div>
               <Label>Valyuta</Label>
               <Select
@@ -175,36 +194,78 @@ const Add = () => {
             </div>
           </div>
 
-          <div>
-            <Label>Qayerga</Label>
-            <Input
-              placeholder="Masalan: Oylik"
-              list="destination-list"
-              value={form.destination_id}
-              onChange={(e) =>
-                setForm({ ...form, destination_id: e.target.value })
-              }
-            />
-            <datalist id="destination-list">
-              {destinations.map((destination) => (
-                <option key={destination.id} value={destination.name} />
-              ))}
-            </datalist>
-          </div>
-
-          <div>
+          <div
+            className="relative"
+            tabIndex={0}
+            onBlur={() => {
+              setTimeout(() => {
+                setEmployeeOptions([]);
+              }, 100);
+            }}
+          >
             <Label>Kim orqali</Label>
             <Input
-              placeholder="Masalan: Abduvali aka"
-              list="via-list"
-              value={form.via_id}
-              onChange={(e) => setForm({ ...form, via_id: e.target.value })}
+              placeholder="Xodimni qidiring..."
+              value={employeeSearch}
+              onChange={(e) => setEmployeeSearch(e.target.value)}
             />
-            <datalist id="via-list">
-              {vias.map((via) => (
-                <option key={via.id} value={via.name} />
-              ))}
-            </datalist>
+
+            {employeeOptions.length > 0 && (
+              <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-40 overflow-y-auto">
+                <ul>
+                  {employeeOptions.map((emp) => (
+                    <li
+                      key={emp.id}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        setForm({ ...form, via_id: emp.id });
+                        setEmployeeSearch(emp.name);
+                        setEmployeeOptions([]);
+                      }}
+                    >
+                      {emp.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div
+            className="relative"
+            tabIndex={0}
+            onBlur={() => {
+              setTimeout(() => {
+                setEmployeeOptions([]);
+              }, 100);
+            }}
+          >
+            <Label>Kimga</Label>
+            <Input
+              placeholder="Xodimni qidiring..."
+              value={destinationSearch}
+              onChange={(e) => setDestinationSearch(e.target.value)}
+            />
+
+            {destinationOptions.length > 0 && (
+              <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-40 overflow-y-auto">
+                <ul>
+                  {destinationOptions.map((dest) => (
+                    <li
+                      key={dest.id}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        setForm({ ...form, destination_id: dest.id });
+                        setDestinationSearch(dest.name);
+                        setDestinationOptions([]);
+                      }}
+                    >
+                      {dest.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div>
