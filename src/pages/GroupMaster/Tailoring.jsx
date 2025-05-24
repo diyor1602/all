@@ -1,16 +1,13 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/utils/api";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Search,
   Package,
@@ -123,7 +120,7 @@ const Tailoring = () => {
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 p-3 sm:p-6"
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ y: -20 }}
           animate={{ y: 0 }}
@@ -134,7 +131,7 @@ const Tailoring = () => {
           </h1>
           <div className="text-lg font-semibold text-purple-800">
             {filteredOrders?.reduce(
-              (total, order) => total + parseInt(order?.quantity),
+              (total, order) => total + Number.parseInt(order?.quantity),
               0
             )}{" "}
             ta
@@ -177,7 +174,7 @@ const Tailoring = () => {
               </p>
             </motion.div>
           ) : (
-            <Accordion type="single" collapsible className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredOrders.map((order, index) => (
                 <motion.div
                   key={order.id}
@@ -186,135 +183,140 @@ const Tailoring = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <AccordionItem
-                    value={order.id.toString()}
-                    className="border-none rounded-xl overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow duration-300"
-                  >
-                    <AccordionTrigger className="px-6 py-4 hover:bg-gray-50">
-                      <div className="flex items-center justify-between w-full flex-wrap gap-4">
+                  <Card className="h-full bg-white shadow-md hover:shadow-lg transition-shadow duration-300 border-0">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <div className="bg-gradient-to-r from-purple-400 to-blue-500 p-2 rounded-lg mr-4">
-                            <Package className="h-6 w-6 text-white" />
+                          <div className="bg-gradient-to-r from-purple-400 to-blue-500 p-2 rounded-lg mr-3">
+                            <Package className="h-5 w-5 text-white" />
                           </div>
-                          <div className="text-left">
-                            <h3
-                              className="font-bold text-xl text-gray-800"
-                              aria-label="Buyurtma nomi"
-                            >
-                              {order?.name}{" "}
-                              <span className="text-primary ml-2">
-                                #{order?.id}
-                              </span>
-                            </h3>
-                            <div className="flex items-center text-sm text-gray-600 mt-1">
-                              <Tag className="h-4 w-4 mr-1" />
-                              <span>{order?.orderModel?.model?.name}</span>
-                            </div>
+                          <div>
+                            <CardTitle className="text-lg font-bold text-gray-800">
+                              {order?.name}
+                            </CardTitle>
+                            <p className="text-sm text-purple-600 font-medium">
+                              #{order?.id}
+                            </p>
                           </div>
                         </div>
-                        <Badge className="bg-indigo-100 text-indigo-800 ml-2">
+                        <Badge className="bg-indigo-100 text-indigo-800">
                           <ShoppingBag className="h-3 w-3 mr-1" />
                           {order?.quantity} ta
                         </Badge>
                       </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="p-6 bg-gradient-to-r from-gray-50 to-white">
-                        <div className="grid grid-cols-1 gap-6">
-                          <div className="space-y-4">
-                            <div>
-                              <h4 className="text-base font-bold text-gray-700 mb-2 flex items-center">
-                                <Tag className="h-5 w-5 mr-2 text-purple-600" />
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      {/* Key Information Section */}
+                      <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-2 rounded-lg border border-purple-100">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <div className="flex items-center mb-1">
+                              <Tag className="h-3 w-3 mr-1 text-purple-600" />
+                              <span className="text-xs font-medium text-gray-600">
                                 Model
-                              </h4>
-                              <div className="font-bold text-lg text-gray-800 bg-purple-50 p-3 rounded-lg border border-purple-100">
-                                {order?.orderModel?.model?.name}
-                              </div>
+                              </span>
                             </div>
-
-                            <div>
-                              <h4 className="text-base font-bold text-gray-700 mb-2 flex items-center">
-                                <Shell className="h-5 w-5 mr-2 text-purple-600" />
-                                Material
-                              </h4>
-                              <div className="font-bold text-lg text-gray-800 bg-purple-50 p-3 rounded-lg border border-purple-100">
-                                {order?.orderModel?.material?.name}
-                              </div>
-                            </div>
-
-                            <div>
-                              <h4 className="text-base font-bold text-gray-700 mb-2 flex items-center">
-                                <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
-                                Izoh
-                              </h4>
-                              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-gray-700 text-base">
-                                {order?.comment || "Izoh yo'q"}
-                              </div>
-                            </div>
+                            <p className="font-semibold text-gray-800 text-sm">
+                              {order?.orderModel?.model?.name}
+                            </p>
                           </div>
 
-                          <div className="space-y-4">
-                            <div>
-                              <h4 className="text-base font-bold text-gray-700 mb-2 flex items-center">
-                                <Ruler className="h-5 w-5 mr-2 text-indigo-600" />
-                                O'lchamlar
-                              </h4>
-                              <div className="flex flex-wrap gap-2 bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                                {order?.orderModel?.sizes?.map((size) => (
-                                  <Badge
-                                    key={size.id}
-                                    className="bg-white text-indigo-700 border border-indigo-200 px-3 py-2 text-base"
-                                  >
-                                    <span className="font-bold">
-                                      {size?.size?.name}
-                                    </span>{" "}
-                                    {size?.quantity ? (
-                                      <span className="font-medium mx-1 text-black">
-                                        {size?.quantity} ta
-                                      </span>
-                                    ) : (
-                                      ""
-                                    )}
-                                  </Badge>
-                                ))}
-                              </div>
+                          <div>
+                            <div className="flex items-center mb-1">
+                              <Shell className="h-3 w-3 mr-1 text-purple-600" />
+                              <span className="text-xs font-medium text-gray-600">
+                                Material
+                              </span>
                             </div>
-
-                            <div>
-                              <h4 className="text-base font-bold text-gray-700 mb-2 flex items-center">
-                                <Tag className="h-5 w-5 mr-2 text-pink-600" />
-                                Submodellar
-                              </h4>
-                              <div className="flex flex-wrap gap-2 bg-pink-50 p-4 rounded-lg border border-pink-100">
-                                {order?.orderModel?.submodels?.map(
-                                  (submodel) => (
-                                    <Badge
-                                      key={submodel.id}
-                                      className="bg-white text-pink-700 border border-pink-200 px-3 py-1.5 text-base"
-                                    >
-                                      {submodel?.submodel?.name}
-                                    </Badge>
-                                  )
-                                )}
-                              </div>
-                            </div>
+                            <p className="font-semibold text-gray-800 text-sm">
+                              {order?.orderModel?.material?.name || "-"}
+                            </p>
                           </div>
                         </div>
-
-                        <Button
-                          className="mt-6 w-full"
-                          onClick={() => {
-                            navigate(`/groupMaster/tailoring/${order?.id}`);
-                          }}
-                        >
-                          Ish biriktirish
-                        </Button>
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
+
+                      {/* Submodels */}
+                      <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-4 rounded-lg border-2 border-pink-200">
+                        <div className="flex items-center mb-3">
+                          <Tag className="h-5 w-5 mr-2 text-pink-600" />
+                          <span className="text-base font-bold text-gray-800">
+                            Submodellar
+                          </span>
+                          <Badge className="ml-2 bg-pink-200 text-pink-800 text-xs">
+                            {order?.orderModel?.submodels?.length || 0} ta
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {order?.orderModel?.submodels?.map((submodel) => (
+                            <Badge
+                              key={submodel.id}
+                              className="bg-white text-pink-800 border-2 border-pink-300 text-sm px-3 py-1.5 font-semibold hover:bg-pink-100 transition-colors"
+                            >
+                              {submodel?.submodel?.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Sizes */}
+                      <div>
+                        <div className="flex items-center mb-2">
+                          <Ruler className="h-4 w-4 mr-2 text-indigo-600" />
+                          <span className="text-sm font-bold text-gray-700">
+                            O'lchamlar
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {order?.orderModel?.sizes?.map((size) => (
+                            <Badge
+                              key={size.id}
+                              className="bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs"
+                            >
+                              <span className="font-bold">
+                                {size?.size?.name}
+                              </span>
+                              {size?.quantity && (
+                                <span className="ml-1 font-medium">
+                                  ({size?.quantity})
+                                </span>
+                              )}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Comment */}
+                      {order?.comment && (
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
+                            <span className="text-sm font-bold text-gray-700">
+                              Izoh
+                            </span>
+                          </div>
+                          <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <p className="text-sm text-gray-700">
+                              {order?.comment}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Button */}
+                      <Button
+                        className="w-full mt-4"
+                        onClick={() => {
+                          navigate(`/groupMaster/tailoring/${order?.id}`);
+                        }}
+                      >
+                        Ish biriktirish
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               ))}
-            </Accordion>
+            </div>
           )}
         </AnimatePresence>
       </div>
