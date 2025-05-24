@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const IncomePage = () => {
   const navigate = useNavigate();
@@ -107,7 +108,9 @@ const IncomePage = () => {
   return (
     <div className="p-4 md:p-8 bg-white rounded-xl shadow-md">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">📥 Kirimlar</h1>
+        <h1 className="text-3xl font-bold text-gray-800">
+          📥 Kirimlar ({data.length})
+        </h1>
         <Button onClick={() => navigate("/casher/income/add")}>
           <PlusCircle />
           Qo'shish
@@ -155,7 +158,7 @@ const IncomePage = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto max-h-[calc(100vh-300px)]">
+      <div className="overflow-x-auto max-h-[calc(100vh-350px)]">
         <table className="min-w-full text-sm text-lef border">
           <thead className="bg-gray-100 text-xs uppercase text-gray-500">
             <tr>
@@ -186,7 +189,13 @@ const IncomePage = () => {
               data
                 .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                 .map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr
+                    key={index}
+                    className={cn(
+                      "hover:bg-gray-50",
+                      index % 2 === 0 && "bg-gray-50"
+                    )}
+                  >
                     <td className="px-4 py-2 border text-center">
                       {index + 1}
                     </td>
@@ -214,13 +223,16 @@ const IncomePage = () => {
           <h2 className="font-semibold mb-2">
             Jami miqdor (valyuta bo‘yicha):
           </h2>
-          <ul className="space-y-1">
+          <div className="flex flex-wrap gap-2">
             {Object.entries(getTotalsByCurrency()).map(([currency, total]) => (
-              <li key={currency}>
-                {currency}: <strong>{total.toLocaleString("ru-RU")}</strong>
-              </li>
+              <div
+                key={currency}
+                className="bg-gray-100 px-2 py-1 rounded flex items-center gap-2"
+              >
+                <strong>{total.toLocaleString("ru-RU")}</strong> {currency}
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>
