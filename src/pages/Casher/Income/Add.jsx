@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,7 +15,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  ArrowLeft,
+  Loader2,
+  Check,
+  ChevronsUpDown,
+  User,
+  Building2,
+  Plus,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Add = () => {
   const { toast } = useToast();
@@ -31,20 +55,35 @@ const Add = () => {
 
   const [currencies, setCurrencies] = useState([]);
   const [sources, setSources] = useState([]);
-  const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeOptions, setEmployeeOptions] = useState([]);
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [sourceSearch, setSourceSearch] = useState("");
+  const [viaOpen, setViaOpen] = useState(false);
+  const [sourceOpen, setSourceOpen] = useState(false);
+  const [searchingEmployees, setSearchingEmployees] = useState(false);
+
+  // Selected names for display
+  const [selectedViaName, setSelectedViaName] = useState("");
+  const [selectedSourceName, setSelectedSourceName] = useState("");
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (employeeSearch.trim().length < 3) return;
+      if (employeeSearch.trim().length < 2) {
+        setEmployeeOptions([]);
+        return;
+      }
 
       try {
+        setSearchingEmployees(true);
         const res = await api.get(`/casher/employees?search=${employeeSearch}`);
         setEmployeeOptions(res.data.data || []);
       } catch (error) {
         console.error("Employee search error:", error);
+        setEmployeeOptions([]);
+      } finally {
+        setSearchingEmployees(false);
       }
-    }, 500); // debounce
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [employeeSearch]);
@@ -122,6 +161,34 @@ const Add = () => {
     }
   };
 
+  const handleViaSelect = (employee) => {
+    setForm({ ...form, via_id: employee.id });
+    setSelectedViaName(employee.name);
+    setViaOpen(false);
+    setEmployeeSearch("");
+  };
+
+  const handleSourceSelect = (source) => {
+    setForm({ ...form, source_id: source.name });
+    setSelectedSourceName(source.name);
+    setSourceOpen(false);
+    setSourceSearch("");
+  };
+
+  const handleCustomSource = () => {
+    if (sourceSearch.trim()) {
+      setForm({ ...form, source_id: sourceSearch.trim() });
+      setSelectedSourceName(sourceSearch.trim());
+      setSourceOpen(false);
+      setSourceSearch("");
+    }
+  };
+
+  // Filter sources based on search
+  const filteredSources = sources.filter((source) =>
+    source.name.toLowerCase().includes(sourceSearch.toLowerCase())
+  );
+
   return (
     <Card className="max-w-2xl mx-auto my-8">
       <CardHeader>
@@ -131,10 +198,10 @@ const Add = () => {
               onClick={() => navigate("/casher/income")}
               variant="outline"
             >
-              <ArrowLeft />
+              <ArrowLeft className="w-4 h-4" />
               Orqaga
             </Button>
-            <div>Yangi Kirim Qo‘shish</div>
+            <div>Yangi Kirim Qo'shish</div>
           </div>
         </CardTitle>
       </CardHeader>
@@ -143,7 +210,8 @@ const Add = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>
-                Miqdor ({parseFloat(form.amount).toLocaleString("ru-Ru")})
+                Miqdor (
+                {Number.parseFloat(form.amount || 0).toLocaleString("ru-Ru")})
               </Label>
               <Input
                 type="number"
@@ -181,56 +249,173 @@ const Add = () => {
             </div>
           </div>
 
-          <div>
-            <Label>Manba</Label>
-            <Input
-              placeholder="Masalan: Xoji aka"
-              list="source-list"
-              value={form.source_id}
-              onChange={(e) => setForm({ ...form, source_id: e.target.value })}
-            />
-            <datalist id="source-list">
-              {sources.map((source) => (
-                <option key={source.id} value={source.name} />
-              ))}
-            </datalist>
+          {/* Source Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="source-select">
+              Manba <span className="text-red-500">*</span>
+            </Label>
+            <Popover open={sourceOpen} onOpenChange={setSourceOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="source-select"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={sourceOpen}
+                  className="w-full justify-between h-10"
+                >
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    <span
+                      className={cn(
+                        "truncate",
+                        !selectedSourceName && "text-muted-foreground"
+                      )}
+                    >
+                      {selectedSourceName || "Manba tanlang yoki kiriting..."}
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput
+                    placeholder="Manba qidiring yoki yangi kiriting..."
+                    value={sourceSearch}
+                    onValueChange={setSourceSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>
+                      {sourceSearch.trim() ? (
+                        <div className="p-2">
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start h-auto p-2"
+                            onClick={handleCustomSource}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            <div className="text-left">
+                              <div className="font-medium">
+                                "{sourceSearch}" qo'shish
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Yangi manba yaratish
+                              </div>
+                            </div>
+                          </Button>
+                        </div>
+                      ) : (
+                        "Manba qidiring..."
+                      )}
+                    </CommandEmpty>
+                    {filteredSources.length > 0 && (
+                      <CommandGroup heading="Mavjud manbalar">
+                        {filteredSources.map((source) => (
+                          <CommandItem
+                            key={source.id}
+                            value={source.name}
+                            onSelect={() => handleSourceSelect(source)}
+                            className="flex items-center gap-2"
+                          >
+                            <Building2 className="w-4 h-4" />
+                            <span>{source.name}</span>
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                form.source_id === source.name
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
-          <div
-            className="relative"
-            tabIndex={0}
-            onBlur={() => {
-              setTimeout(() => {
-                setEmployeeOptions([]);
-              }, 100);
-            }}
-          >
-            <Label>Kim orqali</Label>
-            <Input
-              placeholder="Xodimni qidiring..."
-              value={employeeSearch}
-              onChange={(e) => setEmployeeSearch(e.target.value)}
-            />
-
-            {employeeOptions.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-40 overflow-y-auto">
-                <ul>
-                  {employeeOptions.map((emp) => (
-                    <li
-                      key={emp.id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => {
-                        setForm({ ...form, via_id: emp.id });
-                        setEmployeeSearch(emp.name);
-                        setEmployeeOptions([]);
-                      }}
+          {/* Via Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="via-select">
+              Kim orqali <span className="text-red-500">*</span>
+            </Label>
+            <Popover open={viaOpen} onOpenChange={setViaOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="via-select"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={viaOpen}
+                  className="w-full justify-between h-10"
+                >
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span
+                      className={cn(
+                        "truncate",
+                        !selectedViaName && "text-muted-foreground"
+                      )}
                     >
-                      {emp.name}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                      {selectedViaName || "Xodimni tanlang..."}
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput
+                    placeholder="Xodimni qidiring..."
+                    value={employeeSearch}
+                    onValueChange={setEmployeeSearch}
+                  />
+                  <CommandList>
+                    {searchingEmployees ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          Qidirilmoqda...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <CommandEmpty>
+                          <div className="p-2">
+                            {employeeSearch.length < 2
+                              ? "Qidirish uchun kamida 2 ta harf kiriting"
+                              : "Hech qanday xodim topilmadi"}
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {employeeOptions.map((employee) => (
+                            <CommandItem
+                              key={employee.id}
+                              value={employee.name}
+                              onSelect={() => handleViaSelect(employee)}
+                              className="flex items-center gap-2"
+                            >
+                              <User className="w-4 h-4" />
+                              <span>{employee.name}</span>
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  form.via_id === employee.id
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div>
@@ -245,7 +430,7 @@ const Add = () => {
           <div>
             <Label>Izoh</Label>
             <Input
-              placeholder="Qo‘shimcha izoh"
+              placeholder="Qo'shimcha izoh"
               value={form.comment}
               onChange={(e) => setForm({ ...form, comment: e.target.value })}
             />
@@ -258,7 +443,7 @@ const Add = () => {
                 Saqlanmoqda...
               </>
             ) : (
-              "Qo‘shish"
+              "Qo'shish"
             )}
           </Button>
         </form>
