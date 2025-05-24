@@ -13,7 +13,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  ArrowLeft,
+  Loader2,
+  Check,
+  ChevronsUpDown,
+  User,
+  Users,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Add = () => {
   const { toast } = useToast();
@@ -30,39 +51,61 @@ const Add = () => {
   });
 
   const [currencies, setCurrencies] = useState([]);
-  const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeOptions, setEmployeeOptions] = useState([]);
-  const [destinationSearch, setDestinationSearch] = useState("");
   const [destinationOptions, setDestinationOptions] = useState([]);
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [destinationSearch, setDestinationSearch] = useState("");
+  const [viaOpen, setViaOpen] = useState(false);
+  const [destinationOpen, setDestinationOpen] = useState(false);
+  const [searchingEmployees, setSearchingEmployees] = useState(false);
+  const [searchingDestinations, setSearchingDestinations] = useState(false);
+
+  // Selected employee names for display
+  const [selectedViaName, setSelectedViaName] = useState("");
+  const [selectedDestinationName, setSelectedDestinationName] = useState("");
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (employeeSearch.trim().length < 3) return;
+      if (employeeSearch.trim().length < 2) {
+        setEmployeeOptions([]);
+        return;
+      }
 
       try {
+        setSearchingEmployees(true);
         const res = await api.get(`/casher/employees?search=${employeeSearch}`);
         setEmployeeOptions(res.data.data || []);
       } catch (error) {
         console.error("Employee search error:", error);
+        setEmployeeOptions([]);
+      } finally {
+        setSearchingEmployees(false);
       }
-    }, 500); // debounce
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [employeeSearch]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (destinationSearch.trim().length < 3) return;
+      if (destinationSearch.trim().length < 2) {
+        setDestinationOptions([]);
+        return;
+      }
 
       try {
+        setSearchingDestinations(true);
         const res = await api.get(
           `/casher/employees?search=${destinationSearch}`
         );
         setDestinationOptions(res.data.data || []);
       } catch (error) {
         console.error("Destination search error:", error);
+        setDestinationOptions([]);
+      } finally {
+        setSearchingDestinations(false);
       }
-    }, 500); // debounce
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [destinationSearch]);
@@ -94,7 +137,12 @@ const Add = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.amount || !form.currency_id || !form.destination_id) {
+    if (
+      !form.amount ||
+      !form.currency_id ||
+      !form.destination_id ||
+      !form.via_id
+    ) {
       toast({
         variant: "destructive",
         title: "Diqqat!",
@@ -135,6 +183,20 @@ const Add = () => {
     }
   };
 
+  const handleViaSelect = (employee) => {
+    setForm({ ...form, via_id: employee.id });
+    setSelectedViaName(employee.name);
+    setViaOpen(false);
+    setEmployeeSearch("");
+  };
+
+  const handleDestinationSelect = (employee) => {
+    setForm({ ...form, destination_id: employee.id });
+    setSelectedDestinationName(employee.name);
+    setDestinationOpen(false);
+    setDestinationSearch("");
+  };
+
   return (
     <Card className="max-w-2xl mx-auto my-8">
       <CardHeader>
@@ -144,10 +206,10 @@ const Add = () => {
               onClick={() => navigate("/casher/outcome")}
               variant="outline"
             >
-              <ArrowLeft />
+              <ArrowLeft className="w-4 h-4" />
               Orqaga
             </Button>
-            <div>Yangi Chiqim Qo‘shish</div>
+            <div>Yangi Chiqim Qo'shish</div>
           </div>
         </CardTitle>
       </CardHeader>
@@ -156,7 +218,7 @@ const Add = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>
-                Miqdor ({parseFloat(form.amount).toLocaleString("ru-Ru")})
+                Miqdor ({parseFloat(form.amount || 0).toLocaleString("ru-Ru")})
               </Label>
               <Input
                 type="number"
@@ -194,78 +256,162 @@ const Add = () => {
             </div>
           </div>
 
-          <div
-            className="relative"
-            tabIndex={0}
-            onBlur={() => {
-              setTimeout(() => {
-                setEmployeeOptions([]);
-              }, 100);
-            }}
-          >
-            <Label>Kim orqali</Label>
-            <Input
-              placeholder="Xodimni qidiring..."
-              value={employeeSearch}
-              onChange={(e) => setEmployeeSearch(e.target.value)}
-            />
-
-            {employeeOptions.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-40 overflow-y-auto">
-                <ul>
-                  {employeeOptions.map((emp) => (
-                    <li
-                      key={emp.id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => {
-                        setForm({ ...form, via_id: emp.id });
-                        setEmployeeSearch(emp.name);
-                        setEmployeeOptions([]);
-                      }}
+          {/* Via Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="via-select">Kim orqali</Label>
+            <Popover open={viaOpen} onOpenChange={setViaOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="via-select"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={viaOpen}
+                  className="w-full justify-between h-10"
+                >
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span
+                      className={cn(
+                        "truncate",
+                        !selectedViaName && "text-muted-foreground"
+                      )}
                     >
-                      {emp.name}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                      {selectedViaName || "Xodimni tanlang..."}
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput
+                    placeholder="Xodimni qidiring..."
+                    value={employeeSearch}
+                    onValueChange={setEmployeeSearch}
+                  />
+                  <CommandList>
+                    {searchingEmployees ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          Qidirilmoqda...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <CommandEmpty>
+                          <div className="flex items-center justify-center px-6 py-2">
+                            {employeeSearch.length < 2
+                              ? "Qidirish uchun kamida 2 ta harf kiriting"
+                              : "Hech qanday xodim topilmadi"}
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {employeeOptions.map((employee) => (
+                            <CommandItem
+                              key={employee.id}
+                              value={employee.name}
+                              onSelect={() => handleViaSelect(employee)}
+                              className="flex items-center gap-2"
+                            >
+                              <User className="w-4 h-4" />
+                              <span>{employee.name}</span>
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  form.via_id === employee.id
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
-          <div
-            className="relative"
-            tabIndex={0}
-            onBlur={() => {
-              setTimeout(() => {
-                setEmployeeOptions([]);
-              }, 100);
-            }}
-          >
-            <Label>Kimga</Label>
-            <Input
-              placeholder="Xodimni qidiring..."
-              value={destinationSearch}
-              onChange={(e) => setDestinationSearch(e.target.value)}
-            />
-
-            {destinationOptions.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-40 overflow-y-auto">
-                <ul>
-                  {destinationOptions.map((dest) => (
-                    <li
-                      key={dest.id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => {
-                        setForm({ ...form, destination_id: dest.id });
-                        setDestinationSearch(dest.name);
-                        setDestinationOptions([]);
-                      }}
+          {/* Destination Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="destination-select">Kimga</Label>
+            <Popover open={destinationOpen} onOpenChange={setDestinationOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="destination-select"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={destinationOpen}
+                  className="w-full justify-between h-10"
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <span
+                      className={cn(
+                        "truncate",
+                        !selectedDestinationName && "text-muted-foreground"
+                      )}
                     >
-                      {dest.name}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                      {selectedDestinationName || "Xodimni tanlang..."}
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput
+                    placeholder="Xodimni qidiring..."
+                    value={destinationSearch}
+                    onValueChange={setDestinationSearch}
+                  />
+                  <CommandList>
+                    {searchingDestinations ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          Qidirilmoqda...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <CommandEmpty>
+                          <div className="flex items-center justify-center px-6 py-2">
+                            {destinationSearch.length < 2
+                              ? "Qidirish uchun kamida 2 ta harf kiriting"
+                              : "Hech qanday xodim topilmadi"}
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {destinationOptions.map((employee) => (
+                            <CommandItem
+                              key={employee.id}
+                              value={employee.name}
+                              onSelect={() => handleDestinationSelect(employee)}
+                              className="flex items-center gap-2"
+                            >
+                              <Users className="w-4 h-4" />
+                              <span>{employee.name}</span>
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  form.destination_id === employee.id
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div>
@@ -280,7 +426,7 @@ const Add = () => {
           <div>
             <Label>Izoh</Label>
             <Input
-              placeholder="Qo‘shimcha izoh"
+              placeholder="Qo'shimcha izoh"
               value={form.comment}
               onChange={(e) => setForm({ ...form, comment: e.target.value })}
             />
@@ -293,7 +439,7 @@ const Add = () => {
                 Saqlanmoqda...
               </>
             ) : (
-              "Qo‘shish"
+              "Qo'shish"
             )}
           </Button>
         </form>
