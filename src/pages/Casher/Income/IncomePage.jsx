@@ -109,7 +109,7 @@ const IncomePage = () => {
     <div className="p-4 md:p-8 bg-white rounded-xl shadow-md">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">
-          📥 Kirimlar ({data.length})
+          Kirimlar ({data.length})
         </h1>
         <Button onClick={() => navigate("/casher/income/add")}>
           <PlusCircle />

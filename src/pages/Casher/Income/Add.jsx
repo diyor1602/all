@@ -25,7 +25,6 @@ const Add = () => {
     currency_id: "",
     source_id: "",
     via_id: "",
-    cashbox_id: "",
     purpose: "",
     comment: "",
   });
@@ -33,27 +32,20 @@ const Add = () => {
   const [currencies, setCurrencies] = useState([]);
   const [sources, setSources] = useState([]);
   const [vias, setVias] = useState([]);
-  const [cashboxes, setCashboxes] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [
-          currenciesResponse,
-          sourcesResponse,
-          viasResponse,
-          cashboxesResponse,
-        ] = await Promise.all([
-          api.get("/casher/currencies"),
-          api.get("/casher/sources"),
-          api.get("/casher/via"),
-          api.get("/casher/balances"),
-        ]);
+        const [currenciesResponse, sourcesResponse, viasResponse] =
+          await Promise.all([
+            api.get("/casher/currencies"),
+            api.get("/casher/sources"),
+            api.get("/casher/via"),
+          ]);
         setCurrencies(currenciesResponse.data);
         setSources(sourcesResponse.data);
         setVias(viasResponse.data);
-        setCashboxes(cashboxesResponse.data.cashboxes);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -90,7 +82,6 @@ const Add = () => {
       const payload = {
         amount: form.amount,
         currency_id: form.currency_id,
-        cashbox_id: form.cashbox_id,
         purpose: form.purpose,
         comment: form.comment,
         ...(matchedSource
@@ -137,35 +128,27 @@ const Add = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div>
-            <Label>
-              Miqdor ({parseFloat(form.amount).toLocaleString("ru-Ru")})
-            </Label>
-            <Input
-              type="number"
-              placeholder="Miqdor"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            />
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>
+                Miqdor ({parseFloat(form.amount).toLocaleString("ru-Ru")})
+              </Label>
+              <Input
+                type="number"
+                placeholder="Miqdor"
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              />
+            </div>
+
             <div>
               <Label>Valyuta</Label>
               <Select
                 value={form.currency_id}
                 onValueChange={(value) => {
-                  const matchedCashbox = cashboxes.find(
-                    (cashbox) =>
-                      cashbox.balance?.currency?.id === parseInt(value)
-                  );
-
                   setForm((prevForm) => ({
                     ...prevForm,
                     currency_id: value,
-                    cashbox_id: matchedCashbox
-                      ? matchedCashbox.id.toString()
-                      : "",
                   }));
                 }}
               >
@@ -184,34 +167,12 @@ const Add = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            <div>
-              <Label>Kassa</Label>
-              <Select
-                value={form.cashbox_id}
-                onValueChange={(value) =>
-                  setForm({ ...form, cashbox_id: value })
-                }
-              >
-                <SelectTrigger disabled>
-                  <SelectValue placeholder="Tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cashboxes.map((cashbox) => (
-                    <SelectItem key={cashbox.id} value={cashbox.id.toString()}>
-                      {cashbox.name} — {cashbox.balance?.amount}{" "}
-                      {cashbox.balance?.currency?.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div>
             <Label>Manba</Label>
             <Input
-              placeholder="Masalan: Bank, mijoz"
+              placeholder="Masalan: Xoji aka"
               list="source-list"
               value={form.source_id}
               onChange={(e) => setForm({ ...form, source_id: e.target.value })}
@@ -226,7 +187,7 @@ const Add = () => {
           <div>
             <Label>Kim orqali</Label>
             <Input
-              placeholder="Masalan: Naqd, karta"
+              placeholder="Masalan: Abduvali aka"
               list="via-list"
               value={form.via_id}
               onChange={(e) => setForm({ ...form, via_id: e.target.value })}

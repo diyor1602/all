@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Home, Printer, TrendingUp } from "lucide-react";
+import { Home, Printer, TrendingDown, TrendingUp } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -7,6 +7,12 @@ const navigation = [
     name: "Kirimlar",
     href: "/casher/income",
     icon: TrendingUp,
+    onMobile: true,
+  },
+  {
+    name: "Chiqimlar",
+    href: "/casher/outcome",
+    icon: TrendingDown,
     onMobile: true,
   },
 ];
