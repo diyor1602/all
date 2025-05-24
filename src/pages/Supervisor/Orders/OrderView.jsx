@@ -175,11 +175,6 @@ const OrderView = () => {
     );
   }
 
-  // Check if any submodel has sewingOutputs
-  const hasSewingOutputs = order?.order_model?.submodels?.some(
-    (submodel) => submodel.sewingOutputs && submodel.sewingOutputs.length > 0
-  );
-
   return (
     <div className="space-y-6">
       {/* Header with back button */}
@@ -856,34 +851,17 @@ const OrderView = () => {
               )}
             </Accordion>
           </div>
-          {hasSewingOutputs && (
-            <div className="mt-6">
-              <h4 className="text-base font-bold text-gray-700 mb-3 flex items-center">
-                <Shirt className="h-5 w-5 mr-2 text-purple-600" />
-                Tikish ma'lumotlari
-              </h4>
 
-              <Tabs
-                defaultValue={order?.order_model?.submodels[0]?.id?.toString()}
-              >
-                <TabsList className="mb-4 bg-white bg-opacity-50 p-1 border border-purple-100">
-                  {order?.order_model?.submodels
-                    ?.filter(
-                      (submodel) =>
-                        submodel.sewingOutputs &&
-                        submodel.sewingOutputs.length > 0
-                    )
-                    .map((submodel) => (
-                      <TabsTrigger
-                        key={submodel.id}
-                        value={submodel.id.toString()}
-                        className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-800"
-                      >
-                        {submodel.submodel.name}
-                      </TabsTrigger>
-                    ))}
-                </TabsList>
+          <div className="mt-6">
+            <h4 className="text-base font-bold text-gray-700 mb-3 flex items-center">
+              <Shirt className="h-5 w-5 mr-2 text-purple-600" />
+              Tikish ma'lumotlari
+            </h4>
 
+            <Tabs
+              defaultValue={order?.order_model?.submodels[0]?.id?.toString()}
+            >
+              <TabsList className="mb-4 bg-white bg-opacity-50 p-1 border border-purple-100">
                 {order?.order_model?.submodels
                   ?.filter(
                     (submodel) =>
@@ -891,52 +869,74 @@ const OrderView = () => {
                       submodel.sewingOutputs.length > 0
                   )
                   .map((submodel) => (
-                    <TabsContent
+                    <TabsTrigger
                       key={submodel.id}
                       value={submodel.id.toString()}
+                      className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-800"
                     >
-                      <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-none shadow-sm">
-                        <CardHeader className="pb-2 pt-4">
-                          <div className="flex justify-between items-center">
-                            <CardTitle className="text-lg text-purple-800">
-                              {submodel.submodel.name} tikish ma'lumotlari
-                            </CardTitle>
-                          </div>
-                          {submodel.group && (
-                            <div className="text-sm text-gray-600 flex items-center">
-                              <Users className="h-4 w-4 mr-2 text-purple-500" />
-                              Patok: {submodel.group.group.name}
-                            </div>
-                          )}
-                        </CardHeader>
+                      {submodel.submodel.name}
+                    </TabsTrigger>
+                  ))}
+              </TabsList>
 
-                        <CardContent className="pt-0">
-                          {/* Summary information */}
-                          {submodel.sewingOutputs.length > 0 && (
-                            <div className="mt-4 bg-purple-100 p-3 rounded-lg">
+              {order?.order_model?.submodels.map((submodel) => (
+                <TabsContent key={submodel.id} value={submodel.id.toString()}>
+                  <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-none shadow-sm">
+                    <CardHeader className="pb-2 pt-4">
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-lg text-purple-800">
+                          {submodel.submodel.name} tikish ma'lumotlari
+                        </CardTitle>
+                      </div>
+                      {submodel.group && (
+                        <div className="text-sm text-gray-600 flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-purple-500" />
+                          Patok: {submodel.group.group.name}
+                        </div>
+                      )}
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      {/* Summary information */}
+                      <div className="mt-4 bg-purple-100 p-3 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="font-bold text-purple-800 flex items-center">
+                            <Filter className="h-4 w-4 mr-2" />
+                            Jami:
+                          </div>
+                          <span className="font-bold text-purple-800">
+                            {submodel.total_quantity} dona
+                          </span>
+                        </div>
+                      </div>
+                      {submodel.sewingOutputs.length > 0 && (
+                        <div className="mt-4">
+                          <h5 className="font-medium text-purple-800 flex items-center mb-3">
+                            Bugungi natijalar:
+                          </h5>
+                          {submodel.sewingOutputs.map((output) => (
+                            <div
+                              key={output.id}
+                              className="mt-2 bg-purple-100 p-3 rounded-lg"
+                            >
                               <div className="flex items-center justify-between">
                                 <div className="font-bold text-purple-800 flex items-center">
-                                  <Filter className="h-4 w-4 mr-2" />
-                                  Jami:
+                                  {output?.time?.time}
                                 </div>
                                 <span className="font-bold text-purple-800">
-                                  {submodel.sewingOutputs.reduce(
-                                    (sum, output) =>
-                                      sum + (parseInt(output?.quantity) || 0),
-                                    0
-                                  )}{" "}
-                                  dona
+                                  {output.quantity} dona
                                 </span>
                               </div>
                             </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  ))}
-              </Tabs>
-            </div>
-          )}
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
 
           {order?.specification_categories &&
             order.specification_categories.length > 0 && (

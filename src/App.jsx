@@ -26,6 +26,7 @@ import PackageMaster from "./pages/PackageMaster/PackageMaster";
 import InternalAccountant from "./pages/InternalAccountant/InternalAccountant";
 import Supplier from "./pages/Supplier/Supplier";
 import Tv from "./pages/Tv/Tv";
+import Casher from "./pages/Casher/Casher";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -77,6 +78,7 @@ function App() {
           />
           <Route path="/supplier/*" element={<Supplier />} />
           <Route path="/tv/*" element={<Tv />} />
+          <Route path="/casher/*" element={<Casher />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
