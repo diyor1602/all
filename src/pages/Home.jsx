@@ -122,7 +122,7 @@ const Home = () => {
 
   // Main app content
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50">
       <div className="mx-auto py-3 md:py-6 px-0 md:px-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6 gap-2">
@@ -180,7 +180,7 @@ const Home = () => {
                         output.hasChanged ? "animate-highlight" : ""
                       }`}
                     >
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center">
                         {getMedalForRank(rank)}
                       </td>
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
