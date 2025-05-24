@@ -243,7 +243,7 @@ const Tailoring = () => {
                           <span className="text-base font-bold text-gray-800">
                             Submodellar
                           </span>
-                          <Badge className="ml-2 bg-pink-200 text-pink-800 text-xs">
+                          <Badge className="ml-2 bg-pink-200 text-pink-800 text-xs hover:bg-pink-200 transition-colors">
                             {order?.orderModel?.submodels?.length || 0} ta
                           </Badge>
                         </div>
