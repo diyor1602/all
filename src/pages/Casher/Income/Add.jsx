@@ -138,7 +138,9 @@ const Add = () => {
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
-            <Label>Miqdor</Label>
+            <Label>
+              Miqdor ({parseFloat(form.amount).toLocaleString("ru-Ru")})
+            </Label>
             <Input
               type="number"
               placeholder="Miqdor"
@@ -211,7 +213,7 @@ const Add = () => {
           </div>
 
           <div>
-            <Label>Orqali</Label>
+            <Label>Kim orqali</Label>
             <Input
               placeholder="Masalan: Naqd, karta"
               list="via-list"
