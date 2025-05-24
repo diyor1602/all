@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import { Trophy, Medal } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -92,13 +94,15 @@ const Home = () => {
   const getMedalForRank = (rank) => {
     switch (rank) {
       case 1:
-        return <Trophy className="text-yellow-400" size={24} />;
+        return <Trophy className="text-yellow-400" size={16} />;
       case 2:
-        return <Medal className="text-gray-400" size={24} />;
+        return <Medal className="text-gray-400" size={16} />;
       case 3:
-        return <Medal className="text-yellow-700" size={24} />;
+        return <Medal className="text-yellow-700" size={16} />;
       default:
-        return <span className="font-medium text-gray-500">{rank}</span>;
+        return (
+          <span className="font-medium text-gray-500 text-xs">{rank}</span>
+        );
     }
   };
 
@@ -118,47 +122,50 @@ const Home = () => {
 
   // Main app content
   return (
-    <div className="bg-gray-50">
-      <div className="mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="w-full flex items-center gap-4 justify-between">
+    <div className="bg-gray-50 min-h-screen">
+      <div className="mx-auto py-3 md:py-6 px-0 md:px-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 sm:justify-between w-full">
             <div className="flex items-center gap-2">
-              <p className="text-gray-600 text-3xl font-medium">
+              <p className="text-gray-600 text-sm sm:text-base md:text-lg font-medium">
                 {formattedDate}
               </p>
             </div>
-            <p className="text-black text-3xl font-semibold">{formattedTime}</p>
+            <p className="text-black text-base sm:text-lg md:text-xl font-semibold">
+              {formattedTime}
+            </p>
           </div>
         </div>
 
         {/* Data Table */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <div className="overflow-x-auto max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="bg-white rounded-xl shadow-md p-0 sm:p-4 md:p-6 mb-8">
+          <div className="overflow-x-auto">
             <table className="min-w-full bg-white">
-              <thead className="sticky top-0 z-1 bg-indigo-50">
+              <thead className="sticky top-0 z-10 bg-indigo-50">
                 <tr className="border-b border-indigo-100">
-                  <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
+                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     #
                   </th>
-                  <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
+                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     Model
                   </th>
-                  <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
+                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     Submodel
                   </th>
-                  <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
+                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     Gurux
                   </th>
-                  <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
+                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     Bugungi reja
                   </th>
-                  <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
+                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     Bugungi natija
                   </th>
-                  <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
+                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     Jami natija
                   </th>
-                  <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
+                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     Progress
                   </th>
                 </tr>
@@ -173,21 +180,23 @@ const Home = () => {
                         output.hasChanged ? "animate-highlight" : ""
                       }`}
                     >
-                      <td className="py-3 px-4 text-xl">
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         {getMedalForRank(rank)}
                       </td>
-                      <td className="py-3 px-4 text-xl">{output.model.name}</td>
-                      <td className="py-3 px-4 text-xl">
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
+                        {output.model.name}
+                      </td>
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         {output.submodel.name}
                       </td>
-                      <td className="py-3 px-4 text-xl font-medium">
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-medium">
                         {output.group.name}
                       </td>
-                      <td className="py-3 px-4 text-xl text-center font-bold text-gray-700">
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
                         {output.today_plan}
                       </td>
                       <td
-                        className={`py-3 px-4 text-xl text-center font-bold ${
+                        className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
                           output.today_quantity >= output.today_plan
                             ? "text-green-600"
                             : "text-blue-600"
@@ -195,16 +204,16 @@ const Home = () => {
                       >
                         {output.today_quantity}
                       </td>
-                      <td className="py-3 px-4 text-xl text-center font-bold text-indigo-600">
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
                         {output.total_quantity}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-2 px-1 sm:px-2 md:px-4">
                         <div className="flex items-center">
-                          <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className={`${getProgressColor(
                                 output.progressPercentage
-                              )} h-3 rounded-full`}
+                              )} h-2 rounded-full`}
                               style={{
                                 width: `${Math.min(
                                   output.progressPercentage,
@@ -215,7 +224,7 @@ const Home = () => {
                             ></div>
                           </div>
                           <span
-                            className={`ml-2 text-xl font-bold ${getTextColor(
+                            className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
                               output.progressPercentage
                             )}`}
                           >
