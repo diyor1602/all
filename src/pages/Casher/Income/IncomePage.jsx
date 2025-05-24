@@ -65,6 +65,29 @@ const IncomePage = () => {
     fetchIncomes();
   }, [debouncedFilters]);
 
+  const getTotalsByCurrency = () => {
+    const totals = {};
+
+    data.forEach((item) => {
+      const currency = item.currency?.name || "Noma'lum";
+      let rawAmount = item.amount;
+
+      if (typeof rawAmount === "string") {
+        // Remove spaces and commas (e.g., "1 200 000.00" → "1200000.00")
+        rawAmount = rawAmount.replace(/\s/g, "").replace(/,/g, "");
+      }
+
+      const numericAmount = parseFloat(rawAmount);
+      if (!totals[currency]) {
+        totals[currency] = 0;
+      }
+
+      totals[currency] += isNaN(numericAmount) ? 0 : numericAmount;
+    });
+
+    return totals;
+  };
+
   useEffect(() => {
     const fetchCurrencies = async () => {
       try {
@@ -132,7 +155,7 @@ const IncomePage = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[calc(100vh-300px)]">
         <table className="min-w-full text-sm text-lef border">
           <thead className="bg-gray-100 text-xs uppercase text-gray-500">
             <tr>
@@ -186,6 +209,20 @@ const IncomePage = () => {
           </tbody>
         </table>
       </div>
+      {!loading && data.length > 0 && (
+        <div className="mt-4 border-t pt-4 text-sm text-gray-700">
+          <h2 className="font-semibold mb-2">
+            Jami miqdor (valyuta bo‘yicha):
+          </h2>
+          <ul className="space-y-1">
+            {Object.entries(getTotalsByCurrency()).map(([currency, total]) => (
+              <li key={currency}>
+                {currency}: <strong>{total.toLocaleString("ru-RU")}</strong>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
