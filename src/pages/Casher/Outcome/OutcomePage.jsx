@@ -169,7 +169,6 @@ const OutcomePage = () => {
               <th className="px-4 py-3 border">Kim orqali</th>
               <th className="px-4 py-3 border">Sabab</th>
               <th className="px-4 py-3 border">Izoh</th>
-              <th className="px-4 py-3 border">Kassa</th>
             </tr>
           </thead>
           <tbody>
@@ -213,7 +212,6 @@ const OutcomePage = () => {
                       {item?.purpose || "-"}
                     </td>
                     <td className="px-4 py-2 border">{item?.comment || "-"}</td>
-                    <td className="px-4 py-2 border">{item?.cashbox?.name}</td>
                   </tr>
                 ))
             )}
