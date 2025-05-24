@@ -905,8 +905,20 @@ const OrderView = () => {
                             Jami:
                           </div>
                           <span className="font-bold text-purple-800">
-                            {submodel.total_quantity} dona
+                            {submodel.total_quantity} dona / {order.quantity}{" "}
+                            dona
                           </span>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="font-bold text-purple-800 flex items-center">
+                          Bajarilgan foiz:
+                        </div>
+                        <div className="font-bold text-purple-800">
+                          {((submodel.total_quantity / order.quantity) * 100)
+                            .toFixed(2)
+                            .toString()}
+                          %
                         </div>
                       </div>
                       {submodel.sewingOutputs.length > 0 && (
