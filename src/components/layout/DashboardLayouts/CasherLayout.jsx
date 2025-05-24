@@ -1,5 +1,10 @@
 import BaseLayout from "./BaseLayout";
-import { BanknoteArrowDown, BanknoteArrowUp, Home } from "lucide-react";
+import {
+  BanknoteArrowDown,
+  BanknoteArrowUp,
+  CircleDollarSign,
+  Home,
+} from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -13,6 +18,12 @@ const navigation = [
     name: "Chiqimlar",
     href: "/casher/outcome",
     icon: BanknoteArrowUp,
+    onMobile: true,
+  },
+  {
+    name: "Balans",
+    href: "/casher/balance",
+    icon: CircleDollarSign,
     onMobile: true,
   },
 ];
