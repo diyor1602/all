@@ -14,6 +14,7 @@ import QualityControllerLayout from "./DashboardLayouts/QualityControllerLayout"
 import PackageMasterLayout from "./DashboardLayouts/PackageMasterLayout";
 import InternalAccountantLayout from "./DashboardLayouts/InternalAccountantLayout";
 import SupplierLayout from "./DashboardLayouts/SupplierLayout";
+import CasherLayout from "./DashboardLayouts/CasherLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -32,6 +33,7 @@ const layouts = {
   packageMaster: PackageMasterLayout,
   internalAccountant: InternalAccountantLayout,
   supplier: SupplierLayout,
+  casher: CasherLayout,
   nolayout: NoLayout,
 };
 

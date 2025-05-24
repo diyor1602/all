@@ -1,0 +1,197 @@
+import { useState, useEffect } from "react";
+import api from "@/utils/api";
+import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { Loader2, CalendarDays, PlusCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+
+const Income = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState([]);
+
+  const [filters, setFilters] = useState({
+    start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toLocaleDateString("uz-Uz")
+      .split("T")[0],
+    end_date: new Date().toLocaleDateString("uz-Uz").split("T")[0],
+    search: "",
+    currency_id: "",
+  });
+  const [currencies, setCurrencies] = useState([]);
+
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+
+  // Debounce effect
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [filters]);
+
+  const fetchIncomes = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/casher/transactions", {
+        params: {
+          type: "income",
+          ...debouncedFilters,
+        },
+      });
+      setData(response.data.transactions);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Kirimlarni olishda xatolik yuz berdi!",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchIncomes();
+  }, [debouncedFilters]);
+
+  useEffect(() => {
+    const fetchCurrencies = async () => {
+      try {
+        const response = await api.get("/casher/currencies");
+        setCurrencies(response.data);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Valyuta turlarini olishda xatolik yuz berdi!",
+        });
+      }
+    };
+    fetchCurrencies();
+  }, []);
+
+  return (
+    <div className="p-4 md:p-8 bg-white rounded-xl shadow-md">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">📥 Kirimlar</h1>
+        <Button onClick={() => navigate("/casher/income/add")}>
+          <PlusCircle />
+          Qo'shish
+        </Button>
+      </div>
+
+      <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        <div className="relative">
+          <CalendarDays className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
+          <Input
+            type="date"
+            value={filters.start_date}
+            onChange={(e) =>
+              setFilters({ ...filters, start_date: e.target.value })
+            }
+            className="pl-10"
+          />
+        </div>
+        <div className="relative">
+          <CalendarDays className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
+          <Input
+            type="date"
+            value={filters.end_date}
+            onChange={(e) =>
+              setFilters({ ...filters, end_date: e.target.value })
+            }
+            className="pl-10"
+          />
+        </div>
+        <Select
+          value={filters.currency_id}
+          onValueChange={(value) =>
+            setFilters({ ...filters, currency_id: value })
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Valyuta" />
+          </SelectTrigger>
+          <SelectContent>
+            {currencies.map((currency) => (
+              <SelectItem key={currency.id} value={currency.id}>
+                {currency.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          placeholder="Qidiruv"
+          value={filters.search}
+          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+        />
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm text-lef border">
+          <thead className="bg-gray-100 text-xs uppercase text-gray-500">
+            <tr>
+              <th className="px-4 py-3 border">№</th>
+              <th className="px-4 py-3 border">Sana</th>
+              <th className="px-4 py-3 border">Miqdori</th>
+              <th className="px-4 py-3 border">Manba</th>
+              <th className="px-4 py-3 border">Kim orqali</th>
+              <th className="px-4 py-3 border">Sabab</th>
+              <th className="px-4 py-3 border">Izoh</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="text-center py-8">
+                  <Loader2 className="mx-auto animate-spin h-6 w-6 text-gray-500" />
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-6">
+                  Hech qanday ma’lumot topilmadi.
+                </td>
+              </tr>
+            ) : (
+              data
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 border text-center">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 py-2 border">
+                      {item?.date?.split("-")?.reverse()?.join(".")}
+                    </td>
+                    <td className="px-4 py-2 border">
+                      {item?.amount} {item?.currency?.name}
+                    </td>
+                    <td className="px-4 py-2 border">{item?.source}</td>
+                    <td className="px-4 py-2 border">{item?.via}</td>
+                    <td className="px-4 py-2 border text-center">
+                      {item?.purpose || "-"}
+                    </td>
+                    <td className="px-4 py-2 border">{item?.comment || "-"}</td>
+                  </tr>
+                ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default Income;
