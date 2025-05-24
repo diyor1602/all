@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
   AlertCircle,
   Box,
   Calendar,
+  CheckCheck,
   ClipboardList,
   Download,
   FileText,
@@ -37,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const CuttingStart = () => {
   const { id } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -44,6 +46,7 @@ const CuttingStart = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [cuttingCount, setCuttingCount] = useState("");
+  const [finishing, setFinishing] = useState("");
   const [boxCount, setBoxCount] = useState("");
   const [errors, setErrors] = useState({
     submodel: false,
@@ -140,6 +143,32 @@ const CuttingStart = () => {
       });
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    if (!window.confirm("Buyurtmani yakunlashni tasdiqlaysizmi?")) return;
+    setFinishing(true);
+    try {
+      await api.get(`/cuttingMaster/finishCutting/${id}`);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Buyurtma yakunlandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1500,
+      });
+      navigate("/cuttingMaster/cutting");
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Buyurtma yakunlashda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setFinishing(false);
     }
   };
 
@@ -275,6 +304,14 @@ const CuttingStart = () => {
                 ))}
               </div>
             </div>
+            <Button onClick={handleFinish} disabled={finishing}>
+              {finishing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCheck />
+              )}
+              Yakunlash
+            </Button>
           </div>
         </CardContent>
       </Card>
