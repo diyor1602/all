@@ -1,18 +1,18 @@
 import BaseLayout from "./BaseLayout";
-import { Home, Printer, TrendingDown, TrendingUp } from "lucide-react";
+import { BanknoteArrowDown, BanknoteArrowUp, Home } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
     name: "Kirimlar",
     href: "/casher/income",
-    icon: TrendingUp,
+    icon: BanknoteArrowDown,
     onMobile: true,
   },
   {
     name: "Chiqimlar",
     href: "/casher/outcome",
-    icon: TrendingDown,
+    icon: BanknoteArrowUp,
     onMobile: true,
   },
 ];
