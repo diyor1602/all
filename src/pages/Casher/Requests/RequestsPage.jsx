@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -116,60 +116,62 @@ const RequestsPage = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchData = async (page = 1, search = "", status = "") => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        per_page: "10",
-      });
+  const fetchData = useCallback(
+    async (page = 1, search = "", status = "") => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          per_page: "10",
+        });
 
-      if (search) params.append("search", search);
-      if (status) params.append("status", status);
+        if (search) params.append("search", search);
+        if (status) params.append("status", status);
 
-      const response = await api.get(`/casher/requests?${params.toString()}`);
-      setData(response.data.data);
-      setPagination({
-        current_page: response.data.current_page,
-        last_page: response.data.last_page,
-        per_page: response.data.per_page,
-        total: response.data.total,
-        from: response.data.from,
-        to: response.data.to,
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik!",
-        description:
-          error.response?.data?.message ||
-          "Talabnomalar ma'lumotlari olishda xatolik yuz berdi.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+        const response = await api.get(`/casher/requests?${params.toString()}`);
+        setData(response.data.data);
+        setPagination({
+          current_page: response.data.current_page,
+          last_page: response.data.last_page,
+          per_page: response.data.per_page,
+          total: response.data.total,
+          from: response.data.from,
+          to: response.data.to,
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description:
+            error.response?.data?.message ||
+            "Talabnomalar ma'lumotlari olishda xatolik yuz berdi.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast]
+  );
 
+  // Single effect to handle all data fetching
   useEffect(() => {
-    fetchData(currentPage, searchQuery, statusFilter);
-  }, [currentPage]);
+    const timer = setTimeout(
+      () => {
+        fetchData(currentPage, searchQuery, statusFilter);
+      },
+      searchQuery || statusFilter ? 500 : 0
+    ); // Only debounce when there's search/filter input
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchData(currentPage, searchQuery, statusFilter);
-    }, 500);
     return () => clearTimeout(timer);
-  }, [searchQuery, statusFilter]);
+  }, [currentPage, searchQuery, statusFilter, fetchData]);
 
   const handleSearch = () => {
     setCurrentPage(1);
-    fetchData(1, searchQuery, statusFilter);
   };
 
   const handleStatusFilter = (value) => {
     setStatusFilter(value === "all" ? "" : value);
     setCurrentPage(1);
-    fetchData(1, searchQuery, value === "all" ? "" : value);
   };
 
   const handlePageChange = (page) => {
@@ -210,10 +212,7 @@ const RequestsPage = () => {
                 {pagination.to} ko'rsatilmoqda
               </p>
             </div>
-            <Button
-              className="bg-blue-600 hover:bg-blue-700 shadow-lg"
-              onClick={() => navigate("/casher/requests/add")}
-            >
+            <Button onClick={() => navigate("/casher/requests/add")}>
               <PlusCircle className="w-4 h-4 mr-2" />
               Yangi talab yaratish
             </Button>
@@ -254,10 +253,7 @@ const RequestsPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    onClick={handleSearch}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
+                  <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
                   </Button>
                 </div>
