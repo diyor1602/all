@@ -143,31 +143,32 @@ const IncomePage = () => {
               <th className="px-4 py-3 border">Kim orqali</th>
               <th className="px-4 py-3 border">Sabab</th>
               <th className="px-4 py-3 border">Izoh</th>
+              <th className="px-4 py-3 border">Kassa</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="text-center py-8">
+                <td colSpan={8} className="text-center py-8">
                   <Loader2 className="mx-auto animate-spin h-6 w-6 text-gray-500" />
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-6">
+                <td colSpan={8} className="text-center py-6">
                   Hech qanday ma’lumot topilmadi.
                 </td>
               </tr>
             ) : (
               data
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                 .map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-4 py-2 border text-center">
                       {index + 1}
                     </td>
                     <td className="px-4 py-2 border text-center">
-                      {item?.date?.split("-")?.reverse()?.join(".")}
+                      {new Date(item?.created_at).toLocaleString("ru-RU")}
                     </td>
                     <td className="px-4 py-2 border">
                       {item?.amount} {item?.currency?.name}
@@ -178,6 +179,7 @@ const IncomePage = () => {
                       {item?.purpose || "-"}
                     </td>
                     <td className="px-4 py-2 border">{item?.comment || "-"}</td>
+                    <td className="px-4 py-2 border">{item?.cashbox?.name}</td>
                   </tr>
                 ))
             )}
