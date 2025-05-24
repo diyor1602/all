@@ -65,9 +65,9 @@ const Result = () => {
         order?.orderModel?.model?.name
           .toLowerCase()
           .includes(search.toLowerCase()) ||
-        order?.orderModel?.material?.name
-          .toLowerCase()
-          .includes(search.toLowerCase())
+        order?.orderModel?.submodels?.some((submodel) =>
+          submodel?.submodel?.name.toLowerCase().includes(search.toLowerCase())
+        )
     );
     setFilteredOrders(filtered);
   }, [search, orders]);
