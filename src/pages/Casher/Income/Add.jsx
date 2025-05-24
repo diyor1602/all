@@ -154,9 +154,20 @@ const Add = () => {
               <Label>Valyuta</Label>
               <Select
                 value={form.currency_id}
-                onValueChange={(value) =>
-                  setForm({ ...form, currency_id: value })
-                }
+                onValueChange={(value) => {
+                  const matchedCashbox = cashboxes.find(
+                    (cashbox) =>
+                      cashbox.balance?.currency?.id === parseInt(value)
+                  );
+
+                  setForm((prevForm) => ({
+                    ...prevForm,
+                    currency_id: value,
+                    cashbox_id: matchedCashbox
+                      ? matchedCashbox.id.toString()
+                      : "",
+                  }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Tanlang" />
@@ -182,7 +193,7 @@ const Add = () => {
                   setForm({ ...form, cashbox_id: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger disabled>
                   <SelectValue placeholder="Tanlang" />
                 </SelectTrigger>
                 <SelectContent>
