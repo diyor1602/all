@@ -271,7 +271,7 @@ const Tailoring = () => {
                           {order?.orderModel?.sizes?.map((size) => (
                             <Badge
                               key={size.id}
-                              className="bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs"
+                              className="bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs hover:bg-indigo-200 transition-colors"
                             >
                               <span className="font-bold">
                                 {size?.size?.name}
