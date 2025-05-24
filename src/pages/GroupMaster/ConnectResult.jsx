@@ -213,6 +213,30 @@ const ConnectResult = () => {
             %
           </span>
         </div>
+        <div>
+          Bugun kelgan ishchilar:{" "}
+          <span className="font-semibold">{data.attendanceCount || 0} ta</span>
+        </div>
+        <div>
+          Bugungilik topilgan so'mma:{" "}
+          <span className="font-semibold">
+            {parseFloat(data.order?.todayEarned || 0).toLocaleString("ru-RU")}{" "}
+            so'm
+          </span>
+        </div>
+        <div>
+          Bitta ishchi uchun o'rtacha oylik:{" "}
+          <span className="font-semibold">
+            {parseFloat(data.order?.perEmployeeEarning || 0).toLocaleString(
+              "ru-RU"
+            )}{" "}
+            so'm
+          </span>
+        </div>
+        <div>
+          Bugun tikildi:{" "}
+          <span className="font-semibold">{data.order?.todaySewn || 0} ta</span>
+        </div>
       </div>
       <Accordion
         type="single"
