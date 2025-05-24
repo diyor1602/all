@@ -32,6 +32,23 @@ const Add = () => {
   const [currencies, setCurrencies] = useState([]);
   const [sources, setSources] = useState([]);
   const [vias, setVias] = useState([]);
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [employeeOptions, setEmployeeOptions] = useState([]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (employeeSearch.trim().length < 3) return;
+
+      try {
+        const res = await api.get(`/casher/employees?search=${employeeSearch}`);
+        setEmployeeOptions(res.data.data || []);
+      } catch (error) {
+        console.error("Employee search error:", error);
+      }
+    }, 500); // debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [employeeSearch]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,7 +94,6 @@ const Add = () => {
     try {
       setLoading(true);
       const matchedSource = sources.find((s) => s.name === form.source_id);
-      const matchedVia = vias.find((v) => v.name === form.via_id);
 
       const payload = {
         amount: form.amount,
@@ -87,7 +103,7 @@ const Add = () => {
         ...(matchedSource
           ? { source_id: matchedSource.id }
           : { source_name: form.source_id }),
-        ...(matchedVia ? { via_id: matchedVia.id } : { via_name: form.via_id }),
+        via_id: form.via_id,
       };
 
       await api.post("/casher/incomes", payload);
@@ -184,19 +200,41 @@ const Add = () => {
             </datalist>
           </div>
 
-          <div>
+          <div
+            className="relative"
+            tabIndex={0}
+            onBlur={() => {
+              setTimeout(() => {
+                setEmployeeOptions([]);
+              }, 100);
+            }}
+          >
             <Label>Kim orqali</Label>
             <Input
-              placeholder="Masalan: Abduvali aka"
-              list="via-list"
-              value={form.via_id}
-              onChange={(e) => setForm({ ...form, via_id: e.target.value })}
+              placeholder="Xodimni qidiring..."
+              value={employeeSearch}
+              onChange={(e) => setEmployeeSearch(e.target.value)}
             />
-            <datalist id="via-list">
-              {vias.map((via) => (
-                <option key={via.id} value={via.name} />
-              ))}
-            </datalist>
+
+            {employeeOptions.length > 0 && (
+              <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-40 overflow-y-auto">
+                <ul>
+                  {employeeOptions.map((emp) => (
+                    <li
+                      key={emp.id}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        setForm({ ...form, via_id: emp.id });
+                        setEmployeeSearch(emp.name);
+                        setEmployeeOptions([]);
+                      }}
+                    >
+                      {emp.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div>
