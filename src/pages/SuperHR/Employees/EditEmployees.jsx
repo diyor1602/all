@@ -825,11 +825,18 @@ const EditEmployees = () => {
                       <SelectValue placeholder="Dasturini tanlang" />
                     </SelectTrigger>
                     <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={normalizeId(role.id)}>
-                          {role.description}
-                        </SelectItem>
-                      ))}
+                      {roles
+                        .sort((a, b) =>
+                          a.description.localeCompare(b.description)
+                        )
+                        .map((role) => (
+                          <SelectItem
+                            key={role.id}
+                            value={normalizeId(role.id)}
+                          >
+                            {role.description}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
