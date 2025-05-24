@@ -3,6 +3,7 @@ import {
   BanknoteArrowDown,
   BanknoteArrowUp,
   CircleDollarSign,
+  ClipboardCheck,
   Home,
 } from "lucide-react";
 
@@ -24,6 +25,12 @@ const navigation = [
     name: "Balans",
     href: "/casher/balance",
     icon: CircleDollarSign,
+    onMobile: true,
+  },
+  {
+    name: "Talabnoma",
+    href: "/casher/requests",
+    icon: ClipboardCheck,
     onMobile: true,
   },
 ];
