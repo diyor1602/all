@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Trophy, Medal } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   // App data states - these will only be used after authentication
@@ -11,6 +12,7 @@ const Home = () => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Always define refs at the top level
   const dataIntervalRef = useRef(null);
@@ -54,6 +56,12 @@ const Home = () => {
         description: "Data olishda xatolik",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleNavigate = (id) => {
+    if (localStorage.getItem("role") === "supervisor") {
+      navigate("/supervisor/orders/" + id);
     }
   };
 
@@ -189,7 +197,13 @@ const Home = () => {
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         {output.submodel.name}
                       </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-medium">
+                      <td
+                        className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-medium"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavigate(output.order_id);
+                        }}
+                      >
                         {output.group.name}
                       </td>
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
