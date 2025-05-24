@@ -1,9 +1,25 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
-import { Check, CircleCheck, Loader2, X } from "lucide-react";
+import {
+  Check,
+  CircleCheck,
+  Loader2,
+  X,
+  Package,
+  Target,
+  TrendingUp,
+  Users,
+  DollarSign,
+  Scissors,
+  BarChart3,
+  Hash,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +37,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 
 const ConnectResult = () => {
@@ -132,7 +150,6 @@ const ConnectResult = () => {
         },
       });
 
-      // Close dialog and refresh data
       setDialogOpen(false);
       fetchData();
     } catch (error) {
@@ -157,87 +174,31 @@ const ConnectResult = () => {
   ) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="bg-white rounded-xl shadow-md p-6 text-center">
-          <h2 className="text-xl font-bold text-red-500 mb-2">
-            Buyurtma topilmadi
-          </h2>
-          <p className="text-gray-600">
-            Ushbu buyurtma mavjud emas yoki tikuvda emas
-          </p>
-          <Button
-            className="mt-4"
-            onClick={() => navigate("/groupMaster/result")}
-          >
-            Orqaga qaytish
-          </Button>
-        </div>
+        <Card className="max-w-md mx-auto">
+          <CardContent className="text-center p-6">
+            <h2 className="text-xl font-bold text-red-500 mb-2">
+              Buyurtma topilmadi
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Ushbu buyurtma mavjud emas yoki tikuvda emas
+            </p>
+            <Button onClick={() => navigate("/groupMaster/result")}>
+              Orqaga qaytish
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  const completionPercentage = Number.parseFloat(
+    ((data.order?.quantity - data.order?.remainAmount) / data.order?.quantity) *
+      100
+  ).toFixed(2);
+
   return (
     <>
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6 flex flex-col gap-2">
-        <div className="font-semibold text-lg">
-          <span className="text-primary">#{id}</span>
-          <span> / {data.order?.name}</span>
-        </div>
-        <div>
-          Model:{" "}
-          <span className="font-semibold">
-            {data.order?.orderModel?.model?.name}
-          </span>
-        </div>
-        <div>
-          Miqdor:{" "}
-          <span className="font-semibold">{data.order?.quantity} ta</span>
-        </div>
-        <div>
-          Qoldiq:{" "}
-          <span className="font-semibold">{data.order?.remainAmount} ta</span>
-        </div>
-        <div>
-          Bajarildi:{" "}
-          <span className="font-semibold">
-            {data.order?.quantity - data.order?.remainAmount} ta
-          </span>
-        </div>
-        <div>
-          Foizda:{" "}
-          <span className="font-semibold">
-            {parseFloat(
-              ((data.order?.quantity - data.order?.remainAmount) /
-                data.order?.quantity) *
-                100
-            ).toFixed(2)}{" "}
-            %
-          </span>
-        </div>
-        <div>
-          Bugun kelgan ishchilar:{" "}
-          <span className="font-semibold">{data.attendanceCount || 0} ta</span>
-        </div>
-        <div>
-          Bugungilik topilgan so'mma:{" "}
-          <span className="font-semibold">
-            {parseFloat(data.order?.todayEarned || 0).toLocaleString("ru-RU")}{" "}
-            so'm
-          </span>
-        </div>
-        <div>
-          Bitta ishchi uchun o'rtacha oylik:{" "}
-          <span className="font-semibold">
-            {parseFloat(data.order?.perEmployeeEarning || 0).toLocaleString(
-              "ru-RU"
-            )}{" "}
-            so'm
-          </span>
-        </div>
-        <div>
-          Bugun tikildi:{" "}
-          <span className="font-semibold">{data.order?.todaySewn || 0} ta</span>
-        </div>
-      </div>
+      {/* Existing Accordion Section */}
       <Accordion
         type="single"
         collapsible
@@ -266,16 +227,13 @@ const ConnectResult = () => {
                       let enabled = false;
 
                       if (hasQuantity) {
-                        // Show buttons with quantity
                         show = true;
                         enabled = false;
                       } else if (!foundFirstEmpty && !isFuture) {
-                        // First button without quantity and not in the future
                         foundFirstEmpty = true;
                         show = true;
                         enabled = true;
                       } else {
-                        // Hide the rest
                         show = false;
                       }
 
@@ -317,8 +275,162 @@ const ConnectResult = () => {
           );
         })}
       </Accordion>
+      {/* Enhanced Top Card Section */}
+      <div className="mb-6">
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-blue-50 via-white to-purple-50">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Hash className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl font-bold">
+                    Buyurtma #{id}
+                  </CardTitle>
+                  <p className="text-blue-100 font-medium">
+                    {data.order?.name}
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant="secondary"
+                className="bg-white/20 text-white border-white/30 text-sm px-3 py-1"
+              >
+                <Package className="h-4 w-4 mr-1" />
+                {data.order?.orderModel?.model?.name}
+              </Badge>
+            </div>
+          </CardHeader>
 
-      {/* Sewing Output Dialog */}
+          <CardContent className="p-6">
+            {/* Progress Section */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <span className="font-semibold text-green-800">
+                    Bajarilish holati
+                  </span>
+                </div>
+                <Badge className="bg-green-100 text-green-800 border-green-200">
+                  {completionPercentage}%
+                </Badge>
+              </div>
+              <Progress
+                value={Number.parseFloat(completionPercentage)}
+                className="h-3 mb-2"
+              />
+              <div className="flex justify-between text-sm text-green-700">
+                <span>
+                  Bajarildi: {data.order?.quantity - data.order?.remainAmount}{" "}
+                  ta
+                </span>
+                <span>Qoldiq: {data.order?.remainAmount} ta</span>
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {/* Total Quantity */}
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500 rounded-lg">
+                    <Target className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-600 font-medium">
+                      Umumiy miqdor
+                    </p>
+                    <p className="text-xl font-bold text-blue-800">
+                      {data.order?.quantity} ta
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Workers */}
+              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-500 rounded-lg">
+                    <Users className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-purple-600 font-medium">
+                      Bugungi ishchilar
+                    </p>
+                    <p className="text-xl font-bold text-purple-800">
+                      {data.attendanceCount || 0} ta
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Production */}
+              <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-500 rounded-lg">
+                    <Scissors className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-orange-600 font-medium">
+                      Bugun tikildi
+                    </p>
+                    <p className="text-xl font-bold text-orange-800">
+                      {data.order?.todaySewn || 0} ta
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial Stats */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Today's Earnings */}
+              <div className="p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl border border-emerald-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-emerald-500 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-emerald-600 font-medium">
+                      Bugungilik topilgan summa
+                    </p>
+                    <p className="text-lg font-bold text-emerald-800">
+                      {Number.parseFloat(
+                        data.order?.todayEarned || 0
+                      ).toLocaleString("ru-RU")}{" "}
+                      so'm
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Average Monthly Earning */}
+              <div className="p-4 bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl border border-teal-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-teal-500 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-teal-600 font-medium">
+                      O'rtacha oylik (1 ishchi)
+                    </p>
+                    <p className="text-lg font-bold text-teal-800">
+                      {Number.parseFloat(
+                        data.order?.perEmployeeEarning || 0
+                      ).toLocaleString("ru-RU")}{" "}
+                      so'm
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Existing Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
