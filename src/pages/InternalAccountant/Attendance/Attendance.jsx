@@ -629,8 +629,6 @@ const Attendance = () => {
                                     <img
                                       src={
                                         attendanceRecord.check_in_image ||
-                                        "/placeholder.svg" ||
-                                        "/placeholder.svg" ||
                                         "/placeholder.svg"
                                       }
                                       alt="Check-in image"
@@ -688,8 +686,6 @@ const Attendance = () => {
                                     <img
                                       src={
                                         attendanceRecord.check_out_image ||
-                                        "/placeholder.svg" ||
-                                        "/placeholder.svg" ||
                                         "/placeholder.svg"
                                       }
                                       alt="Check-out image"

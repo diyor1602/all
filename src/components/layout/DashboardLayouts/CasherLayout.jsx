@@ -5,6 +5,7 @@ import {
   CircleDollarSign,
   ClipboardCheck,
   Home,
+  RefreshCcw,
 } from "lucide-react";
 
 const navigation = [
@@ -31,6 +32,12 @@ const navigation = [
     name: "Talabnoma",
     href: "/casher/requests",
     icon: ClipboardCheck,
+    onMobile: true,
+  },
+  {
+    name: "Transfer",
+    href: "/casher/transfer",
+    icon: RefreshCcw,
     onMobile: true,
   },
 ];
