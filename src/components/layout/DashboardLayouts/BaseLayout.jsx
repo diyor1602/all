@@ -85,7 +85,7 @@ export default function BaseLayout({ children, navigation }) {
           <div className="border-t bg-gray-50 p-4">
             <Link
               to="/profile"
-              className="flex items-center gap-3 mb-4 px-2 pl-4"
+              className="flex items-center gap-3 mb-4 px-2"
               onClick={() => setSidebarOpen(false)}
             >
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
