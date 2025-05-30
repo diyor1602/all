@@ -6,7 +6,6 @@ import { useToast } from "@/components/ui/use-toast";
 import {
   PlusCircle,
   Search,
-  Filter,
   Clock,
   MessageSquare,
   CheckCircle,
@@ -233,7 +232,6 @@ const RequestsPage = () => {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-gray-500" />
                   <Select
                     value={statusFilter || "all"}
                     onValueChange={handleStatusFilter}
