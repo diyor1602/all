@@ -1,3 +1,5 @@
+const allowPaths = ["home", "profile", "issue"];
+
 const isTokenValid = (tok) => {
   const expirationTime = tok.exp * 1000;
   return expirationTime > Date.now();
@@ -14,7 +16,7 @@ const checkAuth = () => {
     return false;
   }
 
-  if (path !== "home" && path !== "profile") {
+  if (!allowPaths.includes(path)) {
     if (role !== path) {
       localStorage.clear();
       return false;

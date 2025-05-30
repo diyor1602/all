@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Users, LogOut, Menu, X } from "lucide-react";
+import { Users, LogOut, Menu, X, MessageCircleMore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -85,7 +85,7 @@ export default function BaseLayout({ children, navigation }) {
           <div className="border-t bg-gray-50 p-4">
             <Link
               to="/profile"
-              className="flex items-center gap-3 mb-4 px-2"
+              className="flex items-center gap-3 mb-4 px-2 pl-4"
               onClick={() => setSidebarOpen(false)}
             >
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
@@ -108,6 +108,18 @@ export default function BaseLayout({ children, navigation }) {
                 </p>
               </div>
             </Link>
+            <Button
+              asChild
+              variant="ghost"
+              className="w-full justify-start gap-3 text-gray-700 hover:bg-gray-200/60 mb-2"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Link to="/issue">
+                <MessageCircleMore className="h-4 w-4" />
+                Fikr bildirish
+              </Link>
+            </Button>
+            <hr className="my-2" />
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 text-gray-700 hover:bg-gray-200/60"
