@@ -14,6 +14,14 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
+function formatDateToYYYYMMDD(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0"); // months are 0-based
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const IncomePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -21,10 +29,10 @@ const IncomePage = () => {
   const [data, setData] = useState([]);
 
   const [filters, setFilters] = useState({
-    start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toLocaleDateString("uz-Uz")
-      .split("T")[0],
-    end_date: new Date().toLocaleDateString("uz-Uz").split("T")[0],
+    start_date: formatDateToYYYYMMDD(
+      new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    ),
+    end_date: formatDateToYYYYMMDD(new Date()),
     search: "",
     currency_id: "",
   });
