@@ -212,13 +212,13 @@ const OutcomePage = () => {
                     <td className="px-4 py-2 border">
                       {item?.amount} {item?.currency?.name}
                     </td>
-                    <td className="px-4 py-2 border">{item?.via?.name}</td>
                     <td className="px-4 py-2 border">
-                      {item?.destination?.name}
+                      {item?.via?.name || "-"}
                     </td>
-                    <td className="px-4 py-2 border text-center">
-                      {item?.purpose || "-"}
+                    <td className="px-4 py-2 border">
+                      {item?.destination?.name || "-"}
                     </td>
+                    <td className="px-4 py-2 border">{item?.purpose || "-"}</td>
                     <td className="px-4 py-2 border">{item?.comment || "-"}</td>
                   </tr>
                 ))
