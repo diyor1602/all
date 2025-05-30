@@ -285,7 +285,7 @@ const Transfer = () => {
                       }
                     >
                       <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-500">
-                        <SelectValue placeholder="Tanlang valyuta" />
+                        <SelectValue placeholder="Valyuta tanlang" />
                       </SelectTrigger>
                       <SelectContent>
                         {getAvailableFromCurrencies().map((cur) => (
@@ -308,7 +308,7 @@ const Transfer = () => {
                       }
                     >
                       <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-500">
-                        <SelectValue placeholder="Tanlang valyuta" />
+                        <SelectValue placeholder="Valyuta tanlang" />
                       </SelectTrigger>
                       <SelectContent>
                         {getAvailableToCurrencies().map((cur) => (
