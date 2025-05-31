@@ -72,6 +72,9 @@ const OrderView = () => {
   const [tarifExcelFile, setTarifExcelFile] = useState(null);
   const [isTarifExcelLoading, setIsTarifExcelLoading] = useState(false);
   const [tarifPdfDownloading, setTarifPdfDownloading] = useState(false);
+  const [selectedTarifLang, setSelectedTarifLang] = useState(
+    localStorage.getItem("tarifLang") || "uz"
+  );
 
   const totalSpends = useMemo(
     () =>
@@ -89,14 +92,32 @@ const OrderView = () => {
     [order?.order_model?.submodels]
   );
 
-  const totalSpendSumma = useMemo(
+  const totalSpendSummaRU = useMemo(
     () =>
       order?.order_model?.submodels?.reduce(
         (acc, submodel) =>
           acc +
           parseFloat(
             submodel?.spends?.reduce(
-              (acc, spend) => acc + parseFloat(spend?.summa),
+              (acc, spend) =>
+                acc + (spend?.region == "ru" ? parseFloat(spend?.summa) : 0),
+              0
+            )
+          ),
+        0
+      ),
+    [order?.order_model?.submodels]
+  );
+
+  const totalSpendSummaUZ = useMemo(
+    () =>
+      order?.order_model?.submodels?.reduce(
+        (acc, submodel) =>
+          acc +
+          parseFloat(
+            submodel?.spends?.reduce(
+              (acc, spend) =>
+                acc + (spend?.region == "uz" ? parseFloat(spend?.summa) : 0),
               0
             )
           ),
@@ -110,7 +131,7 @@ const OrderView = () => {
       setTarifDownloading(true);
       try {
         const response = await api.get(`/technologist/export-tarification`, {
-          params: { orderSubModelId: id },
+          params: { orderSubModelId: id, region: selectedTarifLang },
           responseType: "blob",
         });
 
@@ -136,7 +157,13 @@ const OrderView = () => {
         setTarifDownloading(false);
       }
     },
-    [order?.id, order?.name, selectedSubmodel?.submodel?.name, toast]
+    [
+      order?.id,
+      order?.name,
+      selectedSubmodel?.submodel?.name,
+      selectedTarifLang,
+      toast,
+    ]
   );
 
   const handleDownloadSpec = async (id) => {
@@ -193,12 +220,17 @@ const OrderView = () => {
   }, [id, navigate, toast]);
 
   const fetchTarifications = async () => {
+    if (!selectedSubmodel?.id) return;
     setTabLoading(true);
     try {
       const response = await api.get(
         `/technologist/tarification/category/${selectedSubmodel?.id}`
       );
-      setTarifications(response.data);
+      setTarifications(
+        response.data?.filter((tarification) => {
+          return tarification?.region === selectedTarifLang;
+        })
+      );
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -259,6 +291,10 @@ const OrderView = () => {
     selectedSubmodel?.id && fetchSpecifications();
   }, [selectedSubmodel]);
 
+  useEffect(() => {
+    fetchTarifications();
+  }, [selectedTarifLang]);
+
   const handleUploadExcel = useCallback(async () => {
     if (!excelFile) {
       toast({
@@ -273,6 +309,7 @@ const OrderView = () => {
       const formData = new FormData();
       formData.append("file", excelFile);
       formData.append("submodel_id", selectedSubmodel?.id);
+      formData.append("region", selectedTarifLang);
 
       await api.post("/technologist/import-specification", formData, {
         headers: {
@@ -316,6 +353,7 @@ const OrderView = () => {
       const formData = new FormData();
       formData.append("file", tarifExcelFile);
       formData.append("submodel_id", selectedSubmodel?.id);
+      formData.append("region", selectedTarifLang);
 
       await api.post("/technologist/import-tarification", formData, {
         headers: {
@@ -343,7 +381,7 @@ const OrderView = () => {
     } finally {
       setIsTarifExcelLoading(false);
     }
-  }, [tarifExcelFile, selectedSubmodel?.id, toast]);
+  }, [tarifExcelFile, selectedSubmodel?.id, selectedTarifLang, toast]);
 
   const handleDownloadTarifPdf = useCallback(async () => {
     setTarifPdfDownloading(true);
@@ -351,6 +389,7 @@ const OrderView = () => {
       const response = await api.get(`/technologist/tarifications/pdf`, {
         params: {
           submodel_id: selectedSubmodel?.id,
+          region: selectedTarifLang,
         },
         responseType: "blob",
       });
@@ -375,7 +414,7 @@ const OrderView = () => {
     } finally {
       setTarifPdfDownloading(false);
     }
-  }, [selectedSubmodel]);
+  }, [selectedSubmodel?.id, selectedTarifLang]);
 
   if (loading) {
     return (
@@ -541,7 +580,7 @@ const OrderView = () => {
                   <Bitcoin
                     className={cn(
                       "h-4 w-4",
-                      totalSpendSumma > order?.order_model?.rasxod
+                      totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500"
                         : "text-black"
                     )}
@@ -549,13 +588,37 @@ const OrderView = () => {
                   <span
                     className={cn(
                       "font-bold",
-                      totalSpendSumma > order?.order_model?.rasxod
+                      totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500 text-xl"
                         : "text-sm"
                     )}
                   >
-                    Jami:{" "}
-                    {totalSpendSumma?.toLocaleString("ru-RU", {
+                    Jami UZ:{" "}
+                    {totalSpendSummaUZ?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    so'm
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Bitcoin
+                    className={cn(
+                      "h-4 w-4",
+                      totalSpendSummaRU > order?.order_model?.rasxod
+                        ? "text-red-500"
+                        : "text-black"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "font-bold",
+                      totalSpendSummaRU > order?.order_model?.rasxod
+                        ? "text-red-500 text-xl"
+                        : "text-sm"
+                    )}
+                  >
+                    Jami RU:{" "}
+                    {totalSpendSummaRU?.toLocaleString("ru-RU", {
                       maximumFractionDigits: 2,
                     })}{" "}
                     so'm
@@ -722,6 +785,27 @@ const OrderView = () => {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+
+              <div className="flex items-center gap-2 w-full">
+                <Button
+                  onClick={() => {
+                    setSelectedTarifLang("uz");
+                    localStorage.setItem("tarifLang", "uz");
+                  }}
+                  variant={selectedTarifLang === "uz" ? "default" : "outline"}
+                >
+                  O'zbek tarifikatsiya
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSelectedTarifLang("ru");
+                    localStorage.setItem("tarifLang", "ru");
+                  }}
+                  variant={selectedTarifLang === "ru" ? "default" : "outline"}
+                >
+                  Rus tarifikatsiya
+                </Button>
               </div>
 
               <div className="flex items-center justify-between gap-2 flex-wrap">

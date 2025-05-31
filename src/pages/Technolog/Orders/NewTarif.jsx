@@ -60,6 +60,9 @@ const NewTarif = () => {
   const [workers, setWorkers] = useState([]);
   const [ranks, setRanks] = useState([]);
   const [machines, setMachines] = useState([]);
+  const [selectedTarifLang, setSelectedTarifLang] = useState(
+    localStorage.getItem("tarifLang") || "uz"
+  );
   const [activePopoverIndex, setActivePopoverIndex] = useState(null);
   const newRowRef = useRef(null);
 
@@ -344,6 +347,7 @@ const NewTarif = () => {
         data: {
           name: tarif.name,
           submodel_id: parseInt(id),
+          region: selectedTarifLang,
           tarifications: tarificationsToSubmit,
         },
       });
@@ -385,11 +389,26 @@ const NewTarif = () => {
           <Input
             type="text"
             placeholder="Tarifikatsiya nomi"
-            className="w-full"
+            className="w-full bg-white"
             value={tarif?.name}
             onChange={(e) => setTarif({ ...tarif, name: e.target.value })}
           />
         </div>
+        <Select
+          value={selectedTarifLang}
+          onValueChange={(value) => {
+            setSelectedTarifLang(value);
+            localStorage.setItem("tarifLang", value);
+          }}
+        >
+          <SelectTrigger className="w-[180px] bg-white">
+            <SelectValue placeholder="Tarif tili" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="uz">O'zbek</SelectItem>
+            <SelectItem value="ru">Rus</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="w-full overflow-auto max-h-[75vh]">
         <table className="my-4 whitespace-nowrap border w-full bg-white">
@@ -487,47 +506,52 @@ const NewTarif = () => {
                 </td>
                 <td className="px-4 py-2 border">
                   <Select
-                    value={(item?.razryad_id || item?.razryad?.id)?.toString()}
+                    value={item?.razryad?.id?.toString()}
                     onValueChange={(value) =>
                       handleRazryadSelect(index, parseInt(value))
                     }
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-fit">
                       <SelectValue placeholder="Razryadni tanlang" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {ranks.map((rank) => (
-                          <SelectItem key={rank.id} value={rank.id.toString()}>
-                            {rank.name}
-                          </SelectItem>
-                        ))}
+                        {ranks
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((rank) => (
+                            <SelectItem
+                              key={rank.id}
+                              value={rank.id.toString()}
+                            >
+                              {rank.name}
+                            </SelectItem>
+                          ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
                 </td>
                 <td className="px-4 py-2 border">
                   <Select
-                    value={(
-                      item?.typewriter_id || item?.typewriter?.id
-                    )?.toString()}
+                    value={item?.typewriter?.id?.toString()}
                     onValueChange={(value) =>
                       handleMachineSelect(index, parseInt(value))
                     }
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-fit">
                       <SelectValue placeholder="Mashinani tanlang" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {machines.map((machine) => (
-                          <SelectItem
-                            key={machine.id}
-                            value={machine.id.toString()}
-                          >
-                            {machine.name}
-                          </SelectItem>
-                        ))}
+                        {machines
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((machine) => (
+                            <SelectItem
+                              key={machine.id}
+                              value={machine.id.toString()}
+                            >
+                              {machine.name}
+                            </SelectItem>
+                          ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
