@@ -319,6 +319,18 @@ const Orders = () => {
                     </div>
                   </div>
 
+                  <div className="flex items-center gap-2 flex-wrap mb-5 p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
+                    {order.order_model?.submodels?.map((submodel) => (
+                      <Badge
+                        key={submodel.id}
+                        className="bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5 hover:bg-gray-100"
+                      >
+                        <Box size={14} className="text-gray-500" />
+                        {submodel?.submodel?.name}
+                      </Badge>
+                    ))}
+                  </div>
+
                   {/* Button with gradient */}
                   <Button
                     className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${getStatusColor(
