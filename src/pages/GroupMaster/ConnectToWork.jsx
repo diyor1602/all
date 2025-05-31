@@ -54,6 +54,9 @@ const WorkDetails = () => {
   const [tarifications, setTarifications] = useState([]);
   const [planLoader, setPlanLoader] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [selectedTarifLang, setSelectedTarifLang] = useState(
+    localStorage.getItem("tarifLang") || "uz"
+  );
   const [selectedEmployee, setSelectedEmployee] = useState("all");
 
   const totalSpends = useMemo(
@@ -72,14 +75,34 @@ const WorkDetails = () => {
     [order?.order_model?.submodels]
   );
 
-  const totalSpendSumma = useMemo(
+  const totalSpendSummaUZ = useMemo(
     () =>
       order?.order_model?.submodels?.reduce(
         (acc, submodel) =>
           acc +
           Number.parseFloat(
             submodel?.submodel_spend?.reduce(
-              (acc, spend) => acc + Number.parseFloat(spend?.summa),
+              (acc, spend) =>
+                acc +
+                Number.parseFloat(spend?.region == "uz" ? spend?.summa : 0),
+              0
+            )
+          ),
+        0
+      ),
+    [order?.order_model?.submodels]
+  );
+
+  const totalSpendSummaRU = useMemo(
+    () =>
+      order?.order_model?.submodels?.reduce(
+        (acc, submodel) =>
+          acc +
+          Number.parseFloat(
+            submodel?.submodel_spend?.reduce(
+              (acc, spend) =>
+                acc +
+                Number.parseFloat(spend?.region == "ru" ? spend?.summa : 0),
               0
             )
           ),
@@ -132,13 +155,18 @@ const WorkDetails = () => {
   }, [selectedSubmodel]);
 
   useEffect(() => {
+    console.log(selectedTarifLang);
     if (selectedSubmodel) {
       const foundSubmodel = order?.order_model?.submodels?.find(
         (submodel) => submodel?.id === selectedSubmodel?.id
       );
-      setTarifications(foundSubmodel?.tarification_categories || []);
+      setTarifications(
+        foundSubmodel?.tarification_categories?.filter(
+          (category) => category?.region === selectedTarifLang
+        ) || []
+      );
     }
-  }, [selectedSubmodel, order]);
+  }, [selectedSubmodel, order, selectedTarifLang]);
 
   const handlePlan = async () => {
     setPlanLoader(true);
@@ -154,10 +182,12 @@ const WorkDetails = () => {
         ? {
             submodel_id: selectedSubmodel?.id,
             group_id: selectedSubmodel?.group?.group?.id,
+            region: selectedTarifLang,
           }
         : {
             submodel_id: selectedSubmodel?.id,
             employee_id: selectedEmployee,
+            region: selectedTarifLang,
           };
 
     try {
@@ -360,7 +390,7 @@ const WorkDetails = () => {
                   <Bitcoin
                     className={cn(
                       "h-4 w-4",
-                      totalSpendSumma > order?.order_model?.rasxod
+                      totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500"
                         : "text-black"
                     )}
@@ -368,13 +398,37 @@ const WorkDetails = () => {
                   <span
                     className={cn(
                       "font-bold",
-                      totalSpendSumma > order?.order_model?.rasxod
+                      totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500 text-xl"
                         : "text-sm"
                     )}
                   >
-                    Jami:{" "}
-                    {totalSpendSumma?.toLocaleString("ru-RU", {
+                    Jami UZ:{" "}
+                    {totalSpendSummaUZ?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    so'm
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Bitcoin
+                    className={cn(
+                      "h-4 w-4",
+                      totalSpendSummaRU > order?.order_model?.rasxod
+                        ? "text-red-500"
+                        : "text-black"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "font-bold",
+                      totalSpendSummaRU > order?.order_model?.rasxod
+                        ? "text-red-500 text-xl"
+                        : "text-sm"
+                    )}
+                  >
+                    Jami RU:{" "}
+                    {totalSpendSummaRU?.toLocaleString("ru-RU", {
                       maximumFractionDigits: 2,
                     })}{" "}
                     so'm
@@ -441,6 +495,27 @@ const WorkDetails = () => {
                 {submodel?.submodel?.name}
               </Button>
             ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant={selectedTarifLang === "uz" ? "default" : "outline"}
+              onClick={() => {
+                setSelectedTarifLang("uz");
+                localStorage.setItem("tarifLang", "uz");
+              }}
+            >
+              O'zbek tarifikatsiya
+            </Button>
+            <Button
+              variant={selectedTarifLang === "ru" ? "default" : "outline"}
+              onClick={() => {
+                setSelectedTarifLang("ru");
+                localStorage.setItem("tarifLang", "ru");
+              }}
+            >
+              Rus tarifikatsiya
+            </Button>
           </div>
 
           <div className="mt-4">
