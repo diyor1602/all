@@ -34,6 +34,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 const CuttingStart = () => {
   const { id } = useParams();
@@ -48,6 +55,9 @@ const CuttingStart = () => {
   const [cuttingCount, setCuttingCount] = useState("");
   const [finishing, setFinishing] = useState("");
   const [boxCount, setBoxCount] = useState("");
+  const [selectedTarifLang, setSelectedTarifLang] = useState(
+    localStorage.getItem("tarifLang") || "uz"
+  );
   const [errors, setErrors] = useState({
     submodel: false,
     size: false,
@@ -115,6 +125,7 @@ const CuttingStart = () => {
           submodel_id: selectedSubmodel,
           size_id: selectedSize,
           box_capacity: boxCount,
+          region: selectedTarifLang,
         },
         responseType: "blob",
       });
@@ -430,24 +441,40 @@ const CuttingStart = () => {
           )}
         </CardContent>
         <CardFooter>
-          <Button
-            onClick={handleCutting}
-            disabled={isSending}
-            className="w-full sm:w-auto"
-            size="lg"
-          >
-            {isSending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Yuklanmoqda...
-              </>
-            ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                Kesish PDF yuklab olish
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+            <Select
+              value={selectedTarifLang}
+              onValueChange={(value) => {
+                setSelectedTarifLang(value);
+                localStorage.setItem("tarifLang", value);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tarif shakli" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="uz">O'zbek</SelectItem>
+                <SelectItem value="ru">Rus</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={handleCutting}
+              disabled={isSending}
+              className="w-full sm:w-auto"
+            >
+              {isSending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Yuklanmoqda...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Kesish PDF yuklab olish
+                </>
+              )}
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     </div>
