@@ -105,6 +105,10 @@ const Attendance = () => {
     success: [],
     failed: [],
   });
+  const [checkOutDialogOpen, setCheckOutDialogOpen] = useState(false);
+  const [checkOutTime, setCheckOutTime] = useState("");
+  const [bulkCheckOutTime, setBulkCheckOutTime] = useState("");
+  const [bulkCheckOutDialogOpen, setBulkCheckOutDialogOpen] = useState(false);
 
   const formatDate = (date) => {
     return date.toISOString().split("T")[0];
@@ -388,6 +392,216 @@ const Attendance = () => {
     }
   };
 
+  const handleMarkAttendanceFast = (employeeId) => {
+    const attendanceRecord = attendance?.find(
+      (item) => item?.employee_id === employeeId
+    );
+
+    // If there's already a check-in but no check-out, handle as check-out
+    if (
+      attendanceRecord &&
+      attendanceRecord.check_in &&
+      !attendanceRecord.check_out
+    ) {
+      openCheckOutDialog(employeeId);
+      return;
+    }
+
+    // Otherwise handle as check-in
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const time = hours * 60 + minutes;
+    if (time < 9 * 60 + 30) {
+      setSelectedEmployeeId(employeeId);
+      setCheckInTime(`07:30`);
+      handleMarkAttendance();
+    } else {
+      openAttendanceDialog(employeeId);
+    }
+  };
+
+  const openCheckOutDialog = (employeeId) => {
+    setSelectedEmployeeId(employeeId);
+    // Find the employee details to display in the dialog
+    const employee = employees.find((emp) => emp.id === employeeId);
+    setSelectedEmployee(employee);
+
+    // Set default time to current time
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    setCheckOutTime(`${hours}:${minutes}`);
+    setCheckOutDialogOpen(true);
+  };
+
+  const handleMarkCheckOut = async () => {
+    if (!selectedEmployeeId || !checkOutTime) return;
+
+    try {
+      setLoading(true);
+
+      // Create date from selected date and time
+      const [hours, minutes] = checkOutTime.split(":");
+      const checkOutDate = new Date(selectedDate);
+      checkOutDate.setHours(
+        Number.parseInt(hours),
+        Number.parseInt(minutes),
+        0
+      );
+
+      // Add Uzbekistan timezone offset (GMT+5) by specifying proper ISO format with timezone
+      const localDate = new Date(checkOutDate);
+      const isoWithTimezone = new Date(
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .replace("Z", "+05:00");
+
+      // Find the attendance record to update
+      const attendanceRecord = attendance.find(
+        (a) => a.employee_id === selectedEmployeeId
+      );
+
+      if (!attendanceRecord) {
+        throw new Error("Davomat ma'lumoti topilmadi");
+      }
+
+      await api.patch(`/superhr/attendances/${attendanceRecord.id}`, {
+        check_out: isoWithTimezone,
+      });
+
+      fetchAttendance();
+      setCheckOutDialogOpen(false);
+      setSelectedEmployeeId(null);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Ketish vaqti belgilandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkCheckOut = async () => {
+    if (selectedEmployees.length === 0 || !bulkCheckOutTime) return;
+
+    try {
+      setProcessingStatus({
+        processing: true,
+        total: selectedEmployees.length,
+        current: 0,
+        success: [],
+        failed: [],
+      });
+
+      // Create date from selected date and time
+      const [hours, minutes] = bulkCheckOutTime.split(":");
+      const checkOutDate = new Date(selectedDate);
+      checkOutDate.setHours(
+        Number.parseInt(hours),
+        Number.parseInt(minutes),
+        0
+      );
+
+      // Use the timezone offset for Uzbekistan (+05:00)
+      const localDate = new Date(checkOutDate);
+      const isoWithTimezone = new Date(
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .replace("Z", "+05:00");
+
+      // Process each employee one by one
+      for (let i = 0; i < selectedEmployees.length; i++) {
+        const employeeId = selectedEmployees[i];
+        setProcessingStatus((prev) => ({
+          ...prev,
+          current: i + 1,
+        }));
+
+        try {
+          // Find the attendance record to update
+          const attendanceRecord = attendance.find(
+            (a) => a.employee_id === employeeId
+          );
+
+          if (!attendanceRecord) {
+            throw new Error("Davomat ma'lumoti topilmadi");
+          }
+
+          await api.patch(`/superhr/attendances/${attendanceRecord.id}`, {
+            check_out: isoWithTimezone,
+          });
+
+          setProcessingStatus((prev) => ({
+            ...prev,
+            success: [...prev.success, employeeId],
+          }));
+        } catch (error) {
+          const employee = employees.find((emp) => emp.id === employeeId);
+          setProcessingStatus((prev) => ({
+            ...prev,
+            failed: [
+              ...prev.failed,
+              {
+                id: employeeId,
+                name: employee?.name,
+                error: error.response?.data?.message || "Xatolik yuz berdi",
+              },
+            ],
+          }));
+        }
+      }
+
+      // After all processing is done
+      fetchAttendance();
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: `Ketish vaqti muvaffaqiyatli belgilandi`,
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingStatus((prev) => ({
+        ...prev,
+        processing: false,
+      }));
+    }
+  };
+
+  const resetBulkCheckOut = () => {
+    setBulkCheckOutDialogOpen(false);
+    setSelectedEmployees([]);
+    setProcessingStatus({
+      processing: false,
+      total: 0,
+      current: 0,
+      success: [],
+      failed: [],
+    });
+  };
+
   useEffect(() => {
     if (selectedDepartment === "all") {
       setGroups([]);
@@ -579,7 +793,9 @@ const Attendance = () => {
                         <Button
                           size="sm"
                           disabled={loading}
-                          onClick={() => openAttendanceDialog(employee.id)}
+                          onClick={() => {
+                            handleMarkAttendanceFast(employee.id);
+                          }}
                         >
                           Keldi
                         </Button>
@@ -697,7 +913,13 @@ const Attendance = () => {
                             )}
                           </>
                         ) : (
-                          "-"
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openCheckOutDialog(employee.id)}
+                          >
+                            Ketdi
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -708,7 +930,7 @@ const Attendance = () => {
         </table>
       </div>
       {selectedEmployees.length > 0 && isToday && (
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-end gap-2">
           <Button
             onClick={() => {
               // Set default time to current time
@@ -720,6 +942,19 @@ const Attendance = () => {
             }}
           >
             {selectedEmployees.length} ta xodim uchun "Keldi" belgisini qo'yish
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Set default time to current time
+              const now = new Date();
+              const hours = now.getHours().toString().padStart(2, "0");
+              const minutes = now.getMinutes().toString().padStart(2, "0");
+              setBulkCheckOutTime(`${hours}:${minutes}`);
+              setBulkCheckOutDialogOpen(true);
+            }}
+          >
+            {selectedEmployees.length} ta xodim uchun "Ketdi" belgisini qo'yish
           </Button>
         </div>
       )}
@@ -891,6 +1126,180 @@ const Attendance = () => {
                     <Button
                       onClick={handleBulkAttendance}
                       disabled={!bulkCheckInTime}
+                    >
+                      Saqlash
+                    </Button>
+                  )}
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Check-Out Dialog */}
+      <Dialog open={checkOutDialogOpen} onOpenChange={setCheckOutDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ketish vaqtini belgilash</DialogTitle>
+            <DialogDescription>
+              {selectedEmployee?.name} uchun ketgan vaqtni kiriting
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="check-out-time" className="text-right col-span-1">
+                Ketgan vaqti
+              </label>
+              <Input
+                id="check-out-time"
+                type="time"
+                value={checkOutTime}
+                onChange={(e) => setCheckOutTime(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCheckOutDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={handleMarkCheckOut}
+              disabled={loading || !checkOutTime}
+            >
+              {loading ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Check-Out Dialog */}
+      <Dialog
+        open={bulkCheckOutDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && !processingStatus.processing) {
+            resetBulkCheckOut();
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ommaviy ketish vaqtini belgilash</DialogTitle>
+            <DialogDescription>
+              {selectedEmployees.length} ta xodim uchun ketgan vaqtni kiriting
+            </DialogDescription>
+          </DialogHeader>
+
+          {!processingStatus.processing &&
+            processingStatus.success.length === 0 &&
+            processingStatus.failed.length === 0 && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label
+                    htmlFor="bulk-check-out-time"
+                    className="text-right col-span-1"
+                  >
+                    Ketgan vaqti
+                  </label>
+                  <Input
+                    id="bulk-check-out-time"
+                    type="time"
+                    value={bulkCheckOutTime}
+                    onChange={(e) => setBulkCheckOutTime(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+            )}
+
+          {processingStatus.processing && (
+            <div className="py-4">
+              <div className="mb-2 flex justify-between">
+                <span>
+                  Jarayon: {processingStatus.current} / {processingStatus.total}
+                </span>
+                <span>
+                  {Math.round(
+                    (processingStatus.current / processingStatus.total) * 100
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full"
+                  style={{
+                    width: `${
+                      (processingStatus.current / processingStatus.total) * 100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {!processingStatus.processing &&
+            (processingStatus.success.length > 0 ||
+              processingStatus.failed.length > 0) && (
+              <div className="py-4 max-h-[300px] overflow-auto">
+                {processingStatus.success.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="font-medium text-green-600 mb-2">
+                      Muvaffaqiyatli ({processingStatus.success.length})
+                    </h3>
+                    <ul className="text-sm space-y-1">
+                      {processingStatus.success.map((id) => {
+                        const employee = employees.find((emp) => emp.id === id);
+                        return (
+                          <li key={`success-${id}`} className="text-gray-700">
+                            {employee?.name || `ID: ${id}`}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+
+                {processingStatus.failed.length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-red-600 mb-2">
+                      Muvaffaqiyatsiz ({processingStatus.failed.length})
+                    </h3>
+                    <ul className="text-sm space-y-2">
+                      {processingStatus.failed.map((item) => (
+                        <li key={`failed-${item.id}`} className="text-gray-700">
+                          <div className="font-medium">
+                            {item.name || `ID: ${item.id}`}
+                          </div>
+                          <div className="text-red-500 text-xs">
+                            {item.error}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+          <DialogFooter>
+            {!processingStatus.processing && (
+              <>
+                <Button variant="outline" onClick={resetBulkCheckOut}>
+                  {processingStatus.success.length > 0 ||
+                  processingStatus.failed.length > 0
+                    ? "Yopish"
+                    : "Bekor qilish"}
+                </Button>
+
+                {processingStatus.success.length === 0 &&
+                  processingStatus.failed.length === 0 && (
+                    <Button
+                      onClick={handleBulkCheckOut}
+                      disabled={!bulkCheckOutTime}
                     >
                       Saqlash
                     </Button>
