@@ -537,7 +537,9 @@ const EditEmployees = () => {
         <Button variant="outline" className="mr-4" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
         </Button>
-        <h1 className="text-2xl font-bold">Xodim ma'lumotlarini tahrirlash</h1>
+        <h1 className="text-2xl font-bold ml-auto">
+          Xodim ma'lumotlarini tahrirlash
+        </h1>
       </div>
 
       <Card className="w-full max-w-4xl mx-auto">
