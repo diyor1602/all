@@ -649,16 +649,6 @@ const Work = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>Ishlarni tanlang</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addWork}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Ish qo'shish
-                  </Button>
                 </div>
 
                 {selectedWorks.length === 0 ? (
@@ -690,6 +680,16 @@ const Work = () => {
                                       sensitivity: "base",
                                     })
                                   )
+                                  ?.filter((tarification) => {
+                                    // Skip tarifications that are already selected in other work items
+                                    const isAlreadySelected =
+                                      selectedWorks.some(
+                                        (w) =>
+                                          w.id === tarification.id &&
+                                          w.tempId !== work.tempId
+                                      );
+                                    return !isAlreadySelected;
+                                  })
                                   ?.map((tarification) => (
                                     <SelectItem
                                       key={tarification.id}
@@ -901,6 +901,19 @@ const Work = () => {
                     ))}
                   </div>
                 )}
+              </div>
+
+              <div className="w-full flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addWork}
+                  className="flex items-center gap-2 "
+                >
+                  <Plus className="h-4 w-4" />
+                  Ish qo'shish
+                </Button>
               </div>
 
               {/* Summary */}
