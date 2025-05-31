@@ -43,7 +43,7 @@ const formatDate = (dateString) => {
   });
 };
 
-const WorkDetails = () => {
+const ConnectToWork = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -778,4 +778,4 @@ const WorkDetails = () => {
   );
 };
 
-export default WorkDetails;
+export default ConnectToWork;
