@@ -513,19 +513,21 @@ const EditTarif = () => {
                         handleRazryadSelect(index, parseInt(value))
                       }
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-fit">
                         <SelectValue placeholder="Razryadni tanlang" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {ranks.map((rank) => (
-                            <SelectItem
-                              key={rank.id}
-                              value={rank.id.toString()}
-                            >
-                              {rank.name}
-                            </SelectItem>
-                          ))}
+                          {ranks
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((rank) => (
+                              <SelectItem
+                                key={rank.id}
+                                value={rank.id.toString()}
+                              >
+                                {rank.name}
+                              </SelectItem>
+                            ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -539,19 +541,21 @@ const EditTarif = () => {
                         handleMachineSelect(index, parseInt(value))
                       }
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-fit">
                         <SelectValue placeholder="Mashinani tanlang" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {machines.map((machine) => (
-                            <SelectItem
-                              key={machine.id}
-                              value={machine.id.toString()}
-                            >
-                              {machine.name}
-                            </SelectItem>
-                          ))}
+                          {machines
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((machine) => (
+                              <SelectItem
+                                key={machine.id}
+                                value={machine.id.toString()}
+                              >
+                                {machine.name}
+                              </SelectItem>
+                            ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
