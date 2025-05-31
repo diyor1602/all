@@ -73,12 +73,26 @@ const OrderView = () => {
     0
   );
 
-  const totalSpendSumma = order?.order_model?.submodels?.reduce(
+  const totalSpendSummaUZ = order?.order_model?.submodels?.reduce(
     (acc, submodel) =>
       acc +
       parseFloat(
         submodel?.spends?.reduce(
-          (acc, spend) => acc + parseFloat(spend?.summa),
+          (acc, spend) =>
+            acc + (spend?.region == "uz" ? parseFloat(spend?.summa) : 0),
+          0
+        )
+      ),
+    0
+  );
+
+  const totalSpendSummaRU = order?.order_model?.submodels?.reduce(
+    (acc, submodel) =>
+      acc +
+      parseFloat(
+        submodel?.spends?.reduce(
+          (acc, spend) =>
+            acc + (spend?.region == "ru" ? parseFloat(spend?.summa) : 0),
           0
         )
       ),
@@ -356,7 +370,7 @@ const OrderView = () => {
                   <Bitcoin
                     className={cn(
                       "h-4 w-4",
-                      totalSpendSumma > order?.order_model?.rasxod
+                      totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500"
                         : "text-black"
                     )}
@@ -364,13 +378,37 @@ const OrderView = () => {
                   <span
                     className={cn(
                       "font-bold",
-                      totalSpendSumma > order?.order_model?.rasxod
+                      totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500 text-xl"
                         : "text-sm"
                     )}
                   >
-                    Jami:{" "}
-                    {totalSpendSumma?.toLocaleString("ru-RU", {
+                    Jami UZ:{" "}
+                    {totalSpendSummaUZ?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    so'm
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Bitcoin
+                    className={cn(
+                      "h-4 w-4",
+                      totalSpendSummaRU > order?.order_model?.rasxod
+                        ? "text-red-500"
+                        : "text-black"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "font-bold",
+                      totalSpendSummaRU > order?.order_model?.rasxod
+                        ? "text-red-500 text-xl"
+                        : "text-sm"
+                    )}
+                  >
+                    Jami RU:{" "}
+                    {totalSpendSummaRU?.toLocaleString("ru-RU", {
                       maximumFractionDigits: 2,
                     })}{" "}
                     so'm

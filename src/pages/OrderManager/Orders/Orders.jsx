@@ -59,7 +59,7 @@ const Orders = () => {
     localStorage.getItem("searchTerm") || ""
   );
   const [statusFilter, setStatusFilter] = useState(
-    localStorage.getItem("statusFilter") || "all"
+    localStorage.getItem("statusFilter") || "tailoring"
   );
   const [sortBy, setSortBy] = useState(
     localStorage.getItem("sortBy") || "newest"
