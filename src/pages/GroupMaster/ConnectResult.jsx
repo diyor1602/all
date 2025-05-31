@@ -362,7 +362,7 @@ const ConnectResult = () => {
                       Bugungi ishchilar
                     </p>
                     <p className="text-xl font-bold text-purple-800">
-                      {data.attendanceCount || 0} ta
+                      {data.order?.attendanceCount || 0} ta
                     </p>
                   </div>
                 </div>
