@@ -27,6 +27,7 @@ import {
   TrendingUp,
   Calendar,
   MessageSquare,
+  Magnet,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import api from "@/utils/api";
@@ -63,33 +64,33 @@ const Transfer = () => {
     return numValue.toLocaleString("ru-RU");
   };
 
+  const fetchCurrencies = async () => {
+    try {
+      const response = await api.get("/casher/currencies");
+      setCurrencies(response.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Valyuta turlarini olishda xatolik yuz berdi",
+      });
+    }
+  };
+
+  const fetchBalances = async () => {
+    try {
+      const response = await api.get("/casher/balances");
+      setBalances(response.data.cashboxes);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Balanslarni olishda xatolik yuz berdi",
+      });
+    }
+  };
+
   useEffect(() => {
-    const fetchCurrencies = async () => {
-      try {
-        const response = await api.get("/casher/currencies");
-        setCurrencies(response.data);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Xatolik",
-          description: "Valyuta turlarini olishda xatolik yuz berdi",
-        });
-      }
-    };
-
-    const fetchBalances = async () => {
-      try {
-        const response = await api.get("/casher/balances");
-        setBalances(response.data.cashboxes);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Xatolik",
-          description: "Balanslarni olishda xatolik yuz berdi",
-        });
-      }
-    };
-
     fetchCurrencies();
     fetchBalances();
   }, []);
@@ -181,7 +182,7 @@ const Transfer = () => {
         value.replace(/\s/g, "").replace(",", ".")
       );
       const newRate = toAmount / fromAmount;
-      updatedForm.exchange_rate = isNaN(newRate) ? "" : newRate.toFixed(4);
+      updatedForm.exchange_rate = isNaN(newRate) ? "" : newRate.toFixed(5);
       updatedForm.to_amount = value;
     }
 
@@ -206,11 +207,14 @@ const Transfer = () => {
         comment: "",
         to_amount: "",
       });
+      fetchBalances();
+      fetchCurrencies();
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description: "Pul o'tkazishda xatolik yuz berdi",
+        description:
+          error.response.data.message || "Pul o'tkazishda xatolik yuz berdi",
       });
     }
   };
@@ -337,9 +341,17 @@ const Transfer = () => {
                 {/* Amount and Rate */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
+                    <Label className="text-sm font-medium text-gray-700 flex items-center">
                       O'tkaziladigan miqdor{" "}
                       {fromCurrency ? `(${fromCurrency.name})` : ""}
+                      <Magnet
+                        className="ml-auto cursor-pointer text-yellow-500"
+                        onClick={() => {
+                          if (maxAmount) {
+                            handleChange("from_amount", maxAmount.toString());
+                          }
+                        }}
+                      />
                     </Label>
                     <Input
                       type="text"
@@ -411,6 +423,7 @@ const Transfer = () => {
                     <Input
                       type="date"
                       value={form.date}
+                      min={new Date().toISOString().split("T")[0]}
                       onChange={(e) => handleChange("date", e.target.value)}
                       className="h-12 border-2 border-gray-200 focus:border-blue-500"
                     />
@@ -439,7 +452,8 @@ const Transfer = () => {
                     !form.from_currency_id ||
                     !form.to_currency_id ||
                     !form.from_amount ||
-                    !form.exchange_rate
+                    !form.exchange_rate ||
+                    !form.date
                   }
                 >
                   <ArrowRightLeft className="h-5 w-5 mr-2" />
