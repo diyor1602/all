@@ -217,6 +217,9 @@ const ConnectResult = () => {
                     let foundFirstEmpty = false;
 
                     const buttons = data.times?.map((time) => {
+                      if (time?.time === "07:30:00") {
+                        return null;
+                      }
                       const output = submodel?.sewingOutputs?.find(
                         (output) => output?.time?.time === time?.time
                       );
@@ -241,7 +244,7 @@ const ConnectResult = () => {
                     });
 
                     return buttons
-                      .filter((btn) => btn.show)
+                      .filter((btn) => btn?.show)
                       .map(({ time, output, enabled }) => (
                         <Button
                           key={time.id}
