@@ -5,6 +5,7 @@ import Settings from "./Settings/Settings";
 import Work from "./Work/Work";
 import Scanner from "./Scanner/Scanner";
 import Task from "./Task/Task";
+import Manual from "./Manual/Manual";
 
 const InternalAccountant = () => {
   return (
@@ -15,6 +16,7 @@ const InternalAccountant = () => {
       <Route path="work/*" element={<Work />} />
       <Route path="scanner" element={<Scanner />} />
       <Route path="task/*" element={<Task />} />
+      <Route path="manual/*" element={<Manual />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

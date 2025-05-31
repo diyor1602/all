@@ -155,7 +155,6 @@ const ConnectToWork = () => {
   }, [selectedSubmodel]);
 
   useEffect(() => {
-    console.log(selectedTarifLang);
     if (selectedSubmodel) {
       const foundSubmodel = order?.order_model?.submodels?.find(
         (submodel) => submodel?.id === selectedSubmodel?.id

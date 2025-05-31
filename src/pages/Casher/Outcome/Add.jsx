@@ -76,7 +76,6 @@ const Add = () => {
         const res = await api.get(`/casher/employees?search=${employeeSearch}`);
         setEmployeeOptions(res.data.data || []);
       } catch (error) {
-        console.error("Employee search error:", error);
         setEmployeeOptions([]);
       } finally {
         setSearchingEmployees(false);
@@ -100,7 +99,6 @@ const Add = () => {
         );
         setDestinationOptions(res.data.data || []);
       } catch (error) {
-        console.error("Destination search error:", error);
         setDestinationOptions([]);
       } finally {
         setSearchingDestinations(false);

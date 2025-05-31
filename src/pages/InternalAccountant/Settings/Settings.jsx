@@ -49,7 +49,7 @@ const SettingsPage = () => {
     {
       name: "Oylik terish",
       icon: HandCoins,
-      link: "/internalAccountant/salary",
+      link: "/internalAccountant/manual",
       color: "bg-indigo-500",
     },
   ];

@@ -1,0 +1,965 @@
+"use client";
+
+import { useParams, useNavigate } from "react-router-dom";
+import api from "@/utils/api";
+import { useToast } from "@/components/ui/use-toast";
+import { useEffect, useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  ArrowLeft,
+  Loader2,
+  BoxIcon,
+  MessageSquareIcon,
+  CalendarCheckIcon,
+  CalendarIcon,
+  TagIcon,
+  BarChartIcon,
+  RulerIcon,
+  Bitcoin,
+  Timer,
+  FileDigit,
+  Users,
+  Plus,
+  Trash2,
+  Send,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { statuses } from "@/lib/status";
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const Work = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedSubmodel, setSelectedSubmodel] = useState(null);
+  const [employees, setEmployees] = useState([]);
+  const [tarifications, setTarifications] = useState([]);
+  const [selectedTarifLang, setSelectedTarifLang] = useState(
+    localStorage.getItem("tarifLang") || "uz"
+  );
+  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [selectedWorks, setSelectedWorks] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const totalSpends = useMemo(
+    () =>
+      order?.order_model?.submodels?.reduce(
+        (acc, submodel) =>
+          acc +
+          Number.parseFloat(
+            submodel?.submodel_spend?.reduce(
+              (acc, spend) => acc + Number.parseFloat(spend?.seconds),
+              0
+            )
+          ),
+        0
+      ),
+    [order?.order_model?.submodels]
+  );
+
+  const totalSpendSummaUZ = useMemo(
+    () =>
+      order?.order_model?.submodels?.reduce(
+        (acc, submodel) =>
+          acc +
+          Number.parseFloat(
+            submodel?.submodel_spend?.reduce(
+              (acc, spend) =>
+                acc +
+                Number.parseFloat(spend?.region == "uz" ? spend?.summa : 0),
+              0
+            )
+          ),
+        0
+      ),
+    [order?.order_model?.submodels]
+  );
+
+  const totalSpendSummaRU = useMemo(
+    () =>
+      order?.order_model?.submodels?.reduce(
+        (acc, submodel) =>
+          acc +
+          Number.parseFloat(
+            submodel?.submodel_spend?.reduce(
+              (acc, spend) =>
+                acc +
+                Number.parseFloat(spend?.region == "ru" ? spend?.summa : 0),
+              0
+            )
+          ),
+        0
+      ),
+    [order?.order_model?.submodels]
+  );
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(`/internalAccountant/orders/${id}`);
+        setOrder(response.data);
+        setSelectedSubmodel(response.data?.order_model?.submodels?.[0]);
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Bunday buyurtma topilmadi",
+          variant: "destructive",
+        });
+        navigate("/technolog/orders");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [id, navigate, toast]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await api.get(`/internalAccountant/users`, {
+          params: {
+            id: selectedSubmodel?.id,
+          },
+        });
+        setEmployees(response.data);
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Bunday ishchilar topilmadi",
+          variant: "destructive",
+        });
+      }
+    };
+
+    if (selectedSubmodel) {
+      fetchEmployees();
+    }
+  }, [selectedSubmodel]);
+
+  useEffect(() => {
+    if (selectedSubmodel) {
+      api
+        .get(`/internalAccountant/tarifications`, {
+          params: {
+            submodel_id: selectedSubmodel?.id,
+            region: selectedTarifLang,
+          },
+        })
+        .then((response) => {
+          setTarifications(response.data.tarifications);
+        })
+        .catch((error) => {
+          toast({
+            title: "Xatolik",
+            description: error.response?.data?.message || "Tariflar topilmadi",
+            variant: "destructive",
+          });
+        });
+    }
+  }, [selectedSubmodel, selectedTarifLang]);
+
+  const addWork = () => {
+    setSelectedWorks([
+      ...selectedWorks,
+      {
+        id: "",
+        quantity: "",
+        tempId: Date.now(), // Temporary ID for React keys
+      },
+    ]);
+  };
+
+  const removeWork = (tempId) => {
+    setSelectedWorks(selectedWorks.filter((work) => work.tempId !== tempId));
+  };
+
+  const updateWork = (tempId, field, value) => {
+    setSelectedWorks(
+      selectedWorks.map((work) =>
+        work.tempId === tempId ? { ...work, [field]: value } : work
+      )
+    );
+  };
+
+  const getSelectedTarification = (tarificationId) => {
+    return tarifications.find((tarif) => tarif.id === tarificationId);
+  };
+
+  const calculateTotalCost = () => {
+    return selectedWorks.reduce((total, work) => {
+      const tarification = getSelectedTarification(work.id);
+      if (tarification && work.quantity) {
+        return total + tarification.summa * Number.parseInt(work.quantity);
+      }
+      return total;
+    }, 0);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedEmployee) {
+      toast({
+        title: "Xatolik",
+        description: "Xodimni tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedWorks.length === 0) {
+      toast({
+        title: "Xatolik",
+        description: "Kamida bitta ish tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const invalidWorks = selectedWorks.filter(
+      (work) =>
+        !work.id || !work.quantity || Number.parseInt(work.quantity) <= 0
+    );
+
+    if (invalidWorks.length > 0) {
+      toast({
+        title: "Xatolik",
+        description: "Barcha ishlar uchun tarif va miqdorni to'ldiring",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check limit validation
+    const limitExceededWorks = selectedWorks.filter((work) => {
+      const tarification = getSelectedTarification(work.id);
+      if (tarification) {
+        const availableLimit =
+          tarification.limit - (tarification.total_quantity || 0);
+        return Number.parseInt(work.quantity) > availableLimit;
+      }
+      return false;
+    });
+
+    if (limitExceededWorks.length > 0) {
+      const workNames = limitExceededWorks
+        .map((work) => {
+          const tarification = getSelectedTarification(work.id);
+          return `${tarification.code} - ${tarification.name}`;
+        })
+        .join(", ");
+
+      toast({
+        title: "Limit oshib ketdi",
+        description: `Quyidagi ishlar uchun limit oshib ketgan: ${workNames}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const payload = {
+        employee_id: selectedEmployee,
+        tarifications: selectedWorks.map((work) => ({
+          id: work.id,
+          quantity: Number.parseInt(work.quantity),
+        })),
+      };
+
+      await api.post(`/internalAccountant/salaryCalculate`, payload);
+
+      toast({
+        title: "Muvaffaqiyat",
+        description: "Ishlar muvaffaqiyatli yozildi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 2000,
+      });
+
+      // Reset form
+      setSelectedEmployee("");
+      setSelectedWorks([]);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message ||
+          "Ishlarni tayinlashda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <span className="ml-2 text-lg text-gray-600">Yuklanyapti...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header with back button */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          className="flex items-center text-gray-600 hover:text-blue-600"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Orqaga
+        </Button>
+        <h2 className="text-2xl font-bold text-gray-800">
+          Buyurtma #{order?.id}
+        </h2>
+      </div>
+
+      {/* Order info card */}
+      <Card className="bg-gradient-to-r from-sky-100 to-indigo-100 border-none shadow-lg rounded-lg overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-semibold">
+                  {order?.name || "Buyurtma ma'lumotlari"}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {order?.order_model?.model?.name || "Model"}
+                </p>
+              </div>
+              <Badge
+                className={`${
+                  statuses[order?.status]?.color
+                } px-3 py-1 font-medium rounded-full text-sm hover:opacity-90`}
+              >
+                {statuses[order?.status]?.text}
+              </Badge>
+            </div>
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Order Details Section */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-700">Buyurtma haqida</h4>
+
+              <div className="space-y-2">
+                {order?.quantity && (
+                  <div className="flex gap-2 items-center">
+                    <FileDigit className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">
+                      Miqdor: {order?.quantity} ta
+                    </span>
+                  </div>
+                )}
+                {order?.start_date && (
+                  <div className="flex gap-2 items-center">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">
+                      Boshlash: {formatDate(order?.start_date)}
+                    </span>
+                  </div>
+                )}
+
+                {order?.end_date && (
+                  <div className="flex gap-2 items-center">
+                    <CalendarCheckIcon className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">
+                      Tugash: {formatDate(order?.end_date)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex gap-2 items-center">
+                  <Timer className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-bold">
+                    Jami:{" "}
+                    {totalSpends?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    sekund
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Timer className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-bold">
+                    Jami:{" "}
+                    {Number.parseFloat(totalSpends / 60)?.toLocaleString(
+                      "ru-RU",
+                      {
+                        maximumFractionDigits: 2,
+                      }
+                    )}{" "}
+                    minut
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-bold">
+                    Tikayotgan guruh: {selectedSubmodel?.group?.group?.name}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Material Information */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-700">Material haqida</h4>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <BoxIcon className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    Material: {order?.order_model?.material?.name || "N/A"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <TagIcon className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    Material kodi: {order?.order_model?.material?.code || "N/A"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <BarChartIcon
+                    className={cn(
+                      "h-4 w-4",
+                      order?.order_model?.status
+                        ? "text-green-500"
+                        : "text-red-500"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-sm font-bold",
+                      order?.order_model?.status
+                        ? "text-green-500"
+                        : "text-red-500"
+                    )}
+                  >
+                    Limit:{" "}
+                    {Number.parseFloat(
+                      order?.order_model?.rasxod || 0
+                    ).toLocaleString() || "N/A"}{" "}
+                    so'm
+                    <span className="text-sm ml-1">
+                      {order?.order_model?.status
+                        ? "(Tasdiqlangan)"
+                        : "(Tasdiqlanmagan)"}
+                    </span>
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Bitcoin
+                    className={cn(
+                      "h-4 w-4",
+                      totalSpendSummaUZ > order?.order_model?.rasxod
+                        ? "text-red-500"
+                        : "text-black"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "font-bold",
+                      totalSpendSummaUZ > order?.order_model?.rasxod
+                        ? "text-red-500 text-xl"
+                        : "text-sm"
+                    )}
+                  >
+                    Jami UZ:{" "}
+                    {totalSpendSummaUZ?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    so'm
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Bitcoin
+                    className={cn(
+                      "h-4 w-4",
+                      totalSpendSummaRU > order?.order_model?.rasxod
+                        ? "text-red-500"
+                        : "text-black"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "font-bold",
+                      totalSpendSummaRU > order?.order_model?.rasxod
+                        ? "text-red-500 text-xl"
+                        : "text-sm"
+                    )}
+                  >
+                    Jami RU:{" "}
+                    {totalSpendSummaRU?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    so'm
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {order?.comment && (
+            <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+              <MessageSquareIcon className="h-4 w-4 text-gray-500 mt-1" />
+              <span className="text-sm">{order?.comment}</span>
+            </div>
+          )}
+
+          {order?.order_model?.sizes && order.order_model.sizes.length > 0 && (
+            <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
+              <h4 className="font-medium text-gray-700 mb-3 flex items-center">
+                <RulerIcon className="h-4 w-4 mr-2 text-indigo-500" />
+                <span>O'lchamlar</span>
+              </h4>
+              <div className="flex items-center flex-wrap gap-3">
+                {order?.order_model?.sizes?.map((size) => (
+                  <Badge
+                    key={size.id}
+                    className="bg-white text-indigo-700 border border-indigo-200 px-3 py-2 text-base w-fit hover:bg-indigo-50"
+                  >
+                    <span className="font-bold">{size?.size?.name}</span>{" "}
+                    {size?.quantity ? (
+                      <span className="font-medium mx-1 text-black">
+                        {size?.quantity} ta
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {order?.order_model?.submodels?.length > 0 && (
+        <div className="w-full space-y-6">
+          {/* Submodel buttons */}
+          <div className="flex flex-wrap gap-2 bg-blue-50 p-3 rounded-lg">
+            {order?.order_model?.submodels?.map((submodel) => (
+              <Button
+                key={submodel?.submodel?.id}
+                variant={
+                  selectedSubmodel?.submodel?.id === submodel?.submodel?.id
+                    ? "default"
+                    : "outline"
+                }
+                className={
+                  selectedSubmodel?.submodel?.id === submodel?.submodel?.id
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-white text-gray-700 hover:bg-blue-100"
+                }
+                onClick={() => setSelectedSubmodel(submodel)}
+              >
+                {submodel?.submodel?.name}
+              </Button>
+            ))}
+          </div>
+
+          {/* Language selection */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={selectedTarifLang === "uz" ? "default" : "outline"}
+              onClick={() => {
+                setSelectedTarifLang("uz");
+                setSelectedWorks([]);
+                localStorage.setItem("tarifLang", "uz");
+              }}
+            >
+              O'zbek tarifikatsiya
+            </Button>
+            <Button
+              variant={selectedTarifLang === "ru" ? "default" : "outline"}
+              onClick={() => {
+                setSelectedTarifLang("ru");
+                setSelectedWorks([]);
+                localStorage.setItem("tarifLang", "ru");
+              }}
+            >
+              Rus tarifikatsiya
+            </Button>
+          </div>
+
+          {/* Work Assignment Form */}
+          <Card className="bg-white shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-800">
+                Ish tayinlash
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Employee Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="employee">Xodimni tanlang</Label>
+                <Select
+                  value={selectedEmployee}
+                  onValueChange={setSelectedEmployee}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Xodimni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees
+                      ?.sort((a, b) => a.name.localeCompare(b.name))
+                      ?.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Works Selection */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Ishlarni tanlang</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addWork}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Ish qo'shish
+                  </Button>
+                </div>
+
+                {selectedWorks.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Hali hech qanday ish tanlanmagan. "Ish qo'shish" tugmasini
+                    bosing.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {selectedWorks.map((work) => (
+                      <Card key={work.tempId} className="p-4 bg-gray-50">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                          <div className="space-y-2">
+                            <Label>Tarifikatsiya</Label>
+                            <Select
+                              value={work.id}
+                              onValueChange={(value) =>
+                                updateWork(work.tempId, "id", value)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Ishni tanlang" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {tarifications
+                                  ?.sort((a, b) =>
+                                    a.code.localeCompare(b.code, undefined, {
+                                      numeric: true,
+                                      sensitivity: "base",
+                                    })
+                                  )
+                                  ?.map((tarification) => (
+                                    <SelectItem
+                                      key={tarification.id}
+                                      value={tarification.id}
+                                    >
+                                      {tarification.code} - {tarification.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Miqdor</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              max={(() => {
+                                const tarification = getSelectedTarification(
+                                  work.id
+                                );
+                                return tarification
+                                  ? Math.max(
+                                      0,
+                                      tarification.limit -
+                                        (tarification.total_quantity || 0)
+                                    )
+                                  : undefined;
+                              })()}
+                              placeholder="Miqdorni kiriting"
+                              value={work.quantity}
+                              onChange={(e) =>
+                                updateWork(
+                                  work.tempId,
+                                  "quantity",
+                                  e.target.value
+                                )
+                              }
+                              className={(() => {
+                                const tarification = getSelectedTarification(
+                                  work.id
+                                );
+                                const availableLimit = tarification
+                                  ? tarification.limit -
+                                    (tarification.total_quantity || 0)
+                                  : 0;
+                                const currentQuantity =
+                                  Number.parseInt(work.quantity) || 0;
+                                return currentQuantity > availableLimit
+                                  ? "border-red-500 focus:border-red-500"
+                                  : "";
+                              })()}
+                            />
+                            {(() => {
+                              const tarification = getSelectedTarification(
+                                work.id
+                              );
+                              const availableLimit = tarification
+                                ? tarification.limit -
+                                  (tarification.total_quantity || 0)
+                                : 0;
+                              const currentQuantity =
+                                Number.parseInt(work.quantity) || 0;
+
+                              if (
+                                tarification &&
+                                currentQuantity > availableLimit
+                              ) {
+                                return (
+                                  <p className="text-red-500 text-xs">
+                                    Maksimal miqdor: {availableLimit} ta (Limit:{" "}
+                                    {tarification.limit}, Bajarilgan:{" "}
+                                    {tarification.total_quantity || 0})
+                                  </p>
+                                );
+                              }
+
+                              if (tarification) {
+                                return (
+                                  <p className="text-gray-500 text-xs">
+                                    Mavjud: {availableLimit} ta (Limit:{" "}
+                                    {tarification.limit}, Bajarilgan:{" "}
+                                    {tarification.total_quantity || 0})
+                                  </p>
+                                );
+                              }
+
+                              return null;
+                            })()}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>O'chirish</Label>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              onClick={() => removeWork(work.tempId)}
+                              className="flex items-center gap-2 w-fit"
+                            >
+                              <Trash2 className="h-4 w-4 " />
+                              O'chirish
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Work Details */}
+                        {work.id && (
+                          <div className="mt-4 p-3 bg-white rounded border">
+                            {(() => {
+                              const tarification = getSelectedTarification(
+                                work.id
+                              );
+                              return tarification ? (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                      <span className="font-medium">Kod:</span>{" "}
+                                      {tarification.code}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">
+                                        Sekund:
+                                      </span>{" "}
+                                      {tarification.second}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">
+                                        Summa:
+                                      </span>{" "}
+                                      {tarification.summa?.toLocaleString()}{" "}
+                                      so'm
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">
+                                        Limit:
+                                      </span>{" "}
+                                      {tarification.limit?.toLocaleString()} ta
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Bajarilgan:
+                                      </span>
+                                      <Badge variant="secondary">
+                                        {tarification.total_quantity || 0} ta
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Mavjud:
+                                      </span>
+                                      <Badge
+                                        variant={
+                                          tarification.limit -
+                                            (tarification.total_quantity || 0) >
+                                          0
+                                            ? "default"
+                                            : "destructive"
+                                        }
+                                      >
+                                        {Math.max(
+                                          0,
+                                          tarification.limit -
+                                            (tarification.total_quantity || 0)
+                                        )}{" "}
+                                        ta
+                                      </Badge>
+                                    </div>
+                                    {work.quantity && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium">
+                                          Tanlanган:
+                                        </span>
+                                        <Badge
+                                          variant={
+                                            Number.parseInt(work.quantity) <=
+                                            tarification.limit -
+                                              (tarification.total_quantity || 0)
+                                              ? "default"
+                                              : "destructive"
+                                          }
+                                        >
+                                          {work.quantity} ta
+                                        </Badge>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {work.quantity && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm pt-2 border-t">
+                                      <div className="font-medium text-green-600">
+                                        Jami summa:{" "}
+                                        {(
+                                          tarification.summa *
+                                          Number.parseInt(work.quantity)
+                                        )?.toLocaleString()}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : null;
+                            })()}
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Summary */}
+              {selectedWorks.length > 0 && (
+                <Card className="p-4 bg-blue-50 border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-2">
+                    Jami hisobot
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Timer className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium">
+                        Jami ishlar soni: {selectedWorks.length} ta
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Bitcoin className="h-4 w-4 text-green-600" />
+                      <span className="font-medium">
+                        Jami summa: {calculateTotalCost()?.toLocaleString()}{" "}
+                        so'm
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                onClick={handleSubmit}
+                disabled={
+                  !selectedEmployee ||
+                  selectedWorks.length === 0 ||
+                  submitting ||
+                  selectedWorks.some((work) => {
+                    const tarification = getSelectedTarification(work.id);
+                    if (tarification && work.quantity) {
+                      const availableLimit =
+                        tarification.limit - (tarification.total_quantity || 0);
+                      return Number.parseInt(work.quantity) > availableLimit;
+                    }
+                    return false;
+                  })
+                }
+                className="w-full flex items-center gap-2"
+                size="lg"
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                {submitting ? "Yuborilmoqda..." : "Saqlash"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Work;
