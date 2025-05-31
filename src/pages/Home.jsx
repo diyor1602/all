@@ -121,7 +121,6 @@ const Home = () => {
     return "bg-yellow-500";
   };
 
-  // Get text color based on percentage
   const getTextColor = (percentage) => {
     if (percentage >= 100) return "text-green-600";
     if (percentage >= 70) return "text-blue-600";
