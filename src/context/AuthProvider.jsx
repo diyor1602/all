@@ -1,24 +1,17 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/utils/api";
+import { AuthContext } from "./auth-context"; // adjust path as needed
 
-const AuthContext = createContext(null);
-
-export const useAuth = () => useContext(AuthContext);
-
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
 
   const login = async (username, password) => {
     setLoading(true);
     try {
-      const res = await api.post(`/login/`, {
-        username,
-        password,
-      });
+      const res = await api.post(`/login/`, { username, password });
 
       if (res.status === 200) {
         const token = res.data.token;
@@ -29,11 +22,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("user_id", res.data.user.id);
         localStorage.setItem("name", res.data.user.employee.name);
         setUser({ username, role: res.data.user.role.name });
-        if (res.data.user.role.name == "tv") {
-          navigate("/tv", { replace: true });
-        } else {
-          navigate("/home", { replace: true });
-        }
+
+        navigate(res.data.user.role.name === "tv" ? "/tv" : "/home", {
+          replace: true,
+        });
+
         return { success: true };
       }
     } catch (error) {
@@ -98,3 +91,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;

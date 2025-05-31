@@ -1,7 +1,14 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BaggageClaim, Box, History, QrCode } from "lucide-react";
+import {
+  BaggageClaim,
+  Box,
+  Grape,
+  HandCoins,
+  History,
+  QrCode,
+} from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 
 const Settings = () => {
@@ -38,6 +45,12 @@ const SettingsPage = () => {
       icon: QrCode,
       link: "/internalAccountant/scanner",
       color: "bg-gray-500",
+    },
+    {
+      name: "Oylik terish",
+      icon: HandCoins,
+      link: "/internalAccountant/salary",
+      color: "bg-indigo-500",
     },
   ];
 

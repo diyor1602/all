@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context.js";
 import { useToast } from "@/components/ui/use-toast";
 import { KeyRound, Eye, EyeOff } from "lucide-react";
 
