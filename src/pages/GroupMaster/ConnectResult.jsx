@@ -198,7 +198,6 @@ const ConnectResult = () => {
 
   return (
     <>
-      {/* Existing Accordion Section */}
       <Accordion
         type="single"
         collapsible
