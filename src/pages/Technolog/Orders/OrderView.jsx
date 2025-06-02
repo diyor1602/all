@@ -75,6 +75,9 @@ const OrderView = () => {
   const [selectedTarifLang, setSelectedTarifLang] = useState(
     localStorage.getItem("tarifLang") || "uz"
   );
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
+  const [limitValue, setLimitValue] = useState("");
+  const [isLimitLoading, setIsLimitLoading] = useState(false);
 
   const totalSpends = useMemo(
     () =>
@@ -197,25 +200,25 @@ const OrderView = () => {
     }
   };
 
+  const fetchOrder = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/technologist/orders/${id}`);
+      setOrder(response.data);
+      setSelectedSubmodel(response.data?.order_model?.submodels?.[0]);
+      setLimitValue(response.data?.order_model?.rasxod);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Bunday buyurtma topilmadi",
+        variant: "destructive",
+      });
+      navigate("/technolog/orders");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/technologist/orders/${id}`);
-        setOrder(response.data);
-        setSelectedSubmodel(response.data?.order_model?.submodels?.[0]);
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Bunday buyurtma topilmadi",
-          variant: "destructive",
-        });
-        navigate("/technolog/orders");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrder();
   }, [id, navigate, toast]);
 
@@ -425,6 +428,37 @@ const OrderView = () => {
     );
   }
 
+  const handleLimitSend = async () => {
+    setIsLimitLoading(true);
+    try {
+      await api.get(`/technologist/confirmOrder`, {
+        params: {
+          order_id: order?.id,
+          rasxod: limitValue,
+        },
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Limit tasdiqlandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 2000,
+      });
+      setLimitDialogOpen(false);
+      fetchOrder();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Limit tasdiqlab bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLimitLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with back button */}
@@ -558,16 +592,17 @@ const OrderView = () => {
                   />
                   <span
                     className={cn(
-                      "text-sm font-bold",
+                      "text-sm font-bold cursor-pointer",
                       order?.order_model?.status
                         ? "text-green-500"
                         : "text-red-500"
                     )}
+                    onClick={() => setLimitDialogOpen(true)}
                   >
                     Limit:{" "}
-                    {parseFloat(
-                      order?.order_model?.rasxod || 0
-                    ).toLocaleString() || "N/A"}{" "}
+                    {parseFloat(order?.order_model?.rasxod || 0).toLocaleString(
+                      "ru-RU"
+                    ) || "N/A"}{" "}
                     so'm
                     <span className="text-sm ml-1">
                       {order?.order_model?.status
@@ -1142,6 +1177,28 @@ const OrderView = () => {
               disabled={isTarifExcelLoading}
             >
               {isTarifExcelLoading ? "Yuklanmoqda..." : "Yuklash"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Limitni tasdiqlash</DialogTitle>
+            <DialogDescription>
+              Buyurtma limiti: {parseFloat(limitValue).toLocaleString("ru-RU")}{" "}
+              so'm
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center gap-2">
+            <Input
+              type="number"
+              placeholder="Limitni kiriting"
+              value={limitValue}
+              onChange={(e) => setLimitValue(e.target.value)}
+            />
+            <Button onClick={handleLimitSend} disabled={isLimitLoading}>
+              {isLimitLoading ? "Saqlanmoqda..." : "Saqlash"}
             </Button>
           </div>
         </DialogContent>
