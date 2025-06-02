@@ -309,7 +309,13 @@ const Profile = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Tug'ilgan sana</p>
-                      <p className="font-medium">{data.birthday}</p>
+                      <p className="font-medium">
+                        {data.birthday
+                          ?.split(" ")[0]
+                          .split("-")
+                          .reverse()
+                          .join(".")}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -329,7 +335,11 @@ const Profile = () => {
                         Ishga qabul qilingan sana
                       </p>
                       <p className="font-medium">
-                        {data.hiring_date?.split(" ")[0]}
+                        {data.hiring_date
+                          ?.split(" ")[0]
+                          .split("-")
+                          .reverse()
+                          .join(".")}
                       </p>
                     </div>
                     <div>

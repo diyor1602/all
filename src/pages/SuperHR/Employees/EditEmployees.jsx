@@ -47,6 +47,11 @@ const EditEmployees = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [isResetting, setIsResetting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [initialData, setInitialData] = useState({
+    type: "",
+    payment_type: "",
+    salary: "",
+  });
   const fileInputRef = useRef(null);
 
   // Use a ref instead of state to track initial setup
@@ -68,9 +73,10 @@ const EditEmployees = () => {
     position_id: "",
     role_id: "",
     payment_type: "",
-    type: "simple",
+    type: "",
     status: "",
     salary: "",
+    gender: "",
   });
 
   // New state for the image file
@@ -131,6 +137,12 @@ const EditEmployees = () => {
         roleId = normalizeId(employee.user.role.id);
       }
 
+      setInitialData({
+        type: employee.type || "simple",
+        payment_type: employee.payment_type || "piece_work",
+        salary: employee.salary || "",
+      });
+
       // Directly set form data with all values
       setFormData({
         name: employee.name || "",
@@ -149,6 +161,7 @@ const EditEmployees = () => {
         salary: employee.salary || "",
         type: employee.type || "simple",
         status: employee.status || "working",
+        gender: employee.gender || "",
       });
     } catch (error) {
       toast({
@@ -428,7 +441,6 @@ const EditEmployees = () => {
         "position_id",
         "hiring_date",
         "birthday",
-        "payment_type",
       ];
       const missingFields = requiredFields.filter((field) => !formData[field]);
 
@@ -442,10 +454,13 @@ const EditEmployees = () => {
         return;
       }
 
-      if (formData.payment_type === "monthly" && !formData.salary) {
+      if (
+        ["monthly", "daily", "hourly"].includes(formData.payment_type) &&
+        !formData.salary
+      ) {
         toast({
           title: "Diqqat",
-          description: "Iltimos, oylik summani kiriting",
+          description: "Iltimos, maosh summani kiriting",
           variant: "destructive",
         });
         setLoading(false);
@@ -474,10 +489,23 @@ const EditEmployees = () => {
         formDataToSend.append("img", imageFile);
       }
 
-      if (formData.payment_type === "monthly") {
+      if (["monthly", "daily", "hourly"].includes(formData.payment_type)) {
         formDataToSend.append("salary", formData.salary);
       } else {
         formDataToSend.delete("salary");
+      }
+
+      if (formDataToSend.get("type") == "aup") {
+        formDataToSend.delete("salary");
+        formDataToSend.delete("payment_type");
+        formDataToSend.append(
+          "salary",
+          initialData.type == "aup" ? initialData?.salary : 0
+        );
+        formDataToSend.append(
+          "payment_type",
+          initialData.type == "aup" ? initialData?.payment_type : "monthly"
+        );
       }
 
       formDataToSend.append("_method", "PATCH");
@@ -623,18 +651,37 @@ const EditEmployees = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address">
-                  Manzili <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Yashash manzili"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">
+                    Manzili <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="Yashash manzili"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Jinsi</Label>
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, gender: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Jinsi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Erkak</SelectItem>
+                      <SelectItem value="female">Ayol</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -866,43 +913,87 @@ const EditEmployees = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="payment_type">
-                    To'lov turi <span className="text-red-500">*</span>
-                  </Label>
+                  <Label htmlFor="type">Xodim turi</Label>
                   <Select
-                    onValueChange={(value) =>
-                      handleSelectChange("payment_type", value)
-                    }
-                    value={formData.payment_type}
+                    onValueChange={(value) => {
+                      handleSelectChange("type", value);
+                      setFormData((prev) => ({
+                        ...prev,
+                        payment_type: "",
+                        salary: "",
+                      }));
+                    }}
+                    value={formData.type}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="To'lov turi tanlang" />
+                      <SelectValue placeholder="Xodim turi tanlang" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="piece_work">Ishbay</SelectItem>
-                      <SelectItem value="monthly">Oylik</SelectItem>
+                      <SelectItem value="simple">Oddiy xodim</SelectItem>
+                      <SelectItem value="aup">AUP xodim</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              {formData.payment_type === "monthly" && (
-                <div className="grid grid-cols-1 gap-4">
+              {formData.type == "simple" && (
+                <>
                   <div className="space-y-2">
-                    <Label htmlFor="salary">
-                      Oylik summa <span className="text-red-500">*</span> (
-                      {parseFloat(formData.salary).toLocaleString("en")} so'm)
+                    <Label htmlFor="payment_type">
+                      To'lov turi <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="salary"
-                      name="salary"
-                      type="number"
-                      value={formData.salary}
-                      onChange={handleInputChange}
-                      placeholder="Oylik summa"
-                    />
+                    <Select
+                      onValueChange={(value) =>
+                        handleSelectChange("payment_type", value)
+                      }
+                      value={formData.payment_type}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="To'lov turi tanlang" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="piece_work">Ishbay</SelectItem>
+                        <SelectItem value="monthly">Oylik</SelectItem>
+                        <SelectItem value="daily">Kunlik</SelectItem>
+                        <SelectItem value="hourly">Soatbay</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
+
+                  {["monthly", "daily", "hourly"].includes(
+                    formData.payment_type
+                  ) && (
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="salary">
+                          1{" "}
+                          {formData.payment_type === "monthly"
+                            ? "oy"
+                            : formData.payment_type === "daily"
+                            ? "kun"
+                            : "soat"}{" "}
+                          summa <span className="text-red-500">*</span> (
+                          {parseFloat(formData.salary).toLocaleString("en")}{" "}
+                          so'm)
+                        </Label>
+                        <Input
+                          id="salary"
+                          name="salary"
+                          type="number"
+                          value={formData.salary}
+                          onChange={handleInputChange}
+                          placeholder={`1 ${
+                            formData.payment_type === "monthly"
+                              ? "oy"
+                              : formData.payment_type === "daily"
+                              ? "kun"
+                              : "soat"
+                          } summa`}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="space-y-2">

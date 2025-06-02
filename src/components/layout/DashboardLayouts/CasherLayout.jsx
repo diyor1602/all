@@ -4,6 +4,7 @@ import {
   BanknoteArrowUp,
   CircleDollarSign,
   ClipboardCheck,
+  Gem,
   Home,
   RefreshCcw,
 } from "lucide-react";
@@ -35,9 +36,9 @@ const navigation = [
     onMobile: true,
   },
   {
-    name: "Transfer",
-    href: "/casher/transfer",
-    icon: RefreshCcw,
+    name: "Oylik ",
+    href: "/casher/salary",
+    icon: Gem,
     onMobile: true,
   },
 ];

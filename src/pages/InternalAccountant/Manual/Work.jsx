@@ -60,6 +60,7 @@ const Work = () => {
   );
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [selectedWorks, setSelectedWorks] = useState([]);
+  const [tarifLogs, setTarifLogs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   const totalSpends = useMemo(
@@ -114,50 +115,74 @@ const Work = () => {
     [order?.order_model?.submodels]
   );
 
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/internalAccountant/orders/${id}`);
-        setOrder(response.data);
-        setSelectedSubmodel(response.data?.order_model?.submodels?.[0]);
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Bunday buyurtma topilmadi",
-          variant: "destructive",
-        });
-        navigate("/technolog/orders");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchOrder = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/internalAccountant/orders/${id}`);
+      setOrder(response.data);
+      setSelectedSubmodel(response.data?.order_model?.submodels?.[0]);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Bunday buyurtma topilmadi",
+        variant: "destructive",
+      });
+      navigate("/technolog/orders");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOrder();
   }, [id, navigate, toast]);
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await api.get(`/internalAccountant/users`, {
-          params: {
-            id: selectedSubmodel?.id,
-          },
-        });
-        setEmployees(response.data);
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Bunday ishchilar topilmadi",
-          variant: "destructive",
-        });
-      }
-    };
+  const fetchEmployees = async () => {
+    try {
+      const response = await api.get(`/internalAccountant/users`, {
+        params: {
+          id: selectedSubmodel?.id,
+        },
+      });
+      setEmployees(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Bunday ishchilar topilmadi",
+        variant: "destructive",
+      });
+    }
+  };
 
+  useEffect(() => {
     if (selectedSubmodel) {
       fetchEmployees();
     }
   }, [selectedSubmodel]);
+
+  const fetchTarifLogs = async () => {
+    try {
+      const response = await api.get(`/internalAccountant/tarificationLogs`, {
+        params: {
+          submodel_id: selectedSubmodel?.id,
+          region: selectedTarifLang,
+        },
+      });
+      setTarifLogs(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Bunday tariflar topilmadi",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (selectedSubmodel) {
+      fetchTarifLogs();
+    }
+  }, [selectedSubmodel, selectedTarifLang]);
 
   useEffect(() => {
     if (selectedSubmodel) {
@@ -255,8 +280,7 @@ const Work = () => {
     const limitExceededWorks = selectedWorks.filter((work) => {
       const tarification = getSelectedTarification(work.id);
       if (tarification) {
-        const availableLimit =
-          tarification.limit - (tarification.total_quantity || 0);
+        const availableLimit = tarification.limit;
         return Number.parseInt(work.quantity) > availableLimit;
       }
       return false;
@@ -304,6 +328,9 @@ const Work = () => {
       // Reset form
       setSelectedEmployee("");
       setSelectedWorks([]);
+      // fetch data
+      fetchOrder();
+      fetchEmployees();
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -615,6 +642,66 @@ const Work = () => {
             </Button>
           </div>
 
+          <div className="bg-white p-4">
+            <table className="border border-collapse w-full">
+              <thead>
+                <tr>
+                  <th className="border border-gray-300 p-2">Kodi</th>
+                  <th className="border border-gray-300 p-2">Nomi</th>
+                  <th className="border border-gray-300 p-2">Xodim</th>
+                  <th className="border border-gray-300 p-2">Miqdori</th>
+                  <th className="border border-gray-300 p-2">Summa</th>
+                  <th className="border border-gray-300 p-2">Sana</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tarifLogs?.length > 0 ? (
+                  tarifLogs
+                    ?.sort((a, b) =>
+                      a?.tarification?.code.localeCompare(
+                        b?.tarification?.code,
+                        undefined,
+                        {
+                          numeric: true,
+                          sensitivity: "base",
+                        }
+                      )
+                    )
+                    .map((tarifLog, index) => (
+                      <tr key={index}>
+                        <td className="border border-gray-300 p-2 text-center">
+                          {tarifLog?.tarification?.code}
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          {tarifLog?.tarification?.name}
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          {tarifLog?.employee?.name}
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          {tarifLog?.quantity}
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          {parseFloat(tarifLog?.amount_earned).toLocaleString(
+                            "ru-RU"
+                          )}{" "}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-center">
+                          {tarifLog?.date?.split("-")?.reverse()?.join(".")}
+                        </td>
+                      </tr>
+                    ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="text-center">
+                      Ishlar topilmadi
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
           {/* Work Assignment Form */}
           <Card className="bg-white shadow-lg">
             <CardHeader>
@@ -712,11 +799,7 @@ const Work = () => {
                                   work.id
                                 );
                                 return tarification
-                                  ? Math.max(
-                                      0,
-                                      tarification.limit -
-                                        (tarification.total_quantity || 0)
-                                    )
+                                  ? Math.max(0, tarification.limit)
                                   : undefined;
                               })()}
                               placeholder="Miqdorni kiriting"
@@ -733,8 +816,7 @@ const Work = () => {
                                   work.id
                                 );
                                 const availableLimit = tarification
-                                  ? tarification.limit -
-                                    (tarification.total_quantity || 0)
+                                  ? tarification.limit
                                   : 0;
                                 const currentQuantity =
                                   Number.parseInt(work.quantity) || 0;
@@ -748,9 +830,9 @@ const Work = () => {
                                 work.id
                               );
                               const availableLimit = tarification
-                                ? tarification.limit -
-                                  (tarification.total_quantity || 0)
+                                ? tarification.limit
                                 : 0;
+
                               const currentQuantity =
                                 Number.parseInt(work.quantity) || 0;
 
@@ -770,9 +852,8 @@ const Work = () => {
                               if (tarification) {
                                 return (
                                   <p className="text-gray-500 text-xs">
-                                    Mavjud: {availableLimit} ta (Limit:{" "}
-                                    {tarification.limit}, Bajarilgan:{" "}
-                                    {tarification.total_quantity || 0})
+                                    Limit: {tarification.limit}, Bajarilgan:{" "}
+                                    {tarification.total_quantity || 0}
                                   </p>
                                 );
                               }
@@ -845,19 +926,13 @@ const Work = () => {
                                       </span>
                                       <Badge
                                         variant={
-                                          tarification.limit -
-                                            (tarification.total_quantity || 0) >
-                                          0
+                                          tarification.limit >
+                                          (tarification.total_quantity || 0)
                                             ? "default"
                                             : "destructive"
                                         }
                                       >
-                                        {Math.max(
-                                          0,
-                                          tarification.limit -
-                                            (tarification.total_quantity || 0)
-                                        )}{" "}
-                                        ta
+                                        {Math.max(0, tarification.limit)} ta
                                       </Badge>
                                     </div>
                                     {work.quantity && (
@@ -868,8 +943,7 @@ const Work = () => {
                                         <Badge
                                           variant={
                                             Number.parseInt(work.quantity) <=
-                                            tarification.limit -
-                                              (tarification.total_quantity || 0)
+                                            tarification.limit
                                               ? "default"
                                               : "destructive"
                                           }
@@ -950,8 +1024,7 @@ const Work = () => {
                   selectedWorks.some((work) => {
                     const tarification = getSelectedTarification(work.id);
                     if (tarification && work.quantity) {
-                      const availableLimit =
-                        tarification.limit - (tarification.total_quantity || 0);
+                      const availableLimit = tarification.limit;
                       return Number.parseInt(work.quantity) > availableLimit;
                     }
                     return false;

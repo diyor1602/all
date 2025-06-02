@@ -50,10 +50,11 @@ const AddEmployees = () => {
     birthday: "", // required now
     position_id: "", // required
     role_id: "", // not required
-    payment_type: "", // piece_work or monthly
-    salary: "", // required if payment_type is monthly
-    type: "simple", // send it without asking
+    payment_type: "", // piece_work, monthly, daily, hourly
+    salary: "", // required if payment_type is monthly, daily, hourly
+    type: "simple", // or aup
     status: "working", // send it without asking
+    gender: "",
   });
 
   // New state for the image file
@@ -260,10 +261,13 @@ const AddEmployees = () => {
         return;
       }
 
-      if (formData.payment_type === "monthly" && !formData.salary) {
+      if (
+        ["monthly", "daily", "hourly"].includes(formData.payment_type) &&
+        !formData.salary
+      ) {
         toast({
           title: "Diqqat",
-          description: "Iltimos, oylik summani kiriting",
+          description: "Iltimos, maosh summani kiriting",
           variant: "destructive",
         });
         setLoading(false);
@@ -287,10 +291,17 @@ const AddEmployees = () => {
         formDataToSend.append("img", imageFile);
       }
 
-      if (formData.payment_type === "monthly") {
+      if (["monthly", "daily", "hourly"].includes(formData.payment_type)) {
         formDataToSend.append("salary", formData.salary);
       } else {
         formDataToSend.delete("salary");
+      }
+
+      if (formData.type === "aup") {
+        formDataToSend.delete("salary");
+        formDataToSend.delete("payment_type");
+        formDataToSend.append("salary", 0);
+        formDataToSend.append("payment_type", "monthly");
       }
 
       await api.post("/superhr/employees", formDataToSend, {
@@ -420,18 +431,37 @@ const AddEmployees = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address">
-                  Manzili <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Yashash manzili"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">
+                    Manzili <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="Yashash manzili"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Jinsi</Label>
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(value) =>
+                      handleSelectChange("gender", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Jinsi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Erkak</SelectItem>
+                      <SelectItem value="female">Ayol</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -645,40 +675,72 @@ const AddEmployees = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="payment_type">
-                  To'lov turi <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="type">Xodim turi</Label>
                 <Select
-                  onValueChange={(value) =>
-                    handleSelectChange("payment_type", value)
-                  }
-                  value={formData.payment_type}
+                  onValueChange={(value) => handleSelectChange("type", value)}
+                  value={formData.type}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="To'lov turi tanlang" />
+                    <SelectValue placeholder="Xodim turi tanlang" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="piece_work">Ishbay</SelectItem>
-                    <SelectItem value="monthly">Oylik</SelectItem>
+                    <SelectItem value="simple">Oddiy xodim</SelectItem>
+                    <SelectItem value="aup">AUP xodim</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {formData.payment_type === "monthly" && (
-                <div className="space-y-2">
-                  <Label htmlFor="salary">
-                    Oylik summa <span className="text-red-500">*</span> (
-                    {parseFloat(formData.salary).toLocaleString("en")} so'm)
-                  </Label>
-                  <Input
-                    id="salary"
-                    name="salary"
-                    type="number"
-                    value={formData.salary}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
+              {formData.type === "simple" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="payment_type">
+                      To'lov turi <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      onValueChange={(value) =>
+                        handleSelectChange("payment_type", value)
+                      }
+                      value={formData.payment_type}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="To'lov turi tanlang" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="piece_work">Ishbay</SelectItem>
+                        <SelectItem value="monthly">Oylik</SelectItem>
+                        <SelectItem value="daily">Kunlik</SelectItem>
+                        <SelectItem value="hourly">Soatbay</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {["monthly", "daily", "hourly"].includes(
+                    formData.payment_type
+                  ) && (
+                    <div className="space-y-2">
+                      <Label htmlFor="salary">
+                        1{" "}
+                        {formData.payment_type === "monthly"
+                          ? "oylik"
+                          : formData.payment_type === "daily"
+                          ? "kunlik"
+                          : formData.payment_type === "hourly"
+                          ? "soatlik"
+                          : "Ishbay"}{" "}
+                        summa <span className="text-red-500">*</span> (
+                        {parseFloat(formData.salary).toLocaleString("en")} so'm)
+                      </Label>
+                      <Input
+                        id="salary"
+                        name="salary"
+                        type="number"
+                        value={formData.salary}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="space-y-2">
