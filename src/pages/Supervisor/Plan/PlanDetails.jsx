@@ -1,20 +1,12 @@
 "use client";
 
 import api from "@/utils/api";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
 import { Loader2, Plus, Edit2 } from "lucide-react";
 import { statuses } from "@/lib/status";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -33,24 +25,16 @@ import { cn } from "@/lib/utils";
 
 const PlanDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [data, setData] = useState([]);
-  const [unassignedOrders, setUnassignedOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [changing, setChanging] = useState(false);
-
-  // State for add order dialog
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedGroupId, setSelectedGroupId] = useState(null);
-  const [selectedOrderId, setSelectedOrderId] = useState("");
-  const [selectedSubmodelId, setSelectedSubmodelId] = useState("");
-  const [orderNumber, setOrderNumber] = useState("");
-
-  // State for edit order popover
   const [editPopoverOpen, setEditPopoverOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [newOrderNumber, setNewOrderNumber] = useState("");
   const [newGroupId, setNewGroupId] = useState("");
+  const [unassignedOrders, setUnassignedOrders] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -112,7 +96,6 @@ const PlanDetails = () => {
         duration: 2000,
       });
       fetchData();
-      fetchUnassignedOrders();
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -132,51 +115,6 @@ const PlanDetails = () => {
       (order) =>
         order.number === Number.parseInt(number) && order.id !== excludeOrderId
     );
-  };
-
-  const getSelectedOrder = () => {
-    return unassignedOrders.find(
-      (order) => order.id === Number.parseInt(selectedOrderId)
-    );
-  };
-
-  const handleAddOrder = async () => {
-    if (
-      !selectedOrderId ||
-      !selectedSubmodelId ||
-      !orderNumber ||
-      !selectedGroupId
-    ) {
-      toast({
-        title: "Xatolik",
-        description: "Barcha maydonlarni to'ldiring",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!isNumberAvailable(selectedGroupId, orderNumber)) {
-      toast({
-        title: "Xatolik",
-        description: "Bu raqam allaqachon ishlatilgan. Boshqa raqam kiriting.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    await handleChangePlan(
-      Number.parseInt(selectedOrderId),
-      Number.parseInt(selectedSubmodelId),
-      selectedGroupId,
-      Number.parseInt(orderNumber)
-    );
-
-    // Reset form
-    setSelectedOrderId("");
-    setSelectedSubmodelId("");
-    setOrderNumber("");
-    setSelectedGroupId(null);
-    setAddDialogOpen(false);
   };
 
   const handleEditOrder = async () => {
@@ -218,11 +156,6 @@ const PlanDetails = () => {
     setEditPopoverOpen(false);
   };
 
-  const openAddDialog = (groupId) => {
-    setSelectedGroupId(groupId);
-    setAddDialogOpen(true);
-  };
-
   const openEditPopover = (order, groupId) => {
     setEditingOrder(order);
     setNewOrderNumber(order.number.toString());
@@ -233,7 +166,7 @@ const PlanDetails = () => {
   return (
     <div>
       <div className="w-full flex justify-between items-center">
-        <h2 className="text-2xl font-bold mb-4">Planlar</h2>
+        <h2 className="text-2xl font-bold mb-4">Reja</h2>
         <div className="font-medium text-gray-500">{data?.name}</div>
       </div>
 
@@ -243,6 +176,37 @@ const PlanDetails = () => {
         </div>
       ) : (
         <>
+          <style>
+            {`
+      .fill-container {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .fill-wave {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(96, 165, 250, 0.6);
+        animation: waveFill 2s ease-out forwards;
+      }
+
+      @keyframes waveFill {
+        from {
+          height: 0%;
+        }
+        to {
+          height: var(--fill-height);
+        }
+      }
+
+      .fill-text {
+        position: relative;
+        z-index: 1;
+      }
+    `}
+          </style>
           {data?.groups?.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
@@ -264,7 +228,14 @@ const PlanDetails = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => openAddDialog(group.id)}
+                            onClick={() =>
+                              navigate(
+                                `/supervisor/plan/${id}/add/${group.id}`,
+                                {
+                                  state: { groupName: group.name },
+                                }
+                              )
+                            }
                             disabled={changing}
                           >
                             <Plus className="h-4 w-4" />
@@ -278,7 +249,8 @@ const PlanDetails = () => {
                               <th className="border p-2">№</th>
                               <th className="border p-2">Buyurtma nomi</th>
                               <th className="border p-2">Miqdori</th>
-                              <th className="border p-2">Submodellar</th>
+                              <th className="border p-2">Bajarilgan</th>
+                              <th className="border p-2">Submodel</th>
                               <th className="border p-2">Status</th>
                               <th className="border p-2">Amallar</th>
                             </tr>
@@ -291,11 +263,28 @@ const PlanDetails = () => {
                                   <td className="border text-center p-2">
                                     {order?.number}
                                   </td>
-                                  <td className="border p-2">
-                                    {order?.order?.name}
+
+                                  <td
+                                    className="border text-center p-2 fill-container"
+                                    style={{
+                                      "--fill-height": `${
+                                        (order?.order_submodel
+                                          ?.sewing_quantity /
+                                          order?.order?.quantity) *
+                                        100
+                                      }%`,
+                                    }}
+                                  >
+                                    <div className="fill-wave"></div>
+                                    <span className="fill-text">
+                                      {order?.order?.name}
+                                    </span>
                                   </td>
                                   <td className="border p-2">
                                     {order?.order?.quantity}
+                                  </td>
+                                  <td className="border p-2">
+                                    {order?.order_submodel?.sewing_quantity}
                                   </td>
                                   <td className="border p-2">
                                     {order?.order_submodel?.submodel?.name}
@@ -401,40 +390,40 @@ const PlanDetails = () => {
                     </div>
                   ))}
               </div>
-
-              <div className="mt-4">
+              <div className="mt-6">
                 <h2 className="text-2xl font-bold mb-4">
                   Biriktirilmagan buyurtmalar
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {unassignedOrders?.map((order, index) => (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  {unassignedOrders?.map((order) => (
                     <div
-                      key={index}
+                      key={order.id}
                       className={cn(
-                        "p-4 rounded-lg shadow-md",
-                        statuses[order?.status]?.secondaryBg
+                        "p-4 rounded-lg shadow-md h-fit border",
+                        statuses[order.status]?.secondaryBg,
+                        statuses[order.status]?.border
                       )}
                     >
-                      <p className="font-medium">{order?.name}</p>
-                      <p className="text-sm text-gray-600">
-                        Miqdor: {order?.quantity}
-                      </p>
-                      <p className="text-sm text-gray-600 my-2">
-                        <span
+                      <div className="flex justify-between mb-4">
+                        <div className="font-semibold">{order.name}</div>
+                        <div
                           className={cn(
-                            statuses[order?.status]?.color,
-                            "px-2 py-1 rounded-full text-xs text-white"
+                            "text-white px-2 py-1 rounded-full text-xs",
+                            statuses[order.status]?.color
                           )}
                         >
-                          {statuses[order?.status]?.text}
-                        </span>
-                      </p>
-                      <div className="mt-2">
-                        {order?.order_model?.submodels?.map((sub, idx) => (
-                          <p key={idx} className="text-xs text-gray-600">
-                            • {sub?.submodel?.name}
-                          </p>
-                        ))}
+                          <span>{statuses[order.status]?.text}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between mb-4">
+                        <div>
+                          {order?.order_model?.submodels
+                            ?.map((submodel) => submodel.submodel.name)
+                            .join(", ")}
+                        </div>
+                        <div className="font-semibold">
+                          {order.quantity || "0"} ta
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -446,79 +435,6 @@ const PlanDetails = () => {
           )}
         </>
       )}
-
-      {/* Add Order Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Buyurtma qo'shish</DialogTitle>
-            <DialogDescription>
-              Guruhga yangi buyurtma qo'shing. Barcha maydonlarni to'ldiring.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="order">Buyurtma</Label>
-              <Select
-                value={selectedOrderId}
-                onValueChange={setSelectedOrderId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Buyurtmani tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {unassignedOrders.map((order) => (
-                    <SelectItem key={order.id} value={order.id.toString()}>
-                      {order.name} ({order.quantity})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedOrderId && (
-              <div className="grid gap-2">
-                <Label htmlFor="submodel">Submodel</Label>
-                <Select
-                  value={selectedSubmodelId}
-                  onValueChange={setSelectedSubmodelId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Submodelni tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getSelectedOrder()?.order_model?.submodels?.map((sub) => (
-                      <SelectItem key={sub.id} value={sub.id.toString()}>
-                        {sub.submodel.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="grid gap-2">
-              <Label htmlFor="number">Buyurtma raqami</Label>
-              <Input
-                id="number"
-                type="number"
-                value={orderNumber}
-                onChange={(e) => setOrderNumber(e.target.value)}
-                placeholder="Buyurtma raqamini kiriting"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-              Bekor qilish
-            </Button>
-            <Button onClick={handleAddOrder} disabled={changing}>
-              {changing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Qo'shish
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
