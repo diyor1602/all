@@ -50,10 +50,8 @@ const PlanAdd = () => {
   const [unassignedOrders, setUnassignedOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [selectedSubmodelId, setSelectedSubmodelId] = useState("");
-  const [orderNumber, setOrderNumber] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [existingNumbers, setExistingNumbers] = useState([]);
   const [orderComboOpen, setOrderComboOpen] = useState(false);
   const [submodelComboOpen, setSubmodelComboOpen] = useState(false);
 
@@ -66,18 +64,6 @@ const PlanAdd = () => {
           params: { department_id: id },
         });
         setUnassignedOrders(ordersResponse.data);
-
-        // Fetch existing order numbers for the group
-        const groupResponse = await api.get(`/supervisor/plans`, {
-          params: { department_id: id },
-        });
-
-        const numbers =
-          groupResponse.data?.groups
-            ?.find((g) => g.id === Number(groupId))
-            ?.orders?.map((o) => o.number) || [];
-
-        setExistingNumbers(numbers);
       } catch (error) {
         toast({
           title: "Xatolik",
@@ -105,26 +91,13 @@ const PlanAdd = () => {
     );
   }, [selectedSubmodelId, getSelectedOrder]);
 
-  const isNumberAvailable = (number) => {
-    return !existingNumbers.includes(Number(number));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedOrderId || !selectedSubmodelId || !orderNumber) {
+    if (!selectedOrderId || !selectedSubmodelId) {
       toast({
         title: "Xatolik",
         description: "Barcha maydonlarni to'ldiring",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!isNumberAvailable(orderNumber)) {
-      toast({
-        title: "Xatolik",
-        description: "Bu raqam allaqachon ishlatilgan. Boshqa raqam kiriting.",
         variant: "destructive",
       });
       return;
@@ -136,7 +109,6 @@ const PlanAdd = () => {
         order_id: Number(selectedOrderId),
         submodel_id: Number(selectedSubmodelId),
         group_id: Number(groupId),
-        number: Number(orderNumber),
       });
 
       toast({
@@ -253,7 +225,7 @@ const PlanAdd = () => {
                                   <Badge
                                     variant="secondary"
                                     className={cn(
-                                      "text-xs text-white",
+                                      "text-xs text-white hover:bg-transparent hover:text-black",
                                       statuses[order.status]?.color
                                     )}
                                   >
@@ -344,36 +316,6 @@ const PlanAdd = () => {
                 </div>
               )}
 
-              {/* Order Number */}
-              <div className="space-y-2">
-                <Label htmlFor="number" className="flex items-center space-x-2">
-                  <Hash className="h-4 w-4" />
-                  <span>Buyurtma raqami</span>
-                </Label>
-                <Input
-                  id="number"
-                  type="number"
-                  value={orderNumber}
-                  onChange={(e) => setOrderNumber(e.target.value)}
-                  placeholder="Buyurtma raqamini kiriting"
-                  required
-                  min="1"
-                  className={cn(
-                    !isNumberAvailable(orderNumber) &&
-                      orderNumber &&
-                      "border-red-500"
-                  )}
-                />
-                {!isNumberAvailable(orderNumber) && orderNumber && (
-                  <p className="text-sm text-red-500 flex items-center space-x-1">
-                    <span>⚠️</span>
-                    <span>
-                      Bu raqam allaqachon ishlatilgan. Boshqa raqam kiriting.
-                    </span>
-                  </p>
-                )}
-              </div>
-
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 pt-4">
                 <Button
@@ -386,7 +328,7 @@ const PlanAdd = () => {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={submitting || !isNumberAvailable(orderNumber)}
+                  disabled={submitting}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {submitting && (
@@ -463,24 +405,6 @@ const PlanAdd = () => {
                           {selectedSubmodel.submodel.name}
                         </p>
                       </div>
-                    </div>
-                  </>
-                )}
-
-                {orderNumber && (
-                  <>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-muted-foreground">
-                        Buyurtma raqami:
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="flex items-center space-x-1"
-                      >
-                        <Hash className="h-3 w-3" />
-                        <span>{orderNumber}</span>
-                      </Badge>
                     </div>
                   </>
                 )}

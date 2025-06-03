@@ -4,7 +4,7 @@ import api from "@/utils/api";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
-import { Loader2, Plus, Edit2 } from "lucide-react";
+import { Loader2, Plus, Move } from "lucide-react";
 import { statuses } from "@/lib/status";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -32,7 +31,6 @@ const PlanDetails = () => {
   const [changing, setChanging] = useState(false);
   const [editPopoverOpen, setEditPopoverOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
-  const [newOrderNumber, setNewOrderNumber] = useState("");
   const [newGroupId, setNewGroupId] = useState("");
   const [unassignedOrders, setUnassignedOrders] = useState([]);
   const [stats, setStats] = useState({});
@@ -95,14 +93,13 @@ const PlanDetails = () => {
     fetchOrderStats();
   }, []);
 
-  const handleChangePlan = async (order_id, submodel_id, group_id, number) => {
+  const handleChangePlan = async (order_id, submodel_id, group_id) => {
     try {
       setChanging(true);
       await api.post(`/supervisor/plans`, {
         order_id,
         submodel_id,
         group_id,
-        number,
       });
       toast({
         title: "Muvaffaqiyatli",
@@ -125,18 +122,8 @@ const PlanDetails = () => {
     }
   };
 
-  const isNumberAvailable = (groupId, number, excludeOrderId = null) => {
-    const group = data?.groups?.find((g) => g.id === groupId);
-    if (!group) return true;
-
-    return !group.orders.some(
-      (order) =>
-        order.number === Number.parseInt(number) && order.id !== excludeOrderId
-    );
-  };
-
   const handleEditOrder = async () => {
-    if (!newOrderNumber || !newGroupId) {
+    if (!newGroupId) {
       toast({
         title: "Xatolik",
         description: "Barcha maydonlarni to'ldiring",
@@ -145,38 +132,20 @@ const PlanDetails = () => {
       return;
     }
 
-    if (
-      !isNumberAvailable(
-        Number.parseInt(newGroupId),
-        newOrderNumber,
-        editingOrder?.id
-      )
-    ) {
-      toast({
-        title: "Xatolik",
-        description: "Bu raqam allaqachon ishlatilgan. Boshqa raqam kiriting.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     await handleChangePlan(
       editingOrder.order.id,
       editingOrder.order_submodel.id,
-      Number.parseInt(newGroupId),
-      Number.parseInt(newOrderNumber)
+      Number.parseInt(newGroupId)
     );
 
     // Reset form
     setEditingOrder(null);
-    setNewOrderNumber("");
     setNewGroupId("");
     setEditPopoverOpen(false);
   };
 
   const openEditPopover = (order, groupId) => {
     setEditingOrder(order);
-    setNewOrderNumber(order.number.toString());
     setNewGroupId(groupId.toString());
     setEditPopoverOpen(true);
   };
@@ -364,7 +333,7 @@ const PlanDetails = () => {
                               .map((order, index) => (
                                 <tr key={index}>
                                   <td className="border text-center p-2">
-                                    {order?.number}
+                                    {index + 1}
                                   </td>
 
                                   <td
@@ -482,35 +451,15 @@ const PlanDetails = () => {
                                           }
                                           disabled={changing}
                                         >
-                                          <Edit2 size={10} />
+                                          <Move size={10} />
                                         </Button>
                                       </PopoverTrigger>
                                       <PopoverContent className="w-80">
                                         <div className="grid gap-4">
                                           <div className="space-y-2">
-                                            <h4 className="font-medium leading-none">
-                                              Buyurtmani tahrirlash
-                                            </h4>
                                             <p className="text-sm text-muted-foreground">
-                                              Buyurtma raqami va guruhini
-                                              o'zgartiring
+                                              Buyurtma guruhini o'zgartirish
                                             </p>
-                                          </div>
-                                          <div className="grid gap-2">
-                                            <Label htmlFor="newNumber">
-                                              Yangi raqam
-                                            </Label>
-                                            <Input
-                                              id="newNumber"
-                                              type="number"
-                                              value={newOrderNumber}
-                                              onChange={(e) =>
-                                                setNewOrderNumber(
-                                                  e.target.value
-                                                )
-                                              }
-                                              placeholder="Buyurtma raqami"
-                                            />
                                           </div>
                                           <div className="grid gap-2">
                                             <Label htmlFor="newGroup">
