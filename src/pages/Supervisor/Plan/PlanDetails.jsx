@@ -333,6 +333,8 @@ const PlanDetails = () => {
                               <th className="border p-2">Qolgan</th>
                               <th className="border p-2">O'rtacha davomat</th>
                               <th className="border p-2">Tugata oladi</th>
+                              <th className="border p-2">Bir kishiga</th>
+                              <th className="border p-2">Bir kunlik</th>
                               <th className="border p-2">Submodel</th>
                               <th className="border p-2">Status</th>
                               <th className="border p-2">Amallar</th>
@@ -391,26 +393,46 @@ const PlanDetails = () => {
                                     {order?.order_submodel?.avgAttendance}
                                   </td>
                                   <td className="border p-2 text-center">
-                                    <div className="flex items-center gap-2 justify-center">
-                                      <div>
-                                        {parseFloat(
-                                          order?.order_submodel?.plan_uz
-                                        ) > 0
-                                          ? `UZ: ${parseFloat(
-                                              order?.order_submodel?.plan_uz
-                                            ).toFixed(1)}`
-                                          : ""}
-                                      </div>
-                                      <div>
-                                        {parseFloat(
-                                          order?.order_submodel?.plan_ru
-                                        ) > 0
-                                          ? `RU: ${parseFloat(
-                                              order?.order_submodel?.plan_ru
-                                            ).toFixed(1)}`
-                                          : ""}
-                                      </div>
+                                    <div className="flex flex-col items-center gap-2 justify-center">
+                                      {parseFloat(
+                                        order?.order_submodel?.plan_uz
+                                      ) > 0 ? (
+                                        <div>
+                                          <span>UZ: </span>
+                                          {parseFloat(
+                                            order?.order_submodel?.plan_uz
+                                          ).toFixed(1)}{" "}
+                                          kun
+                                        </div>
+                                      ) : (
+                                        ""
+                                      )}
+                                      {parseFloat(
+                                        order?.order_submodel?.plan_ru
+                                      ) > 0 ? (
+                                        <div>
+                                          <span>RU: </span>
+                                          {parseFloat(
+                                            order?.order_submodel?.plan_ru
+                                          ).toFixed(1)}{" "}
+                                          kun
+                                        </div>
+                                      ) : (
+                                        ""
+                                      )}
                                     </div>
+                                  </td>
+                                  <td className="border p-2 text-center">
+                                    {order?.order_submodel?.perEmployee
+                                      ? parseFloat(
+                                          order?.order_submodel?.perEmployee
+                                        ).toFixed(1)
+                                      : ""}
+                                  </td>
+                                  <td className="border p-2 text-center">
+                                    {order?.order_submodel?.avaragePlan > 0
+                                      ? order?.order_submodel?.avaragePlan
+                                      : ""}
                                   </td>
                                   <td className="border p-2">
                                     {order?.order_submodel?.submodel?.name}
