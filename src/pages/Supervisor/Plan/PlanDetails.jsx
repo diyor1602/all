@@ -242,6 +242,49 @@ const PlanDetails = () => {
                           </Button>
                         </div>
                       </div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm text-gray-500">
+                          Miqdori:{" "}
+                          <span className="font-bold">
+                            {parseFloat(
+                              group?.orders?.reduce(
+                                (a, b) => a + b.order?.quantity,
+                                0
+                              )
+                            ).toLocaleString("ru-RU")}{" "}
+                          </span>
+                          ta
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          Bajarilgan:{" "}
+                          <span className="font-bold">
+                            {parseFloat(
+                              group?.orders?.reduce(
+                                (a, b) => a + b.order_submodel?.sewing_quantity,
+                                0
+                              )
+                            ).toLocaleString("ru-RU")}{" "}
+                          </span>
+                          ta
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          Foiz:{" "}
+                          <span className="font-bold">
+                            {(
+                              (group?.orders?.reduce(
+                                (a, b) => a + b.order_submodel?.sewing_quantity,
+                                0
+                              ) /
+                                group?.orders?.reduce(
+                                  (a, b) => a + b.order?.quantity,
+                                  0
+                                )) *
+                              100
+                            ).toFixed(2)}
+                          </span>{" "}
+                          %
+                        </span>
+                      </div>
                       <div className="overflow-auto">
                         <table className="table border-collapse border w-full whitespace-nowrap">
                           <thead>
@@ -284,7 +327,22 @@ const PlanDetails = () => {
                                     {order?.order?.quantity}
                                   </td>
                                   <td className="border p-2">
-                                    {order?.order_submodel?.sewing_quantity}
+                                    <span>
+                                      {order?.order_submodel?.sewing_quantity}
+                                    </span>{" "}
+                                    /{" "}
+                                    <span className="font-bold">
+                                      {parseFloat(
+                                        (order?.order_submodel
+                                          ?.sewing_quantity /
+                                          order?.order?.quantity) *
+                                          100
+                                      ).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}{" "}
+                                      %
+                                    </span>
                                   </td>
                                   <td className="border p-2">
                                     {order?.order_submodel?.submodel?.name}
@@ -392,7 +450,7 @@ const PlanDetails = () => {
               </div>
               <div className="mt-6">
                 <h2 className="text-2xl font-bold mb-4">
-                  Biriktirilmagan buyurtmalar
+                  Biriktirilmagan buyurtmalar ({unassignedOrders?.length} ta)
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                   {unassignedOrders?.map((order) => (
@@ -404,11 +462,11 @@ const PlanDetails = () => {
                         statuses[order.status]?.border
                       )}
                     >
-                      <div className="flex justify-between mb-4">
+                      <div className="flex justify-between mb-4 flex-wrap gap-3">
                         <div className="font-semibold">{order.name}</div>
                         <div
                           className={cn(
-                            "text-white px-2 py-1 rounded-full text-xs",
+                            "text-white px-2 py-1 rounded-full text-xs h-fit flex items-center justify-center",
                             statuses[order.status]?.color
                           )}
                         >
