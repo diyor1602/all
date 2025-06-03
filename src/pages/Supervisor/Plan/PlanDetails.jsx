@@ -342,7 +342,25 @@ const PlanDetails = () => {
                           </thead>
                           <tbody>
                             {group?.orders
-                              ?.sort((a, b) => a?.number - b?.number)
+                              ?.sort((a, b) => {
+                                const aStatus = a?.order?.status;
+                                const bStatus = b?.order?.status;
+                                const statusOrder = {
+                                  tailoring: 1,
+                                  pending: 2,
+                                  cutting: 3,
+                                  printing: 4,
+                                  active: 5,
+                                  inactive: 6,
+                                  tailored: 7,
+                                  checking: 8,
+                                  checked: 9,
+                                  packaging: 10,
+                                };
+                                return (
+                                  statusOrder[aStatus] - statusOrder[bStatus]
+                                );
+                              })
                               .map((order, index) => (
                                 <tr key={index}>
                                   <td className="border text-center p-2">
