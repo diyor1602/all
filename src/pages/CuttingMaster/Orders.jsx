@@ -265,7 +265,7 @@ const Orders = () => {
           ) : (
             <div className="space-y-4">
               {filteredOrders.map((order, index) => {
-                const daysRemaining = calculateDeadline(order.end_date);
+                const daysRemaining = calculateDeadline(order.start_date);
                 const isOrderOverdue = isOverdue(order.start_date);
 
                 return (
@@ -333,7 +333,7 @@ const Orders = () => {
                               </span>
                             </div>
 
-                            {order.end_date && (
+                            {order.start_date && (
                               <div
                                 className={`flex items-center px-3 py-1 rounded-md ${
                                   daysRemaining < 0
