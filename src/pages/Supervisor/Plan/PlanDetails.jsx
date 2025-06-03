@@ -35,6 +35,7 @@ const PlanDetails = () => {
   const [newOrderNumber, setNewOrderNumber] = useState("");
   const [newGroupId, setNewGroupId] = useState("");
   const [unassignedOrders, setUnassignedOrders] = useState([]);
+  const [stats, setStats] = useState({});
 
   const fetchData = async () => {
     try {
@@ -72,9 +73,26 @@ const PlanDetails = () => {
     }
   };
 
+  const fetchOrderStats = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/supervisor/orders/quantity`);
+      setStats(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Bunday ma'lumot topilmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
     fetchUnassignedOrders();
+    fetchOrderStats();
   }, []);
 
   const handleChangePlan = async (order_id, submodel_id, group_id, number) => {
@@ -165,9 +183,28 @@ const PlanDetails = () => {
 
   return (
     <div>
-      <div className="w-full flex justify-between items-center">
-        <h2 className="text-2xl font-bold mb-4">Reja</h2>
-        <div className="font-medium text-gray-500">{data?.name}</div>
+      <div className="w-full flex justify-between items-center mb-2 flex-wrap">
+        <h2 className="text-2xl font-bold mb-4">{data?.name}</h2>
+        {stats?.length > 0 && (
+          <div className="flex items-center gap-4 flex-wrap">
+            {stats?.map((stat, index) => (
+              <div key={index} className="flex flex-col items-center gap-1">
+                <span
+                  className={cn(
+                    "text-xs px-2 py-1 rounded-full text-white",
+                    statuses[stat.status]?.color
+                  )}
+                >
+                  {statuses[stat.status]?.text}
+                </span>
+                <span className="text-xs">{stat.order_count}</span>
+                <span className="text-sm">
+                  {parseFloat(stat.total_quantity)?.toLocaleString("ru-RU")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading ? (
