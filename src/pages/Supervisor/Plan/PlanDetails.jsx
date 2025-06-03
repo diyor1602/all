@@ -246,7 +246,7 @@ const PlanDetails = () => {
           </style>
           {data?.groups?.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-1 gap-4 text-xs">
                 {data?.groups
                   ?.sort((a, b) => a.name.localeCompare(b.name))
                   .map((group) => (
@@ -330,6 +330,9 @@ const PlanDetails = () => {
                               <th className="border p-2">Buyurtma nomi</th>
                               <th className="border p-2">Miqdori</th>
                               <th className="border p-2">Bajarilgan</th>
+                              <th className="border p-2">Qolgan</th>
+                              <th className="border p-2">O'rtacha davomat</th>
+                              <th className="border p-2">Tugata oladi</th>
                               <th className="border p-2">Submodel</th>
                               <th className="border p-2">Status</th>
                               <th className="border p-2">Amallar</th>
@@ -380,6 +383,34 @@ const PlanDetails = () => {
                                       })}{" "}
                                       %
                                     </span>
+                                  </td>
+                                  <td className="border p-2 text-center">
+                                    {order?.order_submodel?.remaining_quantity}
+                                  </td>
+                                  <td className="border p-2 text-center">
+                                    {order?.order_submodel?.avgAttendance}
+                                  </td>
+                                  <td className="border p-2 text-center">
+                                    <div className="flex items-center gap-2 justify-center">
+                                      <div>
+                                        {parseFloat(
+                                          order?.order_submodel?.plan_uz
+                                        ) > 0
+                                          ? `UZ: ${parseFloat(
+                                              order?.order_submodel?.plan_uz
+                                            ).toFixed(1)}`
+                                          : ""}
+                                      </div>
+                                      <div>
+                                        {parseFloat(
+                                          order?.order_submodel?.plan_ru
+                                        ) > 0
+                                          ? `RU: ${parseFloat(
+                                              order?.order_submodel?.plan_ru
+                                            ).toFixed(1)}`
+                                          : ""}
+                                      </div>
+                                    </div>
                                   </td>
                                   <td className="border p-2">
                                     {order?.order_submodel?.submodel?.name}
