@@ -281,7 +281,7 @@ const SalaryDetails = () => {
         </div>
 
         {/* Filters */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm relative z-30">
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm relative">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-slate-700">
               <Calendar className="h-5 w-5" />
