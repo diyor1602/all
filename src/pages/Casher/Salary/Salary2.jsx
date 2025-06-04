@@ -13,6 +13,10 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+const formatNumber = (num) => {
+  return parseFloat(num)?.toLocaleString("ru-RU");
+};
+
 const Salary2 = () => {
   const { toast } = useToast();
 
@@ -119,9 +123,8 @@ const Salary2 = () => {
 
     try {
       setLoading(true);
-      console.log("Fetching salary with filters:", filtersToUse);
       const response = await api.get("/casher/groups", {
-        params: filtersToUse,
+        params: { ...filtersToUse, type: "simple" },
       });
       setSalary(response.data);
     } catch (error) {
@@ -302,6 +305,9 @@ const Salary2 = () => {
               <th className="border p-1">№</th>
               <th className="border p-1">Xodim</th>
               <th className="border p-1">Balansi</th>
+              <th className="border p-1">Topgan puli</th>
+              <th className="border p-1">To'langan pul</th>
+              <th className="border p-1">Amallar</th>
             </tr>
           </thead>
           <tbody className={cn("", loading && "cursor-not-allowed opacity-50")}>
@@ -312,7 +318,16 @@ const Salary2 = () => {
                   <td className="border p-1 text-center">{index + 1}</td>
                   <td className="border p-1">{employee?.name}</td>
                   <td className="border p-1 text-center">
-                    {employee?.balance}
+                    {formatNumber(employee?.balance)}
+                  </td>
+                  <td className="border p-1 text-center">
+                    {formatNumber(employee?.earning?.total_earned)}
+                  </td>
+                  <td className="border p-1 text-center">
+                    {formatNumber(employee?.earning?.total_paid)}
+                  </td>
+                  <td className="border p-1 text-center">
+                    <Input type="number" />
                   </td>
                 </tr>
               ))}
