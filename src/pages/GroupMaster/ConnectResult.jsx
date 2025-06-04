@@ -388,7 +388,7 @@ const ConnectResult = () => {
 						</div>
 
 						{/* Financial Stats */}
-						<div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+						<div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
 							{/* Today's Earnings */}
 							<div className='p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl border border-emerald-200'>
 								<div className='flex items-center gap-3 mb-2'>
