@@ -384,11 +384,6 @@ const ConnectResult = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Financial Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Today's Earnings */}
               <div className="p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl border border-emerald-200">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-emerald-500 rounded-lg">
@@ -421,6 +416,26 @@ const ConnectResult = () => {
                     <p className="text-lg font-bold text-teal-800">
                       {Number.parseFloat(
                         data.order?.perEmployeeEarning || 0
+                      ).toLocaleString("ru-RU")}{" "}
+                      so'm
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Average Dailiy Earning for Master */}
+              <div className="p-4 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl border border-sky-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-sky-500 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-sky-600 font-medium">
+                      Master topgan summa
+                    </p>
+                    <p className="text-lg font-bold text-sky-800">
+                      {Number.parseFloat(
+                        data.order?.actualTodayEarned || 0
                       ).toLocaleString("ru-RU")}{" "}
                       so'm
                     </p>
