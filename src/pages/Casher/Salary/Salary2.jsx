@@ -67,7 +67,6 @@ const Salary2 = () => {
   const [loading, setLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Payment states
   const [paymentLoading, setPaymentLoading] = useState({});
   const [paymentDialog, setPaymentDialog] = useState({
     open: false,
