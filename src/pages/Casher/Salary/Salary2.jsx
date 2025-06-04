@@ -340,7 +340,7 @@ const Salary2 = () => {
 
     if (!amount || Number.parseFloat(amount) <= 0) {
       toast({
-        title: "Xatolik",
+        title: "Diqqat",
         description: "Miqdorni kiriting",
         variant: "destructive",
       });
@@ -349,7 +349,7 @@ const Salary2 = () => {
 
     if (Number.parseFloat(amount) > maxAmount) {
       toast({
-        title: "Xatolik",
+        title: "Diqqat",
         description: `Maksimal miqdor: ${formatNumber(maxAmount)}`,
         variant: "destructive",
       });
@@ -380,7 +380,7 @@ const Salary2 = () => {
       closePaymentDialog();
     } catch (error) {
       toast({
-        title: "Xatolik",
+        title: "Diqqat",
         description: "To'lov amalga oshmadi",
         variant: "destructive",
       });
@@ -541,9 +541,11 @@ const Salary2 = () => {
         {/* Employee Table */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Xodimlar ro'yxati
+            <CardTitle className="text-lg flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Xodimlar ro'yxati
+              </div>
               {filters.department_id && (
                 <Badge variant="secondary" className="ml-2">
                   {getSelectedDepartmentName()}
@@ -557,25 +559,25 @@ const Salary2 = () => {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                    <th className="border border-gray-200 p-3 text-left font-semibold">
+                    <th className="border border-gray-200 p-1 text-left font-semibold">
                       №
                     </th>
-                    <th className="border border-gray-200 p-3 text-left font-semibold">
+                    <th className="border border-gray-200 p-1 text-left font-semibold">
                       Xodim
                     </th>
-                    <th className="border border-gray-200 p-3 text-center font-semibold">
+                    <th className="border border-gray-200 p-1 text-center font-semibold">
                       Balansi
                     </th>
-                    <th className="border border-gray-200 p-3 text-center font-semibold">
+                    <th className="border border-gray-200 p-1 text-center font-semibold">
                       Topgan puli
                     </th>
-                    <th className="border border-gray-200 p-3 text-center font-semibold">
+                    <th className="border border-gray-200 p-1 text-center font-semibold">
                       To'langan pul
                     </th>
-                    <th className="border border-gray-200 p-3 text-center font-semibold">
+                    <th className="border border-gray-200 p-1 text-center font-semibold">
                       Avans
                     </th>
-                    <th className="border border-gray-200 p-3 text-center font-semibold">
+                    <th className="border border-gray-200 p-1 text-center font-semibold">
                       Oylik
                     </th>
                   </tr>
@@ -588,26 +590,21 @@ const Salary2 = () => {
                     .map((employee, index) => {
                       const { advanceTotal, salaryTotal } =
                         calculatePaymentTotals(employee?.paid_amounts);
-                      const maxAdvance = calculateMaxAmount(
-                        employee,
-                        "advance"
-                      );
-                      const maxSalary = calculateMaxAmount(employee, "salary");
 
                       return (
                         <tr
                           key={employee.id}
                           className="hover:bg-gray-50 transition-colors"
                         >
-                          <td className="border border-gray-200 p-3 text-center font-medium">
+                          <td className="border border-gray-200 p-1 text-center font-medium">
                             {index + 1}
                           </td>
-                          <td className="border border-gray-200 p-3">
+                          <td className="border border-gray-200 p-1">
                             <div className="font-medium text-gray-900">
                               {employee?.name}
                             </div>
                           </td>
-                          <td className="border border-gray-200 p-3 text-center">
+                          <td className="border border-gray-200 p-1 text-center">
                             <Badge
                               variant={
                                 Number.parseFloat(employee?.balance) > 0
@@ -618,18 +615,18 @@ const Salary2 = () => {
                               {formatNumber(employee?.balance)}
                             </Badge>
                           </td>
-                          <td className="border border-gray-200 p-3 text-center">
+                          <td className="border border-gray-200 p-1 text-center">
                             <span className="text-green-600 font-medium">
                               {formatNumber(employee?.earning?.total_earned)}
                             </span>
                           </td>
-                          <td className="border border-gray-200 p-3 text-center">
+                          <td className="border border-gray-200 p-1 text-center">
                             <span className="text-green-600 font-medium">
                               {/* calculate it */}
                               {formatNumber(employee?.total_paid)}
                             </span>
                           </td>
-                          <td className="border border-gray-200 p-3 text-center">
+                          <td className="border border-gray-200 p-1 text-center">
                             <div className="w-full flex items-center justify-center">
                               <Button
                                 variant="ghost"
@@ -637,7 +634,6 @@ const Salary2 = () => {
                                   openPaymentDialog(employee, "advance")
                                 }
                                 disabled={
-                                  maxAdvance <= 0 ||
                                   paymentLoading[`${employee.id}_advance`]
                                 }
                                 className="h-auto p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 flex flex-col items-center gap-1"
@@ -650,7 +646,7 @@ const Salary2 = () => {
                               </Button>
                             </div>
                           </td>
-                          <td className="border border-gray-200 p-3 text-center">
+                          <td className="border border-gray-200 p-1 text-center">
                             <div className="flex items-center justify-center gap-2 w-full">
                               <Button
                                 variant="ghost"
@@ -658,7 +654,6 @@ const Salary2 = () => {
                                   openPaymentDialog(employee, "salary")
                                 }
                                 disabled={
-                                  maxSalary <= 0 ||
                                   paymentLoading[`${employee.id}_salary`]
                                 }
                                 className="h-auto p-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex flex-col items-center gap-1"
@@ -723,7 +718,7 @@ const Salary2 = () => {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Miqdor (Max: {formatNumber(paymentDialog.maxAmount)})
+                  Miqdor: {formatNumber(paymentForm.amount)}
                 </label>
                 <Input
                   type="number"
@@ -741,7 +736,7 @@ const Salary2 = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Izoh (ixtiyoriy)
                 </label>
