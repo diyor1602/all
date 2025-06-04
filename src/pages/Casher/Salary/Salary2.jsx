@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,18 +23,13 @@ const Salary2 = () => {
   const [rawDepartmentData, setRawDepartmentData] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const [filters, setFilters] = useState(() => {
-    const savedFilters = localStorage.getItem("salary2-filters");
-    if (savedFilters) {
-      return JSON.parse(savedFilters);
-    }
-    return {
-      department_id: "",
-      group_id: "",
-      start_date: "",
-      end_date: "",
-    };
+  const [filters, setFilters] = useState({
+    department_id: "",
+    group_id: "",
+    start_date: "",
+    end_date: "",
   });
 
   const formatDateLocal = (date) => {
@@ -42,31 +39,37 @@ const Salary2 = () => {
     return `${year}-${month}-${day}`;
   };
 
-  useEffect(() => {
-    if (filters.start_date) {
-      const savedMonth = filters.start_date.substring(0, 7);
-      setSelectedMonth(savedMonth);
-    } else {
+  const initializeFilters = () => {
+    const savedFilters = localStorage.getItem("salary2-filters");
+    let parsedFilters = savedFilters ? JSON.parse(savedFilters) : {};
+
+    // Set default dates if not present
+    if (!parsedFilters.start_date || !parsedFilters.end_date) {
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const value = `${year}-${month}`;
-      setSelectedMonth(value);
 
       const firstDay = `${value}-01`;
-      const lastDayDate = new Date(year, parseInt(month), 0);
+      const lastDayDate = new Date(year, Number.parseInt(month), 0);
       const lastDay = formatDateLocal(lastDayDate);
 
-      const newFilters = {
-        ...filters,
+      parsedFilters = {
+        department_id: parsedFilters.department_id || "",
+        group_id: parsedFilters.group_id || "",
         start_date: firstDay,
         end_date: lastDay,
       };
 
-      setFilters(newFilters);
-      localStorage.setItem("salary2-filters", JSON.stringify(newFilters));
+      setSelectedMonth(value);
+    } else {
+      setSelectedMonth(parsedFilters.start_date.substring(0, 7));
     }
-  }, []);
+
+    setFilters(parsedFilters);
+    localStorage.setItem("salary2-filters", JSON.stringify(parsedFilters));
+    return parsedFilters;
+  };
 
   const fetchDepartments = async () => {
     try {
@@ -78,28 +81,14 @@ const Salary2 = () => {
         rawData.flatMap((item) => item?.departments) || [];
       setDepartments(flatDepartments);
 
-      if (!filters.department_id && flatDepartments.length > 0) {
-        const firstDepartmentId = flatDepartments[0].id.toString();
-        const groups = loadGroupsForDepartment(firstDepartmentId, rawData);
-
-        if (groups.length !== 1) {
-          const newFilters = {
-            ...filters,
-            department_id: firstDepartmentId,
-            group_id: "",
-          };
-          setFilters(newFilters);
-          localStorage.setItem("salary2-filters", JSON.stringify(newFilters));
-        }
-      } else if (filters.department_id) {
-        loadGroupsForDepartment(filters.department_id, rawData);
-      }
+      return { rawData, flatDepartments };
     } catch (error) {
       toast({
         title: "Xatolik",
         description: "Bunday ma'lumot topilmadi",
         variant: "destructive",
       });
+      return { rawData: [], flatDepartments: [] };
     }
   };
 
@@ -116,29 +105,23 @@ const Salary2 = () => {
     });
 
     setGroups(selectedDepartmentGroups);
-
-    if (selectedDepartmentGroups.length === 1) {
-      const singleGroupId = selectedDepartmentGroups[0].id.toString();
-      const newFilters = {
-        ...filters,
-        department_id: departmentId,
-        group_id: singleGroupId,
-      };
-      setFilters(newFilters);
-      localStorage.setItem("salary2-filters", JSON.stringify(newFilters));
-    }
-
     return selectedDepartmentGroups;
   };
 
-  const fetchSalary = async () => {
-    if (!filters.department_id || !filters.start_date || !filters.end_date) {
+  const fetchSalaryData = async (filtersToUse) => {
+    if (
+      !filtersToUse.department_id ||
+      !filtersToUse.start_date ||
+      !filtersToUse.end_date
+    ) {
       return;
     }
+
     try {
       setLoading(true);
+      console.log("Fetching salary with filters:", filtersToUse);
       const response = await api.get("/casher/groups", {
-        params: filters,
+        params: filtersToUse,
       });
       setSalary(response.data);
     } catch (error) {
@@ -152,37 +135,76 @@ const Salary2 = () => {
     }
   };
 
+  // Initialize component on mount
+  useEffect(() => {
+    const initializeComponent = async () => {
+      // Initialize filters first
+      const initialFilters = initializeFilters();
+
+      // Fetch departments
+      const { rawData, flatDepartments } = await fetchDepartments();
+
+      let finalFilters = { ...initialFilters };
+
+      // Handle department selection logic
+      if (!initialFilters.department_id && flatDepartments.length > 0) {
+        // No saved department, select first one
+        const firstDepartmentId = flatDepartments[0].id.toString();
+        const groups = loadGroupsForDepartment(firstDepartmentId, rawData);
+
+        finalFilters = {
+          ...initialFilters,
+          department_id: firstDepartmentId,
+          group_id: groups.length === 1 ? groups[0].id.toString() : "",
+        };
+      } else if (initialFilters.department_id) {
+        // Has saved department, load its groups
+        const groups = loadGroupsForDepartment(
+          initialFilters.department_id,
+          rawData
+        );
+
+        // If there's only one group, auto-select it
+        if (groups.length === 1 && !initialFilters.group_id) {
+          finalFilters = {
+            ...initialFilters,
+            group_id: groups[0].id.toString(),
+          };
+        }
+      }
+
+      // Update filters if they changed
+      if (JSON.stringify(finalFilters) !== JSON.stringify(initialFilters)) {
+        setFilters(finalFilters);
+        localStorage.setItem("salary2-filters", JSON.stringify(finalFilters));
+      }
+
+      // Fetch salary data
+      await fetchSalaryData(finalFilters);
+
+      setIsInitialized(true);
+    };
+
+    initializeComponent();
+  }, []);
+
+  // Update employees when salary data changes
   useEffect(() => {
     const employees = salary.flatMap((s) => s.employees || []);
     setEmployees(employees);
   }, [salary]);
 
-  const fetchSalaryWithCustomFilters = async (customFilters) => {
-    try {
-      setLoading(true);
-      console.log("Fetching salary with custom filters:", customFilters);
-      const response = await api.get("/casher/groups", {
-        params: customFilters,
-      });
-      setSalary(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Bunday ma'lumot topilmadi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  // Fetch salary data when filters change (but only after initialization)
+  useEffect(() => {
+    if (isInitialized) {
+      fetchSalaryData(filters);
     }
+  }, [filters, isInitialized]);
+
+  const updateFilters = (newFilters) => {
+    setFilters(newFilters);
+    localStorage.setItem("salary2-filters", JSON.stringify(newFilters));
   };
-
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
-
-  useEffect(() => {
-    fetchSalary();
-  }, [filters]);
 
   const handleMonthChange = (e) => {
     const value = e.target.value;
@@ -190,7 +212,11 @@ const Salary2 = () => {
 
     const [year, month] = value.split("-");
     const firstDay = `${value}-01`;
-    const lastDayDate = new Date(parseInt(year), parseInt(month), 0);
+    const lastDayDate = new Date(
+      Number.parseInt(year),
+      Number.parseInt(month),
+      0
+    );
     const lastDay = formatDateLocal(lastDayDate);
 
     const newFilters = {
@@ -199,23 +225,19 @@ const Salary2 = () => {
       end_date: lastDay,
     };
 
-    setFilters(newFilters);
-    localStorage.setItem("salary2-filters", JSON.stringify(newFilters));
+    updateFilters(newFilters);
   };
 
   const handleDepartmentChange = (departmentId) => {
     const groups = loadGroupsForDepartment(departmentId, rawDepartmentData);
 
-    if (groups.length !== 1) {
-      const newFilters = {
-        ...filters,
-        department_id: departmentId,
-        group_id: "",
-      };
+    const newFilters = {
+      ...filters,
+      department_id: departmentId,
+      group_id: groups.length === 1 ? groups[0].id.toString() : "",
+    };
 
-      setFilters(newFilters);
-      localStorage.setItem("salary2-filters", JSON.stringify(newFilters));
-    }
+    updateFilters(newFilters);
   };
 
   const handleGroupChange = (groupId) => {
@@ -224,49 +246,8 @@ const Salary2 = () => {
       group_id: groupId,
     };
 
-    setFilters(newFilters);
-    localStorage.setItem("salary2-filters", JSON.stringify(newFilters));
-
-    if (
-      newFilters.department_id &&
-      newFilters.start_date &&
-      newFilters.end_date &&
-      newFilters.group_id
-    ) {
-      fetchSalaryWithCustomFilters(newFilters);
-    }
+    updateFilters(newFilters);
   };
-
-  useEffect(() => {
-    const saved = localStorage.getItem("salary2-filters");
-    let parsed = saved ? JSON.parse(saved) : {};
-
-    const hasDates = parsed.start_date && parsed.end_date;
-
-    if (!hasDates) {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const value = `${year}-${month}`;
-
-      const firstDay = `${value}-01`;
-      const lastDayDate = new Date(year, parseInt(month), 0);
-      const lastDay = formatDateLocal(lastDayDate);
-
-      const fixedFilters = {
-        ...parsed,
-        start_date: firstDay,
-        end_date: lastDay,
-      };
-
-      setFilters(fixedFilters);
-      setSelectedMonth(value);
-      localStorage.setItem("salary2-filters", JSON.stringify(fixedFilters));
-    } else {
-      setFilters(parsed);
-      setSelectedMonth(parsed.start_date.substring(0, 7));
-    }
-  }, []);
 
   return (
     <div className="flex flex-col gap-4">
