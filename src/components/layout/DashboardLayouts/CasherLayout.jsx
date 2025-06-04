@@ -39,7 +39,7 @@ const navigation = [
     name: "Oylik ",
     href: "/casher/salary",
     icon: Gem,
-    onMobile: true,
+    onMobile: false,
   },
 ];
 
