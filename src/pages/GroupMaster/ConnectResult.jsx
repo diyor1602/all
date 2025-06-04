@@ -17,6 +17,7 @@ import {
   Scissors,
   BarChart3,
   Hash,
+  CircleDollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -427,7 +428,7 @@ const ConnectResult = () => {
               <div className="p-4 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl border border-sky-200">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-sky-500 rounded-lg">
-                    <BarChart3 className="h-5 w-5 text-white" />
+                    <CircleDollarSign className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-sky-600 font-medium">
