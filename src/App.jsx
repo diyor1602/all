@@ -29,6 +29,8 @@ import Supplier from "./pages/Supplier/Supplier";
 import Tv from "./pages/Tv/Tv";
 import Casher from "./pages/Casher/Casher";
 import Ceo from "./pages/Ceo/Ceo";
+import OneSignal from "react-onesignal";
+import { useEffect } from "react";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -51,6 +53,17 @@ const RootRoute = () => {
 };
 
 function App() {
+  useEffect(() => {
+    OneSignal.init({
+      appId: import.meta.env.VITE_API_APPID,
+      safari_web_id: import.meta.env.VITE_API_APPIDSAFARI,
+      notifyButton: {
+        enable: true,
+      },
+      allowLocalhostAsSecureOrigin: true,
+    });
+  }, []);
+
   return (
     <AuthProvider>
       <Toaster />
