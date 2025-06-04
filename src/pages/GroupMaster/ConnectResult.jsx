@@ -343,7 +343,7 @@ const ConnectResult = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-sky-600 font-medium">
-                      Master topgan summa
+                      Siz ishlab topgan summa
                     </p>
                     <p className="text-lg font-bold text-sky-800">
                       {Number.parseFloat(
