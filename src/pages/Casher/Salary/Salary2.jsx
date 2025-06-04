@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   HandCoins,
   CreditCard,
@@ -36,10 +37,22 @@ import {
   TrendingUp,
   User,
   Plus,
+  History,
+  Clock,
 } from "lucide-react";
 
 const formatNumber = (num) => {
   return Number.parseFloat(num)?.toLocaleString("ru-RU");
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 };
 
 const Salary2 = () => {
@@ -191,16 +204,20 @@ const Salary2 = () => {
     return { advanceTotal, salaryTotal };
   };
 
-  // Calculate maximum payable amount
+  // Fixed maximum amount calculation - allows redistributing existing payments
   const calculateMaxAmount = (employee, paymentType) => {
     const totalEarned = Number.parseFloat(employee?.earning?.total_earned || 0);
     const { advanceTotal, salaryTotal } = calculatePaymentTotals(
       employee?.paid_amounts
     );
 
+    // The maximum should be the total earned amount minus the OTHER type of payment
+    // This allows redistributing between advance and salary
     if (paymentType === "advance") {
+      // For advance: total_earned - current_salary_payments
       return Math.max(0, totalEarned - salaryTotal);
     } else {
+      // For salary: total_earned - current_advance_payments
       return Math.max(0, totalEarned - advanceTotal);
     }
   };
@@ -308,6 +325,19 @@ const Salary2 = () => {
 
   const openPaymentDialog = (employee, type) => {
     const maxAmount = calculateMaxAmount(employee, type);
+    const { advanceTotal, salaryTotal } = calculatePaymentTotals(
+      employee?.paid_amounts
+    );
+
+    // Get current amount for this payment type
+    const currentAmount = type === "advance" ? advanceTotal : salaryTotal;
+
+    // Get the most recent comment for this payment type (if any)
+    const paymentHistory = getPaymentHistory(employee, type);
+    const mostRecentComment =
+      paymentHistory.length > 0
+        ? paymentHistory[paymentHistory.length - 1].comment || ""
+        : "";
 
     setPaymentDialog({
       open: true,
@@ -316,8 +346,8 @@ const Salary2 = () => {
       maxAmount,
     });
     setPaymentForm({
-      amount: "",
-      comment: "",
+      amount: currentAmount.toString(),
+      comment: mostRecentComment,
     });
   };
 
@@ -338,7 +368,7 @@ const Salary2 = () => {
     const { employee, type, maxAmount } = paymentDialog;
     const { amount, comment } = paymentForm;
 
-    if (!amount || Number.parseFloat(amount) <= 0) {
+    if (!amount || Number.parseFloat(amount) < 0) {
       toast({
         title: "Diqqat",
         description: "Miqdorni kiriting",
@@ -372,7 +402,11 @@ const Salary2 = () => {
       toast({
         title: "Muvaffaqiyatli",
         description: `${type === "advance" ? "Avans" : "Oylik"} to'landi`,
-        variant: "default",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1500,
       });
 
       // Refresh data
@@ -381,7 +415,7 @@ const Salary2 = () => {
     } catch (error) {
       toast({
         title: "Diqqat",
-        description: "To'lov amalga oshmadi",
+        description: error?.response?.data?.message || "To'lov amalga oshmadi",
         variant: "destructive",
       });
     } finally {
@@ -410,6 +444,14 @@ const Salary2 = () => {
     },
     { totalBalance: 0, totalEarned: 0, totalPaid: 0 }
   );
+
+  // Get payment history for the current type
+  const getPaymentHistory = (employee, type) => {
+    if (!employee?.paid_amounts || !employee.paid_amounts[type]) {
+      return [];
+    }
+    return employee.paid_amounts[type] || [];
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
@@ -622,7 +664,6 @@ const Salary2 = () => {
                           </td>
                           <td className="border border-gray-200 p-1 text-center">
                             <span className="text-green-600 font-medium">
-                              {/* calculate it */}
                               {formatNumber(employee?.total_paid)}
                             </span>
                           </td>
@@ -692,9 +733,9 @@ const Salary2 = () => {
           </CardContent>
         </Card>
 
-        {/* Payment Dialog */}
+        {/* Enhanced Payment Dialog */}
         <Dialog open={paymentDialog.open} onOpenChange={closePaymentDialog}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 {paymentDialog.type === "advance" ? (
@@ -706,7 +747,8 @@ const Salary2 = () => {
               </DialogTitle>
               <DialogDescription>
                 <strong>{paymentDialog.employee?.name}</strong> uchun{" "}
-                {paymentDialog.type === "advance" ? "avans" : "oylik"} to'lash
+                {paymentDialog.type === "advance" ? "avans" : "oylik"} miqdorini
+                o'zgartirish
                 <br />
                 <span className="text-sm text-gray-600">
                   Maksimal miqdor:{" "}
@@ -715,43 +757,107 @@ const Salary2 = () => {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Miqdor: {formatNumber(paymentForm.amount)}
-                </label>
-                <Input
-                  type="number"
-                  placeholder="Miqdorni kiriting"
-                  value={paymentForm.amount}
-                  onChange={(e) =>
-                    setPaymentForm((prev) => ({
-                      ...prev,
-                      amount: e.target.value,
-                    }))
-                  }
-                  className="border-2 focus:border-blue-500"
-                  max={paymentDialog.maxAmount}
-                />
-              </div>
+            <div className="space-y-6">
+              {/* Payment History */}
+              {paymentDialog.employee && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <History className="h-4 w-4 text-gray-500" />
+                    <h4 className="font-medium text-gray-900">
+                      {paymentDialog.type === "advance" ? "Avans" : "Oylik"}{" "}
+                      tarixi
+                    </h4>
+                  </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Izoh (ixtiyoriy)
-                </label>
-                <Textarea
-                  placeholder="Izoh yozing..."
-                  value={paymentForm.comment}
-                  onChange={(e) =>
-                    setPaymentForm((prev) => ({
-                      ...prev,
-                      comment: e.target.value,
-                    }))
-                  }
-                  className="border-2 focus:border-blue-500 resize-none"
-                  rows={3}
-                />
+                  <div className="max-h-40 overflow-y-auto border rounded-lg">
+                    {getPaymentHistory(
+                      paymentDialog.employee,
+                      paymentDialog.type
+                    ).length > 0 ? (
+                      <div className="divide-y">
+                        {getPaymentHistory(
+                          paymentDialog.employee,
+                          paymentDialog.type
+                        ).map((payment, index) => (
+                          <div key={index} className="p-3 hover:bg-gray-50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-green-500" />
+                                <span className="font-medium">
+                                  {formatNumber(payment.amount)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <Clock className="h-3 w-3" />
+                                {formatDate(payment.date)}
+                              </div>
+                            </div>
+                            {payment.comment && (
+                              <div className="mt-1 text-sm text-gray-600 flex items-start gap-2">
+                                <MessageSquare className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                <span>{payment.comment}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">
+                        Hali{" "}
+                        {paymentDialog.type === "advance" ? "avans" : "oylik"}{" "}
+                        to'lanmagan
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Separator />
+
+              {/* New Payment Form */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  To'lovni o'zgartirish
+                </h4>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Miqdor: {formatNumber(paymentForm.amount)}
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Miqdorni kiriting"
+                    value={paymentForm.amount}
+                    onChange={(e) =>
+                      setPaymentForm((prev) => ({
+                        ...prev,
+                        amount: e.target.value,
+                      }))
+                    }
+                    className="border-2 focus:border-blue-500"
+                    max={paymentDialog.maxAmount}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Izoh (ixtiyoriy)
+                  </label>
+                  <Textarea
+                    placeholder="Izoh yozing..."
+                    value={paymentForm.comment}
+                    onChange={(e) =>
+                      setPaymentForm((prev) => ({
+                        ...prev,
+                        comment: e.target.value,
+                      }))
+                    }
+                    className="border-2 focus:border-blue-500 resize-none"
+                    rows={3}
+                  />
+                </div>
               </div>
             </div>
 
