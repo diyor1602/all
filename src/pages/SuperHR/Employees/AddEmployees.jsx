@@ -247,7 +247,6 @@ const AddEmployees = () => {
         "position_id",
         "hiring_date",
         "birthday",
-        "payment_type",
       ];
       const missingFields = requiredFields.filter((field) => !formData[field]);
 
