@@ -28,7 +28,6 @@ const Profile = () => {
   });
 
   const img = data.img;
-  console.log(img);
 
   const fetchProfile = async () => {
     try {
