@@ -1,14 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Trophy, Medal } from "lucide-react";
-import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
+import api from "@/utils/api";
+import {
+  ChartColumnIncreasing,
+  ChartNoAxesCombined,
+  Medal,
+  NotepadText,
+  Trophy,
+  Users,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   // App data states - these will only be used after authentication
   const [outputs, setOutputs] = useState([]);
+  const [employeeCount, setEmployeeCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
   const { toast } = useToast();
@@ -50,6 +58,12 @@ const Home = () => {
 
       // Process the data
       processOutputData(data.sewing_outputs);
+      setEmployeeCount(
+        data.sewing_outputs.reduce(
+          (total, output) => total + output.employee_count,
+          0
+        )
+      );
     } catch (error) {
       toast({
         title: "Xatolik!",
@@ -127,168 +141,296 @@ const Home = () => {
     return "text-yellow-600";
   };
 
+  const getProgressStyle = (percentage) => {
+    if (percentage >= 100) {
+      return {
+        bg: "from-emerald-500 to-green-600",
+        text: "text-emerald-600",
+      };
+    }
+    if (percentage >= 70) {
+      return {
+        bg: "from-blue-500 to-cyan-600",
+        text: "text-blue-600",
+      };
+    }
+    return {
+      bg: "from-amber-500 to-orange-600",
+      text: "text-amber-600",
+    };
+  };
+
   // Main app content
   return (
     <div className="bg-gray-50">
-      <div className="mx-auto py-3 md:py-6 px-0 md:px-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6 gap-2">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 sm:justify-between w-full">
-            <div className="flex items-center gap-2">
-              <p className="text-gray-600 text-sm sm:text-base md:text-lg font-medium">
-                {formattedDate}
-              </p>
+      <div className="mx-auto px-0 md:px-4">
+        <div className="mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div>
+                <p className="text-slate-600 font-medium">{formattedDate}</p>
+              </div>
             </div>
-            <p className="text-black text-base sm:text-lg md:text-xl font-semibold">
-              {formattedTime}
-            </p>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-slate-800 font-mono">
+                {formattedTime}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Data Table */}
-        <div className="bg-white rounded-xl shadow-md p-0 sm:p-4 md:p-6 mb-8">
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white">
-              <thead className="sticky top-0 z-10 bg-indigo-50">
-                <tr className="border-b border-indigo-100">
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    #
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Model
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Submodel
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Gurux
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Bugungi reja
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Bugungi natija
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Jami natija
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Progress
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {outputs.map((output, index) => {
-                  const rank = index + 1;
-                  return (
-                    <tr
-                      key={`${output.model.name}-${output.submodel.name}-${output.group.name}`}
-                      className={`border-b border-gray-200 hover:bg-gray-50 ${
-                        output.hasChanged ? "animate-highlight" : ""
-                      }`}
-                    >
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center">
-                        {getMedalForRank(rank)}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        {output.model.name}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        {output.submodel.name}
-                      </td>
-                      <td
-                        className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-medium"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleNavigate(output.order_id);
-                        }}
-                      >
-                        {output.group.name}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
-                        {output.today_plan}
-                      </td>
-                      <td
-                        className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
-                          output.today_quantity >= output.today_plan
-                            ? "text-green-600"
-                            : "text-blue-600"
-                        }`}
-                      >
-                        {output.today_quantity}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
-                        {output.total_quantity}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4">
-                        <div className="flex items-center">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`${getProgressColor(
-                                output.progressPercentage
-                              )} h-2 rounded-full`}
-                              style={{
-                                width: `${Math.min(
-                                  output.progressPercentage,
-                                  100
-                                )}%`,
-                                animation: "fillProgress 1s ease-out",
-                              }}
-                            ></div>
-                          </div>
-                          <span
-                            className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
-                              output.progressPercentage
-                            )}`}
-                          >
-                            {output.progressPercentage}%
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-medium text-center"
-                  >
-                    Jami
-                  </td>
-                  <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
+        <div className="flex flex-col-reverse md:flex-col">
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Bugungi kiritilgan reja
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
                     {outputs.reduce(
                       (total, output) => total + output.today_plan,
                       0
                     )}
-                  </td>
-                  <td
-                    className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
-                      outputs.reduce(
-                        (total, output) => total + output.today_quantity,
-                        0
-                      ) >=
-                      outputs.reduce(
-                        (total, output) => total + output.today_plan,
-                        0
-                      )
-                        ? "text-green-600"
-                        : "text-blue-600"
-                    }`}
-                  >
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl shadow-lg">
+                  <NotepadText className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Bugungi Bajarilgan natija
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
                     {outputs.reduce(
                       (total, output) => total + output.today_quantity,
                       0
                     )}
-                  </td>
-                  <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
+                  </p>
+                </div>
+                <div
+                  className={`p-3 rounded-xl shadow-lg ${
+                    outputs.reduce(
+                      (total, output) => total + output.today_quantity,
+                      0
+                    ) >=
+                    outputs.reduce(
+                      (total, output) => total + output.today_plan,
+                      0
+                    )
+                      ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                      : "bg-gradient-to-r from-red-400 to-red-800"
+                  }`}
+                >
+                  <ChartColumnIncreasing className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Jami natija
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
                     {outputs.reduce(
                       (total, output) => total + output.total_quantity,
                       0
                     )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg">
+                  <ChartNoAxesCombined className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Jami Ishchilar
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {employeeCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl shadow-lg">
+                  <Users className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Bajarilgan O'rtacha Plan
+                  </p>
+                  {(() => {
+                    // Calculate average progress across all outputs
+                    const avgProgress =
+                      outputs.length > 0
+                        ? Math.round(
+                            outputs.reduce((sum, output) => {
+                              const progress =
+                                output.today_plan > 0
+                                  ? (output.today_quantity /
+                                      output.today_plan) *
+                                    100
+                                  : 0;
+                              return sum + progress;
+                            }, 0) / outputs.length
+                          )
+                        : 0;
+                    const style = getProgressStyle(avgProgress);
+                    return (
+                      <p className={`text-2xl font-bold ${style.text}`}>
+                        {avgProgress}%
+                      </p>
+                    );
+                  })()}
+                </div>
+                <div
+                  className={`p-3 rounded-xl shadow-lg bg-gradient-to-r ${(() => {
+                    // Use the same average progress for the background style
+                    const avgProgress =
+                      outputs.length > 0
+                        ? Math.round(
+                            outputs.reduce((sum, output) => {
+                              const progress =
+                                output.today_plan > 0
+                                  ? (output.today_quantity /
+                                      output.today_plan) *
+                                    100
+                                  : 0;
+                              return sum + progress;
+                            }, 0) / outputs.length
+                          )
+                        : 0;
+                    return getProgressStyle(avgProgress).bg;
+                  })()}`}
+                >
+                  <ChartColumnIncreasing className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Table */}
+          <div className="bg-white rounded-xl shadow-md p-0 sm:p-4 md:p-6 mb-8">
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white">
+                <thead className="sticky top-0 z-10 bg-indigo-50">
+                  <tr className="border-b border-indigo-100">
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      #
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Model
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Guruh
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Ishchilar
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Bugungi reja
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Bugungi natija
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Jami natija
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Progress
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {outputs.map((output, index) => {
+                    const rank = index + 1;
+                    return (
+                      <tr
+                        key={`${output.model.name}-${output.group.name}`}
+                        className={`border-b border-gray-200 hover:bg-gray-50 ${
+                          output.hasChanged ? "animate-highlight" : ""
+                        }`}
+                      >
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
+                          {getMedalForRank(rank)}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
+                          {output.model.name}
+                        </td>
+                        <td
+                          className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavigate(output.order_id);
+                          }}
+                        >
+                          {output.group.name}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center">
+                          <span className="font-bold text-indigo-600">
+                            {output.employee_count}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
+                          {output.today_plan}
+                        </td>
+                        <td
+                          className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
+                            output.today_quantity >= output.today_plan
+                              ? "text-green-600"
+                              : "text-blue-600"
+                          }`}
+                        >
+                          {output.today_quantity}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
+                          {output.total_quantity}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4">
+                          <div className="flex items-center">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`${getProgressColor(
+                                  output.progressPercentage
+                                )} h-2 rounded-full`}
+                                style={{
+                                  width: `${Math.min(
+                                    output.progressPercentage,
+                                    100
+                                  )}%`,
+                                  animation: "fillProgress 1s ease-out",
+                                }}
+                              ></div>
+                            </div>
+                            <span
+                              className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
+                                output.progressPercentage
+                              )}`}
+                            >
+                              {output.progressPercentage}%
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

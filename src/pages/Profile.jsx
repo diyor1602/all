@@ -1,9 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+"use client";
+
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 import api from "@/utils/api";
-import NoImage from "/noimage.png";
-import { Eye, EyeOff, Upload } from "lucide-react";
+import { X, Pencil, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Female from "/female.png";
+import Male from "/male.png";
+import NoImage from "/noimage.png";
 
 const Profile = () => {
   const [data, setData] = useState({});
@@ -21,6 +26,9 @@ const Profile = () => {
     password: "",
     confirmPassword: "",
   });
+
+  const img = data.img;
+  console.log(img);
 
   const fetchProfile = async () => {
     try {
@@ -145,244 +153,240 @@ const Profile = () => {
 
   if (loading && !data.id) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center min-h-[calc(100vh-6rem)]">
+        <div>
+          <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto"></div>
+          <h2 className="text-zinc-900 dark:text-white mt-4">Loading...</h2>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-40 flex items-center justify-center">
-          <h1 className="text-3xl font-bold text-white mb-5">Shaxsiy profil</h1>
-        </div>
-
-        <div className="relative -mt-16 px-6">
-          <div className="flex justify-center">
-            <div
-              className="h-32 w-32 rounded-full border-4 border-white bg-gray-200 overflow-hidden cursor-pointer relative"
-              onClick={editing ? handleImageClick : undefined}
-            >
-              {editing && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  <Upload className="text-white" />
-                </div>
-              )}
-              <img
-                src={imagePreview || data.img || NoImage}
-                alt="Profile"
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.target.src = NoImage;
-                }}
-              />
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
+    <div className="flex items-center justify-center min-h-[calc(100vh-6rem)]">
+      <div className="w-full mx-auto p-4">
+        <div className="flex justify-between items-stretch flex-col md:flex-row gap-6 mb-6 w-full">
+          {/* profil rasmi */}
+          <div className="w-full md:w-1/3 bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
+            <div className="text-2xl font-semibold text-center mb-6">
+              {data.name}
             </div>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {editing ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">
-                    Foydalanuvchi ismi
-                  </label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
+            <div className="flex justify-center items-center w-full">
+              <div
+                className={cn(
+                  "relative w-64 h-64 rounded-full border-4 border-primary/20 bg-gray-200 overflow-hidden cursor-pointer shadow-lg",
+                  editing && "hover:border-primary transition-all duration-300"
+                )}
+                onClick={editing ? handleImageClick : undefined}
+              >
+                <div
+                  className={cn(
+                    "absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 transition-opacity duration-300 z-10",
+                    editing && "hover:opacity-100"
+                  )}
+                >
+                  {editing && <Upload className="text-white w-8 h-8" />}
+                </div>
+                <div className="w-full h-full relative">
+                  <img
+                    src={
+                      imagePreview ||
+                      data.img ||
+                      (data.gender === "male"
+                        ? Male
+                        : data.gender === "female"
+                        ? Female
+                        : NoImage) ||
+                      "/placeholder.svg"
+                    }
+                    alt="Profile"
+                    className="w-full h-full object-cover object-center"
+                    onError={(e) => {
+                      e.target.src = NoImage;
+                    }}
                   />
                 </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </div>
+            </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">
-                    F.I.SH
-                  </label>
-                  <div className="px-4 py-2 border border-gray-200 rounded-md bg-gray-50">
-                    {data.name}
-                  </div>
-                </div>
+            <button
+              className="mt-8 py-2.5 px-6 bg-white border border-primary text-primary rounded-full flex items-center gap-2 hover:bg-primary hover:text-white transition-colors duration-300 shadow-sm"
+              onClick={handleEditToggle}
+            >
+              {editing ? (
+                <X className="w-4 h-4" />
+              ) : (
+                <Pencil className="w-4 h-4" />
+              )}
+              {editing ? "Bekor qilish" : "Tahrirlash"}
+            </button>
+          </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">
-                    Yangi parol
-                  </label>
-                  <div className="relative">
+          {/* ma'lumotlar */}
+          <div className="w-full md:w-2/3 bg-white rounded-lg shadow-md p-6 px-8">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-semibold">Shaxsiy ma'lumotlar</h1>
+            </div>
+
+            {editing && (
+              <form onSubmit={handleSubmit} className="mb-6 rounded-lg">
+                <div className="grid grid-cols-1 gap-4 mb-4">
+                  <div className="w-full block">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Foydalanuvchi ismi
+                    </label>
                     <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      autoComplete="new-password"
+                      type="text"
+                      name="username"
+                      value={formData.username}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 text-gray-500"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">
-                    Parolni tasdiqlang
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="absolute right-3 top-2.5 text-gray-500"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={18} />
-                      ) : (
-                        <Eye size={18} />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={handleEditToggle}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Bekor qilish
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <div className="w-5 h-5 border-t-2 border-blue-200 border-solid rounded-full animate-spin mx-auto"></div>
-                  ) : (
-                    "Saqlash"
-                  )}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <div className="space-y-3">
+                  <div className="flex gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">
-                        Foydalanuvchi ismi
-                      </p>
-                      <p className="font-medium">{data.username}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Yangi parol (ixtiyoriy)
+                      </label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        minLength={6}
+                      />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">F.I.SH</p>
-                      <p className="font-medium">{data.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Telefon</p>
-                      <p className="font-medium">{data.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Tug'ilgan sana</p>
-                      <p className="font-medium">
-                        {data.birthday
-                          ?.split(" ")[0]
-                          .split("-")
-                          .reverse()
-                          .join(".")}
-                      </p>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Parolni tasdiqlash
+                      </label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        minLength={6}
+                      />
                     </div>
                   </div>
                 </div>
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    {loading ? "Saqlanmoqda..." : "Saqlash"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleEditToggle}
+                    className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                  >
+                    Bekor qilish
+                  </button>
+                </div>
+              </form>
+            )}
 
-                <div>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-gray-500">Bo'lim</p>
-                      <p className="font-medium">{data.department}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Lavozim</p>
-                      <p className="font-medium">{data.position || "-"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">
-                        Ishga qabul qilingan sana
-                      </p>
-                      <p className="font-medium">
-                        {data.hiring_date
-                          ?.split(" ")[0]
-                          .split("-")
-                          .reverse()
-                          .join(".")}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Holati</p>
-                      <p className="font-medium capitalize">
-                        {data.status === "working"
-                          ? "Faol ishlayotgan"
-                          : data.status}
-                      </p>
-                    </div>
+            {!editing && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 md:gap-6">
+                <div className="space-y-4">
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">Foydalanuvchi ismi</p>
+                    <p className="font-medium text-lg">{data.username}</p>
+                  </div>
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">F.I.SH</p>
+                    <p className="font-medium text-lg">{data.name}</p>
+                  </div>
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">Telefon</p>
+                    <p className="font-medium text-lg">
+                      {data.phone && data.phone.length >= 11
+                        ? data.phone.slice(0, 4) +
+                          " " +
+                          data.phone.slice(4, 6) +
+                          " " +
+                          data.phone.slice(6, 9) +
+                          " " +
+                          data.phone.slice(9, 11) +
+                          " " +
+                          data.phone.slice(11)
+                        : data.phone || "-"}
+                    </p>
+                  </div>
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">Tug'ilgan sana</p>
+                    <p className="font-medium text-lg">
+                      {data.birthday
+                        ? data.birthday
+                            .split(" ")[0]
+                            .split("-")
+                            .reverse()
+                            .join(".")
+                        : "-"}
+                    </p>
+                  </div>
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">Bo'lim</p>
+                    <p className="font-medium text-lg">
+                      {data.department || "-"}
+                    </p>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+                <div className="space-y-4">
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">Lavozim</p>
+                    <p className="font-medium text-lg">
+                      {data.position || "-"}
+                    </p>
+                  </div>
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">
+                      Ishga qabul qilingan sana
+                    </p>
+                    <p className="font-medium text-lg">
+                      {data.hiring_date
+                        ? data.hiring_date
+                            .split(" ")[0]
+                            .split("-")
+                            .reverse()
+                            .join(".")
+                        : "-"}
+                    </p>
+                  </div>
+                  <div className="border-b pb-2">
                     <p className="text-sm text-gray-500">Manzil</p>
-                    <p className="font-medium">{data.address}</p>
+                    <p className="font-medium text-lg">{data.address || "-"}</p>
                   </div>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-gray-500">Pasport seriya</p>
-                      <p className="font-medium">{data.passport_number}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">JSHSHIR</p>
-                      <p className="font-medium">{data.passport_code}</p>
-                    </div>
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">Pasport seriya</p>
+                    <p className="font-medium text-lg">
+                      {data.passport_number || "-"}
+                    </p>
+                  </div>
+                  <div className="border-b pb-2">
+                    <p className="text-sm text-gray-500">JSHSHIR</p>
+                    <p className="font-medium text-lg">
+                      {data.passport_code || "-"}
+                    </p>
                   </div>
                 </div>
               </div>
-
-              <div className="mt-8 flex justify-end">
-                <button
-                  onClick={handleEditToggle}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Tahrirlash
-                </button>
-              </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
