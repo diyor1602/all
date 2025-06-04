@@ -335,6 +335,25 @@ const ConnectResult = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {/* Average Dailiy Earning for Master */}
+              <div className="p-4 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl border border-sky-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-sky-500 rounded-lg">
+                    <CircleDollarSign className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-sky-600 font-medium">
+                      Master topgan summa
+                    </p>
+                    <p className="text-lg font-bold text-sky-800">
+                      {Number.parseFloat(
+                        data.order?.actualTodayEarned || 0
+                      ).toLocaleString("ru-RU")}{" "}
+                      so'm
+                    </p>
+                  </div>
+                </div>
+              </div>
               {/* Total Quantity */}
               <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
                 <div className="flex items-center gap-3">
@@ -417,26 +436,6 @@ const ConnectResult = () => {
                     <p className="text-lg font-bold text-teal-800">
                       {Number.parseFloat(
                         data.order?.perEmployeeEarning || 0
-                      ).toLocaleString("ru-RU")}{" "}
-                      so'm
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Average Dailiy Earning for Master */}
-              <div className="p-4 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl border border-sky-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-sky-500 rounded-lg">
-                    <CircleDollarSign className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-sky-600 font-medium">
-                      Master topgan summa
-                    </p>
-                    <p className="text-lg font-bold text-sky-800">
-                      {Number.parseFloat(
-                        data.order?.actualTodayEarned || 0
                       ).toLocaleString("ru-RU")}{" "}
                       so'm
                     </p>
