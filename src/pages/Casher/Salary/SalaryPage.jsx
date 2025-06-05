@@ -40,6 +40,7 @@ import {
   History,
   Clock,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const formatNumber = (num) => {
   return Number.parseFloat(num)?.toLocaleString("ru-RU");
@@ -671,9 +672,13 @@ const SalaryPage = () => {
                             </Badge>
                           </td>
                           <td className="border border-gray-200 p-1 text-center">
-                            <span className="text-green-600 font-medium">
+                            <Link
+                              to={`/casher/salary/${employee.id}`}
+                              target="_blank"
+                              className="text-green-600 font-medium"
+                            >
                               {formatNumber(employee?.earning?.total_earned)}
-                            </span>
+                            </Link>
                           </td>
                           <td className="border border-gray-200 p-1 text-center">
                             <span className="text-green-600 font-medium">
