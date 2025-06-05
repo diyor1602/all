@@ -7,6 +7,7 @@ import {
   Gem,
   Home,
   RefreshCcw,
+  UserLock,
 } from "lucide-react";
 
 const navigation = [
@@ -36,9 +37,15 @@ const navigation = [
     onMobile: true,
   },
   {
-    name: "Oylik ",
+    name: "Oylik",
     href: "/casher/salary",
     icon: Gem,
+    onMobile: false,
+  },
+  {
+    name: "AUP",
+    href: "/casher/aup",
+    icon: UserLock,
     onMobile: false,
   },
 ];

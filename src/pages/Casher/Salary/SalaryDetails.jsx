@@ -51,7 +51,6 @@ const SalaryDetails = () => {
             end_date: filters.end_date,
           },
         });
-        console.log(response.data);
       } catch (error) {
         toast({
           title: "Xatolik",
