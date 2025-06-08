@@ -5,7 +5,7 @@ import Balance from "./Balance/Balance";
 import Requests from "./Requests/Requests";
 import Transfer from "./Transfer/Transfer";
 import Salary from "./Salary/Salary";
-import Aup from "./Aup/Aup";
+import Employees from "./Employees/Employees";
 
 const Casher = () => {
   return (
@@ -16,7 +16,7 @@ const Casher = () => {
       <Route path="requests/*" element={<Requests />} />
       <Route path="transfer" element={<Transfer />} />
       <Route path="salary/*" element={<Salary />} />
-      <Route path="aup" element={<Aup />} />
+      <Route path="employees" element={<Employees />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
