@@ -24,6 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { statuses } from "@/lib/status";
 
 const Results = () => {
   const { toast } = useToast();
@@ -97,7 +98,7 @@ const Results = () => {
                       dona)
                     </CardDescription>
                     <CardDescription className="text-xs">
-                      Status: {result.order.status} | Rasxod:{" "}
+                      Status: {statuses[result.order.status]?.text} | Rasxod:{" "}
                       {result.order.rasxod}
                     </CardDescription>
                     {result.order.comment && (
