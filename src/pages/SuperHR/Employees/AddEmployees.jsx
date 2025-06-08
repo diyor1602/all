@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ArrowLeft, Upload } from "lucide-react";
+import payment_types from "@/lib/paymentTypes";
 
 const AddEmployees = () => {
   const { toast } = useToast();
@@ -705,15 +706,16 @@ const AddEmployees = () => {
                         <SelectValue placeholder="To'lov turi tanlang" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="piece_work">Ishbay</SelectItem>
-                        <SelectItem value="monthly">Oylik</SelectItem>
-                        <SelectItem value="daily">Kunlik</SelectItem>
-                        <SelectItem value="hourly">Soatbay</SelectItem>
+                        {Object.entries(payment_types).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {["monthly", "daily", "hourly"].includes(
+                  {["hourly", "daily", "monthly"].includes(
                     formData.payment_type
                   ) && (
                     <div className="space-y-2">
@@ -725,7 +727,7 @@ const AddEmployees = () => {
                           ? "kunlik"
                           : formData.payment_type === "hourly"
                           ? "soatlik"
-                          : "Ishbay"}{" "}
+                          : "oylik"}{" "}
                         summa <span className="text-red-500">*</span> (
                         {parseFloat(formData.salary).toLocaleString("en")} so'm)
                       </Label>

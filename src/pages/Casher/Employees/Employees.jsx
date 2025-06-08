@@ -454,7 +454,7 @@ const Employees = () => {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                Bonus (
+                KPI (
                 {parseFloat(selectedEmployee?.bonus)?.toLocaleString("ru-RU")})
                 {isBonusDisabled() && (
                   <span className="text-xs text-gray-500 ml-2">
@@ -464,7 +464,7 @@ const Employees = () => {
               </label>
               <Input
                 type="number"
-                placeholder="Bonus"
+                placeholder="KPI"
                 value={selectedEmployee?.bonus || ""}
                 onChange={(e) =>
                   setSelectedEmployee({
@@ -592,7 +592,7 @@ const Employees = () => {
             <TableHead className="border">Lavozimi</TableHead>
             <TableHead className="border">To'lov turi</TableHead>
             <TableHead className="border">Maosh</TableHead>
-            <TableHead className="border">Bonus</TableHead>
+            <TableHead className="border">KPI</TableHead>
             <TableHead className="border">Holati</TableHead>
             <TableHead className="border">Amallar</TableHead>
           </TableRow>
