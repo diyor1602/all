@@ -39,6 +39,7 @@ import {
   Plus,
   History,
   Clock,
+  Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -67,7 +68,7 @@ const SalaryPage = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-
+  const [downloading, setDownloading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState({});
   const [paymentDialog, setPaymentDialog] = useState({
     open: false,
@@ -92,6 +93,39 @@ const SalaryPage = () => {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  };
+
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+
+      const params = {
+        department_id: filters.department_id,
+        group_id: filters.group_id,
+        start_date: filters.start_date,
+        end_date: filters.end_date,
+      };
+
+      const response = await api.get(`/casher/pdf/employees`, {
+        params,
+        responseType: "blob",
+      });
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(response.data);
+      link.download = `Xodimlar oylik-${selectedMonth}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.message || "Yuklab olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const initializeFilters = () => {
@@ -597,7 +631,7 @@ const SalaryPage = () => {
         {/* Employee Table */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between gap-2">
+            <CardTitle className="text-lg flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <User className="h-5 w-5" />
                 Xodimlar ro'yxati
@@ -608,6 +642,18 @@ const SalaryPage = () => {
                   {filters.group_id && ` - ${getSelectedGroupName()}`}
                 </Badge>
               )}
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={downloading}
+                onClick={handleDownload}
+              >
+                {downloading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Download />
+                )}
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
