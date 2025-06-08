@@ -306,6 +306,7 @@ const Employees = () => {
     try {
       const payload = {
         payment_type: selectedEmployee.payment_type,
+        type: selectedEmployee.type,
       };
 
       // Apply validation rules for API payload
@@ -327,7 +328,7 @@ const Employees = () => {
 
       toast({
         title: "Muvaffaqiyatli",
-        description: "To'lov turi o'zgartirildi",
+        description: "Xodim ma'lumotlari o'zgartirildi",
         style: {
           backgroundColor: "green",
           color: "white",
@@ -341,7 +342,8 @@ const Employees = () => {
       toast({
         title: "Xatolik",
         description:
-          error.response?.data?.message || "To'lov turi o'zgartirishda xatolik",
+          error.response?.data?.message ||
+          "Xodim ma'lumotlari o'zgartirishda xatolik",
         variant: "destructive",
       });
     } finally {
@@ -397,6 +399,13 @@ const Employees = () => {
     fetchEmployees();
   };
 
+  const handleEditTypeChange = (type) => {
+    setSelectedEmployee({
+      ...selectedEmployee,
+      type,
+    });
+  };
+
   return (
     <div className="space-y-2">
       <Dialog open={editDialogOpen} onOpenChange={handleEditClose}>
@@ -408,6 +417,21 @@ const Employees = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Xodim turi</label>
+              <Select
+                value={selectedEmployee?.type}
+                onValueChange={handleEditTypeChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Xodim turi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="simple">Oddiy</SelectItem>
+                  <SelectItem value="aup">AUP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">To'lov turi</label>
               <Select
