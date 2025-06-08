@@ -22,8 +22,6 @@ const Profile = () => {
 	const [data, setData] = useState({})
 	const [loading, setLoading] = useState(true)
 	const [editing, setEditing] = useState(false)
-	const [showPassword, setShowPassword] = useState(false)
-	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 	const [imagePreview, setImagePreview] = useState(null)
 	const fileInputRef = useRef(null)
 	const { toast } = useToast()
@@ -42,7 +40,11 @@ const Profile = () => {
 				setBalance(parseFloat(data.balance))
 				setTodayBonus(parseFloat(data.today_bonus))
 			} catch (error) {
-				console.error("Ma'lumot olishda xatolik:", error)
+				toast({
+					title: "Xatolik",
+					description: "Profil ma'lumotlarini olib bo'lmadi",
+					variant: "destructive",
+				})
 			}
 		}
 

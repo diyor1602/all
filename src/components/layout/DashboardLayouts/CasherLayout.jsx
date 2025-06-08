@@ -6,7 +6,8 @@ import {
   ClipboardCheck,
   Gem,
   Home,
-  RefreshCcw,
+  Rotate3d,
+  Users,
 } from "lucide-react";
 
 const navigation = [
@@ -36,9 +37,21 @@ const navigation = [
     onMobile: true,
   },
   {
-    name: "Oylik ",
+    name: "Transfer",
+    href: "/casher/transfer",
+    icon: Rotate3d,
+    onMobile: false,
+  },
+  {
+    name: "Oylik",
     href: "/casher/salary",
     icon: Gem,
+    onMobile: false,
+  },
+  {
+    name: "Xodimlar",
+    href: "/casher/employees",
+    icon: Users,
     onMobile: false,
   },
 ];
