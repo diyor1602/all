@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DialogDescription } from "@radix-ui/react-dialog";
+import payment_types from "@/lib/paymentTypes";
 
 const EditEmployees = () => {
   const { id } = useParams();
@@ -51,6 +52,7 @@ const EditEmployees = () => {
     type: "",
     payment_type: "",
     salary: "",
+    bonus: "",
   });
   const fileInputRef = useRef(null);
 
@@ -141,6 +143,7 @@ const EditEmployees = () => {
         type: employee.type || "simple",
         payment_type: employee.payment_type || "piece_work",
         salary: employee.salary || "",
+        bonus: employee.bonus || "",
       });
 
       // Directly set form data with all values
@@ -159,6 +162,7 @@ const EditEmployees = () => {
         role_id: roleId,
         payment_type: employee.payment_type || "piece_work",
         salary: employee.salary || "",
+        bonus: employee.bonus || "",
         type: employee.type || "simple",
         status: employee.status || "working",
         gender: employee.gender || "",
@@ -507,8 +511,10 @@ const EditEmployees = () => {
           initialData.type == "aup" ? initialData?.payment_type : "monthly"
         );
       }
+      formDataToSend.append("bonus", initialData.bonus);
 
       formDataToSend.append("_method", "PATCH");
+
       await api.post(`/superhr/employees/${id}`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -952,10 +958,11 @@ const EditEmployees = () => {
                         <SelectValue placeholder="To'lov turi tanlang" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="piece_work">Ishbay</SelectItem>
-                        <SelectItem value="monthly">Oylik</SelectItem>
-                        <SelectItem value="daily">Kunlik</SelectItem>
-                        <SelectItem value="hourly">Soatbay</SelectItem>
+                        {Object.entries(payment_types).map(([key, value]) => (
+                          <SelectItem key={key} value={key}>
+                            {value}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
