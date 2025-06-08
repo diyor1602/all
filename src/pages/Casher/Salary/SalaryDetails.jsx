@@ -291,8 +291,10 @@ const SalaryDetails = () => {
 						<div className='space-y-3'>
 							<div className='flex items-center gap-3'>
 								<Hash className='h-4 w-4 text-primary' />
-								<div>
-									<span className='text-xs text-muted-foreground'>Xodim ID:</span>
+								<div className='flex items-center gap-1'>
+									<span className='text-xs text-muted-foreground '>
+										Xodim ID:
+									</span>
 									<span className='font-medium'>{employee.id}</span>
 								</div>
 							</div>
@@ -327,9 +329,14 @@ const SalaryDetails = () => {
 						<div className='space-y-3'>
 							{employee.balance && (
 								<div className='flex justify-between items-center'>
-									<span className='text-xs text-muted-foreground'>Hisobdagi mablag'lar:</span>
+									<span className='text-xs text-muted-foreground'>
+										Hisobdagi mablag'lar:
+									</span>
 									<span className='font-medium text-green-600'>
-										{Number.parseFloat(employee.balance).toLocaleString('ru-RU')} so'm
+										{Number.parseFloat(employee.balance).toLocaleString(
+											"ru-RU"
+										)}{" "}
+										so'm
 									</span>
 								</div>
 							)}
@@ -337,7 +344,8 @@ const SalaryDetails = () => {
 								<div className='flex justify-between items-center'>
 									<span className='text-sm text-muted-foreground'>Bonus:</span>
 									<span className='font-medium'>
-										{Number.parseFloat(employee.bonus).toLocaleString('ru-RU')} so'm
+										{Number.parseFloat(employee.bonus).toLocaleString("ru-RU")}{" "}
+										so'm
 									</span>
 								</div>
 							)}
@@ -347,7 +355,7 @@ const SalaryDetails = () => {
 										Jami ishlangan mablag'lar:
 									</span>
 									<span className='font-medium text-blue-600'>
-										{totalTarificationAmount.toLocaleString('ru-RU')} so'm
+										{totalTarificationAmount.toLocaleString("ru-RU")} so'm
 									</span>
 								</div>
 							)}
@@ -373,18 +381,6 @@ const SalaryDetails = () => {
 									<span>{employee.type}</span>
 								</div>
 							)}
-							{employee.branch_id && (
-								<div className='flex justify-between'>
-									<span>Filial ID:</span>
-									<span>{employee.branch_id}</span>
-								</div>
-							)}
-							{employee.user_id && (
-								<div className='flex justify-between'>
-									<span>Foydalanuvchi ID:</span>
-									<span>{employee.user_id}</span>
-								</div>
-							)}
 						</div>
 					</CardFooter>
 				</Card>
@@ -396,8 +392,7 @@ const SalaryDetails = () => {
 						onValueChange={setActiveTab}
 						className='w-full'
 					>
-						<TabsList className='grid grid-cols-3 mb-4'>
-							<TabsTrigger value='overview'>Umumiy</TabsTrigger>
+						<TabsList className='grid grid-cols-2 mb-4'>
 							<TabsTrigger value='attendance'>
 								Davomat
 								{employee.attendances?.length > 0 && (
@@ -415,230 +410,6 @@ const SalaryDetails = () => {
 								)}
 							</TabsTrigger>
 						</TabsList>
-
-						<TabsContent value='overview' className='space-y-4'>
-							{/* Bo'lim ma'lumotlari */}
-							{employee.department && (
-								<Card>
-									<CardHeader>
-										<CardTitle className='text-lg flex items-center gap-2'>
-											<Building className='h-5 w-5 text-primary' />
-											Bo'lim ma'lumotlari
-										</CardTitle>
-									</CardHeader>
-									<CardContent className='space-y-4'>
-										<div className='grid grid-cols-2 gap-4'>
-											<div>
-												<p className='text-sm text-muted-foreground'>
-													Bo'lim nomi
-												</p>
-												<p className='font-medium'>
-													{employee.department.name}
-												</p>
-											</div>
-											{employee.department.id && (
-												<div>
-													<p className='text-sm text-muted-foreground'>
-														Bo'lim ID
-													</p>
-													<p className='font-medium'>
-														{employee.department.id}
-													</p>
-												</div>
-											)}
-											{employee.department.main_department_id && (
-												<div>
-													<p className='text-sm text-muted-foreground'>
-														Asosiy bo'lim ID
-													</p>
-													<p className='font-medium'>
-														{employee.department.main_department_id}
-													</p>
-												</div>
-											)}
-											{employee.department.break_time && (
-												<div>
-													<p className='text-sm text-muted-foreground'>
-														Tanaffus
-													</p>
-													<p className='font-medium'>
-														{employee.department.break_time} daqiqa
-													</p>
-												</div>
-											)}
-										</div>
-										{employee.department.start_time &&
-											employee.department.end_time && (
-												<div className='flex items-center justify-between pt-2'>
-													<div>
-														<p className='text-sm text-muted-foreground'>
-															Ish vaqti
-														</p>
-														<p className='font-medium flex items-center gap-2'>
-															<Clock className='h-4 w-4 text-muted-foreground' />
-															{formatTime(employee.department.start_time)} -{" "}
-															{formatTime(employee.department.end_time)}
-														</p>
-													</div>
-												</div>
-											)}
-									</CardContent>
-								</Card>
-							)}
-
-							{/* Lavozim va guruh ma'lumotlari */}
-							{(employee.position || employee.group) && (
-								<Card>
-									<CardHeader>
-										<CardTitle className='text-lg flex items-center gap-2'>
-											<Users className='h-5 w-5 text-primary' />
-											Lavozim va guruh
-										</CardTitle>
-									</CardHeader>
-									<CardContent className='space-y-4'>
-										<div className='grid grid-cols-2 gap-4'>
-											{employee.position && (
-												<>
-													<div>
-														<p className='text-sm text-muted-foreground'>
-															Lavozim
-														</p>
-														<p className='font-medium'>
-															{employee.position.name}
-														</p>
-													</div>
-													{employee.position.id && (
-														<div>
-															<p className='text-sm text-muted-foreground'>
-																Lavozim ID
-															</p>
-															<p className='font-medium'>
-																{employee.position.id}
-															</p>
-														</div>
-													)}
-												</>
-											)}
-											{employee.group && (
-												<>
-													<div>
-														<p className='text-sm text-muted-foreground'>
-															Guruh
-														</p>
-														<p className='font-medium'>{employee.group.name}</p>
-													</div>
-													{employee.group.id && (
-														<div>
-															<p className='text-sm text-muted-foreground'>
-																Guruh ID
-															</p>
-															<p className='font-medium'>{employee.group.id}</p>
-														</div>
-													)}
-													{employee.group.responsible_user_id && (
-														<div>
-															<p className='text-sm text-muted-foreground'>
-																Mas'ul ID
-															</p>
-															<p className='font-medium'>
-																{employee.group.responsible_user_id}
-															</p>
-														</div>
-													)}
-												</>
-											)}
-										</div>
-									</CardContent>
-								</Card>
-							)}
-
-							{/* Davomat statistikasi */}
-							{employee.attendances?.length > 0 && (
-								<Card>
-									<CardHeader className='pb-2'>
-										<CardTitle className='text-lg flex items-center gap-2'>
-											<CalendarClock className='h-5 w-5 text-primary' />
-											Davomat statistikasi
-										</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<div className='space-y-4'>
-											<div>
-												<div className='flex justify-between mb-1'>
-													<span className='text-sm'>Davomat darajasi</span>
-													<span className='text-sm font-medium'>
-														{attendanceRate.toFixed(0)}%
-													</span>
-												</div>
-												<Progress value={attendanceRate} className='h-2' />
-											</div>
-
-											<div className='grid grid-cols-2 gap-4 pt-2'>
-												<div className='flex items-center gap-2'>
-													<CheckCircle2 className='h-4 w-4 text-green-500' />
-													<span className='text-sm'>
-														{
-															employee.attendances.filter(
-																(a) => a.status === "present"
-															).length
-														}{" "}
-														kun kelgan
-													</span>
-												</div>
-												<div className='flex items-center gap-2'>
-													<XCircle className='h-4 w-4 text-red-500' />
-													<span className='text-sm'>
-														{
-															employee.attendances.filter(
-																(a) => a.status === "absent"
-															).length
-														}{" "}
-														kun kelmagan
-													</span>
-												</div>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-							)}
-
-							{/* Tizim ma'lumotlari */}
-							{(employee.created_at || employee.updated_at) && (
-								<Card>
-									<CardHeader>
-										<CardTitle className='text-lg flex items-center gap-2'>
-											<User className='h-5 w-5 text-primary' />
-											Tizim ma'lumotlari
-										</CardTitle>
-									</CardHeader>
-									<CardContent className='space-y-3'>
-										<div className='grid grid-cols-2 gap-4 text-sm'>
-											{employee.created_at && (
-												<div>
-													<p className='text-muted-foreground'>
-														Yaratilgan sana
-													</p>
-													<p className='font-medium'>
-														{formatDateTime(employee.created_at)}
-													</p>
-												</div>
-											)}
-											{employee.updated_at && (
-												<div>
-													<p className='text-muted-foreground'>
-														Yangilangan sana
-													</p>
-													<p className='font-medium'>
-														{formatDateTime(employee.updated_at)}
-													</p>
-												</div>
-											)}
-										</div>
-									</CardContent>
-								</Card>
-							)}
-						</TabsContent>
-
 						<TabsContent value='attendance' className='space-y-4'>
 							<Card>
 								<CardHeader>
@@ -646,10 +417,32 @@ const SalaryDetails = () => {
 										<Calendar className='h-5 w-5 text-primary' />
 										Davomat qaydnomasi
 									</CardTitle>
-									<CardDescription>
+									<CardDescription className='grid grid-cols-3 gap-4 pt-2'>
 										{employee.attendances?.length > 0
 											? `${employee.attendances.length} kunlik davomat`
 											: "Davomat ma'lumotlari mavjud emas"}
+										<div className='flex items-center gap-2'>
+											<CheckCircle2 className='h-4 w-4 text-green-500' />
+											<span className='text-sm'>
+												{
+													employee.attendances.filter(
+														(a) => a.status === "present"
+													).length
+												}{" "}
+												kun kelgan
+											</span>
+										</div>
+										<div className='flex items-center gap-2'>
+											<XCircle className='h-4 w-4 text-red-500' />
+											<span className='text-sm'>
+												{
+													employee.attendances.filter(
+														(a) => a.status === "absent"
+													).length
+												}{" "}
+												kun kelmagan
+											</span>
+										</div>
 									</CardDescription>
 								</CardHeader>
 								<CardContent>
@@ -675,7 +468,6 @@ const SalaryDetails = () => {
 																{formatDate(attendance.date)}
 															</p>
 															<p className='text-xs text-muted-foreground'>
-																ID: {attendance.id} •{" "}
 																{attendance.status === "present"
 																	? "Kelgan"
 																	: "Kelmagan"}
@@ -687,7 +479,7 @@ const SalaryDetails = () => {
 															<div className='flex items-center gap-1'>
 																<Clock className='h-3 w-3 text-muted-foreground' />
 																<span>
-																	Kirdi:{" "}
+																	Keldi:{" "}
 																	{formatTime(
 																		attendance.check_in.split(" ")[1]
 																	)}
@@ -698,17 +490,11 @@ const SalaryDetails = () => {
 															<div className='flex items-center gap-1'>
 																<Clock className='h-3 w-3 text-muted-foreground' />
 																<span>
-																	Chiqdi:{" "}
+																	Ketdi:{" "}
 																	{formatTime(
 																		attendance.check_out.split(" ")[1]
 																	)}
 																</span>
-															</div>
-														)}
-														{attendance.updated_at && (
-															<div className='text-xs text-muted-foreground'>
-																Yangilangan:{" "}
-																{formatDateTime(attendance.updated_at)}
 															</div>
 														)}
 													</div>
@@ -770,16 +556,6 @@ const SalaryDetails = () => {
 													</div>
 
 													<div className='space-y-3'>
-														<div>
-															<p className='font-medium text-base'>
-																{log.tarification.name}
-															</p>
-															<p className='text-xs text-muted-foreground'>
-																Log ID: {log.id} • Tarifikatsiya ID:{" "}
-																{log.tarification.id}
-															</p>
-														</div>
-
 														<div className='grid grid-cols-2 md:grid-cols-4 gap-3 text-sm'>
 															<div className='flex flex-col'>
 																<span className='text-muted-foreground flex items-center gap-1'>
