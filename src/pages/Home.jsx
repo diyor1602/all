@@ -205,7 +205,7 @@ const Home = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-500 text-sm font-medium">
-                    Bugungi Bajarilgan natija
+                    Real natija
                   </p>
                   <p className="text-2xl font-bold text-slate-800">
                     {outputs.reduce(
@@ -255,7 +255,7 @@ const Home = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-500 text-sm font-medium">
-                    Jami Ishchilar
+                    Jami ishchilar
                   </p>
                   <p className="text-2xl font-bold text-slate-800">
                     {employeeCount}
@@ -271,7 +271,7 @@ const Home = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-500 text-sm font-medium">
-                    Bajarilgan O'rtacha Plan
+                    Bajarilgan ortacha plan
                   </p>
                   {(() => {
                     // Calculate average progress across all outputs
