@@ -65,7 +65,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-.onesignal-bell-launcher-button {
-  display: none !important;
-}
