@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import payment_types from "@/lib/paymentTypes";
+import { cn } from "@/lib/utils";
 
 const EditEmployees = () => {
   const { id } = useParams();
@@ -888,6 +889,7 @@ const EditEmployees = () => {
                           <SelectItem
                             key={role.id}
                             value={normalizeId(role.id)}
+                            className={role.id == "none" ? "text-red-500" : ""}
                           >
                             {role.description}
                           </SelectItem>
