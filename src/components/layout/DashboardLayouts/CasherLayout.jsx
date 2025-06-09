@@ -7,6 +7,7 @@ import {
   Gem,
   Home,
   Rotate3d,
+  TentTree,
   Users,
 } from "lucide-react";
 
@@ -52,6 +53,12 @@ const navigation = [
     name: "Xodimlar",
     href: "/casher/employees",
     icon: Users,
+    onMobile: false,
+  },
+  {
+    name: "Kunlik balans",
+    href: "/casher/daily",
+    icon: TentTree,
     onMobile: false,
   },
 ];
