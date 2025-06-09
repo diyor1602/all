@@ -643,8 +643,8 @@ const SalaryDetails = () => {
                     <div className="text-center py-8">
                       <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground">
-                        Тanlangan сана оралиғида тарификация маълумотлари
-                        топилмади
+                        Tanlangan sana oralig'ida tarifikatsiya ma'lumotlari
+                        topilmadi
                       </p>
                     </div>
                   )}
