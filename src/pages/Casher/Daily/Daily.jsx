@@ -216,14 +216,14 @@ const Daily = () => {
       bg: "bg-sky-300",
     },
     {
-      label: "Kunlik o'zgarmas harajatlar",
-      value: daily.daily_expenses,
-      bg: "bg-green-300",
-    },
-    {
       label: "Jami harajatlar",
       value: daily.total_fixed_cost_uzs,
       bg: "bg-red-300",
+    },
+    {
+      label: "Kunlik o'zgarmas harajatlar",
+      value: daily.daily_expenses,
+      bg: "bg-green-300",
     },
     {
       label: "AUP",
@@ -244,6 +244,14 @@ const Daily = () => {
       label: "Transport uchun",
       value: daily.transport_attendance,
       bg: "bg-gray-300",
+    },
+    {
+      label: "Tikuv uchun",
+      value: daily.orders?.reduce(
+        (acc, order) => acc + order.rasxod_limit_uzs,
+        0
+      ),
+      bg: "bg-purple-300",
     },
   ];
 
