@@ -538,6 +538,19 @@ const SalaryDetails = () => {
                                     ? "Kelgan"
                                     : "Kelmagan"}
                                 </p>
+                                {employee?.attendance_salaries?.find(
+                                  (a) => a.attendance_id === attendance.id
+                                ) && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Topgan puli:{" "}
+                                    {parseFloat(
+                                      employee.attendance_salaries.find(
+                                        (a) => a.attendance_id === attendance.id
+                                      )?.amount || 0
+                                    )?.toLocaleString("ru-RU")}{" "}
+                                    so'm
+                                  </p>
+                                )}
                               </div>
                             </div>
                             <div className="text-sm space-y-1">
