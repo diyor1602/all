@@ -550,8 +550,8 @@ const Daily = () => {
               <CardTitle className="text-slate-800">Buyurtmalar</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table className="border border-slate-200">
+              <div className="overflow-x-auto w-full">
+                <Table className="border border-slate-200 w-full whitespace-nowrap">
                   <TableHeader className="bg-slate-50">
                     <TableRow>
                       <TableHead className="border border-slate-200">
@@ -574,6 +574,15 @@ const Daily = () => {
                       </TableHead>
                       <TableHead className="border border-slate-200">
                         Harajat
+                      </TableHead>
+                      <TableHead className="border border-slate-200">
+                        1 tasi harajat
+                      </TableHead>
+                      <TableHead className="border border-slate-200">
+                        1 tasi foyda
+                      </TableHead>{" "}
+                      <TableHead className="border border-slate-200">
+                        Foiz
                       </TableHead>
                       <TableHead className="border border-slate-200">
                         Daromad
@@ -654,6 +663,15 @@ const Daily = () => {
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
+                        </TableCell>
+                        <TableCell className="font-mono border border-slate-200">
+                          {formatNumber(order?.cost_per_unit_uzs)} so'm
+                        </TableCell>
+                        <TableCell className="font-mono border border-slate-200">
+                          {formatNumber(order?.profit_per_unit_uzs)} so'm
+                        </TableCell>{" "}
+                        <TableCell className="font-mono border border-slate-200">
+                          {formatNumber(order?.profitability_percent)} %
                         </TableCell>
                         <TableCell>
                           <Badge
