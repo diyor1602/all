@@ -3,6 +3,7 @@
 import api from "@/utils/api";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -30,19 +31,13 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
+  Eye,
   Pencil,
   RotateCcw,
   Search,
-  User,
   UserLock,
   UserRoundCheck,
 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -83,6 +78,7 @@ const useDebounce = (value, delay) => {
 
 const Employees = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // States
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -227,11 +223,19 @@ const Employees = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case "working":
-        return <Badge className="bg-green-500">Ishlamoqda</Badge>;
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">Ishlamoqda</Badge>
+        );
       case "kicked":
-        return <Badge className="bg-red-500">Ishdan bo'shatilgan</Badge>;
+        return (
+          <Badge className="bg-red-500 hover:bg-red-600">
+            Ishdan bo'shatilgan
+          </Badge>
+        );
       case "reserv":
-        return <Badge className="bg-blue-500">Zaxirada</Badge>;
+        return (
+          <Badge className="bg-blue-500 hover:bg-blue-600">Zaxirada</Badge>
+        );
       default:
         return <Badge className="bg-gray-400">{status || "Noma'lum"}</Badge>;
     }
@@ -656,25 +660,14 @@ const Employees = () => {
                     <div className="flex flex-col overflow-hidden">
                       {/* Desktop Tooltip */}
                       <div className="block">
-                        <TooltipProvider>
-                          <Tooltip delayDuration={200}>
-                            <TooltipTrigger asChild>
-                              <div className="truncate cursor-pointer flex flex-col">
-                                <div>{employee.name}</div>
-                                <div>
-                                  Id:{" "}
-                                  <span className="font-semibold">
-                                    {employee.id}
-                                  </span>{" "}
-                                  Username: {employee.user?.username}
-                                </div>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{employee.name}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <div className="truncate flex flex-col">
+                          <div>{employee.name}</div>
+                          <div>
+                            Id:{" "}
+                            <span className="font-semibold">{employee.id}</span>{" "}
+                            Username: {employee.user?.username}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -708,6 +701,13 @@ const Employees = () => {
                   {getStatusBadge(employee.status)}
                 </TableCell>
                 <TableCell className="border">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate(`/casher/salary/${employee.id}`)}
+                  >
+                    <Eye className="h-4 w-4 text-blue-500" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

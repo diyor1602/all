@@ -394,86 +394,92 @@ const ViewEmployees = () => {
                 <CardContent>
                   {employee.attendances?.length > 0 ? (
                     <div className="space-y-3">
-                      {employee.attendances.map((attendance) => (
-                        <div
-                          key={attendance.id}
-                          className={`flex items-center justify-between p-4 border rounded-lg ${
-                            attendance.status === "present"
-                              ? "border-green-200 bg-green-50"
-                              : "border-red-200 bg-red-50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            {attendance.status === "present" ? (
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
-                            ) : (
-                              <XCircle className="h-5 w-5 text-red-500" />
-                            )}
-                            <div>
-                              <p className="font-medium">
-                                {formatDate(attendance.date)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {attendance.status === "present"
-                                  ? "Kelgan"
-                                  : "Kelmagan"}
-                              </p>
+                      {employee.attendances
+                        ?.sort((a, b) => {
+                          const dateA = new Date(a.date);
+                          const dateB = new Date(b.date);
+                          return dateB - dateA;
+                        })
+                        .map((attendance) => (
+                          <div
+                            key={attendance.id}
+                            className={`flex items-center justify-between p-4 border rounded-lg ${
+                              attendance.status === "present"
+                                ? "border-green-200 bg-green-50"
+                                : "border-red-200 bg-red-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              {attendance.status === "present" ? (
+                                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                              ) : (
+                                <XCircle className="h-5 w-5 text-red-500" />
+                              )}
+                              <div>
+                                <p className="font-medium">
+                                  {formatDate(attendance.date)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {attendance.status === "present"
+                                    ? "Kelgan"
+                                    : "Kelmagan"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-sm space-y-1">
+                              {attendance.check_in && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-muted-foreground" />
+                                  <span>
+                                    Keldi:{" "}
+                                    {formatTime(
+                                      attendance.check_in.split(" ")[1]
+                                    )}
+                                  </span>
+                                  {attendance.check_in_image && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setSelectedImage(
+                                          attendance.check_in_image
+                                        );
+                                        setImageDialogOpen(true);
+                                      }}
+                                    >
+                                      <Images />
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                              {attendance.check_out && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-muted-foreground" />
+                                  <span>
+                                    Ketdi:{" "}
+                                    {formatTime(
+                                      attendance.check_out.split(" ")[1]
+                                    )}
+                                  </span>
+                                  {attendance.check_out_image && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setSelectedImage(
+                                          attendance.check_out_image
+                                        );
+                                        setImageDialogOpen(true);
+                                      }}
+                                    >
+                                      <Images />
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="text-sm space-y-1">
-                            {attendance.check_in && (
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3 text-muted-foreground" />
-                                <span>
-                                  Keldi:{" "}
-                                  {formatTime(
-                                    attendance.check_in.split(" ")[1]
-                                  )}
-                                </span>
-                                {attendance.check_in_image && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                      setSelectedImage(
-                                        attendance.check_in_image
-                                      );
-                                      setImageDialogOpen(true);
-                                    }}
-                                  >
-                                    <Images />
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                            {attendance.check_out && (
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3 text-muted-foreground" />
-                                <span>
-                                  Ketdi:{" "}
-                                  {formatTime(
-                                    attendance.check_out.split(" ")[1]
-                                  )}
-                                </span>
-                                {attendance.check_out_image && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                      setSelectedImage(
-                                        attendance.check_out_image
-                                      );
-                                      setImageDialogOpen(true);
-                                    }}
-                                  >
-                                    <Images />
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   ) : (
                     <div className="text-center py-8">
