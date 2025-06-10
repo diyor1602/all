@@ -602,6 +602,37 @@ const Attendance = () => {
     });
   };
 
+  // Helper function to check if bulk check-in button should be disabled
+  const shouldDisableBulkCheckIn = () => {
+    if (selectedEmployees.length === 0) return true;
+
+    // Check if at least one selected employee already has check_in
+    return selectedEmployees.some((employeeId) => {
+      const attendanceRecord = attendance.find(
+        (a) => a.employee_id === employeeId
+      );
+      return attendanceRecord && attendanceRecord.check_in;
+    });
+  };
+
+  // Helper function to check if bulk check-out button should be disabled
+  const shouldDisableBulkCheckOut = () => {
+    if (selectedEmployees.length === 0) return true;
+
+    // Check if at least one selected employee has not checked in or has already checked out
+    return selectedEmployees.some((employeeId) => {
+      const attendanceRecord = attendance.find(
+        (a) => a.employee_id === employeeId
+      );
+      // Disable if no attendance record (not checked in) or already checked out
+      return (
+        !attendanceRecord ||
+        !attendanceRecord.check_in ||
+        attendanceRecord.check_out
+      );
+    });
+  };
+
   useEffect(() => {
     if (selectedDepartment === "all") {
       setGroups([]);
@@ -919,6 +950,11 @@ const Attendance = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => openCheckOutDialog(employee.id)}
+                            disabled={
+                              !attendance?.find(
+                                (a) => a.employee_id === employee.id
+                              )?.check_in
+                            }
                           >
                             Ketdi
                           </Button>
@@ -942,6 +978,7 @@ const Attendance = () => {
               setBulkCheckInTime(`${hours}:${minutes}`);
               setBulkDialogOpen(true);
             }}
+            disabled={shouldDisableBulkCheckIn()}
           >
             {selectedEmployees.length} ta xodim uchun "Keldi" belgisini qo'yish
           </Button>
@@ -955,6 +992,7 @@ const Attendance = () => {
               setBulkCheckOutTime(`${hours}:${minutes}`);
               setBulkCheckOutDialogOpen(true);
             }}
+            disabled={shouldDisableBulkCheckOut()}
           >
             {selectedEmployees.length} ta xodim uchun "Ketdi" belgisini qo'yish
           </Button>
