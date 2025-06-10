@@ -394,7 +394,7 @@ const AttendanceHistory = () => {
             <DialogTitle>{selectedImage.title}</DialogTitle>
             <DialogDescription>{selectedImage.description}</DialogDescription>
           </DialogHeader>
-          <div>
+          <div className="max-h-[80vh] overflow-auto">
             <img
               src={selectedImage.url || "/placeholder.svg"}
               alt="Attendance image"

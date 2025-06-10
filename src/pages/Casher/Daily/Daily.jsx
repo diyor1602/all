@@ -36,10 +36,8 @@ import {
   ChevronUp,
   Plus,
   Edit,
-  DollarSign,
   TrendingUp,
   Calculator,
-  Users,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
