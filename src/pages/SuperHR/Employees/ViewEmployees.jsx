@@ -28,6 +28,7 @@ import {
   Clock,
   Hash,
   Images,
+  MessageCircle,
   Phone,
   Users,
   XCircle,
@@ -73,13 +74,11 @@ const getInitials = (name) => {
 const getStatusColor = (status) => {
   switch (status) {
     case "working":
-      return "bg-green-100 text-green-800";
-    case "absent":
-      return "bg-red-100 text-red-800";
-    case "present":
-      return "bg-green-100 text-green-800";
+      return "bg-green-100 text-green-800 hover:bg-green-200";
+    case "kicked":
+      return "bg-red-100 text-red-800 hover:bg-red-200";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
   }
 };
 
@@ -257,12 +256,28 @@ const ViewEmployees = () => {
             <CardTitle className="text-center">{employee.name}</CardTitle>
             <div className="flex justify-center mt-2">
               <Badge className={getStatusColor(employee.status)}>
-                {employee.status === "working" ? "Ishlayapti" : "Ishlamayapti"}
+                {employee.status === "working"
+                  ? "Ishlayapti"
+                  : employee.status === "kicked"
+                  ? "Ishlamayapti"
+                  : "-"}
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
+              {employee.status === "kicked" && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <XCircle className="h-4 w-4 text-primary" />
+                    <span>{formatDate(employee.kicked_date)}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <MessageCircle className="h-4 w-4 text-primary" />
+                    <span>{employee.comment}</span>
+                  </div>
+                </>
+              )}
               <div className="flex items-center gap-3">
                 <Hash className="h-4 w-4 text-primary" />
                 <div className="flex items-center gap-1">
@@ -273,10 +288,13 @@ const ViewEmployees = () => {
                 </div>
               </div>
               {employee.phone && (
-                <div className="flex items-center gap-3">
+                <a
+                  href={`tel:${employee.phone}`}
+                  className="flex items-center gap-3"
+                >
                   <Phone className="h-4 w-4 text-primary" />
                   <span>{employee.phone}</span>
-                </div>
+                </a>
               )}
               {employee.position && (
                 <div className="flex items-center gap-3">
@@ -302,6 +320,36 @@ const ViewEmployees = () => {
           </CardContent>
           <CardFooter className="flex flex-col items-start pt-0">
             <div className="text-xs text-muted-foreground w-full space-y-1">
+              {employee.address && (
+                <div className="flex justify-between">
+                  <span>Manzil:</span>
+                  <span>{employee.address}</span>
+                </div>
+              )}
+              {employee.passport_number && (
+                <div className="flex justify-between">
+                  <span>Passport:</span>
+                  <span>{employee.passport_number}</span>
+                </div>
+              )}
+              {employee.passport_code && (
+                <div className="flex justify-between">
+                  <span>JSHSHIR:</span>
+                  <span>{employee.passport_code}</span>
+                </div>
+              )}
+              {employee.gender && (
+                <div className="flex justify-between">
+                  <span>Jinsi:</span>
+                  <span>{employee.gender}</span>
+                </div>
+              )}
+              {employee.birthday && (
+                <div className="flex justify-between">
+                  <span>Tug'ilgan sana:</span>
+                  <span>{formatDate(employee.birthday)}</span>
+                </div>
+              )}
               {employee.hiring_date && (
                 <div className="flex justify-between">
                   <span>Ishga kirgan sana:</span>
@@ -335,6 +383,12 @@ const ViewEmployees = () => {
                     : "-"}
                 </span>
               </div>
+              {employee?.comment && (
+                <div className="flex justify-between">
+                  <span>Izoh:</span>
+                  <span>{employee.comment}</span>
+                </div>
+              )}
             </div>
           </CardFooter>
         </Card>
