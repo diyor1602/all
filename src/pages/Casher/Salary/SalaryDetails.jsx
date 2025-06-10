@@ -254,7 +254,11 @@ const SalaryDetails = () => {
             <div className="flex justify-center mb-4">
               <Avatar className="h-24 w-24">
                 {employee.img ? (
-                  <img src={employee.img} alt={employee.name} />
+                  <img
+                    src={employee.img}
+                    alt={employee.name}
+                    className="h-24 w-24 object-cover"
+                  />
                 ) : (
                   <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                     {getInitials(employee.name)}
