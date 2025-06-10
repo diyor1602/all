@@ -146,13 +146,13 @@ const OrderView = () => {
   const handleCopy = () => {
     // Create a new object with the required format
     const formattedOrder = {
-      name: order.name,
-      quantity: order.quantity,
-      price: order.price.toString(),
-      start_date: order.start_date ? order.start_date.split(" ")[0] : null,
-      end_date: order.end_date ? order.end_date.split(" ")[0] : null,
-      rasxod: order.rasxod,
-      comment: order.comment,
+      name: order?.name,
+      quantity: order?.quantity,
+      price: order?.price.toString(),
+      start_date: order?.start_date ? order.start_date.split(" ")[0] : null,
+      end_date: order?.end_date ? order.end_date.split(" ")[0] : null,
+      rasxod: order?.rasxod,
+      comment: order?.comment,
       model: {
         id: order?.order_model?.model?.id,
         material_id: order?.order_model?.material?.id,
@@ -164,7 +164,7 @@ const OrderView = () => {
           quantity: size.quantity,
         })),
       },
-      instructions: order.instructions,
+      instructions: order?.instructions,
       contragent_id: order?.contragent ? order.contragent.id : null,
     };
 
