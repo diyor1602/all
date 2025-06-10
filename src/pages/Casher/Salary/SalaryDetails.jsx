@@ -475,7 +475,15 @@ const SalaryDetails = () => {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
-                    Davomat qaydnomasi
+                    Davomat qaydnomasi (
+                    {employee.attendance_salaries
+                      ?.reduce(
+                        (sum, salary) =>
+                          sum + Number.parseFloat(salary.amount || 0),
+                        0
+                      )
+                      ?.toLocaleString("ru-RU")}{" "}
+                    so'm )
                   </CardTitle>
                   <CardDescription className="grid grid-cols-3 gap-4 pt-2">
                     {employee.attendances?.length > 0
