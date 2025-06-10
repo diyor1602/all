@@ -99,6 +99,7 @@ const Employees = () => {
     status: "working",
     search: "",
     page: 1,
+    type: "",
   });
 
   // SelectItem qiymatlari uchun useState
@@ -106,6 +107,7 @@ const Employees = () => {
     department_id: "all",
     group_id: "all",
     status: "working",
+    type: "all",
   });
 
   const [groups, setGroups] = useState([]);
@@ -115,6 +117,7 @@ const Employees = () => {
   const debouncedDepartment = useDebounce(filters.department_id, 300);
   const debouncedGroup = useDebounce(filters.group_id, 300);
   const debouncedStatus = useDebounce(filters.status, 300);
+  const debouncedType = useDebounce(filters.type, 300);
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -176,6 +179,7 @@ const Employees = () => {
       ...prev,
       department_id: value,
       group_id: "all",
+      type: "all",
     }));
   };
 
@@ -199,6 +203,7 @@ const Employees = () => {
       department_id: "",
       group_id: "",
       status: "",
+      type: "",
       search: "",
       page: 1,
     });
@@ -206,6 +211,7 @@ const Employees = () => {
       department_id: "all",
       group_id: "all",
       status: "all",
+      type: "all",
     });
     setGroups([]);
     fetchEmployees();
@@ -299,7 +305,13 @@ const Employees = () => {
   // Fetch employees when debounced values change
   useEffect(() => {
     fetchEmployees();
-  }, [debouncedSearch, debouncedDepartment, debouncedGroup, debouncedStatus]);
+  }, [
+    debouncedSearch,
+    debouncedDepartment,
+    debouncedGroup,
+    debouncedStatus,
+    debouncedType,
+  ]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Xodimni ishdan ketkazishni xohlaysizmi?")) return;
@@ -430,6 +442,20 @@ const Employees = () => {
             <SelectItem value="working">Ishlamoqda</SelectItem>
             <SelectItem value="kicked">Ishdan bo'shatilgan</SelectItem>
             <SelectItem value="reserv">Zaxirada</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={selectValues.type}
+          onValueChange={(value) => handleFilterChange("type", value)}
+        >
+          <SelectTrigger className="bg-white">
+            <SelectValue placeholder="Turini tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barcha xodimlar</SelectItem>
+            <SelectItem value="aup">AUP xodim</SelectItem>
+            <SelectItem value="simple">Oddiy xodim</SelectItem>
           </SelectContent>
         </Select>
 
