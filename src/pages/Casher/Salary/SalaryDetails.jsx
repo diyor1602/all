@@ -475,7 +475,15 @@ const SalaryDetails = () => {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
-                    Davomat qaydnomasi
+                    Davomat qaydnomasi (
+                    {employee.attendance_salaries
+                      ?.reduce(
+                        (sum, salary) =>
+                          sum + Number.parseFloat(salary.amount || 0),
+                        0
+                      )
+                      ?.toLocaleString("ru-RU")}{" "}
+                    so'm )
                   </CardTitle>
                   <CardDescription className="grid grid-cols-3 gap-4 pt-2">
                     {employee.attendances?.length > 0
@@ -538,6 +546,19 @@ const SalaryDetails = () => {
                                     ? "Kelgan"
                                     : "Kelmagan"}
                                 </p>
+                                {employee?.attendance_salaries?.find(
+                                  (a) => a.attendance_id === attendance.id
+                                ) && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Topgan puli:{" "}
+                                    {parseFloat(
+                                      employee.attendance_salaries.find(
+                                        (a) => a.attendance_id === attendance.id
+                                      )?.amount || 0
+                                    )?.toLocaleString("ru-RU")}{" "}
+                                    so'm
+                                  </p>
+                                )}
                               </div>
                             </div>
                             <div className="text-sm space-y-1">
