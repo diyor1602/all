@@ -874,14 +874,14 @@ const Attendance = () => {
                                       ).toLocaleTimeString("ru-RU")}
                                     </DialogDescription>
                                   </DialogHeader>
-                                  <div>
+                                  <div className="w-full max-h-[80vh] overflow-auto">
                                     <img
                                       src={
                                         attendanceRecord.check_in_image ||
                                         "/placeholder.svg"
                                       }
                                       alt="Check-in image"
-                                      className="w-full rounded-md border"
+                                      className="w-full"
                                     />
                                   </div>
                                 </DialogContent>
@@ -931,14 +931,14 @@ const Attendance = () => {
                                       ).toLocaleTimeString("ru-RU")}
                                     </DialogDescription>
                                   </DialogHeader>
-                                  <div>
+                                  <div className="w-full max-h-[80vh] overflow-auto">
                                     <img
                                       src={
                                         attendanceRecord.check_out_image ||
                                         "/placeholder.svg"
                                       }
                                       alt="Check-out image"
-                                      className="w-full rounded-md border"
+                                      className="w-full"
                                     />
                                   </div>
                                 </DialogContent>
