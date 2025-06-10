@@ -385,7 +385,13 @@ const SalaryDetails = () => {
               {employee.gender && (
                 <div className="flex justify-between">
                   <span>Jinsi:</span>
-                  <span>{employee.gender}</span>
+                  <span>
+                    {employee.gender === "male"
+                      ? "Erkak"
+                      : employee.gender === "female"
+                      ? "Ayol"
+                      : "-"}
+                  </span>
                 </div>
               )}
               {employee.birthday && (
