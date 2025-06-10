@@ -221,13 +221,25 @@ const Employees = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case "working":
-        return <Badge className="bg-green-500">Ishlamoqda</Badge>;
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">Ishlamoqda</Badge>
+        );
       case "kicked":
-        return <Badge className="bg-red-500">Ishdan bo'shatilgan</Badge>;
+        return (
+          <Badge className="bg-red-500 hover:bg-red-600">
+            Ishdan bo'shatilgan
+          </Badge>
+        );
       case "reserv":
-        return <Badge className="bg-blue-500">Zaxirada</Badge>;
+        return (
+          <Badge className="bg-blue-500 hover:bg-blue-600">Zaxirada</Badge>
+        );
       default:
-        return <Badge className="bg-gray-400">{status || "Noma'lum"}</Badge>;
+        return (
+          <Badge className="bg-gray-400 hover:bg-gray-500">
+            {status || "Noma'lum"}
+          </Badge>
+        );
     }
   };
 
