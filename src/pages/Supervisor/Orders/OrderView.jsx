@@ -154,18 +154,18 @@ const OrderView = () => {
       rasxod: order.rasxod,
       comment: order.comment,
       model: {
-        id: order.order_model.model.id,
-        material_id: order.order_model.material.id,
-        submodels: order.order_model.submodels.map(
+        id: order?.order_model?.model?.id,
+        material_id: order?.order_model?.material?.id,
+        submodels: order?.order_model?.submodels?.map(
           (submodel) => submodel.submodel.id
         ),
-        sizes: order.order_model.sizes.map((size) => ({
+        sizes: order?.order_model?.sizes?.map((size) => ({
           id: size.size.id,
           quantity: size.quantity,
         })),
       },
       instructions: order.instructions,
-      contragent_id: order.contragent ? order.contragent.id : null,
+      contragent_id: order?.contragent ? order.contragent.id : null,
     };
 
     // Copy the formatted order to clipboard
