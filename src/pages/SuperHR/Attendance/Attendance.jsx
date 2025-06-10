@@ -713,11 +713,13 @@ const Attendance = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Barcha guruhlar</SelectItem>
-              {groups.map((group) => (
-                <SelectItem key={group.id} value={group.id.toString()}>
-                  {group.name}
-                </SelectItem>
-              ))}
+              {groups
+                ?.sort((a, b) => a.name.localeCompare(b.name))
+                ?.map((group) => (
+                  <SelectItem key={group.id} value={group.id.toString()}>
+                    {group.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
 

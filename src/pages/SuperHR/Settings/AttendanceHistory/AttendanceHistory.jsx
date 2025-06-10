@@ -81,9 +81,11 @@ const AttendanceHistory = () => {
   const [attendance, setAttendance] = useState([]);
   const [filteredAttendance, setFilteredAttendance] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedGroup, setSelectedGroup] = useState("all");
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState({
     url: "",
@@ -110,6 +112,23 @@ const AttendanceHistory = () => {
     setImageDialogOpen(true);
   };
 
+  useEffect(() => {
+    if (selectedDepartment === "all") {
+      setGroups([]);
+      setSelectedGroup("all");
+    } else {
+      const selectedDept = departments.find(
+        (dept) => dept.id === Number.parseInt(selectedDepartment)
+      );
+      if (selectedDept && selectedDept.groups) {
+        setGroups(selectedDept.groups);
+      } else {
+        setGroups([]);
+      }
+      setSelectedGroup("all");
+    }
+  }, [selectedDepartment, departments]);
+
   const filterAttendance = () => {
     let filtered = [...attendance];
 
@@ -124,7 +143,12 @@ const AttendanceHistory = () => {
       );
     }
 
-    // Search for employee name or ID
+    if (selectedGroup !== "all") {
+      filtered = filtered.filter(
+        (record) => record.employee?.group_id === Number.parseInt(selectedGroup)
+      );
+    }
+
     if (searchQuery) {
       const searchTerm = searchQuery.toLowerCase();
       const latinSearchTerm = cyrillicToLatin(searchTerm);
@@ -187,7 +211,13 @@ const AttendanceHistory = () => {
 
   useEffect(() => {
     setFilteredAttendance(filterAttendance());
-  }, [attendance, selectedStatus, selectedDepartment, searchQuery]);
+  }, [
+    attendance,
+    selectedStatus,
+    selectedDepartment,
+    selectedGroup,
+    searchQuery,
+  ]);
 
   return (
     <>
@@ -254,6 +284,27 @@ const AttendanceHistory = () => {
                   {dept.name}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={selectedGroup}
+            onValueChange={setSelectedGroup}
+            className="w-full sm:w-[180px]"
+            disabled={selectedDepartment === "all" || groups.length === 0}
+          >
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Guruh" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha guruhlar</SelectItem>
+              {groups
+                ?.sort((a, b) => a.name.localeCompare(b.name))
+                ?.map((group) => (
+                  <SelectItem key={group.id} value={group.id.toString()}>
+                    {group.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
 

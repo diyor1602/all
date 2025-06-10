@@ -146,26 +146,26 @@ const OrderView = () => {
   const handleCopy = () => {
     // Create a new object with the required format
     const formattedOrder = {
-      name: order.name,
-      quantity: order.quantity,
-      price: order.price.toString(),
-      start_date: order.start_date ? order.start_date.split(" ")[0] : null,
-      end_date: order.end_date ? order.end_date.split(" ")[0] : null,
-      rasxod: order.rasxod,
-      comment: order.comment,
+      name: order?.name,
+      quantity: order?.quantity,
+      price: order?.price.toString(),
+      start_date: order?.start_date ? order.start_date.split(" ")[0] : null,
+      end_date: order?.end_date ? order.end_date.split(" ")[0] : null,
+      rasxod: order?.rasxod,
+      comment: order?.comment,
       model: {
-        id: order.order_model.model.id,
-        material_id: order.order_model.material.id,
-        submodels: order.order_model.submodels.map(
+        id: order?.order_model?.model?.id,
+        material_id: order?.order_model?.material?.id,
+        submodels: order?.order_model?.submodels?.map(
           (submodel) => submodel.submodel.id
         ),
-        sizes: order.order_model.sizes.map((size) => ({
+        sizes: order?.order_model?.sizes?.map((size) => ({
           id: size.size.id,
           quantity: size.quantity,
         })),
       },
-      instructions: order.instructions,
-      contragent_id: order.contragent ? order.contragent.id : null,
+      instructions: order?.instructions,
+      contragent_id: order?.contragent ? order.contragent.id : null,
     };
 
     // Copy the formatted order to clipboard

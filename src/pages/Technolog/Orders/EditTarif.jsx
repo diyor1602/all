@@ -278,12 +278,8 @@ const EditTarif = () => {
     const hasEmptyRazryad = tarif?.tarifications?.some(
       (item) => !item?.razryad_id && !item?.razryad?.id
     );
-    const hasEmptyMachine = tarif?.tarifications?.some(
-      (item) => !item?.typewriter_id && !item?.typewriter?.id
-    );
-
     const hasEmptySecond = tarif?.tarifications?.some((item) => !item?.second);
-    if (hasEmptyNames || hasEmptyRazryad || hasEmptyMachine || hasEmptySecond) {
+    if (hasEmptyNames || hasEmptyRazryad || hasEmptySecond) {
       toast({
         title: "Diqqat",
         description: "Barcha maydonlarni to'ldiring",

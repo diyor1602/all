@@ -99,6 +99,7 @@ const Employees = () => {
     status: "working",
     search: "",
     page: 1,
+    type: "",
   });
 
   // SelectItem qiymatlari uchun useState
@@ -106,6 +107,7 @@ const Employees = () => {
     department_id: "all",
     group_id: "all",
     status: "working",
+    type: "all",
   });
 
   const [groups, setGroups] = useState([]);
@@ -115,6 +117,7 @@ const Employees = () => {
   const debouncedDepartment = useDebounce(filters.department_id, 300);
   const debouncedGroup = useDebounce(filters.group_id, 300);
   const debouncedStatus = useDebounce(filters.status, 300);
+  const debouncedType = useDebounce(filters.type, 300);
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -176,6 +179,7 @@ const Employees = () => {
       ...prev,
       department_id: value,
       group_id: "all",
+      type: "all",
     }));
   };
 
@@ -199,6 +203,7 @@ const Employees = () => {
       department_id: "",
       group_id: "",
       status: "",
+      type: "",
       search: "",
       page: 1,
     });
@@ -206,6 +211,7 @@ const Employees = () => {
       department_id: "all",
       group_id: "all",
       status: "all",
+      type: "all",
     });
     setGroups([]);
     fetchEmployees();
@@ -215,13 +221,25 @@ const Employees = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case "working":
-        return <Badge className="bg-green-500">Ishlamoqda</Badge>;
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">Ishlamoqda</Badge>
+        );
       case "kicked":
-        return <Badge className="bg-red-500">Ishdan bo'shatilgan</Badge>;
+        return (
+          <Badge className="bg-red-500 hover:bg-red-600">
+            Ishdan bo'shatilgan
+          </Badge>
+        );
       case "reserv":
-        return <Badge className="bg-blue-500">Zaxirada</Badge>;
+        return (
+          <Badge className="bg-blue-500 hover:bg-blue-600">Zaxirada</Badge>
+        );
       default:
-        return <Badge className="bg-gray-400">{status || "Noma'lum"}</Badge>;
+        return (
+          <Badge className="bg-gray-400 hover:bg-gray-500">
+            {status || "Noma'lum"}
+          </Badge>
+        );
     }
   };
 
@@ -299,7 +317,13 @@ const Employees = () => {
   // Fetch employees when debounced values change
   useEffect(() => {
     fetchEmployees();
-  }, [debouncedSearch, debouncedDepartment, debouncedGroup, debouncedStatus]);
+  }, [
+    debouncedSearch,
+    debouncedDepartment,
+    debouncedGroup,
+    debouncedStatus,
+    debouncedType,
+  ]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Xodimni ishdan ketkazishni xohlaysizmi?")) return;
@@ -430,6 +454,20 @@ const Employees = () => {
             <SelectItem value="working">Ishlamoqda</SelectItem>
             <SelectItem value="kicked">Ishdan bo'shatilgan</SelectItem>
             <SelectItem value="reserv">Zaxirada</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={selectValues.type}
+          onValueChange={(value) => handleFilterChange("type", value)}
+        >
+          <SelectTrigger className="bg-white">
+            <SelectValue placeholder="Turini tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barcha xodimlar</SelectItem>
+            <SelectItem value="aup">AUP xodim</SelectItem>
+            <SelectItem value="simple">Oddiy xodim</SelectItem>
           </SelectContent>
         </Select>
 

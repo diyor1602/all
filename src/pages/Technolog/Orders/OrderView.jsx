@@ -402,7 +402,9 @@ const OrderView = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `${order?.id} ${order?.name} ${selectedSubmodel?.submodel?.name} tarifikatsiya.pdf`
+        `${order?.id} ${order?.name} ${selectedSubmodel?.submodel?.name} ${
+          selectedTarifLang == "ru" ? "RU" : "UZ"
+        } tarifikatsiya.pdf`
       );
       document.body.appendChild(link);
       link.click();
