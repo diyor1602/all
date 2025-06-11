@@ -62,7 +62,6 @@ const ConnectResult = () => {
     timeValue: "",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [mode, setMode] = useState(localStorage.getItem("mode") || "example");
 
   const handleError = useCallback(
     (error) => {
@@ -141,7 +140,6 @@ const ConnectResult = () => {
         time_id: selectedOutput.time_id,
         quantity: Number(selectedOutput.quantity),
         comment: selectedOutput.comment || null,
-        mode,
       });
 
       toast({
@@ -201,26 +199,6 @@ const ConnectResult = () => {
 
   return (
     <>
-      <div className="flex my-4 w-full items-center justify-center gap-4">
-        <Button
-          variant={mode === "example" ? "default" : "outline"}
-          onClick={() => {
-            setMode("example");
-            localStorage.setItem("mode", "example");
-          }}
-        >
-          Zagatovka
-        </Button>
-        <Button
-          variant={mode === "production" ? "default" : "outline"}
-          onClick={() => {
-            setMode("production");
-            localStorage.setItem("mode", "production");
-          }}
-        >
-          Tayyor mahsulot
-        </Button>
-      </div>
       <Accordion
         type="single"
         collapsible
