@@ -596,7 +596,20 @@ const Daily = () => {
                           {order?.order?.id}
                         </TableCell>
                         <TableCell className="border border-slate-200">
-                          {order?.order?.name}
+                          <TooltipProvider delayDuration={100}>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <p>{order?.order?.name}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  {order?.responsibleUser
+                                    ?.map((user) => user.employee.name)
+                                    .join(", ")}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                         <TableCell className="border border-slate-200">
                           <div>

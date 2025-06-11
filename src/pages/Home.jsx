@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import {
@@ -18,6 +24,7 @@ const Home = () => {
   const [outputs, setOutputs] = useState([]);
   const [employeeCount, setEmployeeCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [aupCount, setAupCount] = useState(0);
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -64,6 +71,7 @@ const Home = () => {
           0
         )
       );
+      setAupCount(data.aup);
     } catch (error) {
       toast({
         title: "Xatolik!",
@@ -266,7 +274,19 @@ const Home = () => {
                 </div>
               </div>
             </div>
-
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">AUP</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {aupCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl shadow-lg">
+                  <Users className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
@@ -378,7 +398,16 @@ const Home = () => {
                             handleNavigate(output.order_id);
                           }}
                         >
-                          {output.group.name}
+                          <TooltipProvider delayDuration={100}>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <p>{output?.group?.name}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{output?.responsibleUser}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </td>
                         <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center">
                           <span className="font-bold text-indigo-600">
