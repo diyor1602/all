@@ -115,7 +115,7 @@ const ConnectResult = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedOutput.quantity || Number(selectedOutput.quantity) <= 0) {
+    if (!selectedOutput.quantity || Number(selectedOutput.quantity) < 0) {
       toast({
         title: "Diqqat!",
         description: "Miqdor 0 dan katta bo'lishi kerak",
@@ -223,7 +223,7 @@ const ConnectResult = () => {
                       const output = submodel?.sewingOutputs?.find(
                         (output) => output?.time?.time === time?.time
                       );
-                      const hasQuantity = output?.quantity > 0;
+                      const hasQuantity = output?.quantity >= 0;
                       const isFuture = isFutureTime(time?.time);
 
                       let show = true;
@@ -505,7 +505,7 @@ const ConnectResult = () => {
                 disabled={
                   submitting ||
                   !selectedOutput.quantity ||
-                  Number(selectedOutput.quantity) <= 0
+                  Number(selectedOutput.quantity) < 0
                 }
                 className="gap-2"
               >
