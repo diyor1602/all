@@ -60,6 +60,18 @@ const Daily = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [dollarRate, setDollarRate] = useState(
+    localStorage.getItem("dollarRate") || 12700
+  );
+  const [dollarDialogOpen, setDollarDialogOpen] = useState(false);
+  const [newDollarRate, setNewDollarRate] = useState(dollarRate);
+
+  const updateDollarRate = async () => {
+    localStorage.setItem("dollarRate", newDollarRate);
+    setDollarRate(newDollarRate);
+    setDollarDialogOpen(false);
+    fetchDaily();
+  };
 
   const navigateDate = (direction) => {
     const currentDate = new Date(selectedDate);
@@ -71,7 +83,7 @@ const Daily = () => {
     setLoading(true);
     try {
       const response = await api.get("/casher/dailyReport", {
-        params: { date: selectedDate },
+        params: { date: selectedDate, dollar_rate: dollarRate },
       });
       setDaily(response.data);
     } catch (error) {
@@ -209,11 +221,6 @@ const Daily = () => {
 
   const additionalMetrics = [
     {
-      label: "Dollar kursi",
-      value: daily.dollar_rate,
-      bg: "bg-sky-300",
-    },
-    {
       label: "Jami harajatlar",
       value: daily.total_fixed_cost_uzs,
       bg: "bg-red-300",
@@ -331,6 +338,17 @@ const Daily = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div
+                  className="flex justify-between items-center p-3 bg-50 rounded-lg cursor-pointer bg-sky-300"
+                  onClick={() => setDollarDialogOpen(true)}
+                >
+                  <span className="text-sm font-medium text-slate-600">
+                    Dollar kursi:
+                  </span>
+                  <Badge variant="ghost" className="font-mono border-none">
+                    {formatNumber(dollarRate)} so'm
+                  </Badge>
+                </div>
                 {additionalMetrics.map((metric, index) => (
                   <div
                     key={index}
@@ -350,6 +368,29 @@ const Daily = () => {
               </div>
             </CardContent>
           </Card>
+
+          <Dialog open={dollarDialogOpen} onOpenChange={setDollarDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Dollar kursini o'zgartirish</DialogTitle>
+              </DialogHeader>
+              <Input
+                type="number"
+                value={newDollarRate}
+                onChange={(e) => setNewDollarRate(e.target.value)}
+                className="w-full"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setDollarDialogOpen(false)}
+                >
+                  Bekor qilish
+                </Button>
+                <Button onClick={updateDollarRate}>Saqlash</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Monthly Expenses */}
           <Card className="border-0 shadow-md">
