@@ -41,7 +41,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import monthly_expence_types from "@/lib/monthlyExpenceTypes";
+import {
+  monthly_expence_types,
+  monthly_expence_currency,
+} from "@/lib/monthlyExpenceTypes";
 import {
   Select,
   SelectContent,
@@ -554,9 +557,7 @@ const Daily = () => {
                           </TableCell>
                           <TableCell className="font-mono border border-slate-200">
                             {formatNumber(expense.amount)}{" "}
-                            {["amortization"]?.includes(expense.type)
-                              ? "$"
-                              : "so'm"}
+                            {monthly_expence_currency[expense.type]}
                           </TableCell>
                           <TableCell className="border border-slate-200">
                             <div className="flex justify-center w-full">
