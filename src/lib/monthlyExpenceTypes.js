@@ -1,7 +1,13 @@
 const monthly_expence_types = {
   monthly: "Oylik",
-  income_percentage: "Ishlab topilgan puldan 7% lik soliq",
+  income_percentage: "Ishlab topilgan puldan soliq",
   amortization: "Amortizatsiya",
 };
 
-export default monthly_expence_types;
+const monthly_expence_currency = {
+  monthly: "so'm",
+  income_percentage: "%",
+  amortization: "$",
+};
+
+export { monthly_expence_types, monthly_expence_currency };
