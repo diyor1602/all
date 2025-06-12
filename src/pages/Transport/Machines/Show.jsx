@@ -20,7 +20,9 @@ const Show = () => {
   const [transport, setTransport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("attendances");
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
   const { toast } = useToast();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -57,7 +59,7 @@ const Show = () => {
 
   const filteredAttendances = useMemo(() => {
     if (!transport) return [];
-    return transport.transport_attendances.filter(attendance => {
+    return transport.transport_attendances.filter((attendance) => {
       return attendance.date.startsWith(selectedMonth);
     });
   }, [transport, selectedMonth]);
@@ -186,9 +188,9 @@ const Show = () => {
             </div>
             <div className="flex items-center gap-2">
               <Phone className="h-5 w-5 text-gray-500" />
-              <span>{transport.phone}</span>
+              <span>{transport?.phone || "Ko'rsatilmagan"}</span>
             </div>
-            {transport.phone_2 && (
+            {transport?.phone_2 && (
               <div className="flex items-center gap-2">
                 <Phone className="h-5 w-5 text-gray-500" />
                 <span>{transport.phone_2}</span>
@@ -241,7 +243,7 @@ const Show = () => {
             </div>
             <div className="flex items-center gap-2 mt-4">
               <MapPin className="h-5 w-5 text-gray-500" />
-              <span>Hudud: {transport.region.name}</span>
+              <span>Hudud: {transport?.region?.name || "Ko'rsatilmagan"}</span>
             </div>
           </div>
         </div>
@@ -263,7 +265,12 @@ const Show = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
               <h3 className="text-xl font-semibold">Davomat ro'yxati</h3>
               <div className="flex items-center gap-2">
-                <label htmlFor="month" className="text-sm font-medium text-gray-700">Oy:</label>
+                <label
+                  htmlFor="month"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Oy:
+                </label>
                 <input
                   type="month"
                   id="month"
@@ -274,7 +281,7 @@ const Show = () => {
               </div>
             </div>
 
-            {filteredAttendances.length > 0 ? (
+            {filteredAttendances?.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -345,7 +352,7 @@ const Show = () => {
               <h3 className="text-xl font-semibold">To'lovlar tarixi</h3>
             </div>
 
-            {transport.payments && transport.payments.length > 0 ? (
+            {transport?.payments?.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -371,7 +378,7 @@ const Show = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {transport.payments.map((payment) => (
+                    {transport?.payments?.map((payment) => (
                       <tr key={payment.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatDate(payment.date)}
