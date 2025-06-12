@@ -41,6 +41,14 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import monthly_expence_types from "@/lib/monthlyExpenceTypes";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formatNumber = (number) => {
   return Number.parseFloat(number || 0).toLocaleString("ru-RU");
@@ -113,11 +121,11 @@ const Daily = () => {
   };
 
   const addExpense = async () => {
-    if (!newExpense.type || !newExpense.amount) {
+    if (!newExpense.name || !newExpense.amount || !newExpense.type) {
       toast({
         variant: "destructive",
         title: "Diqqat",
-        description: "Harajat turi va miqdori bo'sh bo'lishi mumkin emas",
+        description: "Harajat nomi, miqdori va turi bo'sh bo'lishi mumkin emas",
         duration: 1500,
       });
       return;
@@ -141,7 +149,7 @@ const Daily = () => {
         duration: 1500,
       });
 
-      setNewExpense({ type: "", amount: "" });
+      setNewExpense({ name: "", amount: "", type: "" });
       setIsAddDialogOpen(false);
       fetchMonthlyExpenses();
     } catch (error) {
@@ -156,11 +164,15 @@ const Daily = () => {
   };
 
   const editExpense = async () => {
-    if (!editingExpense.type || !editingExpense.amount) {
+    if (
+      !editingExpense.name ||
+      !editingExpense.amount ||
+      !editingExpense.type
+    ) {
       toast({
         variant: "destructive",
         title: "Diqqat",
-        description: "Harajat turi va miqdori bo'sh bo'lishi mumkin emas",
+        description: "Harajat nomi, miqdori va turi bo'sh bo'lishi mumkin emas",
         duration: 1500,
       });
       return;
@@ -168,6 +180,7 @@ const Daily = () => {
     setSending(true);
     try {
       await api.patch(`/casher/monthlyExpense/${editingExpense.id}`, {
+        name: editingExpense.name,
         type: editingExpense.type,
         amount: Number.parseFloat(editingExpense.amount),
       });
@@ -417,16 +430,41 @@ const Daily = () => {
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="type">Turi</Label>
-                          <Input
-                            id="type"
+                          <Select
                             value={newExpense.type}
+                            onValueChange={(value) =>
+                              setNewExpense({
+                                ...newExpense,
+                                type: value,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Turi" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(monthly_expence_types).map(
+                                ([key, value]) => (
+                                  <SelectItem key={key} value={key}>
+                                    {value}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="name">Nomi</Label>
+                          <Input
+                            id="name"
+                            value={newExpense.name}
                             onChange={(e) =>
                               setNewExpense({
                                 ...newExpense,
-                                type: e.target.value,
+                                name: e.target.value,
                               })
                             }
-                            placeholder="Harajat turi"
+                            placeholder="Harajat nomi"
                           />
                         </div>
                         <div>
@@ -485,16 +523,19 @@ const Daily = () => {
                   <Table className="border border-slate-200">
                     <TableHeader className="bg-slate-50">
                       <TableRow>
-                        <TableHead className="w-16 border border-slate-200">
+                        <TableHead className="w-16 border border-slate-200 text-center">
                           №
                         </TableHead>
-                        <TableHead className="border border-slate-200">
+                        <TableHead className="border border-slate-200 text-center">
+                          Nomi
+                        </TableHead>
+                        <TableHead className="border border-slate-200 text-center">
                           Turi
                         </TableHead>
-                        <TableHead className="border border-slate-200">
+                        <TableHead className="border border-slate-200 text-center">
                           Miqdori
                         </TableHead>
-                        <TableHead className="w-20 border border-slate-200">
+                        <TableHead className="w-20 border border-slate-200 text-center">
                           Amallar
                         </TableHead>
                       </TableRow>
@@ -506,22 +547,30 @@ const Daily = () => {
                             {i + 1}
                           </TableCell>
                           <TableCell className="border border-slate-200">
-                            {expense.type}
+                            {expense.name}
+                          </TableCell>
+                          <TableCell className="border border-slate-200 text-center">
+                            {monthly_expence_types[expense.type]}
                           </TableCell>
                           <TableCell className="font-mono border border-slate-200">
-                            {formatNumber(expense.amount)} so'm
+                            {formatNumber(expense.amount)}{" "}
+                            {["amortization"]?.includes(expense.type)
+                              ? "$"
+                              : "so'm"}
                           </TableCell>
                           <TableCell className="border border-slate-200">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setEditingExpense(expense);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            <div className="flex justify-center w-full">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingExpense(expense);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                <Edit />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -542,13 +591,38 @@ const Daily = () => {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="edit-type">Turi</Label>
-                    <Input
-                      id="edit-type"
+                    <Select
                       value={editingExpense.type}
+                      onValueChange={(value) =>
+                        setEditingExpense({
+                          ...editingExpense,
+                          type: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Turi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(monthly_expence_types).map(
+                          ([key, value]) => (
+                            <SelectItem key={key} value={key}>
+                              {value}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-name">Nomi</Label>
+                    <Input
+                      id="edit-name"
+                      value={editingExpense.name}
                       onChange={(e) =>
                         setEditingExpense({
                           ...editingExpense,
-                          type: e.target.value,
+                          name: e.target.value,
                         })
                       }
                     />
