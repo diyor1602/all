@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   ArrowRight,
@@ -39,6 +40,8 @@ import {
   TrendingUp,
   Calculator,
   Loader2,
+  Copy,
+  ClipboardPaste,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -66,8 +69,11 @@ const Daily = () => {
   const [showExpenses, setShowExpenses] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPasteDialogOpen, setIsPasteDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [newExpense, setNewExpense] = useState({ type: "", amount: "" });
+  const [pasteData, setPasteData] = useState("");
+  const [isPasting, setIsPasting] = useState(false);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -120,6 +126,118 @@ const Daily = () => {
         title: "Xatolik",
         description: "Oylik harajatlar ma'lumotlarni olishda xatolik",
       });
+    }
+  };
+
+  const copyExpenses = async () => {
+    try {
+      if (!monthlyExpenses?.expenses || monthlyExpenses.expenses.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Diqqat",
+          description: "Nusxalash uchun harajatlar mavjud emas",
+          duration: 1500,
+        });
+        return;
+      }
+
+      // Create a clean copy of expenses without IDs and month-specific data
+      const expensesToCopy = monthlyExpenses.expenses.map((expense) => ({
+        name: expense.name,
+        type: expense.type,
+        amount: expense.amount,
+      }));
+
+      const jsonData = JSON.stringify(expensesToCopy, null, 2);
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(jsonData);
+
+      toast({
+        title: "Muvaffaqiyat",
+        description: `${expensesToCopy.length} ta harajat nusxalandi`,
+        style: {
+          background: "green",
+          color: "white",
+        },
+        duration: 1500,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Nusxalashda xatolik yuz berdi",
+      });
+    }
+  };
+
+  const pasteExpenses = async () => {
+    if (!pasteData.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Diqqat",
+        description: "Qo'yish uchun ma'lumot kiriting",
+        duration: 1500,
+      });
+      return;
+    }
+
+    setIsPasting(true);
+    try {
+      const expensesToPaste = JSON.parse(pasteData);
+
+      if (!Array.isArray(expensesToPaste)) {
+        throw new Error("Ma'lumot massiv formatida bo'lishi kerak");
+      }
+
+      const month = selectedDate.slice(0, 7);
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Send each expense to backend one by one
+      for (const expense of expensesToPaste) {
+        try {
+          if (!expense.name || !expense.amount || !expense.type) {
+            errorCount++;
+            continue;
+          }
+
+          await api.post("/casher/monthlyExpense", {
+            ...expense,
+            month,
+            amount: Number.parseFloat(expense.amount),
+          });
+
+          successCount++;
+        } catch (error) {
+          errorCount++;
+        }
+      }
+
+      toast({
+        title: "Jarayon tugadi",
+        description: `${successCount} ta harajat qo'shildi${
+          errorCount > 0 ? `, ${errorCount} ta xatolik` : ""
+        }`,
+        style: {
+          background: errorCount > 0 ? "orange" : "green",
+          color: "white",
+        },
+        duration: 2000,
+      });
+
+      setPasteData("");
+      setIsPasteDialogOpen(false);
+      fetchMonthlyExpenses();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description:
+          "Ma'lumotni tahlil qilishda xatolik. JSON formatini tekshiring.",
+      });
+    } finally {
+      setIsPasting(false);
     }
   };
 
@@ -501,6 +619,83 @@ const Daily = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
+
+                  {/* Copy Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyExpenses}
+                    className="gap-2"
+                    disabled={!monthlyExpenses?.expenses?.length}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Nusxalash
+                  </Button>
+
+                  {/* Paste Button */}
+                  <Dialog
+                    open={isPasteDialogOpen}
+                    onOpenChange={setIsPasteDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <ClipboardPaste className="h-4 w-4" />
+                        Qo'yish
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Harajatlarni qo'yish</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="paste-data">
+                            JSON ma'lumotlarni qo'ying:
+                          </Label>
+                          <Textarea
+                            id="paste-data"
+                            value={pasteData}
+                            onChange={(e) => setPasteData(e.target.value)}
+                            placeholder='[{"name": "Harajat nomi", "type": "fixed", "amount": 1000000}, ...]'
+                            className="min-h-[200px] font-mono text-sm"
+                          />
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          <p className="font-medium mb-2">Format:</p>
+                          <code className="bg-slate-100 p-2 rounded block">
+                            {`[
+  {
+    "name": "Harajat nomi",
+    "type": "fixed",
+    "amount": 1000000
+  }
+]`}
+                          </code>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setPasteData("");
+                              setIsPasteDialogOpen(false);
+                            }}
+                          >
+                            Bekor qilish
+                          </Button>
+                          <Button
+                            onClick={pasteExpenses}
+                            disabled={isPasting || !pasteData.trim()}
+                          >
+                            {isPasting ? (
+                              <Loader2 className="animate-spin mr-2" />
+                            ) : null}
+                            Qo'yish
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
                   <Button
                     variant="ghost"
                     size="sm"
