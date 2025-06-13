@@ -326,7 +326,7 @@ const ConnectResult = () => {
               />
               <div className="flex justify-between text-sm text-green-700">
                 <span>
-                  Bajarildi: {data.order?.quantity - data.order?.remainAmount}{" "}
+                  Bajarildi: {data.order?.quantity - data.order?.remainExample}{" "}
                   ta
                 </span>
                 <span>Qoldiq: {data.order?.remainAmount} ta</span>
@@ -346,8 +346,8 @@ const ConnectResult = () => {
                       Siz ishlab topgan summa
                     </p>
                     <p className="text-lg font-bold text-sky-800">
-                      {Number.parseFloat(
-                        data.order?.actualTodayEarned || 0
+                      {parseFloat(
+                        data.order?.actualEarnedExample || 0
                       ).toLocaleString("ru-RU")}{" "}
                       so'm
                     </p>
@@ -397,7 +397,7 @@ const ConnectResult = () => {
                       Bugun tikildi
                     </p>
                     <p className="text-xl font-bold text-orange-800">
-                      {data.order?.todaySewn || 0} ta
+                      {data.order?.todayExample || 0} ta
                     </p>
                   </div>
                 </div>
@@ -412,8 +412,8 @@ const ConnectResult = () => {
                       Bugungilik topilgan summa
                     </p>
                     <p className="text-lg font-bold text-emerald-800">
-                      {Number.parseFloat(
-                        data.order?.todayEarned || 0
+                      {parseFloat(
+                        data.order?.todayEarnedExample || 0
                       ).toLocaleString("ru-RU")}{" "}
                       so'm
                     </p>
@@ -431,8 +431,8 @@ const ConnectResult = () => {
                       O'rtacha oylik (1 ishchi)
                     </p>
                     <p className="text-lg font-bold text-teal-800">
-                      {Number.parseFloat(
-                        data.order?.perEmployeeEarning || 0
+                      {parseFloat(
+                        data.order?.perEmployeeExampleEarning || 0
                       ).toLocaleString("ru-RU")}{" "}
                       so'm
                     </p>

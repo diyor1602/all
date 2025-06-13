@@ -1,468 +1,572 @@
-"use client"
+"use client";
 
 import {
-	Tooltip,
-	TooltipProvider,
-	TooltipTrigger,
-	TooltipContent,
-} from "@/components/ui/tooltip"
-import { useToast } from "@/components/ui/use-toast"
-import api from "@/utils/api"
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { useToast } from "@/components/ui/use-toast";
+import api from "@/utils/api";
 import {
-	ChartColumnIncreasing,
-	ChartNoAxesCombined,
-	Medal,
-	NotepadText,
-	Trophy,
-	Users,
-} from "lucide-react"
-import { useEffect, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+  ChartColumnIncreasing,
+  ChartNoAxesCombined,
+  Medal,
+  NotepadText,
+  Trophy,
+  Users,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
-	// App data states - these will only be used after authentication
-	const [outputs, setOutputs] = useState([])
-	const [employeeCount, setEmployeeCount] = useState(0)
-	const [currentDateTime, setCurrentDateTime] = useState(new Date())
-	const [aupCount, setAupCount] = useState(0)
+  // App data states - these will only be used after authentication
+  const [outputs, setOutputs] = useState([]);
+  const [exampleOutputs, setExampleOutputs] = useState([]);
+  const [employeeCount, setEmployeeCount] = useState(0);
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [aupCount, setAupCount] = useState(0);
 
-	const { toast } = useToast()
-	const navigate = useNavigate()
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-	// Always define refs at the top level
-	const dataIntervalRef = useRef(null)
-	const dateTimerRef = useRef(null)
+  // Always define refs at the top level
+  const dataIntervalRef = useRef(null);
+  const dateTimerRef = useRef(null);
 
-	// Initialize app data and timers after authentication
-	const initializeApp = () => {
-		// Initialize date timer
-		dateTimerRef.current = setInterval(() => {
-			setCurrentDateTime(new Date())
-		}, 1000)
+  // Initialize app data and timers after authentication
+  const initializeApp = () => {
+    // Initialize date timer
+    dateTimerRef.current = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
 
-		// Initial data load and set interval for updates
-		fetchData()
-		dataIntervalRef.current = setInterval(fetchData, 60000)
-	}
+    // Initial data load and set interval for updates
+    fetchData();
+    dataIntervalRef.current = setInterval(fetchData, 60000);
+  };
 
-	useEffect(() => {
-		initializeApp()
-	}, [])
+  useEffect(() => {
+    initializeApp();
+  }, []);
 
-	// Clean up all timers and resources on unmount
-	useEffect(() => {
-		return () => {
-			if (dateTimerRef.current) clearInterval(dateTimerRef.current)
-			if (dataIntervalRef.current) clearInterval(dataIntervalRef.current)
-		}
-	}, [])
+  // Clean up all timers and resources on unmount
+  useEffect(() => {
+    return () => {
+      if (dateTimerRef.current) clearInterval(dateTimerRef.current);
+      if (dataIntervalRef.current) clearInterval(dataIntervalRef.current);
+    };
+  }, []);
 
-	// Fetch data
-	const fetchData = async () => {
-		try {
-			const response = await api.get("/sewingOutputs")
-			const data = await response.data
+  // Fetch data
+  const fetchData = async () => {
+    try {
+      const response = await api.get("/sewingOutputs");
+      const data = await response.data;
 
-			// Process the data
-			processOutputData(data.sewing_outputs)
-			setEmployeeCount(
-				data.sewing_outputs.reduce(
-					(total, output) => total + output.employee_count,
-					0
-				)
-			)
-			setAupCount(data.aup)
-		} catch (error) {
-			toast({
-				title: "Xatolik!",
-				description: "Data olishda xatolik",
-				variant: "destructive",
-			})
-		}
-	}
+      // Process the data
+      processOutputData(data.sewing_outputs);
+      processExampleOutputData(data.example_outputs);
+      setEmployeeCount(
+        data.sewing_outputs.reduce(
+          (total, output) => total + output.employee_count,
+          0
+        )
+      );
+      setAupCount(data.aup);
+    } catch (error) {
+      toast({
+        title: "Xatolik!",
+        description: "Data olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
 
-	const handleNavigate = (id) => {
-		if (localStorage.getItem("role") === "supervisor") {
-			navigate("/supervisor/orders/" + id)
-		}
-	}
+  const handleNavigate = (id) => {
+    if (localStorage.getItem("role") === "supervisor") {
+      navigate("/supervisor/orders/" + id);
+    }
+  };
 
-	const processOutputData = (outputsData) => {
-		// Sort by progress percentage (descending)
-		const sortedOutputs = [...outputsData]
-			.map((output) => {
-				const progressPercentage =
-					output.today_plan > 0
-						? Math.round((output.today_quantity / output.today_plan) * 100)
-						: 0
+  const processOutputData = (outputsData) => {
+    // Sort by progress percentage (descending)
+    const sortedOutputs = [...outputsData]
+      .map((output) => {
+        const progressPercentage =
+          output.today_plan > 0
+            ? Math.round((output.today_quantity / output.today_plan) * 100)
+            : 0;
 
-				return {
-					...output,
-					progressPercentage,
-				}
-			})
-			.sort((a, b) => b.progressPercentage - a.progressPercentage)
+        return {
+          ...output,
+          progressPercentage,
+        };
+      })
+      .sort((a, b) => b.progressPercentage - a.progressPercentage);
 
-		setOutputs(sortedOutputs)
-	}
+    setOutputs(sortedOutputs);
+  };
 
-	// Format date and time
-	const formattedDate = currentDateTime.toLocaleDateString("ru-RU", {
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-		weekday: "long",
-	})
+  const processExampleOutputData = (outputsData) => {
+    // Sort by progress percentage (descending)
+    const sortedOutputs = [...outputsData]
+      .map((output) => {
+        const progressPercentage =
+          output.today_plan > 0
+            ? Math.round((output.today_quantity / output.today_plan) * 100)
+            : 0;
 
-	const formattedTime = currentDateTime.toLocaleTimeString("ru-RU", {
-		hour: "2-digit",
-		minute: "2-digit",
-		second: "2-digit",
-	})
+        return {
+          ...output,
+          progressPercentage,
+        };
+      })
+      .sort((a, b) => b.progressPercentage - a.progressPercentage);
 
-	// Get medal for rank
-	const getMedalForRank = (rank) => {
-		switch (rank) {
-			case 1:
-				return <Trophy className='text-yellow-400' size={16} />
-			case 2:
-				return <Medal className='text-gray-400' size={16} />
-			case 3:
-				return <Medal className='text-yellow-700' size={16} />
-			default:
-				return <span className='font-medium text-gray-500 text-xs'>{rank}</span>
-		}
-	}
+    setExampleOutputs(sortedOutputs);
+  };
 
-	// Get progress bar color based on percentage
-	const getProgressColor = (percentage) => {
-		if (percentage >= 100) return "bg-green-500"
-		if (percentage >= 70) return "bg-blue-500"
-		return "bg-yellow-500"
-	}
+  // Format date and time
+  const formattedDate = currentDateTime.toLocaleDateString("ru-RU", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
 
-	const getTextColor = (percentage) => {
-		if (percentage >= 100) return "text-green-600"
-		if (percentage >= 70) return "text-blue-600"
-		return "text-yellow-600"
-	}
+  const formattedTime = currentDateTime.toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 
-	const getProgressStyle = (percentage) => {
-		if (percentage >= 100) {
-			return {
-				bg: "from-emerald-500 to-green-600",
-				text: "text-emerald-600",
-			}
-		}
-		if (percentage >= 70) {
-			return {
-				bg: "from-blue-500 to-cyan-600",
-				text: "text-blue-600",
-			}
-		}
-		return {
-			bg: "from-amber-500 to-orange-600",
-			text: "text-amber-600",
-		}
-	}
+  // Get medal for rank
+  const getMedalForRank = (rank) => {
+    switch (rank) {
+      case 1:
+        return <Trophy className="text-yellow-400" size={16} />;
+      case 2:
+        return <Medal className="text-gray-400" size={16} />;
+      case 3:
+        return <Medal className="text-yellow-700" size={16} />;
+      default:
+        return (
+          <span className="font-medium text-gray-500 text-xs">{rank}</span>
+        );
+    }
+  };
 
-	// Main app content
-	return (
-		<div className='bg-gray-50'>
-			<div className='mx-auto px-0 md:px-4'>
-				<div className='mb-4'>
-					<div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4'>
-						<div className='flex items-center gap-4'>
-							<div>
-								<p className='text-slate-600 font-medium'>{formattedDate}</p>
-							</div>
-						</div>
-						<div className='text-right'>
-							<div className='text-3xl font-bold text-slate-800 font-mono'>
-								{formattedTime}
-							</div>
-						</div>
-					</div>
-				</div>
+  // Get progress bar color based on percentage
+  const getProgressColor = (percentage) => {
+    if (percentage >= 100) return "bg-green-500";
+    if (percentage >= 70) return "bg-blue-500";
+    return "bg-yellow-500";
+  };
 
-				<div className='flex flex-col-reverse md:flex-col'>
-					{/* Statistics Cards */}
-					<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
-						<div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-slate-500 text-sm font-medium'>
-										Bugungi kiritilgan reja
-									</p>
-									<p className='text-2xl font-bold text-slate-800'>
-										{outputs.reduce(
-											(total, output) => total + output.today_plan,
-											0
-										)}
-									</p>
-								</div>
-								<div className='p-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl shadow-lg'>
-									<NotepadText className='text-white' size={24} />
-								</div>
-							</div>
-						</div>
+  const getTextColor = (percentage) => {
+    if (percentage >= 100) return "text-green-600";
+    if (percentage >= 70) return "text-blue-600";
+    return "text-yellow-600";
+  };
 
-						<div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-slate-500 text-sm font-medium'>
-										Real natija
-									</p>
-									<p className='text-2xl font-bold text-slate-800'>
-										{outputs.reduce(
-											(total, output) => total + output.today_quantity,
-											0
-										)}
-									</p>
-								</div>
-								<div
-									className={`p-3 rounded-xl shadow-lg ${
-										outputs.reduce(
-											(total, output) => total + output.today_quantity,
-											0
-										) >=
-										outputs.reduce(
-											(total, output) => total + output.today_plan,
-											0
-										)
-											? "bg-gradient-to-r from-emerald-500 to-green-600"
-											: "bg-gradient-to-r from-red-500 to-red-700"
-									}`}
-								>
-									<ChartColumnIncreasing className='text-white' size={24} />
-								</div>
-							</div>
-						</div>
+  const getProgressStyle = (percentage) => {
+    if (percentage >= 100) {
+      return {
+        bg: "from-emerald-500 to-green-600",
+        text: "text-emerald-600",
+      };
+    }
+    if (percentage >= 70) {
+      return {
+        bg: "from-blue-500 to-cyan-600",
+        text: "text-blue-600",
+      };
+    }
+    return {
+      bg: "from-amber-500 to-orange-600",
+      text: "text-amber-600",
+    };
+  };
 
-						<div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-slate-500 text-sm font-medium'>
-										Jami natija
-									</p>
-									<p className='text-2xl font-bold text-slate-800'>
-										{outputs.reduce(
-											(total, output) => total + output.total_quantity,
-											0
-										)}
-									</p>
-								</div>
-								<div className='p-3 bg-gradient-to-r from-pink-500 to-pink-700 rounded-xl shadow-lg'>
-									<ChartNoAxesCombined className='text-white' size={24} />
-								</div>
-							</div>
-						</div>
-						<div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-slate-500 text-sm font-medium'>
-										Jami ishchilar
-									</p>
-									<p className='text-2xl font-bold text-slate-800'>
-										{employeeCount}
-									</p>
-								</div>
-								<div className='p-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl shadow-lg'>
-									<Users className='text-white' size={24} />
-								</div>
-							</div>
-						</div>
-						<div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-slate-500 text-sm font-medium'>AUP</p>
-									<p className='text-2xl font-bold text-slate-800'>
-										{aupCount}
-									</p>
-								</div>
-								<div className='p-3 bg-gradient-to-r from-yellow-600 to-yellow-800 rounded-xl shadow-lg'>
-									<Users className='text-white' size={24} />
-								</div>
-							</div>
-						</div>
-						<div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-slate-500 text-sm font-medium'>
-										Bajarilgan ortacha plan
-									</p>
-									{(() => {
-										// Calculate average progress across all outputs
-										const avgProgress =
-											outputs.length > 0
-												? Math.round(
-														outputs.reduce((sum, output) => {
-															const progress =
-																output.today_plan > 0
-																	? (output.today_quantity /
-																			output.today_plan) *
-																	  100
-																	: 0
-															return sum + progress
-														}, 0) / outputs.length
-												  )
-												: 0
-										const style = getProgressStyle(avgProgress)
-										return (
-											<p className={`text-2xl font-bold ${style.text}`}>
-												{avgProgress}%
-											</p>
-										)
-									})()}
-								</div>
-								<div
-									className={`p-3 rounded-xl shadow-lg bg-gradient-to-r ${(() => {
-										// Use the same average progress for the background style
-										const avgProgress =
-											outputs.length > 0
-												? Math.round(
-														outputs.reduce((sum, output) => {
-															const progress =
-																output.today_plan > 0
-																	? (output.today_quantity /
-																			output.today_plan) *
-																	  100
-																	: 0
-															return sum + progress
-														}, 0) / outputs.length
-												  )
-												: 0
-										return getProgressStyle(avgProgress).bg
-									})()}`}
-								>
-									<ChartColumnIncreasing className='text-white' size={24} />
-								</div>
-							</div>
-						</div>
-					</div>
+  // Main app content
+  return (
+    <div className="bg-gray-50">
+      <div className="mx-auto px-0 md:px-4">
+        <div className="mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div>
+                <p className="text-slate-600 font-medium">{formattedDate}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-slate-800 font-mono">
+                {formattedTime}
+              </div>
+            </div>
+          </div>
+        </div>
 
-					{/* Data Table */}
-					<div className='bg-white rounded-xl shadow-md p-0 sm:p-4 md:p-6 mb-8'>
-						<div className='overflow-x-auto'>
-							<table className='min-w-full bg-white'>
-								<thead className='sticky top-0 z-10 bg-indigo-50'>
-									<tr className='border-b border-indigo-100'>
-										<th className='py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800'>
-											#
-										</th>
-										<th className='py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800'>
-											Model
-										</th>
-										<th className='py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800'>
-											Guruh
-										</th>
-										<th className='py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800'>
-											Ishchilar
-										</th>
-										<th className='py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800'>
-											Bugungi reja
-										</th>
-										<th className='py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800'>
-											Bugungi natija
-										</th>
-										<th className='py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800'>
-											Jami natija
-										</th>
-										<th className='py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800'>
-											Progress
-										</th>
-									</tr>
-								</thead>
-								<tbody>
-									{outputs.map((output, index) => {
-										const rank = index + 1
-										return (
-											<tr
-												key={`${output.model.name}-${output.group.name}`}
-												className={`border-b border-gray-200 hover:bg-gray-50 ${
-													output.hasChanged ? "animate-highlight" : ""
-												}`}
-											>
-												<td className='py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base'>
-													{getMedalForRank(rank)}
-												</td>
-												<td className='py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base'>
-													{output.model.name}
-												</td>
-												<td
-													className='py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base'
-													onClick={(e) => {
-														e.preventDefault()
-														handleNavigate(output.order_id)
-													}}
-												>
-													<TooltipProvider delayDuration={100}>
-														<Tooltip>
-															<TooltipTrigger>
-																<p>{output?.group?.name}</p>
-															</TooltipTrigger>
-															<TooltipContent>
-																<p>{output?.responsibleUser}</p>
-															</TooltipContent>
-														</Tooltip>
-													</TooltipProvider>
-												</td>
-												<td className='py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center'>
-													<span className='font-bold text-indigo-600'>
-														{output.employee_count}
-													</span>
-												</td>
-												<td className='py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700'>
-													{output.today_plan}
-												</td>
-												<td
-													className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
-														output.today_quantity >= output.today_plan
-															? "text-green-600"
-															: "text-blue-600"
-													}`}
-												>
-													{output.today_quantity}
-												</td>
-												<td className='py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600'>
-													{output.total_quantity}
-												</td>
-												<td className='py-2 px-1 sm:px-2 md:px-4'>
-													<div className='flex items-center'>
-														<div className='w-full bg-gray-200 rounded-full h-2'>
-															<div
-																className={`${getProgressColor(
-																	output.progressPercentage
-																)} h-2 rounded-full`}
-																style={{
-																	width: `${Math.min(
-																		output.progressPercentage,
-																		100
-																	)}%`,
-																	animation: "fillProgress 1s ease-out",
-																}}
-															></div>
-														</div>
-														<span
-															className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
-																output.progressPercentage
-															)}`}
-														>
-															{output.progressPercentage}%
-														</span>
-													</div>
-												</td>
-											</tr>
-										)
-									})}
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	)
-}
+        <div className="flex flex-col-reverse md:flex-col">
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Bugungi kiritilgan reja
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {outputs.reduce(
+                      (total, output) => total + output.today_plan,
+                      0
+                    )}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl shadow-lg">
+                  <NotepadText className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
 
-export default Home
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Real natija
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {outputs.reduce(
+                      (total, output) => total + output.today_quantity,
+                      0
+                    )}
+                  </p>
+                </div>
+                <div
+                  className={`p-3 rounded-xl shadow-lg ${
+                    outputs.reduce(
+                      (total, output) => total + output.today_quantity,
+                      0
+                    ) >=
+                    outputs.reduce(
+                      (total, output) => total + output.today_plan,
+                      0
+                    )
+                      ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                      : "bg-gradient-to-r from-red-500 to-red-700"
+                  }`}
+                >
+                  <ChartColumnIncreasing className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Jami natija
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {outputs.reduce(
+                      (total, output) => total + output.total_quantity,
+                      0
+                    )}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-pink-500 to-pink-700 rounded-xl shadow-lg">
+                  <ChartNoAxesCombined className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Jami ishchilar
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {employeeCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl shadow-lg">
+                  <Users className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">AUP</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {aupCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-yellow-600 to-yellow-800 rounded-xl shadow-lg">
+                  <Users className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Bajarilgan ortacha plan
+                  </p>
+                  {(() => {
+                    // Calculate average progress across all outputs
+                    const avgProgress =
+                      outputs.length > 0
+                        ? Math.round(
+                            outputs.reduce((sum, output) => {
+                              const progress =
+                                output.today_plan > 0
+                                  ? (output.today_quantity /
+                                      output.today_plan) *
+                                    100
+                                  : 0;
+                              return sum + progress;
+                            }, 0) / outputs.length
+                          )
+                        : 0;
+                    const style = getProgressStyle(avgProgress);
+                    return (
+                      <p className={`text-2xl font-bold ${style.text}`}>
+                        {avgProgress}%
+                      </p>
+                    );
+                  })()}
+                </div>
+                <div
+                  className={`p-3 rounded-xl shadow-lg bg-gradient-to-r ${(() => {
+                    // Use the same average progress for the background style
+                    const avgProgress =
+                      outputs.length > 0
+                        ? Math.round(
+                            outputs.reduce((sum, output) => {
+                              const progress =
+                                output.today_plan > 0
+                                  ? (output.today_quantity /
+                                      output.today_plan) *
+                                    100
+                                  : 0;
+                              return sum + progress;
+                            }, 0) / outputs.length
+                          )
+                        : 0;
+                    return getProgressStyle(avgProgress).bg;
+                  })()}`}
+                >
+                  <ChartColumnIncreasing className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Table */}
+          <div className="bg-white rounded-xl shadow-md p-0 sm:p-4 md:p-6 mb-8">
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white">
+                <thead className="sticky top-0 z-10 bg-indigo-50">
+                  <tr className="border-b border-indigo-100">
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      #
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Model
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Guruh
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Ishchilar
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Bugungi reja
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Bugungi natija
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Jami natija
+                    </th>
+                    <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
+                      Progress
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {outputs.map((output, index) => {
+                    const rank = index + 1;
+                    return (
+                      <tr
+                        key={`${output.model.name}-${output.group.name}`}
+                        className={`border-b border-gray-200 hover:bg-gray-50 ${
+                          output.hasChanged ? "animate-highlight" : ""
+                        }`}
+                      >
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
+                          {getMedalForRank(rank)}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
+                          {output.model.name}
+                        </td>
+                        <td
+                          className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavigate(output.order_id);
+                          }}
+                        >
+                          <TooltipProvider delayDuration={100}>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <p>{output?.group?.name}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{output?.responsibleUser}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center">
+                          <span className="font-bold text-indigo-600">
+                            {output.employee_count}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
+                          {output.today_plan}
+                        </td>
+                        <td
+                          className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
+                            output.today_quantity >= output.today_plan
+                              ? "text-green-600"
+                              : "text-blue-600"
+                          }`}
+                        >
+                          {output.today_quantity}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
+                          {output.total_quantity}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4">
+                          <div className="flex items-center">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`${getProgressColor(
+                                  output.progressPercentage
+                                )} h-2 rounded-full`}
+                                style={{
+                                  width: `${Math.min(
+                                    output.progressPercentage,
+                                    100
+                                  )}%`,
+                                  animation: "fillProgress 1s ease-out",
+                                }}
+                              ></div>
+                            </div>
+                            <span
+                              className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
+                                output.progressPercentage
+                              )}`}
+                            >
+                              {output.progressPercentage}%
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {exampleOutputs.map((output, index) => {
+                    const rank = index + 1;
+                    return (
+                      <tr
+                        key={`${output.model.name}-${output.group.name}`}
+                        className={`border-b border-gray-200 hover:bg-gray-50 ${
+                          output.hasChanged ? "animate-highlight" : ""
+                        }`}
+                      >
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
+                          {getMedalForRank(rank)}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
+                          {output.model.name}
+                        </td>
+                        <td
+                          className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavigate(output.order_id);
+                          }}
+                        >
+                          <TooltipProvider delayDuration={100}>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <p>{output?.group?.name}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{output?.responsibleUser}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center">
+                          <span className="font-bold text-indigo-600">
+                            {output.employee_count}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
+                          {output.today_plan}
+                        </td>
+                        <td
+                          className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
+                            output.today_quantity >= output.today_plan
+                              ? "text-green-600"
+                              : "text-blue-600"
+                          }`}
+                        >
+                          {output.today_quantity}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
+                          {output.total_quantity}
+                        </td>
+                        <td className="py-2 px-1 sm:px-2 md:px-4">
+                          <div className="flex items-center">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`${getProgressColor(
+                                  output.progressPercentage
+                                )} h-2 rounded-full`}
+                                style={{
+                                  width: `${Math.min(
+                                    output.progressPercentage,
+                                    100
+                                  )}%`,
+                                  animation: "fillProgress 1s ease-out",
+                                }}
+                              ></div>
+                            </div>
+                            <span
+                              className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
+                                output.progressPercentage
+                              )}`}
+                            >
+                              {output.progressPercentage}%
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Home;
