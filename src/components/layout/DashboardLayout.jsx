@@ -3,6 +3,7 @@ import TechnologLayout from "./DashboardLayouts/TechnologLayout";
 import SuperHrLayout from "./DashboardLayouts/SuperHrLayout";
 import CuttingMasterLayout from "./DashboardLayouts/CuttingMasterLayout";
 import GroupMasterLayout from "./DashboardLayouts/GroupMasterLayout";
+import GroupHelperLayout from "./DashboardLayouts/GroupHelperLayout";
 import TvLayout from "./DashboardLayouts/TvLayout";
 import ConstructorLayout from "./DashboardLayouts/ConstructorLayout";
 import OrderManagerLayout from "./DashboardLayouts/OrderManagerLayout";
@@ -23,6 +24,7 @@ const layouts = {
   superhr: SuperHrLayout,
   cuttingMaster: CuttingMasterLayout,
   groupMaster: GroupMasterLayout,
+  groupHelper: GroupHelperLayout,
   tv: TvLayout,
   constructor: ConstructorLayout,
   orderManager: OrderManagerLayout,

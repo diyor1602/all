@@ -16,6 +16,7 @@ import SuperHr from "./pages/SuperHR/SuperHr";
 import Technolog from "./pages/Technolog/Technolog";
 import CuttingMaster from "./pages/CuttingMaster/CuttingMaster";
 import GroupMaster from "./pages/GroupMaster/GroupMaster";
+import GroupHelper from "./pages/GroupHelper/GroupHelper";
 import Constructor from "./pages/Constructor/Constructor";
 import OrderManager from "./pages/OrderManager/OrderManager";
 import Supervisor from "./pages/Supervisor/Supervisor";
@@ -64,6 +65,7 @@ function App() {
           <Route path="/technologist/*" element={<Technolog />} />
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />
           <Route path="/groupMaster/*" element={<GroupMaster />} />
+          <Route path="/groupHelper/*" element={<GroupHelper />} />
           <Route path="/constructor/*" element={<Constructor />} />
           <Route path="/orderManager/*" element={<OrderManager />} />
           <Route path="/supervisor/*" element={<Supervisor />} />
