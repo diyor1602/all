@@ -72,9 +72,9 @@ const Result = () => {
     setFilteredOrders(filtered);
   }, [search, orders]);
 
-  const calculateProgress = (quantity, remainAmount) => {
+  const calculateProgress = (quantity, remainExample) => {
     if (!quantity || quantity === 0) return 0;
-    const completed = remainAmount || 0;
+    const completed = remainExample || 0;
     return Math.round((completed / quantity) * 100);
   };
 
@@ -192,7 +192,7 @@ const Result = () => {
               {filteredOrders.map((order, index) => {
                 const progress = calculateProgress(
                   order?.quantity,
-                  order?.remainAmount
+                  order?.remainExample
                 );
                 const isExpanded = expandedCard === order.id;
 
@@ -235,7 +235,7 @@ const Result = () => {
                           <div className="flex justify-between text-xs text-gray-600 mb-1">
                             <span>Jarayon</span>
                             <span className="font-medium">
-                              {order?.remainAmount || 0} / {order?.quantity}
+                              {order?.remainExample || 0} / {order?.quantity}
                             </span>
                           </div>
                           <Progress
@@ -336,7 +336,7 @@ const Result = () => {
                                     Qoldiq
                                   </div>
                                   <div className="font-medium text-gray-800 bg-violet-50 p-1.5 rounded-lg text-xs">
-                                    {order?.remainAmount} ta
+                                    {order?.remainExample} ta
                                   </div>
                                 </div>
                               </div>
