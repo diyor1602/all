@@ -397,6 +397,12 @@ const Daily = () => {
       value: daily.per_employee_cost_uzs,
       bg: "bg-orange-300",
     },
+    {
+      label: "Jami aktiv ishchilar",
+      value: daily.employee_count,
+      bg: "bg-orange-300",
+      prefix: "ta",
+    },
   ];
 
   return (
@@ -500,7 +506,7 @@ const Daily = () => {
                       {metric.label}:
                     </span>
                     <Badge variant="ghost" className="font-mono border-none">
-                      {formatNumber(metric.value)} so'm
+                      {formatNumber(metric.value)} {metric.prefix || "so'm"}
                     </Badge>
                   </div>
                 ))}

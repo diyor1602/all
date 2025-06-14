@@ -67,12 +67,7 @@ const Home = () => {
       // Process the data
       processOutputData(data.sewing_outputs);
       processExampleOutputData(data.example_outputs);
-      setEmployeeCount(
-        data.sewing_outputs.reduce(
-          (total, output) => total + output.employee_count,
-          0
-        )
-      );
+      setEmployeeCount(data.simple);
       setAupCount(data.aup);
     } catch (error) {
       toast({
