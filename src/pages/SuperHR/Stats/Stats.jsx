@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 
 // Transliteration mapping for Cyrillic to Latin
 const cyrillicToLatin = {
@@ -505,6 +506,14 @@ const Stats = () => {
                       {expandedRows[stat.employee_id] && (
                         <div className="bg-slate-50 border-t border-slate-200">
                           <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+                            <Link
+                              to={`/superhr/employees/view/${stat.employee_id}`}
+                              target="_blank"
+                            >
+                              <Button variant="outline">
+                                <Eye /> Ko'rish
+                              </Button>
+                            </Link>
                             {/* Present Days */}
                             {stat?.attendances?.present?.length > 0 && (
                               <div>
