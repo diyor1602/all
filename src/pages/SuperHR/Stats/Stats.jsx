@@ -104,9 +104,10 @@ const latinToCyrillic = {
   shch: "щ",
   yu: "ю",
   ya: "я",
-  // Common variations
   q: "қ",
   h: "ҳ",
+  x: "х",
+  j: "ж",
 };
 
 const transliterate = (text, fromCyrillic = true) => {
@@ -509,7 +510,6 @@ const Stats = () => {
                 ) : (
                   <Download />
                 )}
-                Export
               </Button>
             </div>
           </div>
