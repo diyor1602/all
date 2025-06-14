@@ -328,7 +328,8 @@ const Stats = () => {
   };
 
   // Count employees with 0% attendance
-  const zeroPercentCount = stats?.data?.filter(stat => getAttendanceRate(stat) === 0).length || 0;
+  const zeroPercentCount =
+    stats?.data?.filter((stat) => getAttendanceRate(stat) === 0).length || 0;
 
   const handleExport = async () => {
     setDownloading(true);
