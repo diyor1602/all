@@ -392,11 +392,16 @@ const Daily = () => {
       ),
       bg: "bg-purple-300",
     },
+    {
+      label: "1 kishi uchun harajat",
+      value: daily.per_employee_cost_uzs,
+      bg: "bg-orange-300",
+    },
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between md:p-6 gap-4 flex-wrap">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-3xl font-bold text-slate-800">Kunlik hisobot</h1>
         <div className="flex items-center gap-3">
           <Button
@@ -425,7 +430,7 @@ const Daily = () => {
       </div>
       <div
         className={cn(
-          "min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 md:p-6",
+          "min-h-screen bg-gradient-to-br from-slate-50 to-slate-100",
           loading && "opacity-50 cursor-not-allowed"
         )}
       >
@@ -862,7 +867,7 @@ const Daily = () => {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto w-full">
-                <Table className="border border-slate-200 w-full whitespace-nowrap">
+                <Table className="border border-slate-200 w-full whitespace-nowrap text-xs">
                   <TableHeader className="bg-slate-50">
                     <TableRow>
                       <TableHead className="border border-slate-200">
@@ -878,7 +883,7 @@ const Daily = () => {
                         Narxi
                       </TableHead>
                       <TableHead className="border border-slate-200">
-                        Chiqarilgan soni
+                        Chiqarilgan
                       </TableHead>
                       <TableHead className="border border-slate-200">
                         Topgan puli
@@ -896,7 +901,7 @@ const Daily = () => {
                         Foiz
                       </TableHead>
                       <TableHead className="border border-slate-200">
-                        Chok uchun
+                        Chok
                       </TableHead>
                       <TableHead className="border border-slate-200">
                         Daromad
@@ -940,13 +945,13 @@ const Daily = () => {
                           </div>
                         </TableCell>
                         <TableCell className="border border-slate-200">
-                          <div className="space-y-1 flex items-center gap-2">
-                            <Badge variant="outline" className="font-mono">
+                          <div className="flex flex-col gap-1">
+                            <div className="font-mono">
                               {formatNumber(order?.price_uzs)} so'm
-                            </Badge>
-                            <Badge variant="secondary" className="font-mono">
+                            </div>
+                            <div className="font-mono">
                               {formatNumber(order?.price_usd)} $
-                            </Badge>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="font-mono border border-slate-200">
@@ -959,10 +964,10 @@ const Daily = () => {
                           <TooltipProvider delayDuration={100}>
                             <Tooltip>
                               <TooltipTrigger>
-                                <Badge variant="outline" className="font-mono">
+                                <div className="font-mono">
                                   {formatNumber(order?.total_fixed_cost_uzs)}{" "}
                                   so'm
-                                </Badge>
+                                </div>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <div className="space-y-1">
@@ -1004,16 +1009,16 @@ const Daily = () => {
                           {formatNumber(order?.rasxod_percent_of_price)} %
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
+                          <div
+                            className={cn(
+                              "font-bold font-mono",
                               order.net_profit_uzs > 0
-                                ? "default"
-                                : "destructive"
-                            }
-                            className="font-mono"
+                                ? "text-green-500"
+                                : "text-red-500"
+                            )}
                           >
                             {formatNumber(order.net_profit_uzs)} so'm
-                          </Badge>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
