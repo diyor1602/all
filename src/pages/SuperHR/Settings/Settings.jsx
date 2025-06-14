@@ -3,12 +3,11 @@ import Positions from "./Positions/Positions";
 import Deparments from "./Departments/Departments";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Blocks, Frown, History, UserCog, UserPlus } from "lucide-react";
+import { Blocks, History, UserCog, UserPlus } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddFastUser from "./AddFastUser/AddFastUser";
 import AddGroup from "./Departments/AddGroup";
 import EditGroup from "./Departments/EditGroup";
-import Stats from "./Stats/Stats";
 
 const Settings = () => {
   return (
@@ -20,7 +19,6 @@ const Settings = () => {
       <Route path="add-fast-user" element={<AddFastUser />} />
       <Route path="add-group" element={<AddGroup />} />
       <Route path="edit-group/:id" element={<EditGroup />} />
-      <Route path="stats" element={<Stats />} />
     </Routes>
   );
 };
@@ -50,12 +48,6 @@ const SettingsPage = () => {
       icon: UserPlus,
       link: "/superhr/settings/add-fast-user",
       color: "bg-yellow-500",
-    },
-    {
-      name: "Davomat statistika",
-      icon: Frown,
-      link: "/superhr/settings/stats",
-      color: "bg-red-500",
     },
   ];
 
