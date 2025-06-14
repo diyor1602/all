@@ -2,25 +2,18 @@
 
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import {
   ChevronDown,
   ChevronUp,
-  Calendar,
   Users,
   UserCheck,
   UserX,
   Search,
-  Filter,
   Download,
   Eye,
+  Loader2,
+  Axe,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -171,48 +164,56 @@ const createSearchVariants = (text) => {
   return [...new Set(variants)]; // Remove duplicates
 };
 
-const filterOptions = [
-  { value: "today", label: "Bugun", icon: Calendar },
-  { value: "yesterday", label: "Kecha", icon: Calendar },
-  { value: "last_7_days", label: "Hafta", icon: Calendar },
-  { value: "last_10_days", label: "So'nggi 10 kun", icon: Calendar },
-  { value: "last_30_days", label: "So'nggi 30 kun", icon: Calendar },
-];
+// Format date to YYYY-MM-DD
+const formatDate = (date) => {
+  return date.toISOString().split("T")[0];
+};
+
+// Get today's date
+const today = new Date();
+// Get date 7 days ago as default start date
+const defaultStartDate = new Date();
+defaultStartDate.setDate(today.getDate() - 7);
 
 const Stats = () => {
   const { toast } = useToast();
 
   const [stats, setStats] = useState([]);
-  const [filter, setFilter] = useState(
-    localStorage.getItem("attdFilter") || "yesterday"
-  );
+  const [dateRange, setDateRange] = useState({
+    startDate: formatDate(defaultStartDate),
+    endDate: formatDate(today),
+  });
   const [expandedRows, setExpandedRows] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/superhr/filterAttendance", {
+        params: {
+          start_date: dateRange.startDate,
+          end_date: dateRange.endDate,
+        },
+      });
+      setStats(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message ||
+          "Davomat ma'lumotlari olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get("/superhr/filterAttendance", {
-          params: {
-            filter: filter,
-          },
-        });
-        setStats(response.data);
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Davomat ma'lumotlari olishda xatolik",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStats();
-  }, [filter]);
+  }, [dateRange]);
 
   const toggleRow = (employeeId) => {
     setExpandedRows((prev) => ({
@@ -286,6 +287,79 @@ const Stats = () => {
     return total > 0 ? Math.round((present / total) * 100) : 0;
   };
 
+  const handleExport = async () => {
+    setDownloading(true);
+    try {
+      const response = await api.get("/superhr/export-attendance", {
+        params: {
+          start_date: dateRange.startDate,
+          end_date: dateRange.endDate,
+        },
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `davomat_${dateRange.startDate}-${dateRange.endDate}.pdf`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url); // optional but good practice
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message ||
+          "Davomat ma'lumotlari export qilishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+  const handleDelete = async (stat) => {
+    const isConfirmed = window.confirm(
+      `${stat.name} ni ishdan ketkazishga rozimisiz?`
+    );
+    if (!isConfirmed) return;
+
+    const reason = window.prompt("Ishdan ketkazish sababini kiriting:");
+    if (!reason) {
+      toast({
+        title: "Xatolik",
+        description: "Ishdan ketkazish sababini kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+
+    try {
+      await api.patch(`/superhr/employees/${stat.employee_id}`, {
+        status: "kicked",
+        comment: reason,
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Xodim ishdan bo'shatildi",
+        variant: "default",
+        duration: 1500,
+      });
+      fetchStats();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Xodim ishdan bo'shatishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -312,50 +386,53 @@ const Stats = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <Select
-                value={filter}
-                onValueChange={(value) => {
-                  setFilter(value);
-                  localStorage.setItem("attdFilter", value);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-[200px] bg-white">
-                  <SelectValue placeholder="Filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filterOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center gap-2">
-                        {option.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Input
+                  type="date"
+                  value={dateRange.startDate}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({
+                      ...prev,
+                      startDate: e.target.value,
+                    }))
+                  }
+                  className="text-sm focus:outline-none bg-white"
+                  max={dateRange.endDate}
+                />
+                <div className="flex items-center justify-center text-slate-500">
+                  -
+                </div>
+                <Input
+                  type="date"
+                  value={dateRange.endDate}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({
+                      ...prev,
+                      endDate: e.target.value,
+                    }))
+                  }
+                  className="text-sm focus:outline-none bg-white"
+                  min={dateRange.startDate}
+                  max={formatDate(today)}
+                />
+              </div>
 
-              <Button variant="outline" className="gap-2 w-full sm:w-auto">
-                <Download className="h-4 w-4" />
+              <Button
+                variant="outline"
+                className="gap-2 w-full sm:w-auto"
+                onClick={handleExport}
+                disabled={downloading}
+              >
+                {downloading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Download />
+                )}
                 Export
               </Button>
             </div>
           </div>
         </div>
-
-        {/* Date Range Info */}
-        {stats?.date_range && (
-          <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-blue-500" />
-                <span className="font-medium">Qidiruv oralig'i:</span>
-                <Badge variant="secondary" className="font-mono">
-                  {stats.date_range[0]?.split("-")?.reverse()?.join(".")} -{" "}
-                  {stats.date_range[1]?.split("-")?.reverse()?.join(".")}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -506,14 +583,22 @@ const Stats = () => {
                       {expandedRows[stat.employee_id] && (
                         <div className="bg-slate-50 border-t border-slate-200">
                           <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
-                            <Link
-                              to={`/superhr/employees/view/${stat.employee_id}`}
-                              target="_blank"
-                            >
-                              <Button variant="outline">
-                                <Eye /> Ko'rish
+                            <div className="flex items-center gap-2">
+                              <Link
+                                to={`/superhr/employees/view/${stat.employee_id}`}
+                                target="_blank"
+                              >
+                                <Button variant="outline">
+                                  <Eye /> Ko'rish
+                                </Button>
+                              </Link>
+                              <Button
+                                className="bg-red-500 hover:bg-red-600"
+                                onClick={() => handleDelete(stat)}
+                              >
+                                <Axe /> Chopish
                               </Button>
-                            </Link>
+                            </div>
                             {/* Present Days */}
                             {stat?.attendances?.present?.length > 0 && (
                               <div>
