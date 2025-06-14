@@ -896,6 +896,9 @@ const Daily = () => {
                         Foiz
                       </TableHead>
                       <TableHead className="border border-slate-200">
+                        Chok uchun
+                      </TableHead>
+                      <TableHead className="border border-slate-200">
                         Daromad
                       </TableHead>
                     </TableRow>
@@ -996,6 +999,9 @@ const Daily = () => {
                         </TableCell>{" "}
                         <TableCell className="font-mono border border-slate-200">
                           {formatNumber(order?.profitability_percent)} %
+                        </TableCell>
+                        <TableCell className="font-mono border border-slate-200">
+                          {formatNumber(order?.rasxod_percent_of_price)} %
                         </TableCell>
                         <TableCell>
                           <Badge
