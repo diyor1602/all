@@ -327,6 +327,9 @@ const Stats = () => {
     return total > 0 ? Math.round((present / total) * 100) : 0;
   };
 
+  // Count employees with 0% attendance
+  const zeroPercentCount = stats?.data?.filter(stat => getAttendanceRate(stat) === 0).length || 0;
+
   const handleExport = async () => {
     setDownloading(true);
     try {
@@ -516,7 +519,7 @@ const Stats = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card className="border-l-4 border-l-blue-500">
             <CardHeader className="pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-slate-600 flex items-center gap-2">
@@ -555,6 +558,20 @@ const Stats = () => {
             <CardContent className="pt-0">
               <div className="text-xl sm:text-2xl font-bold text-red-600">
                 {totalAbsent}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-amber-500">
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-slate-600 flex items-center gap-2">
+                <UserX className="h-3 w-3 sm:h-4 sm:w-4" />
+                0% Davomat
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-xl sm:text-2xl font-bold text-amber-600">
+                {zeroPercentCount}
               </div>
             </CardContent>
           </Card>
