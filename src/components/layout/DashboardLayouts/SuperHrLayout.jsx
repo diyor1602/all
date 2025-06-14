@@ -1,5 +1,11 @@
 import BaseLayout from "./BaseLayout";
-import { Home, Users, Settings, Calendar1 } from "lucide-react";
+import {
+  Home,
+  Users,
+  Settings,
+  Calendar1,
+  ChartColumnDecreasing,
+} from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -10,6 +16,12 @@ const navigation = [
     onMobile: true,
   },
   { name: "Xodimlar", href: "/superhr/employees", icon: Users, onMobile: true },
+  {
+    name: "Statistika",
+    href: "/superhr/stats",
+    icon: ChartColumnDecreasing,
+    onMobile: false,
+  },
   {
     name: "Qo'shimcha",
     href: "/superhr/settings",
