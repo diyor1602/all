@@ -22,8 +22,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Transliteration mapping for Cyrillic to Latin
 const cyrillicToLatin = {
@@ -187,6 +193,10 @@ const Stats = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedGroup, setSelectedGroup] = useState("all");
+  const [departments, setDepartments] = useState([]);
+  const [groups, setGroups] = useState([]);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -195,6 +205,8 @@ const Stats = () => {
         params: {
           start_date: dateRange.startDate,
           end_date: dateRange.endDate,
+          department_id: selectedDepartment === "all" ? "" : selectedDepartment,
+          group_id: selectedGroup === "all" ? "" : selectedGroup,
         },
       });
       setStats(response.data);
@@ -211,9 +223,46 @@ const Stats = () => {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const response = await api.get("/superhr/departments");
+      const allSubDepartments = response.data.flatMap(
+        (main) => main.departments
+      );
+      setDepartments(allSubDepartments);
+    } catch (error) {
+      toast({
+        title: "Diqqat",
+        description: error.response?.data?.message || "Xatolik yuz berdi",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDepartment === "all") {
+      setGroups([]);
+      setSelectedGroup("all");
+    } else {
+      const selectedDept = departments.find(
+        (dept) => dept.id === Number.parseInt(selectedDepartment)
+      );
+      if (selectedDept && selectedDept.groups) {
+        setGroups(selectedDept.groups);
+      } else {
+        setGroups([]);
+      }
+      setSelectedGroup("all");
+    }
+  }, [selectedDepartment, departments]);
+
   useEffect(() => {
     fetchStats();
-  }, [dateRange]);
+  }, [dateRange, selectedDepartment, selectedGroup]);
 
   const toggleRow = (employeeId) => {
     setExpandedRows((prev) => ({
@@ -270,16 +319,6 @@ const Stats = () => {
       0
     ) || 0;
 
-  const getInitials = (name) => {
-    return (
-      name
-        ?.split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase() || "?"
-    );
-  };
-
   const getAttendanceRate = (stat) => {
     const present = stat?.attendances?.present?.length || 0;
     const absent = stat?.attendances?.absent?.length || 0;
@@ -294,6 +333,8 @@ const Stats = () => {
         params: {
           start_date: dateRange.startDate,
           end_date: dateRange.endDate,
+          department_id: selectedDepartment === "all" ? "" : selectedDepartment,
+          group_id: selectedGroup === "all" ? "" : selectedGroup,
         },
         responseType: "blob",
       });
@@ -384,6 +425,46 @@ const Stats = () => {
                 className="pl-10 w-full"
               />
             </div>
+
+            <Select
+              value={selectedDepartment}
+              onValueChange={setSelectedDepartment}
+              className="w-full sm:w-[180px]"
+              disabled={loading}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Bo'lim" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barcha bo'limlar</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id.toString()}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={selectedGroup}
+              onValueChange={setSelectedGroup}
+              className="w-full sm:w-[180px]"
+              disabled={selectedDepartment === "all" || groups.length === 0}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Guruh" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barcha guruhlar</SelectItem>
+                {groups
+                  ?.sort((a, b) => a.name.localeCompare(b.name))
+                  ?.map((group) => (
+                    <SelectItem key={group.id} value={group.id.toString()}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -523,12 +604,6 @@ const Stats = () => {
                             )}
                           </Button>
 
-                          <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
-                            <AvatarFallback className="bg-blue-100 text-blue-700 font-semibold text-xs sm:text-sm">
-                              {getInitials(stat?.name)}
-                            </AvatarFallback>
-                          </Avatar>
-
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                               <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base">
@@ -540,6 +615,20 @@ const Stats = () => {
                               >
                                 ID: {stat?.employee_id}
                               </Badge>
+                              <Badge
+                                variant="outline"
+                                className="text-xs w-fit"
+                              >
+                                {stat?.department}
+                              </Badge>
+                              {stat?.group && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs w-fit"
+                                >
+                                  {stat?.group}
+                                </Badge>
+                              )}
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1 text-xs sm:text-sm text-slate-600">
                               <span className="flex items-center gap-1">
