@@ -400,7 +400,7 @@ const Daily = () => {
     {
       label: "Jami aktiv ishchilar",
       value: daily.employee_count,
-      bg: "bg-orange-300",
+      bg: "bg-lime-300",
       prefix: "ta",
     },
   ];
@@ -540,11 +540,11 @@ const Daily = () => {
           {/* Monthly Expenses */}
           <Card className="border-0 shadow-md">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <CardTitle className="text-slate-800">
                   Oylik harajatlar
                 </CardTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap gap-2">
                   <Dialog
                     open={isAddDialogOpen}
                     onOpenChange={setIsAddDialogOpen}
