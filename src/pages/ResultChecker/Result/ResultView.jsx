@@ -1,5 +1,5 @@
 import api from "@/utils/api";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +48,6 @@ const getStatusText = (status) => {
 const ResultView = () => {
   const { id } = useParams();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
@@ -121,7 +120,6 @@ const ResultView = () => {
   }
 
   const handleOpenDialog = (order, time) => {
-    console.log(order);
     setSelectedOutput({
       order_id: order.id,
       order_submodel_id: order.submodel?.id,
