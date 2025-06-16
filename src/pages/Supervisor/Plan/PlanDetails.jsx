@@ -1,189 +1,189 @@
-"use client";
+"use client"
 
-import api from "@/utils/api";
-import { useParams, useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-import { useState, useEffect } from "react";
-import { Loader2, Plus, Move } from "lucide-react";
-import { statuses } from "@/lib/status";
-import { Button } from "@/components/ui/button";
+import api from "@/utils/api"
+import { useParams, useNavigate } from "react-router-dom"
+import { useToast } from "@/components/ui/use-toast"
+import { useState, useEffect } from "react"
+import { Loader2, Plus, Move } from "lucide-react"
+import { statuses } from "@/lib/status"
+import { Button } from "@/components/ui/button"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 const PlanDetails = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [changing, setChanging] = useState(false);
-  const [editPopoverOpen, setEditPopoverOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState(null);
-  const [newGroupId, setNewGroupId] = useState("");
-  const [unassignedOrders, setUnassignedOrders] = useState([]);
-  const [stats, setStats] = useState({});
+	const { id } = useParams()
+	const navigate = useNavigate()
+	const { toast } = useToast()
+	const [data, setData] = useState([])
+	const [loading, setLoading] = useState(false)
+	const [changing, setChanging] = useState(false)
+	const [editPopoverOpen, setEditPopoverOpen] = useState(false)
+	const [editingOrder, setEditingOrder] = useState(null)
+	const [newGroupId, setNewGroupId] = useState("")
+	const [unassignedOrders, setUnassignedOrders] = useState([])
+	const [stats, setStats] = useState({})
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/supervisor/plans`, {
-        params: {
-          department_id: id,
-        },
-      });
-      setData(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Bunday ma'lumot topilmadi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+	const fetchData = async () => {
+		try {
+			setLoading(true)
+			const response = await api.get(`/supervisor/plans`, {
+				params: {
+					department_id: id,
+				},
+			})
+			setData(response.data)
+		} catch (error) {
+			toast({
+				title: "Xatolik",
+				description: "Bunday ma'lumot topilmadi",
+				variant: "destructive",
+			})
+		} finally {
+			setLoading(false)
+		}
+	}
 
-  const fetchUnassignedOrders = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/supervisor/orders/groups`);
-      setUnassignedOrders(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Bunday ma'lumot topilmadi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+	const fetchUnassignedOrders = async () => {
+		try {
+			setLoading(true)
+			const response = await api.get(`/supervisor/orders/groups`)
+			setUnassignedOrders(response.data)
+		} catch (error) {
+			toast({
+				title: "Xatolik",
+				description: "Bunday ma'lumot topilmadi",
+				variant: "destructive",
+			})
+		} finally {
+			setLoading(false)
+		}
+	}
 
-  const fetchOrderStats = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/supervisor/orders/quantity`);
-      setStats(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Bunday ma'lumot topilmadi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+	const fetchOrderStats = async () => {
+		try {
+			setLoading(true)
+			const response = await api.get(`/supervisor/orders/quantity`)
+			setStats(response.data)
+		} catch (error) {
+			toast({
+				title: "Xatolik",
+				description: "Bunday ma'lumot topilmadi",
+				variant: "destructive",
+			})
+		} finally {
+			setLoading(false)
+		}
+	}
 
-  useEffect(() => {
-    fetchData();
-    fetchUnassignedOrders();
-    fetchOrderStats();
-  }, []);
+	useEffect(() => {
+		fetchData()
+		fetchUnassignedOrders()
+		fetchOrderStats()
+	}, [])
 
-  const handleChangePlan = async (order_id, submodel_id, group_id) => {
-    try {
-      setChanging(true);
-      await api.post(`/supervisor/plans`, {
-        order_id,
-        submodel_id,
-        group_id,
-      });
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Buyurtma guruhga biriktirildi",
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
-        duration: 2000,
-      });
-      fetchData();
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Buyurtma planlanmagan",
-        variant: "destructive",
-      });
-    } finally {
-      setChanging(false);
-    }
-  };
+	const handleChangePlan = async (order_id, submodel_id, group_id) => {
+		try {
+			setChanging(true)
+			await api.post(`/supervisor/plans`, {
+				order_id,
+				submodel_id,
+				group_id,
+			})
+			toast({
+				title: "Muvaffaqiyatli",
+				description: "Buyurtma guruhga biriktirildi",
+				style: {
+					backgroundColor: "green",
+					color: "white",
+				},
+				duration: 2000,
+			})
+			fetchData()
+		} catch (error) {
+			toast({
+				title: "Xatolik",
+				description: "Buyurtma planlanmagan",
+				variant: "destructive",
+			})
+		} finally {
+			setChanging(false)
+		}
+	}
 
-  const handleEditOrder = async () => {
-    if (!newGroupId) {
-      toast({
-        title: "Xatolik",
-        description: "Barcha maydonlarni to'ldiring",
-        variant: "destructive",
-      });
-      return;
-    }
+	const handleEditOrder = async () => {
+		if (!newGroupId) {
+			toast({
+				title: "Xatolik",
+				description: "Barcha maydonlarni to'ldiring",
+				variant: "destructive",
+			})
+			return
+		}
 
-    await handleChangePlan(
-      editingOrder.order.id,
-      editingOrder.order_submodel.id,
-      Number.parseInt(newGroupId)
-    );
+		await handleChangePlan(
+			editingOrder.order.id,
+			editingOrder.order_submodel.id,
+			Number.parseInt(newGroupId)
+		)
 
-    // Reset form
-    setEditingOrder(null);
-    setNewGroupId("");
-    setEditPopoverOpen(false);
-  };
+		// Reset form
+		setEditingOrder(null)
+		setNewGroupId("")
+		setEditPopoverOpen(false)
+	}
 
-  const openEditPopover = (order, groupId) => {
-    setEditingOrder(order);
-    setNewGroupId(groupId.toString());
-    setEditPopoverOpen(true);
-  };
+	const openEditPopover = (order, groupId) => {
+		setEditingOrder(order)
+		setNewGroupId(groupId.toString())
+		setEditPopoverOpen(true)
+	}
 
-  return (
-    <div>
-      <div className="w-full flex justify-between items-center mb-2 flex-wrap">
-        <h2 className="text-2xl font-bold mb-4">{data?.name}</h2>
-        {stats?.length > 0 && (
-          <div className="flex items-center gap-4 flex-wrap">
-            {stats?.map((stat, index) => (
-              <div key={index} className="flex flex-col items-center gap-1">
-                <span
-                  className={cn(
-                    "text-xs px-2 py-1 rounded-full text-white",
-                    statuses[stat.status]?.color
-                  )}
-                >
-                  {statuses[stat.status]?.text}
-                </span>
-                <span className="text-xs">{stat.order_count}</span>
-                <span className="text-sm">
-                  {parseFloat(stat.total_quantity)?.toLocaleString("ru-RU")}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+	return (
+		<div>
+			<div className='w-full flex justify-between items-center mb-2 flex-wrap'>
+				<h2 className='text-2xl font-bold mb-4'>{data?.name}</h2>
+				{stats?.length > 0 && (
+					<div className='flex items-center gap-4 flex-wrap'>
+						{stats?.map((stat, index) => (
+							<div key={index} className='flex flex-col items-center gap-1'>
+								<span
+									className={cn(
+										"text-xs px-2 py-1 rounded-full text-white",
+										statuses[stat.status]?.color
+									)}
+								>
+									{statuses[stat.status]?.text}
+								</span>
+								<span className='text-xs'>{stat.order_count}</span>
+								<span className='text-sm'>
+									{parseFloat(stat.total_quantity)?.toLocaleString("ru-RU")}
+								</span>
+							</div>
+						))}
+					</div>
+				)}
+			</div>
 
-      {loading ? (
-        <div className="flex items-center justify-center w-full min-h-[calc(100vh-6rem)]">
-          <Loader2 className="animate-spin text-primary" size={36} />
-        </div>
-      ) : (
-        <>
-          <style>
-            {`
+			{loading ? (
+				<div className='flex items-center justify-center w-full min-h-[calc(100vh-6rem)]'>
+					<Loader2 className='animate-spin text-primary' size={36} />
+				</div>
+			) : (
+				<>
+					<style>
+						{`
       .fill-container {
         position: relative;
         overflow: hidden;
@@ -212,346 +212,346 @@ const PlanDetails = () => {
         z-index: 1;
       }
     `}
-          </style>
-          {data?.groups?.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 gap-4 text-xs">
-                {data?.groups
-                  ?.sort((a, b) => a.name.localeCompare(b.name))
-                  .map((group) => (
-                    <div
-                      key={group?.id}
-                      className="bg-white p-4 rounded-lg shadow-md h-fit"
-                    >
-                      <div className="flex justify-between mb-4">
-                        <div className="text-lg font-semibold">
-                          {group?.name}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">
-                            Buyurtmalar: {group?.orders?.length}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              navigate(
-                                `/supervisor/plan/${id}/add/${group.id}`,
-                                {
-                                  state: { groupName: group.name },
-                                }
-                              )
-                            }
-                            disabled={changing}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm text-gray-500">
-                          Miqdori:{" "}
-                          <span className="font-bold">
-                            {parseFloat(
-                              group?.orders?.reduce(
-                                (a, b) => a + b.order?.quantity,
-                                0
-                              )
-                            ).toLocaleString("ru-RU")}{" "}
-                          </span>
-                          ta
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          Bajarilgan:{" "}
-                          <span className="font-bold">
-                            {parseFloat(
-                              group?.orders?.reduce(
-                                (a, b) => a + b.order_submodel?.sewing_quantity,
-                                0
-                              )
-                            ).toLocaleString("ru-RU")}{" "}
-                          </span>
-                          ta
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          Foiz:{" "}
-                          <span className="font-bold">
-                            {(
-                              (group?.orders?.reduce(
-                                (a, b) => a + b.order_submodel?.sewing_quantity,
-                                0
-                              ) /
-                                group?.orders?.reduce(
-                                  (a, b) => a + b.order?.quantity,
-                                  0
-                                )) *
-                              100
-                            ).toFixed(2)}
-                          </span>{" "}
-                          %
-                        </span>
-                      </div>
-                      <div className="overflow-auto">
-                        <table className="table border-collapse border w-full whitespace-nowrap">
-                          <thead>
-                            <tr>
-                              <th className="border p-2">№</th>
-                              <th className="border p-2">Buyurtma nomi</th>
-                              <th className="border p-2">Miqdori</th>
-                              <th className="border p-2">Bajarilgan</th>
-                              <th className="border p-2">Qolgan</th>
-                              <th className="border p-2">O'rtacha davomat</th>
-                              <th className="border p-2">Tugata oladi</th>
-                              <th className="border p-2">Bir kishiga</th>
-                              <th className="border p-2">Bir kunlik</th>
-                              <th className="border p-2">Submodel</th>
-                              <th className="border p-2">Status</th>
-                              <th className="border p-2">Amallar</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {group?.orders
-                              ?.sort((a, b) => {
-                                const aStatus = a?.order?.status;
-                                const bStatus = b?.order?.status;
-                                const statusOrder = {
-                                  tailoring: 1,
-                                  pending: 2,
-                                  cutting: 3,
-                                  printing: 4,
-                                  active: 5,
-                                  inactive: 6,
-                                  tailored: 7,
-                                  checking: 8,
-                                  checked: 9,
-                                  packaging: 10,
-                                };
-                                return (
-                                  statusOrder[aStatus] - statusOrder[bStatus]
-                                );
-                              })
-                              .map((order, index) => (
-                                <tr key={index}>
-                                  <td className="border text-center p-2">
-                                    {index + 1}
-                                  </td>
+					</style>
+					{data?.groups?.length > 0 ? (
+						<>
+							<div className='grid grid-cols-1 gap-4 text-xs'>
+								{data?.groups
+									?.sort((a, b) => a.name.localeCompare(b.name))
+									.map((group) => (
+										<div
+											key={group?.id}
+											className='bg-white p-4 rounded-lg shadow-md h-fit'
+										>
+											<div className='flex justify-between mb-4'>
+												<div className='text-lg font-semibold'>
+													{group?.name}
+												</div>
+												<div className='flex items-center gap-2'>
+													<span className='text-sm text-gray-500'>
+														Buyurtmalar: {group?.orders?.length}
+													</span>
+													<Button
+														size='sm'
+														variant='outline'
+														onClick={() =>
+															navigate(
+																`/supervisor/plan/${id}/add/${group.id}`,
+																{
+																	state: { groupName: group.name },
+																}
+															)
+														}
+														disabled={changing}
+													>
+														<Plus className='h-4 w-4' />
+													</Button>
+												</div>
+											</div>
+											<div className='flex items-center justify-between mb-4'>
+												<span className='text-sm text-gray-500'>
+													Miqdori:{" "}
+													<span className='font-bold'>
+														{parseFloat(
+															group?.orders?.reduce(
+																(a, b) => a + b.order?.quantity,
+																0
+															)
+														).toLocaleString("ru-RU")}{" "}
+													</span>
+													ta
+												</span>
+												<span className='text-sm text-gray-500'>
+													Bajarilgan:{" "}
+													<span className='font-bold'>
+														{parseFloat(
+															group?.orders?.reduce(
+																(a, b) => a + b.order_submodel?.sewing_quantity,
+																0
+															)
+														).toLocaleString("ru-RU")}{" "}
+													</span>
+													ta
+												</span>
+												<span className='text-sm text-gray-500'>
+													Foiz:{" "}
+													<span className='font-bold'>
+														{(
+															(group?.orders?.reduce(
+																(a, b) => a + b.order_submodel?.sewing_quantity,
+																0
+															) /
+																group?.orders?.reduce(
+																	(a, b) => a + b.order?.quantity,
+																	0
+																)) *
+															100
+														).toFixed(2)}
+													</span>{" "}
+													%
+												</span>
+											</div>
+											<div className='overflow-auto'>
+												<table className='table border-collapse border w-full whitespace-nowrap'>
+													<thead>
+														<tr>
+															<th className='border p-2'>№</th>
+															<th className='border p-2'>Buyurtma nomi</th>
+															<th className='border p-2'>Miqdori</th>
+															<th className='border p-2'>Bajarilgan</th>
+															<th className='border p-2'>Qolgan</th>
+															<th className='border p-2'>O'rtacha davomat</th>
+															<th className='border p-2'>Tugata oladi</th>
+															<th className='border p-2'>Bir kishiga</th>
+															<th className='border p-2'>Bir kunlik</th>
+															<th className='border p-2'>Submodel</th>
+															<th className='border p-2'>Status</th>
+															<th className='border p-2'>Amallar</th>
+														</tr>
+													</thead>
+													<tbody>
+														{group?.orders
+															?.sort((a, b) => {
+																const aStatus = a?.order?.status
+																const bStatus = b?.order?.status
+																const statusOrder = {
+																	tailoring: 1,
+																	pending: 2,
+																	cutting: 3,
+																	printing: 4,
+																	active: 5,
+																	inactive: 6,
+																	tailored: 7,
+																	checking: 8,
+																	checked: 9,
+																	packaging: 10,
+																}
+																return (
+																	statusOrder[aStatus] - statusOrder[bStatus]
+																)
+															})
+															.map((order, index) => (
+																<tr key={index}>
+																	<td className='border text-center p-2'>
+																		{index + 1}
+																	</td>
 
-                                  <td
-                                    className="border text-center p-2 fill-container"
-                                    style={{
-                                      "--fill-height": `${
-                                        (order?.order_submodel
-                                          ?.sewing_quantity /
-                                          order?.order?.quantity) *
-                                        100
-                                      }%`,
-                                    }}
-                                  >
-                                    <div className="fill-wave"></div>
-                                    <span className="fill-text">
-                                      {order?.order?.name}
-                                    </span>
-                                  </td>
-                                  <td className="border p-2">
-                                    {order?.order?.quantity}
-                                  </td>
-                                  <td className="border p-2">
-                                    <span>
-                                      {order?.order_submodel?.sewing_quantity}
-                                    </span>{" "}
-                                    /{" "}
-                                    <span className="font-bold">
-                                      {parseFloat(
-                                        (order?.order_submodel
-                                          ?.sewing_quantity /
-                                          order?.order?.quantity) *
-                                          100
-                                      ).toLocaleString("en-US", {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      })}{" "}
-                                      %
-                                    </span>
-                                  </td>
-                                  <td className="border p-2 text-center">
-                                    {order?.order_submodel?.remaining_quantity}
-                                  </td>
-                                  <td className="border p-2 text-center">
-                                    {order?.order_submodel?.avgAttendance}
-                                  </td>
-                                  <td className="border p-2 text-center">
-                                    <div className="flex flex-col items-center gap-2 justify-center">
-                                      {parseFloat(
-                                        order?.order_submodel?.plan_uz
-                                      ) > 0 ? (
-                                        <div>
-                                          <span>UZ: </span>
-                                          {parseFloat(
-                                            order?.order_submodel?.plan_uz
-                                          ).toFixed(1)}{" "}
-                                          kun
-                                        </div>
-                                      ) : (
-                                        ""
-                                      )}
-                                      {parseFloat(
-                                        order?.order_submodel?.plan_ru
-                                      ) > 0 ? (
-                                        <div>
-                                          <span>RU: </span>
-                                          {parseFloat(
-                                            order?.order_submodel?.plan_ru
-                                          ).toFixed(1)}{" "}
-                                          kun
-                                        </div>
-                                      ) : (
-                                        ""
-                                      )}
-                                    </div>
-                                  </td>
-                                  <td className="border p-2 text-center">
-                                    {order?.order_submodel?.perEmployee
-                                      ? parseFloat(
-                                          order?.order_submodel?.perEmployee
-                                        ).toFixed(1)
-                                      : ""}
-                                  </td>
-                                  <td className="border p-2 text-center">
-                                    {order?.order_submodel?.avaragePlan > 0
-                                      ? order?.order_submodel?.avaragePlan
-                                      : ""}
-                                  </td>
-                                  <td className="border p-2">
-                                    {order?.order_submodel?.submodel?.name}
-                                  </td>
-                                  <td className="border p-2">
-                                    <span
-                                      className={cn(
-                                        statuses[order?.order?.status]?.color,
-                                        "px-2 py-1 rounded-full text-xs text-white"
-                                      )}
-                                    >
-                                      {statuses[order?.order?.status]?.text}
-                                    </span>
-                                  </td>
-                                  <td className="border p-2 text-center">
-                                    <Popover
-                                      open={
-                                        editPopoverOpen &&
-                                        editingOrder?.id === order.id
-                                      }
-                                      onOpenChange={setEditPopoverOpen}
-                                    >
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() =>
-                                            openEditPopover(order, group.id)
-                                          }
-                                          disabled={changing}
-                                        >
-                                          <Move size={10} />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-80">
-                                        <div className="grid gap-4">
-                                          <div className="space-y-2">
-                                            <p className="text-sm text-muted-foreground">
-                                              Buyurtma guruhini o'zgartirish
-                                            </p>
-                                          </div>
-                                          <div className="grid gap-2">
-                                            <Label htmlFor="newGroup">
-                                              Yangi guruh
-                                            </Label>
-                                            <Select
-                                              value={newGroupId}
-                                              onValueChange={setNewGroupId}
-                                            >
-                                              <SelectTrigger>
-                                                <SelectValue placeholder="Guruhni tanlang" />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {data?.groups?.map((g) => (
-                                                  <SelectItem
-                                                    key={g.id}
-                                                    value={g.id.toString()}
-                                                  >
-                                                    {g.name}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                          </div>
-                                          <Button
-                                            onClick={handleEditOrder}
-                                            disabled={changing}
-                                          >
-                                            {changing && (
-                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            )}
-                                            Saqlash
-                                          </Button>
-                                        </div>
-                                      </PopoverContent>
-                                    </Popover>
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-              <div className="mt-6">
-                <h2 className="text-2xl font-bold mb-4">
-                  Biriktirilmagan buyurtmalar ({unassignedOrders?.length} ta)
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                  {unassignedOrders?.map((order) => (
-                    <div
-                      key={order.id}
-                      className={cn(
-                        "p-4 rounded-lg shadow-md h-fit border",
-                        statuses[order.status]?.secondaryBg,
-                        statuses[order.status]?.border
-                      )}
-                    >
-                      <div className="flex justify-between mb-4 flex-wrap gap-3">
-                        <div className="font-semibold">{order.name}</div>
-                        <div
-                          className={cn(
-                            "text-white px-2 py-1 rounded-full text-xs h-fit flex items-center justify-center",
-                            statuses[order.status]?.color
-                          )}
-                        >
-                          <span>{statuses[order.status]?.text}</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between mb-4">
-                        <div>
-                          {order?.order_model?.submodels
-                            ?.map((submodel) => submodel.submodel.name)
-                            .join(", ")}
-                        </div>
-                        <div className="font-semibold">
-                          {order.quantity || "0"} ta
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div>Ma'lumotlar mavjud emas</div>
-          )}
-        </>
-      )}
-    </div>
-  );
-};
+																	<td
+																		className='border text-center p-2 fill-container'
+																		style={{
+																			"--fill-height": `${
+																				(order?.order_submodel
+																					?.sewing_quantity /
+																					order?.order?.quantity) *
+																				100
+																			}%`,
+																		}}
+																	>
+																		<div className='fill-wave'></div>
+																		<span className='fill-text'>
+																			{order?.order?.name}
+																		</span>
+																	</td>
+																	<td className='border p-2'>
+																		{order?.order?.quantity}
+																	</td>
+																	<td className='border p-2'>
+																		<span>
+																			{order?.order_submodel?.sewing_quantity}
+																		</span>{" "}
+																		/{" "}
+																		<span className='font-bold'>
+																			{parseFloat(
+																				(order?.order_submodel
+																					?.sewing_quantity /
+																					order?.order?.quantity) *
+																					100
+																			).toLocaleString("en-US", {
+																				minimumFractionDigits: 2,
+																				maximumFractionDigits: 2,
+																			})}{" "}
+																			%
+																		</span>
+																	</td>
+																	<td className='border p-2 text-center'>
+																		{order?.order_submodel?.remaining_quantity}
+																	</td>
+																	<td className='border p-2 text-center'>
+																		{order?.order_submodel?.avgAttendance}
+																	</td>
+																	<td className='border p-2 text-center'>
+																		<div className='flex flex-col items-center gap-2 justify-center'>
+																			{parseFloat(
+																				order?.order_submodel?.plan_uz
+																			) > 0 ? (
+																				<div>
+																					<span>UZ: </span>
+																					{parseFloat(
+																						order?.order_submodel?.plan_uz
+																					).toFixed(1)}{" "}
+																					kun
+																				</div>
+																			) : (
+																				""
+																			)}
+																			{parseFloat(
+																				order?.order_submodel?.plan_ru
+																			) > 0 ? (
+																				<div>
+																					<span>RU: </span>
+																					{parseFloat(
+																						order?.order_submodel?.plan_ru
+																					).toFixed(1)}{" "}
+																					kun
+																				</div>
+																			) : (
+																				""
+																			)}
+																		</div>
+																	</td>
+																	<td className='border p-2 text-center'>
+																		{order?.order_submodel?.perEmployee
+																			? parseFloat(
+																					order?.order_submodel?.perEmployee
+																			  ).toFixed(1)
+																			: ""}
+																	</td>
+																	<td className='border p-2 text-center'>
+																		{order?.order_submodel?.avaragePlan > 0
+																			? order?.order_submodel?.avaragePlan
+																			: ""}
+																	</td>
+																	<td className='border p-2'>
+																		{order?.order_submodel?.submodel?.name}
+																	</td>
+																	<td className='border p-2'>
+																		<span
+																			className={cn(
+																				statuses[order?.order?.status]?.color,
+																				"px-2 py-1 rounded-full text-xs text-white"
+																			)}
+																		>
+																			{statuses[order?.order?.status]?.text}
+																		</span>
+																	</td>
+																	<td className='border p-2 text-center'>
+																		<Popover
+																			open={
+																				editPopoverOpen &&
+																				editingOrder?.id === order.id
+																			}
+																			onOpenChange={setEditPopoverOpen}
+																		>
+																			<PopoverTrigger asChild>
+																				<Button
+																					size='sm'
+																					variant='ghost'
+																					onClick={() =>
+																						openEditPopover(order, group.id)
+																					}
+																					disabled={changing}
+																				>
+																					<Move size={10} />
+																				</Button>
+																			</PopoverTrigger>
+																			<PopoverContent className='w-80'>
+																				<div className='grid gap-4'>
+																					<div className='space-y-2'>
+																						<p className='text-sm text-muted-foreground'>
+																							Buyurtma guruhini o'zgartirish
+																						</p>
+																					</div>
+																					<div className='grid gap-2'>
+																						<Label htmlFor='newGroup'>
+																							Yangi guruh
+																						</Label>
+																						<Select
+																							value={newGroupId}
+																							onValueChange={setNewGroupId}
+																						>
+																							<SelectTrigger>
+																								<SelectValue placeholder='Guruhni tanlang' />
+																							</SelectTrigger>
+																							<SelectContent>
+																								{data?.groups?.map((g) => (
+																									<SelectItem
+																										key={g.id}
+																										value={g.id.toString()}
+																									>
+																										{g.name}
+																									</SelectItem>
+																								))}
+																							</SelectContent>
+																						</Select>
+																					</div>
+																					<Button
+																						onClick={handleEditOrder}
+																						disabled={changing}
+																					>
+																						{changing && (
+																							<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+																						)}
+																						Saqlash
+																					</Button>
+																				</div>
+																			</PopoverContent>
+																		</Popover>
+																	</td>
+																</tr>
+															))}
+													</tbody>
+												</table>
+											</div>
+										</div>
+									))}
+							</div>
+							<div className='mt-6'>
+								<h2 className='text-2xl font-bold mb-4'>
+									Biriktirilmagan buyurtmalar ({unassignedOrders?.length} ta)
+								</h2>
+								<div className='grid grid-cols-1 md:grid-cols-4 gap-4 text-sm'>
+									{unassignedOrders?.map((order) => (
+										<div
+											key={order.id}
+											className={cn(
+												"p-4 rounded-lg shadow-md h-fit border",
+												statuses[order.status]?.secondaryBg,
+												statuses[order.status]?.border
+											)}
+										>
+											<div className='flex justify-between mb-4 flex-wrap gap-3'>
+												<div className='font-semibold'>{order.name}</div>
+												<div
+													className={cn(
+														"text-white px-2 py-1 rounded-full text-xs h-fit flex items-center justify-center",
+														statuses[order.status]?.color
+													)}
+												>
+													<span>{statuses[order.status]?.text}</span>
+												</div>
+											</div>
+											<div className='flex justify-between mb-4'>
+												<div>
+													{order?.order_model?.submodels
+														?.map((submodel) => submodel.submodel.name)
+														.join(", ")}
+												</div>
+												<div className='font-semibold'>
+													{order.quantity || "0"} ta
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+						</>
+					) : (
+						<div>Ma'lumotlar mavjud emas</div>
+					)}
+				</>
+			)}
+		</div>
+	)
+}
 
-export default PlanDetails;
+export default PlanDetails
