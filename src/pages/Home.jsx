@@ -282,7 +282,8 @@ const Home = () => {
                     Jami ishchilar
                   </p>
                   <p className="text-2xl font-bold text-slate-800">
-                    {employeeCount} / {employeeCount + aupCount}
+                    <span className="text-green-500">{employeeCount}</span> /{" "}
+                    {employeeCount + aupCount}
                   </p>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl shadow-lg">
