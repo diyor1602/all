@@ -88,7 +88,7 @@ export default function BaseLayout({ children, navigation }) {
               className="flex items-center gap-3 mb-4 px-2"
               onClick={() => setSidebarOpen(false)}
             >
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
                 {hasValidImage ? (
                   <img
                     src={imageUrl}
