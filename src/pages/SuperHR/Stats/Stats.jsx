@@ -15,6 +15,13 @@ import {
   Loader2,
   Axe,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,13 +30,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 // Transliteration mapping for Cyrillic to Latin
 const cyrillicToLatin = {
@@ -194,6 +194,7 @@ const Stats = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadType, setDownloadType] = useState("absent");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [departments, setDepartments] = useState([]);
@@ -331,7 +332,7 @@ const Stats = () => {
   const zeroPercentCount =
     stats?.data?.filter((stat) => getAttendanceRate(stat) === 0).length || 0;
 
-  const handleExport = async () => {
+  const handleExport = async (downloadType = "all") => {
     setDownloading(true);
     try {
       const response = await api.get("/superhr/export-attendance", {
@@ -340,6 +341,7 @@ const Stats = () => {
           end_date: dateRange.endDate,
           department_id: selectedDepartment === "all" ? "" : selectedDepartment,
           group_id: selectedGroup === "all" ? "" : selectedGroup,
+          status: downloadType, // 'all' or 'absent'
         },
         responseType: "blob",
       });
@@ -503,18 +505,33 @@ const Stats = () => {
                 />
               </div>
 
-              <Button
-                variant="outline"
-                className="gap-2 w-full sm:w-auto"
-                onClick={handleExport}
-                disabled={downloading}
-              >
-                {downloading ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Download />
-                )}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Select
+                  value={downloadType}
+                  onValueChange={setDownloadType}
+                  disabled={downloading}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px] bg-white">
+                    <SelectValue placeholder="Yuklash turi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Barchasi</SelectItem>
+                    <SelectItem value="absent">Kelmaganlar</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  className="gap-2 w-full sm:w-auto bg-white"
+                  onClick={() => handleExport(downloadType)}
+                  disabled={downloading}
+                >
+                  {downloading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Download />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -703,7 +720,7 @@ const Stats = () => {
                                 className="bg-red-500 hover:bg-red-600"
                                 onClick={() => handleDelete(stat)}
                               >
-                                <Axe /> Chopish
+                                <Axe /> O'chirish
                               </Button>
                             </div>
                             {/* Present Days */}
