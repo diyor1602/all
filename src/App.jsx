@@ -29,6 +29,7 @@ import InternalAccountant from "./pages/InternalAccountant/InternalAccountant";
 import Supplier from "./pages/Supplier/Supplier";
 import Tv from "./pages/Tv/Tv";
 import Casher from "./pages/Casher/Casher";
+import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
 
 const ProtectedRoute = () => {
@@ -84,6 +85,7 @@ function App() {
           <Route path="/supplier/*" element={<Supplier />} />
           <Route path="/tv/*" element={<Tv />} />
           <Route path="/casher/*" element={<Casher />} />
+          <Route path="/resultChecker/*" element={<ResultChecker />} />
           <Route path="/ceo/*" element={<Ceo />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
