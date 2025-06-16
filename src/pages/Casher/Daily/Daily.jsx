@@ -544,7 +544,7 @@ const Daily = () => {
                 <CardTitle className="text-slate-800">
                   Oylik harajatlar
                 </CardTitle>
-                <div className="flex items-center gap-2 flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Dialog
                     open={isAddDialogOpen}
                     onOpenChange={setIsAddDialogOpen}
