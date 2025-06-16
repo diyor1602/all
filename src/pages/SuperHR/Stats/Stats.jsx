@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 // Transliteration mapping for Cyrillic to Latin
 const cyrillicToLatin = {
@@ -375,7 +376,10 @@ const Stats = () => {
     );
     if (!isConfirmed) return;
 
-    const reason = window.prompt("Ishdan ketkazish sababini kiriting:");
+    const reason = window.prompt(
+      "Ishdan ketkazish sababini kiriting:",
+      "Progulchi"
+    );
     if (!reason) {
       toast({
         title: "Xatolik",
@@ -604,330 +608,320 @@ const Stats = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {filteredStats
-                  ?.sort(
-                    (a, b) =>
-                      (b?.attendances?.absent?.length || 0) -
-                      (a?.attendances?.absent?.length || 0)
-                  )
-                  ?.map((stat, i) => (
+            <div
+              className={cn(
+                "space-y-1",
+                loading && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              {filteredStats
+                ?.sort(
+                  (a, b) =>
+                    (b?.attendances?.absent?.length || 0) -
+                    (a?.attendances?.absent?.length || 0)
+                )
+                ?.map((stat, i) => (
+                  <div
+                    key={i}
+                    className="border-b border-slate-100 last:border-b-0"
+                  >
+                    {/* Main Row */}
                     <div
-                      key={i}
-                      className="border-b border-slate-100 last:border-b-0"
+                      className="flex items-center justify-between p-3 sm:p-4 hover:bg-slate-50 cursor-pointer transition-colors"
+                      onClick={() => toggleRow(stat.employee_id)}
                     >
-                      {/* Main Row */}
-                      <div
-                        className="flex items-center justify-between p-3 sm:p-4 hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => toggleRow(stat.employee_id)}
-                      >
-                        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-1 h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0"
-                          >
-                            {expandedRows[stat.employee_id] ? (
-                              <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                            ) : (
-                              <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-1 h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0"
+                        >
+                          {expandedRows[stat.employee_id] ? (
+                            <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          )}
+                        </Button>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                            <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base">
+                              {stat?.name}
+                            </h3>
+                            <Badge variant="outline" className="text-xs w-fit">
+                              ID: {stat?.employee_id}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs w-fit">
+                              {stat?.department}
+                            </Badge>
+                            {stat?.group && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs w-fit"
+                              >
+                                {stat?.group}
+                              </Badge>
                             )}
-                          </Button>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                              <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base">
-                                {stat?.name}
-                              </h3>
-                              <Badge
-                                variant="outline"
-                                className="text-xs w-fit"
-                              >
-                                ID: {stat?.employee_id}
-                              </Badge>
-                              <Badge
-                                variant="outline"
-                                className="text-xs w-fit"
-                              >
-                                {stat?.department}
-                              </Badge>
-                              {stat?.group && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs w-fit"
-                                >
-                                  {stat?.group}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1 text-xs sm:text-sm text-slate-600">
-                              <span className="flex items-center gap-1">
-                                <UserCheck className="h-3 w-3 text-green-500 flex-shrink-0" />
-                                <span className="whitespace-nowrap">
-                                  {stat?.attendances?.present?.length || 0}{" "}
-                                  kelgan
-                                </span>
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <UserX className="h-3 w-3 text-red-500 flex-shrink-0" />
-                                <span className="whitespace-nowrap">
-                                  {stat?.attendances?.absent?.length || 0}{" "}
-                                  kelmagan
-                                </span>
-                              </span>
-                            </div>
                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-                          <div className="text-right">
-                            <div className="text-sm sm:text-lg font-bold text-slate-900">
-                              {getAttendanceRate(stat)}%
-                            </div>
-                            <div className="text-xs text-slate-500 hidden sm:block">
-                              Davomat
-                            </div>
-                          </div>
-
-                          <div className="w-8 sm:w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
-                              style={{ width: `${getAttendanceRate(stat)}%` }}
-                            />
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1 text-xs sm:text-sm text-slate-600">
+                            <span className="flex items-center gap-1">
+                              <UserCheck className="h-3 w-3 text-green-500 flex-shrink-0" />
+                              <span className="whitespace-nowrap">
+                                {stat?.attendances?.present?.length || 0} kelgan
+                              </span>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <UserX className="h-3 w-3 text-red-500 flex-shrink-0" />
+                              <span className="whitespace-nowrap">
+                                {stat?.attendances?.absent?.length || 0}{" "}
+                                kelmagan
+                              </span>
+                            </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Expanded Content */}
-                      {expandedRows[stat.employee_id] && (
-                        <div className="bg-slate-50 border-t border-slate-200">
-                          <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
-                            <div className="flex items-center gap-2">
-                              <Link
-                                to={`/superhr/employees/view/${stat.employee_id}`}
-                                target="_blank"
-                              >
-                                <Button variant="outline">
-                                  <Eye /> Ko'rish
-                                </Button>
-                              </Link>
-                              <Button
-                                className="bg-red-500 hover:bg-red-600"
-                                onClick={() => handleDelete(stat)}
-                              >
-                                <Axe /> O'chirish
-                              </Button>
-                            </div>
-                            {/* Present Days */}
-                            {stat?.attendances?.present?.length > 0 && (
-                              <div>
-                                <h4 className="font-semibold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-                                  <UserCheck className="h-4 w-4 text-green-500" />
-                                  Kelgan kunlari (
-                                  {stat.attendances.present.length})
-                                </h4>
-                                <div className="space-y-2 sm:space-y-3">
-                                  {stat.attendances.present
-                                    ?.sort(
-                                      (a, b) =>
-                                        new Date(b.date) - new Date(a.date)
-                                    )
-                                    ?.map((day, idx) => (
-                                      <Card
-                                        key={`present-${idx}`}
-                                        className="bg-white border-l-4 border-l-green-500"
-                                      >
-                                        <CardContent className="p-3 sm:p-4">
-                                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                                              <div className="text-center sm:text-left">
-                                                <div className="font-semibold text-slate-900 text-sm sm:text-base">
-                                                  {new Date(
-                                                    day.date
-                                                  ).toLocaleDateString("ru-RU")}
-                                                </div>
-                                                <div className="text-xs text-slate-500">
-                                                  {format(
-                                                    new Date(day.date),
-                                                    "EEEE",
-                                                    { locale: ru }
-                                                  )}
-                                                </div>
-                                              </div>
-
-                                              <Separator
-                                                orientation="vertical"
-                                                className="h-8 hidden sm:block"
-                                              />
-
-                                              <div className="flex items-center justify-center sm:justify-start gap-4 sm:gap-6">
-                                                <div className="text-center">
-                                                  <div className="text-sm font-medium text-green-600">
-                                                    {formatDateTime(
-                                                      day.check_in
-                                                    )}
-                                                  </div>
-                                                  <div className="text-xs text-slate-500">
-                                                    Kelish
-                                                  </div>
-                                                </div>
-
-                                                <div className="text-center">
-                                                  <div className="text-sm font-medium text-blue-600">
-                                                    {day.check_out
-                                                      ? formatDateTime(
-                                                          day.check_out
-                                                        )
-                                                      : "-"}
-                                                  </div>
-                                                  <div className="text-xs text-slate-500">
-                                                    Ketish
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                              {day.check_in_image && (
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  asChild
-                                                  className="gap-2 text-xs"
-                                                >
-                                                  <a
-                                                    href={day.check_in_image}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                  >
-                                                    <Eye className="h-3 w-3" />
-                                                    <span className="hidden sm:inline">
-                                                      Kelish rasmi
-                                                    </span>
-                                                    <span className="sm:hidden">
-                                                      Kelish
-                                                    </span>
-                                                  </a>
-                                                </Button>
-                                              )}
-                                              {day.check_out_image && (
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  asChild
-                                                  className="gap-2 text-xs"
-                                                >
-                                                  <a
-                                                    href={day.check_out_image}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                  >
-                                                    <Eye className="h-3 w-3" />
-                                                    <span className="hidden sm:inline">
-                                                      Ketish rasmi
-                                                    </span>
-                                                    <span className="sm:hidden">
-                                                      Ketish
-                                                    </span>
-                                                  </a>
-                                                </Button>
-                                              )}
-                                              {!day.check_in_image &&
-                                                !day.check_out_image && (
-                                                  <span className="text-xs text-slate-500 text-center">
-                                                    Rasm mavjud emas
-                                                  </span>
-                                                )}
-                                            </div>
-                                          </div>
-                                        </CardContent>
-                                      </Card>
-                                    ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Absent Days */}
-                            {stat?.attendances?.absent?.length > 0 && (
-                              <div>
-                                <h4 className="font-semibold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-                                  <UserX className="h-4 w-4 text-red-500" />
-                                  Kelmagan kunlari (
-                                  {stat.attendances.absent.length})
-                                </h4>
-                                <div className="space-y-2 sm:space-y-3">
-                                  {stat.attendances.absent
-                                    ?.sort(
-                                      (a, b) =>
-                                        new Date(b.date) - new Date(a.date)
-                                    )
-                                    ?.map((day, idx) => (
-                                      <Card
-                                        key={`absent-${idx}`}
-                                        className="bg-white border-l-4 border-l-red-500"
-                                      >
-                                        <CardContent className="p-3 sm:p-4">
-                                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                                              <div className="text-center sm:text-left">
-                                                <div className="font-semibold text-slate-900 text-sm sm:text-base">
-                                                  {new Date(
-                                                    day.date
-                                                  ).toLocaleDateString("ru-RU")}
-                                                </div>
-                                                <div className="text-xs text-slate-500">
-                                                  {format(
-                                                    new Date(day.date),
-                                                    "EEEE",
-                                                    { locale: ru }
-                                                  )}
-                                                </div>
-                                              </div>
-
-                                              <Separator
-                                                orientation="vertical"
-                                                className="h-8 hidden sm:block"
-                                              />
-
-                                              <Badge
-                                                variant="destructive"
-                                                className="gap-1 w-fit"
-                                              >
-                                                <UserX className="h-3 w-3" />
-                                                Kelmagan
-                                              </Badge>
-                                            </div>
-                                          </div>
-                                        </CardContent>
-                                      </Card>
-                                    ))}
-                                </div>
-                              </div>
-                            )}
+                      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+                        <div className="text-right">
+                          <div className="text-sm sm:text-lg font-bold text-slate-900">
+                            {getAttendanceRate(stat)}%
+                          </div>
+                          <div className="text-xs text-slate-500 hidden sm:block">
+                            Davomat
                           </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
 
-                {filteredStats.length === 0 && !loading && (
-                  <div className="text-center py-8 sm:py-12 px-4">
-                    <Users className="h-8 w-8 sm:h-12 sm:w-12 text-slate-400 mx-auto mb-3 sm:mb-4" />
-                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">
-                      Hech qanday ma'lumot topilmadi
-                    </h3>
-                    <p className="text-sm sm:text-base text-slate-600">
-                      Qidiruv shartlaringizni o'zgartirib ko'ring
-                    </p>
+                        <div className="w-8 sm:w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
+                            style={{ width: `${getAttendanceRate(stat)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Expanded Content */}
+                    {expandedRows[stat.employee_id] && (
+                      <div className="bg-slate-50 border-t border-slate-200">
+                        <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+                          <div className="flex items-center gap-2">
+                            <Link
+                              to={`/superhr/employees/view/${stat.employee_id}`}
+                              target="_blank"
+                            >
+                              <Button variant="outline">
+                                <Eye /> Ko'rish
+                              </Button>
+                            </Link>
+                            <Button
+                              className="bg-red-500 hover:bg-red-600"
+                              onClick={() => handleDelete(stat)}
+                            >
+                              <Axe /> O'chirish
+                            </Button>
+                          </div>
+                          {/* Present Days */}
+                          {stat?.attendances?.present?.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                                <UserCheck className="h-4 w-4 text-green-500" />
+                                Kelgan kunlari (
+                                {stat.attendances.present.length})
+                              </h4>
+                              <div className="space-y-2 sm:space-y-3">
+                                {stat.attendances.present
+                                  ?.sort(
+                                    (a, b) =>
+                                      new Date(b.date) - new Date(a.date)
+                                  )
+                                  ?.map((day, idx) => (
+                                    <Card
+                                      key={`present-${idx}`}
+                                      className="bg-white border-l-4 border-l-green-500"
+                                    >
+                                      <CardContent className="p-3 sm:p-4">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                                            <div className="text-center sm:text-left">
+                                              <div className="font-semibold text-slate-900 text-sm sm:text-base">
+                                                {new Date(
+                                                  day.date
+                                                ).toLocaleDateString("ru-RU")}
+                                              </div>
+                                              <div className="text-xs text-slate-500">
+                                                {format(
+                                                  new Date(day.date),
+                                                  "EEEE",
+                                                  { locale: ru }
+                                                )}
+                                              </div>
+                                            </div>
+
+                                            <Separator
+                                              orientation="vertical"
+                                              className="h-8 hidden sm:block"
+                                            />
+
+                                            <div className="flex items-center justify-center sm:justify-start gap-4 sm:gap-6">
+                                              <div className="text-center">
+                                                <div className="text-sm font-medium text-green-600">
+                                                  {formatDateTime(day.check_in)}
+                                                </div>
+                                                <div className="text-xs text-slate-500">
+                                                  Kelish
+                                                </div>
+                                              </div>
+
+                                              <div className="text-center">
+                                                <div className="text-sm font-medium text-blue-600">
+                                                  {day.check_out
+                                                    ? formatDateTime(
+                                                        day.check_out
+                                                      )
+                                                    : "-"}
+                                                </div>
+                                                <div className="text-xs text-slate-500">
+                                                  Ketish
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                            {day.check_in_image && (
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                                className="gap-2 text-xs"
+                                              >
+                                                <a
+                                                  href={day.check_in_image}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                >
+                                                  <Eye className="h-3 w-3" />
+                                                  <span className="hidden sm:inline">
+                                                    Kelish rasmi
+                                                  </span>
+                                                  <span className="sm:hidden">
+                                                    Kelish
+                                                  </span>
+                                                </a>
+                                              </Button>
+                                            )}
+                                            {day.check_out_image && (
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                                className="gap-2 text-xs"
+                                              >
+                                                <a
+                                                  href={day.check_out_image}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                >
+                                                  <Eye className="h-3 w-3" />
+                                                  <span className="hidden sm:inline">
+                                                    Ketish rasmi
+                                                  </span>
+                                                  <span className="sm:hidden">
+                                                    Ketish
+                                                  </span>
+                                                </a>
+                                              </Button>
+                                            )}
+                                            {!day.check_in_image &&
+                                              !day.check_out_image && (
+                                                <span className="text-xs text-slate-500 text-center">
+                                                  Rasm mavjud emas
+                                                </span>
+                                              )}
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Absent Days */}
+                          {stat?.attendances?.absent?.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                                <UserX className="h-4 w-4 text-red-500" />
+                                Kelmagan kunlari (
+                                {stat.attendances.absent.length})
+                              </h4>
+                              <div className="space-y-2 sm:space-y-3">
+                                {stat.attendances.absent
+                                  ?.sort(
+                                    (a, b) =>
+                                      new Date(b.date) - new Date(a.date)
+                                  )
+                                  ?.map((day, idx) => (
+                                    <Card
+                                      key={`absent-${idx}`}
+                                      className="bg-white border-l-4 border-l-red-500"
+                                    >
+                                      <CardContent className="p-3 sm:p-4">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                                            <div className="text-center sm:text-left">
+                                              <div className="font-semibold text-slate-900 text-sm sm:text-base">
+                                                {new Date(
+                                                  day.date
+                                                ).toLocaleDateString("ru-RU")}
+                                              </div>
+                                              <div className="text-xs text-slate-500">
+                                                {format(
+                                                  new Date(day.date),
+                                                  "EEEE",
+                                                  { locale: ru }
+                                                )}
+                                              </div>
+                                            </div>
+
+                                            <Separator
+                                              orientation="vertical"
+                                              className="h-8 hidden sm:block"
+                                            />
+
+                                            <Badge
+                                              variant="destructive"
+                                              className="gap-1 w-fit"
+                                            >
+                                              <UserX className="h-3 w-3" />
+                                              Kelmagan
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                ))}
+
+              {filteredStats.length === 0 && !loading && (
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <Users className="h-8 w-8 sm:h-12 sm:w-12 text-slate-400 mx-auto mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">
+                    Hech qanday ma'lumot topilmadi
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-600">
+                    Qidiruv shartlaringizni o'zgartirib ko'ring
+                  </p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
