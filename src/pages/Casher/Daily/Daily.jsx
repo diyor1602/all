@@ -977,25 +977,78 @@ const Daily = () => {
                               </TooltipTrigger>
                               <TooltipContent>
                                 <div className="space-y-1">
-                                  <div>
-                                    AUP:{" "}
-                                    {formatNumber(
-                                      order?.costs_uzs?.attendance_salary
-                                    )}{" "}
-                                    so'm
+                                  <div className="w-full flex justify-between gap-2">
+                                    <div> AUP: </div>
+                                    <div>
+                                      {" "}
+                                      {formatNumber(
+                                        order?.costs_uzs?.allocatedAup
+                                      )}{" "}
+                                      so'm
+                                    </div>
                                   </div>
-                                  <div>
-                                    KPI:{" "}
-                                    {formatNumber(order?.costs_uzs?.bonuses)}{" "}
-                                    so'm
+                                  <div className="w-full flex justify-between gap-2">
+                                    <div> KPI: </div>
+                                    <div>
+                                      {formatNumber(order?.costs_uzs?.bonus)}{" "}
+                                      so'm
+                                    </div>
                                   </div>
-                                  <div>
-                                    Tikuvchilar:{" "}
-                                    {formatNumber(
-                                      order?.costs_uzs
-                                        ?.employee_tarification_logs
-                                    )}{" "}
-                                    so'm
+                                  <div className="w-full flex justify-between gap-2">
+                                    <div> O'zgarmas harajat: </div>
+                                    <div>
+                                      {formatNumber(
+                                        order?.costs_uzs
+                                          ?.allocatedDailyExpenseMonthly
+                                      )}{" "}
+                                      so'm
+                                    </div>
+                                  </div>
+                                  <div className="w-full flex justify-between gap-2">
+                                    <div> Transport: </div>
+                                    <div>
+                                      {formatNumber(
+                                        order?.costs_uzs?.allocatedTransport
+                                      )}{" "}
+                                      so'm
+                                    </div>
+                                  </div>
+                                  <div className="w-full flex justify-between gap-2">
+                                    <div> Amortizatsiya: </div>
+                                    <div>
+                                      {formatNumber(
+                                        order?.costs_uzs?.amortizationExpense
+                                      )}{" "}
+                                      so'm
+                                    </div>
+                                  </div>
+                                  <div className="w-full flex justify-between gap-2">
+                                    <div> Soliq: </div>
+                                    <div>
+                                      {formatNumber(
+                                        order?.costs_uzs
+                                          ?.incomePercentageExpense
+                                      )}{" "}
+                                      so'm
+                                    </div>
+                                  </div>
+                                  <div className="w-full flex justify-between gap-2">
+                                    <div> Tikuv uchun: </div>
+                                    <div>
+                                      {formatNumber(
+                                        order?.costs_uzs?.remainder
+                                      )}{" "}
+                                      so'm
+                                    </div>
+                                  </div>
+                                  <div className="w-full flex justify-between gap-2">
+                                    <div> Tikuvchilar: </div>
+                                    <div>
+                                      {formatNumber(
+                                        order?.costs_uzs?.tarification
+                                      )}{" "}
+                                      so'm
+                                    </div>
                                   </div>
                                 </div>
                               </TooltipContent>
