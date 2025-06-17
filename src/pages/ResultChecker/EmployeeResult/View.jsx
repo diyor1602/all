@@ -389,6 +389,8 @@ const View = () => {
                             className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
                           >
                             <span className="truncate">
+                              {result?.tarification?.code}
+                              {" - "}
                               {result?.tarification?.name}
                             </span>
                             <Badge
@@ -503,7 +505,9 @@ const View = () => {
                         onClick={() => handleSelectTarif(tarif)}
                       >
                         <div>
-                          <p className="font-medium">{tarif.name}</p>
+                          <p className="font-medium">
+                            {tarif.code} - {tarif.name}
+                          </p>
                           <p className="text-sm text-muted-foreground">
                             {tarif.summa} so'm
                           </p>
@@ -539,7 +543,9 @@ const View = () => {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="font-semibold">{selectedTarif.name}</h4>
+                        <h4 className="font-semibold">
+                          {selectedTarif.code} - {selectedTarif.name}
+                        </h4>
                         <p className="text-sm text-muted-foreground mt-1">
                           Narx:{" "}
                           <span className="font-medium">
