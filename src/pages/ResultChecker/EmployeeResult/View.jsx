@@ -41,7 +41,9 @@ const View = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
+  const [allEmployees, setAllEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
   const [availableTarifs, setAvailableTarifs] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTarif, setSelectedTarif] = useState(null);
@@ -54,7 +56,80 @@ const View = () => {
   const [searchingTarifs, setSearchingTarifs] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-  // Debounce search term
+  // Function to normalize text for search (converts Cyrillic to Latin for comparison)
+  const normalizeText = (text) => {
+    if (!text) return "";
+    return (
+      text
+        .toLowerCase()
+        // Handle common Uzbek/Cyrillic variations first
+        .replace(/[ёЁ]/g, "yo")
+        .replace(/йо|йё|йе/gi, "yo")
+        .replace(/ч/gi, "ch")
+        .replace(/ш/gi, "sh")
+        .replace(/щ/gi, "sh")
+        .replace(/ғ/gi, "g'")
+        .replace(/ў/gi, "o'")
+        .replace(/қ/gi, "q")
+        .replace(/ҳ/gi, "h")
+        // Handle single character replacements
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[й]/g, "y")
+        .replace(/[ц]/g, "ts")
+        .replace(/[у]/g, "u")
+        .replace(/[к]/g, "k")
+        .replace(/[еёэ]/g, "e")
+        .replace(/[н]/g, "n")
+        .replace(/[г]/g, "g")
+        .replace(/[з]/g, "z")
+        .replace(/[х]/g, "x")
+        .replace(/[ъ]/g, "'")
+        .replace(/[ф]/g, "f")
+        .replace(/[ы]/g, "i")
+        .replace(/[в]/g, "v")
+        .replace(/[а]/g, "a")
+        .replace(/[п]/g, "p")
+        .replace(/[р]/g, "r")
+        .replace(/[о]/g, "o")
+        .replace(/[л]/g, "l")
+        .replace(/[д]/g, "d")
+        .replace(/[ж]/g, "j")
+        .replace(/[я]/g, "ya")
+        .replace(/[с]/g, "s")
+        .replace(/[м]/g, "m")
+        .replace(/[иі]/g, "i")
+        .replace(/[т]/g, "t")
+        .replace(/[ь]/g, "'")
+        .replace(/[б]/g, "b")
+        .replace(/[ю]/g, "yu")
+        // Handle common transliteration variations
+        .replace(/yo+/g, "yo") // Normalize multiple 'o's in 'yo'
+        .replace(/([aeiou])['`]?([aeiou])/g, "$1'$2") // Handle apostrophes between vowels
+        .replace(/['`]+/g, "'") // Normalize different apostrophe characters
+        .replace(/ +/g, " ") // Normalize multiple spaces
+        .trim()
+    );
+  };
+
+  // Filter employees based on search term
+  useEffect(() => {
+    if (!employeeSearchTerm.trim()) {
+      setEmployees(allEmployees);
+      return;
+    }
+
+    const searchTermNormalized = normalizeText(employeeSearchTerm);
+
+    const filtered = allEmployees.filter((employee) => {
+      const nameNormalized = normalizeText(employee.name);
+      return nameNormalized.includes(searchTermNormalized);
+    });
+
+    setEmployees(filtered);
+  }, [employeeSearchTerm, allEmployees]);
+
+  // Debounce search term for tarifs
   useEffect(() => {
     const timerId = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -95,6 +170,7 @@ const View = () => {
           group_id: id,
         },
       });
+      setAllEmployees(response.data);
       setEmployees(response.data);
     } catch (error) {
       toast({
@@ -236,17 +312,42 @@ const View = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-full">
-          <Users className="w-5 h-5 text-primary" />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-full">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Xodimlar ro'yxati
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Jami {employees?.length} ta xodim
+              </p>
+            </div>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Xodimlar ro'yxati
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Jami {employees?.length} ta xodim
-          </p>
+
+        {/* Search Input */}
+        <div className="relative bg-white">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Xodim ismi bo'yicha qidirish..."
+            className="pl-10"
+            value={employeeSearchTerm}
+            onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+          />
+          {employeeSearchTerm && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+              onClick={() => setEmployeeSearchTerm("")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
