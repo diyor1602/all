@@ -1,9 +1,20 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, X } from "lucide-react";
+import {
+  Plus,
+  Search,
+  X,
+  Users,
+  Clock,
+  Package,
+  Loader2,
+  ChevronDown,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +24,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const View = () => {
   const { id } = useParams();
@@ -29,9 +51,30 @@ const View = () => {
   const searchInputRef = useRef(null);
   const [times, setTimes] = useState([]);
   const [selectedTimeId, setSelectedTimeId] = useState(null);
+  const [searchingTarifs, setSearchingTarifs] = useState(false);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  // Debounce search term
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm]);
+
+  // Call search when debounced search term changes
+  useEffect(() => {
+    if (debouncedSearchTerm.trim().length >= 2) {
+      searchTarifs(debouncedSearchTerm);
+    } else {
+      setAvailableTarifs([]);
+    }
+  }, [debouncedSearchTerm]);
 
   const fetchTimes = async () => {
-    setLoading(true);
     try {
       const response = await api.get("/resultChecker/times");
       setTimes(response.data);
@@ -41,8 +84,6 @@ const View = () => {
         description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -66,12 +107,12 @@ const View = () => {
     }
   };
 
-  const searchTarifs = async () => {
-    if (searchTerm.trim() === "" || searchTerm.trim().length < 2) return;
+  const searchTarifs = async (term) => {
+    setSearchingTarifs(true);
     try {
       const response = await api.get("/resultChecker/tarifications/search", {
         params: {
-          search: searchTerm,
+          search: term,
         },
       });
       setAvailableTarifs(response.data);
@@ -81,12 +122,10 @@ const View = () => {
         description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
       });
+    } finally {
+      setSearchingTarifs(false);
     }
   };
-
-  useEffect(() => {
-    searchTarifs();
-  }, [searchTerm]);
 
   useEffect(() => {
     fetchEmployees();
@@ -98,6 +137,7 @@ const View = () => {
     setSelectedTarif(null);
     setSearchTerm("");
     setQuantity(1);
+    setSelectedTimeId(null);
     setIsModalOpen(true);
     setTimeout(() => {
       searchInputRef.current?.focus();
@@ -107,6 +147,7 @@ const View = () => {
   const handleSelectTarif = (tarif) => {
     setSelectedTarif(tarif);
     setSearchTerm(tarif.name);
+    setAvailableTarifs([]);
   };
 
   const handleSubmit = async () => {
@@ -134,7 +175,7 @@ const View = () => {
       });
 
       setIsModalOpen(false);
-      fetchEmployees(); // Refresh the list
+      fetchEmployees();
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -153,111 +194,338 @@ const View = () => {
     setSearchTerm("");
     setQuantity(1);
     setSelectedTimeId(null);
+    setAvailableTarifs([]);
   };
 
+  const getTotalTasks = (employee) => {
+    return (
+      employee?.employee_results?.reduce(
+        (total, result) => total + result.quantity,
+        0
+      ) || 0
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="grid gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-3">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-16" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative">
-      {/* Tarif Selection Modal */}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-full">
+          <Users className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Xodimlar ro'yxati
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Jami {employees?.length} ta xodim
+          </p>
+        </div>
+      </div>
+
+      {/* Employee Cards Grid */}
+      <div className="grid gap-4">
+        {employees
+          ?.sort((a, b) => a?.name.localeCompare(b?.name))
+          ?.map((employee) => (
+            <Card
+              key={employee?.id}
+              className="hover:shadow-md transition-shadow"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg">{employee?.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      ID: {employee?.id}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="ml-2">
+                    {getTotalTasks(employee)} ta
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Tasks List */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Package className="w-4 h-4" />
+                    Bajarilgan ishlar
+                  </div>
+                  {employee?.employee_results?.length > 0 ? (
+                    <ScrollArea>
+                      <div className="space-y-1">
+                        {employee.employee_results.map((result) => (
+                          <div
+                            key={result?.id}
+                            className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
+                          >
+                            <span className="truncate">
+                              {result?.tarification?.name}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="mr-auto ml-2 text-xs"
+                            >
+                              {result?.tarification?.second} sekund
+                            </Badge>
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              {result?.time?.time?.slice(0, 5)}
+                            </Badge>
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              {result?.quantity} ta
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      Hali hech qanday ish bajarilmagan
+                    </p>
+                  )}
+                </div>
+
+                {/* Add Button */}
+                <Button
+                  onClick={() => handleAddTarif(employee)}
+                  className="w-full"
+                  size="sm"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ish qo'shish
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+      </div>
+
+      {/* Empty State */}
+      {employees?.length === 0 && (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Xodimlar topilmadi</h3>
+            <p className="text-muted-foreground">
+              Hozircha bu guruhda xodimlar mavjud emas
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add Tarif Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Tarif qo'shish</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Yangi ish qo'shish
+            </DialogTitle>
             <DialogDescription>
-              {currentEmployee?.name} uchun tarif qo'shish
+              <span className="font-medium">{currentEmployee?.name}</span> uchun
+              yangi ish qo'shish
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Qidirish</Label>
+          <div className="space-y-6">
+            {/* Search Section */}
+            <div className="space-y-3">
+              <Label htmlFor="search" className="text-sm font-medium">
+                Ish turini qidiring
+              </Label>
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
                   ref={searchInputRef}
-                  placeholder="Tarif nomi bo'yicha qidiring..."
-                  className="pl-8"
+                  placeholder="Ish nomi bo'yicha qidiring..."
+                  className="pl-10 pr-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 {searchTerm && (
-                  <X
-                    className="absolute right-2.5 top-2.5 h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
                     onClick={() => {
                       setSearchTerm("");
                       setSelectedTarif(null);
+                      setAvailableTarifs([]);
                     }}
-                  />
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+                {searchingTarifs && (
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
                 )}
               </div>
             </div>
 
-            {!selectedTarif && searchTerm && (
-              <div className="border rounded-md max-h-60 overflow-auto">
-                {availableTarifs.length > 0 ? (
-                  availableTarifs.map((tarif) => (
-                    <div
-                      key={tarif.id}
-                      className="p-2 hover:bg-accent cursor-pointer"
-                      onClick={() => handleSelectTarif(tarif)}
-                    >
-                      {tarif.name}
-                    </div>
-                  ))
-                ) : (
-                  <p className="p-2 text-muted-foreground text-sm">
-                    Hech narsa topilmadi
-                  </p>
-                )}
-              </div>
+            {/* Search Results */}
+            {!selectedTarif && searchTerm && availableTarifs.length > 0 && (
+              <Card>
+                <CardContent className="p-0">
+                  <ScrollArea className="max-h-48">
+                    {availableTarifs.map((tarif) => (
+                      <div
+                        key={tarif.id}
+                        className="flex items-center justify-between p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0"
+                        onClick={() => handleSelectTarif(tarif)}
+                      >
+                        <div>
+                          <p className="font-medium">{tarif.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {tarif.summa} so'm
+                          </p>
+                        </div>
+                        <ChevronDown className="w-4 h-4 text-muted-foreground rotate-[-90deg]" />
+                      </div>
+                    ))}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
             )}
 
+            {/* No Results */}
+            {!selectedTarif &&
+              searchTerm &&
+              availableTarifs.length === 0 &&
+              !searchingTarifs &&
+              searchTerm.length >= 2 && (
+                <Card>
+                  <CardContent className="text-center py-6">
+                    <Search className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Hech narsa topilmadi
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+            {/* Selected Tarif Details */}
             {selectedTarif && (
               <div className="space-y-4">
-                <div className="p-4 border rounded-md">
-                  <h4 className="font-medium">{selectedTarif.name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Narx: {selectedTarif.price} so'm
-                  </p>
-                </div>
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-semibold">{selectedTarif.name}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Narx:{" "}
+                          <span className="font-medium">
+                            {selectedTarif.summa} so'm
+                          </span>
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTarif(null);
+                          setSearchTerm("");
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
+                {/* Quantity Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Miqdori</Label>
+                  <Label htmlFor="quantity" className="text-sm font-medium">
+                    Miqdori
+                  </Label>
                   <Input
                     id="quantity"
                     type="number"
-                    min="1"
                     value={quantity}
                     onChange={(e) =>
-                      setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                      setQuantity(Math.max(1, Number.parseInt(e.target.value)))
                     }
+                    className="text-center"
                   />
                 </div>
 
+                {/* Time Selection */}
                 <div className="space-y-2">
-                  <Label>Vaqtni tanlang</Label>
-                  <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={selectedTimeId || ""}
-                    onChange={(e) => setSelectedTimeId(Number(e.target.value))}
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Vaqtni tanlang
+                  </Label>
+                  <Select
+                    value={selectedTimeId?.toString() || ""}
+                    onValueChange={(value) => setSelectedTimeId(Number(value))}
                   >
-                    <option value="">Vaqtni tanlang</option>
-                    {times
-                      .filter((time) => time.time !== "07:30:00")
-                      .map((time) => (
-                        <option key={time.id} value={time.id}>
-                          {time.time.slice(0, 5)} {/* Show only hh:mm */}
-                        </option>
-                      ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Vaqtni tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {times
+                        .filter((time) => time.time !== "07:30:00")
+                        .map((time) => (
+                          <SelectItem key={time.id} value={time.id.toString()}>
+                            {time.time.slice(0, 5)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={closeModal}>
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={closeModal}
+                    className="flex-1"
+                  >
                     Bekor qilish
                   </Button>
-                  <Button onClick={handleSubmit} disabled={isSubmitting}>
-                    {isSubmitting ? "Jo'natilmoqda..." : "Qo'shish"}
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Jo'natilmoqda...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Qo'shish
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -265,53 +533,6 @@ const View = () => {
           </div>
         </DialogContent>
       </Dialog>
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
-        Xodimlar ({employees?.length})
-      </h1>
-      <div className="w-full overflow-auto">
-        <table className="w-full border border-collapse">
-          <thead>
-            <tr>
-              <th className="border border-gray-600 p-2">ID</th>
-              <th className="border border-gray-600 p-2">Xodim</th>
-              <th className="border border-gray-600 p-2">Qilgan ishlari</th>
-              <th className="border border-gray-600 p-2">Qo'shish</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees
-              ?.sort((a, b) => a?.name.localeCompare(b?.name))
-              ?.map((employee) => (
-                <tr key={employee?.id}>
-                  <td className="border border-gray-600 p-2 text-center">
-                    {employee?.id}
-                  </td>
-                  <td className="border border-gray-600 p-2">
-                    {employee?.name}
-                  </td>
-                  <td className="border border-gray-600 p-2">
-                    {employee?.employee_results?.map((result) => (
-                      <div key={result?.id}>
-                        {result?.tarification?.name} -{" "}
-                        <span className="font-semibold">
-                          {result?.quantity}
-                        </span>
-                      </div>
-                    ))}
-                  </td>
-                  <td className="border border-gray-600 p-2 text-center">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleAddTarif(employee)}
-                    >
-                      <Plus />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 };
