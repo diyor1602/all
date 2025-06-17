@@ -1,178 +1,53 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Search,
-  X,
-  Users,
-  Clock,
-  Package,
-  Loader2,
-  ChevronDown,
-  Building2,
-  Timer,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import api from "@/utils/api";
 
 const View = () => {
   const { id } = useParams();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+
+  const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState([]);
-  const [allEmployees, setAllEmployees] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
-  const [availableTarifs, setAvailableTarifs] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTarif, setSelectedTarif] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentEmployee, setCurrentEmployee] = useState(null);
-  const searchInputRef = useRef(null);
   const [times, setTimes] = useState([]);
-  const [selectedTimeId, setSelectedTimeId] = useState(null);
-  const [searchingTarifs, setSearchingTarifs] = useState(false);
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-  // Function to normalize text for search (converts Cyrillic to Latin for comparison)
-  const normalizeText = (text) => {
-    if (!text) return "";
-    return text
-      .toLowerCase()
-      .replace(/[ёЁ]/g, "yo")
-      .replace(/йо|йё|йе/gi, "yo")
-      .replace(/ч/gi, "ch")
-      .replace(/ш/gi, "sh")
-      .replace(/щ/gi, "sh")
-      .replace(/ғ/gi, "g'")
-      .replace(/ў/gi, "o'")
-      .replace(/қ/gi, "q")
-      .replace(/ҳ/gi, "h")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[й]/g, "y")
-      .replace(/[ц]/g, "ts")
-      .replace(/[у]/g, "u")
-      .replace(/[к]/g, "k")
-      .replace(/[еёэ]/g, "e")
-      .replace(/[н]/g, "n")
-      .replace(/[г]/g, "g")
-      .replace(/[з]/g, "z")
-      .replace(/[х]/g, "x")
-      .replace(/[ъ]/g, "'")
-      .replace(/[ф]/g, "f")
-      .replace(/[ы]/g, "i")
-      .replace(/[в]/g, "v")
-      .replace(/[а]/g, "a")
-      .replace(/[п]/g, "p")
-      .replace(/[р]/g, "r")
-      .replace(/[о]/g, "o")
-      .replace(/[л]/g, "l")
-      .replace(/[д]/g, "d")
-      .replace(/[ж]/g, "j")
-      .replace(/[я]/g, "ya")
-      .replace(/[с]/g, "s")
-      .replace(/[м]/g, "m")
-      .replace(/[иі]/g, "i")
-      .replace(/[т]/g, "t")
-      .replace(/[ь]/g, "'")
-      .replace(/[б]/g, "b")
-      .replace(/[ю]/g, "yu")
-      .replace(/yo+/g, "yo")
-      .replace(/([aeiou])['`]?([aeiou])/g, "$1'$2")
-      .replace(/['`]+/g, "'")
-      .replace(/ +/g, " ")
-      .trim();
-  };
-
-  // Filter employees based on search term
   useEffect(() => {
-    if (!employeeSearchTerm.trim()) {
-      setEmployees(allEmployees);
-      return;
-    }
-
-    const searchTermNormalized = normalizeText(employeeSearchTerm);
-
-    const filtered = allEmployees.filter((employee) => {
-      const nameNormalized = normalizeText(employee.name);
-      return nameNormalized.includes(searchTermNormalized);
-    });
-
-    setEmployees(filtered);
-  }, [employeeSearchTerm, allEmployees]);
-
-  // Debounce search term for tarifs
-  useEffect(() => {
-    const timerId = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-
-    return () => {
-      clearTimeout(timerId);
+    const fetchTimes = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/resultChecker/times");
+        setTimes(response.data?.filter((time) => time.time !== "07:30:00"));
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description:
+            error.response?.data?.message ||
+            "Qabul qilish vaqti olishda xatolik",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [searchTerm]);
+    fetchTimes();
+  }, [id]);
 
-  // Call search when debounced search term changes
-  useEffect(() => {
-    if (debouncedSearchTerm.trim().length >= 2) {
-      searchTarifs(debouncedSearchTerm);
-    } else {
-      setAvailableTarifs([]);
-    }
-  }, [debouncedSearchTerm]);
-
-  const fetchTimes = async () => {
+  const fetchEmployee = async () => {
     try {
-      const response = await api.get("/resultChecker/times");
-      setTimes(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchEmployees = async () => {
-    setLoading(true);
-    try {
+      setLoading(true);
       const response = await api.get("/resultChecker/employeeResults", {
         params: {
           group_id: id,
         },
       });
-      setAllEmployees(response.data);
       setEmployees(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
+        description:
+          error.response?.data?.message || "Xodim ma'lumotlari olishda xatolik",
         variant: "destructive",
       });
     } finally {
@@ -180,586 +55,437 @@ const View = () => {
     }
   };
 
-  const searchTarifs = async (term) => {
-    setSearchingTarifs(true);
-    try {
-      const response = await api.get("/resultChecker/tarifications/search", {
-        params: {
-          search: term,
-        },
-      });
-      setAvailableTarifs(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
-        variant: "destructive",
-      });
-    } finally {
-      setSearchingTarifs(false);
-    }
-  };
-
   useEffect(() => {
-    fetchEmployees();
-    fetchTimes();
-  }, []);
+    fetchEmployee();
+  }, [id]);
 
-  const handleAddTarif = (employee) => {
-    setCurrentEmployee(employee);
-    setSelectedTarif(null);
-    setSearchTerm("");
-    setQuantity(1);
-    setSelectedTimeId(null);
-    setIsModalOpen(true);
-    setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 100);
+  // Helper function to find existing employee result for a specific time
+  const findEmployeeResult = (employee, timeId) => {
+    return employee.employee_results?.find(
+      (result) => result.time?.id === timeId
+    );
   };
 
-  const handleSelectTarif = (tarif) => {
-    setSelectedTarif(tarif);
-    setSearchTerm(tarif.name);
-    setAvailableTarifs([]);
-  };
+  // Helper function to validate numeric input
+  const validateNumericInput = (value, fieldName = "Qiymat") => {
+    if (value === "" || value === null || value === undefined) {
+      return { isValid: true, numValue: 0 };
+    }
 
-  const handleSubmit = async () => {
-    if (!selectedTarif || !quantity || quantity < 1 || !selectedTimeId) {
+    const numValue = Number(value);
+    if (isNaN(numValue)) {
       toast({
         title: "Xatolik",
-        description: "Iltimos, barcha maydonlarni to'ldiring",
+        description: `${fieldName} son bo'lishi shart`,
+        variant: "destructive",
+        duration: 1500,
+      });
+      return { isValid: false, numValue: 0 };
+    }
+
+    if (numValue < 0) {
+      toast({
+        title: "Xatolik",
+        description: `${fieldName} manfiy bo'lishi mumkin emas`,
+        variant: "destructive",
+        duration: 1500,
+      });
+      return { isValid: false, numValue: 0 };
+    }
+
+    return { isValid: true, numValue };
+  };
+
+  // Function to handle minute updates - updates ALL existing results for the employee
+  const handleMinuteSubmit = async (employeeId, minute) => {
+    const validation = validateNumericInput(minute, "Daqiqa");
+    if (!validation.isValid) return;
+
+    const minuteNum = validation.numValue;
+    const employee = employees.find((emp) => emp.id === employeeId);
+
+    if (!employee) {
+      toast({
+        title: "Xatolik",
+        description: "Xodim topilmadi",
         variant: "destructive",
       });
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      await api.post(`/resultChecker/employeeResults`, {
-        employee_id: currentEmployee.id,
-        tarification_id: selectedTarif.id,
-        quantity: Number(quantity),
-        time_id: selectedTimeId,
-      });
+      setLoading(true);
+
+      const existingResults = employee.employee_results || [];
+
+      if (existingResults.length > 0) {
+        // PATCH - Update ALL existing results with new minute value
+        const updatePromises = existingResults.map((result) =>
+          api.patch(`/resultChecker/employeeResults/${result.id}`, {
+            minute: minuteNum,
+            time_id: result.time?.id,
+            quantity: result.quantity || 0,
+          })
+        );
+
+        await Promise.all(updatePromises);
+      } else {
+        // POST - Create new result for the first time slot
+        const firstTimeId = times[0]?.id;
+        if (!firstTimeId) {
+          toast({
+            title: "Xatolik",
+            description: "Vaqt ma'lumotlari topilmadi",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        await api.post(`/resultChecker/employeeResults`, {
+          employee_id: employeeId,
+          minute: minuteNum,
+          time_id: firstTimeId,
+          quantity: 0,
+        });
+      }
+
+      await fetchEmployee();
 
       toast({
-        title: "Muvaffaqiyatli",
-        description: `${selectedTarif.name} - ${quantity} ta qo'shildi`,
+        title: "Muvaffaqiyat",
+        description: "Daqiqa muvaffaqiyatli yangilandi",
+        variant: "default",
+        duration: 1500,
       });
-
-      setIsModalOpen(false);
-      fetchEmployees();
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
+        description:
+          error.response?.data?.message || "Daqiqa o'zgartirishda xatolik",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setCurrentEmployee(null);
-    setSelectedTarif(null);
-    setSearchTerm("");
-    setQuantity(1);
-    setSelectedTimeId(null);
-    setAvailableTarifs([]);
+  // Function to handle quantity updates for any time slot
+  const handleQuantitySubmit = async (employeeId, timeId, quantity) => {
+    const validation = validateNumericInput(quantity, "Miqdor");
+    if (!validation.isValid) return;
+
+    const quantityNum = validation.numValue;
+    const employee = employees.find((emp) => emp.id === employeeId);
+
+    if (!employee) {
+      toast({
+        title: "Xatolik",
+        description: "Xodim topilmadi",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const existingResult = findEmployeeResult(employee, timeId);
+
+      if (existingResult) {
+        // PATCH - Update existing result
+        await api.patch(`/resultChecker/employeeResults/${existingResult.id}`, {
+          minute: existingResult.minute || 0,
+          time_id: timeId,
+          quantity: quantityNum,
+        });
+      } else {
+        // POST - Create new result
+        // For new quantity entries, we need a default minute value
+        const defaultMinute =
+          employee.employee_results?.length > 0
+            ? employee.employee_results[employee.employee_results.length - 1]
+                .minute || 0
+            : 0;
+
+        await api.post(`/resultChecker/employeeResults`, {
+          employee_id: employeeId,
+          minute: defaultMinute,
+          time_id: timeId,
+          quantity: quantityNum,
+        });
+      }
+
+      await fetchEmployee();
+
+      toast({
+        title: "Muvaffaqiyat",
+        description: "Miqdor muvaffaqiyatli yangilandi",
+        variant: "default",
+        duration: 1500,
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Miqdor o'zgartirishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getTotalTasks = (employee) => {
+  // Function to safely evaluate mathematical expressions
+  const safeEval = (expression) => {
+    try {
+      // Remove any non-mathematical characters for security
+      const cleanExpression = expression.replace(/[^-()\d/*+.\s]/g, "");
+      if (!cleanExpression) return 0;
+
+      // Use Function constructor instead of eval for better security
+      const result = new Function(
+        `"use strict"; return (${cleanExpression})`
+      )();
+      return isNaN(result) ? 0 : Number(result);
+    } catch {
+      return 0;
+    }
+  };
+
+  const calculateProgress = (employee) => {
+    const maxTime = 500;
+    const empMinute = employee.employee_results?.at(-1)?.minute;
+
+    if (!empMinute || empMinute === 0) return 0;
+
+    const canDo = maxTime / empMinute;
+    const totalQuantity = employee.employee_results?.reduce(
+      (acc, result) => acc + (result.quantity || 0),
+      0
+    );
+
+    if (canDo === 0) return 0;
+    return (totalQuantity / canDo) * 100;
+  };
+
+  const calculateMaximum = (employee) => {
+    const empMinute = employee.employee_results?.at(-1)?.minute;
+    if (!empMinute || empMinute === 0) return 0;
+    return (500 / Number.parseFloat(empMinute)).toFixed(2);
+  };
+
+  // Helper function to calculate total quantity for an employee
+  const calculateTotalQuantity = (employee) => {
     return (
-      employee?.employee_results?.reduce(
-        (total, result) => total + result.quantity,
+      employee.employee_results?.reduce(
+        (acc, result) => acc + (result.quantity || 0),
         0
       ) || 0
     );
   };
 
-  const getTotalEarnings = (employee) => {
-    return (
-      employee?.employee_results?.reduce(
-        (total, result) => total + result.quantity * result.tarification.summa,
-        0
-      ) || 0
-    );
+  // Helper function to check if employee has minute entered
+  const hasMinuteEntered = (employee) => {
+    const lastResult = employee.employee_results?.at(-1);
+    return lastResult && lastResult.minute && Number(lastResult.minute) > 0;
   };
 
-  if (loading) {
+  if (loading && employees.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 lg:p-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-32" />
-            </div>
-          </div>
-          <Skeleton className="h-12 w-full rounded-xl" />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i} className="h-64">
-                <CardHeader>
-                  <Skeleton className="h-6 w-48" />
-                  <Skeleton className="h-4 w-24" />
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-10 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg">Yuklanmoqda...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 lg:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Xodimlar ro'yxati
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Jami {employees?.length} ta xodim
-                </p>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Jami bajarilgan</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {parseFloat(
-                    employees?.reduce(
-                      (total, emp) => total + getTotalTasks(emp),
-                      0
-                    )
-                  )?.toLocaleString("ru-RU")}{" "}
-                  ta
-                </p>
-              </div>
-            </div>
-          </div>
+    <div className="w-full max-h-[90vh] overflow-auto">
+      <style>{`
+        .sticky-table {
+          position: relative;
+        }
 
-          {/* Search Input */}
-          <Input
-            placeholder="Xodim ismi bo'yicha qidirish..."
-            className="pl-6 h-12 text-lg bg-white/80 backdrop-blur-sm border-gray-200 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
-            value={employeeSearchTerm}
-            onChange={(e) => setEmployeeSearchTerm(e.target.value)}
-          />
-        </div>
+        .sticky-header {
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          background: #f3f4f6;
+        }
 
-        {/* Employee Cards Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {employees
-            ?.sort((a, b) => a?.name.localeCompare(b?.name))
-            ?.map((employee) => (
-              <Card
-                key={employee?.id}
-                className="group hover:shadow-xl h-fit transition-all duration-300 border-0 shadow-md bg-white/80 backdrop-blur-sm hover:bg-white hover:scale-[1.02]"
+        .sticky-left-1 {
+          position: sticky;
+          left: 0;
+          z-index: 10;
+          background: white;
+          box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .sticky-left-2 {
+          position: sticky;
+          left: 200px;
+          z-index: 10;
+          background: white;
+          box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .sticky-header.sticky-left-1 {
+          z-index: 30;
+          background: #f3f4f6;
+        }
+
+        .sticky-header.sticky-left-2 {
+          z-index: 30;
+          background: #f3f4f6;
+        }
+
+        tr:hover .sticky-left-1,
+        tr:hover .sticky-left-2 {
+          background: #f9fafb;
+        }
+      `}</style>
+
+      <table className="border-collapse border border-gray-500 w-full whitespace-nowrap sticky-table text-sm">
+        <thead>
+          <tr>
+            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header sticky-left-1 min-w-[200px]">
+              Xodim
+            </th>
+            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header sticky-left-2 min-w-[100px]">
+              Daqiqa
+            </th>
+            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header min-w-[100px]">
+              Progress
+            </th>
+            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header min-w-[100px]">
+              Maximum
+            </th>
+            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header min-w-[120px]">
+              Jami miqdor
+            </th>
+            {times.map((time) => (
+              <th
+                key={time.id}
+                className="border border-gray-500 p-2 bg-gray-100 sticky-header min-w-[100px]"
               >
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {employee?.name}
-                      </CardTitle>
-                      <p className="text-sm text-gray-500 mt-1">
-                        ID: {employee?.id}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge
-                        variant="secondary"
-                        className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium"
-                      >
-                        {getTotalTasks(employee)?.toLocaleString("ru-RU")} ta
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="text-green-600 border-green-200 bg-green-50"
-                      >
-                        {getTotalEarnings(employee)?.toLocaleString("ru-RU")}{" "}
-                        so'm
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {/* Tasks List */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
-                      <Package className="w-4 h-4" />
-                      Bajarilgan ishlar
-                    </div>
-
-                    {employee?.employee_results?.length > 0 ? (
-                      <div
-                        className="space-y-2 overflow-y-auto pr-2 h-fit max-h-[400px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
-                        style={{
-                          scrollbarWidth: "thin",
-                          scrollbarColor: "#CBD5E1 #F1F5F9",
-                        }}
-                      >
-                        {employee.employee_results
-                          ?.sort((a, b) => a.time?.id - b.time?.id)
-                          ?.map((result) => (
-                            <div
-                              key={result?.id}
-                              className="p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow"
-                            >
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex-1">
-                                  <p className="font-medium text-gray-900 text-sm">
-                                    {result?.tarification?.code}
-                                  </p>
-                                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                                    {result?.tarification?.name}
-                                  </p>
-                                </div>
-                                <Badge
-                                  variant="outline"
-                                  className="ml-2 text-xs bg-white"
-                                >
-                                  {result?.quantity} ta
-                                </Badge>
-                              </div>
-
-                              <div className="flex items-center justify-between text-xs text-gray-500">
-                                <div className="flex items-center gap-1">
-                                  <Timer className="w-3 h-3" />
-                                  {result?.tarification?.second}s
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {result?.time?.time?.slice(0, 5)}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  {parseFloat(
-                                    result?.quantity *
-                                      result?.tarification?.summa
-                                  )?.toLocaleString("ru-RU")}{" "}
-                                  so'm
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        <Building2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">
-                          Hali hech qanday ish bajarilmagan
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Add Button */}
-                  <Button
-                    onClick={() => handleAddTarif(employee)}
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                    size="sm"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Yangi ish qo'shish
-                  </Button>
-                </CardContent>
-              </Card>
+                {time.time?.slice(0, 5)}
+              </th>
             ))}
-        </div>
-
-        {/* Empty State */}
-        {employees?.length === 0 && (
-          <Card className="text-center py-16 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardContent>
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Xodimlar topilmadi
-              </h3>
-              <p className="text-gray-500 max-w-md mx-auto">
-                Hozircha bu guruhda xodimlar mavjud emas yoki qidiruv natijasida
-                hech kim topilmadi
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Add Tarif Modal */}
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] bg-white">
-            <DialogHeader className="pb-4 border-b border-gray-100">
-              <DialogTitle className="flex items-center gap-3 text-xl">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Plus className="w-4 h-4 text-blue-600" />
-                </div>
-                Yangi ish qo'shish
-              </DialogTitle>
-              <DialogDescription className="text-gray-600">
-                <span className="font-medium text-gray-900">
-                  {currentEmployee?.name}
-                </span>{" "}
-                uchun yangi ish qo'shish
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6 py-4">
-              {/* Search Section */}
-              <div className="space-y-3">
-                <Label
-                  htmlFor="search"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Ish turini qidiring
-                </Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="search"
-                    ref={searchInputRef}
-                    placeholder="Ish nomi yoki kodi bo'yicha qidiring..."
-                    className="pl-10 pr-10 h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                  {searchTerm && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSelectedTarif(null);
-                        setAvailableTarifs([]);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {searchingTarifs && (
-                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-blue-500" />
-                  )}
-                </div>
-              </div>
-
-              {/* Search Results */}
-              {!selectedTarif && searchTerm && availableTarifs.length > 0 && (
-                <Card className="border border-gray-200">
-                  <CardContent className="p-0">
-                    <div
-                      className="max-h-64 overflow-y-auto"
-                      style={{
-                        scrollbarWidth: "thin",
-                        scrollbarColor: "#CBD5E1 #F1F5F9",
-                      }}
-                    >
-                      {availableTarifs.map((tarif, index) => (
-                        <div
-                          key={tarif.id}
-                          className={`flex items-center justify-between p-4 hover:bg-blue-50 cursor-pointer transition-colors ${
-                            index !== availableTarifs.length - 1
-                              ? "border-b border-gray-100"
-                              : ""
-                          }`}
-                          onClick={() => handleSelectTarif(tarif)}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="text-xs">
-                                {tarif.code}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {tarif.second}s
-                              </span>
-                            </div>
-                            <p className="font-medium text-gray-900 mb-1">
-                              {tarif.name}
-                            </p>
-                            <p className="text-sm text-green-600 font-medium">
-                              {tarif.summa.toLocaleString()} so'm
-                            </p>
-                          </div>
-                          <ChevronDown className="w-4 h-4 text-gray-400 rotate-[-90deg]" />
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* No Results */}
-              {!selectedTarif &&
-                searchTerm &&
-                availableTarifs.length === 0 &&
-                !searchingTarifs &&
-                searchTerm.length >= 2 && (
-                  <Card className="border border-gray-200">
-                    <CardContent className="text-center py-8">
-                      <Search className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-                      <p className="text-sm text-gray-500">
-                        "{searchTerm}" bo'yicha hech narsa topilmadi
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-              {/* Selected Tarif Details */}
-              {selectedTarif && (
-                <div className="space-y-6">
-                  <Card className="border-blue-200 bg-blue-50/50">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="bg-white">
-                              {selectedTarif.code}
-                            </Badge>
-                            <Badge
-                              variant="outline"
-                              className="bg-white text-gray-600"
-                            >
-                              {selectedTarif.second}s
-                            </Badge>
-                          </div>
-                          <h4 className="font-semibold text-gray-900 mb-2">
-                            {selectedTarif.name}
-                          </h4>
-                          <p className="text-sm text-green-600 font-medium">
-                            Narx: {selectedTarif.summa.toLocaleString()} so'm
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="hover:bg-white/80"
-                          onClick={() => {
-                            setSelectedTarif(null);
-                            setSearchTerm("");
-                          }}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Quantity Input */}
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="quantity"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Miqdori
-                      </Label>
-                      <Input
-                        id="quantity"
-                        type="number"
-                        value={quantity}
-                        onChange={(e) =>
-                          setQuantity(Number.parseInt(e.target.value))
+          </tr>
+        </thead>
+        <tbody>
+          {employees
+            ?.sort((a, b) => a.name.localeCompare(b.name))
+            ?.map((employee) => (
+              <tr key={employee.id} className="hover:bg-gray-50">
+                <td className="border border-gray-500 p-2 font-medium sticky-left-1 min-w-[200px]">
+                  {employee.name}
+                </td>
+                <td className="border border-gray-500 p-2 sticky-left-2 min-w-[100px]">
+                  <div className="w-full flex justify-center">
+                    <input
+                      type="text"
+                      className="w-24 px-2 py-1 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      defaultValue={
+                        employee.employee_results?.at(-1)?.minute ?? ""
+                      }
+                      disabled={loading}
+                      onBlur={(e) => {
+                        const value = e.target.value.trim();
+                        if (!value) {
+                          handleMinuteSubmit(employee.id, "0");
+                          e.target.value = "0";
+                          return;
                         }
-                        className="text-center bg-gray-50 border-gray-200 focus:bg-white"
+
+                        const result = safeEval(value);
+                        e.target.value = result.toString();
+                        handleMinuteSubmit(employee.id, result.toString());
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.target.blur();
+                        }
+                      }}
+                    />
+                  </div>
+                </td>
+                <td className="border border-gray-500 p-2 text-center min-w-[100px]">
+                  <span
+                    className={`font-medium ${
+                      calculateProgress(employee) >= 100
+                        ? "text-green-600"
+                        : calculateProgress(employee) >= 80
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {calculateProgress(employee)?.toLocaleString("ru-RU", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    %
+                  </span>
+                </td>
+                <td className="border border-gray-500 p-2 text-center font-medium min-w-[100px]">
+                  {calculateMaximum(employee)}
+                </td>
+                <td className="border border-gray-500 p-2 text-center font-bold text-blue-600 min-w-[120px]">
+                  {calculateTotalQuantity(employee).toLocaleString()}
+                </td>
+                {times.map((time) => {
+                  const existingResult = findEmployeeResult(employee, time.id);
+                  const isDisabled = !hasMinuteEntered(employee) || loading;
+
+                  return (
+                    <td
+                      key={time.id}
+                      className="border border-gray-500 p-2 text-center min-w-[100px]"
+                    >
+                      <input
+                        type="text"
+                        className={`w-20 px-2 py-1 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          isDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+                        }`}
+                        defaultValue={existingResult?.quantity ?? ""}
+                        disabled={isDisabled}
+                        placeholder=""
+                        onBlur={(e) => {
+                          if (isDisabled) return;
+
+                          const value = e.target.value.trim();
+                          if (!value) {
+                            handleQuantitySubmit(employee.id, time.id, "0");
+                            e.target.value = "0";
+                            return;
+                          }
+
+                          const result = safeEval(value);
+                          e.target.value = result.toString();
+                          handleQuantitySubmit(
+                            employee.id,
+                            time.id,
+                            result.toString()
+                          );
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.target.blur();
+                          }
+                        }}
                       />
-                    </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+        </tbody>
+      </table>
 
-                    {/* Time Selection */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">
-                        Vaqt
-                      </Label>
-                      <Select
-                        value={selectedTimeId?.toString() || ""}
-                        onValueChange={(e) => setSelectedTimeId(Number(e))}
-                        className="w-full bg-gray-50 border-gray-200 focus:bg-white"
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Vaqtni tanlang" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {times
-                            .filter((time) => time.time !== "07:30:00")
-                            .map((time) => (
-                              <SelectItem
-                                key={time.id}
-                                value={time.id.toString()}
-                              >
-                                {time.time.slice(0, 5)}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Summary */}
-                  {quantity && selectedTarif && (
-                    <Card className="bg-green-50 border-green-200">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">
-                            Jami summa:
-                          </span>
-                          <span className="text-lg font-bold text-green-600">
-                            {(quantity * selectedTarif.summa).toLocaleString()}{" "}
-                            so'm
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4 border-t border-gray-100">
-                    <Button
-                      variant="outline"
-                      onClick={closeModal}
-                      className="flex-1 h-11"
-                    >
-                      Bekor qilish
-                    </Button>
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={isSubmitting || !selectedTimeId}
-                      className="flex-1 h-11 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Jo'natilmoqda...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Qo'shish
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+      {employees.length === 0 && !loading && (
+        <div className="text-center py-8 text-gray-500">Xodimlar topilmadi</div>
+      )}
     </div>
   );
 };
