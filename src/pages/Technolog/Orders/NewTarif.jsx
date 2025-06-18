@@ -13,6 +13,7 @@ import {
   ChevronsUpDown,
   ClipboardPaste,
   Timer,
+  Trash,
 } from "lucide-react";
 import {
   Command,
@@ -255,6 +256,25 @@ const NewTarif = () => {
     setActiveTimerRowIndex(null);
   };
 
+  const handleDeleteRow = (index) => {
+    if (tarif.tarifications.length <= 1) {
+      toast({
+        title: "Diqqat",
+        description: "Kamida bitta qator bo'lishi kerak",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedTarifications = [...tarif.tarifications];
+    updatedTarifications.splice(index, 1);
+    
+    setTarif({
+      ...tarif,
+      tarifications: updatedTarifications,
+    });
+  };
+
   const addNewRow = () => {
     const newRow = {
       name: "",
@@ -418,6 +438,7 @@ const NewTarif = () => {
               <th className="px-4 py-2 border">Mashina</th>
               <th className="px-4 py-2 border">Sekund</th>
               <th className="px-4 py-2 border">Summa (so'm)</th>
+              <th className="px-4 py-2 border">O'chirish</th>
             </tr>
           </thead>
           <tbody>
@@ -578,6 +599,18 @@ const NewTarif = () => {
                   {parseFloat(item?.summa).toLocaleString("en-US", {
                     maximumFractionDigits: 2,
                   })}
+                </td>
+                <td className="px-4 py-2 border">
+                  <div className="w-full text-center">
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDeleteRow(index)}
+                      title="O'chirish"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
