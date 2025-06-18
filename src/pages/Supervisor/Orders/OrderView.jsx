@@ -948,7 +948,7 @@ const OrderView = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="mt-2 flex items-center justify-between">
+                      <div className="mt-2 flex items-center gap-2 justify-end">
                         <div className="font-bold text-purple-800 flex items-center">
                           Bajarilgan foiz:
                         </div>
