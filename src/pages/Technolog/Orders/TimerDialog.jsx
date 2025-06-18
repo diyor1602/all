@@ -9,12 +9,22 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Play, Square, Save, RotateCcw, Clock, List } from "lucide-react";
+import {
+  Play,
+  Square,
+  Save,
+  RotateCcw,
+  Clock,
+  List,
+  Pause,
+} from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 const TimerDialog = ({ isOpen, onClose, onSave }) => {
   const [isRunning, setIsRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [startTime, setStartTime] = useState(null);
+  const [pausedTime, setPausedTime] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [measurements, setMeasurements] = useState([]);
   const [averageTime, setAverageTime] = useState(0);
@@ -24,6 +34,8 @@ const TimerDialog = ({ isOpen, onClose, onSave }) => {
   useEffect(() => {
     if (isOpen) {
       setIsRunning(false);
+      setIsPaused(false);
+      setPausedTime(0);
       setElapsedTime(0);
       setMeasurements([]);
       setAverageTime(0);
@@ -52,21 +64,42 @@ const TimerDialog = ({ isOpen, onClose, onSave }) => {
   }, [measurements]);
 
   const startTimer = () => {
-    setStartTime(Date.now());
-    setElapsedTime(0);
+    if (isPaused) {
+      // Resume from paused state
+      const newStartTime = Date.now() - pausedTime;
+      setStartTime(newStartTime);
+      setIsPaused(false);
+    } else {
+      // Start fresh
+      const newStartTime = Date.now() - elapsedTime;
+      setStartTime(newStartTime);
+    }
     setIsRunning(true);
   };
 
-  const stopTimer = () => {
+  const pauseTimer = () => {
     if (isRunning) {
-      const timeInSeconds = elapsedTime / 1000;
+      setIsPaused(true);
+      setIsRunning(false);
+      setPausedTime(elapsedTime);
+    }
+  };
+
+  const stopTimer = () => {
+    if (isRunning || isPaused) {
+      const timeInSeconds = (isPaused ? pausedTime : elapsedTime) / 1000;
       setMeasurements([...measurements, timeInSeconds]);
       setIsRunning(false);
+      setIsPaused(false);
+      setElapsedTime(0);
+      setPausedTime(0);
     }
   };
 
   const resetTimer = () => {
     setIsRunning(false);
+    setIsPaused(false);
+    setPausedTime(0);
     setElapsedTime(0);
     setMeasurements([]);
     setAverageTime(0);
@@ -116,21 +149,41 @@ const TimerDialog = ({ isOpen, onClose, onSave }) => {
             {!isRunning ? (
               <Button
                 onClick={startTimer}
-                className="bg-green-500 hover:bg-green-600"
+                className={`${
+                  isPaused
+                    ? "bg-yellow-500 hover:bg-yellow-600"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
               >
-                <Play className="mr-2 h-4 w-4" />
-                Boshlash
+                {isPaused ? (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    Davom ettirish
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    Boshlash
+                  </>
+                )}
               </Button>
             ) : (
-              <Button onClick={stopTimer} variant="destructive">
-                <Square className="mr-2 h-4 w-4" />
-                To'xtatish
-              </Button>
+              <>
+                <Button onClick={pauseTimer} variant="outline" className="mr-2">
+                  <Pause className="mr-2 h-4 w-4" />
+                  Pauza
+                </Button>
+                <Button onClick={stopTimer} variant="destructive">
+                  <Square className="mr-2 h-4 w-4" />
+                  To'xtatish
+                </Button>
+              </>
             )}
             <Button
               onClick={resetTimer}
               variant="outline"
-              disabled={isRunning || measurements.length === 0}
+              disabled={isRunning || isPaused || measurements.length === 0}
+              className="ml-2"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
               Tozalash
@@ -167,17 +220,19 @@ const TimerDialog = ({ isOpen, onClose, onSave }) => {
         </div>
 
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Bekor qilish</Button>
-          </DialogClose>
-          <Button
-            onClick={saveAndClose}
-            disabled={measurements.length < 3}
-            className="bg-blue-500 hover:bg-blue-600"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Saqlash
-          </Button>
+          <div className="flex items-center gap-2 justify-end">
+            <DialogClose asChild>
+              <Button variant="outline">Bekor qilish</Button>
+            </DialogClose>
+            <Button
+              onClick={saveAndClose}
+              disabled={measurements.length < 3}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Saqlash
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
