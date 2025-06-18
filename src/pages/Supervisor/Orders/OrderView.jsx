@@ -948,7 +948,7 @@ const OrderView = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="mt-2 flex items-center justify-between">
+                      <div className="mt-2 flex items-center gap-2 justify-end">
                         <div className="font-bold text-purple-800 flex items-center">
                           Bajarilgan foiz:
                         </div>
@@ -962,7 +962,12 @@ const OrderView = () => {
                       {submodel.sewingOutputs.length > 0 && (
                         <div className="mt-4">
                           <h5 className="font-medium text-purple-800 flex items-center mb-3">
-                            Bugungi natijalar:
+                            Bugungi natijalar (
+                            {submodel.sewingOutputs?.reduce(
+                              (acc, output) => acc + output?.quantity,
+                              0
+                            )}
+                            )
                           </h5>
                           {submodel.sewingOutputs.map((output) => (
                             <div
@@ -974,7 +979,7 @@ const OrderView = () => {
                                   {output?.time?.time}
                                 </div>
                                 <span className="font-bold text-purple-800">
-                                  {output.quantity} dona
+                                  {output?.quantity} dona
                                 </span>
                               </div>
                             </div>
