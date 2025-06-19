@@ -23,6 +23,7 @@ const Home = () => {
   // App data states - these will only be used after authentication
   const [outputs, setOutputs] = useState([]);
   const [exampleOutputs, setExampleOutputs] = useState([]);
+  const [groupEarnings, setGroupEarnings] = useState([]);
   const [employeeCount, setEmployeeCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [aupCount, setAupCount] = useState(0);
@@ -69,6 +70,7 @@ const Home = () => {
       processExampleOutputData(data.example_outputs);
       setEmployeeCount(data.simple);
       setAupCount(data.aup);
+      setGroupEarnings(data.group_earnings);
     } catch (error) {
       toast({
         title: "Xatolik!",
@@ -558,6 +560,68 @@ const Home = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <div className="w-full overflow-x-auto rounded-lg shadow-md">
+          <div className="min-w-full overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-indigo-50 dark:bg-indigo-900/30">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    Gurux
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    Davomat
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    Qilgan ishi
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    O'rtacha summa
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    Jami topilgan
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+                {groupEarnings
+                  ?.sort(
+                    (a, b) =>
+                      parseFloat(b.per_employee_earning) -
+                      parseFloat(a.per_employee_earning)
+                  )
+                  ?.map((groupEarning, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-indigo-800">
+                        {groupEarning.group_name || "-"}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
+                        {groupEarning.attendance_count || "0"}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
+                        {parseFloat(groupEarning.quantity || 0)?.toLocaleString(
+                          "ru-RU"
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
+                        {parseFloat(
+                          groupEarning.per_employee_earning || 0
+                        )?.toLocaleString("ru-RU")}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-semibold text-green-600 dark:text-green-400">
+                        {parseFloat(
+                          groupEarning.today_earning || 0
+                        )?.toLocaleString("ru-RU")}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
