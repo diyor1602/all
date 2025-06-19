@@ -310,7 +310,7 @@ const Home = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-500 text-sm font-medium">
-                    Bajarilgan ortacha plan
+                    Bajarilgan o'rtacha plan
                   </p>
                   {(() => {
                     // Calculate average progress across all outputs

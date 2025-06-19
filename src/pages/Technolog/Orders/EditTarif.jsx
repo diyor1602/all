@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const STORAGE_KEY = "edit_tarif_draft";
 import {
   ArrowLeft,
   CheckCheck,
@@ -42,7 +44,23 @@ const EditTarif = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [tarif, setTarif] = useState(null);
+  const [serverTarif, setServerTarif] = useState(null);
+  const [localChanges, setLocalChanges] = useState(null);
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  // Combined tarif state that merges server data with local changes
+  const tarif = useMemo(() => {
+    if (!serverTarif) return null;
+    if (!localChanges) return serverTarif;
+
+    // Merge server data with local changes
+    return {
+      ...serverTarif,
+      ...localChanges,
+      // For arrays, we need to merge them carefully
+      tarifications: localChanges.tarifications || serverTarif.tarifications,
+    };
+  }, [serverTarif, localChanges]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [workers, setWorkers] = useState([]);
@@ -55,11 +73,28 @@ const EditTarif = () => {
   const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
   const [activeTimerRowIndex, setActiveTimerRowIndex] = useState(null);
 
-  const fetchTarif = async () => {
+  const fetchTarif = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get(`/technologist/tarification/${id}`);
-      setTarif(response.data);
+      // Always update server data with the latest from the server
+      setServerTarif(response.data);
+
+      // Check for local changes
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        // Only apply local changes if they're for this tarif
+        if (parsed.id === id) {
+          setLocalChanges(parsed);
+        } else {
+          // Clear any unrelated saved data
+          localStorage.removeItem(STORAGE_KEY);
+          setLocalChanges(null);
+        }
+      } else {
+        setLocalChanges(null);
+      }
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -69,7 +104,7 @@ const EditTarif = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, toast]);
 
   const fetchWorkers = async () => {
     try {
@@ -114,113 +149,166 @@ const EditTarif = () => {
     }
   };
 
+  // Save local changes to localStorage
+  useEffect(() => {
+    if (!localChanges || initialLoad) return;
+
+    const saveDraft = () => {
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            ...localChanges,
+            id, // Ensure the current ID is always included
+            updatedAt: new Date().toISOString(),
+          })
+        );
+      } catch (e) {
+        console.error("Failed to save draft", e);
+      }
+    };
+
+    // Save immediately on change
+    saveDraft();
+
+    // Set up autosave interval
+    const intervalId = setInterval(saveDraft, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [localChanges, id, initialLoad]);
+
+  // Load saved changes on initial render
+  useEffect(() => {
+    if (!initialLoad) return;
+
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.id === id) {
+          setLocalChanges(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to parse saved tarif data", e);
+      }
+    }
+    setInitialLoad(false);
+  }, [id, initialLoad]);
+
+  // Initial data fetch
   useEffect(() => {
     fetchTarif();
     fetchRanks();
     fetchMachines();
+    fetchWorkers();
   }, [id]);
 
-  useEffect(() => {
-    if (tarif?.submodel_id) {
-      fetchWorkers();
-    }
-  }, [tarif?.submodel_id]);
+  const updateLocalChanges = (updater) => {
+    setLocalChanges((prev) => {
+      const current = prev || { tarifications: [] };
+      const updated =
+        typeof updater === "function" ? updater(current) : updater;
+      return { ...current, ...updated };
+    });
+  };
 
   const handleInputChange = (index, field, value) => {
-    const updateTarifications = [...tarif.tarifications];
-    updateTarifications[index] = {
-      ...updateTarifications[index],
-      [field]: value,
-    };
-
-    setTarif({
-      ...tarif,
-      tarifications: updateTarifications,
+    updateLocalChanges((prev) => {
+      const updateTarifications = [
+        ...(prev?.tarifications || serverTarif?.tarifications || []),
+      ];
+      updateTarifications[index] = {
+        ...updateTarifications[index],
+        [field]: value,
+      };
+      return {
+        ...prev,
+        tarifications: updateTarifications,
+      };
     });
   };
 
   const handleWorkerSelect = (index, workerId) => {
-    const updateTarifications = [...tarif.tarifications];
-    updateTarifications[index] = {
-      ...updateTarifications[index],
-      employee_id: workerId,
-      // Remove the employee object reference when directly setting employee_id
-      employee: null,
-    };
-
-    setTarif({
-      ...tarif,
-      tarifications: updateTarifications,
+    updateLocalChanges((prev) => {
+      const updateTarifications = [
+        ...(prev?.tarifications || serverTarif?.tarifications || []),
+      ];
+      updateTarifications[index] = {
+        ...updateTarifications[index],
+        employee_id: workerId,
+        employee: null,
+      };
+      return {
+        ...prev,
+        tarifications: updateTarifications,
+      };
     });
-
-    // Close the popover after selection
     setActivePopoverIndex(null);
   };
 
   const handleRazryadSelect = (index, razryadId) => {
-    const updateTarifications = [...tarif.tarifications];
-    const tarification = updateTarifications[index];
+    updateLocalChanges((prev) => {
+      const updateTarifications = [...(prev?.tarifications || [])];
+      const tarification = { ...updateTarifications[index] };
 
-    // Update razryad_id and remove razryad object
-    tarification.razryad_id = razryadId;
-    tarification.razryad = null;
+      // Update razryad_id and remove razryad object
+      tarification.razryad_id = razryadId;
+      tarification.razryad = null;
 
-    // Calculate new summa based on selected razryad and current second value
-    if (razryadId) {
-      const razryad = ranks.find((r) => r.id === razryadId);
-      if (razryad && razryad.salary && tarification.second) {
-        // Calculate the summa and round to 1 decimal place
-        const calculatedSumma = (
-          parseFloat(razryad.salary) * parseFloat(tarification.second)
-        ).toFixed(1);
-        tarification.summa = calculatedSumma;
+      // Calculate new summa based on selected razryad and current second value
+      if (razryadId) {
+        const razryad = ranks.find((r) => r.id === razryadId);
+        if (razryad && razryad.salary && tarification.second) {
+          // Calculate the summa and round to 1 decimal place
+          const calculatedSumma = (
+            parseFloat(razryad.salary) * parseFloat(tarification.second)
+          ).toFixed(1);
+          tarification.summa = calculatedSumma;
+        }
       }
-    }
 
-    setTarif({
-      ...tarif,
-      tarifications: updateTarifications,
+      updateTarifications[index] = tarification;
+      return { tarifications: updateTarifications };
     });
   };
 
   const handleMachineSelect = (index, machineId) => {
-    const updateTarifications = [...tarif.tarifications];
-    updateTarifications[index] = {
-      ...updateTarifications[index],
-      typewriter_id: machineId,
-      // Remove the typewriter object reference when directly setting typewriter_id
-      typewriter: null,
-    };
-
-    setTarif({
-      ...tarif,
-      tarifications: updateTarifications,
+    updateLocalChanges((prev) => {
+      const updateTarifications = [...(prev?.tarifications || [])];
+      updateTarifications[index] = {
+        ...updateTarifications[index],
+        typewriter_id: machineId,
+        typewriter: null,
+      };
+      return { tarifications: updateTarifications };
     });
   };
 
   const handleSecondChange = (index, value) => {
-    const updateTarifications = [...tarif.tarifications];
-    const tarification = updateTarifications[index];
+    updateLocalChanges((prev) => {
+      const updateTarifications = [...(prev?.tarifications || [])];
+      const tarification = { ...updateTarifications[index] };
 
-    // Update the second value
-    tarification.second = value;
+      // Update the second value
+      tarification.second = value;
 
-    // Calculate summa based on razryad salary * second
-    const razryadId =
-      tarification.razryad_id ||
-      (tarification.razryad ? tarification.razryad.id : null);
-    if (razryadId) {
-      const razryad = ranks.find((r) => r.id === razryadId);
-      if (razryad && razryad.salary) {
-        // Calculate the summa and round to 1 decimal place
-        const calculatedSumma = (parseFloat(razryad.salary) * value).toFixed(1);
-        tarification.summa = calculatedSumma;
+      // Calculate summa based on razryad salary * second
+      const razryadId =
+        tarification.razryad_id ||
+        (tarification.razryad ? tarification.razryad.id : null);
+      if (razryadId) {
+        const razryad = ranks.find((r) => r.id === razryadId);
+        if (razryad && razryad.salary) {
+          // Calculate the summa and round to 1 decimal place
+          const calculatedSumma = (parseFloat(razryad.salary) * value).toFixed(
+            1
+          );
+          tarification.summa = calculatedSumma;
+        }
       }
-    }
 
-    setTarif({
-      ...tarif,
-      tarifications: updateTarifications,
+      updateTarifications[index] = tarification;
+      return { tarifications: updateTarifications };
     });
   };
 
@@ -249,7 +337,11 @@ const EditTarif = () => {
   };
 
   const handleDeleteRow = (index) => {
-    if (tarif?.tarifications?.length <= 1) {
+    if (
+      (serverTarif?.tarifications?.length || 0) +
+        (localChanges?.tarifications?.length || 0) <=
+      1
+    ) {
       toast({
         title: "Diqqat",
         description: "Kamida bitta qator bo'lishi kerak",
@@ -258,12 +350,10 @@ const EditTarif = () => {
       return;
     }
 
-    const updatedTarifications = [...tarif.tarifications];
-    updatedTarifications.splice(index, 1);
-    
-    setTarif({
-      ...tarif,
-      tarifications: updatedTarifications,
+    updateLocalChanges((prev) => {
+      const updatedTarifications = [...(prev?.tarifications || [])];
+      updatedTarifications.splice(index, 1);
+      return { tarifications: updatedTarifications };
     });
   };
 
@@ -274,14 +364,31 @@ const EditTarif = () => {
       razryad_id: null,
       typewriter_id: null,
       second: 0,
-      // Preserve these fields as read-only
       code: "",
       summa: 0,
+      is_new: true, // Mark as new row that doesn't exist on server
     };
 
-    setTarif({
-      ...tarif,
-      tarifications: [...tarif.tarifications, newRow],
+    updateLocalChanges((prev) => {
+      // Get existing local changes or initialize empty array
+      const existingLocalChanges = prev?.tarifications || [];
+      // Get server tarifications that haven't been modified locally
+      const unmodifiedServerTarifs = (serverTarif?.tarifications || []).filter(
+        (serverItem) =>
+          !existingLocalChanges.some(
+            (localItem) => localItem.id === serverItem.id
+          )
+      );
+
+      return {
+        ...prev,
+        // Combine unmodified server tarifs, existing local changes, and the new row
+        tarifications: [
+          ...unmodifiedServerTarifs,
+          ...existingLocalChanges,
+          newRow,
+        ],
+      };
     });
 
     // Focus on the new row after the state update
@@ -293,6 +400,8 @@ const EditTarif = () => {
   };
 
   const saveTarifications = async () => {
+    if (!serverTarif) return;
+
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
     const hasEmptyRazryad = tarif?.tarifications?.some(
@@ -374,6 +483,7 @@ const EditTarif = () => {
           color: "white",
         },
       });
+      localStorage.removeItem(STORAGE_KEY);
       fetchTarif();
     } catch (error) {
       toast({
@@ -405,14 +515,16 @@ const EditTarif = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Orqaga
         </Button>
-        <div className="text-xl font-semibold w-full">
-          <Input
-            type="text"
-            placeholder="Tarifikatsiya nomi"
-            className="w-full"
-            value={tarif?.name}
-            onChange={(e) => setTarif({ ...tarif, name: e.target.value })}
-          />
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="Tarifikatsiya nomi"
+              className="w-full"
+              value={tarif?.name || ""}
+              onChange={(e) => updateLocalChanges({ name: e.target.value })}
+            />
+          </div>
         </div>
       </div>
       <div className="w-full overflow-auto max-h-[75vh]">
@@ -432,7 +544,7 @@ const EditTarif = () => {
           <tbody>
             {tarif?.tarifications
               ?.sort((a, b) =>
-                a.code.localeCompare(b.code, undefined, {
+                a?.code?.localeCompare(b?.code, undefined, {
                   numeric: true,
                   sensitivity: "base",
                 })
@@ -440,7 +552,17 @@ const EditTarif = () => {
               .map((item, index) => (
                 <tr key={index}>
                   <td className="px-4 py-2 border text-center">{index + 1}</td>
-                  <td className="px-4 py-2 border">{item?.code || "-"}</td>
+                  <td className="px-4 py-2 border">
+                    {item?.code ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">
+                          {item?.code}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-red-500">Saqlanmagan</div>
+                    )}
+                  </td>
                   <td className="px-4 py-2 border">
                     <Input
                       placeholder="Nomi"
@@ -601,7 +723,7 @@ const EditTarif = () => {
                     <div className="flex items-center justify-between">
                       <span>
                         {parseFloat(item?.summa).toLocaleString("en-US", {
-                      maximumFractionDigits: 2,
+                          maximumFractionDigits: 2,
                         })}
                       </span>
                       <Button
