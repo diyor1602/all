@@ -76,8 +76,11 @@ const NewTarif = () => {
     };
   });
 
-  // Autosave effect
+  // Autosave effect - saves after every change
   useEffect(() => {
+    // Don't save if form was already submitted
+    if (formSubmittedRef.current) return;
+
     // Save to localStorage whenever tarif changes
     const saveDraft = () => {
       try {
@@ -87,13 +90,14 @@ const NewTarif = () => {
       }
     };
 
-    // Set up autosave interval
-    const intervalId = setInterval(saveDraft, 30000); // Save every 30 seconds
+    // Save immediately on each change
+    saveDraft();
 
-    // Also save when component unmounts
+    // Cleanup - save on unmount if not submitted
     return () => {
-      clearInterval(intervalId);
-      saveDraft();
+      if (!formSubmittedRef.current) {
+        saveDraft();
+      }
     };
   }, [tarif]);
 
@@ -115,6 +119,7 @@ const NewTarif = () => {
   // Timer dialog state
   const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
   const [activeTimerRowIndex, setActiveTimerRowIndex] = useState(null);
+  const formSubmittedRef = useRef(false);
 
   const fetchWorkers = async () => {
     try {
@@ -339,8 +344,8 @@ const NewTarif = () => {
   };
 
   const saveTarifications = async () => {
-    // Clear the saved draft when submitting
-    localStorage.removeItem(STORAGE_KEY);
+    // Don't clear localStorage yet - wait for successful submission
+    formSubmittedRef.current = true; // Mark form as submitting
 
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
@@ -420,9 +425,11 @@ const NewTarif = () => {
           color: "white",
         },
       });
+      // Only clear localStorage after successful API call
       localStorage.removeItem(STORAGE_KEY);
       navigate(-1);
     } catch (error) {
+      formSubmittedRef.current = false; // Reset if there's an error
       toast({
         title: "Xatolik",
         description:
