@@ -125,11 +125,29 @@ const NewTarif = () => {
   );
   const [activePopoverIndex, setActivePopoverIndex] = useState(null);
   const newRowRef = useRef(null);
+  const [lastTarifs, setLastTarifs] = useState([]);
 
   // Timer dialog state
   const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
   const [activeTimerRowIndex, setActiveTimerRowIndex] = useState(null);
   const formSubmittedRef = useRef(false);
+
+  const fetchLastTarifs = async () => {
+    try {
+      const response = await api.get("/technologist/lastTarifications");
+      setLastTarifs(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Tarifikatsiyalar olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchLastTarifs();
+  }, [id]);
 
   const fetchWorkers = async () => {
     try {
@@ -533,6 +551,9 @@ const NewTarif = () => {
                           )
                         ).map((name, idx) => (
                           <option key={idx} value={name} />
+                        ))}
+                        {lastTarifs?.map((tarif, idx) => (
+                          <option key={idx} value={tarif?.name} />
                         ))}
                       </datalist>
                     )}
