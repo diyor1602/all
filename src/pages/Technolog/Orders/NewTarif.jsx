@@ -507,20 +507,36 @@ const NewTarif = () => {
               <tr key={index}>
                 <td className="px-4 py-2 border text-center">{index + 1}</td>
                 <td className="px-4 py-2 border">
-                  <Input
-                    placeholder="Nomi"
-                    className="min-w-[400px]"
-                    type="text"
-                    value={item?.name || ""}
-                    onChange={(e) =>
-                      handleInputChange(index, "name", e.target.value)
-                    }
-                    ref={
-                      index === tarif.tarifications.length - 1
-                        ? newRowRef
-                        : null
-                    }
-                  />
+                  <>
+                    <Input
+                      placeholder="Nomi"
+                      className="min-w-[400px]"
+                      type="text"
+                      list="nomi-options"
+                      value={item?.name || ""}
+                      onChange={(e) =>
+                        handleInputChange(index, "name", e.target.value)
+                      }
+                      ref={
+                        index === tarif.tarifications.length - 1
+                          ? newRowRef
+                          : null
+                      }
+                    />
+                    {index === 0 && (
+                      <datalist id="nomi-options">
+                        {Array.from(
+                          new Set(
+                            tarif.tarifications
+                              .map((t) => t.name)
+                              .filter(Boolean)
+                          )
+                        ).map((name, idx) => (
+                          <option key={idx} value={name} />
+                        ))}
+                      </datalist>
+                    )}
+                  </>
                 </td>
                 <td className="px-4 py-2 border">
                   <Popover
