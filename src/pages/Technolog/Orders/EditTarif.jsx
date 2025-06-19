@@ -68,6 +68,7 @@ const EditTarif = () => {
   const [machines, setMachines] = useState([]);
   const [activePopoverIndex, setActivePopoverIndex] = useState(null);
   const newRowRef = useRef(null);
+  const formSubmittedRef = useRef(false);
 
   // Timer dialog state
   const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
@@ -151,7 +152,8 @@ const EditTarif = () => {
 
   // Save local changes to localStorage
   useEffect(() => {
-    if (!localChanges || initialLoad) return;
+    // Don't save if form was already submitted or no changes
+    if (formSubmittedRef.current || !localChanges || initialLoad) return;
 
     const saveDraft = () => {
       try {
@@ -171,10 +173,12 @@ const EditTarif = () => {
     // Save immediately on change
     saveDraft();
 
-    // Set up autosave interval
-    const intervalId = setInterval(saveDraft, 30000);
-
-    return () => clearInterval(intervalId);
+    // Cleanup - save on unmount if not submitted
+    return () => {
+      if (!formSubmittedRef.current) {
+        saveDraft();
+      }
+    };
   }, [localChanges, id, initialLoad]);
 
   // Load saved changes on initial render
@@ -401,6 +405,9 @@ const EditTarif = () => {
 
   const saveTarifications = async () => {
     if (!serverTarif) return;
+    
+    // Mark form as submitting
+    formSubmittedRef.current = true;
 
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
@@ -483,9 +490,12 @@ const EditTarif = () => {
           color: "white",
         },
       });
+      // Only clear localStorage after successful API call
       localStorage.removeItem(STORAGE_KEY);
       fetchTarif();
     } catch (error) {
+      // Reset form submission state on error
+      formSubmittedRef.current = false;
       toast({
         title: "Xatolik",
         description: "Tarifikatsiyani saqlashda xatolik yuz berdi",
