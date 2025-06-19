@@ -4,18 +4,20 @@ import { motion } from "framer-motion";
 import {
   BaggageClaim,
   Box,
-  Grape,
   HandCoins,
   History,
+  Plane,
   QrCode,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
+import Nakladnoy from "./Nakladnoy";
 
 const Settings = () => {
   return (
     <Routes>
       <Route path="*" element={<SettingsPage />} />
       <Route path="attendance-history" element={<AttendanceHistory />} />
+      <Route path="nakladnoy" element={<Nakladnoy />} />
     </Routes>
   );
 };
@@ -51,6 +53,12 @@ const SettingsPage = () => {
       icon: HandCoins,
       link: "/internalAccountant/manual",
       color: "bg-indigo-500",
+    },
+    {
+      name: "Nakladnoy",
+      icon: Plane,
+      link: "/internalAccountant/settings/nakladnoy",
+      color: "bg-orange-500",
     },
   ];
 
