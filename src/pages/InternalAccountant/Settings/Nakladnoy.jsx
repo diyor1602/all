@@ -28,20 +28,17 @@ const getCardColor = (index) => {
 const Nakladnoy = () => {
   const { toast } = useToast();
 
-  const [departments, setDepartments] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState("all");
   const [loading, setLoading] = useState(false);
   const [downloadingIds, setDownloadingIds] = useState({});
 
-  const fetchDepartments = async () => {
+  const fetchGroups = async () => {
     setLoading(true);
     try {
       const response = await api.get("/internalAccountant/departments");
       const allSubDepartments = response.data.flatMap(
         (main) => main.departments
       );
-      setDepartments(allSubDepartments);
       setGroups(allSubDepartments.flatMap((dept) => dept.groups));
     } catch (error) {
       toast({
@@ -55,10 +52,10 @@ const Nakladnoy = () => {
   };
 
   useEffect(() => {
-    fetchDepartments();
+    fetchGroups();
   }, []);
 
-  const handleDownload = async (groupId) => {
+  const handleDownload = async (groupId, groupName) => {
     setDownloadingIds((prev) => ({ ...prev, [groupId]: true }));
     try {
       const response = await api.get(`/internalAccountant/nakladnoy`, {
@@ -71,7 +68,7 @@ const Nakladnoy = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `nakladnoy.pdf`;
+      link.download = `nakladnoy_${groupName}.pdf`;
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -120,7 +117,7 @@ const Nakladnoy = () => {
                     variant="outline"
                     size="sm"
                     className="w-full mt-2"
-                    onClick={() => handleDownload(group.id)}
+                    onClick={() => handleDownload(group.id, group.name)}
                   >
                     {downloadingIds[group.id] ? (
                       <>
