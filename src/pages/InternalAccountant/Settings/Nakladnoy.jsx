@@ -68,7 +68,9 @@ const Nakladnoy = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `nakladnoy_${groupName}.pdf`;
+      link.download = `nakladnoy_${groupName}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
