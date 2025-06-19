@@ -39,24 +39,69 @@ import {
 } from "@/components/ui/select";
 import TimerDialog from "./TimerDialog";
 
+const STORAGE_KEY = 'tarif_draft';
+
 const NewTarif = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [tarif, setTarif] = useState({
-    name: "",
-    submodel_id: parseInt(id),
-    tarifications: [
-      {
-        name: "",
-        employee: { id: null },
-        razryad: { id: null },
-        typewriter: { id: null },
-        second: 0,
-        summa: 0,
-      },
-    ],
+  const [tarif, setTarif] = useState(() => {
+    // Try to load from localStorage on initial render
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        // Only use saved data if it's for the same submodel
+        if (parsed.submodel_id === parseInt(id)) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Failed to parse saved tarif data', e);
+      }
+    }
+    // Default state if no saved data
+    return {
+      name: "",
+      submodel_id: parseInt(id),
+      tarifications: [
+        {
+          name: "",
+          employee: { id: null },
+          razryad: { id: null },
+          typewriter: { id: null },
+          second: 0,
+          summa: 0,
+        },
+      ],
+    };
   });
+  
+  // Autosave effect
+  useEffect(() => {
+    // Save to localStorage whenever tarif changes
+    const saveDraft = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tarif));
+      } catch (e) {
+        console.error('Failed to save draft', e);
+      }
+    };
+
+    // Set up autosave interval
+    const intervalId = setInterval(saveDraft, 30000); // Save every 30 seconds
+    
+    // Also save when component unmounts
+    return () => {
+      clearInterval(intervalId);
+      saveDraft();
+    };
+  }, [tarif]);
+  
+  // Fetch ranks and machines on mount
+  useEffect(() => {
+    fetchRanks();
+    fetchMachines();
+  }, [id]);
   const [saving, setSaving] = useState(false);
   const [workers, setWorkers] = useState([]);
   const [ranks, setRanks] = useState([]);
@@ -114,10 +159,7 @@ const NewTarif = () => {
     }
   };
 
-  useEffect(() => {
-    fetchRanks();
-    fetchMachines();
-  }, [id]);
+
 
   useEffect(() => {
     if (tarif?.submodel_id) {
@@ -299,6 +341,9 @@ const NewTarif = () => {
   };
 
   const saveTarifications = async () => {
+    // Clear the saved draft when submitting
+    localStorage.removeItem(STORAGE_KEY);
+    
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
     const hasEmptyRazryad = tarif?.tarifications?.some(
