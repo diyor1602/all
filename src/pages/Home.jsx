@@ -23,15 +23,6 @@ const Home = () => {
   // App data states - these will only be used after authentication
   const [outputs, setOutputs] = useState([]);
   const [exampleOutputs, setExampleOutputs] = useState([]);
-  const [employeeCount, setEmployeeCount] = useState(0);
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
-  const [aupCount, setAupCount] = useState(0);
-
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  // App data states - these will only be used after authentication
-  const [outputs, setOutputs] = useState([]);
-  const [exampleOutputs, setExampleOutputs] = useState([]);
   const [groupEarnings, setGroupEarnings] = useState([]);
   const [employeeCount, setEmployeeCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -74,19 +65,6 @@ const Home = () => {
       const response = await api.get("/sewingOutputs");
       const data = await response.data;
 
-      // Process the data
-      processOutputData(data.sewing_outputs);
-      processExampleOutputData(data.example_outputs);
-      setEmployeeCount(data.simple);
-      setAupCount(data.aup);
-    } catch (error) {
-      toast({
-        title: "Xatolik!",
-        description: "Data olishda xatolik",
-        variant: "destructive",
-      });
-    }
-  };
       // Process the data
       processOutputData(data.sewing_outputs);
       processExampleOutputData(data.example_outputs);
@@ -281,108 +259,6 @@ const Home = () => {
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-500 text-sm font-medium">
-                    Jami natija
-                  </p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {outputs.reduce(
-                      (total, output) => total + output.total_quantity,
-                      0
-                    )}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-pink-500 to-pink-700 rounded-xl shadow-lg">
-                  <ChartNoAxesCombined className="text-white" size={24} />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-500 text-sm font-medium">
-                    Jami ishchilar
-                  </p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    <span className="text-green-500">{employeeCount}</span> /{" "}
-                    {employeeCount + aupCount}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl shadow-lg">
-                  <Users className="text-white" size={24} />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-500 text-sm font-medium">AUP</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {aupCount}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-yellow-600 to-yellow-800 rounded-xl shadow-lg">
-                  <Users className="text-white" size={24} />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-500 text-sm font-medium">
-                    Bajarilgan ortacha plan
-                  </p>
-                  {(() => {
-                    // Calculate average progress across all outputs
-                    const avgProgress =
-                      outputs.length > 0
-                        ? Math.round(
-                            outputs.reduce((sum, output) => {
-                              const progress =
-                                output.today_plan > 0
-                                  ? (output.today_quantity /
-                                      output.today_plan) *
-                                    100
-                                  : 0;
-                              return sum + progress;
-                            }, 0) / outputs.length
-                          )
-                        : 0;
-                    const style = getProgressStyle(avgProgress);
-                    return (
-                      <p className={`text-2xl font-bold ${style.text}`}>
-                        {avgProgress}%
-                      </p>
-                    );
-                  })()}
-                </div>
-                <div
-                  className={`p-3 rounded-xl shadow-lg bg-gradient-to-r ${(() => {
-                    // Use the same average progress for the background style
-                    const avgProgress =
-                      outputs.length > 0
-                        ? Math.round(
-                            outputs.reduce((sum, output) => {
-                              const progress =
-                                output.today_plan > 0
-                                  ? (output.today_quantity /
-                                      output.today_plan) *
-                                    100
-                                  : 0;
-                              return sum + progress;
-                            }, 0) / outputs.length
-                          )
-                        : 0;
-                    return getProgressStyle(avgProgress).bg;
-                  })()}`}
-                >
-                  <ChartColumnIncreasing className="text-white" size={24} />
-                </div>
-              </div>
-            </div>
-          </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
