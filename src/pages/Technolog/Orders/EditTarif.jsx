@@ -166,7 +166,12 @@ const EditTarif = () => {
           })
         );
       } catch (e) {
-        console.error("Failed to save draft", e);
+        toast({
+          title: "Xatolik",
+          description: "Tarifikatsiyani qoralamaga saqlashda xatolik",
+          variant: "destructive",
+          duration: 1000,
+        });
       }
     };
 
@@ -193,7 +198,12 @@ const EditTarif = () => {
           setLocalChanges(parsed);
         }
       } catch (e) {
-        console.error("Failed to parse saved tarif data", e);
+        toast({
+          title: "Xatolik",
+          description: "Tarifikatsiyani qoralamadan olishda xatolik",
+          variant: "destructive",
+          duration: 1000,
+        });
       }
     }
     setInitialLoad(false);
@@ -405,7 +415,7 @@ const EditTarif = () => {
 
   const saveTarifications = async () => {
     if (!serverTarif) return;
-    
+
     // Mark form as submitting
     formSubmittedRef.current = true;
 
