@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select";
 import TimerDialog from "./TimerDialog";
 
-const STORAGE_KEY = 'tarif_draft';
+const STORAGE_KEY = "tarif_draft";
 
 const NewTarif = () => {
   const { id } = useParams();
@@ -56,7 +56,7 @@ const NewTarif = () => {
           return parsed;
         }
       } catch (e) {
-        console.error('Failed to parse saved tarif data', e);
+        console.error("Failed to parse saved tarif data", e);
       }
     }
     // Default state if no saved data
@@ -75,7 +75,7 @@ const NewTarif = () => {
       ],
     };
   });
-  
+
   // Autosave effect
   useEffect(() => {
     // Save to localStorage whenever tarif changes
@@ -83,20 +83,20 @@ const NewTarif = () => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tarif));
       } catch (e) {
-        console.error('Failed to save draft', e);
+        console.error("Failed to save draft", e);
       }
     };
 
     // Set up autosave interval
     const intervalId = setInterval(saveDraft, 30000); // Save every 30 seconds
-    
+
     // Also save when component unmounts
     return () => {
       clearInterval(intervalId);
       saveDraft();
     };
   }, [tarif]);
-  
+
   // Fetch ranks and machines on mount
   useEffect(() => {
     fetchRanks();
@@ -158,8 +158,6 @@ const NewTarif = () => {
       });
     }
   };
-
-
 
   useEffect(() => {
     if (tarif?.submodel_id) {
@@ -310,7 +308,7 @@ const NewTarif = () => {
 
     const updatedTarifications = [...tarif.tarifications];
     updatedTarifications.splice(index, 1);
-    
+
     setTarif({
       ...tarif,
       tarifications: updatedTarifications,
@@ -343,7 +341,7 @@ const NewTarif = () => {
   const saveTarifications = async () => {
     // Clear the saved draft when submitting
     localStorage.removeItem(STORAGE_KEY);
-    
+
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
     const hasEmptyRazryad = tarif?.tarifications?.some(
@@ -422,6 +420,7 @@ const NewTarif = () => {
           color: "white",
         },
       });
+      localStorage.removeItem(STORAGE_KEY);
       navigate(-1);
     } catch (error) {
       toast({
