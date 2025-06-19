@@ -145,7 +145,7 @@ const TimerDialog = ({ isOpen, onClose, onSave }) => {
           />
 
           {/* Timer Controls */}
-          <div className="flex space-x-3 mt-4">
+          <div className="flex space-x-3 mt-4 flex-wrap gap-1">
             {!isRunning ? (
               <Button
                 onClick={startTimer}
@@ -183,10 +183,9 @@ const TimerDialog = ({ isOpen, onClose, onSave }) => {
               onClick={resetTimer}
               variant="outline"
               disabled={isRunning || isPaused || measurements.length === 0}
-              className="ml-2"
             >
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Tozalash
+              <RotateCcw className="h-4 w-4" />
+              <span className="hidden md:block">Tozalash</span>
             </Button>
           </div>
 

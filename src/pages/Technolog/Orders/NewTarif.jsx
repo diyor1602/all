@@ -56,7 +56,12 @@ const NewTarif = () => {
           return parsed;
         }
       } catch (e) {
-        console.error("Failed to parse saved tarif data", e);
+        toast({
+          title: "Xatolik",
+          description: "Tarifikatsiyani qoralamadan olishda xatolik",
+          variant: "destructive",
+          duration: 1000,
+        });
       }
     }
     // Default state if no saved data
@@ -86,7 +91,12 @@ const NewTarif = () => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tarif));
       } catch (e) {
-        console.error("Failed to save draft", e);
+        toast({
+          title: "Xatolik",
+          description: "Tarifikatsiyani qoralamaga saqlashda xatolik",
+          variant: "destructive",
+          duration: 1000,
+        });
       }
     };
 
