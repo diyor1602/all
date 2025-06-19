@@ -35,7 +35,7 @@ const Nakladnoy = () => {
   const fetchGroups = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/technolog/departments");
+      const response = await api.get("/technologist/departments");
       const allSubDepartments = response.data.flatMap(
         (main) => main.departments
       );
@@ -58,7 +58,7 @@ const Nakladnoy = () => {
   const handleDownload = async (groupId, groupName) => {
     setDownloadingIds((prev) => ({ ...prev, [groupId]: true }));
     try {
-      const response = await api.get(`/technolog/nakladnoy`, {
+      const response = await api.get(`/technologist/nakladnoy`, {
         params: {
           group_id: groupId,
         },
