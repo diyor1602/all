@@ -6,6 +6,7 @@ import EditTarif from "./Orders/EditTarif";
 import NewSpec from "./Orders/NewSpec";
 import NewTarif from "./Orders/NewTarif";
 import Machines from "./Machines/Machines";
+import Nakladnoy from "./Nakladnoy";
 
 const Technolog = () => {
   return (
@@ -18,6 +19,7 @@ const Technolog = () => {
       <Route path="*" element={<Navigate to="/home" replace />} />
       <Route path="new-tarif/:id" element={<NewTarif />} />
       <Route path="machines" element={<Machines />} />
+      <Route path="nakladnoy" element={<Nakladnoy />} />
     </Routes>
   );
 };
