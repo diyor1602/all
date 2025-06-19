@@ -598,7 +598,16 @@ const Home = () => {
                       className="hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 transition-colors"
                     >
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-indigo-800">
-                        {groupEarning.group_name || "-"}
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <p>{groupEarning.group_name}</p>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{groupEarning.responsibleUser}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
                         {groupEarning.attendance_count || "0"}
