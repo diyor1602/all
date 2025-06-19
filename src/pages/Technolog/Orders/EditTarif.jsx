@@ -12,6 +12,7 @@ import {
   Check,
   ChevronsUpDown,
   Timer,
+  Trash,
 } from "lucide-react";
 import {
   Command,
@@ -245,6 +246,25 @@ const EditTarif = () => {
     }
     setIsTimerDialogOpen(false);
     setActiveTimerRowIndex(null);
+  };
+
+  const handleDeleteRow = (index) => {
+    if (tarif?.tarifications?.length <= 1) {
+      toast({
+        title: "Diqqat",
+        description: "Kamida bitta qator bo'lishi kerak",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedTarifications = [...tarif.tarifications];
+    updatedTarifications.splice(index, 1);
+
+    setTarif({
+      ...tarif,
+      tarifications: updatedTarifications,
+    });
   };
 
   const addNewRow = () => {
@@ -578,9 +598,25 @@ const EditTarif = () => {
                     </div>
                   </td>
                   <td className="px-4 py-2 border">
-                    {parseFloat(item?.summa).toLocaleString("en-US", {
-                      maximumFractionDigits: 2,
-                    })}
+                    <div className="flex items-center justify-between">
+                      <span>
+                        {parseFloat(item?.summa).toLocaleString("en-US", {
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteRow(index);
+                        }}
+                        title="O'chirish"
+                      >
+                        <Trash className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
