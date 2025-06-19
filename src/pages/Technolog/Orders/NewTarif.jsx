@@ -13,6 +13,7 @@ import {
   ChevronsUpDown,
   ClipboardPaste,
   Timer,
+  Trash,
 } from "lucide-react";
 import {
   Command,
@@ -38,24 +39,83 @@ import {
 } from "@/components/ui/select";
 import TimerDialog from "./TimerDialog";
 
+const STORAGE_KEY = "tarif_draft";
+
 const NewTarif = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [tarif, setTarif] = useState({
-    name: "",
-    submodel_id: parseInt(id),
-    tarifications: [
-      {
-        name: "",
-        employee: { id: null },
-        razryad: { id: null },
-        typewriter: { id: null },
-        second: 0,
-        summa: 0,
-      },
-    ],
+  const [tarif, setTarif] = useState(() => {
+    // Try to load from localStorage on initial render
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        // Only use saved data if it's for the same submodel
+        if (parsed.submodel_id === parseInt(id)) {
+          return parsed;
+        }
+      } catch (e) {
+        toast({
+          title: "Xatolik",
+          description: "Tarifikatsiyani qoralamadan olishda xatolik",
+          variant: "destructive",
+          duration: 1000,
+        });
+      }
+    }
+    // Default state if no saved data
+    return {
+      name: "",
+      submodel_id: parseInt(id),
+      tarifications: [
+        {
+          name: "",
+          employee: { id: null },
+          razryad: { id: null },
+          typewriter: { id: null },
+          second: 0,
+          summa: 0,
+        },
+      ],
+    };
   });
+
+  // Autosave effect - saves after every change
+  useEffect(() => {
+    // Don't save if form was already submitted
+    if (formSubmittedRef.current) return;
+
+    // Save to localStorage whenever tarif changes
+    const saveDraft = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tarif));
+      } catch (e) {
+        toast({
+          title: "Xatolik",
+          description: "Tarifikatsiyani qoralamaga saqlashda xatolik",
+          variant: "destructive",
+          duration: 1000,
+        });
+      }
+    };
+
+    // Save immediately on each change
+    saveDraft();
+
+    // Cleanup - save on unmount if not submitted
+    return () => {
+      if (!formSubmittedRef.current) {
+        saveDraft();
+      }
+    };
+  }, [tarif]);
+
+  // Fetch ranks and machines on mount
+  useEffect(() => {
+    fetchRanks();
+    fetchMachines();
+  }, [id]);
   const [saving, setSaving] = useState(false);
   const [workers, setWorkers] = useState([]);
   const [ranks, setRanks] = useState([]);
@@ -69,6 +129,7 @@ const NewTarif = () => {
   // Timer dialog state
   const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
   const [activeTimerRowIndex, setActiveTimerRowIndex] = useState(null);
+  const formSubmittedRef = useRef(false);
 
   const fetchWorkers = async () => {
     try {
@@ -112,11 +173,6 @@ const NewTarif = () => {
       });
     }
   };
-
-  useEffect(() => {
-    fetchRanks();
-    fetchMachines();
-  }, [id]);
 
   useEffect(() => {
     if (tarif?.submodel_id) {
@@ -255,6 +311,25 @@ const NewTarif = () => {
     setActiveTimerRowIndex(null);
   };
 
+  const handleDeleteRow = (index) => {
+    if (tarif.tarifications.length <= 1) {
+      toast({
+        title: "Diqqat",
+        description: "Kamida bitta qator bo'lishi kerak",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedTarifications = [...tarif.tarifications];
+    updatedTarifications.splice(index, 1);
+
+    setTarif({
+      ...tarif,
+      tarifications: updatedTarifications,
+    });
+  };
+
   const addNewRow = () => {
     const newRow = {
       name: "",
@@ -279,6 +354,9 @@ const NewTarif = () => {
   };
 
   const saveTarifications = async () => {
+    // Don't clear localStorage yet - wait for successful submission
+    formSubmittedRef.current = true; // Mark form as submitting
+
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
     const hasEmptyRazryad = tarif?.tarifications?.some(
@@ -357,8 +435,11 @@ const NewTarif = () => {
           color: "white",
         },
       });
+      // Only clear localStorage after successful API call
+      localStorage.removeItem(STORAGE_KEY);
       navigate(-1);
     } catch (error) {
+      formSubmittedRef.current = false; // Reset if there's an error
       toast({
         title: "Xatolik",
         description:
@@ -418,6 +499,7 @@ const NewTarif = () => {
               <th className="px-4 py-2 border">Mashina</th>
               <th className="px-4 py-2 border">Sekund</th>
               <th className="px-4 py-2 border">Summa (so'm)</th>
+              <th className="px-4 py-2 border">O'chirish</th>
             </tr>
           </thead>
           <tbody>
@@ -425,20 +507,36 @@ const NewTarif = () => {
               <tr key={index}>
                 <td className="px-4 py-2 border text-center">{index + 1}</td>
                 <td className="px-4 py-2 border">
-                  <Input
-                    placeholder="Nomi"
-                    className="min-w-[400px]"
-                    type="text"
-                    value={item?.name || ""}
-                    onChange={(e) =>
-                      handleInputChange(index, "name", e.target.value)
-                    }
-                    ref={
-                      index === tarif.tarifications.length - 1
-                        ? newRowRef
-                        : null
-                    }
-                  />
+                  <>
+                    <Input
+                      placeholder="Nomi"
+                      className="min-w-[400px]"
+                      type="text"
+                      list="nomi-options"
+                      value={item?.name || ""}
+                      onChange={(e) =>
+                        handleInputChange(index, "name", e.target.value)
+                      }
+                      ref={
+                        index === tarif.tarifications.length - 1
+                          ? newRowRef
+                          : null
+                      }
+                    />
+                    {index === 0 && (
+                      <datalist id="nomi-options">
+                        {Array.from(
+                          new Set(
+                            tarif.tarifications
+                              .map((t) => t.name)
+                              .filter(Boolean)
+                          )
+                        ).map((name, idx) => (
+                          <option key={idx} value={name} />
+                        ))}
+                      </datalist>
+                    )}
+                  </>
                 </td>
                 <td className="px-4 py-2 border">
                   <Popover
@@ -578,6 +676,18 @@ const NewTarif = () => {
                   {parseFloat(item?.summa).toLocaleString("en-US", {
                     maximumFractionDigits: 2,
                   })}
+                </td>
+                <td className="px-4 py-2 border">
+                  <div className="w-full text-center">
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDeleteRow(index)}
+                      title="O'chirish"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

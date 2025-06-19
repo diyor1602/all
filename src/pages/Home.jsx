@@ -29,6 +29,16 @@ const Home = () => {
 
   const { toast } = useToast();
   const navigate = useNavigate();
+  // App data states - these will only be used after authentication
+  const [outputs, setOutputs] = useState([]);
+  const [exampleOutputs, setExampleOutputs] = useState([]);
+  const [groupEarnings, setGroupEarnings] = useState([]);
+  const [employeeCount, setEmployeeCount] = useState(0);
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [aupCount, setAupCount] = useState(0);
+
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Always define refs at the top level
   const dataIntervalRef = useRef(null);
@@ -69,6 +79,20 @@ const Home = () => {
       processExampleOutputData(data.example_outputs);
       setEmployeeCount(data.simple);
       setAupCount(data.aup);
+    } catch (error) {
+      toast({
+        title: "Xatolik!",
+        description: "Data olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+      // Process the data
+      processOutputData(data.sewing_outputs);
+      processExampleOutputData(data.example_outputs);
+      setEmployeeCount(data.simple);
+      setAupCount(data.aup);
+      setGroupEarnings(data.group_earnings);
     } catch (error) {
       toast({
         title: "Xatolik!",
@@ -359,6 +383,108 @@ const Home = () => {
               </div>
             </div>
           </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Jami natija
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {outputs.reduce(
+                      (total, output) => total + output.total_quantity,
+                      0
+                    )}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-pink-500 to-pink-700 rounded-xl shadow-lg">
+                  <ChartNoAxesCombined className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Jami ishchilar
+                  </p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    <span className="text-green-500">{employeeCount}</span> /{" "}
+                    {employeeCount + aupCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl shadow-lg">
+                  <Users className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">AUP</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {aupCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-yellow-600 to-yellow-800 rounded-xl shadow-lg">
+                  <Users className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Bajarilgan o'rtacha plan
+                  </p>
+                  {(() => {
+                    // Calculate average progress across all outputs
+                    const avgProgress =
+                      outputs.length > 0
+                        ? Math.round(
+                            outputs.reduce((sum, output) => {
+                              const progress =
+                                output.today_plan > 0
+                                  ? (output.today_quantity /
+                                      output.today_plan) *
+                                    100
+                                  : 0;
+                              return sum + progress;
+                            }, 0) / outputs.length
+                          )
+                        : 0;
+                    const style = getProgressStyle(avgProgress);
+                    return (
+                      <p className={`text-2xl font-bold ${style.text}`}>
+                        {avgProgress}%
+                      </p>
+                    );
+                  })()}
+                </div>
+                <div
+                  className={`p-3 rounded-xl shadow-lg bg-gradient-to-r ${(() => {
+                    // Use the same average progress for the background style
+                    const avgProgress =
+                      outputs.length > 0
+                        ? Math.round(
+                            outputs.reduce((sum, output) => {
+                              const progress =
+                                output.today_plan > 0
+                                  ? (output.today_quantity /
+                                      output.today_plan) *
+                                    100
+                                  : 0;
+                              return sum + progress;
+                            }, 0) / outputs.length
+                          )
+                        : 0;
+                    return getProgressStyle(avgProgress).bg;
+                  })()}`}
+                >
+                  <ChartColumnIncreasing className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Data Table */}
           <div className="bg-white rounded-xl shadow-md p-0 sm:p-4 md:p-6 mb-8">
@@ -558,6 +684,77 @@ const Home = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <div className="w-full overflow-x-auto rounded-lg shadow-md">
+          <div className="min-w-full overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-indigo-50 dark:bg-indigo-900/30">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    Gurux
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    Davomat
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    Qilgan ishi
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    O'rtacha summa
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+                    Jami topilgan
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+                {groupEarnings
+                  ?.sort(
+                    (a, b) =>
+                      parseFloat(b.per_employee_earning) -
+                      parseFloat(a.per_employee_earning)
+                  )
+                  ?.map((groupEarning, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-indigo-800">
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <p>{groupEarning.group_name}</p>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{groupEarning.responsibleUser}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
+                        {groupEarning.attendance_count || "0"}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
+                        {parseFloat(groupEarning.quantity || 0)?.toLocaleString(
+                          "ru-RU"
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
+                        {parseFloat(
+                          groupEarning.per_employee_earning || 0
+                        )?.toLocaleString("ru-RU")}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-semibold text-green-600 dark:text-green-400">
+                        {parseFloat(
+                          groupEarning.today_earning || 0
+                        )?.toLocaleString("ru-RU")}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

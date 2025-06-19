@@ -824,7 +824,7 @@ const OrderView = () => {
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 w-full">
+              <div className="flex items-center gap-2 w-full mt-6">
                 <Button
                   onClick={() => {
                     setSelectedTarifLang("uz");
