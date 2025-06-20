@@ -119,7 +119,7 @@ const Orders = () => {
                     "No Submodel"}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
-                  Tikkan gurux: {order.order_model?.submodels[0]?.group?.name}
+                  Tikkan guruh: {order.order_model?.submodels[0]?.group?.name}
                 </div>
               </div>
 

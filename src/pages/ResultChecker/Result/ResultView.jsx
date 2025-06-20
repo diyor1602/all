@@ -47,14 +47,14 @@ const getStatusText = (status) => {
 
 const getCardBackground = (index) => {
   const colors = [
-    'bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-400 dark:border-blue-500',
-    'bg-emerald-100 dark:bg-emerald-900/40 border-l-4 border-emerald-400 dark:border-emerald-500',
-    'bg-amber-100 dark:bg-amber-900/40 border-l-4 border-amber-400 dark:border-amber-500',
-    'bg-violet-100 dark:bg-violet-900/40 border-l-4 border-violet-400 dark:border-violet-500',
-    'bg-rose-100 dark:bg-rose-900/40 border-l-4 border-rose-400 dark:border-rose-500',
-    'bg-cyan-100 dark:bg-cyan-900/40 border-l-4 border-cyan-400 dark:border-cyan-500',
-    'bg-fuchsia-100 dark:bg-fuchsia-900/40 border-l-4 border-fuchsia-400 dark:border-fuchsia-500',
-    'bg-lime-100 dark:bg-lime-900/40 border-l-4 border-lime-400 dark:border-lime-500',
+    "bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-400 dark:border-blue-500",
+    "bg-emerald-100 dark:bg-emerald-900/40 border-l-4 border-emerald-400 dark:border-emerald-500",
+    "bg-amber-100 dark:bg-amber-900/40 border-l-4 border-amber-400 dark:border-amber-500",
+    "bg-violet-100 dark:bg-violet-900/40 border-l-4 border-violet-400 dark:border-violet-500",
+    "bg-rose-100 dark:bg-rose-900/40 border-l-4 border-rose-400 dark:border-rose-500",
+    "bg-cyan-100 dark:bg-cyan-900/40 border-l-4 border-cyan-400 dark:border-cyan-500",
+    "bg-fuchsia-100 dark:bg-fuchsia-900/40 border-l-4 border-fuchsia-400 dark:border-fuchsia-500",
+    "bg-lime-100 dark:bg-lime-900/40 border-l-4 border-lime-400 dark:border-lime-500",
   ];
   return colors[index % colors.length];
 };
@@ -198,7 +198,7 @@ const ResultView = () => {
   return (
     <>
       <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
-        Guruxlar
+        Guruhlar
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -207,7 +207,9 @@ const ResultView = () => {
           ?.map((group, index) => (
             <Card
               key={group?.id}
-              className={`overflow-hidden transition-all duration-300 h-fit transform hover:-translate-y-1 hover:shadow-xl ${getCardBackground(index)}`}
+              className={`overflow-hidden transition-all duration-300 h-fit transform hover:-translate-y-1 hover:shadow-xl ${getCardBackground(
+                index
+              )}`}
             >
               <CardHeader className="bg-gray-50 dark:bg-gray-800 p-4 border-b">
                 <div className="flex justify-between items-start">

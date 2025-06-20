@@ -569,7 +569,7 @@ const Home = () => {
               <thead className="bg-indigo-50 dark:bg-indigo-900/30">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
-                    Gurux
+                    Guruh
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
                     Davomat
