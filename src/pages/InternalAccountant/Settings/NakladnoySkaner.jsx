@@ -13,7 +13,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, QrCode, RefreshCw, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Loader2,
+  QrCode,
+  RefreshCw,
+  Zap,
+  Search,
+  Plus,
+  Minus,
+  Trash2,
+  Send,
+  CheckCircle,
+  Clock,
+  DollarSign,
+} from "lucide-react";
 
 const NakladnoySkanner = () => {
   const { toast } = useToast();
@@ -22,10 +37,21 @@ const NakladnoySkanner = () => {
   const inputRef = useRef(null);
   const [data, setData] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [selectedEmp, setSelectedEmp] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [empDetails, setEmpDetails] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [availableTarifs, setAvailableTarifs] = useState([]);
+  const [selectedTarifs, setSelectedTarifs] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const resetForm = () => {
     setCode("");
     setData(null);
+    setSelectedTarifs([]);
+    setSearchTerm("");
+    setAvailableTarifs([]);
   };
 
   const handleCodeChange = (e) => {
@@ -43,6 +69,27 @@ const NakladnoySkanner = () => {
     inputRef.current?.focus();
   };
 
+  const getEmpDetails = async () => {
+    try {
+      const response = await api.get(
+        `/internalAccountant/employees/${selectedEmp}`
+      );
+      setEmpDetails(response.data?.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: error.response?.data?.message || "Xatolik",
+        description: "Xodim ma'lumotlari olishda xatolik",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (selectedEmp) {
+      getEmpDetails();
+    }
+  }, [selectedEmp]);
+
   useEffect(() => {
     if (data) {
       setCode("");
@@ -56,13 +103,19 @@ const NakladnoySkanner = () => {
     try {
       setIsScanning(true);
 
-      const employeeID = code.split("-")[1] || code;
-      const date = code.split("-")[0];
+      const employeeID = code.split("+")[0];
+      const date = code.split("+")[1];
+
+      setSelectedEmp(
+        employeeID?.startsWith("A") ? employeeID?.split("A")[1] : employeeID
+      );
+      setSelectedDate(date);
 
       toast({
         title: "Muvaffaqiyatli",
         description: "Ma'lumotlar muvaffaqiyatli yuklandi",
         variant: "default",
+        duration: 1000,
       });
     } catch (error) {
       toast({
@@ -75,16 +128,151 @@ const NakladnoySkanner = () => {
     }
   };
 
+  const getTarifs = async () => {
+    if (!searchTerm.trim()) {
+      setAvailableTarifs([]);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      const response = await api.get(
+        `/internalAccountant/tarifications/search`,
+        {
+          params: {
+            search: searchTerm,
+          },
+        }
+      );
+      setAvailableTarifs(response.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: error.response?.data?.message || "Xatolik",
+        description: "Tariflar olishda xatolik",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      getTarifs();
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
+  const addTarification = (tarif) => {
+    const isAlreadySelected = selectedTarifs.some(
+      (item) => item.id === tarif.id
+    );
+
+    if (isAlreadySelected) {
+      toast({
+        variant: "destructive",
+        title: "Diqqat",
+        description: "Bu tarifikatsiya allaqachon tanlangan",
+      });
+      return;
+    }
+
+    setSelectedTarifs((prev) => [...prev, { ...tarif, quantity: 1 }]);
+    setSearchTerm("");
+    setAvailableTarifs([]);
+
+    toast({
+      title: "Qo'shildi",
+      description: `${tarif.name} ro'yxatga qo'shildi`,
+      duration: 1000,
+    });
+  };
+
+  const updateQuantity = (id, newQuantity) => {
+    if (newQuantity < 1) return;
+
+    setSelectedTarifs((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  };
+
+  const removeTarification = (id) => {
+    setSelectedTarifs((prev) => prev.filter((item) => item.id !== id));
+    toast({
+      title: "O'chirildi",
+      description: "Tarifikatsiya ro'yxatdan o'chirildi",
+      duration: 1000,
+    });
+  };
+
+  const calculateTotal = () => {
+    return selectedTarifs.reduce((total, item) => {
+      return total + Number.parseFloat(item.summa) * item.quantity;
+    }, 0);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedEmp || selectedTarifs.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Xodim va kamida bitta tarifikatsiya tanlang",
+      });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const payload = {
+        employee_id: selectedEmp,
+        tarifications: selectedTarifs.map((work) => ({
+          id: work.id,
+          quantity: Number.parseInt(work.quantity),
+        })),
+        date: selectedDate,
+      };
+
+      await api.post(`/internalAccountant/salaryCalculate`, payload);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Ma'lumotlar muvaffaqiyatli yuborildi",
+        style: {
+          background: "green",
+          color: "white",
+        },
+        duration: 1500,
+      });
+
+      // Reset selected tarifications after successful submission
+      setSelectedTarifs([]);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: error.response?.data?.message || "Xatolik",
+        description: "Ma'lumotlarni yuborishda xatolik",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col space-y-6 p-4 md:p-6 max-w-5xl mx-auto">
+    <div className="flex flex-col space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex flex-col space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight">Vazifa Skaneri</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Nakladnoy Skaneri
+        </h1>
+        <p className="text-muted-foreground text-lg">
           Xodimlar va vazifalarni skanerlash va ma'lumotlarni ko'rish uchun
         </p>
       </div>
 
-      <Card>
+      <Card className="border-2 border-dashed border-gray-200 hover:border-blue-300 transition-colors">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <QrCode className="h-5 w-5 text-primary" />
@@ -106,6 +294,7 @@ const NakladnoySkanner = () => {
                   handleScan();
                 }
               }}
+              className="text-lg py-3"
               autoFocus
             />
             {isScanning && (
@@ -117,12 +306,12 @@ const NakladnoySkanner = () => {
           <Button
             variant="outline"
             onClick={resetForm}
-            disabled={!code && !data}
+            disabled={!code && !data && selectedTarifs.length === 0}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Tozalash
           </Button>
-          <Button onClick={handleScan} disabled={!code || isScanning}>
+          <Button onClick={handleScan} disabled={!code || isScanning} size="lg">
             {isScanning ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -137,6 +326,240 @@ const NakladnoySkanner = () => {
           </Button>
         </CardFooter>
       </Card>
+
+      {selectedEmp && empDetails && (
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-800">
+              <CheckCircle className="h-5 w-5" />
+              Xodim Ma'lumotlari
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">ID</p>
+                <p className="text-lg font-semibold">{empDetails?.id}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Sana</p>
+                <p className="text-lg font-semibold">
+                  {selectedDate?.split("-")?.reverse()?.join(".")}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Xodim</p>
+                <p className="text-lg font-semibold">{empDetails?.name}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Bo'lim</p>
+                <p className="text-lg font-semibold">
+                  {empDetails?.department?.name || "-"}
+                </p>
+              </div>
+            </div>
+            {empDetails?.group?.name && (
+              <div className="mt-4">
+                <Badge variant="secondary" className="text-sm">
+                  Guruh: {empDetails.group.name}
+                </Badge>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedEmp && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-primary" />
+              Tarifikatsiya Qidirish
+            </CardTitle>
+            <CardDescription>
+              Tarifikatsiya nomini kiriting va ro'yxatdan tanlang
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Tarifikatsiya nomini kiriting..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+              {isSearching && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+            </div>
+
+            {availableTarifs.length > 0 && (
+              <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
+                {availableTarifs.map((tarif) => (
+                  <div
+                    key={tarif.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => addTarification(tarif)}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium">{tarif.name}</h4>
+                        <Badge variant="outline">{tarif.code}</Badge>
+                      </div>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {tarif.second}s
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3" />
+                          {tarif.summa} so'm
+                        </span>
+                        <span>Razryad: {tarif.razryad?.name}</span>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="ghost">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedTarifs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Tanlangan Tarifikatsiyalar
+              </span>
+              <Badge variant="secondary">{selectedTarifs.length} ta</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {selectedTarifs.map((tarif, index) => (
+                <div
+                  key={tarif.id}
+                  className="border rounded-lg p-4 bg-gray-50"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-semibold text-lg">{tarif.name}</h4>
+                        <Badge>{tarif.code}</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Vaqt:</span>
+                          <span className="ml-1 font-medium">
+                            {tarif.second}s
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Narx:</span>
+                          <span className="ml-1 font-medium">
+                            {tarif.summa} so'm
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Razryad:</span>
+                          <span className="ml-1 font-medium">
+                            {tarif.razryad?.name}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Jami:</span>
+                          <span className="ml-1 font-bold text-green-600">
+                            {(
+                              Number.parseFloat(tarif.summa) * tarif.quantity
+                            ).toLocaleString("ru-RU")}{" "}
+                            so'm
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          updateQuantity(tarif.id, tarif.quantity - 1)
+                        }
+                        disabled={tarif.quantity <= 1}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <Input
+                        type="number"
+                        value={tarif.quantity}
+                        onChange={(e) =>
+                          updateQuantity(
+                            tarif.id,
+                            Number.parseInt(e.target.value) || 1
+                          )
+                        }
+                        className="text-center"
+                        min="1"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          updateQuantity(tarif.id, tarif.quantity + 1)
+                        }
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => removeTarification(tarif.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="flex items-center justify-between">
+              <div className="text-xl font-bold">
+                Umumiy summa:{" "}
+                <span className="text-green-600">
+                  {calculateTotal().toLocaleString("ru-RU")} so'm
+                </span>
+              </div>
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting || selectedTarifs.length === 0}
+                size="lg"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Yuborilmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Ma'lumotlarni Yuborish
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
