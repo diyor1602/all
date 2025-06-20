@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Check, ChevronsUpDown } from "lucide-react";
+import { Download, Loader2, ChevronsUpDown } from "lucide-react";
 import {
   Card,
   CardContent,
