@@ -45,6 +45,7 @@ const NakladnoySkanner = () => {
   const [selectedTarifs, setSelectedTarifs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [history, setHistory] = useState([]);
 
   const resetForm = () => {
     setCode("");
@@ -96,6 +97,18 @@ const NakladnoySkanner = () => {
       inputRef.current?.focus();
     }
   }, [data]);
+
+  // Load history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('nakladnoyHistory');
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (error) {
+        console.error('Failed to parse history:', error);
+      }
+    }
+  }, []);
 
   const handleScan = () => {
     if (!code) return;
@@ -214,6 +227,33 @@ const NakladnoySkanner = () => {
     }, 0);
   };
 
+  const addToHistory = (data) => {
+    const historyItem = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      employee: empDetails,
+      tarifs: selectedTarifs.map(t => ({
+        ...t,
+        total: Number.parseFloat(t.summa) * t.quantity
+      })),
+      total: calculateTotal()
+    };
+
+    const newHistory = [historyItem, ...history].slice(0, 10); // Keep only last 10 items
+    setHistory(newHistory);
+    localStorage.setItem('nakladnoyHistory', JSON.stringify(newHistory));
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('nakladnoyHistory');
+    toast({
+      title: "Tarix tozalandi",
+      description: "Barcha tarix ma'lumotlari o'chirildi",
+      duration: 2000,
+    });
+  };
+
   const handleSubmit = async () => {
     if (!selectedEmp || selectedTarifs.length === 0) {
       toast({
@@ -237,6 +277,9 @@ const NakladnoySkanner = () => {
       };
 
       await api.post(`/internalAccountant/salaryCalculate`, payload);
+
+      // Add to history before resetting
+      addToHistory(payload);
 
       toast({
         title: "Muvaffaqiyatli",
@@ -559,6 +602,67 @@ const NakladnoySkanner = () => {
                 )}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {history.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-blue-600" />
+                Tarix
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearHistory}
+                className="text-red-500 hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Tozalash
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {history.map((item) => (
+              <div key={item.id} className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h4 className="font-semibold">
+                      {new Date(item.date).toLocaleString('ru-RU', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {item.employee?.name}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-green-600">
+                    {item.total.toLocaleString('ru-RU')} so'm
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 mt-2">
+                  {item.tarifs.map((tarif, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-gray-700">{tarif.name}</span>
+                      <span className="font-medium">
+                        {tarif.quantity} x {tarif.summa} ={' '}
+                        <span className="text-green-600">
+                          {tarif.total.toLocaleString('ru-RU')} so'm
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
