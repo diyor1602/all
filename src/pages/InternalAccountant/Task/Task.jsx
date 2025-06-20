@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import TaskPage from "./TaskPage";
 import TaskScanner from "./TaskScanner";
 
 const Task = () => {

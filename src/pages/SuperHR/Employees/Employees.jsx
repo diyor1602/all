@@ -50,7 +50,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const formatPhoneNumber = (phone) => {
   return phone
@@ -581,20 +581,24 @@ const Employees = () => {
                 </TableCell>
                 <TableCell className="text-right border">
                   <div className="flex items-center gap-2">
-                    <Eye
-                      size={16}
-                      className="text-blue-500 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer"
-                      onClick={() =>
-                        navigate(`/superhr/employees/view/${employee.id}`)
-                      }
-                    />
-                    <Pencil
-                      size={16}
-                      className="text-amber-500 hover:text-amber-600 hover:scale-110 transition-all duration-200 cursor-pointer"
-                      onClick={() =>
-                        navigate(`/superhr/employees/edit/${employee.id}`)
-                      }
-                    />
+                    <Link
+                      to={`/superhr/employees/view/${employee.id}`}
+                      target="_blank"
+                    >
+                      <Eye
+                        size={16}
+                        className="text-blue-500 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer"
+                      />
+                    </Link>
+                    <Link
+                      to={`/superhr/employees/edit/${employee.id}`}
+                      target="_blank"
+                    >
+                      <Pencil
+                        size={16}
+                        className="text-amber-500 hover:text-amber-600 hover:scale-110 transition-all duration-200 cursor-pointer"
+                      />
+                    </Link>
                     {employee?.status == "kicked" ? (
                       <UserPlus
                         size={16}
