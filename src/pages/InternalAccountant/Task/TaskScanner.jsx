@@ -132,9 +132,9 @@ const TaskScanner = () => {
       setSavedData((prev) => [
         {
           code: code.split("A")[1] || code,
-          tarif_code: taskData.box_tarification.tarification?.code,
-          vaqt: taskData.box_tarification.tarification?.second,
-          summa: taskData.box_tarification.tarification?.summa,
+          tarif_code: taskData.box_tarification?.tarification?.code,
+          vaqt: taskData.box_tarification?.tarification?.second,
+          summa: taskData.box_tarification?.tarification?.summa,
           miqdori: taskData.box_tarification?.quantity,
           jami_summa: taskData.box_tarification?.total,
           employee: taskData.employee?.name || "-",
@@ -392,14 +392,6 @@ const TaskScanner = () => {
                         </TableCell>
                         <TableCell className="border">
                           {data.box_tarification.tarification?.razryad?.name}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium border">
-                          Mashina
-                        </TableCell>
-                        <TableCell className="border">
-                          {data.box_tarification.tarification?.typewriter?.name}
                         </TableCell>
                       </TableRow>
                       <TableRow>

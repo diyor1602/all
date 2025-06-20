@@ -8,9 +8,11 @@ import {
   History,
   Plane,
   QrCode,
+  TreePalm,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 import Nakladnoy from "./Nakladnoy";
+import NakladnoySkaner from "./NakladnoySkaner";
 
 const Settings = () => {
   return (
@@ -18,6 +20,7 @@ const Settings = () => {
       <Route path="*" element={<SettingsPage />} />
       <Route path="attendance-history" element={<AttendanceHistory />} />
       <Route path="nakladnoy" element={<Nakladnoy />} />
+      <Route path="nakladnoy-skaner" element={<NakladnoySkaner />} />
     </Routes>
   );
 };
@@ -59,6 +62,12 @@ const SettingsPage = () => {
       icon: Plane,
       link: "/internalAccountant/settings/nakladnoy",
       color: "bg-orange-500",
+    },
+    {
+      name: "Nakladnoy Skaner",
+      icon: TreePalm,
+      link: "/internalAccountant/settings/nakladnoy-skaner",
+      color: "bg-emerald-500",
     },
   ];
 
