@@ -302,7 +302,7 @@ const NakladnoySkanner = () => {
             )}
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex justify-between gap-2 flex-wrap">
           <Button
             variant="outline"
             onClick={resetForm}
@@ -399,7 +399,7 @@ const NakladnoySkanner = () => {
                 {availableTarifs.map((tarif) => (
                   <div
                     key={tarif.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="flex items-center gap-2 flex-wrap justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                     onClick={() => addTarification(tarif)}
                   >
                     <div className="flex-1">
@@ -443,39 +443,41 @@ const NakladnoySkanner = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {selectedTarifs.map((tarif, index) => (
+              {selectedTarifs.map((tarif) => (
                 <div
                   key={tarif.id}
-                  className="border rounded-lg p-4 bg-gray-50"
+                  className="border rounded-lg p-3 sm:p-4 bg-gray-50"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-lg">{tarif.name}</h4>
-                        <Badge>{tarif.code}</Badge>
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h4 className="font-semibold text-base sm:text-lg break-words">
+                          {tarif.name}
+                        </h4>
+                        <Badge className="whitespace-nowrap">
+                          {tarif.code}
+                        </Badge>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Vaqt:</span>
-                          <span className="ml-1 font-medium">
-                            {tarif.second}s
-                          </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-sm">
+                        <div className="break-words">
+                          <span className="text-gray-600">Vaqt: </span>
+                          <span className="font-medium">{tarif.second}s</span>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Narx:</span>
-                          <span className="ml-1 font-medium">
+                        <div className="break-words">
+                          <span className="text-gray-600">Narx: </span>
+                          <span className="font-medium">
                             {tarif.summa} so'm
                           </span>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Razryad:</span>
-                          <span className="ml-1 font-medium">
-                            {tarif.razryad?.name}
+                        <div className="break-words">
+                          <span className="text-gray-600">Razryad: </span>
+                          <span className="font-medium">
+                            {tarif.razryad?.name || "-"}
                           </span>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Jami:</span>
-                          <span className="ml-1 font-bold text-green-600">
+                        <div className="break-words">
+                          <span className="text-gray-600">Jami: </span>
+                          <span className="font-bold text-green-600 whitespace-nowrap">
                             {(
                               Number.parseFloat(tarif.summa) * tarif.quantity
                             ).toLocaleString("ru-RU")}{" "}
@@ -484,7 +486,7 @@ const NakladnoySkanner = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="flex items-center justify-end sm:justify-start gap-2 mt-2 sm:mt-0 sm:ml-4">
                       <Button
                         size="sm"
                         variant="outline"
@@ -504,7 +506,7 @@ const NakladnoySkanner = () => {
                             Number.parseInt(e.target.value) || 1
                           )
                         }
-                        className="text-center"
+                        className="w-24 text-center"
                         min="1"
                       />
                       <Button
@@ -531,8 +533,8 @@ const NakladnoySkanner = () => {
 
             <Separator className="my-4" />
 
-            <div className="flex items-center justify-between">
-              <div className="text-xl font-bold">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="text-lg sm:text-xl font-bold">
                 Umumiy summa:{" "}
                 <span className="text-green-600">
                   {calculateTotal().toLocaleString("ru-RU")} so'm
@@ -542,7 +544,7 @@ const NakladnoySkanner = () => {
                 onClick={handleSubmit}
                 disabled={submitting || selectedTarifs.length === 0}
                 size="lg"
-                className="bg-green-600 hover:bg-green-700"
+                className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
               >
                 {submitting ? (
                   <>
