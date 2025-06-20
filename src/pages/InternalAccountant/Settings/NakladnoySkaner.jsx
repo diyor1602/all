@@ -100,12 +100,12 @@ const NakladnoySkanner = () => {
 
   // Load history from localStorage on component mount
   useEffect(() => {
-    const savedHistory = localStorage.getItem('nakladnoyHistory');
+    const savedHistory = localStorage.getItem("nakladnoyHistory");
     if (savedHistory) {
       try {
         setHistory(JSON.parse(savedHistory));
       } catch (error) {
-        console.error('Failed to parse history:', error);
+        // ignore
       }
     }
   }, []);
@@ -232,21 +232,21 @@ const NakladnoySkanner = () => {
       id: Date.now(),
       date: new Date().toISOString(),
       employee: empDetails,
-      tarifs: selectedTarifs.map(t => ({
+      tarifs: selectedTarifs.map((t) => ({
         ...t,
-        total: Number.parseFloat(t.summa) * t.quantity
+        total: Number.parseFloat(t.summa) * t.quantity,
       })),
-      total: calculateTotal()
+      total: calculateTotal(),
     };
 
     const newHistory = [historyItem, ...history].slice(0, 10); // Keep only last 10 items
     setHistory(newHistory);
-    localStorage.setItem('nakladnoyHistory', JSON.stringify(newHistory));
+    localStorage.setItem("nakladnoyHistory", JSON.stringify(newHistory));
   };
 
   const clearHistory = () => {
     setHistory([]);
-    localStorage.removeItem('nakladnoyHistory');
+    localStorage.removeItem("nakladnoyHistory");
     toast({
       title: "Tarix tozalandi",
       description: "Barcha tarix ma'lumotlari o'chirildi",
@@ -631,12 +631,12 @@ const NakladnoySkanner = () => {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4 className="font-semibold">
-                      {new Date(item.date).toLocaleString('ru-RU', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
+                      {new Date(item.date).toLocaleString("ru-RU", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </h4>
                     <p className="text-sm text-gray-600">
@@ -644,18 +644,18 @@ const NakladnoySkanner = () => {
                     </p>
                   </div>
                   <Badge variant="outline" className="text-green-600">
-                    {item.total.toLocaleString('ru-RU')} so'm
+                    {item.total.toLocaleString("ru-RU")} so'm
                   </Badge>
                 </div>
-                
+
                 <div className="space-y-2 mt-2">
                   {item.tarifs.map((tarif, idx) => (
                     <div key={idx} className="flex justify-between text-sm">
                       <span className="text-gray-700">{tarif.name}</span>
                       <span className="font-medium">
-                        {tarif.quantity} x {tarif.summa} ={' '}
+                        {tarif.quantity} x {tarif.summa} ={" "}
                         <span className="text-green-600">
-                          {tarif.total.toLocaleString('ru-RU')} so'm
+                          {tarif.total.toLocaleString("ru-RU")} so'm
                         </span>
                       </span>
                     </div>
