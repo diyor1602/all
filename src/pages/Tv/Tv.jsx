@@ -252,7 +252,7 @@ const Tv = () => {
                     Submodel
                   </th>
                   <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
-                    Gurux
+                    Guruh
                   </th>
                   <th className="py-3 px-4 text-left text-xl font-medium text-indigo-800">
                     Bugungi reja

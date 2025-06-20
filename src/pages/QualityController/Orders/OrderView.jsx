@@ -152,7 +152,7 @@ const OrderView = () => {
                       value: order?.order_model?.material?.name || "-",
                     },
                     {
-                      label: "Tikkan gurux",
+                      label: "Tikkan guruh",
                       value:
                         order?.order_model?.submodels[0]?.group?.group?.name ||
                         "-",
