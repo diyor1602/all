@@ -152,10 +152,42 @@ const EditTarif = () => {
 
   const handleInputChange = (index, field, value) => {
     const updateTarifications = [...tarif.tarifications];
-    updateTarifications[index] = {
-      ...updateTarifications[index],
-      [field]: value,
-    };
+
+    // If this is a name change, check if it matches any last tarification
+    if (field === "name") {
+      const matchingTarif = lastTarifs.find((t) => t.name === value);
+      if (matchingTarif) {
+        // Update the razryad and second fields from the matched tarification
+        updateTarifications[index] = {
+          ...updateTarifications[index],
+          [field]: value,
+          razryad_id: matchingTarif.razryad?.id || null,
+          razryad: matchingTarif.razryad,
+          second: matchingTarif.second,
+        };
+
+        // Calculate summa if razryad has a salary
+        if (matchingTarif.razryad?.salary) {
+          const calculatedSumma = (
+            parseFloat(matchingTarif.razryad.salary) *
+            parseFloat(matchingTarif.second)
+          ).toFixed(1);
+          updateTarifications[index].summa = calculatedSumma;
+        }
+      } else {
+        // Just update the name if no matching tarification found
+        updateTarifications[index] = {
+          ...updateTarifications[index],
+          [field]: value,
+        };
+      }
+    } else {
+      // Handle other field changes normally
+      updateTarifications[index] = {
+        ...updateTarifications[index],
+        [field]: value,
+      };
+    }
 
     setTarif({
       ...tarif,
@@ -307,13 +339,6 @@ const EditTarif = () => {
       ...tarif,
       tarifications: [...tarif.tarifications, newRow],
     });
-
-    // Focus on the new row after the state update
-    setTimeout(() => {
-      if (newRowRef.current) {
-        newRowRef.current.focus();
-      }
-    }, 0);
   };
 
   const saveTarifications = async () => {
