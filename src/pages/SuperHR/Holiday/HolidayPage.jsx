@@ -3,22 +3,91 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  PlusCircle,
-  Search,
+  Pencil,
+  Check,
+  Eye,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  Pencil,
+  PlusCircle,
+  Search,
+  Loader2,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { format, parseISO } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const HolidayPage = () => {
   const { toast } = useToast();
 
+  const [sending, setSending] = useState(false);
+
+  const handleStartEdit = (holiday) => {
+    setEditingId(holiday.id);
+    setEditData({
+      id: holiday.id,
+      start_date: holiday.start_date.split("T")[0],
+      end_date: holiday.end_date.split("T")[0],
+      comment: holiday.comment || "",
+    });
+  };
+
+  const handleSaveEdit = async (id) => {
+    setSending(true);
+    try {
+      const payload = {
+        start_date: editData.start_date,
+        end_date: editData.end_date,
+        comment: editData.comment,
+      };
+
+      await api.patch(`/superhr/employeeHolidays/${id}`, payload);
+
+      // Update local state
+      setHolidays(
+        holidays.map((holiday) =>
+          holiday.id === id
+            ? {
+                ...holiday,
+                start_date: editData.start_date,
+                end_date: editData.end_date,
+                comment: editData.comment,
+              }
+            : holiday
+        )
+      );
+
+      setEditingId(null);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Ta'til ma'lumotlari yangilandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1200,
+      });
+    } catch (error) {
+      console.error("Error updating holiday:", error);
+      toast({
+        title: "Xatolik",
+        description: "Ta'til ma'lumotlarini yangilashda xatolik yuz berdi",
+        variant: "destructive",
+        duration: 1200,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
   const [holidays, setHolidays] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({
+    id: null,
+    start_date: "",
+    end_date: "",
+    comment: "",
+  });
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -191,19 +260,62 @@ const HolidayPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-1 border border-gray-200">
-                      <div className="text-xs text-gray-900 text-center">
-                        {format(parseISO(holiday.start_date), "dd.MM.yyyy")}
-                      </div>
+                      {editingId === holiday.id ? (
+                        <Input
+                          type="date"
+                          className="h-8 text-xs w-fit"
+                          value={editData.start_date}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              start_date: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="text-xs text-gray-900 text-center">
+                          {format(parseISO(holiday.start_date), "dd.MM.yyyy")}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-1 border border-gray-200">
-                      <div className="text-xs text-gray-900 text-center">
-                        {format(parseISO(holiday.end_date), "dd.MM.yyyy")}
-                      </div>
+                      {editingId === holiday.id ? (
+                        <Input
+                          type="date"
+                          className="h-8 text-xs w-fit"
+                          value={editData.end_date}
+                          min={editData.start_date}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              end_date: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="text-xs text-gray-900 text-center">
+                          {format(parseISO(holiday.end_date), "dd.MM.yyyy")}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-1 border border-gray-200">
-                      <div className="text-xs text-gray-900 max-w-xs truncate">
-                        {holiday.comment || "-"}
-                      </div>
+                      {editingId === holiday.id ? (
+                        <Input
+                          type="text"
+                          className="h-8 text-xs"
+                          value={editData.comment}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              comment: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="text-xs text-gray-900 max-w-xs truncate">
+                          {holiday.comment || "-"}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-1 flex items-center gap-2">
                       <Link
@@ -218,13 +330,28 @@ const HolidayPage = () => {
                           <Eye className="text-blue-500" />
                         </Button>
                       </Link>
-                      <Button
-                        variant="ghost"
-                        className="text-xs"
-                        // onClick={() => handleDeleteHoliday(holiday.id)}
-                      >
-                        <Pencil className="text-orange-500" />
-                      </Button>
+                      {editingId === holiday.id ? (
+                        <Button
+                          variant="ghost"
+                          className="text-xs"
+                          onClick={() => handleSaveEdit(holiday.id)}
+                          disabled={sending}
+                        >
+                          {sending ? (
+                            <Loader2 className="animate-spin text-primary" />
+                          ) : (
+                            <Check className="text-green-500" />
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          className="text-xs"
+                          onClick={() => handleStartEdit(holiday)}
+                        >
+                          <Pencil className="text-orange-500" />
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))
