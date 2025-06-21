@@ -512,9 +512,24 @@ const EditTarif = () => {
                       className="min-w-[400px]"
                       type="text"
                       value={item?.name || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "name", e.target.value)
-                      }
+                      onChange={(e) => {
+                        // Get the selected option from the datalist
+                        const input = e.target;
+                        const value = input.value;
+                        const options = document.getElementById('nomi-options').options;
+                        let selectedName = value;
+                        
+                        // Check if the selected value matches any option with seconds
+                        for (let i = 0; i < options.length; i++) {
+                          if (options[i].value === value) {
+                            // Use the data-value attribute if it exists (contains just the name)
+                            selectedName = options[i].dataset.value || value.split(' (')[0];
+                            break;
+                          }
+                        }
+                        
+                        handleInputChange(index, "name", selectedName);
+                      }}
                       ref={
                         index === tarif.tarifications.length - 1
                           ? newRowRef
@@ -531,14 +546,18 @@ const EditTarif = () => {
                               .filter(Boolean)
                           )
                         ).map((name, idx) => (
-                          <option key={idx} value={name} />
+                          <option key={idx} value={name} data-value={name} />
                         ))}
-                        {lastTarifs?.map((tarif, idx) => (
-                          <option
-                            key={idx}
-                            value={`${tarif?.name} (${tarif?.second})`}
-                          />
-                        ))}
+                        {lastTarifs?.map((tarif, idx) => {
+                          const displayValue = `${tarif?.name} (${tarif?.second})`;
+                          return (
+                            <option
+                              key={idx}
+                              value={displayValue}
+                              data-value={tarif?.name}
+                            />
+                          );
+                        })}
                       </datalist>
                     )}
                   </td>
