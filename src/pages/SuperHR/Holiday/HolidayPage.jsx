@@ -186,8 +186,8 @@ const HolidayPage = () => {
                     </td>
                     <td className="px-6 py-1 border border-gray-200">
                       <div className="text-xs font-medium text-gray-900 flex flex-col gap-1">
-                        {holiday.employee?.department?.name}
-                        {holiday.employee?.group?.name}
+                        <div>{holiday.employee?.department?.name}</div>
+                        <div>{holiday.employee?.group?.name}</div>
                       </div>
                     </td>
                     <td className="px-6 py-1 border border-gray-200">
