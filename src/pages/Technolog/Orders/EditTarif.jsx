@@ -57,11 +57,16 @@ const EditTarif = () => {
   const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
   const [activeTimerRowIndex, setActiveTimerRowIndex] = useState(null);
 
+  const [selectedTarifLang, setSelectedTarifLang] = useState(
+    localStorage.getItem("tarifLang") || "uz"
+  );
+
   const fetchTarif = async () => {
     setLoading(true);
     try {
       const response = await api.get(`/technologist/tarification/${id}`);
       setTarif(response.data);
+      setSelectedTarifLang(response.data?.region);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -382,6 +387,7 @@ const EditTarif = () => {
       await api.patch(`/technologist/tarification/${id}`, {
         name: tarif.name,
         submodel_id: tarif.submodel_id,
+        region: selectedTarifLang,
         tarifications: tarificationsToSubmit,
       });
 
@@ -433,6 +439,21 @@ const EditTarif = () => {
             onChange={(e) => setTarif({ ...tarif, name: e.target.value })}
           />
         </div>
+        <Select
+          value={selectedTarifLang}
+          onValueChange={(value) => {
+            setSelectedTarifLang(value);
+            localStorage.setItem("tarifLang", value);
+          }}
+        >
+          <SelectTrigger className="w-[180px] bg-white">
+            <SelectValue placeholder="Tarif tili" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="uz">O'zbek</SelectItem>
+            <SelectItem value="ru">Rus</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="w-full overflow-auto max-h-[75vh]">
         <table className="my-4 whitespace-nowrap border w-full bg-white">
