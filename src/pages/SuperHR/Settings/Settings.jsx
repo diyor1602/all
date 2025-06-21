@@ -52,7 +52,7 @@ const SettingsPage = () => {
     {
       name: "Ta'til",
       icon: TreePalm,
-      link: "/superhr/settings/add-fast-user",
+      link: "/superhr/holiday",
       color: "bg-red-500",
     },
   ];

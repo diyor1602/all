@@ -6,6 +6,7 @@ import Attendance from "./Attendance/Attendance";
 import Settings from "./Settings/Settings";
 import ViewEmployees from "./Employees/ViewEmployees";
 import Stats from "./Stats/Stats";
+import Holiday from "./Holiday/Holiday";
 
 const SuperHr = () => {
   return (
@@ -16,6 +17,7 @@ const SuperHr = () => {
       <Route path="employees/view/:id" element={<ViewEmployees />} />
       <Route path="settings/*" element={<Settings />} />
       <Route path="attendance" element={<Attendance />} />
+      <Route path="holiday/*" element={<Holiday />} />
       <Route path="stats" element={<Stats />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>

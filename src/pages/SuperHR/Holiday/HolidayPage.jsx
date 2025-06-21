@@ -1,0 +1,291 @@
+import { useState, useEffect } from "react";
+import api from "@/utils/api";
+import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  PlusCircle,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Pencil,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { format, parseISO } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const HolidayPage = () => {
+  const { toast } = useToast();
+
+  const [holidays, setHolidays] = useState([]);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    links: [],
+  });
+  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState({
+    from: "",
+    to: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const fetchHolidays = async (page = 1) => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page,
+        search,
+        ...(dateRange.from && { start_date: dateRange.from }),
+        ...(dateRange.to && { end_date: dateRange.to }),
+      });
+
+      const response = await api.get(`/superhr/employeeHolidays?${params}`);
+      setHolidays(response.data.data);
+      setPagination({
+        current_page: response.data.current_page,
+        last_page: response.data.last_page,
+        total: response.data.total,
+        links: response.data.links || [],
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Ta'tillar ro'yxati olishda xatolik yuz berish mumkin",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHolidays(1);
+  }, [search, dateRange]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchHolidays(1);
+  };
+
+  const handlePageChange = (page) => {
+    if (page && page >= 1 && page <= pagination.last_page) {
+      fetchHolidays(page);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h2 className="text-2xl font-bold">Ta'tillar</h2>
+        <Link to="/superhr/holiday/add">
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Qo'shish
+          </Button>
+        </Link>
+      </div>
+
+      <form onSubmit={handleSearch} className="space-y-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col space-y-1">
+            <label htmlFor="search" className="text-sm font-medium">
+              Qidirish
+            </label>
+            <Input
+              type="search"
+              placeholder="Ism yoki izoh"
+              id="search"
+              className="w-full bg-white"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col space-y-1">
+            <label htmlFor="start-date" className="text-sm font-medium">
+              Boshlanish sanasi
+            </label>
+            <Input
+              id="start-date"
+              type="date"
+              className="w-full bg-white"
+              value={dateRange.from}
+              onChange={(e) =>
+                setDateRange({ ...dateRange, from: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="flex flex-col space-y-1">
+            <label htmlFor="end-date" className="text-sm font-medium">
+              Tugash sanasi
+            </label>
+            <Input
+              id="end-date"
+              type="date"
+              className="w-full bg-white"
+              min={dateRange.from}
+              value={dateRange.to}
+              onChange={(e) =>
+                setDateRange({ ...dateRange, to: e.target.value })
+              }
+            />
+          </div>
+        </div>
+      </form>
+
+      <div className="mt-6 border">
+        <div className="relative w-full overflow-auto">
+          <table className="w-full text-xs whitespace-nowrap">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                  Xodim
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                  Bo'lim
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                  Boshlanish sanasi
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                  Tugash sanasi
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                  Izoh
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                  Amallar
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {holidays?.length > 0 ? (
+                holidays.map((holiday) => (
+                  <tr
+                    key={holiday.id}
+                    className="hover:bg-gray-50 border border-gray-200"
+                  >
+                    <td className="px-6 py-1 border border-gray-200">
+                      <div className="text-xs font-medium text-gray-900">
+                        {holiday.employee?.name || "Noma'lum"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-1 border border-gray-200">
+                      <div className="text-xs font-medium text-gray-900 flex flex-col gap-1">
+                        {holiday.employee?.department?.name}
+                        {holiday.employee?.group?.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-1 border border-gray-200">
+                      <div className="text-xs text-gray-900 text-center">
+                        {format(parseISO(holiday.start_date), "dd.MM.yyyy")}
+                      </div>
+                    </td>
+                    <td className="px-6 py-1 border border-gray-200">
+                      <div className="text-xs text-gray-900 text-center">
+                        {format(parseISO(holiday.end_date), "dd.MM.yyyy")}
+                      </div>
+                    </td>
+                    <td className="px-6 py-1 border border-gray-200">
+                      <div className="text-xs text-gray-900 max-w-xs truncate">
+                        {holiday.comment || "-"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-1 flex items-center gap-2">
+                      <Link
+                        to={`/superhr/employees/view/${holiday.employee?.id}`}
+                      >
+                        {" "}
+                        <Button
+                          variant="ghost"
+                          className="text-xs"
+                          // onClick={() => handleDeleteHoliday(holiday.id)}
+                        >
+                          <Eye className="text-blue-500" />
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        className="text-xs"
+                        // onClick={() => handleDeleteHoliday(holiday.id)}
+                      >
+                        <Pencil className="text-orange-500" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="px-6 py-1 text-center text-xs text-gray-500"
+                  >
+                    Ma'lumot topilmadi
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      {pagination.last_page > 1 && (
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+          <div className="text-sm text-muted-foreground">
+            Jami: {pagination.total} ta
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(pagination.current_page - 1)}
+              disabled={pagination.current_page === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="ml-1">Oldingi</span>
+            </Button>
+
+            <div className="flex items-center space-x-1">
+              {pagination.links.slice(1, -1).map((link, index) => (
+                <Button
+                  key={index}
+                  variant={link.active ? "default" : "outline"}
+                  onClick={() => handlePageChange(parseInt(link.label))}
+                  disabled={!link.url}
+                >
+                  {link.label}
+                </Button>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(pagination.current_page + 1)}
+              disabled={pagination.current_page === pagination.last_page}
+            >
+              <span className="mr-1">Keyingi</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default HolidayPage;
