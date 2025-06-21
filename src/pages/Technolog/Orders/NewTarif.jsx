@@ -200,10 +200,10 @@ const NewTarif = () => {
 
   const handleInputChange = (index, field, value) => {
     const updateTarifications = [...tarif.tarifications];
-    
+
     // If this is a name change, check if it matches any last tarification
-    if (field === 'name') {
-      const matchingTarif = lastTarifs.find(t => t.name === value);
+    if (field === "name") {
+      const matchingTarif = lastTarifs.find((t) => t.name === value);
       if (matchingTarif) {
         // Update the razryad and second fields from the matched tarification
         updateTarifications[index] = {
@@ -212,11 +212,12 @@ const NewTarif = () => {
           razryad: matchingTarif.razryad,
           second: matchingTarif.second,
         };
-        
+
         // Calculate summa if razryad has a salary
         if (matchingTarif.razryad?.salary) {
           const calculatedSumma = (
-            parseFloat(matchingTarif.razryad.salary) * parseFloat(matchingTarif.second)
+            parseFloat(matchingTarif.razryad.salary) *
+            parseFloat(matchingTarif.second)
           ).toFixed(1);
           updateTarifications[index].summa = calculatedSumma;
         }
@@ -583,7 +584,10 @@ const NewTarif = () => {
                           <option key={idx} value={name} />
                         ))}
                         {lastTarifs?.map((tarif, idx) => (
-                          <option key={idx} value={tarif?.name} />
+                          <option
+                            key={idx}
+                            value={`${tarif?.name} (${tarif?.second})`}
+                          />
                         ))}
                       </datalist>
                     )}

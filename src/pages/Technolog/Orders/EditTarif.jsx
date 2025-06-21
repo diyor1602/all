@@ -534,7 +534,10 @@ const EditTarif = () => {
                           <option key={idx} value={name} />
                         ))}
                         {lastTarifs?.map((tarif, idx) => (
-                          <option key={idx} value={tarif?.name} />
+                          <option
+                            key={idx}
+                            value={`${tarif?.name} (${tarif?.second})`}
+                          />
                         ))}
                       </datalist>
                     )}

@@ -3,7 +3,7 @@ import Positions from "./Positions/Positions";
 import Deparments from "./Departments/Departments";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Blocks, History, UserCog, UserPlus } from "lucide-react";
+import { Blocks, History, TreePalm, UserCog, UserPlus } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddFastUser from "./AddFastUser/AddFastUser";
 import AddGroup from "./Departments/AddGroup";
@@ -48,6 +48,12 @@ const SettingsPage = () => {
       icon: UserPlus,
       link: "/superhr/settings/add-fast-user",
       color: "bg-yellow-500",
+    },
+    {
+      name: "Ta'til",
+      icon: TreePalm,
+      link: "/superhr/settings/add-fast-user",
+      color: "bg-red-500",
     },
   ];
 
