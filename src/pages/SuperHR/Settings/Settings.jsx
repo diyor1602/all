@@ -3,11 +3,19 @@ import Positions from "./Positions/Positions";
 import Deparments from "./Departments/Departments";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Blocks, History, TreePalm, UserCog, UserPlus } from "lucide-react";
+import {
+  Blocks,
+  HeartCrack,
+  History,
+  TreePalm,
+  UserCog,
+  UserPlus,
+} from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddFastUser from "./AddFastUser/AddFastUser";
 import AddGroup from "./Departments/AddGroup";
 import EditGroup from "./Departments/EditGroup";
+import TodayAbsence from "../Stats/TodayAbsence";
 
 const Settings = () => {
   return (
@@ -19,12 +27,19 @@ const Settings = () => {
       <Route path="add-fast-user" element={<AddFastUser />} />
       <Route path="add-group" element={<AddGroup />} />
       <Route path="edit-group/:id" element={<EditGroup />} />
+      <Route path="today-absence" element={<TodayAbsence />} />
     </Routes>
   );
 };
 
 const SettingsPage = () => {
   const cardData = [
+    {
+      name: "Bugun kelmaganlar",
+      icon: HeartCrack,
+      link: "/superhr/settings/today-absence",
+      color: "bg-orange-500",
+    },
     {
       name: "Bo'limlar",
       icon: Blocks,

@@ -709,7 +709,7 @@ const SalaryDetails = () => {
                               <div className="flex flex-col">
                                 <span className="text-muted-foreground flex items-center gap-1">
                                   <DollarSign className="h-3 w-3" />
-                                  Жами
+                                  Jami
                                 </span>
                                 <span className="font-medium text-green-600">
                                   {(
