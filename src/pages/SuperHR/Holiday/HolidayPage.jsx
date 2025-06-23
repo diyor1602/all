@@ -66,7 +66,6 @@ const HolidayPage = () => {
         duration: 1200,
       });
     } catch (error) {
-      console.error("Error updating holiday:", error);
       toast({
         title: "Xatolik",
         description: "Ta'til ma'lumotlarini yangilashda xatolik yuz berdi",
