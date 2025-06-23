@@ -11,11 +11,9 @@ import {
   ChevronLeft,
   ChevronRight,
   PlusCircle,
-  Search,
   Loader2,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const HolidayPage = () => {
   const { toast } = useToast();
@@ -380,11 +378,11 @@ const HolidayPage = () => {
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
+              size="icon"
               onClick={() => handlePageChange(pagination.current_page - 1)}
               disabled={pagination.current_page === 1}
             >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="ml-1">Oldingi</span>
+              <ChevronLeft />
             </Button>
 
             <div className="flex items-center space-x-1">
@@ -402,11 +400,11 @@ const HolidayPage = () => {
 
             <Button
               variant="outline"
+              size="icon"
               onClick={() => handlePageChange(pagination.current_page + 1)}
               disabled={pagination.current_page === pagination.last_page}
             >
-              <span className="mr-1">Keyingi</span>
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight />
             </Button>
           </div>
         </div>
