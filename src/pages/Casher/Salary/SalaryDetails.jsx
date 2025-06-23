@@ -529,7 +529,7 @@ const SalaryDetails = () => {
                         .map((attendance) => (
                           <div
                             key={attendance.id}
-                            className={`flex items-center justify-between p-4 border rounded-lg ${
+                            className={`flex items-center justify-between p-4 border rounded-lg flex-wrap gap-2 ${
                               attendance.status === "present"
                                 ? "border-green-200 bg-green-50"
                                 : "border-red-200 bg-red-50"
