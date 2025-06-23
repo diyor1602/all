@@ -210,6 +210,7 @@ const Stats = () => {
           end_date: dateRange.endDate,
           department_id: selectedDepartment === "all" ? "" : selectedDepartment,
           group_id: selectedGroup === "all" ? "" : selectedGroup,
+          status: downloadType,
         },
       });
       setStats(response.data);
@@ -265,7 +266,7 @@ const Stats = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [dateRange, selectedDepartment, selectedGroup]);
+  }, [dateRange, selectedDepartment, selectedGroup, downloadType]);
 
   const toggleRow = (employeeId) => {
     setExpandedRows((prev) => ({
