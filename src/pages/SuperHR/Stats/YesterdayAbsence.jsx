@@ -60,7 +60,7 @@ const YesterdayAbsence = () => {
                   </td>
                   <td className="border border-gray-500 p-2">
                     <Link to={`/superhr/employees/view/${item.id}`}>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 justify-between">
                         <div>{item.name}</div>
                         <div>
                           {item.was_on_holiday && (
