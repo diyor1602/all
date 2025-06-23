@@ -67,7 +67,6 @@ const AddHoliday = () => {
         });
         setEmployees(response.data.data || []);
       } catch (error) {
-        console.error("Error fetching employees:", error);
         toast({
           variant: "destructive",
           title: "Xatolik",
