@@ -26,6 +26,7 @@ import {
   FileDigit,
   Users,
   FileText,
+  Image,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -731,6 +732,24 @@ const OrderView = () => {
                 ))}
               </div>
             </div>
+          )}
+
+          {order?.order_model?.model?.images?.length > 0 ? (
+            <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
+              <h4 className="font-medium text-gray-700 mb-3 flex items-center">
+                <Image className="h-4 w-4 mr-2 text-indigo-500" />
+                <span>Rasmlar</span>
+              </h4>
+              <div className="flex items-center gap-2 flex-wrap">
+                {order?.order_model?.model?.images?.map((item, index) => (
+                  <div key={index}>
+                    <img src={item?.image} alt="-" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div>Rasmlar mavjud emas!</div>
           )}
         </CardContent>
       </Card>
