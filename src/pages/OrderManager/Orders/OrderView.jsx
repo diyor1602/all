@@ -65,7 +65,21 @@ const OrderView = () => {
       acc +
       parseFloat(
         submodel?.spends?.reduce(
-          (acc, spend) => acc + parseFloat(spend?.seconds),
+          (acc, spend) =>
+            acc + (spend?.region == "uz" ? parseFloat(spend?.seconds) : 0),
+          0
+        )
+      ),
+    0
+  );
+
+  const totalSpendsRU = order?.order_model?.submodels?.reduce(
+    (acc, submodel) =>
+      acc +
+      parseFloat(
+        submodel?.spends?.reduce(
+          (acc, spend) =>
+            acc + (spend?.region == "ru" ? parseFloat(spend?.seconds) : 0),
           0
         )
       ),
@@ -277,18 +291,26 @@ const OrderView = () => {
                 <div className="flex gap-2 items-center">
                   <Timer className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-bold">
-                    Jami:{" "}
+                    Jami UZ:{" "}
                     {totalSpends?.toLocaleString("ru-RU", {
                       maximumFractionDigits: 2,
                     })}{" "}
-                    sekund
+                    sekund /{" "}
+                    {parseFloat(totalSpends / 60)?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    minut
                   </span>
                 </div>
                 <div className="flex gap-2 items-center">
                   <Timer className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-bold">
-                    Jami:{" "}
-                    {parseFloat(totalSpends / 60)?.toLocaleString("ru-RU", {
+                    Jami RU:{" "}
+                    {totalSpendsRU?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    sekund /{" "}
+                    {parseFloat(totalSpendsRU / 60)?.toLocaleString("ru-RU", {
                       maximumFractionDigits: 2,
                     })}{" "}
                     minut
