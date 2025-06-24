@@ -33,6 +33,7 @@ const AddModel = () => {
     name: "",
     description: "",
     rasxod: "0",
+    minute: "0",
     submodels: [],
     sizes: [],
     images: [],
@@ -183,6 +184,7 @@ const AddModel = () => {
       const modelData = {
         name: model.name,
         rasxod: parseFloat(model.rasxod) * 250,
+        minute: parseFloat(model.rasxod),
         description: model.description || "",
         sizes: model.sizes.map((size) => ({ name: size.name })),
         submodels: model.submodels.map((submodel) => ({ name: submodel.name })),
@@ -198,6 +200,7 @@ const AddModel = () => {
         JSON.stringify({
           name: modelData.name,
           rasxod: modelData.rasxod,
+          minute: modelData.minute,
           description: modelData.description,
           sizes: modelData.sizes,
           submodels: modelData.submodels,

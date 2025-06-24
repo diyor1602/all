@@ -37,6 +37,7 @@ const EditModel = () => {
     name: "",
     description: "",
     rasxod: "",
+    minute: "",
     submodels: [],
     sizes: [],
     images: [],
@@ -57,6 +58,7 @@ const EditModel = () => {
           sizes: modelData.sizes || [],
           submodels: modelData.submodels || [],
           rasxod: parseFloat(modelData.rasxod / 250).toFixed(3) || "",
+          minute: parseFloat(modelData.rasxod) || "",
           images: modelData.images || [],
         });
       } catch (error) {
@@ -265,6 +267,7 @@ const EditModel = () => {
             name: submodel.name,
           })),
           rasxod: parseFloat(model.rasxod) * 250,
+          minute: parseFloat(model.rasxod),
           images: existingImages.map((image) => ({ id: image.id })),
         })
       );
