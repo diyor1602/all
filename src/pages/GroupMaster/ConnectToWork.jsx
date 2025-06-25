@@ -64,9 +64,10 @@ const ConnectToWork = () => {
       order?.order_model?.submodels?.reduce(
         (acc, submodel) =>
           acc +
-          Number.parseFloat(
-            submodel?.submodel_spend?.reduce(
-              (acc, spend) => acc + Number.parseFloat(spend?.seconds),
+          parseFloat(
+            submodel?.spends?.reduce(
+              (acc, spend) =>
+                acc + (spend?.region == "uz" ? parseFloat(spend?.seconds) : 0),
               0
             )
           ),
@@ -75,6 +76,22 @@ const ConnectToWork = () => {
     [order?.order_model?.submodels]
   );
 
+  const totalSpendsRU = useMemo(
+    () =>
+      order?.order_model?.submodels?.reduce(
+        (acc, submodel) =>
+          acc +
+          parseFloat(
+            submodel?.spends?.reduce(
+              (acc, spend) =>
+                acc + (spend?.region == "ru" ? parseFloat(spend?.seconds) : 0),
+              0
+            )
+          ),
+        0
+      ),
+    [order?.order_model?.submodels]
+  );
   const totalSpendSummaUZ = useMemo(
     () =>
       order?.order_model?.submodels?.reduce(
@@ -307,24 +324,38 @@ const ConnectToWork = () => {
 
                 <div className="flex gap-2 items-center">
                   <Timer className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-bold">
-                    Jami:{" "}
-                    {totalSpends?.toLocaleString("ru-RU", {
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    sekund
+                  <span className="text-sm">
+                    Jami UZ:{" "}
+                    <span className="font-bold">
+                      {" "}
+                      {totalSpends?.toLocaleString("ru-RU", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>{" "}
+                    sekund /{" "}
+                    <span className="font-bold">
+                      {parseFloat(totalSpends / 60)?.toLocaleString("ru-RU", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>{" "}
+                    minut
                   </span>
                 </div>
                 <div className="flex gap-2 items-center">
                   <Timer className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-bold">
-                    Jami:{" "}
-                    {Number.parseFloat(totalSpends / 60)?.toLocaleString(
-                      "ru-RU",
-                      {
+                  <span className="text-sm">
+                    Jami RU:{" "}
+                    <span className="font-bold">
+                      {parseFloat(totalSpendsRU)?.toLocaleString("ru-RU", {
                         maximumFractionDigits: 2,
-                      }
-                    )}{" "}
+                      })}
+                    </span>{" "}
+                    sekund /{" "}
+                    <span className="font-bold">
+                      {parseFloat(totalSpendsRU / 60)?.toLocaleString("ru-RU", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>{" "}
                     minut
                   </span>
                 </div>

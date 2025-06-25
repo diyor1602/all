@@ -3,20 +3,13 @@
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
-import {
-  BadgeDollarSign,
-  Eye,
-  EyeOff,
-  Pencil,
-  Upload,
-  Wallet,
-  X,
-} from "lucide-react";
+import { CircleDollarSign, Pencil, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Female from "/female.png";
 import Male from "/male.png";
 import NoImage from "/noimage.png";
+import { Button } from "@/components/ui/button";
 
 const Profile = () => {
   const [data, setData] = useState({});
@@ -26,49 +19,12 @@ const Profile = () => {
   const fileInputRef = useRef(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [balance, setBalance] = useState(0);
-  const [todayBonus, setTodayBonus] = useState(0);
-  const [showBalance, setShowBalance] = useState(false);
-
-  // 1. Axios orqali backend'dan ma'lumot olish
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        const res = await api.get("/profile");
-        const data = res.data;
-
-        setBalance(parseFloat(data.balance));
-        setTodayBonus(parseFloat(data.today_bonus));
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Profil ma'lumotlarini olib bo'lmadi",
-          variant: "destructive",
-        });
-      }
-    };
-
-    getData();
-  }, []);
-
-  // 2. Balansni avtomatik 10 sekunddan so‘ng yashirish
-  useEffect(() => {
-    let timer;
-    if (showBalance) {
-      timer = setTimeout(() => {
-        setShowBalance(false);
-      }, 10000);
-    }
-    return () => clearTimeout(timer);
-  }, [showBalance]);
 
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     confirmPassword: "",
   });
-
-  const img = data.img;
 
   const fetchProfile = async () => {
     try {
@@ -127,7 +83,6 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if password fields are filled and match
     const hasPasswordChange =
       formData.password.trim() !== "" || formData.confirmPassword.trim() !== "";
 
@@ -156,10 +111,8 @@ const Profile = () => {
       const updateData = new FormData();
       updateData.append("_method", "PATCH");
 
-      // Always send username
       updateData.append("username", formData.username);
 
-      // Only send password if it's not empty
       if (hasPasswordChange) {
         updateData.append("password", formData.password);
       }
@@ -196,7 +149,7 @@ const Profile = () => {
       <div className="flex items-center justify-center min-h-[calc(100vh-6rem)]">
         <div>
           <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto"></div>
-          <h2 className="text-zinc-900 dark:text-white mt-4">Loading...</h2>
+          <h2 className="text-zinc-900 dark:text-white mt-4">Yuklanmoqda...</h2>
         </div>
       </div>
     );
@@ -206,7 +159,6 @@ const Profile = () => {
     <div className="flex items-center justify-center min-h-[calc(100vh-6rem)]">
       <div className="w-full mx-auto p-4">
         <div className="flex justify-between items-stretch flex-col md:flex-row gap-6 mb-6 w-full">
-          {/* profil rasmi */}
           <div className="w-full md:w-1/3 bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
             <div className="text-2xl font-semibold text-center mb-6">
               {data.name}
@@ -267,40 +219,19 @@ const Profile = () => {
               )}
               {editing ? "Bekor qilish" : "Tahrirlash"}
             </button>
-            <div className="grid grid-cols-1 items-center mt-6 gap-4 w-full">
-              {/* Bugungi bonus */}
-              <div className="text-center bg-green-200 rounded-lg p-2">
-                <div className="flex justify-center items-center gap-2 mb-1">
-                  <BadgeDollarSign size={30} className="text-green-600" />
-                  <span>Bugun ishlab topganingiz</span>
-                </div>
-                <div className="font-semibold">
-                  {todayBonus.toLocaleString(undefined, {
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-              </div>
-
-              {/* Umumiy balans */}
-              <div className="text-center bg-blue-200 rounded-lg p-2 relative">
-                <div className="flex justify-center items-center gap-2">
-                  <Wallet size={30} className="text-blue-600" />
-                  <span>Umumiy balansingiz</span>
-                  <button
-                    onClick={() => setShowBalance(!showBalance)}
-                    className="focus:outline-none"
-                  >
-                    {showBalance ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-                <div className="font-semibold text-xl mt-1">
-                  {showBalance ? balance.toLocaleString() : "*****"}
-                </div>
-              </div>
-            </div>
+            <Link
+              to="/profileSalary"
+              className="mt-6 w-full flex items-center justify-center"
+            >
+              <Button
+                className="rounded-full w-full flex items-center gap-2 bg-green-500 hover:bg-green-600"
+                size="lg"
+              >
+                <CircleDollarSign /> Oylik
+              </Button>
+            </Link>
           </div>
 
-          {/* ma'lumotlar */}
           <div className="w-full md:w-2/3 bg-white rounded-lg shadow-md p-6 px-8 h-fit">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-semibold">Shaxsiy ma'lumotlar</h1>
