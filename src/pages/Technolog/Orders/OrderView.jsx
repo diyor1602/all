@@ -646,7 +646,8 @@ const OrderView = () => {
                       {order?.order_model?.status
                         ? "(Tasdiqlangan)"
                         : "(Tasdiqlanmagan)"}
-                    </span>
+                    </span>{" "}
+                    / {order?.order_model?.minute} minut
                   </span>
                 </div>
                 <div className="flex gap-2 items-center">
