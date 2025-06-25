@@ -277,7 +277,7 @@ const Work = () => {
       {
         id: "",
         quantity: "",
-        tempId: Date.now(), // Temporary ID for React keys
+        tempId: Date.now(),
       },
     ]);
   };
