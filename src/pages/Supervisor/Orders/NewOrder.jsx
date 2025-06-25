@@ -1086,6 +1086,13 @@ const NewOrder = () => {
                           so'm
                         </p>
                         <p>
+                          <span className="font-medium">Minut:</span>{" "}
+                          {parseFloat(selectedModel.minute).toLocaleString(
+                            "en-EN"
+                          ) || "-"}{" "}
+                          minut
+                        </p>
+                        <p>
                           <span className="font-medium">Sub-modellar:</span>{" "}
                           {selectedModel.submodels &&
                           selectedModel.submodels.length > 0

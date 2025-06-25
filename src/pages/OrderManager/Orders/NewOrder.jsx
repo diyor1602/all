@@ -932,6 +932,10 @@ const NewOrder = () => {
                                         Rasxod:{" "}
                                         {model?.rasxod || "Ko'rsatilmagan"}
                                       </span>
+                                      <span className="mr-2">
+                                        Minut:{" "}
+                                        {model?.minute || "Ko'rsatilmagan"}
+                                      </span>
                                       {model?.submodels?.length > 0 && (
                                         <Badge
                                           variant="outline"
@@ -1074,6 +1078,13 @@ const NewOrder = () => {
                             "en-EN"
                           ) || "-"}{" "}
                           so'm
+                        </p>
+                        <p>
+                          <span className="font-medium">Minut:</span>{" "}
+                          {parseFloat(selectedModel.minute).toLocaleString(
+                            "en-EN"
+                          ) || "-"}{" "}
+                          minut
                         </p>
                         <p>
                           <span className="font-medium">Sub-modellar:</span>{" "}

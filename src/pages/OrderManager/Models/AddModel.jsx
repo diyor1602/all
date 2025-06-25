@@ -33,6 +33,7 @@ const AddModel = () => {
     name: "",
     description: "",
     rasxod: "0",
+    minute: "0",
     submodels: [],
     sizes: [],
     images: [],
@@ -150,6 +151,15 @@ const AddModel = () => {
       return false;
     }
 
+    if (!model.minute || isNaN(parseFloat(model.minute))) {
+      toast({
+        title: "Xato",
+        description: "Daqiqa kiritilishi shart va raqam bo'lishi kerak",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     if (model.submodels.length === 0) {
       toast({
         title: "Xato",
@@ -183,6 +193,7 @@ const AddModel = () => {
       const modelData = {
         name: model.name,
         rasxod: parseFloat(model.rasxod),
+        minute: parseFloat(model.minute),
         description: model.description || "",
         sizes: model.sizes.map((size) => ({ name: size.name })),
         submodels: model.submodels.map((submodel) => ({ name: submodel.name })),
@@ -198,6 +209,7 @@ const AddModel = () => {
         JSON.stringify({
           name: modelData.name,
           rasxod: modelData.rasxod,
+          minute: modelData.minute,
           description: modelData.description,
           sizes: modelData.sizes,
           submodels: modelData.submodels,
@@ -295,17 +307,31 @@ const AddModel = () => {
                     required
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Tavsif</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={model.description || ""}
-                  onChange={handleInputChange}
-                  placeholder="Model haqida qo'shimcha ma'lumot..."
-                  rows={3}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="minute">
+                    Patok uchun daqiqa <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="minute"
+                    name="minute"
+                    type="number"
+                    step="0.01"
+                    value={model.minute}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Tavsif</Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    value={model.description || ""}
+                    onChange={handleInputChange}
+                    placeholder="Model haqida qo'shimcha ma'lumot..."
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
