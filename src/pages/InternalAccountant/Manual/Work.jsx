@@ -24,6 +24,9 @@ import {
   Plus,
   Trash2,
   Send,
+  Pencil,
+  X,
+  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +65,40 @@ const Work = () => {
   const [selectedWorks, setSelectedWorks] = useState([]);
   const [tarifLogs, setTarifLogs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const [editingID, setEditingID] = useState("");
+  const [newQuantity, setNewQuantity] = useState("");
+  const [editing, setEditing] = useState(false);
+
+  const editExistingWork = async () => {
+    setEditing(true);
+    try {
+      await api.patch(
+        `/internalAccountant/employeeTarificationLog/${editingID}`,
+        {
+          quantity: Number.parseInt(newQuantity),
+        }
+      );
+      toast({
+        title: "Muvaffaqiyat",
+        description: "Miqdor o'zgartirildi",
+        variant: "default",
+      });
+      setEditingID("");
+      setNewQuantity("");
+      fetchOrder();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message ||
+          "Ishlar tayinlashda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setEditing(false);
+    }
+  };
 
   const totalSpends = useMemo(
     () =>
@@ -689,16 +726,26 @@ const Work = () => {
               <tbody>
                 {tarifLogs?.length > 0 ? (
                   tarifLogs
-                    ?.sort((a, b) =>
-                      a?.tarification?.code.localeCompare(
+                    ?.sort((a, b) => {
+                      // First sort by tarif code
+                      const codeCompare = a?.tarification?.code?.localeCompare(
                         b?.tarification?.code,
                         undefined,
                         {
                           numeric: true,
                           sensitivity: "base",
                         }
-                      )
-                    )
+                      );
+
+                      // If tarif codes are the same, sort by employee name
+                      if (codeCompare === 0) {
+                        return a?.employee?.name?.localeCompare(
+                          b?.employee?.name
+                        );
+                      }
+
+                      return codeCompare;
+                    })
                     .map((tarifLog, index) => (
                       <tr key={index}>
                         <td className="border border-gray-300 p-2 text-center">
@@ -711,7 +758,52 @@ const Work = () => {
                           {tarifLog?.employee?.name}
                         </td>
                         <td className="border border-gray-300 p-2">
-                          {tarifLog?.quantity}
+                          {editingID === tarifLog?.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                value={newQuantity}
+                                onChange={(e) => {
+                                  setNewQuantity(e.target.value);
+                                }}
+                                disabled={editing}
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={editing}
+                                onClick={editExistingWork}
+                              >
+                                <Check className="text-green-500" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={editing}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingID("");
+                                  setNewQuantity("");
+                                }}
+                              >
+                                <X className="text-red-500" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div
+                              className="flex items-center gap-2 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingID(tarifLog?.id);
+                                setNewQuantity(tarifLog?.quantity);
+                              }}
+                            >
+                              {tarifLog?.quantity}
+                              <Button variant="ghost" size="icon">
+                                <Pencil />
+                              </Button>
+                            </div>
+                          )}
                         </td>
                         <td className="border border-gray-300 p-2">
                           {parseFloat(tarifLog?.amount_earned).toLocaleString(
