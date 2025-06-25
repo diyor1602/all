@@ -27,18 +27,25 @@ import {
   Pencil,
   X,
   Check,
+  ChevronsUpDown,
 } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -69,6 +76,9 @@ const Work = () => {
   const [editingID, setEditingID] = useState("");
   const [newQuantity, setNewQuantity] = useState("");
   const [editing, setEditing] = useState(false);
+
+  const [empComboOpen, setEmpComboOpen] = useState(false);
+  const [workPopoverOpen, setWorkPopoverOpen] = useState({});
 
   const editExistingWork = async () => {
     setEditing(true);
@@ -836,24 +846,49 @@ const Work = () => {
             <CardContent className="space-y-6">
               {/* Employee Selection */}
               <div className="space-y-2">
-                <Label htmlFor="employee">Xodimni tanlang</Label>
-                <Select
-                  value={selectedEmployee}
-                  onValueChange={setSelectedEmployee}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Xodimni tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees
-                      ?.sort((a, b) => a.name.localeCompare(b.name))
-                      ?.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={empComboOpen} onOpenChange={setEmpComboOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={empComboOpen}
+                      className="min-w-[200px] justify-between"
+                    >
+                      {selectedEmployee
+                        ? employees?.find((emp) => emp.id === selectedEmployee)
+                            ?.name
+                        : "Xodimni tanlang"}
+                      <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="min-w-[200px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Xodimni qidirish..." />
+                      <CommandEmpty>
+                        <p className="text-center text-muted-foreground">
+                          Xodim topilmadi.
+                        </p>
+                      </CommandEmpty>
+                      <CommandList>
+                        <CommandGroup>
+                          {employees
+                            ?.sort((a, b) => a.name.localeCompare(b.name))
+                            ?.map((employee) => (
+                              <CommandItem
+                                key={employee.id}
+                                onSelect={() => {
+                                  setSelectedEmployee(employee.id);
+                                  setEmpComboOpen(false);
+                                }}
+                              >
+                                {employee.name}
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Works Selection */}
@@ -874,43 +909,99 @@ const Work = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                           <div className="space-y-2">
                             <Label>Tarifikatsiya</Label>
-                            <Select
-                              value={work.id}
-                              onValueChange={(value) =>
-                                updateWork(work.tempId, "id", value)
+                            <Popover
+                              open={workPopoverOpen[work.tempId] || false}
+                              onOpenChange={(open) =>
+                                setWorkPopoverOpen((prev) => ({
+                                  ...prev,
+                                  [work.tempId]: open,
+                                }))
                               }
                             >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Ishni tanlang" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {tarifications
-                                  ?.sort((a, b) =>
-                                    a.code.localeCompare(b.code, undefined, {
-                                      numeric: true,
-                                      sensitivity: "base",
-                                    })
-                                  )
-                                  ?.filter((tarification) => {
-                                    // Skip tarifications that are already selected in other work items
-                                    const isAlreadySelected =
-                                      selectedWorks.some(
-                                        (w) =>
-                                          w.id === tarification.id &&
-                                          w.tempId !== work.tempId
-                                      );
-                                    return !isAlreadySelected;
-                                  })
-                                  ?.map((tarification) => (
-                                    <SelectItem
-                                      key={tarification.id}
-                                      value={tarification.id}
-                                    >
-                                      {tarification.code} - {tarification.name}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={
+                                    workPopoverOpen[work.tempId] || false
+                                  }
+                                  className="w-full justify-between truncate"
+                                >
+                                  {work.id
+                                    ? `${
+                                        tarifications?.find(
+                                          (t) => t.id === work.id
+                                        )?.code || ""
+                                      } - ${
+                                        tarifications?.find(
+                                          (t) => t.id === work.id
+                                        )?.name || ""
+                                      }`
+                                    : "Ishni tanlang"}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="min-w-[200px] p-0">
+                                <Command>
+                                  <CommandInput placeholder="Ish qidirish..." />
+                                  <CommandEmpty>
+                                    <p className="text-center text-muted-foreground py-2">
+                                      Ish topilmadi.
+                                    </p>
+                                  </CommandEmpty>
+                                  <CommandList>
+                                    <CommandGroup>
+                                      {tarifications
+                                        ?.sort((a, b) =>
+                                          a.code.localeCompare(
+                                            b.code,
+                                            undefined,
+                                            {
+                                              numeric: true,
+                                              sensitivity: "base",
+                                            }
+                                          )
+                                        )
+                                        ?.filter((tarification) => {
+                                          const isAlreadySelected =
+                                            selectedWorks.some(
+                                              (w) =>
+                                                w.id === tarification.id &&
+                                                w.tempId !== work.tempId
+                                            );
+                                          return !isAlreadySelected;
+                                        })
+                                        ?.map((tarification) => (
+                                          <CommandItem
+                                            key={tarification.id}
+                                            value={`${tarification.code} - ${tarification.name}`}
+                                            onSelect={() => {
+                                              updateWork(
+                                                work.tempId,
+                                                "id",
+                                                tarification.id
+                                              );
+                                              setWorkPopoverOpen((prev) => ({
+                                                ...prev,
+                                                [work.tempId]: false,
+                                              }));
+                                            }}
+                                            className="flex items-center justify-between"
+                                          >
+                                            <span>
+                                              {tarification.code} -{" "}
+                                              {tarification.name}
+                                            </span>
+                                            {work.id === tarification.id && (
+                                              <Check className="h-4 w-4 text-primary" />
+                                            )}
+                                          </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                           </div>
 
                           <div className="space-y-2">
