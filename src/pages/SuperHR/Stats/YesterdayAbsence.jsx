@@ -9,7 +9,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +23,7 @@ const YesterdayAbsence = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [actionType, setActionType] = useState(""); // 'absence' or 'holiday'
   const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -44,8 +44,8 @@ const YesterdayAbsence = () => {
     fetchData();
   }, []);
 
-  const handleOpenDialog = (employeeId, type) => {
-    setSelectedEmployee(employeeId);
+  const handleOpenDialog = (employee, type) => {
+    setSelectedEmployee(employee);
     setActionType(type);
     setComment("");
     setIsDialogOpen(true);
@@ -55,16 +55,17 @@ const YesterdayAbsence = () => {
     if (!comment.trim()) {
       toast({
         variant: "destructive",
-        title: "Xatolik",
+        title: "Diqqat",
         description: "Iltimos, izoh yozing",
       });
       return;
     }
 
     try {
+      setSubmitting(true);
       if (actionType === "holiday") {
         await api.post("/superhr/employeeHolidays", {
-          employee_id: selectedEmployee,
+          employee_id: selectedEmployee?.id,
           start_date: data?.[0]?.absent_date,
           end_date: data?.[0]?.absent_date,
           comment: comment,
@@ -81,7 +82,7 @@ const YesterdayAbsence = () => {
         });
       } else {
         await api.post("/superhr/employeeAbsence", {
-          employee_id: selectedEmployee,
+          employee_id: selectedEmployee?.id,
           start_date: data?.[0]?.absent_date,
           end_date: data?.[0]?.absent_date,
           comment: comment,
@@ -109,6 +110,8 @@ const YesterdayAbsence = () => {
             ? "Sababli qo'shishda xatolik yuz berdi"
             : "Sababsiz qo'shishda xatolik yuz berdi",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -124,9 +127,12 @@ const YesterdayAbsence = () => {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
-              {actionType === "holiday"
-                ? "Sababli qo'shish"
-                : "Sababsiz qo'shish"}
+              {actionType === "holiday" ? (
+                <span className="text-green-500">Sababli qo'shish</span>
+              ) : (
+                <span className="text-red-500">Sababsiz qo'shish</span>
+              )}
+              <span className="ml-2">({selectedEmployee?.name})</span>
             </DialogTitle>
             <DialogDescription>Iltimos, izoh yozing</DialogDescription>
           </DialogHeader>
@@ -148,14 +154,14 @@ const YesterdayAbsence = () => {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Bekor qilish
             </Button>
-            <Button type="submit" onClick={handleSubmit}>
-              Saqlash
+            <Button type="submit" onClick={handleSubmit} disabled={submitting}>
+              {submitting ? "Saqlanmoqda..." : "Saqlash"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <div className="w-full overflow-auto">
-        <table className="whitespace-nowrap border border-gray-500 w-full border-collapse text-xs bg-white">
+        <table className="border border-gray-500 w-full border-collapse text-xs bg-white">
           <thead>
             <tr>
               <th className="border border-gray-500 p-2">№</th>
@@ -186,7 +192,7 @@ const YesterdayAbsence = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleOpenDialog(item.id, "holiday")}
+                            onClick={() => handleOpenDialog(item, "holiday")}
                             disabled={
                               item.was_on_holiday || item.was_on_absence
                             }
@@ -202,7 +208,7 @@ const YesterdayAbsence = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleOpenDialog(item.id, "absence")}
+                            onClick={() => handleOpenDialog(item, "absence")}
                             disabled={
                               item.was_on_holiday || item.was_on_absence
                             }
