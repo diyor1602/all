@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { BadgeCheck, OctagonX } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const YesterdayAbsence = () => {
   const { toast } = useToast();
@@ -160,7 +161,7 @@ const YesterdayAbsence = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="w-full overflow-auto">
+      <div className="w-full overflow-auto mt-4 shadow-md">
         <table className="border border-gray-500 w-full border-collapse text-xs bg-white">
           <thead>
             <tr>
@@ -187,7 +188,9 @@ const YesterdayAbsence = () => {
                   <td className="border border-gray-500 p-2">
                     <div>
                       <div className="flex items-center gap-2 justify-between">
-                        <div>{item.name}</div>
+                        <Link to={`/superhr/employees/view/${item.id}`}>
+                          {item.name}
+                        </Link>
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
