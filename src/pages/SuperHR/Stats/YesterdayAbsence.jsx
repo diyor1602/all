@@ -152,12 +152,18 @@ const YesterdayAbsence = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Bekor qilish
-            </Button>
-            <Button type="submit" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Saqlanmoqda..." : "Saqlash"}
-            </Button>
+            <div className="flex items-center gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Bekor qilish
+              </Button>
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? "Saqlanmoqda..." : "Saqlash"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
