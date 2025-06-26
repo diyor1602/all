@@ -259,30 +259,32 @@ const YesterdayAbsence = () => {
         </DialogContent>
       </Dialog>
       <div className="w-full overflow-auto mt-4 shadow-md">
-        <table className="border border-gray-500 w-full border-collapse text-xs bg-white">
+        <table className="w-full border-collapse text-xs bg-white">
           <thead>
             <tr>
-              <th className="border border-gray-500 p-2">№</th>
-              <th className="border border-gray-500 p-2">F.I.SH</th>
-              <th className="border border-gray-500 p-2">Bo'lim</th>
-              <th className="border border-gray-500 p-2">Izoh</th>
+              <th className="border p-2 ">№</th>
+              <th className="border p-2">F.I.SH</th>
+              <th className="border p-2">Bo'lim</th>
+              <th className="border p-2">Izoh</th>
             </tr>
           </thead>
           <tbody>
-            {data?.sort(
-              // first show was_on_holiday, then sort by name
-              (a, b) => {
-                if (a.was_on_holiday && !b.was_on_holiday) return -1;
-                if (!a.was_on_holiday && b.was_on_holiday) return 1;
-                return a.name.localeCompare(b.name);
-              }
-            ) &&
+            {data?.sort((a, b) => {
+              if (!a.was_on_holiday && a.was_on_holiday !== b.was_on_holiday)
+                return -1;
+              if (a.was_on_holiday && !b.was_on_holiday) return 1;
+              if (!a.was_on_absence && a.was_on_absence !== b.was_on_absence)
+                return -1;
+              if (a.was_on_absence && !b.was_on_absence) return 1;
+              return a.name.localeCompare(b.name);
+            }) &&
               data?.map((item, index) => (
-                <tr key={index}>
-                  <td className="border border-gray-500 p-2 text-center">
-                    {index + 1}
-                  </td>
-                  <td className="border border-gray-500 p-2">
+                <tr
+                  key={index}
+                  className={cn(index % 2 === 0 ? "bg-gray-100" : "")}
+                >
+                  <td className="border p-2 text-center">{index + 1}</td>
+                  <td className="border p-2">
                     <div>
                       <div className="flex items-center gap-2 justify-between">
                         <Link to={`/superhr/employees/view/${item.id}`}>
@@ -349,15 +351,13 @@ const YesterdayAbsence = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="border border-gray-500 p-2">
+                  <td className="border  p-2">
                     <div className="flex flex-col">
                       <div>{item.department || "-"}</div>
                       <div>{item.group || "-"}</div>
                     </div>
                   </td>
-                  <td className="border border-gray-500 p-2">
-                    {item.comment || "-"}
-                  </td>
+                  <td className="border  p-2">{item.comment || "-"}</td>
                 </tr>
               ))}
           </tbody>
