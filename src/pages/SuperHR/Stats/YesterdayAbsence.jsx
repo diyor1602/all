@@ -1,5 +1,5 @@
 import api from "@/utils/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { BadgeCheck, OctagonX } from "lucide-react";
+import { BadgeCheck, Image, OctagonX } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const YesterdayAbsence = () => {
@@ -24,7 +24,12 @@ const YesterdayAbsence = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [actionType, setActionType] = useState(""); // 'absence' or 'holiday'
   const [comment, setComment] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -49,7 +54,34 @@ const YesterdayAbsence = () => {
     setSelectedEmployee(employee);
     setActionType(type);
     setComment("");
+    setSelectedFile(null);
+    setPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setIsDialogOpen(true);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async () => {
@@ -64,41 +96,40 @@ const YesterdayAbsence = () => {
 
     try {
       setSubmitting(true);
-      if (actionType === "holiday") {
-        await api.post("/superhr/employeeHolidays", {
-          employee_id: selectedEmployee?.id,
-          start_date: data?.[0]?.absent_date,
-          end_date: data?.[0]?.absent_date,
-          comment: comment,
-        });
 
-        toast({
-          title: "Muvaffaqiyatli",
-          description: "Sababli deb qo'shildi",
-          style: {
-            backgroundColor: "green",
-            color: "white",
-          },
-          duration: 1200,
-        });
-      } else {
-        await api.post("/superhr/employeeAbsence", {
-          employee_id: selectedEmployee?.id,
-          start_date: data?.[0]?.absent_date,
-          end_date: data?.[0]?.absent_date,
-          comment: comment,
-        });
+      const formData = new FormData();
+      formData.append("employee_id", selectedEmployee?.id);
+      formData.append("start_date", data?.[0]?.absent_date);
+      formData.append("end_date", data?.[0]?.absent_date);
+      formData.append("comment", comment);
 
-        toast({
-          title: "Muvaffaqiyatli",
-          description: "Sababsiz qo'shildi",
-          style: {
-            backgroundColor: "green",
-            color: "white",
-          },
-          duration: 1200,
-        });
+      if (selectedFile) {
+        formData.append("image", selectedFile);
       }
+
+      const endpoint =
+        actionType === "holiday"
+          ? "/superhr/employeeHolidays"
+          : "/superhr/employeeAbsence";
+
+      await api.post(endpoint, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description:
+          actionType === "holiday"
+            ? "Sababli deb qo'shildi"
+            : "Sababsiz qo'shildi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1200,
+      });
 
       setIsDialogOpen(false);
       fetchData();
@@ -123,6 +154,20 @@ const YesterdayAbsence = () => {
         {data?.[0]?.absent_date?.split("-").reverse().join(".")}) kelmaganlar.
         Jami: {data?.length} ta
       </div>
+
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <div className="flex items-center justify-center">
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt=""
+                className="w-full h-auto max-h-[90vh]"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -150,14 +195,66 @@ const YesterdayAbsence = () => {
                 placeholder="Izoh yozing..."
               />
             </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="image" className="text-right pt-2">
+                Rasm
+              </Label>
+              <div className="col-span-3 space-y-2">
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  className="cursor-pointer"
+                />
+                {preview && (
+                  <div className="mt-2 relative">
+                    <div className="relative w-32 h-32 border rounded-md overflow-hidden">
+                      <img
+                        src={preview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Bekor qilish
-            </Button>
-            <Button type="submit" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Saqlanmoqda..." : "Saqlash"}
-            </Button>
+            <div className="flex items-center gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Bekor qilish
+              </Button>
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? "Saqlanmoqda..." : "Saqlash"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -191,7 +288,19 @@ const YesterdayAbsence = () => {
                         <Link to={`/superhr/employees/view/${item.id}`}>
                           {item.name}
                         </Link>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
+                          {item?.image && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedImage(item.image);
+                                setIsImageDialogOpen(true);
+                              }}
+                            >
+                              <Image />
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
