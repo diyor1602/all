@@ -69,7 +69,13 @@ const Work = () => {
     localStorage.getItem("tarifLang") || "uz"
   );
   const [selectedEmployee, setSelectedEmployee] = useState("");
-  const [selectedWorks, setSelectedWorks] = useState([]);
+  const [selectedWorks, setSelectedWorks] = useState([
+    {
+      id: "",
+      quantity: "",
+      tempId: Date.now(),
+    },
+  ]);
   const [tarifLogs, setTarifLogs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -827,7 +833,7 @@ const Work = () => {
                     ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="text-center">
+                    <td colSpan={6} className="text-center">
                       Ishlar topilmadi
                     </td>
                   </tr>
@@ -1256,6 +1262,30 @@ const Work = () => {
                 {submitting ? "Yuborilmoqda..." : "Saqlash"}
               </Button>
             </CardContent>
+          </Card>
+
+          {/* Employees that has no work */}
+          <Card className="p-4">
+            <h1 className="font-semibold text-blue-800 mb-2">
+              Ish biriktirilmagan xodimlar
+            </h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {employees
+                ?.filter(
+                  (employee) =>
+                    !tarifLogs?.some((log) => log.employee?.id === employee.id)
+                )
+                ?.sort?.((a, b) => a.name.localeCompare(b.name))
+                ?.map((employee, index) => (
+                  <div
+                    key={index}
+                    className="p-2 bg-blue-50 border-blue-200 flex items-center gap-2"
+                  >
+                    <div>{index + 1}.</div>
+                    <div>{employee.name}</div>
+                  </div>
+                ))}
+            </div>
           </Card>
         </div>
       )}
