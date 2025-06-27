@@ -12,13 +12,18 @@ import {
   ChevronRight,
   PlusCircle,
   Loader2,
+  X,
+  Image,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const HolidayPage = () => {
   const { toast } = useToast();
 
   const [sending, setSending] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageOpen, setImageOpen] = useState(false);
 
   const handleStartEdit = (holiday) => {
     setEditingId(holiday.id);
@@ -154,6 +159,17 @@ const HolidayPage = () => {
 
   return (
     <div>
+      <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+        <DialogContent>
+          {selectedImage && (
+            <img
+              src={selectedImage}
+              alt=""
+              className="w-full max-w-[90vw] h-auto max-h-[90vh]"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="text-2xl font-bold">Ta'tillar</h2>
         <Link to="/superhr/holiday/add">
@@ -218,22 +234,22 @@ const HolidayPage = () => {
           <table className="w-full text-xs whitespace-nowrap">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
                   Xodim
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
                   Bo'lim
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
                   Boshlanish sanasi
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
                   Tugash sanasi
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
                   Izoh
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">
                   Amallar
                 </th>
               </tr>
@@ -245,18 +261,18 @@ const HolidayPage = () => {
                     key={holiday.id}
                     className="hover:bg-gray-50 border border-gray-200"
                   >
-                    <td className="px-6 py-1 border border-gray-200">
+                    <td className="px-3 py-1 border border-gray-200">
                       <div className="text-xs font-medium text-gray-900">
                         {holiday.employee?.name || "Noma'lum"}
                       </div>
                     </td>
-                    <td className="px-6 py-1 border border-gray-200">
+                    <td className="px-3 py-1 border border-gray-200">
                       <div className="text-xs font-medium text-gray-900 flex flex-col gap-1">
                         <div>{holiday.employee?.department?.name}</div>
                         <div>{holiday.employee?.group?.name}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-1 border border-gray-200">
+                    <td className="px-3 py-1 border border-gray-200">
                       {editingId === holiday.id ? (
                         <Input
                           type="date"
@@ -275,7 +291,7 @@ const HolidayPage = () => {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-1 border border-gray-200">
+                    <td className="px-3 py-1 border border-gray-200">
                       {editingId === holiday.id ? (
                         <Input
                           type="date"
@@ -295,7 +311,7 @@ const HolidayPage = () => {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-1 border border-gray-200">
+                    <td className="px-3 py-1 border border-gray-200">
                       {editingId === holiday.id ? (
                         <Input
                           type="text"
@@ -309,37 +325,66 @@ const HolidayPage = () => {
                           }
                         />
                       ) : (
-                        <div className="text-xs text-gray-900 max-w-xs truncate">
-                          {holiday.comment || "-"}
+                        <div className="flex items-center gap-2">
+                          {holiday?.image && (
+                            <Button
+                              variant="ghost"
+                              className="text-xs"
+                              size="icon"
+                              onClick={() => {
+                                setImageOpen(true);
+                                setSelectedImage(holiday.image);
+                              }}
+                            >
+                              <Image className="text-primary" />
+                            </Button>
+                          )}
+                          <div className="text-xs text-gray-900 max-w-xs truncate">
+                            {holiday.comment || "-"}
+                          </div>
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-1 flex items-center gap-2">
+                    <td className="px-1 py-1 flex items-center gap-1">
                       <Link
                         to={`/superhr/employees/view/${holiday.employee?.id}`}
                       >
                         {" "}
-                        <Button
-                          variant="ghost"
-                          className="text-xs"
-                          // onClick={() => handleDeleteHoliday(holiday.id)}
-                        >
+                        <Button variant="ghost" className="text-xs">
                           <Eye className="text-blue-500" />
                         </Button>
                       </Link>
                       {editingId === holiday.id ? (
-                        <Button
-                          variant="ghost"
-                          className="text-xs"
-                          onClick={() => handleSaveEdit(holiday.id)}
-                          disabled={sending}
-                        >
-                          {sending ? (
-                            <Loader2 className="animate-spin text-primary" />
-                          ) : (
-                            <Check className="text-green-500" />
-                          )}
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            className="text-xs"
+                            onClick={() => handleSaveEdit(holiday.id)}
+                            disabled={sending}
+                          >
+                            {sending ? (
+                              <Loader2 className="animate-spin text-primary" />
+                            ) : (
+                              <Check className="text-green-500" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="text-xs"
+                            onClick={() => {
+                              setEditingId(null);
+                              setEditData({
+                                id: null,
+                                start_date: "",
+                                end_date: "",
+                                comment: "",
+                              });
+                            }}
+                            disabled={sending}
+                          >
+                            <X className="text-red-500" />
+                          </Button>
+                        </>
                       ) : (
                         <Button
                           variant="ghost"
@@ -356,7 +401,7 @@ const HolidayPage = () => {
                 <tr>
                   <td
                     colSpan="6"
-                    className="px-6 py-1 text-center text-xs text-gray-500"
+                    className="px-3 py-1 text-center text-xs text-gray-500"
                   >
                     Ma'lumot topilmadi
                   </td>
