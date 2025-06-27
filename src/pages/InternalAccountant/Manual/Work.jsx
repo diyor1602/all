@@ -69,7 +69,13 @@ const Work = () => {
     localStorage.getItem("tarifLang") || "uz"
   );
   const [selectedEmployee, setSelectedEmployee] = useState("");
-  const [selectedWorks, setSelectedWorks] = useState([]);
+  const [selectedWorks, setSelectedWorks] = useState([
+    {
+      id: "",
+      quantity: "",
+      tempId: Date.now(),
+    },
+  ]);
   const [tarifLogs, setTarifLogs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
