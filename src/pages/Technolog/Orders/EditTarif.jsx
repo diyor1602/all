@@ -304,7 +304,32 @@ const EditTarif = () => {
     setActiveTimerRowIndex(null);
   };
 
-  const handleDeleteRow = (index) => {
+  const handleDeleteRow = async (index) => {
+    if (!window.confirm("Haqiqatdan o'chirishni xohlaysizmi?")) return;
+
+    // if it has id, send delete request
+    if (tarif?.tarifications[index]?.id) {
+      try {
+        await api.delete(
+          `/technologist/tarification/${tarif?.tarifications[index]?.id}`
+        );
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Tarifikatsiya muvaffaqiyatli o'chirildi",
+          style: {
+            backgroundColor: "green",
+            color: "white",
+          },
+        });
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Tarifikatsiyani o'chirishda xatolik",
+          variant: "destructive",
+        });
+      }
+    }
+
     if (tarif?.tarifications?.length <= 1) {
       toast({
         title: "Diqqat",
@@ -516,18 +541,20 @@ const EditTarif = () => {
                         // Get the selected option from the datalist
                         const input = e.target;
                         const value = input.value;
-                        const options = document.getElementById('nomi-options').options;
+                        const options =
+                          document.getElementById("nomi-options").options;
                         let selectedName = value;
-                        
+
                         // Check if the selected value matches any option with seconds
                         for (let i = 0; i < options.length; i++) {
                           if (options[i].value === value) {
                             // Use the data-value attribute if it exists (contains just the name)
-                            selectedName = options[i].dataset.value || value.split(' (')[0];
+                            selectedName =
+                              options[i].dataset.value || value.split(" (")[0];
                             break;
                           }
                         }
-                        
+
                         handleInputChange(index, "name", selectedName);
                       }}
                       ref={
