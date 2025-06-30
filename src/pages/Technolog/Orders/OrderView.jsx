@@ -27,6 +27,7 @@ import {
   Users,
   FileText,
   Image,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +80,41 @@ const OrderView = () => {
   const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const [limitValue, setLimitValue] = useState("");
   const [isLimitLoading, setIsLimitLoading] = useState(false);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const deleteTarif = (id) => {
+    setDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteTarif = async () => {
+    setIsDeleting(true);
+    try {
+      await api.delete(`/technologist/tarification/category/${deleteId}`);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Tarifikatsiya o'chirildi",
+        variant: "default",
+      });
+      fetchSpecifications();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message ||
+          "Tarifikatsiyani o'chirishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setDeleteId(null);
+      fetchTarifications();
+    }
+  };
 
   const totalSpends = useMemo(
     () =>
@@ -172,7 +208,8 @@ const OrderView = () => {
       } catch (error) {
         toast({
           title: "Xatolik",
-          description: "Tarification yuklab bo'lmadi",
+          description:
+            error?.response?.data?.message || "Tarifikatsiyani yuklab bo'lmadi",
           variant: "destructive",
         });
       } finally {
@@ -211,7 +248,9 @@ const OrderView = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Spesifikatsiyalarni yuklab bo'lmadi",
+        description:
+          error?.response?.data?.message ||
+          "Spesifikatsiyalarni yuklab bo'lmadi",
         variant: "destructive",
       });
     } finally {
@@ -229,7 +268,8 @@ const OrderView = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Bunday buyurtma topilmadi",
+        description:
+          error?.response?.data?.message || "Bunday buyurtma topilmadi",
         variant: "destructive",
       });
       navigate("/technolog/orders");
@@ -256,7 +296,8 @@ const OrderView = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Tariflarni olishda xatolik",
+        description:
+          error?.response?.data?.message || "Tariflarni olishda xatolik",
         variant: "destructive",
       });
     } finally {
@@ -274,7 +315,9 @@ const OrderView = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Spesifikatsiyalarni olishda xatolik",
+        description:
+          error?.response?.data?.message ||
+          "Spesifikatsiyalarni olishda xatolik",
         variant: "destructive",
       });
     } finally {
@@ -482,6 +525,31 @@ const OrderView = () => {
 
   return (
     <div className="space-y-6">
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tarifikatsiya o'chirish</DialogTitle>
+            <DialogDescription>
+              Tarifikatsiyani o'chirishni ishlatishni halosizmi?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              disabled={isDeleting}
+              onClick={handleDeleteTarif}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {isDeleting ? "O'chirilmoqda..." : "O'chirish"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Header with back button */}
       <div className="flex items-center justify-between">
         <Button
@@ -1070,6 +1138,16 @@ const OrderView = () => {
                               >
                                 <Edit className="h-4 w-4 mr-1" />
                                 O'zgartirish
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  deleteTarif(tarification?.id);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                O'chirish
                               </Button>
                             </div>
                             <Button
