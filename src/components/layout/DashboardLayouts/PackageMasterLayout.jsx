@@ -5,7 +5,7 @@ const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
     name: "Buyurtmalar",
-    href: "/packageMaster/orders",
+    href: "/packageMaster/new-spec",
     icon: PackageOpen,
     onMobile: true,
   },
