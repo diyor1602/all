@@ -108,6 +108,20 @@ const SalaryDetails = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const getAbsenceData = (date) => {
+    return employeeData?.absences?.find(
+      (absence) => absence.start_date === date
+    );
+  };
+
+  const getHolidayData = (date) => {
+    return employeeData?.holidays?.find(
+      (holiday) =>
+        new Date(date) >= new Date(holiday.start_date) &&
+        new Date(date) <= new Date(holiday.end_date)
+    );
+  };
+
   useEffect(() => {
     localStorage.setItem("salary2-filters", JSON.stringify(filters));
   }, [filters]);
@@ -603,6 +617,54 @@ const SalaryDetails = () => {
                                       <Images />
                                     </Button>
                                   )}
+                                </div>
+                              )}
+                              {getAbsenceData(attendance.date) && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {getAbsenceData(attendance.date)?.image && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setSelectedImage(
+                                          getAbsenceData(attendance.date)?.image
+                                        );
+                                        setImageDialogOpen(true);
+                                      }}
+                                    >
+                                      <Images />
+                                    </Button>
+                                  )}
+                                  <div className="rounded-full bg-red-500 text-white px-2 py-1 w-fit text-xs">
+                                    Sababsiz
+                                  </div>
+                                  <div>
+                                    {getAbsenceData(attendance.date)?.comment}
+                                  </div>
+                                </div>
+                              )}
+                              {getHolidayData(attendance.date) && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {getHolidayData(attendance.date)?.image && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setSelectedImage(
+                                          getHolidayData(attendance.date)?.image
+                                        );
+                                        setImageDialogOpen(true);
+                                      }}
+                                    >
+                                      <Images />
+                                    </Button>
+                                  )}
+                                  <div className="rounded-full bg-green-500 text-white px-2 py-1 w-fit text-xs">
+                                    Sababli
+                                  </div>
+                                  <div>
+                                    {getHolidayData(attendance.date)?.comment}
+                                  </div>
                                 </div>
                               )}
                             </div>
