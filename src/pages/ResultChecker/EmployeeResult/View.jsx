@@ -309,7 +309,7 @@ const View = () => {
           position: sticky;
           top: 0;
           z-index: 20;
-          background: #f3f4f6;
+          background: white;
         }
 
         .sticky-left-1 {
@@ -330,42 +330,42 @@ const View = () => {
 
         .sticky-header.sticky-left-1 {
           z-index: 30;
-          background: #f3f4f6;
+          background: white;
         }
 
         .sticky-header.sticky-left-2 {
           z-index: 30;
-          background: #f3f4f6;
+          background: white;
         }
 
         tr:hover .sticky-left-1,
         tr:hover .sticky-left-2 {
-          background: #f9fafb;
+          background: white;
         }
       `}</style>
 
-      <table className="border-collapse border border-gray-500 w-full whitespace-nowrap sticky-table text-sm">
+      <table className="border-collapse border border-gray-200 w-full whitespace-nowrap sticky-table text-xs">
         <thead>
           <tr>
-            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header sticky-left-1 min-w-[200px]">
+            <th className="border border-gray-200 p-2 sticky-header sticky-left-1 min-w-[200px]">
               Xodim
             </th>
-            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header sticky-left-2 min-w-[100px]">
+            <th className="border border-gray-200 p-2 sticky-header sticky-left-2 min-w-[100px]">
               Daqiqa
             </th>
-            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header min-w-[100px]">
+            <th className="border border-gray-200 p-2 sticky-header min-w-[100px]">
               Progress
             </th>
-            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header min-w-[100px]">
+            <th className="border border-gray-200 p-2 sticky-header min-w-[100px]">
               Maximum
             </th>
-            <th className="border border-gray-500 p-2 bg-gray-100 sticky-header min-w-[120px]">
+            <th className="border border-gray-200 p-2 sticky-header min-w-[120px]">
               Jami miqdor
             </th>
             {times.map((time) => (
               <th
                 key={time.id}
-                className="border border-gray-500 p-2 bg-gray-100 sticky-header min-w-[100px]"
+                className="border border-gray-200 p-2 sticky-header min-w-[100px]"
               >
                 {time.time?.slice(0, 5)}
               </th>
@@ -375,12 +375,12 @@ const View = () => {
         <tbody>
           {employees
             ?.sort((a, b) => a.name.localeCompare(b.name))
-            ?.map((employee) => (
-              <tr key={employee.id} className="hover:bg-gray-50">
-                <td className="border border-gray-500 p-2 font-medium sticky-left-1 min-w-[200px]">
-                  {employee.name}
+            ?.map((employee, index) => (
+              <tr key={index}>
+                <td className="border border-gray-200 p-2 font-medium sticky-left-1 min-w-[200px]">
+                  <i>{employee.name}</i>
                 </td>
-                <td className="border border-gray-500 p-2 sticky-left-2 min-w-[100px]">
+                <td className="border border-gray-200 p-2 sticky-left-2 min-w-[100px]">
                   <div className="w-full flex justify-center">
                     <input
                       type="text"
@@ -410,7 +410,7 @@ const View = () => {
                     />
                   </div>
                 </td>
-                <td className="border border-gray-500 p-2 text-center min-w-[100px]">
+                <td className="border border-gray-200 p-2 text-center min-w-[100px]">
                   <span
                     className={`font-medium ${
                       calculateProgress(employee) >= 100
@@ -427,10 +427,10 @@ const View = () => {
                     %
                   </span>
                 </td>
-                <td className="border border-gray-500 p-2 text-center font-medium min-w-[100px]">
+                <td className="border border-gray-200 p-2 text-center font-medium min-w-[100px]">
                   {calculateMaximum(employee)}
                 </td>
-                <td className="border border-gray-500 p-2 text-center font-bold text-blue-600 min-w-[120px]">
+                <td className="border border-gray-200 p-2 text-center font-bold text-blue-600 min-w-[120px]">
                   {calculateTotalQuantity(employee).toLocaleString()}
                 </td>
                 {times.map((time) => {
@@ -440,7 +440,7 @@ const View = () => {
                   return (
                     <td
                       key={time.id}
-                      className="border border-gray-500 p-2 text-center min-w-[100px]"
+                      className="border border-gray-200 p-2 text-center min-w-[100px]"
                     >
                       <input
                         type="text"
