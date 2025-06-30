@@ -149,7 +149,7 @@ const Specification = () => {
     toast({ title: "Ma'lumot tahlil qilindi" });
   };
 
-  const handleGenerateJson = () => {
+  const handleGenerateJson = async () => {
     const sizes = parsedSizes.map((sizeObj) => ({
       ...sizeObj,
       capacity: capacities[sizeObj.size_id],
@@ -167,6 +167,41 @@ const Specification = () => {
 
     const orders = selectedOrders.map((o) => o.id);
     setResultJson({ orders, sizes });
+
+    try {
+      const response = await api.post(
+        "/packageMaster/packageStore",
+        resultJson,
+        {
+          responseType: "blob", // Important: treat response as binary
+        }
+      );
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Optional: Set file name
+      link.download = "data.xlsx";
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast({ title: "Muvaffaqiyatli", description: "Excel fayl yuklandi" });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Excel faylni yuklab olishda xatolik",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCapacityChange = (sizeId, value) => {
