@@ -1113,7 +1113,7 @@ const OrderView = () => {
                             </div>
                           </div>
                           <div className="flex flex-wrap justify-between gap-2 mt-4">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <Button
                                 variant="outline"
                                 size="sm"
