@@ -24,6 +24,7 @@ const Specification = () => {
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [resultJson, setResultJson] = useState(null);
   const [capacities, setCapacities] = useState({});
+  const [kgs, setKgs] = useState({});
   const [parsedSizes, setParsedSizes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -153,6 +154,7 @@ const Specification = () => {
     const sizes = parsedSizes.map((sizeObj) => ({
       ...sizeObj,
       capacity: capacities[sizeObj.size_id],
+      kg: kgs[sizeObj.size_id],
     }));
 
     const hasMissingCapacities = sizes.some((s) => !s.capacity);
@@ -160,6 +162,16 @@ const Specification = () => {
       toast({
         title: "Xatolik",
         description: "Barcha o'lchamlar uchun sig'im kiritilishi kerak",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasMissingKgs = sizes.some((s) => !s.kg);
+    if (hasMissingKgs) {
+      toast({
+        title: "Xatolik",
+        description: "Barcha o'lchamlar uchun kg kiritilishi kerak",
         variant: "destructive",
       });
       return;
@@ -206,6 +218,10 @@ const Specification = () => {
 
   const handleCapacityChange = (sizeId, value) => {
     setCapacities({ ...capacities, [sizeId]: parseInt(value) });
+  };
+
+  const handleKgChange = (sizeId, value) => {
+    setKgs({ ...kgs, [sizeId]: parseInt(value) });
   };
 
   const toggleOrderSelection = (order) => {
@@ -369,6 +385,9 @@ const Specification = () => {
                           <th className="h-10 px-4 text-left align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
                             Sig'imi
                           </th>
+                          <th className="h-10 px-4 text-left align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
+                            Kg
+                          </th>
                           {getAllColorNames(parsedSizes).map((color, idx) => (
                             <th
                               key={idx}
@@ -414,6 +433,21 @@ const Specification = () => {
                                   min="1"
                                 />
                               </td>
+                              <td className="p-3 align-middle">
+                                <Input
+                                  type="number"
+                                  className="h-8 w-20 text-center text-sm border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                  value={kgs[sizeObj.size_id] || ""}
+                                  onChange={(e) =>
+                                    handleKgChange(
+                                      sizeObj.size_id,
+                                      e.target.value
+                                    )
+                                  }
+                                  required
+                                  min="1"
+                                />
+                              </td>
                               {colorNames.map((color, i) => (
                                 <td
                                   key={i}
@@ -440,6 +474,7 @@ const Specification = () => {
                           <td className="p-3 text-sm text-gray-900 font-semibold">
                             об.кол
                           </td>
+                          <td className="p-3">-</td>
                           <td className="p-3">-</td>
                           {getAllColorNames(parsedSizes).map((color, idx) => (
                             <td key={idx} className="p-3 text-center">
