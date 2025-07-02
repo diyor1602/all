@@ -3,7 +3,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -22,6 +22,7 @@ import {
   FileDigit,
   Pencil,
   Users,
+  FileText,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,7 @@ const WorkDetails = () => {
     localStorage.getItem("tarifLang") || "uz"
   );
   const [selectedEmployee, setSelectedEmployee] = useState("all");
+  const [tarifPdfDownloading, setTarifPdfDownloading] = useState(false);
 
   const totalSpends = useMemo(
     () =>
@@ -238,6 +240,41 @@ const WorkDetails = () => {
       setPlanLoader(false);
     }
   };
+
+  const handleDownloadTarifPdf = useCallback(async () => {
+    setTarifPdfDownloading(true);
+    try {
+      const response = await api.get(`/internalAccountant/tarifications/pdf`, {
+        params: {
+          submodel_id: selectedSubmodel?.id,
+          region: selectedTarifLang,
+        },
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${order?.id} ${order?.name} ${selectedSubmodel?.submodel?.name} ${
+          selectedTarifLang == "ru" ? "RU" : "UZ"
+        } tarifikatsiya.pdf`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url); // optional cleanup
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Tarification PDF fayl yuklab bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setTarifPdfDownloading(false);
+    }
+  }, [selectedSubmodel?.id, selectedTarifLang]);
 
   if (loading) {
     return (
@@ -642,6 +679,20 @@ const WorkDetails = () => {
                                 minimumFractionDigits: 2,
                               })}{" "}
                             sekund
+                            <Button
+                              size="icon"
+                              className="ml-4 h-8 w-8 rounded-full text-white bg-red-500 hover:bg-red-600"
+                              onClick={() =>
+                                handleDownloadTarifPdf(selectedSubmodel?.id)
+                              }
+                              disabled={tarifPdfDownloading}
+                            >
+                              {tarifPdfDownloading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </div>
