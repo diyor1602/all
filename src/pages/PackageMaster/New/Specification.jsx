@@ -178,12 +178,13 @@ const Specification = () => {
     }
 
     const orders = selectedOrders.map((o) => o.id);
-    setResultJson({ orders, sizes });
+    const payload = { orders, sizes };
+    setResultJson(payload);
 
     try {
       const response = await api.post(
         "/packageMaster/packageStore",
-        resultJson,
+        payload,
         {
           responseType: "blob", // Important: treat response as binary
         }
