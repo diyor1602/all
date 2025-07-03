@@ -1,10 +1,12 @@
-import React from "react";
+import { Routes, Route } from "react-router-dom";
+import Logs from "./Logs";
 
 const Ceo = () => {
   return (
     <div>
-      Ceo
-      <h2>Ceo</h2>
+      <Routes>
+        <Route path="logs" element={<Logs />} />
+      </Routes>
     </div>
   );
 };
