@@ -916,7 +916,14 @@ const Daily = () => {
                   </TableHeader>
                   <TableBody>
                     {daily.orders?.map((order, i) => (
-                      <TableRow key={i}>
+                      <TableRow
+                        key={i}
+                        className={cn(
+                          order.net_profit_uzs > 0
+                            ? "bg-green-100 hover:bg-green-200"
+                            : "bg-red-100 hover:bg-red-200"
+                        )}
+                      >
                         <TableCell className="font-medium border border-slate-200 text-center">
                           {order?.order?.id}
                         </TableCell>
