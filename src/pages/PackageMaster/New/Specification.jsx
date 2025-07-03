@@ -192,36 +192,40 @@ const Specification = () => {
     const payload = { orders, sizes };
 
     try {
-      const response = await api.post("/packageMaster/packageStore", payload, {
-        responseType: "blob", // Important: treat response as binary
-      });
-
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-
-      // Optional: Set file name
-      link.download = "data.xlsx";
-
-      document.body.appendChild(link);
-      link.click();
-
-      // Clean up
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Excel fayl yuklandi",
-        duration: 1200,
-      });
+      // First, make the API call to start processing
+      const response = await api.post("/packageMaster/packageStore", payload);
+      
+      // Check if we got a URL in the response
+      if (response.data && response.data.url) {
+        // Create a temporary link element to trigger the download
+        const link = document.createElement('a');
+        link.href = response.data.url;
+        link.target = '_blank'; // Open in new tab
+        link.download = response.data.url.split('/').pop() || 'download.zip'; // Extract filename from URL or use default
+        
+        // Append to body, click and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Muvaffaqiyatli",
+          description: response.data.message || "Fayl yuklandi",
+          duration: 2000,
+        });
+      } else {
+        // Handle case where URL is not in the response
+        toast({
+          title: "Xatolik",
+          description: "Fayl manzili topilmadi",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
+      console.error('Error downloading file:', error);
       toast({
         title: "Xatolik",
-        description: "Excel faylni yuklab olishda xatolik",
+        description: error.response?.data?.message || "Faylni yuklab olishda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
