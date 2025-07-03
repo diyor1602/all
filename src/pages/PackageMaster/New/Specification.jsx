@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { statuses } from "@/lib/status";
 
 const Specification = () => {
   const { toast } = useToast();
@@ -194,20 +195,20 @@ const Specification = () => {
     try {
       // First, make the API call to start processing
       const response = await api.post("/packageMaster/packageStore", payload);
-      
+
       // Check if we got a URL in the response
       if (response.data && response.data.url) {
         // Create a temporary link element to trigger the download
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = response.data.url;
-        link.target = '_blank'; // Open in new tab
-        link.download = response.data.url.split('/').pop() || 'download.zip'; // Extract filename from URL or use default
-        
+        link.target = "_blank"; // Open in new tab
+        link.download = response.data.url.split("/").pop() || "download.zip"; // Extract filename from URL or use default
+
         // Append to body, click and remove
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         toast({
           title: "Muvaffaqiyatli",
           description: response.data.message || "Fayl yuklandi",
@@ -222,10 +223,11 @@ const Specification = () => {
         });
       }
     } catch (error) {
-      console.error('Error downloading file:', error);
       toast({
         title: "Xatolik",
-        description: error.response?.data?.message || "Faylni yuklab olishda xatolik yuz berdi",
+        description:
+          error.response?.data?.message ||
+          "Faylni yuklab olishda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
@@ -319,9 +321,19 @@ const Specification = () => {
                     onClick={() => toggleOrderSelection(order)}
                   >
                     <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold">#{order.id}</h4>
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="w-full">
+                          <div className="flex items-center gap-2 w-full justify-between flex-wrap">
+                            <h4 className="font-semibold">#{order.id}</h4>
+                            <p
+                              className={
+                                "text-xs rounded-full px-2 py-1 text-white " +
+                                statuses[order.status]?.color
+                              }
+                            >
+                              {statuses[order.status]?.text}
+                            </p>
+                          </div>
                           <p className="text-sm text-muted-foreground">
                             {order.order_model?.model?.name} • {order.quantity}{" "}
                             ta
