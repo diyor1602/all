@@ -12,9 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ClipboardCopy, Check } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Specification = () => {
   const { toast } = useToast();
@@ -22,12 +21,11 @@ const Specification = () => {
   const [pastedData, setPastedData] = useState("");
   const [matchedOrders, setMatchedOrders] = useState([]);
   const [selectedOrders, setSelectedOrders] = useState([]);
-  const [resultJson, setResultJson] = useState(null);
   const [capacities, setCapacities] = useState({});
   const [kgs, setKgs] = useState({});
   const [parsedSizes, setParsedSizes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const extractAndSearchOrders = async () => {
     const lines = pastedData.trim().split("\n");
@@ -62,11 +60,13 @@ const Specification = () => {
           title: "Topilmadi",
           description: `Buyurtmalar: "${searchTerm}" topilmadi`,
           variant: "destructive",
+          duration: 1200,
         });
       } else {
         toast({
           title: "Muvaffaqiyatli",
           description: `${response.data.length} ta buyurtma topildi`,
+          duration: 1200,
         });
       }
       setMatchedOrders(response.data);
@@ -113,6 +113,16 @@ const Specification = () => {
   };
 
   const parseExcelData = () => {
+    if (selectedOrders.length === 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, avval buyurtmalarni tanlang",
+        variant: "destructive",
+        duration: 1200,
+      });
+      return;
+    }
+
     const lines = pastedData.trim().split("\n");
     if (lines.length < 2) return;
 
@@ -147,10 +157,11 @@ const Specification = () => {
       .filter(Boolean);
 
     setParsedSizes(parsed);
-    toast({ title: "Ma'lumot tahlil qilindi" });
+    toast({ title: "Ma'lumot tahlil qilindi", duration: 1200 });
   };
 
   const handleGenerateJson = async () => {
+    setIsSending(true);
     const sizes = parsedSizes.map((sizeObj) => ({
       ...sizeObj,
       capacity: capacities[sizeObj.size_id],
@@ -179,16 +190,11 @@ const Specification = () => {
 
     const orders = selectedOrders.map((o) => o.id);
     const payload = { orders, sizes };
-    setResultJson(payload);
 
     try {
-      const response = await api.post(
-        "/packageMaster/packageStore",
-        payload,
-        {
-          responseType: "blob", // Important: treat response as binary
-        }
-      );
+      const response = await api.post("/packageMaster/packageStore", payload, {
+        responseType: "blob", // Important: treat response as binary
+      });
 
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -207,13 +213,19 @@ const Specification = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast({ title: "Muvaffaqiyatli", description: "Excel fayl yuklandi" });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Excel fayl yuklandi",
+        duration: 1200,
+      });
     } catch (error) {
       toast({
         title: "Xatolik",
         description: "Excel faylni yuklab olishda xatolik",
         variant: "destructive",
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -231,17 +243,6 @@ const Specification = () => {
     } else {
       setSelectedOrders([...selectedOrders, order]);
     }
-  };
-
-  const copyToClipboard = () => {
-    if (!resultJson) return;
-    navigator.clipboard.writeText(JSON.stringify(resultJson, null, 2));
-    setCopied(true);
-    toast({
-      title: "Nusxalandi!",
-      description: "JSON nusxalandi",
-    });
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -285,13 +286,6 @@ const Specification = () => {
                 disabled={!pastedData.trim() || matchedOrders.length === 0}
               >
                 Tahlil qilish
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleGenerateJson}
-                disabled={parsedSizes.length === 0}
-              >
-                JSON yaratish
               </Button>
             </div>
           </div>
@@ -358,190 +352,159 @@ const Specification = () => {
       )}
 
       {parsedSizes.length > 0 && (
-        <Tabs defaultValue="table" className="w-full">
-          <TabsList>
-            <TabsTrigger value="table">Jadval Ko'rinishi</TabsTrigger>
-            <TabsTrigger value="json" disabled={!resultJson}>
-              JSON Ma'lumotlari
-            </TabsTrigger>
-          </TabsList>
+        <Card>
+          <CardHeader>
+            <CardTitle>Excel Jadvali</CardTitle>
+            <CardDescription>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>Tahlil qilingan ma'lumotlar jadvali</div>
+                <Button
+                  onClick={handleGenerateJson}
+                  disabled={parsedSizes.length === 0 || isSending}
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  {isSending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Yuborilmoqda...
+                    </>
+                  ) : (
+                    "Yuborish"
+                  )}
+                </Button>
+              </div>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              <div className="relative w-full overflow-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50">
+                    <tr className="border-b border-gray-200">
+                      <th className="h-10 px-4 text-left align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
+                        Размер
+                      </th>
+                      <th className="h-10 px-4 text-left align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
+                        Sig'imi
+                      </th>
+                      <th className="h-10 px-4 text-left align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
+                        Kg
+                      </th>
+                      {getAllColorNames(parsedSizes).map((color, idx) => (
+                        <th
+                          key={idx}
+                          className="h-10 px-4 text-center align-middle font-medium text-gray-700 text-xs uppercase tracking-wider"
+                        >
+                          {color}
+                        </th>
+                      ))}
+                      <th className="h-10 px-4 text-center align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
+                        Об.кол
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {parsedSizes.map((sizeObj, rowIdx) => {
+                      const colorValues = getColorMap(sizeObj.colors);
+                      const colorNames = getAllColorNames(parsedSizes);
+                      const total = Object.values(colorValues).reduce(
+                        (sum, val) => sum + val,
+                        0
+                      );
 
-          <TabsContent value="table">
-            <Card>
-              <CardHeader>
-                <CardTitle>Excel Jadvali</CardTitle>
-                <CardDescription>
-                  Tahlil qilingan ma'lumotlar jadvali
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="relative w-full overflow-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
-                        <tr className="border-b border-gray-200">
-                          <th className="h-10 px-4 text-left align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
-                            Размер
-                          </th>
-                          <th className="h-10 px-4 text-left align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
-                            Sig'imi
-                          </th>
-                          <th className="h-10 px-4 text-left align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
-                            Kg
-                          </th>
-                          {getAllColorNames(parsedSizes).map((color, idx) => (
-                            <th
-                              key={idx}
-                              className="h-10 px-4 text-center align-middle font-medium text-gray-700 text-xs uppercase tracking-wider"
-                            >
-                              {color}
-                            </th>
-                          ))}
-                          <th className="h-10 px-4 text-center align-middle font-medium text-gray-700 text-xs uppercase tracking-wider">
-                            Об.кол
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {parsedSizes.map((sizeObj, rowIdx) => {
-                          const colorValues = getColorMap(sizeObj.colors);
-                          const colorNames = getAllColorNames(parsedSizes);
-                          const total = Object.values(colorValues).reduce(
-                            (sum, val) => sum + val,
-                            0
-                          );
-
-                          return (
-                            <tr
-                              key={rowIdx}
-                              className="hover:bg-gray-50 transition-colors"
-                            >
-                              <td className="p-3 align-middle font-medium text-sm text-gray-900">
-                                {getSizeNameById(sizeObj.size_id)}
-                              </td>
-                              <td className="p-3 align-middle">
-                                <Input
-                                  type="number"
-                                  className="h-8 w-20 text-center text-sm border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
-                                  value={capacities[sizeObj.size_id] || ""}
-                                  onChange={(e) =>
-                                    handleCapacityChange(
-                                      sizeObj.size_id,
-                                      e.target.value
-                                    )
-                                  }
-                                  required
-                                  min="1"
-                                />
-                              </td>
-                              <td className="p-3 align-middle">
-                                <Input
-                                  type="number"
-                                  className="h-8 w-20 text-center text-sm border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
-                                  value={kgs[sizeObj.size_id] || ""}
-                                  onChange={(e) =>
-                                    handleKgChange(
-                                      sizeObj.size_id,
-                                      e.target.value
-                                    )
-                                  }
-                                  required
-                                  min="1"
-                                />
-                              </td>
-                              {colorNames.map((color, i) => (
-                                <td
-                                  key={i}
-                                  className="p-3 align-middle text-center text-sm text-gray-800"
-                                >
-                                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100">
-                                    {colorValues[color] || 0}
-                                  </span>
-                                </td>
-                              ))}
-                              <td className="p-3 align-middle text-center">
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs font-semibold"
-                                >
-                                  {total}
-                                </Badge>
-                              </td>
-                            </tr>
-                          );
-                        })}
-
-                        <tr className="bg-gray-50 font-semibold">
-                          <td className="p-3 text-sm text-gray-900 font-semibold">
-                            об.кол
+                      return (
+                        <tr
+                          key={rowIdx}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="p-3 align-middle font-medium text-sm text-gray-900">
+                            {getSizeNameById(sizeObj.size_id)}
                           </td>
-                          <td className="p-3">-</td>
-                          <td className="p-3">-</td>
-                          {getAllColorNames(parsedSizes).map((color, idx) => (
-                            <td key={idx} className="p-3 text-center">
-                              <Badge
-                                variant="outline"
-                                className="text-xs font-semibold"
-                              >
-                                {getColumnTotal(parsedSizes, color)}
-                              </Badge>
+                          <td className="p-3 align-middle">
+                            <Input
+                              type="number"
+                              className="h-8 w-20 text-center text-sm border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                              value={capacities[sizeObj.size_id] || ""}
+                              onChange={(e) =>
+                                handleCapacityChange(
+                                  sizeObj.size_id,
+                                  e.target.value
+                                )
+                              }
+                              required
+                              min="1"
+                            />
+                          </td>
+                          <td className="p-3 align-middle">
+                            <Input
+                              type="number"
+                              className="h-8 w-20 text-center text-sm border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                              value={kgs[sizeObj.size_id] || ""}
+                              onChange={(e) =>
+                                handleKgChange(sizeObj.size_id, e.target.value)
+                              }
+                              required
+                              min="1"
+                            />
+                          </td>
+                          {colorNames.map((color, i) => (
+                            <td
+                              key={i}
+                              className="p-3 align-middle text-center text-sm text-gray-800"
+                            >
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100">
+                                {colorValues[color] || 0}
+                              </span>
                             </td>
                           ))}
-                          <td className="p-3 text-center">
-                            <Badge className="bg-primary text-white text-xs font-semibold">
-                              {parsedSizes.reduce(
-                                (sum, sizeObj) =>
-                                  sum +
-                                  sizeObj.colors.reduce(
-                                    (s, c) => s + Object.values(c)[0],
-                                    0
-                                  ),
-                                0
-                              )}
+                          <td className="p-3 align-middle text-center">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs font-semibold"
+                            >
+                              {total}
                             </Badge>
                           </td>
                         </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                      );
+                    })}
 
-          <TabsContent value="json">
-            {resultJson && (
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <CardTitle>Yaratilgan JSON</CardTitle>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyToClipboard}
-                      className="gap-2"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="h-4 w-4" /> Nusxalandi
-                        </>
-                      ) : (
-                        <>
-                          <ClipboardCopy className="h-4 w-4" /> Nusxalash
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <pre className="relative rounded-md bg-muted p-4 overflow-x-auto text-sm">
-                    <code>{JSON.stringify(resultJson, null, 2)}</code>
-                  </pre>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+                    <tr className="bg-gray-50 font-semibold">
+                      <td className="p-3 text-sm text-gray-900 font-semibold">
+                        об.кол
+                      </td>
+                      <td className="p-3">-</td>
+                      <td className="p-3">-</td>
+                      {getAllColorNames(parsedSizes).map((color, idx) => (
+                        <td key={idx} className="p-3 text-center">
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-semibold"
+                          >
+                            {getColumnTotal(parsedSizes, color)}
+                          </Badge>
+                        </td>
+                      ))}
+                      <td className="p-3 text-center">
+                        <Badge className="bg-primary text-white text-xs font-semibold">
+                          {parsedSizes.reduce(
+                            (sum, sizeObj) =>
+                              sum +
+                              sizeObj.colors.reduce(
+                                (s, c) => s + Object.values(c)[0],
+                                0
+                              ),
+                            0
+                          )}
+                        </Badge>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
