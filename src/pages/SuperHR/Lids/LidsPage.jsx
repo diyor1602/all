@@ -3,7 +3,15 @@ import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
 import { CirclePlus, Edit } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Dialog,
   DialogContent,
@@ -34,26 +42,44 @@ const formatPhoneNumber = (value) => {
 const LidsPage = () => {
   const { toast } = useToast();
 
-  const [lids, setLidsPage] = useState([]);
+  const [lids, setLids] = useState([]);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0,
+  });
   const [imageDialog, setImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parseInt(searchParams.get('page') || '1');
 
   useEffect(() => {
-    const fetchLidsPage = async () => {
+    const fetchLids = async () => {
       try {
-        const response = await api.get("/superhr/lids");
-        setLidsPage(response.data?.data);
+        const response = await api.get(`/superhr/lids?page=${page}`);
+        setLids(response.data?.data);
+        setPagination({
+          current_page: response.data.current_page,
+          last_page: response.data.last_page,
+          per_page: response.data.per_page,
+          total: response.data.total,
+        });
       } catch (error) {
         toast({
           variant: "destructive",
           title: "Xatolik",
-          description:
-            error.response?.data?.message || "LidsPage olishda xatolik",
+          description: error.response?.data?.message || "Lidlar olishda xatolik",
         });
       }
     };
-    fetchLidsPage();
-  }, []);
+    fetchLids();
+  }, [page]);
+
+  const handlePageChange = (newPage) => {
+    setSearchParams({ page: newPage });
+    window.scrollTo(0, 0);
+  };
 
   return (
     <div>
@@ -122,6 +148,54 @@ const LidsPage = () => {
             ))}
           </tbody>
         </table>
+        {pagination.last_page > 1 && (
+          <div className="mt-4 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(pagination.current_page - 1)}
+                    disabled={pagination.current_page === 1}
+                    className={pagination.current_page === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, pagination.last_page) }, (_, i) => {
+                  let pageNum;
+                  if (pagination.last_page <= 5) {
+                    pageNum = i + 1;
+                  } else if (pagination.current_page <= 3) {
+                    pageNum = i + 1;
+                  } else if (pagination.current_page >= pagination.last_page - 2) {
+                    pageNum = pagination.last_page - 4 + i;
+                  } else {
+                    pageNum = pagination.current_page - 2 + i;
+                  }
+                  
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(pageNum)}
+                        isActive={pagination.current_page === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(pagination.current_page + 1)}
+                    disabled={pagination.current_page === pagination.last_page}
+                    className={pagination.current_page === pagination.last_page ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
       <Dialog open={imageDialog} onOpenChange={setImageDialog}>
         <DialogContent>
