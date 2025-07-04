@@ -5,6 +5,7 @@ import {
   Settings,
   Calendar1,
   ChartColumnDecreasing,
+  Swords,
 } from "lucide-react";
 
 const navigation = [
@@ -20,6 +21,12 @@ const navigation = [
     name: "Statistika",
     href: "/superhr/stats",
     icon: ChartColumnDecreasing,
+    onMobile: false,
+  },
+  {
+    name: "Nomzodlar",
+    href: "/superhr/lids",
+    icon: Swords,
     onMobile: false,
   },
   {
