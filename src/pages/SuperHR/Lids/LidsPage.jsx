@@ -2,7 +2,16 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
-import { CirclePlus, Edit, Search, Trash2, Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  CirclePlus,
+  Edit,
+  Search,
+  Trash2,
+  Loader2,
+  RotateCcw,
+} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Link, useSearchParams } from "react-router-dom";
@@ -63,6 +72,9 @@ const LidsPage = () => {
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
   );
+  const [showInactive, setShowInactive] = useState(
+    searchParams.get("status") === "inactive"
+  );
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const fetchLids = async () => {
@@ -72,6 +84,7 @@ const LidsPage = () => {
       if (debouncedSearchTerm) {
         params.append("search", debouncedSearchTerm);
       }
+      params.append("status", showInactive ? "inactive" : "active");
 
       const response = await api.get(`/superhr/lids?${params.toString()}`);
       setLids(response.data?.data);
@@ -91,7 +104,7 @@ const LidsPage = () => {
   };
   useEffect(() => {
     fetchLids();
-  }, [page, debouncedSearchTerm]);
+  }, [page, debouncedSearchTerm, showInactive]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -101,12 +114,24 @@ const LidsPage = () => {
     const params = new URLSearchParams(searchParams);
     if (value) {
       params.set("search", value);
-      // Reset to first page when searching
-      params.set("page", "1");
     } else {
       params.delete("search");
-      params.set("page", "1");
     }
+    // Always reset to first page when searching
+    params.set("page", "1");
+    setSearchParams(params);
+  };
+
+  const handleToggleInactive = (checked) => {
+    setShowInactive(checked);
+    const params = new URLSearchParams(searchParams);
+    if (checked) {
+      params.set("status", "inactive");
+    } else {
+      params.delete("status");
+    }
+    // Reset to first page when toggling
+    params.set("page", "1");
     setSearchParams(params);
   };
 
@@ -133,24 +158,23 @@ const LidsPage = () => {
     try {
       setDeleteDialog((prev) => ({ ...prev, loading: true }));
 
+      const newStatus = showInactive ? "active" : "inactive";
       await api.patch(`/superhr/lids/${deleteDialog.lid.id}`, {
-        status: "inactive",
+        status: newStatus,
       });
 
       // Refresh the list
-      const response = await api.get(
-        `/superhr/lids?${new URLSearchParams(searchParams).toString()}`
-      );
-      setLids(response.data?.data);
+      await fetchLids();
 
       toast({
         title: "Muvaffaqiyatli",
-        description: `${deleteDialog.lid.name} o'chirildi`,
+        description: showInactive
+          ? `${deleteDialog.lid.name} qayta tiklandi`
+          : `${deleteDialog.lid.name} o'chirildi`,
         style: { background: "green", color: "white" },
       });
 
       setDeleteDialog({ open: false, lid: null, loading: false });
-      fetchLids();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -171,16 +195,28 @@ const LidsPage = () => {
       <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center">
         <h1 className="text-2xl font-bold">Nomzodlar</h1>
         <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Qidirish..."
-              className="pl-8 sm:w-[200px] md:w-[300px] bg-white"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              onKeyDown={handleKeyDown}
-            />
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="show-inactive" className="whitespace-nowrap">
+                {showInactive ? "O'chirilganlar" : "Faollar"}
+              </Label>
+              <Switch
+                id="show-inactive"
+                checked={showInactive}
+                onCheckedChange={handleToggleInactive}
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Qidirish..."
+                className="pl-8 sm:w-[200px] md:w-[300px] bg-white"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
+              />
+            </div>
           </div>
           <Link to="/superhr/lids/add">
             <Button className="w-full sm:w-auto">
@@ -216,7 +252,7 @@ const LidsPage = () => {
                       <img
                         src={lid.image}
                         alt={lid.name}
-                        className="w-10 h-10 object-cover rounded-full cursor-pointer"
+                        className="w-10 h-10 max-w-none object-cover rounded-full cursor-pointer"
                         onClick={() => {
                           setSelectedImage(lid.image);
                           setImageDialog(true);
@@ -246,10 +282,13 @@ const LidsPage = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteClick(lid)}
-                      disabled={lid.status === "inactive"}
-                      className={lid.status === "inactive" ? "opacity-50" : ""}
+                      className={
+                        showInactive
+                          ? "text-blue-600 hover:text-blue-700"
+                          : "text-red-500 hover:text-red-600"
+                      }
                     >
-                      <Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+                      {showInactive ? <RotateCcw /> : <Trash2 />}
                     </Button>
                   </div>
                 </td>
@@ -326,9 +365,6 @@ const LidsPage = () => {
       </div>
       <Dialog open={imageDialog} onOpenChange={setImageDialog}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rasm</DialogTitle>
-          </DialogHeader>
           <div className="w-full h-full max-w-[80vw] max-h-[80vh]">
             <img
               src={selectedImage}
@@ -348,7 +384,9 @@ const LidsPage = () => {
             <p className="text-sm text-gray-600">
               Rostan ham{" "}
               <span className="font-semibold">{deleteDialog.lid?.name}</span> ni
-              o'chirib tashlamoqchimisiz?
+              {showInactive
+                ? " qayta tiklamoqchimisiz?"
+                : " o'chirib tashlamoqchimisiz?"}
             </p>
           </div>
           <div className="flex justify-end space-x-2 pt-4">
@@ -369,6 +407,8 @@ const LidsPage = () => {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Kuting...
                 </>
+              ) : showInactive ? (
+                "Qayta tiklash"
               ) : (
                 "O'chirish"
               )}
