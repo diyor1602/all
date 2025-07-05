@@ -29,6 +29,7 @@ const Kpi = () => {
   });
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [loadingGroupPlans, setLoadingGroupPlans] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const fetchGroupPlans = async () => {
     setLoadingGroupPlans(true);
@@ -89,11 +90,16 @@ const Kpi = () => {
       year: parseInt(month?.split("-")[0]),
     };
     try {
+      setSending(true);
       await api.post("/casher/groupPlans", payload);
       toast({
         title: "Muvaffaqiyatli",
         description: "Guruh plani qo'shildi",
-        variant: "default",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1200,
       });
       setAddDialogOpen(false);
       setAddPayload({
@@ -109,7 +115,10 @@ const Kpi = () => {
         title: "Xatolik",
         description: error.response?.data?.message || "Nimadir xato ketdi",
         variant: "destructive",
+        duration: 1200,
       });
+    } finally {
+      setSending(false);
     }
   };
 
@@ -152,9 +161,9 @@ const Kpi = () => {
             <Button
               type="button"
               onClick={handleAddGroupPlan}
-              disabled={loading}
+              disabled={sending}
             >
-              {loading ? "Yuklanmoqda..." : "Qo'shish"}
+              {sending ? "Yuklanmoqda..." : "Qo'shish"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -217,11 +226,13 @@ const Kpi = () => {
                             </div>
                           )}
                           <div className="mt-1 text-sm flex items-center gap-1">
-                            <span>Miqdori:</span>{" "}
+                            <span>Plan:</span>{" "}
                             <span className="font-semibold">
-                              {groupPlans?.find(
-                                (plan) => plan.group_id === group.id
-                              )?.quantity || 0}{" "}
+                              {parseFloat(
+                                groupPlans?.find(
+                                  (plan) => plan.group_id === group.id
+                                )?.quantity || 0
+                              ).toLocaleString("ru-RU")}{" "}
                             </span>
                             ta
                           </div>
