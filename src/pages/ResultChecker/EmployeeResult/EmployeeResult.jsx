@@ -92,7 +92,7 @@ const EmployeeResult = () => {
             ?.filter((dept) => dept?.groups?.length > 0)
             ?.sort((a, b) => b?.groups?.length - a?.groups?.length)
             .map((department, index) => (
-              <di
+              <div
                 key={department?.id}
                 className="group relative overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-fit flex flex-col"
               >
@@ -154,7 +154,7 @@ const EmployeeResult = () => {
                     </div>
                   </div>
                 </div>
-              </di>
+              </div>
             ))}
         </div>
       )}

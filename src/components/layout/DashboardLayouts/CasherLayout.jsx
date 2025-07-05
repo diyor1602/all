@@ -1,5 +1,6 @@
 import BaseLayout from "./BaseLayout";
 import {
+  BadgePercent,
   BanknoteArrowDown,
   BanknoteArrowUp,
   CircleDollarSign,
@@ -53,6 +54,12 @@ const navigation = [
     name: "Xodimlar",
     href: "/casher/employees",
     icon: Users,
+    onMobile: false,
+  },
+  {
+    name: "KPI",
+    href: "/casher/kpi",
+    icon: BadgePercent,
     onMobile: false,
   },
   {
