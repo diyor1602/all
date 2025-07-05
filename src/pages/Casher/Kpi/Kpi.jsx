@@ -27,7 +27,16 @@ const Kpi = () => {
     month: month?.split("-")[1],
     year: month?.split("-")[0],
   });
+  const [editPayload, setEditPayload] = useState({
+    id: null,
+    group_id: null,
+    group_name: null,
+    quantity: null,
+    month: month?.split("-")[1],
+    year: month?.split("-")[0],
+  });
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loadingGroupPlans, setLoadingGroupPlans] = useState(false);
   const [sending, setSending] = useState(false);
 
@@ -122,6 +131,47 @@ const Kpi = () => {
     }
   };
 
+  const handleEditGroupPlan = async () => {
+    const payload = {
+      group_id: editPayload.group_id,
+      quantity: parseFloat(editPayload.quantity),
+      month: parseInt(month?.split("-")[1]),
+      year: parseInt(month?.split("-")[0]),
+    };
+    try {
+      setSending(true);
+      await api.patch(`/casher/groupPlans/${editPayload.id}`, payload);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Guruh plani yangilandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1200,
+      });
+      setEditDialogOpen(false);
+      setEditPayload({
+        id: null,
+        group_id: null,
+        group_name: null,
+        quantity: null,
+        month: month?.split("-")[1],
+        year: month?.split("-")[0],
+      });
+      await fetchGroupPlans();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Nimadir xato ketdi",
+        variant: "destructive",
+        duration: 1200,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
   // Loading skeleton
   if (loading) {
     return (
@@ -168,6 +218,32 @@ const Kpi = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editPayload.group_name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-4">
+            <Input
+              type="number"
+              placeholder="Miqdor"
+              value={editPayload.quantity}
+              onChange={(e) =>
+                setEditPayload({ ...editPayload, quantity: e.target.value })
+              }
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={handleEditGroupPlan}
+              disabled={sending}
+            >
+              {sending ? "Yuklanmoqda..." : "Yangilash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Input
         type="month"
         value={month}
@@ -209,12 +285,25 @@ const Kpi = () => {
                         <div
                           key={group.id}
                           onClick={() => {
-                            setAddPayload({
-                              group_id: group.id,
-                              quantity: null,
-                              group_name: group.name,
-                            });
-                            setAddDialogOpen(true);
+                            const plan = groupPlans?.find(
+                              (plan) => plan.group_id === group.id
+                            );
+                            if (plan) {
+                              setEditPayload({
+                                id: plan.id,
+                                group_id: group.id,
+                                group_name: group.name,
+                                quantity: plan.quantity,
+                              });
+                              setEditDialogOpen(true);
+                            } else {
+                              setAddPayload({
+                                group_id: group.id,
+                                quantity: null,
+                                group_name: group.name,
+                              });
+                              setAddDialogOpen(true);
+                            }
                           }}
                           className="w-full backdrop-blur-sm h-fit rounded-lg p-3 block bg-gray-200 cursor-pointer"
                         >
