@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, User } from "lucide-react";
+import { Building2, User, Target, Users, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -13,6 +13,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+
+// Array of Tailwind CSS background color classes
+const groupColors = [
+  "bg-blue-200 hover:bg-blue-300",
+  "bg-green-200 hover:bg-green-300",
+  "bg-yellow-200 hover:bg-yellow-300",
+  "bg-red-200 hover:bg-red-300",
+  "bg-purple-200 hover:bg-purple-300",
+  "bg-pink-200 hover:bg-pink-300",
+  "bg-indigo-200 hover:bg-indigo-300",
+  "bg-teal-200 hover:bg-teal-300",
+  "bg-orange-200 hover:bg-orange-300",
+  "bg-cyan-200 hover:bg-cyan-300",
+];
 
 const Kpi = () => {
   const { toast } = useToast();
@@ -244,12 +258,23 @@ const Kpi = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Input
-        type="month"
-        value={month}
-        onChange={(e) => setMonth(e.target.value)}
-        className="w-fit bg-white"
-      />
+      <div className="flex justify-between items-center mb-4">
+        <Input
+          type="month"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="w-fit bg-white"
+        />
+        <div className="bg-white p-2 rounded-lg shadow-md">
+          <span className="font-medium">Jami: </span>
+          <span className="font-bold text-blue-600">
+            {groupPlans
+              .reduce((sum, plan) => sum + (parseFloat(plan.quantity) || 0), 0)
+              .toLocaleString("ru-RU")}
+          </span>
+          <span> ta</span>
+        </div>
+      </div>
       {departments?.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400">
@@ -305,25 +330,57 @@ const Kpi = () => {
                               setAddDialogOpen(true);
                             }
                           }}
-                          className="w-full backdrop-blur-sm h-fit rounded-lg p-3 block bg-gray-200 cursor-pointer"
+                          className={`w-full h-full rounded-xl p-4 transition-all duration-300 transform cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+                            groupColors[group.id % groupColors.length] ||
+                            "bg-gray-100 hover:bg-gray-200"
+                          }`}
                         >
-                          <h4 className="font-medium">{group.name}</h4>
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="p-2 bg-white/50 rounded-lg">
+                                <Users className="w-5 h-5" />
+                              </div>
+                              <h4 className="font-semibold text-gray-800">
+                                {group.name}
+                              </h4>
+                            </div>
+                            <div className="p-1.5 bg-white/50 rounded-full">
+                              <Target className="w-4 h-4 text-gray-600" />
+                            </div>
+                          </div>
+
                           {group.responsible_user?.employee && (
-                            <div className="mt-1 text-sm flex items-center">
-                              <User className="w-3.5 h-3.5 mr-1.5" />
-                              {group.responsible_user.employee.name}
+                            <div className="flex items-center text-sm text-gray-600 mb-3">
+                              <div className="flex items-center bg-white/50 px-2 py-1 rounded-full">
+                                <User className="w-3.5 h-3.5 mr-1.5 text-gray-500" />
+                                <span className="text-xs">
+                                  {group.responsible_user.employee.name}
+                                </span>
+                              </div>
                             </div>
                           )}
-                          <div className="mt-1 text-sm flex items-center gap-1">
-                            <span>Plan:</span>{" "}
-                            <span className="font-semibold">
-                              {parseFloat(
-                                groupPlans?.find(
-                                  (plan) => plan.group_id === group.id
-                                )?.quantity || 0
-                              ).toLocaleString("ru-RU")}{" "}
-                            </span>
-                            ta
+
+                          <div className="mt-3 p-3 bg-white/50 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <ClipboardList className="w-4 h-4 text-gray-500" />
+                                <span className="text-sm text-gray-600">
+                                  Plan:
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="font-bold text-lg text-blue-600">
+                                  {parseFloat(
+                                    groupPlans?.find(
+                                      (plan) => plan.group_id === group.id
+                                    )?.quantity || 0
+                                  ).toLocaleString("ru-RU")}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  ta
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))
