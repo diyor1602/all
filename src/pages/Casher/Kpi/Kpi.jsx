@@ -10,6 +10,7 @@ import {
   Users,
   ClipboardList,
   ListChecks,
+  CirclePercent,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -406,6 +407,40 @@ const Kpi = () => {
                                 <span className="text-sm text-gray-500">
                                   ta
                                 </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <CirclePercent className="w-4 h-4 text-gray-500" />
+                                <span className="text-sm text-gray-600">
+                                  Foiz:
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="font-bold text-lg text-blue-600">
+                                  {(() => {
+                                    const plan = groupPlans?.find(
+                                      (p) => p.group_id === group.id
+                                    );
+                                    if (
+                                      !plan ||
+                                      !plan.quantity ||
+                                      plan.quantity === "0" ||
+                                      plan.quantity === 0
+                                    ) {
+                                      return "0.00";
+                                    }
+                                    const monthlyTotal = parseFloat(
+                                      plan.monthly_total || 0
+                                    );
+                                    const quantity = parseFloat(plan.quantity);
+                                    return (
+                                      (monthlyTotal / quantity) *
+                                      100
+                                    ).toFixed(2);
+                                  })()}
+                                </span>
+                                <span className="text-sm text-gray-500">%</span>
                               </div>
                             </div>
                           </div>
