@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2,
   User,
-  Target,
   Users,
   ClipboardList,
   ListChecks,
@@ -206,6 +205,8 @@ const Kpi = () => {
   const [sending, setSending] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [image, setImage] = useState(null);
 
   const fetchGroupPlans = async () => {
     setLoadingGroupPlans(true);
@@ -359,6 +360,13 @@ const Kpi = () => {
 
   return (
     <>
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent>
+          <div className="flex items-center justify-center max-w-[90vh] max-h-[90vh] overflow-auto">
+            <img src={image} alt="-" className="w-full" />
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -482,14 +490,14 @@ const Kpi = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-2">
         <Input
           type="month"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
           className="w-fit bg-white"
         />
-        <div className="bg-white p-2 rounded-lg shadow-md">
+        <div className="bg-white p-2 rounded-lg shadow-md w-fit">
           <span className="font-medium">Jami: </span>
           <span className="font-bold text-blue-600">
             {groupPlans
@@ -530,240 +538,270 @@ const Kpi = () => {
 
                   <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {department?.groups?.length > 0 ? (
-                      department.groups.map((group) => (
-                        <div
-                          key={group.id}
-                          className={`w-full h-fit rounded-xl p-4 transition-all duration-300 transform cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
-                            groupColors[group.id % groupColors.length] ||
-                            "bg-gray-100 hover:bg-gray-200"
-                          }`}
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex items-center gap-2">
-                              <div className="p-2 bg-white/50 rounded-lg">
-                                <Users className="w-5 h-5" />
+                      department.groups
+                        ?.sort(
+                          (a, b) =>
+                            parseFloat(
+                              groupPlans?.find(
+                                (plan) => plan.group_id === b?.id
+                              )?.quantity || 0
+                            ) -
+                            parseFloat(
+                              groupPlans?.find(
+                                (plan) => plan.group_id === a?.id
+                              )?.quantity || 0
+                            )
+                        )
+                        .map((group) => (
+                          <div
+                            key={group.id}
+                            className={`w-full h-fit rounded-xl p-4 transition-all duration-300 transform cursor-pointer shadow-sm hover:shadow-2xl ${
+                              groupColors[group.id % groupColors.length] ||
+                              "bg-gray-100 hover:bg-gray-200"
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="p-2 bg-white/50 rounded-lg">
+                                  <Users className="w-5 h-5" />
+                                </div>
+                                <h4 className="font-semibold text-gray-800">
+                                  {group.name}
+                                </h4>
                               </div>
-                              <h4 className="font-semibold text-gray-800">
-                                {group.name}
-                              </h4>
+                              {group.responsible_user?.employee?.img && (
+                                <img
+                                  src={group.responsible_user?.employee?.img}
+                                  alt="-"
+                                  className="md:w-10 md:h-10 w-8 h-8 object-cover rounded-full"
+                                  onClick={() => {
+                                    setImageDialogOpen(true);
+                                    setImage(
+                                      group.responsible_user?.employee?.img
+                                    );
+                                  }}
+                                />
+                              )}
                             </div>
-                            <div className="p-1.5 bg-white/50 rounded-full">
-                              <Target className="w-4 h-4 text-gray-600" />
-                            </div>
-                          </div>
 
-                          {group.responsible_user?.employee && (
-                            <>
-                              <div className="flex items-center text-sm text-gray-600 mb-3">
-                                <div className="flex items-center bg-white/50 px-2 py-1 rounded-full">
-                                  <User className="w-3.5 h-3.5 mr-1.5 text-gray-500" />
-                                  <span className="text-xs">
-                                    {group.responsible_user?.employee?.name}
+                            {group.responsible_user?.employee && (
+                              <>
+                                <div className="flex items-center text-sm text-gray-600 mb-3">
+                                  <div
+                                    className="flex items-center bg-white/50 px-2 py-1 rounded-full"
+                                    onClick={() => {
+                                      group?.responsible_user?.employee?.img &&
+                                        setImageDialogOpen(true);
+                                      setImage(
+                                        group.responsible_user?.employee?.img
+                                      );
+                                    }}
+                                  >
+                                    <User className="w-3.5 h-3.5 mr-1.5 text-gray-500" />
+                                    <span className="text-xs">
+                                      {group.responsible_user?.employee?.name}
+                                    </span>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            <div className="mt-3 p-3 bg-white/50 rounded-lg space-y-3">
+                              <div
+                                className="flex items-center justify-between"
+                                onClick={() => {
+                                  const plan = groupPlans?.find(
+                                    (plan) => plan.group_id === group.id
+                                  );
+                                  if (plan) {
+                                    setEditPayload({
+                                      id: plan.id,
+                                      group_id: plan.group_id,
+                                      group_name: group.name,
+                                      quantity: plan.quantity,
+                                    });
+                                    setEditDialogOpen(true);
+                                  } else {
+                                    setAddPayload({
+                                      group_id: group.id,
+                                      quantity: null,
+                                      group_name: group.name,
+                                    });
+                                    setAddDialogOpen(true);
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <ClipboardList className="w-4 h-4 text-gray-500" />
+                                  <span className="text-sm text-gray-600">
+                                    Plan:
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <span className="font-bold text-lg text-blue-600">
+                                    {parseFloat(
+                                      groupPlans?.find(
+                                        (plan) => plan.group_id === group.id
+                                      )?.quantity || 0
+                                    ).toLocaleString("ru-RU")}
+                                  </span>
+                                  <span className="text-sm text-gray-500">
+                                    ta
                                   </span>
                                 </div>
                               </div>
-                              {group?.responsible_user?.employee?.img && (
-                                <img
-                                  src={group?.responsible_user?.employee?.img}
-                                  alt=""
-                                  className="w-full h-64 object-cover object-center rounded-xl"
-                                />
-                              )}
-                            </>
-                          )}
-
-                          <div className="mt-3 p-3 bg-white/50 rounded-lg space-y-3">
-                            <div
-                              className="flex items-center justify-between"
-                              onClick={() => {
-                                const plan = groupPlans?.find(
-                                  (plan) => plan.group_id === group.id
-                                );
-                                if (plan) {
-                                  setEditPayload({
-                                    id: plan.id,
-                                    group_id: plan.group_id,
-                                    group_name: group.name,
-                                    quantity: plan.quantity,
-                                  });
-                                  setEditDialogOpen(true);
-                                } else {
-                                  setAddPayload({
-                                    group_id: group.id,
-                                    quantity: null,
-                                    group_name: group.name,
-                                  });
-                                  setAddDialogOpen(true);
-                                }
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <ClipboardList className="w-4 h-4 text-gray-500" />
-                                <span className="text-sm text-gray-600">
-                                  Plan:
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <span className="font-bold text-lg text-blue-600">
-                                  {parseFloat(
-                                    groupPlans?.find(
-                                      (plan) => plan.group_id === group.id
-                                    )?.quantity || 0
-                                  ).toLocaleString("ru-RU")}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                  ta
-                                </span>
-                              </div>
-                            </div>
-                            <div
-                              className="flex items-center justify-between"
-                              onClick={() => {
-                                setSelectedGroup(group);
-                                setGroupDialogOpen(true);
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <ListChecks className="w-4 h-4 text-gray-500" />
-                                <span className="text-sm text-gray-600">
-                                  Bajarilgan:
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <span className="font-bold text-lg text-blue-600">
-                                  {parseFloat(
-                                    groupPlans?.find(
-                                      (plan) => plan.group_id === group.id
-                                    )?.monthly_total || 0
-                                  ).toLocaleString("ru-RU")}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                  ta
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Daily Output Analysis */}
-                            {(() => {
-                              const plan = groupPlans?.find(
-                                (p) => p.group_id === group.id
-                              );
-                              // Don't show if no plan, no daily outputs, or plan quantity is 0/not set
-                              if (
-                                !plan?.daily_outputs?.length ||
-                                !plan?.quantity ||
-                                plan.quantity === 0
-                              )
-                                return null;
-
-                              const analysis = analyzeProgress(plan);
-                              if (!analysis) return null;
-
-                              return (
-                                <div className="mt-4 pt-3 border-t border-gray-200 space-y-3">
-                                  <h4 className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
-                                    <Info className="w-3.5 h-3.5" />
-                                    Progress Tahlili
-                                  </h4>
-
-                                  <div className="space-y-1">
-                                    <div className="flex justify-between text-xs text-gray-600">
-                                      <span>
-                                        Progress: {analysis.progress}%
-                                      </span>
-                                      <span>
-                                        {analysis.completed.toLocaleString()} /{" "}
-                                        {analysis.target.toLocaleString()}
-                                      </span>
-                                    </div>
-                                    <Progress
-                                      value={analysis.progress}
-                                      className="h-1.5"
-                                    />
-                                  </div>
-
-                                  <Alert
-                                    className={
-                                      analysis.onTrack
-                                        ? "bg-green-50 p-2"
-                                        : "bg-amber-50 p-2"
-                                    }
-                                  >
-                                    {analysis.onTrack ? (
-                                      <CheckCircle2 className="h-3.5 w-3.5 text-green-600 mr-1 flex-shrink-0" />
-                                    ) : (
-                                      <AlertCircle className="h-3.5 w-3.5 text-amber-600 mr-1 flex-shrink-0" />
-                                    )}
-                                    <div>
-                                      <p className="text-xs font-medium">
-                                        {analysis.onTrack
-                                          ? "Planni bajara oladi"
-                                          : "Planni bajarish uchun harakat qilish kerak"}
-                                      </p>
-                                      <p className="text-xs mt-0.5">
-                                        {analysis.onTrack ? (
-                                          `Rejada: ~${Math.round(
-                                            analysis.avgDailyOutput *
-                                              analysis.workingDaysRemaining +
-                                              analysis.completed
-                                          ).toLocaleString()} / ${analysis.target.toLocaleString()}`
-                                        ) : (
-                                          <div>
-                                            Kerak:{" "}
-                                            <span className="font-medium">
-                                              {analysis.requiredDailyOutput.toLocaleString()}
-                                            </span>{" "}
-                                            ta dan{" "}
-                                            <span className="font-medium">
-                                              {analysis.workingDaysRemaining}
-                                            </span>{" "}
-                                            kun
-                                          </div>
-                                        )}
-                                      </p>
-                                    </div>
-                                  </Alert>
-
-                                  <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <div className="bg-white p-1.5 rounded border text-center">
-                                      <div className="text-gray-500 text-[10px]">
-                                        Kunlik o'rtacha
-                                      </div>
-                                      <div className="font-medium">
-                                        {analysis.avgDailyOutput.toLocaleString()}
-                                      </div>
-                                    </div>
-                                    <div className="bg-white p-1.5 rounded border text-center">
-                                      <div className="text-gray-500 text-[10px]">
-                                        Kun qoldi
-                                      </div>
-                                      <div className="font-medium">
-                                        {analysis.workingDaysRemaining}
-                                      </div>
-                                    </div>
-                                    <div className="bg-white p-1.5 rounded border text-center">
-                                      <div className="text-gray-500 text-[10px]">
-                                        Kunlik kerak
-                                      </div>
-                                      <div className="font-medium">
-                                        {analysis.requiredDailyOutput.toLocaleString()}
-                                      </div>
-                                    </div>
-                                    <div className="bg-white p-1.5 rounded border text-center">
-                                      <div className="text-gray-500 text-[10px]">
-                                        So'nggi yangilanish
-                                      </div>
-                                      <div className="font-medium">
-                                        {analysis.lastUpdated}
-                                      </div>
-                                    </div>
-                                  </div>
+                              <div
+                                className="flex items-center justify-between"
+                                onClick={() => {
+                                  setSelectedGroup(group);
+                                  setGroupDialogOpen(true);
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <ListChecks className="w-4 h-4 text-gray-500" />
+                                  <span className="text-sm text-gray-600">
+                                    Bajarilgan:
+                                  </span>
                                 </div>
-                              );
-                            })()}
+                                <div className="flex items-center gap-1">
+                                  <span className="font-bold text-lg text-blue-600">
+                                    {parseFloat(
+                                      groupPlans?.find(
+                                        (plan) => plan.group_id === group.id
+                                      )?.monthly_total || 0
+                                    ).toLocaleString("ru-RU")}
+                                  </span>
+                                  <span className="text-sm text-gray-500">
+                                    ta
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Daily Output Analysis */}
+                              {(() => {
+                                const plan = groupPlans?.find(
+                                  (p) => p.group_id === group.id
+                                );
+                                // Don't show if no plan, no daily outputs, or plan quantity is 0/not set
+                                if (
+                                  !plan?.daily_outputs?.length ||
+                                  !plan?.quantity ||
+                                  plan.quantity === 0
+                                )
+                                  return null;
+
+                                const analysis = analyzeProgress(plan);
+                                if (!analysis) return null;
+
+                                return (
+                                  <div className="mt-4 pt-3 border-t border-gray-200 space-y-3">
+                                    <h4 className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
+                                      <Info className="w-3.5 h-3.5" />
+                                      Progress Tahlili
+                                    </h4>
+
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between text-xs text-gray-600">
+                                        <span>
+                                          Progress:{" "}
+                                          <span className="font-bold">
+                                            {analysis.progress}
+                                          </span>
+                                          %
+                                        </span>
+                                        <span>
+                                          {analysis.completed.toLocaleString()}{" "}
+                                          / {analysis.target.toLocaleString()}
+                                        </span>
+                                      </div>
+                                      <Progress
+                                        value={analysis.progress}
+                                        className="h-1.5"
+                                      />
+                                    </div>
+
+                                    <Alert
+                                      className={
+                                        analysis.onTrack
+                                          ? "bg-green-50 p-2"
+                                          : "bg-amber-50 p-2"
+                                      }
+                                    >
+                                      {analysis.onTrack ? (
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-green-600 mr-1 flex-shrink-0" />
+                                      ) : (
+                                        <AlertCircle className="h-3.5 w-3.5 text-amber-600 mr-1 flex-shrink-0" />
+                                      )}
+                                      <div>
+                                        <p className="text-xs font-medium">
+                                          {analysis.onTrack
+                                            ? "Planni bajara oladi"
+                                            : "Planni bajarish uchun harakat qilish kerak"}
+                                        </p>
+                                        <p className="text-xs mt-0.5">
+                                          {analysis.onTrack ? (
+                                            `Rejada: ~${Math.round(
+                                              analysis.avgDailyOutput *
+                                                analysis.workingDaysRemaining +
+                                                analysis.completed
+                                            ).toLocaleString()} / ${analysis.target.toLocaleString()}`
+                                          ) : (
+                                            <div>
+                                              Kerak:{" "}
+                                              <span className="font-medium">
+                                                {analysis.requiredDailyOutput.toLocaleString()}
+                                              </span>{" "}
+                                              ta dan{" "}
+                                              <span className="font-medium">
+                                                {analysis.workingDaysRemaining}
+                                              </span>{" "}
+                                              kun
+                                            </div>
+                                          )}
+                                        </p>
+                                      </div>
+                                    </Alert>
+
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      <div className="bg-white p-1.5 rounded border text-center">
+                                        <div className="text-gray-500 text-[10px]">
+                                          Kunlik o'rtacha
+                                        </div>
+                                        <div className="font-medium">
+                                          {analysis.avgDailyOutput.toLocaleString()}
+                                        </div>
+                                      </div>
+                                      <div className="bg-white p-1.5 rounded border text-center">
+                                        <div className="text-gray-500 text-[10px]">
+                                          Kun qoldi
+                                        </div>
+                                        <div className="font-medium">
+                                          {analysis.workingDaysRemaining}
+                                        </div>
+                                      </div>
+                                      <div className="bg-white p-1.5 rounded border text-center">
+                                        <div className="text-gray-500 text-[10px]">
+                                          Kunlik kerak
+                                        </div>
+                                        <div className="font-medium">
+                                          {analysis.requiredDailyOutput.toLocaleString()}
+                                        </div>
+                                      </div>
+                                      <div className="bg-white p-1.5 rounded border text-center">
+                                        <div className="text-gray-500 text-[10px]">
+                                          So'nggi yangilanish
+                                        </div>
+                                        <div className="font-medium">
+                                          {analysis.lastUpdated}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        ))
                     ) : (
                       <div className="text-center py-4text-sm">
                         Guruhlar mavjud emas
