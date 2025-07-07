@@ -3,7 +3,14 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, User, Target, Users, ClipboardList } from "lucide-react";
+import {
+  Building2,
+  User,
+  Target,
+  Users,
+  ClipboardList,
+  ListChecks,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -316,14 +323,14 @@ const Kpi = () => {
                             if (plan) {
                               setEditPayload({
                                 id: plan.id,
-                                group_id: group.id,
+                                group_id: plan.group_id,
                                 group_name: group.name,
                                 quantity: plan.quantity,
                               });
                               setEditDialogOpen(true);
                             } else {
                               setAddPayload({
-                                group_id: group.id,
+                                group_id: plan.group_id,
                                 quantity: null,
                                 group_name: group.name,
                               });
@@ -374,6 +381,26 @@ const Kpi = () => {
                                     groupPlans?.find(
                                       (plan) => plan.group_id === group.id
                                     )?.quantity || 0
+                                  ).toLocaleString("ru-RU")}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  ta
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <ListChecks className="w-4 h-4 text-gray-500" />
+                                <span className="text-sm text-gray-600">
+                                  Bajarilgan:
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="font-bold text-lg text-blue-600">
+                                  {parseFloat(
+                                    groupPlans?.find(
+                                      (plan) => plan.group_id === group.id
+                                    )?.monthly_total || 0
                                   ).toLocaleString("ru-RU")}
                                 </span>
                                 <span className="text-sm text-gray-500">
