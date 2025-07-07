@@ -108,8 +108,8 @@ const analyzeProgress = (plan) => {
     target,
     remaining,
     progress: Math.min(100, Math.round((completed / target) * 100)),
-    avgDailyOutput: Math.round(avgDailyOutput * 100) / 100,
-    requiredDailyOutput: Math.round(requiredDailyOutput * 100) / 100,
+    avgDailyOutput: parseInt((avgDailyOutput * 100) / 100),
+    requiredDailyOutput: parseInt((requiredDailyOutput * 100) / 100),
     onTrack: projectedTotal >= target,
     workingDaysPassed,
     workingDaysRemaining,
@@ -161,7 +161,7 @@ const calculatePreviousPlan = (month, year, plan, daily_outputs) => {
         color = "bg-yellow-100 text-yellow-800";
         icon = <Meh size={16} />;
       } else {
-        status = "Qoniqarsiz natija";
+        status = "Qoniqarsiz";
         color = "bg-red-100 text-red-800";
         icon = <Angry size={16} />;
       }
@@ -169,7 +169,7 @@ const calculatePreviousPlan = (month, year, plan, daily_outputs) => {
       return {
         ...day,
         dailyTarget: parseInt(dailyTarget),
-        percentage: Math.round(percentage * 100) / 100,
+        percentage: parseInt((percentage * 100) / 100),
         status,
         color,
         icon,
