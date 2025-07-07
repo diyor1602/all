@@ -161,7 +161,7 @@ const calculatePreviousPlan = (month, year, plan, daily_outputs) => {
         color = "bg-yellow-100 text-yellow-800";
         icon = <Meh size={16} />;
       } else {
-        status = "Qoniqarsiz natija";
+        status = "Qoniqarsiz";
         color = "bg-red-100 text-red-800";
         icon = <Angry size={16} />;
       }
