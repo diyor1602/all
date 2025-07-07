@@ -26,16 +26,16 @@ import { Info, AlertCircle, CheckCircle2 } from "lucide-react";
 
 // Array of Tailwind CSS background color classes
 const groupColors = [
-  "bg-blue-200 hover:bg-blue-300",
-  "bg-green-200 hover:bg-green-300",
-  "bg-yellow-200 hover:bg-yellow-300",
-  "bg-red-200 hover:bg-red-300",
-  "bg-purple-200 hover:bg-purple-300",
-  "bg-pink-200 hover:bg-pink-300",
-  "bg-indigo-200 hover:bg-indigo-300",
-  "bg-teal-200 hover:bg-teal-300",
-  "bg-orange-200 hover:bg-orange-300",
-  "bg-cyan-200 hover:bg-cyan-300",
+  "bg-blue-300",
+  "bg-green-300",
+  "bg-yellow-300",
+  "bg-red-300",
+  "bg-purple-300",
+  "bg-pink-300",
+  "bg-indigo-300",
+  "bg-teal-300",
+  "bg-orange-300",
+  "bg-cyan-300",
 ];
 
 // Function to calculate working days between two dates (excluding Sundays)
@@ -67,9 +67,10 @@ const analyzeProgress = (plan) => {
   const currentDay = today.getDate();
 
   // Get the last date in daily outputs
-  const lastOutputDate = new Date(
-    plan.daily_outputs[plan.daily_outputs.length - 1].date
+  const sortedOutputs = [...plan.daily_outputs].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
   );
+  const lastOutputDate = new Date(sortedOutputs[sortedOutputs.length - 1].date);
   const lastOutputDay = lastOutputDate.getDate();
 
   // Calculate working days passed and remaining
@@ -393,27 +394,6 @@ const Kpi = () => {
                       department.groups.map((group) => (
                         <div
                           key={group.id}
-                          onClick={() => {
-                            const plan = groupPlans?.find(
-                              (plan) => plan.group_id === group.id
-                            );
-                            if (plan) {
-                              setEditPayload({
-                                id: plan.id,
-                                group_id: plan.group_id,
-                                group_name: group.name,
-                                quantity: plan.quantity,
-                              });
-                              setEditDialogOpen(true);
-                            } else {
-                              setAddPayload({
-                                group_id: plan.group_id,
-                                quantity: null,
-                                group_name: group.name,
-                              });
-                              setAddDialogOpen(true);
-                            }
-                          }}
                           className={`w-full h-fit rounded-xl p-4 transition-all duration-300 transform cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
                             groupColors[group.id % groupColors.length] ||
                             "bg-gray-100 hover:bg-gray-200"
@@ -434,18 +414,50 @@ const Kpi = () => {
                           </div>
 
                           {group.responsible_user?.employee && (
-                            <div className="flex items-center text-sm text-gray-600 mb-3">
-                              <div className="flex items-center bg-white/50 px-2 py-1 rounded-full">
-                                <User className="w-3.5 h-3.5 mr-1.5 text-gray-500" />
-                                <span className="text-xs">
-                                  {group.responsible_user.employee.name}
-                                </span>
+                            <>
+                              <div className="flex items-center text-sm text-gray-600 mb-3">
+                                <div className="flex items-center bg-white/50 px-2 py-1 rounded-full">
+                                  <User className="w-3.5 h-3.5 mr-1.5 text-gray-500" />
+                                  <span className="text-xs">
+                                    {group.responsible_user?.employee?.name}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
+                              {group?.responsible_user?.employee?.img && (
+                                <img
+                                  src={group?.responsible_user?.employee?.img}
+                                  alt=""
+                                  className="w-full h-64 object-cover object-center rounded-xl"
+                                />
+                              )}
+                            </>
                           )}
 
                           <div className="mt-3 p-3 bg-white/50 rounded-lg space-y-3">
-                            <div className="flex items-center justify-between">
+                            <div
+                              className="flex items-center justify-between"
+                              onClick={() => {
+                                const plan = groupPlans?.find(
+                                  (plan) => plan.group_id === group.id
+                                );
+                                if (plan) {
+                                  setEditPayload({
+                                    id: plan.id,
+                                    group_id: plan.group_id,
+                                    group_name: group.name,
+                                    quantity: plan.quantity,
+                                  });
+                                  setEditDialogOpen(true);
+                                } else {
+                                  setAddPayload({
+                                    group_id: plan.group_id,
+                                    quantity: null,
+                                    group_name: group.name,
+                                  });
+                                  setAddDialogOpen(true);
+                                }
+                              }}
+                            >
                               <div className="flex items-center gap-2">
                                 <ClipboardList className="w-4 h-4 text-gray-500" />
                                 <span className="text-sm text-gray-600">
@@ -541,18 +553,28 @@ const Kpi = () => {
                                       <p className="text-xs font-medium">
                                         {analysis.onTrack
                                           ? "Planni bajara oladi"
-                                          : "Planni bajara olmaydi"}
+                                          : "Planni bajarish uchun harakat qilish kerak"}
                                       </p>
                                       <p className="text-xs mt-0.5">
-                                        {analysis.onTrack
-                                          ? `Rejada: ~${Math.round(
-                                              analysis.avgDailyOutput *
-                                                analysis.workingDaysRemaining +
-                                                analysis.completed
-                                            ).toLocaleString()} / ${analysis.target.toLocaleString()}`
-                                          : `Kerak: ${analysis.requiredDailyOutput.toLocaleString()} ta dan ${
-                                              analysis.workingDaysRemaining
-                                            } kun`}
+                                        {analysis.onTrack ? (
+                                          `Rejada: ~${Math.round(
+                                            analysis.avgDailyOutput *
+                                              analysis.workingDaysRemaining +
+                                              analysis.completed
+                                          ).toLocaleString()} / ${analysis.target.toLocaleString()}`
+                                        ) : (
+                                          <div>
+                                            Kerak:{" "}
+                                            <span className="font-medium">
+                                              {analysis.requiredDailyOutput.toLocaleString()}
+                                            </span>{" "}
+                                            ta dan{" "}
+                                            <span className="font-medium">
+                                              {analysis.workingDaysRemaining}
+                                            </span>{" "}
+                                            kun
+                                          </div>
+                                        )}
                                       </p>
                                     </div>
                                   </Alert>
