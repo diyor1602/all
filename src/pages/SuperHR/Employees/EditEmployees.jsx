@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/dialog";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import payment_types from "@/lib/paymentTypes";
-import { cn } from "@/lib/utils";
 
 const EditEmployees = () => {
   const { id } = useParams();
