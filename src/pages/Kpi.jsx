@@ -1,8 +1,6 @@
 import api from "@/utils/api";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2,
   User,
@@ -13,6 +11,7 @@ import {
   Meh,
   Laugh,
   ChartNoAxesCombined,
+  LoaderCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -281,7 +280,7 @@ const Kpi = () => {
   const fetchGroupPlans = async () => {
     setLoadingGroupPlans(true);
     try {
-      const response = await api.get("/casher/groupPlans", {
+      const response = await api.get("/groupPlans", {
         params: {
           year: month?.split("-")[0],
           month: month?.split("-")[1],
@@ -413,17 +412,8 @@ const Kpi = () => {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-6 p-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="w-full">
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-4 w-1/2 mt-2" />
-            </CardContent>
-          </Card>
-        ))}
+      <div className="w-full h-[90vh] flex items-center justify-center">
+        <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
       </div>
     );
   }
@@ -976,24 +966,29 @@ const Kpi = () => {
                               <div
                                 className="flex items-center justify-between"
                                 onClick={() => {
-                                  const plan = groupPlans?.find(
-                                    (plan) => plan.group_id === group.id
-                                  );
-                                  if (plan) {
-                                    setEditPayload({
-                                      id: plan.id,
-                                      group_id: plan.group_id,
-                                      group_name: group.name,
-                                      quantity: plan.quantity,
-                                    });
-                                    setEditDialogOpen(true);
-                                  } else {
-                                    setAddPayload({
-                                      group_id: group.id,
-                                      quantity: null,
-                                      group_name: group.name,
-                                    });
-                                    setAddDialogOpen(true);
+                                  if (
+                                    localStorage.getItem("role") === "casher"
+                                  ) {
+                                    const plan = groupPlans?.find(
+                                      (plan) => plan.group_id === group.id
+                                    );
+
+                                    if (plan) {
+                                      setEditPayload({
+                                        id: plan.id,
+                                        group_id: plan.group_id,
+                                        group_name: group.name,
+                                        quantity: plan.quantity,
+                                      });
+                                      setEditDialogOpen(true);
+                                    } else {
+                                      setAddPayload({
+                                        group_id: group.id,
+                                        quantity: null,
+                                        group_name: group.name,
+                                      });
+                                      setAddDialogOpen(true);
+                                    }
                                   }
                                 }}
                               >

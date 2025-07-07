@@ -1,8 +1,20 @@
 import BaseLayout from "./BaseLayout";
-import { Home, BadgeMinus, BadgePlus, Box, Settings } from "lucide-react";
+import {
+  BadgePercent,
+  BadgeMinus,
+  BadgePlus,
+  Home,
+  Settings,
+} from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
+  {
+    name: "KPI",
+    href: "/kpi",
+    icon: BadgePercent,
+    onMobile: false,
+  },
   {
     name: "Kirimlar",
     href: "/warehouseManager/income",

@@ -7,7 +7,6 @@ import Transfer from "./Transfer/Transfer";
 import Salary from "./Salary/Salary";
 import Employees from "./Employees/Employees";
 import Daily from "./Daily/Daily";
-import Kpi from "./Kpi/Kpi";
 
 const Casher = () => {
   return (
@@ -20,7 +19,6 @@ const Casher = () => {
       <Route path="salary/*" element={<Salary />} />
       <Route path="employees" element={<Employees />} />
       <Route path="daily" element={<Daily />} />
-      <Route path="kpi/*" element={<Kpi />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

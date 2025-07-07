@@ -58,7 +58,7 @@ const navigation = [
   },
   {
     name: "KPI",
-    href: "/casher/kpi",
+    href: "/kpi",
     icon: BadgePercent,
     onMobile: false,
   },
