@@ -12,6 +12,7 @@ import {
   Angry,
   Meh,
   Laugh,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -178,6 +179,74 @@ const calculatePreviousPlan = (month, year, plan, daily_outputs) => {
     .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date
 };
 
+// Function to calculate total progress across all groups
+const calculateTotalProgress = (groupPlans, month) => {
+  // Filter out groups without a plan (quantity is 0 or null/undefined)
+  const groupsWithPlan = groupPlans.filter((plan) => plan.quantity > 0);
+
+  if (!groupsWithPlan?.length) return null;
+
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+
+  // Calculate working days in the month
+  const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
+  const endOfMonth = new Date(currentYear, currentMonth, 0);
+  const totalWorkingDays = getWorkingDays(startOfMonth, endOfMonth);
+
+  // Calculate working days passed
+  const workingDaysPassed = getWorkingDays(
+    startOfMonth,
+    new Date(currentYear, currentMonth - 1, currentDay)
+  );
+
+  const workingDaysRemaining = totalWorkingDays - workingDaysPassed;
+
+  // Calculate totals across groups with plans
+  const totals = groupsWithPlan.reduce(
+    (acc, plan) => {
+      acc.totalCompleted += parseFloat(plan.monthly_total || 0);
+      acc.totalTarget += parseFloat(plan.quantity);
+      return acc;
+    },
+    { totalCompleted: 0, totalTarget: 0 }
+  );
+
+  // Rest of the function remains the same...
+  const remaining = Math.max(0, totals.totalTarget - totals.totalCompleted);
+  const progress =
+    totals.totalTarget > 0
+      ? Math.min(
+          100,
+          Math.round((totals.totalCompleted / totals.totalTarget) * 100)
+        )
+      : 0;
+
+  const avgDailyOutput =
+    workingDaysPassed > 0 ? totals.totalCompleted / workingDaysPassed : 0;
+  const requiredDailyOutput =
+    workingDaysRemaining > 0 ? remaining / workingDaysRemaining : 0;
+  const projectedTotal =
+    totals.totalCompleted + avgDailyOutput * workingDaysRemaining;
+
+  return {
+    totalCompleted: parseInt(totals.totalCompleted),
+    totalTarget: parseInt(totals.totalTarget),
+    remaining: parseInt(remaining),
+    progress,
+    avgDailyOutput: parseInt((avgDailyOutput * 100) / 100),
+    requiredDailyOutput: parseInt((requiredDailyOutput * 100) / 100),
+    workingDaysPassed,
+    workingDaysRemaining,
+    onTrack: projectedTotal >= totals.totalTarget,
+    lastUpdated: today.toLocaleDateString("ru-RU"),
+    groupsWithPlanCount: groupsWithPlan.length, // Added to show how many groups are included
+    totalGroups: groupPlans.length, // Added to show total number of groups
+  };
+};
+
 const Kpi = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -207,6 +276,7 @@ const Kpi = () => {
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [image, setImage] = useState(null);
+  const [showTotalProgress, setShowTotalProgress] = useState(false);
 
   const fetchGroupPlans = async () => {
     setLoadingGroupPlans(true);
@@ -490,6 +560,180 @@ const Kpi = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={showTotalProgress} onOpenChange={setShowTotalProgress}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Umumiy Kunlik Hisobot</DialogTitle>
+            <DialogDescription>
+              <div className="space-y-1">
+                <div>
+                  Jami tikilgan:{" "}
+                  <span className="font-bold">
+                    {calculateTotalProgress(
+                      groupPlans,
+                      month
+                    )?.totalCompleted.toLocaleString() || 0}
+                  </span>{" "}
+                  ta
+                </div>
+                <div>
+                  Jami plan:{" "}
+                  <span className="font-bold">
+                    {calculateTotalProgress(
+                      groupPlans,
+                      month
+                    )?.totalTarget.toLocaleString() || 0}
+                  </span>{" "}
+                  ta
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            {(() => {
+              // Get all daily outputs from all groups
+              const allDailyOutputs = groupPlans
+                .filter((plan) => plan.quantity > 0)
+                .flatMap((plan) =>
+                  (plan.daily_outputs || []).map((output) => ({
+                    ...output,
+                    group_name:
+                      departments
+                        .flatMap((dept) => dept.groups)
+                        .find((g) => g.id === plan.group_id)?.name ||
+                      "Noma'lum",
+                  }))
+                );
+
+              // Group by date
+              const groupedByDate = allDailyOutputs.reduce((acc, output) => {
+                if (!acc[output.date]) {
+                  acc[output.date] = {
+                    date: output.date,
+                    total_count: 0,
+                    groups: [],
+                  };
+                }
+                acc[output.date].total_count += output.total_count;
+                acc[output.date].groups.push({
+                  group_name: output.group_name,
+                  count: output.total_count,
+                });
+                return acc;
+              }, {});
+
+              // Calculate daily target
+              const totalPlan = groupPlans
+                .filter((plan) => plan.quantity > 0)
+                .reduce((sum, plan) => sum + parseFloat(plan.quantity), 0);
+
+              const workingDaysInMonth = getWorkingDays(
+                new Date(
+                  new Date(month + "-01").getFullYear(),
+                  new Date(month + "-01").getMonth(),
+                  1
+                ),
+                new Date(
+                  new Date(month + "-01").getFullYear(),
+                  new Date(month + "-01").getMonth() + 1,
+                  0
+                )
+              );
+
+              const dailyTarget = totalPlan / workingDaysInMonth;
+
+              // Convert to array and sort by date
+              const sortedDailyData = Object.values(groupedByDate)
+                .map((day) => {
+                  const percentage = (day.total_count / dailyTarget) * 100;
+                  let status, color, icon;
+
+                  if (percentage >= 100) {
+                    status = "Ajoyib";
+                    color = "bg-green-100 text-green-800";
+                    icon = <Laugh size={16} />;
+                  } else if (percentage >= 80) {
+                    status = "Yaxshilash kerak";
+                    color = "bg-yellow-100 text-yellow-800";
+                    icon = <Meh size={16} />;
+                  } else {
+                    status = "Qoniqarsiz";
+                    color = "bg-red-100 text-red-800";
+                    icon = <Angry size={16} />;
+                  }
+
+                  return {
+                    ...day,
+                    dailyTarget: Math.round(dailyTarget),
+                    percentage: Math.round(percentage),
+                    status,
+                    color,
+                    icon,
+                  };
+                })
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+              return (
+                <div className="space-y-2">
+                  {sortedDailyData?.map((day, index) => (
+                    <div
+                      key={index}
+                      className={`flex flex-col p-3 rounded-lg border ${day.color}`}
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="font-medium">
+                          {day.date.split("-").reverse().join(".")}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{day.status}</span>
+                          {day.icon}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm">Jami:</span>
+                        <span className="font-bold">
+                          {day.total_count} /{" "}
+                          <span className="text-xs opacity-70">
+                            {day.dailyTarget}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm">Bajarildi:</span>
+                        <span className="font-bold">{day.percentage}%</span>
+                      </div>
+
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{
+                            width: `${Math.min(100, day.percentage)}%`,
+                          }}
+                        ></div>
+                      </div>
+
+                      <div className="text-xs text-gray-600">
+                        {day.groups
+                          ?.sort?.((a, b) =>
+                            a.group_name.localeCompare(b.group_name)
+                          )
+                          ?.map((group, i) => (
+                            <div key={i} className="flex justify-between">
+                              <span>{group.group_name}:</span>
+                              <span>{group.count} ta</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-2">
         <Input
           type="month"
@@ -507,6 +751,128 @@ const Kpi = () => {
           <span> ta</span>
         </div>
       </div>
+
+      {/* Add this after the month selector, before the departments mapping */}
+      {groupPlans?.length > 0 && (
+        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+          <div className="w-full flex justify-between items-center mb-4 gap-2 flex-wrap">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <ChartNoAxesCombined className="w-5 h-5" />
+              Umumiy Progress
+            </h3>
+
+            <Button
+              variant="ghost"
+              onClick={() => setShowTotalProgress(true)}
+              className="text-sm text-blue-600 hover:underline mb-4"
+            >
+              Kunlik hisobotlarni ko'rish
+            </Button>
+          </div>
+
+          {(() => {
+            const totalProgress = calculateTotalProgress(groupPlans, month);
+            if (!totalProgress) return null;
+
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                  <div className="bg-blue-200 p-4 rounded-lg">
+                    <div className="text-sm text-blue-600">Jami Bajarildi</div>
+                    <div className="text-2xl font-bold">
+                      {totalProgress.totalCompleted.toLocaleString()} ta
+                    </div>
+                  </div>
+                  <div className="bg-green-200 p-4 rounded-lg">
+                    <div className="text-sm text-green-600">Jami Reja</div>
+                    <div className="text-2xl font-bold">
+                      {totalProgress.totalTarget.toLocaleString()} ta
+                    </div>
+                  </div>
+                  <div className="bg-amber-200 p-4 rounded-lg">
+                    <div className="text-sm text-amber-600">Progress</div>
+                    <div className="text-2xl font-bold">
+                      {totalProgress.progress}%
+                    </div>
+                  </div>
+                  <div className="bg-purple-200 p-4 rounded-lg">
+                    <div className="text-sm text-purple-600">Qoldi</div>
+                    <div className="text-2xl font-bold">
+                      {totalProgress.remaining.toLocaleString()} ta
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg border">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium">Kunlik Progress</h4>
+                    <div
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        totalProgress.onTrack
+                          ? "bg-green-300 text-green-800"
+                          : "bg-red-300 text-red-800"
+                      }`}
+                    >
+                      {totalProgress.onTrack
+                        ? "Hammasi Reja Bo'yicha"
+                        : "Rejadan Orqada"}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-blue-200 p-2 rounded-lg">
+                        <div className="text-sm text-gray-500">
+                          Kunlik o'rtacha
+                        </div>
+                        <div className="font-medium">
+                          {totalProgress.avgDailyOutput.toLocaleString()} ta
+                        </div>
+                      </div>
+                      <div className="bg-green-200 p-2 rounded-lg">
+                        <div className="text-sm text-gray-500">Kun qoldi</div>
+                        <div className="font-medium">
+                          {totalProgress.workingDaysRemaining} kun
+                        </div>
+                      </div>
+                      <div className="bg-orange-200 p-2 rounded-lg">
+                        <div className="text-sm text-gray-500">
+                          Kunlik kerak
+                        </div>
+                        <div className="font-medium">
+                          {totalProgress.requiredDailyOutput.toLocaleString()}{" "}
+                          ta
+                        </div>
+                      </div>
+                      <div className="bg-purple-200 p-2 rounded-lg">
+                        <div className="text-sm text-gray-500">Ish kunlari</div>
+                        <div className="font-medium">
+                          {totalProgress.workingDaysPassed}/
+                          {totalProgress.workingDaysPassed +
+                            totalProgress.workingDaysRemaining}
+                        </div>
+                      </div>
+                    </div>
+
+                    {!totalProgress.onTrack && (
+                      <div className="mt-2 text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                        Rejaga yetish uchun har bir ish kunida kamida{" "}
+                        <span className="font-bold">
+                          {Math.ceil(
+                            totalProgress.requiredDailyOutput
+                          ).toLocaleString()}
+                        </span>{" "}
+                        ta tikish kerak.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {departments?.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400">
