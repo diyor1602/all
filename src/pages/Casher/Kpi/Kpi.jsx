@@ -10,11 +10,15 @@ import {
   Users,
   ClipboardList,
   ListChecks,
+  Angry,
+  Meh,
+  Laugh,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -113,6 +117,68 @@ const analyzeProgress = (plan) => {
   };
 };
 
+const calculatePreviousPlan = (month, year, plan, daily_outputs) => {
+  if (!plan || !daily_outputs?.length) return [];
+
+  // Get the first and last day of the month
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+
+  // Calculate total working days in the month (excluding Sundays)
+  let workingDays = 0;
+  const currentDate = new Date(firstDay);
+  while (currentDate <= lastDay) {
+    if (currentDate.getDay() !== 0) {
+      // 0 is Sunday
+      workingDays++;
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Calculate daily target
+  const dailyTarget = plan / workingDays;
+
+  // Process each day's output
+  return daily_outputs
+    .map((day) => {
+      const dayOfWeek = new Date(day.date).getDay();
+      const isWeekend = dayOfWeek === 0; // Sunday
+
+      // Skip weekends
+      if (isWeekend) return null;
+
+      // Calculate percentage of target achieved
+      const percentage = (day.total_count / dailyTarget) * 100;
+
+      // Determine status and color
+      let status, color, icon;
+      if (percentage >= 100) {
+        status = "Ajoyib";
+        color = "bg-green-100 text-green-800";
+        icon = <Laugh size={16} />;
+      } else if (percentage >= 80) {
+        status = "Yaxshilash kerak";
+        color = "bg-yellow-100 text-yellow-800";
+        icon = <Meh size={16} />;
+      } else {
+        status = "Qoniqarsiz natija";
+        color = "bg-red-100 text-red-800";
+        icon = <Angry size={16} />;
+      }
+
+      return {
+        ...day,
+        dailyTarget: parseInt(dailyTarget),
+        percentage: Math.round(percentage * 100) / 100,
+        status,
+        color,
+        icon,
+      };
+    })
+    .filter(Boolean) // Remove null values (weekends)
+    .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date
+};
+
 const Kpi = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -138,6 +204,8 @@ const Kpi = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loadingGroupPlans, setLoadingGroupPlans] = useState(false);
   const [sending, setSending] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
 
   const fetchGroupPlans = async () => {
     setLoadingGroupPlans(true);
@@ -291,6 +359,77 @@ const Kpi = () => {
 
   return (
     <>
+      <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedGroup?.name}</DialogTitle>
+            <DialogDescription>
+              <div>
+                Jami tikilgan:{" "}
+                <span className="font-bold">
+                  {groupPlans?.find(
+                    (plan) => plan.group_id === selectedGroup?.id
+                  )?.monthly_total || 0}
+                </span>{" "}
+                ta
+              </div>
+              <div>
+                Jami plan:{" "}
+                <span className="font-bold">
+                  {groupPlans?.find(
+                    (plan) => plan.group_id === selectedGroup?.id
+                  )?.quantity || 0}
+                </span>{" "}
+                ta
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col space-y-2 max-h-[400px] overflow-y-auto">
+            {(() => {
+              const selectedPlan = groupPlans?.find(
+                (plan) => plan.group_id === selectedGroup?.id
+              );
+              if (!selectedPlan) return null;
+
+              const monthlyPlan = selectedPlan.quantity;
+              const year = new Date(month + "-01").getFullYear();
+              const monthNumber = new Date(month + "-01").getMonth() + 1;
+
+              const dailyData = calculatePreviousPlan(
+                monthNumber,
+                year,
+                monthlyPlan,
+                selectedPlan.daily_outputs || []
+              );
+
+              return dailyData.map((day, index) => (
+                <div
+                  key={index}
+                  className={`flex justify-between items-center p-2 rounded ${day.color} border`}
+                >
+                  <div className="flex-1">
+                    <div className="font-medium">
+                      {day.date?.split("-").reverse().join(".")}
+                    </div>
+                    <div className="text-xs opacity-75 flex items-center gap-1">
+                      {day.icon} {day.status}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold">
+                      {day.total_count} /{" "}
+                      <span className="text-xs opacity-50">
+                        {day.dailyTarget}
+                      </span>
+                    </div>
+                    <div className="text-xs">{day.percentage}%</div>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -450,7 +589,7 @@ const Kpi = () => {
                                   setEditDialogOpen(true);
                                 } else {
                                   setAddPayload({
-                                    group_id: plan.group_id,
+                                    group_id: group.id,
                                     quantity: null,
                                     group_name: group.name,
                                   });
@@ -477,7 +616,13 @@ const Kpi = () => {
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div
+                              className="flex items-center justify-between"
+                              onClick={() => {
+                                setSelectedGroup(group);
+                                setGroupDialogOpen(true);
+                              }}
+                            >
                               <div className="flex items-center gap-2">
                                 <ListChecks className="w-4 h-4 text-gray-500" />
                                 <span className="text-sm text-gray-600">
