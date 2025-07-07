@@ -1,8 +1,14 @@
 import BaseLayout from "./BaseLayout";
-import { Home, Users, Settings, Calendar1 } from "lucide-react";
+import { BadgePercent, Home, Users, Settings, Calendar1 } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
+  {
+    name: "KPI",
+    href: "/kpi",
+    icon: BadgePercent,
+    onMobile: false,
+  },
   {
     name: "Davomat",
     href: "/internalAccountant/attendance",

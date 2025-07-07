@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 import DashboardLayout from "./components/layout/DashboardLayout";
 import Home from "./pages/Home";
+import Kpi from "./pages/Kpi";
 import Profile from "./pages/Profile";
 import ProfileSalary from "./pages/ProfileSalary";
 import Issue from "./pages/Issue";
@@ -64,6 +65,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profileSalary" element={<ProfileSalary />} />
           <Route path="/issue" element={<Issue />} />
+          <Route path="/kpi" element={<Kpi />} />
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />

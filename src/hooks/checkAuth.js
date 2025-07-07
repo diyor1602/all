@@ -1,4 +1,4 @@
-const allowPaths = ["home", "profile", "issue", "profileSalary"];
+const allowPaths = ["home", "profile", "issue", "profileSalary", "kpi"];
 
 const isTokenValid = (tok) => {
   const expirationTime = tok.exp * 1000;
