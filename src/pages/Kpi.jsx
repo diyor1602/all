@@ -301,7 +301,7 @@ const Kpi = () => {
   const fetchDepartments = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/casher/departments");
+      const response = await api.get("/departments");
       const depts = response.data?.flatMap((item) => item?.departments) || [];
       // Sort groups by name
       const sortedDepts = depts.map((dept) => ({
