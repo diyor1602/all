@@ -10,7 +10,6 @@ import {
   Users,
   ClipboardList,
   ListChecks,
-  CirclePercent,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,6 +20,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Alert } from "@/components/ui/alert";
+import { Info, AlertCircle, CheckCircle2 } from "lucide-react";
 
 // Array of Tailwind CSS background color classes
 const groupColors = [
@@ -35,6 +37,80 @@ const groupColors = [
   "bg-orange-200 hover:bg-orange-300",
   "bg-cyan-200 hover:bg-cyan-300",
 ];
+
+// Function to calculate working days between two dates (excluding Sundays)
+const getWorkingDays = (startDate, endDate) => {
+  let count = 0;
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+
+  while (current <= end) {
+    const day = current.getDay();
+    if (day !== 0) {
+      // 0 is Sunday
+      count++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+};
+
+// Function to analyze daily outputs and predict progress
+const analyzeProgress = (plan) => {
+  if (!plan.daily_outputs || plan.daily_outputs.length === 0) {
+    return null;
+  }
+
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+
+  // Get the last date in daily outputs
+  const lastOutputDate = new Date(
+    plan.daily_outputs[plan.daily_outputs.length - 1].date
+  );
+  const lastOutputDay = lastOutputDate.getDate();
+
+  // Calculate working days passed and remaining
+  const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
+  const endOfMonth = new Date(currentYear, currentMonth, 0);
+
+  // Calculate working days passed (from start of month to last output day)
+  const workingDaysPassed = getWorkingDays(
+    startOfMonth,
+    new Date(currentYear, currentMonth - 1, lastOutputDay)
+  );
+
+  // Calculate remaining working days (from tomorrow to end of month, excluding Sundays)
+  const tomorrow = new Date(currentYear, currentMonth - 1, currentDay + 1);
+  const workingDaysRemaining = getWorkingDays(tomorrow, endOfMonth);
+
+  // Calculate current progress
+  const completed = plan.monthly_total || 0;
+  const target = plan.quantity;
+  const remaining = Math.max(0, target - completed);
+
+  // Calculate average daily output
+  const avgDailyOutput = completed / workingDaysPassed;
+  const projectedTotal = completed + avgDailyOutput * workingDaysRemaining;
+
+  // Calculate required daily output to meet target
+  const requiredDailyOutput = remaining / workingDaysRemaining;
+
+  return {
+    completed,
+    target,
+    remaining,
+    progress: Math.min(100, Math.round((completed / target) * 100)),
+    avgDailyOutput: Math.round(avgDailyOutput * 100) / 100,
+    requiredDailyOutput: Math.round(requiredDailyOutput * 100) / 100,
+    onTrack: projectedTotal >= target,
+    workingDaysPassed,
+    workingDaysRemaining,
+    lastUpdated: lastOutputDate.toLocaleDateString("ru-RU"),
+  };
+};
 
 const Kpi = () => {
   const { toast } = useToast();
@@ -338,7 +414,7 @@ const Kpi = () => {
                               setAddDialogOpen(true);
                             }
                           }}
-                          className={`w-full h-full rounded-xl p-4 transition-all duration-300 transform cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+                          className={`w-full h-fit rounded-xl p-4 transition-all duration-300 transform cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
                             groupColors[group.id % groupColors.length] ||
                             "bg-gray-100 hover:bg-gray-200"
                           }`}
@@ -368,7 +444,7 @@ const Kpi = () => {
                             </div>
                           )}
 
-                          <div className="mt-3 p-3 bg-white/50 rounded-lg">
+                          <div className="mt-3 p-3 bg-white/50 rounded-lg space-y-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <ClipboardList className="w-4 h-4 text-gray-500" />
@@ -409,40 +485,115 @@ const Kpi = () => {
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <CirclePercent className="w-4 h-4 text-gray-500" />
-                                <span className="text-sm text-gray-600">
-                                  Foiz:
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <span className="font-bold text-lg text-blue-600">
-                                  {(() => {
-                                    const plan = groupPlans?.find(
-                                      (p) => p.group_id === group.id
-                                    );
-                                    if (
-                                      !plan ||
-                                      !plan.quantity ||
-                                      plan.quantity === "0" ||
-                                      plan.quantity === 0
-                                    ) {
-                                      return "0.00";
+
+                            {/* Daily Output Analysis */}
+                            {(() => {
+                              const plan = groupPlans?.find(
+                                (p) => p.group_id === group.id
+                              );
+                              // Don't show if no plan, no daily outputs, or plan quantity is 0/not set
+                              if (
+                                !plan?.daily_outputs?.length ||
+                                !plan?.quantity ||
+                                plan.quantity === 0
+                              )
+                                return null;
+
+                              const analysis = analyzeProgress(plan);
+                              if (!analysis) return null;
+
+                              return (
+                                <div className="mt-4 pt-3 border-t border-gray-200 space-y-3">
+                                  <h4 className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
+                                    <Info className="w-3.5 h-3.5" />
+                                    Progress Tahlili
+                                  </h4>
+
+                                  <div className="space-y-1">
+                                    <div className="flex justify-between text-xs text-gray-600">
+                                      <span>
+                                        Progress: {analysis.progress}%
+                                      </span>
+                                      <span>
+                                        {analysis.completed.toLocaleString()} /{" "}
+                                        {analysis.target.toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <Progress
+                                      value={analysis.progress}
+                                      className="h-1.5"
+                                    />
+                                  </div>
+
+                                  <Alert
+                                    className={
+                                      analysis.onTrack
+                                        ? "bg-green-50 p-2"
+                                        : "bg-amber-50 p-2"
                                     }
-                                    const monthlyTotal = parseFloat(
-                                      plan.monthly_total || 0
-                                    );
-                                    const quantity = parseFloat(plan.quantity);
-                                    return (
-                                      (monthlyTotal / quantity) *
-                                      100
-                                    ).toFixed(2);
-                                  })()}
-                                </span>
-                                <span className="text-sm text-gray-500">%</span>
-                              </div>
-                            </div>
+                                  >
+                                    {analysis.onTrack ? (
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-green-600 mr-1 flex-shrink-0" />
+                                    ) : (
+                                      <AlertCircle className="h-3.5 w-3.5 text-amber-600 mr-1 flex-shrink-0" />
+                                    )}
+                                    <div>
+                                      <p className="text-xs font-medium">
+                                        {analysis.onTrack
+                                          ? "Planni bajara oladi"
+                                          : "Planni bajara olmaydi"}
+                                      </p>
+                                      <p className="text-xs mt-0.5">
+                                        {analysis.onTrack
+                                          ? `Rejada: ~${Math.round(
+                                              analysis.avgDailyOutput *
+                                                analysis.workingDaysRemaining +
+                                                analysis.completed
+                                            ).toLocaleString()} / ${analysis.target.toLocaleString()}`
+                                          : `Kerak: ${analysis.requiredDailyOutput.toLocaleString()} ta dan ${
+                                              analysis.workingDaysRemaining
+                                            } kun`}
+                                      </p>
+                                    </div>
+                                  </Alert>
+
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="bg-white p-1.5 rounded border text-center">
+                                      <div className="text-gray-500 text-[10px]">
+                                        Kunlik o'rtacha
+                                      </div>
+                                      <div className="font-medium">
+                                        {analysis.avgDailyOutput.toLocaleString()}
+                                      </div>
+                                    </div>
+                                    <div className="bg-white p-1.5 rounded border text-center">
+                                      <div className="text-gray-500 text-[10px]">
+                                        Kun qoldi
+                                      </div>
+                                      <div className="font-medium">
+                                        {analysis.workingDaysRemaining}
+                                      </div>
+                                    </div>
+                                    <div className="bg-white p-1.5 rounded border text-center">
+                                      <div className="text-gray-500 text-[10px]">
+                                        Kunlik kerak
+                                      </div>
+                                      <div className="font-medium">
+                                        {analysis.requiredDailyOutput.toLocaleString()}
+                                      </div>
+                                    </div>
+                                    <div className="bg-white p-1.5 rounded border text-center">
+                                      <div className="text-gray-500 text-[10px]">
+                                        So'nggi yangilanish
+                                      </div>
+                                      <div className="font-medium">
+                                        {analysis.lastUpdated}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       ))
