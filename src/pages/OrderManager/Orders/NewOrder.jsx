@@ -219,7 +219,7 @@ const NewOrder = () => {
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-3 gap-4 mt-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
             {/* Searchable Contragent Selection */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderContragent">Kontragent</Label>
@@ -511,6 +511,20 @@ const NewOrder = () => {
                   </Command>
                 </PopoverContent>
               </Popover>
+            </div>
+            {/* Comment */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orderComment">Izoh</Label>
+              <Input
+                id="orderComment"
+                name="orderComment"
+                value={payload.comment}
+                className="bg-white"
+                onChange={(e) =>
+                  setPayload({ ...payload, comment: e.target.value })
+                }
+                placeholder="Buyurtma haqida izoh"
+              />
             </div>
           </div>
 
