@@ -471,7 +471,7 @@ const NewOrder = () => {
                     aria-expanded={materialOpen}
                     className="justify-between bg-white"
                   >
-                    {payload.material?.name || "Material tanlang"}
+                    {payload.model.material?.name || "Material tanlang"}
                     <ChevronsUpDown className="opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -486,7 +486,14 @@ const NewOrder = () => {
                             key={material.id}
                             value={material.name}
                             onSelect={() => {
-                              setPayload({ ...payload, material: material });
+                              setPayload((prev) => ({
+                                ...prev,
+                                model: {
+                                  ...prev.model,
+                                  material_id: material.id,
+                                  material: material, // Store the full material object
+                                },
+                              }));
                               setMaterialOpen(false);
                             }}
                           >
@@ -499,7 +506,7 @@ const NewOrder = () => {
                             <Check
                               className={cn(
                                 "ml-auto h-4 w-4",
-                                material === payload.material
+                                material.id === payload.model.material_id
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
