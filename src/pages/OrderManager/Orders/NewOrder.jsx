@@ -214,7 +214,7 @@ const NewOrder = () => {
     <>
       <div className="text-2xl font-bold mb-4">Yangi buyurtma yaratish</div>
       {loading ? (
-        <div className="w-full h-[90vh] flex items-center justify-center">
+        <div className="w-full h-[80vh] flex items-center justify-center">
           <Loader2 className="animate-spin text-primary" size={36} />
         </div>
       ) : (
