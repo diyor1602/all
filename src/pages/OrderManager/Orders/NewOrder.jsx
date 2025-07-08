@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -33,10 +35,11 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const NewOrder = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
-
   const [materials, setMaterials] = useState([]);
   const [models, setModels] = useState([]);
   const [contragents, setContragents] = useState([]);
@@ -44,6 +47,8 @@ const NewOrder = () => {
   const [loading, setLoading] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [materialOpen, setMaterialOpen] = useState(false);
+  const [contragentOpen, setContragentOpen] = useState(false);
+  const [colorOpens, setColorOpens] = useState({});
 
   const fetchData = async () => {
     setLoading(true);
@@ -88,22 +93,52 @@ const NewOrder = () => {
       submodels: [],
       sizes: [],
     },
-    contragent_id: "",
+    contragent: {
+      id: null,
+      name: "",
+      isNew: false,
+    },
   });
+
   const [isSending, setIsSending] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Prepare the payload in the required format
+    if (
+      !payload.name ||
+      !payload.model.id ||
+      !payload.price ||
+      !payload.model.material_id ||
+      !payload.model.submodels.length ||
+      !payload.model.sizes.length
+    ) {
+      toast({
+        title: "Xatolik",
+        description: "Barcha maydonlar to'ldirilishi shart",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Calculate total quantity from all sizes
     const sizes =
       payload.model.sizes
-        ?.map((size) => ({
-          id: size.id,
-          quantity: parseInt(size.quantity) || 0,
-          color_id: size.color_id,
-        }))
+        ?.map((size) => {
+          const sizeData = {
+            id: size.id,
+            quantity: Number.parseInt(size.quantity) || 0,
+          };
+
+          // Only include color_id OR color_name, not both
+          if (size.color?.isNew) {
+            sizeData.color_name = size.color.name;
+          } else if (size.color?.id) {
+            sizeData.color_id = size.color.id;
+          }
+
+          return sizeData;
+        })
         .filter((size) => size.id && size.quantity > 0) || [];
 
     const totalQuantity = sizes.reduce(
@@ -113,7 +148,7 @@ const NewOrder = () => {
 
     const formattedPayload = {
       name: payload.name,
-      quantity: totalQuantity, // Use calculated total quantity
+      quantity: totalQuantity,
       price: payload.price,
       start_date: payload.start_date,
       end_date: payload.end_date,
@@ -121,7 +156,7 @@ const NewOrder = () => {
       comment: payload.comment,
       model: {
         id: payload.model.id,
-        material_id: payload.material?.id || "",
+        material_id: payload.model.material_id,
         submodels:
           payload.model.submodels
             ?.map((submodel) =>
@@ -130,8 +165,14 @@ const NewOrder = () => {
             .filter(Boolean) || [],
         sizes: sizes,
       },
-      contragent_id: payload.contragent_id,
     };
+
+    // Only include contragent_id OR contragent_name, not both
+    if (payload.contragent.isNew) {
+      formattedPayload.contragent_name = payload.contragent.name;
+    } else if (payload.contragent.id) {
+      formattedPayload.contragent_id = payload.contragent.id;
+    }
 
     setIsSending(true);
     try {
@@ -143,9 +184,10 @@ const NewOrder = () => {
           backgroundColor: "green",
           color: "white",
         },
+        duration: 1200,
       });
+      navigate("/orderManager/orders");
     } catch (error) {
-      console.error("Error creating order:", error);
       toast({
         title: "Xatolik",
         description:
@@ -157,47 +199,116 @@ const NewOrder = () => {
     }
   };
 
+  const handleColorOpen = (index, isOpen) => {
+    setColorOpens((prev) => ({
+      ...prev,
+      [index]: isOpen,
+    }));
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
 
   return (
     <>
-      <div className="text-2xl font-semibold mb-4">Yangi buyurtma yaratish</div>
+      <div className="text-2xl font-bold mb-4">Yangi buyurtma yaratish</div>
       {loading ? (
         <div className="w-full h-[90vh] flex items-center justify-center">
           <Loader2 className="animate-spin text-primary" size={36} />
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4 mt-10">
+            {/* Searchable Contragent Selection */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderContragent">Kontragent</Label>
-              <Select
-                value={payload.contragent_id?.toString()}
-                onValueChange={(value) => {
-                  setPayload((prev) => ({
-                    ...prev,
-                    contragent_id: parseInt(value) || "",
-                  }));
-                }}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Kontragent tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {contragents.map((contragent) => (
-                    <SelectItem
-                      key={contragent.id}
-                      value={contragent.id.toString()}
-                      className="capitalize"
-                    >
-                      {contragent.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={contragentOpen} onOpenChange={setContragentOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={contragentOpen}
+                    className="justify-between bg-white"
+                  >
+                    {payload.contragent.name || "Kontragent tanlang"}
+                    <ChevronsUpDown className="opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0">
+                  <Command>
+                    <CommandInput placeholder="Kontragent qidirish yoki yaratish..." />
+                    <CommandList>
+                      <CommandEmpty>
+                        <div className="p-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              const input = document.querySelector(
+                                '[placeholder="Kontragent qidirish yoki yaratish..."]'
+                              );
+                              const searchValue = input?.value || "";
+                              if (searchValue.trim()) {
+                                setPayload((prev) => ({
+                                  ...prev,
+                                  contragent: {
+                                    id: null,
+                                    name: searchValue.trim(),
+                                    isNew: true,
+                                  },
+                                }));
+                                setContragentOpen(false);
+                              }
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Yangi kontragent yaratish
+                          </Button>
+                        </div>
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {contragents.map((contragent) => (
+                          <CommandItem
+                            key={contragent.id}
+                            value={contragent.name}
+                            onSelect={() => {
+                              setPayload((prev) => ({
+                                ...prev,
+                                contragent: {
+                                  id: contragent.id,
+                                  name: contragent.name,
+                                  isNew: false,
+                                },
+                              }));
+                              setContragentOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                payload.contragent.id === contragent.id
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {contragent.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {payload.contragent.isNew && (
+                <div className="text-sm text-green-600 flex items-center gap-1">
+                  <Plus className="h-3 w-3" />
+                  Yangi kontragent: {payload.contragent.name}
+                </div>
+              )}
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderName">Buyurtma nomi</Label>
               <Input
@@ -212,6 +323,7 @@ const NewOrder = () => {
                 }
               />
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderPrice">Buyurtma narxi</Label>
               <Input
@@ -227,6 +339,7 @@ const NewOrder = () => {
                 }}
               />
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderRasxod">Rasxod</Label>
               <Input
@@ -242,6 +355,7 @@ const NewOrder = () => {
                 }}
               />
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderStartDate">Boshlanish sanasi</Label>
               <Input
@@ -249,13 +363,13 @@ const NewOrder = () => {
                 id="orderStartDate"
                 placeholder="Boshlanish sanasi"
                 value={payload.start_date}
-                required
                 className="bg-white"
                 onChange={(e) => {
                   setPayload({ ...payload, start_date: e.target.value });
                 }}
               />
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderEndDate">Tugash sanasi</Label>
               <Input
@@ -264,13 +378,13 @@ const NewOrder = () => {
                 placeholder="Tugash sanasi"
                 value={payload.end_date}
                 min={payload.start_date}
-                required
                 className="bg-white"
                 onChange={(e) => {
                   setPayload({ ...payload, end_date: e.target.value });
                 }}
               />
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderModel">Modelni tanlang</Label>
               <Popover open={modelOpen} onOpenChange={setModelOpen}>
@@ -279,7 +393,7 @@ const NewOrder = () => {
                     variant="outline"
                     role="combobox"
                     aria-expanded={modelOpen}
-                    className="justify-between"
+                    className="justify-between bg-white"
                   >
                     {payload.model.name || "Model tanlang"}
                     <ChevronsUpDown className="opacity-50" />
@@ -300,12 +414,16 @@ const NewOrder = () => {
                                 ...payload,
                                 model: {
                                   ...model,
-                                  sizesList: model.sizes, // Store available sizes for selection
+                                  sizesList: model.sizes,
                                   sizes: [
                                     {
                                       id: "",
                                       quantity: "",
-                                      color_id: "",
+                                      color: {
+                                        id: null,
+                                        name: "",
+                                        isNew: false,
+                                      },
                                     },
                                   ],
                                 },
@@ -342,6 +460,7 @@ const NewOrder = () => {
                 </PopoverContent>
               </Popover>
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderMaterial">Materialni tanlang</Label>
               <Popover open={materialOpen} onOpenChange={setMaterialOpen}>
@@ -350,7 +469,7 @@ const NewOrder = () => {
                     variant="outline"
                     role="combobox"
                     aria-expanded={materialOpen}
-                    className="justify-between"
+                    className="justify-between bg-white"
                   >
                     {payload.material?.name || "Material tanlang"}
                     <ChevronsUpDown className="opacity-50" />
@@ -394,6 +513,7 @@ const NewOrder = () => {
               </Popover>
             </div>
           </div>
+
           {payload?.model?.id && (
             <>
               <div className="mt-4 flex flex-wrap gap-2 items-center">
@@ -428,6 +548,7 @@ const NewOrder = () => {
                     </div>
                   ))}
               </div>
+
               {/* Sizes section */}
               <div className="mt-4 flex flex-col gap-4">
                 <div className="font-medium">O'lcham va ranglar</div>
@@ -435,15 +556,15 @@ const NewOrder = () => {
                   <div key={index} className="flex items-center gap-2">
                     {/* Size selection */}
                     <Select
-                      value={size.id}
+                      value={size.id?.toString() || ""}
                       onValueChange={(value) => {
                         const selectedSize = payload.model.sizesList.find(
-                          (s) => s.id === parseInt(value)
+                          (s) => s.id === Number.parseInt(value)
                         );
                         const newSizes = [...payload.model.sizes];
                         newSizes[index] = {
                           ...newSizes[index],
-                          id: parseInt(value),
+                          id: Number.parseInt(value),
                           name: selectedSize?.name || "",
                         };
                         setPayload({
@@ -476,47 +597,111 @@ const NewOrder = () => {
                       </SelectContent>
                     </Select>
 
-                    {/* Color selection */}
-                    <Select
-                      value={size.color_id}
-                      onValueChange={(value) => {
-                        const selectedColor = colors.find(
-                          (c) => c.id === parseInt(value)
-                        );
-                        const newSizes = [...payload.model.sizes];
-                        newSizes[index] = {
-                          ...newSizes[index],
-                          color_id: parseInt(value),
-                          color_name: selectedColor?.name || "",
-                        };
-                        setPayload({
-                          ...payload,
-                          model: {
-                            ...payload.model,
-                            sizes: newSizes,
-                          },
-                        });
-                      }}
+                    {/* Searchable Color selection */}
+                    <Popover
+                      open={colorOpens[index] || false}
+                      onOpenChange={(isOpen) => handleColorOpen(index, isOpen)}
                     >
-                      <SelectTrigger className="w-[180px] bg-white">
-                        <SelectValue placeholder="Rang tanlang">
-                          {size.color_id
-                            ? colors?.find((c) => c.id === size.color_id)
-                                ?.name || ""
-                            : ""}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {colors?.map((color) => (
-                          <SelectItem
-                            key={color.id}
-                            value={color.id.toString()}
-                          >
-                            {color.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={colorOpens[index] || false}
+                          className="w-fit justify-between bg-white"
+                        >
+                          {size.color?.name || "Rang tanlang"}
+                          <ChevronsUpDown className="opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0">
+                        <Command>
+                          <CommandInput placeholder="Rang qidirish yoki yaratish..." />
+                          <CommandList>
+                            <CommandEmpty>
+                              <div className="p-2">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="w-full justify-start"
+                                  onClick={() => {
+                                    const input = document.querySelector(
+                                      '[placeholder="Rang qidirish yoki yaratish..."]'
+                                    );
+                                    const searchValue = input?.value || "";
+                                    if (searchValue.trim()) {
+                                      const newSizes = [...payload.model.sizes];
+                                      newSizes[index] = {
+                                        ...newSizes[index],
+                                        color: {
+                                          id: null,
+                                          name: searchValue.trim(),
+                                          isNew: true,
+                                        },
+                                      };
+                                      setPayload({
+                                        ...payload,
+                                        model: {
+                                          ...payload.model,
+                                          sizes: newSizes,
+                                        },
+                                      });
+                                      handleColorOpen(index, false);
+                                    }
+                                  }}
+                                >
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Yangi rang yaratish
+                                </Button>
+                              </div>
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {colors.map((color) => (
+                                <CommandItem
+                                  key={color.id}
+                                  value={color.name}
+                                  onSelect={() => {
+                                    const newSizes = [...payload.model.sizes];
+                                    newSizes[index] = {
+                                      ...newSizes[index],
+                                      color: {
+                                        id: color.id,
+                                        name: color.name,
+                                        isNew: false,
+                                      },
+                                    };
+                                    setPayload({
+                                      ...payload,
+                                      model: {
+                                        ...payload.model,
+                                        sizes: newSizes,
+                                      },
+                                    });
+                                    handleColorOpen(index, false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      size.color?.id === color.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {color.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+
+                    {size.color?.isNew && (
+                      <div className="text-xs text-green-600 flex items-center gap-1">
+                        <Plus className="h-3 w-3" />
+                        Yangi
+                      </div>
+                    )}
 
                     {/* Quantity input */}
                     <Input
@@ -529,7 +714,7 @@ const NewOrder = () => {
                         const newSizes = [...payload.model.sizes];
                         newSizes[index] = {
                           ...newSizes[index],
-                          quantity: parseInt(e.target.value) || 0,
+                          quantity: Number.parseInt(e.target.value) || 0,
                         };
                         setPayload({
                           ...payload,
@@ -569,7 +754,7 @@ const NewOrder = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="mt-2 w-fit"
+                  className="mt-2 w-fit bg-transparent"
                   onClick={() => {
                     setPayload({
                       ...payload,
@@ -580,7 +765,11 @@ const NewOrder = () => {
                           {
                             id: "",
                             quantity: "",
-                            color_id: "",
+                            color: {
+                              id: null,
+                              name: "",
+                              isNew: false,
+                            },
                           },
                         ],
                       },
@@ -593,6 +782,7 @@ const NewOrder = () => {
               </div>
             </>
           )}
+
           <div className="flex justify-end">
             <Button type="submit" className="mt-4" disabled={isSending}>
               {isSending ? (
