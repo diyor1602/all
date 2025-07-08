@@ -721,14 +721,13 @@ const NewOrder = () => {
                     <Input
                       type="number"
                       placeholder="Miqdori"
-                      min="1"
                       className="w-[120px] bg-white"
                       value={size.quantity}
                       onChange={(e) => {
                         const newSizes = [...payload.model.sizes];
                         newSizes[index] = {
                           ...newSizes[index],
-                          quantity: Number.parseInt(e.target.value) || 0,
+                          quantity: Number.parseInt(e.target.value),
                         };
                         setPayload({
                           ...payload,
@@ -764,11 +763,23 @@ const NewOrder = () => {
                   </div>
                 ))}
 
+                {/* sum of quantity */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Jami:</span>
+                  <span className="text-lg font-semibold">
+                    {payload.model.sizes.reduce(
+                      (sum, size) =>
+                        sum + (Number.parseInt(size.quantity) || 0),
+                      0
+                    )}
+                  </span>
+                </div>
+
                 {/* Add new size button */}
                 <Button
                   type="button"
                   variant="outline"
-                  className="mt-2 w-fit bg-transparent"
+                  className="mt-2 w-fit"
                   onClick={() => {
                     setPayload({
                       ...payload,
