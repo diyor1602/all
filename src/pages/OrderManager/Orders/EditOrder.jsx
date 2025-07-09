@@ -35,10 +35,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
 const EditOrder = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { id } = useParams();
 
@@ -261,7 +259,6 @@ const EditOrder = () => {
         },
         duration: 1200,
       });
-      navigate(`/orderManager/orders/${id}`);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -424,6 +421,7 @@ const EditOrder = () => {
                 placeholder="Buyurtma narxi"
                 value={payload.price}
                 min={0}
+                step={0.01}
                 className="bg-white"
                 required
                 onChange={(e) => {
@@ -440,6 +438,7 @@ const EditOrder = () => {
                 placeholder="Rasxod"
                 value={payload.rasxod}
                 min={0}
+                step={0.01}
                 className="bg-white"
                 required
                 onChange={(e) => {
