@@ -1,26 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import {
-  Check,
+  Loader2,
   ChevronsUpDown,
-  Calendar,
-  Package,
-  User,
-  FileText,
-  ClipboardList,
-  Search,
-  PlusCircle,
-  Tag,
-  Ruler,
+  Check,
+  Trash2,
   Plus,
-  Trash,
-  ClipboardPaste,
+  Save,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import {
   Command,
   CommandEmpty,
@@ -34,337 +33,155 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const NewOrder = () => {
-  const [models, setModels] = useState([]);
-  const [materials, setMaterials] = useState([]);
-  const [contragents, setContragents] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const [materialsOpen, setMaterialsOpen] = useState(false);
-  const [modelsOpen, setModelsOpen] = useState(false);
-  const [contragentsOpen, setContragentsOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(null);
-  const [selectedContragent, setSelectedContragent] = useState(null);
-  const [selectedMaterial, setSelectedMaterial] = useState(null);
-  const [contragentInput, setContragentInput] = useState("");
-  const [isNewContragent, setIsNewContragent] = useState(false);
-  const [filteredContragents, setFilteredContragents] = useState([]);
-  const [currentTab, setCurrentTab] = useState("general");
+  const { toast } = useToast();
+  const [materials, setMaterials] = useState([]);
+  const [models, setModels] = useState([]);
+  const [contragents, setContragents] = useState([]);
+  const [colors, setColors] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
+  const [materialOpen, setMaterialOpen] = useState(false);
+  const [contragentOpen, setContragentOpen] = useState(false);
+  const [colorOpens, setColorOpens] = useState({});
 
-  // New states for submodels and sizes
-  const [selectedSubmodels, setSelectedSubmodels] = useState([]);
-  const [selectedSizes, setSelectedSizes] = useState([]);
-  const [sizesWithQuantity, setSizesWithQuantity] = useState([]);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [
+        materialsResponse,
+        modelsResponse,
+        contragentsResponse,
+        colorsResponse,
+      ] = await Promise.all([
+        api.get("/supervisor/materials"),
+        api.get("/supervisor/models"),
+        api.get("/supervisor/contragents"),
+        api.get("/supervisor/colors"),
+      ]);
+      setMaterials(materialsResponse.data);
+      setModels(modelsResponse.data);
+      setContragents(contragentsResponse.data);
+      setColors(colorsResponse.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Ma'lumotlar yuklashda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const [formData, setFormData] = useState({
+  const [payload, setPayload] = useState({
     name: "",
-    quantity: 1,
+    quantity: "",
+    price: 0,
     start_date: "",
     end_date: "",
-    comment: "-",
-    model_id: null,
-    material_id: null,
-    contragent_id: null,
-    contragent_name: "",
-    instructions: [
-      {
-        title: "",
-        description: "",
-      },
-    ],
+    rasxod: 0,
+    comment: "",
+    model: {
+      id: "",
+      material_id: "",
+      submodels: [],
+      sizes: [],
+    },
+    contragent: {
+      id: null,
+      name: "",
+      isNew: false,
+    },
   });
 
-  const fetchModels = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/supervisor/models");
-      const modelData = response.data || [];
-      setModels(modelData);
-    } catch (error) {
-      toast({
-        title: "Xato",
-        description: "Modellarni yuklashda xatolik yuz berdi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMaterials = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/supervisor/materials");
-      const materialData = response.data || [];
-      setMaterials(materialData);
-    } catch (error) {
-      toast({
-        title: "Xato",
-        description: "Materiallarni yuklashda xatolik yuz berdi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchContragents = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/supervisor/contragents");
-      const contragentData = response.data || [];
-      setContragents(contragentData);
-      setFilteredContragents(contragentData);
-    } catch (error) {
-      toast({
-        title: "Xato",
-        description: "Kontragentlarni yuklashda xatolik yuz berdi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchModels();
-    fetchMaterials();
-    fetchContragents();
-  }, []);
-
-  // Reset submodels and sizes when model changes
-  useEffect(() => {
-    if (selectedModel) {
-      setSelectedSubmodels([]);
-      setSelectedSizes([]);
-      setSizesWithQuantity([]);
-    }
-  }, [selectedModel]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleContragentInputChange = (value) => {
-    setContragentInput(value);
-    setFormData({
-      ...formData,
-      contragent_name: value,
-    });
-
-    if (value.trim() === "") {
-      setFilteredContragents(contragents);
-      setIsNewContragent(false);
-      return;
-    }
-
-    const filtered = contragents.filter((c) =>
-      c.name.toLowerCase().includes(value.toLowerCase())
-    );
-
-    setFilteredContragents(filtered);
-    setIsNewContragent(filtered.length === 0);
-  };
-
-  const handleSelectContragent = (contragent) => {
-    setSelectedContragent(contragent);
-    setContragentInput(contragent.name);
-    setFormData({
-      ...formData,
-      contragent_id: contragent.id,
-      contragent_name: "",
-    });
-    setIsNewContragent(false);
-    setContragentsOpen(false);
-  };
-
-  const handleSelectModel = (model) => {
-    setSelectedModel(model);
-    setModelsOpen(false);
-    setFormData({
-      ...formData,
-      model_id: model.id,
-    });
-  };
-
-  const handleSubmodelToggle = (submodel) => {
-    setSelectedSubmodels((prev) => {
-      const isSelected = prev.some((sm) => sm.id === submodel.id);
-      if (isSelected) {
-        return prev.filter((sm) => sm.id !== submodel.id);
-      } else {
-        return [...prev, submodel];
-      }
-    });
-  };
-
-  const handleSizeToggle = (size) => {
-    setSelectedSizes((prev) => {
-      // Check if size is already selected
-      const isSelected = prev.some((s) => s.id === size.id);
-
-      if (isSelected) {
-        setSizesWithQuantity((prevSizes) =>
-          prevSizes.filter((s) => s.id !== size.id)
-        );
-        return prev.filter((s) => s.id !== size.id);
-      } else {
-        // Add to sizesWithQuantity with default quantity
-        setSizesWithQuantity((prevSizes) => [
-          ...prevSizes,
-          { id: size.id, name: size.name, quantity: 1 },
-        ]);
-        return [...prev, size];
-      }
-    });
-  };
-
-  const handleSizeQuantityChange = (sizeId, quantity) => {
-    setSizesWithQuantity((prev) =>
-      prev.map((size) =>
-        size.id === sizeId
-          ? { ...size, quantity: Number.parseInt(quantity) }
-          : size
-      )
-    );
-  };
+  const [isSending, setIsSending] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedModel) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, modelni tanlang",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!selectedMaterial) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, materialni tanlang",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (selectedSizes.length === 0) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, kamida bitta o'lchamni tanlang",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (selectedSubmodels.length === 0 && selectedModel.submodels?.length > 0) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, kamida bitta sub-modelni tanlang",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // check sizes with quantity is number and greater than 0
     if (
-      sizesWithQuantity.some(
-        (size) => isNaN(size.quantity) || size.quantity <= 0
-      )
+      !payload.name ||
+      !payload.model.id ||
+      !payload.model.material_id ||
+      !payload.model.submodels.length ||
+      !payload.model.sizes.length
     ) {
       toast({
-        title: "Diqqat",
-        description: "Iltimos, miqdorni to'g'ri kiriting",
+        title: "Xatolik",
+        description: "Barcha maydonlar to'ldirilishi shart",
         variant: "destructive",
       });
       return;
     }
 
-    if (!formData.contragent_id && !formData.contragent_name) {
-      toast({
-        title: "Diqqat",
-        description:
-          "Iltimos, kontragentni tanlang yoki yangi kontragent nomini kiriting",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (formData.instructions?.length > 0) {
-      const hasEmptyFields = formData.instructions.some(
-        (instruction) => !instruction.title || !instruction.description
-      );
-      if (hasEmptyFields) {
-        toast({
-          title: "Diqqat",
-          description: "Iltimos, instruksiya nomi va izohni to'g'ri kiriting",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    try {
-      setSubmitting(true);
-
-      // Calculate total quantity from sizes
-      const totalQuantity = sizesWithQuantity.reduce(
-        (sum, size) => sum + size.quantity,
-        0
-      );
-
-      // Prepare the submission data
-      const orderData = {
-        name: formData.name,
-        quantity: totalQuantity,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-        comment: formData.comment,
-        model: {
-          id: selectedModel.id,
-          material_id: selectedMaterial.id,
-          submodels: selectedSubmodels.map((sm) => sm.id),
-          sizes: sizesWithQuantity.map((size) => ({
+    // Calculate total quantity from all sizes
+    const sizes =
+      payload.model.sizes
+        ?.map((size) => {
+          const sizeData = {
             id: size.id,
-            quantity: size.quantity,
-          })),
-        },
-        instructions: formData.instructions,
-      };
+            quantity: Number.parseInt(size.quantity) || 0,
+          };
 
-      // Handle contragent (existing or new)
-      if (selectedContragent && !isNewContragent) {
-        orderData.contragent_id = selectedContragent.id;
-      } else if (contragentInput.trim() !== "") {
-        orderData.contragent_name = contragentInput;
-      }
+          // For new colors, always use color_name
+          if (size.color?.isNew) {
+            sizeData.color_name = size.color.name;
+          }
+          // For existing colors that were previously created in this session
+          else if (size.color?.isNewlyCreated) {
+            sizeData.color_name = size.color.name;
+          }
+          // For pre-existing colors from the database
+          else if (size.color?.id) {
+            sizeData.color_id = size.color.id;
+          }
 
-      const response = await api.post("/supervisor/orders", orderData);
+          return sizeData;
+        })
+        .filter((size) => size.id && size.quantity > 0) || [];
 
+    const totalQuantity = sizes.reduce(
+      (sum, size) => sum + (size.quantity || 0),
+      0
+    );
+
+    const formattedPayload = {
+      name: payload.name,
+      quantity: totalQuantity,
+      price: payload.price,
+      start_date: payload.start_date,
+      end_date: payload.end_date,
+      rasxod: payload.rasxod,
+      comment: payload.comment,
+      model: {
+        id: payload.model.id,
+        material_id: payload.model.material_id,
+        submodels:
+          payload.model.submodels
+            ?.map((submodel) =>
+              typeof submodel === "object" ? submodel.id : submodel
+            )
+            .filter(Boolean) || [],
+        sizes: sizes,
+      },
+    };
+
+    // Only include contragent_id OR contragent_name, not both
+    if (payload.contragent.isNew) {
+      formattedPayload.contragent_name = payload.contragent.name;
+    } else if (payload.contragent.id) {
+      formattedPayload.contragent_id = payload.contragent.id;
+    }
+
+    setIsSending(true);
+    try {
+      await api.post("/supervisor/orders", formattedPayload);
       toast({
         title: "Muvaffaqiyatli",
         description: "Buyurtma muvaffaqiyatli yaratildi",
@@ -372,692 +189,512 @@ const NewOrder = () => {
           backgroundColor: "green",
           color: "white",
         },
+        duration: 1200,
       });
-
-      navigate(`/supervisor/orders/${response.data.order.id}`);
+      navigate("/supervisor/orders");
     } catch (error) {
       toast({
-        title: "Xato",
-        description: "Buyurtmani yaratishda xatolik yuz berdi",
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Buyurtma yaratishda xatolik",
         variant: "destructive",
       });
     } finally {
-      setSubmitting(false);
+      setIsSending(false);
     }
   };
 
-  const handleInstructionAdd = () => {
-    setFormData((prev) => ({
+  const handleColorOpen = (index, isOpen) => {
+    setColorOpens((prev) => ({
       ...prev,
-      instructions: [
-        ...(prev.instructions || []),
-        { title: "", description: "" },
-      ],
+      [index]: isOpen,
     }));
   };
 
-  const handleInstructionChange = (index, value, field) => {
-    setFormData((prev) => ({
-      ...prev,
-      instructions: prev.instructions.map((instruction, i) =>
-        i === index ? { ...instruction, [field]: value } : instruction
-      ),
-    }));
-  };
-
-  const handleInstructionDelete = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      instructions: prev.instructions.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Calculate total quantity from selected sizes
-  const totalQuantity = sizesWithQuantity.reduce(
-    (sum, size) => sum + size.quantity,
-    0
-  );
-
-  const handlePaste = () => {
-    setCurrentTab("general");
-    navigator.clipboard
-      .readText()
-      .then(async (text) => {
-        try {
-          // Parse the pasted text as JSON
-          const pastedData = JSON.parse(text);
-
-          // Check if the pasted data has the expected structure
-          if (!pastedData || typeof pastedData !== "object") {
-            throw new Error("Invalid data format");
-          }
-
-          // Update form data with basic fields
-          const updatedFormData = {
-            name: pastedData.name || "",
-            quantity: pastedData.quantity || 1,
-            start_date: pastedData.start_date || "",
-            end_date: pastedData.end_date || "",
-            comment: pastedData.comment || "",
-            model_id: pastedData.model?.id || null,
-            contragent_id: pastedData.contragent_id || null,
-            contragent_name: "",
-            instructions: pastedData.instructions || [],
-          };
-
-          setFormData(updatedFormData);
-
-          // Set contragent if exists
-          if (pastedData.contragent_id) {
-            const contragent = contragents.find(
-              (c) => c.id === pastedData.contragent_id
-            );
-            if (contragent) {
-              setSelectedContragent(contragent);
-              setContragentInput(contragent.name);
-              setContragentsOpen(false);
-            }
-          }
-
-          // Process model tab
-          const processModelTab = async () => {
-            // Switch to model tab
-            if (document.querySelector('[value="model"]')) {
-              document.querySelector('[value="model"]').click();
-              // Wait for UI to update
-              await new Promise((resolve) => setTimeout(resolve, 200));
-            }
-
-            // Find and select the model
-            if (pastedData.model?.id) {
-              const model = models.find((m) => m.id === pastedData.model.id);
-              if (model) {
-                setSelectedModel(model);
-                setModelsOpen(false);
-
-                // Wait for model selection to take effect
-                await new Promise((resolve) => setTimeout(resolve, 200));
-
-                // Find and select material
-                if (pastedData.model.material_id) {
-                  const material = materials.find(
-                    (m) => m.id === pastedData.model.material_id
-                  );
-                  if (material) {
-                    setSelectedMaterial(material);
-                    setMaterialsOpen(false);
-
-                    // Wait for material selection to take effect
-                    await new Promise((resolve) => setTimeout(resolve, 200));
-                  }
-                }
-
-                // Handle submodels
-                if (
-                  pastedData.model.submodels &&
-                  model.submodels &&
-                  model.submodels.length > 0
-                ) {
-                  // Make sure submodels is an array
-                  const submodelIds = Array.isArray(pastedData.model.submodels)
-                    ? pastedData.model.submodels
-                    : [pastedData.model.submodels];
-
-                  // Find the submodel objects using their IDs
-                  const submodelsToSelect = model.submodels.filter((sm) =>
-                    submodelIds.includes(sm.id)
-                  );
-
-                  // Set the selected submodels
-                  setSelectedSubmodels(submodelsToSelect);
-
-                  // Wait for the submodels state to update
-                  await new Promise((resolve) => setTimeout(resolve, 200));
-
-                  // Find and click each submodel checkbox
-                  submodelIds.forEach((id) => {
-                    const checkbox = document.getElementById(`submodel-${id}`);
-                    if (checkbox && !checkbox.checked) {
-                      checkbox.click();
-                    }
-                  });
-
-                  // Wait for checkbox clicks to take effect
-                  await new Promise((resolve) => setTimeout(resolve, 200));
-                }
-              }
-            }
-          };
-
-          // Process sizes tab
-          const processSizesTab = async () => {
-            // Switch to sizes tab
-            if (document.querySelector('[value="sizes"]')) {
-              document.querySelector('[value="sizes"]').click();
-              // Wait for UI to update
-              await new Promise((resolve) => setTimeout(resolve, 200));
-            }
-
-            if (pastedData.model?.id && pastedData.model.sizes) {
-              const model = models.find((m) => m.id === pastedData.model.id);
-              if (model && model.sizes && model.sizes.length > 0) {
-                // Prepare sizes data
-                const sizesToSelect = [];
-                const sizesWithQuantityData = [];
-
-                pastedData.model.sizes.forEach((sizeData) => {
-                  const modelSize = model.sizes.find(
-                    (s) => s.id === sizeData.id
-                  );
-                  if (modelSize) {
-                    sizesToSelect.push(modelSize);
-                    sizesWithQuantityData.push({
-                      id: modelSize.id,
-                      name: modelSize.name,
-                      quantity: sizeData.quantity || 1,
-                    });
-                  }
-                });
-
-                // Set state
-                setSelectedSizes(sizesToSelect);
-                setSizesWithQuantity(sizesWithQuantityData);
-
-                // Wait for state to update
-                await new Promise((resolve) => setTimeout(resolve, 200));
-
-                // Check all checkboxes
-                pastedData.model.sizes.forEach((sizeData) => {
-                  const checkbox = document.getElementById(
-                    `size-${sizeData.id}`
-                  );
-                  if (checkbox && !checkbox.checked) {
-                    checkbox.click();
-                  }
-                });
-
-                // Wait for checkbox clicks to take effect
-                await new Promise((resolve) => setTimeout(resolve, 200));
-
-                // Now set quantities for each size
-                sizesWithQuantityData.forEach((size) => {
-                  // Find input field
-                  const inputs = document.querySelectorAll(
-                    'input[type="number"]'
-                  );
-                  inputs.forEach((input) => {
-                    // Find parent element with text that contains the size name
-                    const parent = input.closest("div");
-                    if (parent && parent.textContent.includes(size.name)) {
-                      input.value = size.quantity;
-                      // Trigger input event to ensure React state updates
-                      const event = new Event("input", { bubbles: true });
-                      input.dispatchEvent(event);
-                    }
-                  });
-                });
-
-                // Wait for input events to take effect
-                await new Promise((resolve) => setTimeout(resolve, 200));
-              }
-            }
-          };
-
-          // Process general tab
-          const processGeneralTab = async () => {
-            // Switch to general tab
-            if (document.querySelector('[value="general"]')) {
-              document.querySelector('[value="general"]').click();
-              // Wait for UI to update
-              await new Promise((resolve) => setTimeout(resolve, 200));
-            }
-
-            // Check and set all form inputs
-            const inputs = document.querySelectorAll("input, textarea");
-            inputs.forEach((input) => {
-              const name = input.name;
-              if (name && updatedFormData[name] !== undefined) {
-                input.value = updatedFormData[name];
-                // Trigger input event
-                const event = new Event("input", { bubbles: true });
-                input.dispatchEvent(event);
-              }
-            });
-          };
-
-          // Execute all tab processing in sequence
-          try {
-            await processModelTab();
-            await processSizesTab();
-            await processGeneralTab();
-
-            // Finally return to original tab
-            if (
-              currentTab &&
-              document.querySelector(`[value="${currentTab}"]`)
-            ) {
-              document.querySelector(`[value="${currentTab}"]`).click();
-            }
-
-            toast({
-              title: "Ma'lumotlar joylandi",
-              description: "Buyurtma ma'lumotlari muvaffaqiyatli joylandi",
-              style: {
-                backgroundColor: "green",
-                color: "white",
-              },
-            });
-          } catch (processError) {
-            toast({
-              title: "Xatolik",
-              description: "Ma'lumotlarni joylashda xatolik yuz berdi",
-              variant: "destructive",
-            });
-          }
-        } catch (parseError) {
-          toast({
-            title: "Xatolik",
-            description:
-              "Noto'g'ri formatdagi ma'lumotlar. Iltimos, to'g'ri formatdagi ma'lumotlarni joylashtiring.",
-            variant: "destructive",
-          });
-        }
-      })
-      .catch((clipboardError) => {
-        toast({
-          title: "Xatolik",
-          description: "Clipboard ma'lumotlarini olishda xatolik yuz berdi",
-          variant: "destructive",
-        });
-      });
-  };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
-    <Card className="w-full max-w-5xl mx-auto shadow-md">
-      <CardHeader className="bg-slate-50">
-        <CardTitle className="text-2xl font-bold text-slate-800">
-          <ClipboardList className="inline-block mr-2 mb-1" size={24} />
-          Yangi Buyurtma
-        </CardTitle>
-        <CardDescription>
-          Quyidagi formani to'ldirish orqali yangi buyurtma yarating
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-6">
+    <>
+      <div className="text-2xl font-bold mb-4">Yangi buyurtma yaratish</div>
+      {loading ? (
+        <div className="w-full h-[80vh] flex items-center justify-center">
+          <Loader2 className="animate-spin text-primary" size={36} />
+        </div>
+      ) : (
         <form onSubmit={handleSubmit}>
-          <Tabs value={currentTab} className="w-full">
-            <TabsList className="overflow-x-auto w-full flex justify-start">
-              <TabsTrigger
-                value="general"
-                onClick={() => setCurrentTab("general")}
-              >
-                Asosiy Ma'lumotlar
-              </TabsTrigger>
-              <TabsTrigger value="model" onClick={() => setCurrentTab("model")}>
-                Model va Material
-              </TabsTrigger>
-              <TabsTrigger value="sizes" onClick={() => setCurrentTab("sizes")}>
-                O'lchamlar va Miqdorlar
-              </TabsTrigger>
-              <TabsTrigger
-                value="instructions"
-                onClick={() => setCurrentTab("instructions")}
-              >
-                Instruksiyalar
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Tab 1: General Information */}
-            <TabsContent value="general" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="font-medium">
-                      <FileText className="inline-block mr-2 mb-1" size={16} />
-                      Buyurtma Nomi
-                    </Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      placeholder="Buyurtma nomini kiriting"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="start_date" className="font-medium">
-                      <Calendar className="inline-block mr-2 mb-1" size={16} />
-                      Boshlanish Sanasi
-                    </Label>
-                    <Input
-                      id="start_date"
-                      name="start_date"
-                      type="date"
-                      value={formData.start_date}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="end_date" className="font-medium">
-                      <Calendar className="inline-block mr-2 mb-1" size={16} />
-                      Tugash Sanasi
-                    </Label>
-                    <Input
-                      id="end_date"
-                      name="end_date"
-                      type="date"
-                      value={formData.end_date}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="font-medium">
-                      <User className="inline-block mr-2 mb-1" size={16} />
-                      Kontragent
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        placeholder="Kontragentni qidiring yoki yangi kontragent qo'shing..."
-                        value={contragentInput}
-                        onChange={(e) =>
-                          handleContragentInputChange(e.target.value)
-                        }
-                        className="w-full pr-10"
-                        onClick={() => setContragentsOpen(true)}
-                      />
-                      <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-500" />
-                    </div>
-
-                    {contragentsOpen && (
-                      <div className="absolute z-10 w-full max-w-md bg-white border border-gray-200 rounded-md shadow-lg mt-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+            {/* Searchable Contragent Selection */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orderContragent">Kontragent</Label>
+              <Popover open={contragentOpen} onOpenChange={setContragentOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={contragentOpen}
+                    className="justify-between bg-white"
+                  >
+                    {payload.contragent.name || "Kontragent tanlang"}
+                    <ChevronsUpDown className="opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0">
+                  <Command>
+                    <CommandInput placeholder="Kontragent qidirish yoki yaratish..." />
+                    <CommandList>
+                      <CommandEmpty>
                         <div className="p-2">
-                          {filteredContragents.length > 0 && (
-                            <div className="text-xs font-medium text-gray-500 mb-2 pl-2">
-                              Mavjud Kontragentlar
-                            </div>
-                          )}
-
-                          {filteredContragents.map((contragent) => (
-                            <div
-                              key={contragent.id}
-                              className="flex items-center px-2 py-2 cursor-pointer hover:bg-gray-100 rounded-md"
-                              onClick={() => handleSelectContragent(contragent)}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedContragent?.id === contragent.id
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              <div>
-                                <div>{contragent.name}</div>
-                                {contragent.description && (
-                                  <div className="text-xs text-gray-500">
-                                    {contragent.description}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-
-                          {contragentInput.trim() !== "" && (
-                            <>
-                              {filteredContragents.length > 0 && (
-                                <Separator className="my-2" />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              const input = document.querySelector(
+                                '[placeholder="Kontragent qidirish yoki yaratish..."]'
+                              );
+                              const searchValue = input?.value || "";
+                              if (searchValue.trim()) {
+                                setPayload((prev) => ({
+                                  ...prev,
+                                  contragent: {
+                                    id: null,
+                                    name: searchValue.trim(),
+                                    isNew: true,
+                                  },
+                                }));
+                                setContragentOpen(false);
+                              }
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Yangi kontragent yaratish
+                          </Button>
+                        </div>
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {contragents.map((contragent) => (
+                          <CommandItem
+                            key={contragent.id}
+                            value={contragent.name}
+                            onSelect={() => {
+                              setPayload((prev) => ({
+                                ...prev,
+                                contragent: {
+                                  id: contragent.id,
+                                  name: contragent.name,
+                                  isNew: false,
+                                },
+                              }));
+                              setContragentOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                payload.contragent.id === contragent.id
+                                  ? "opacity-100"
+                                  : "opacity-0"
                               )}
-                              <div
-                                className="flex items-center px-2 py-2 cursor-pointer hover:bg-gray-100 rounded-md"
-                                onClick={() => {
-                                  setIsNewContragent(true);
-                                  setFormData({
-                                    ...formData,
-                                    contragent_id: null,
-                                    contragent_name: contragentInput,
-                                  });
-                                  setContragentsOpen(false);
-                                }}
-                              >
-                                <PlusCircle className="mr-2 h-4 w-4 text-blue-500" />
-                                <div>
-                                  <div className="text-blue-600">
-                                    Yangi kontragent yaratish
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    "{contragentInput}"
-                                  </div>
-                                </div>
+                            />
+                            {contragent.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {payload.contragent.isNew && (
+                <div className="text-sm text-green-600 flex items-center gap-1">
+                  <Plus className="h-3 w-3" />
+                  Yangi kontragent: {payload.contragent.name}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orderName">Buyurtma nomi</Label>
+              <Input
+                type="text"
+                id="orderName"
+                placeholder="Buyurtma nomi"
+                value={payload.name}
+                required
+                className="bg-white"
+                onChange={(e) =>
+                  setPayload({ ...payload, name: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orderStartDate">Boshlanish sanasi</Label>
+              <Input
+                type="date"
+                id="orderStartDate"
+                placeholder="Boshlanish sanasi"
+                value={payload.start_date}
+                className="bg-white"
+                onChange={(e) => {
+                  setPayload({ ...payload, start_date: e.target.value });
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orderEndDate">Tugash sanasi</Label>
+              <Input
+                type="date"
+                id="orderEndDate"
+                placeholder="Tugash sanasi"
+                value={payload.end_date}
+                min={payload.start_date}
+                className="bg-white"
+                onChange={(e) => {
+                  setPayload({ ...payload, end_date: e.target.value });
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orderModel">Modelni tanlang</Label>
+              <Popover open={modelOpen} onOpenChange={setModelOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={modelOpen}
+                    className="justify-between bg-white"
+                  >
+                    {payload.model.name || "Model tanlang"}
+                    <ChevronsUpDown className="opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0">
+                  <Command>
+                    <CommandInput placeholder="Modelni qidirish..." />
+                    <CommandList>
+                      <CommandEmpty>Model topilmadi</CommandEmpty>
+                      <CommandGroup>
+                        {models.map((model) => (
+                          <CommandItem
+                            key={model.id}
+                            value={model.name}
+                            onSelect={() => {
+                              setPayload({
+                                ...payload,
+                                model: {
+                                  ...model,
+                                  sizesList: model.sizes,
+                                  sizes: [
+                                    {
+                                      id: "",
+                                      quantity: "",
+                                      color: {
+                                        id: null,
+                                        name: "",
+                                        isNew: false,
+                                      },
+                                    },
+                                  ],
+                                },
+                              });
+                              setModelOpen(false);
+                            }}
+                          >
+                            <div className="w-full flex flex-col gap-1">
+                              <div>{model.name}</div>
+                              <div className="flex gap-2 flex-wrap">
+                                {model.submodels?.map((submodel) => (
+                                  <span
+                                    key={submodel.id}
+                                    className="rounded-full bg-gray-200 px-2 py-1 text-xs"
+                                  >
+                                    {submodel.name}
+                                  </span>
+                                ))}
                               </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {isNewContragent && (
-                      <div className="text-sm text-blue-600 mt-1 flex items-center">
-                        <PlusCircle className="h-3 w-3 mr-1" />
-                        Yangi kontragent yaratilmoqda: "{contragentInput}"
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="comment" className="font-medium">
-                      <FileText className="inline-block mr-2 mb-1" size={16} />
-                      Izohlar
-                    </Label>
-                    <Textarea
-                      id="comment"
-                      name="comment"
-                      placeholder="Qo'shimcha izohlarni kiriting..."
-                      value={formData.comment}
-                      onChange={handleInputChange}
-                      className="w-full min-h-[100px]"
-                    />
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Tab 2: Model and Material Selection */}
-            <TabsContent value="model" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Models Selection */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="font-medium">
-                      <Package className="inline-block mr-2 mb-1" size={16} />
-                      Modelni Tanlang
-                    </Label>
-                    <Popover open={modelsOpen} onOpenChange={setModelsOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={modelsOpen}
-                          className="w-full justify-between"
-                        >
-                          {selectedModel
-                            ? models.find(
-                                (model) => model.id === selectedModel.id
-                              )?.name
-                            : "Modelni tanlang"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput placeholder="Modellarni qidirish..." />
-                          <CommandList>
-                            <CommandEmpty>Modellar topilmadi.</CommandEmpty>
-                            <CommandGroup>
-                              {models.map((model) => (
-                                <CommandItem
-                                  key={model.id}
-                                  value={model.id}
-                                  onSelect={() => handleSelectModel(model)}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      selectedModel?.id === model.id
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  <div className="flex flex-col gap-1 cursor-pointer">
-                                    <div>{model?.name}</div>
-                                    <div className="text-gray-500 text-xs flex items-center">
-                                      <span className="mr-2">
-                                        Rasxod:{" "}
-                                        {model?.rasxod || "Ko'rsatilmagan"}
-                                      </span>
-                                      {model?.submodels?.length > 0 && (
-                                        <Badge
-                                          variant="outline"
-                                          className="mr-1"
-                                        >
-                                          {model.submodels.length} ta sub-model
-                                        </Badge>
-                                      )}
-                                      {model?.sizes?.length > 0 && (
-                                        <Badge variant="outline">
-                                          {model.sizes.length} ta o'lcham
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {selectedModel &&
-                    selectedModel.submodels &&
-                    selectedModel.submodels.length > 0 && (
-                      <div className="space-y-2 bg-slate-50 p-4 rounded-md">
-                        <Label className="font-medium">
-                          <Tag className="inline-block mr-2 mb-1" size={16} />
-                          Sub-modellarni tanlang
-                        </Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          {selectedModel.submodels.map((submodel) => (
-                            <div
-                              key={submodel.id}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`submodel-${submodel.id}`}
-                                checked={selectedSubmodels.some(
-                                  (sm) => sm.id === submodel.id
-                                )}
-                                onCheckedChange={() =>
-                                  handleSubmodelToggle(submodel)
-                                }
-                              />
-                              <label
-                                htmlFor={`submodel-${submodel.id}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                {submodel.name}
-                              </label>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                </div>
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                model === payload.model
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
 
-                {/* Materials Selection */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="font-medium">
-                      <Package className="inline-block mr-2 mb-1" size={16} />
-                      Materialni Tanlang
-                    </Label>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orderMaterial">Materialni tanlang</Label>
+              <Popover open={materialOpen} onOpenChange={setMaterialOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={materialOpen}
+                    className="justify-between bg-white"
+                  >
+                    {payload.model.material?.name || "Material tanlang"}
+                    <ChevronsUpDown className="opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0">
+                  <Command>
+                    <CommandInput placeholder="Materialni qidirish..." />
+                    <CommandList>
+                      <CommandEmpty>Material topilmadi</CommandEmpty>
+                      <CommandGroup>
+                        {materials.map((material) => (
+                          <CommandItem
+                            key={material.id}
+                            value={material.name}
+                            onSelect={() => {
+                              setPayload((prev) => ({
+                                ...prev,
+                                model: {
+                                  ...prev.model,
+                                  material_id: material.id,
+                                  material: material, // Store the full material object
+                                },
+                              }));
+                              setMaterialOpen(false);
+                            }}
+                          >
+                            <div className="w-full flex flex-col gap-1">
+                              <div>{material.name}</div>
+                              <div className="text-xs text-gray-500">
+                                {material.color?.name} {material.lot}
+                              </div>
+                            </div>
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                material.id === payload.model.material_id
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+            {/* Comment */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orderComment">Izoh</Label>
+              <Input
+                id="orderComment"
+                name="orderComment"
+                value={payload.comment}
+                className="bg-white"
+                onChange={(e) =>
+                  setPayload({ ...payload, comment: e.target.value })
+                }
+                placeholder="Buyurtma haqida izoh"
+              />
+            </div>
+          </div>
+
+          {payload?.model?.id && (
+            <>
+              <div className="mt-4 flex flex-wrap gap-2 items-center">
+                {models
+                  ?.find((model) => model.id === payload.model.id)
+                  ?.submodels.map((submodel) => (
+                    <div key={submodel.id}>
+                      <Button
+                        variant={
+                          payload.submodels?.includes(submodel.id)
+                            ? "default"
+                            : "outline"
+                        }
+                        type="button"
+                        onClick={() => {
+                          setPayload({
+                            ...payload,
+                            submodels: payload.submodels?.includes(submodel.id)
+                              ? payload.submodels?.filter(
+                                  (id) => id !== submodel.id
+                                )
+                              : [
+                                  ...(payload.submodels?.filter((id) => id) ||
+                                    []),
+                                  submodel.id,
+                                ],
+                          });
+                        }}
+                      >
+                        {submodel.name}
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Sizes section */}
+              <div className="mt-4 flex flex-col gap-4">
+                <div className="font-medium">O'lcham va ranglar</div>
+                {payload?.model?.sizes?.map((size, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    {/* Size selection */}
+                    <Select
+                      value={size.id?.toString() || ""}
+                      onValueChange={(value) => {
+                        const selectedSize = payload.model.sizesList.find(
+                          (s) => s.id === Number.parseInt(value)
+                        );
+                        const newSizes = [...payload.model.sizes];
+                        newSizes[index] = {
+                          ...newSizes[index],
+                          id: Number.parseInt(value),
+                          name: selectedSize?.name || "",
+                        };
+                        setPayload({
+                          ...payload,
+                          model: {
+                            ...payload.model,
+                            sizes: newSizes,
+                          },
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="w-[180px] bg-white">
+                        <SelectValue placeholder="O'lcham tanlang">
+                          {size.id
+                            ? payload.model.sizesList?.find(
+                                (s) => s.id === size.id
+                              )?.name || ""
+                            : ""}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {payload.model?.sizesList?.map((sizeItem) => (
+                          <SelectItem
+                            key={sizeItem.id}
+                            value={sizeItem.id.toString()}
+                          >
+                            {sizeItem.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Searchable Color selection */}
                     <Popover
-                      open={materialsOpen}
-                      onOpenChange={setMaterialsOpen}
+                      open={colorOpens[index] || false}
+                      onOpenChange={(isOpen) => handleColorOpen(index, isOpen)}
                     >
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           role="combobox"
-                          aria-expanded={materialsOpen}
-                          className="w-full justify-between"
+                          aria-expanded={colorOpens[index] || false}
+                          className="w-fit justify-between bg-white"
                         >
-                          {selectedMaterial
-                            ? materials.find(
-                                (material) =>
-                                  material.id === selectedMaterial.id
-                              )?.name + ` (${selectedMaterial?.code})`
-                            : "Materialni tanlang"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          {size.color?.name || "Rang tanlang"}
+                          <ChevronsUpDown className="opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
+                      <PopoverContent className="p-0">
                         <Command>
-                          <CommandInput placeholder="Materiallarni qidirish..." />
+                          <CommandInput placeholder="Rang qidirish yoki yaratish..." />
                           <CommandList>
-                            <CommandEmpty>Materiallar topilmadi.</CommandEmpty>
+                            <CommandEmpty>
+                              <div className="p-2">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="w-full justify-start"
+                                  onClick={() => {
+                                    const input = document.querySelector(
+                                      '[placeholder="Rang qidirish yoki yaratish..."]'
+                                    );
+                                    const searchValue = input?.value || "";
+                                    if (searchValue.trim()) {
+                                      const newColor = {
+                                        id: Date.now(), // Temporary ID for local state
+                                        name: searchValue.trim(),
+                                        isNewlyCreated: true, // Mark as newly created in this session
+                                      };
+
+                                      // Add the new color to the colors state
+                                      setColors([...colors, newColor]);
+
+                                      // Update the selected color in the form
+                                      const newSizes = [...payload.model.sizes];
+                                      newSizes[index] = {
+                                        ...newSizes[index],
+                                        color: {
+                                          ...newColor,
+                                          isNew: true,
+                                          isNewlyCreated: true, // Mark as newly created in this session
+                                        },
+                                      };
+                                      setPayload({
+                                        ...payload,
+                                        model: {
+                                          ...payload.model,
+                                          sizes: newSizes,
+                                        },
+                                      });
+                                      handleColorOpen(index, false);
+                                    }
+                                  }}
+                                >
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Yangi rang yaratish
+                                </Button>
+                              </div>
+                            </CommandEmpty>
                             <CommandGroup>
-                              {materials.map((material) => (
+                              {colors.map((color) => (
                                 <CommandItem
-                                  key={material.id}
-                                  value={material.id}
+                                  key={color.id}
+                                  value={color.name}
                                   onSelect={() => {
-                                    setSelectedMaterial(material);
-                                    setMaterialsOpen(false);
+                                    const newSizes = [...payload.model.sizes];
+                                    newSizes[index] = {
+                                      ...newSizes[index],
+                                      color: {
+                                        id: color.id,
+                                        name: color.name,
+                                        isNew: false,
+                                        // Preserve the isNewlyCreated flag if this color was created in this session
+                                        isNewlyCreated:
+                                          color.isNewlyCreated || false,
+                                      },
+                                    };
+                                    setPayload({
+                                      ...payload,
+                                      model: {
+                                        ...payload.model,
+                                        sizes: newSizes,
+                                      },
+                                    });
+                                    handleColorOpen(index, false);
                                   }}
                                 >
                                   <Check
                                     className={cn(
                                       "mr-2 h-4 w-4",
-                                      selectedMaterial?.id === material.id
+                                      size.color?.id === color.id
                                         ? "opacity-100"
                                         : "opacity-0"
                                     )}
                                   />
-                                  <div className="flex flex-col gap-1">
-                                    <div>{material?.name}</div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">
-                                        Kod:
-                                        {material?.code}
-                                      </span>{" "}
-                                      <span
-                                        className={cn(
-                                          "font-medium",
-                                          material?.color?.hex &&
-                                            `text-[#${material?.color?.hex}]`
-                                        )}
-                                      >
-                                        Rangi:
-                                        {material?.color?.name}
-                                      </span>{" "}
-                                      <span className="font-medium">
-                                        Lot:
-                                        {material?.lot}
-                                      </span>{" "}
-                                    </div>
-                                  </div>
+                                  {color.name}
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -1065,264 +702,123 @@ const NewOrder = () => {
                         </Command>
                       </PopoverContent>
                     </Popover>
-                  </div>
 
-                  {selectedModel && (
-                    <div className="p-4 bg-blue-50 rounded-md">
-                      <h3 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <FileText className="inline-block mr-2" size={16} />
-                        Model Ma'lumotlari
-                      </h3>
-                      <div className="space-y-1 text-sm">
-                        <p>
-                          <span className="font-medium">Nomi:</span>{" "}
-                          {selectedModel.name}
-                        </p>
-                        <p>
-                          <span className="font-medium">Rasxod:</span>{" "}
-                          {parseFloat(selectedModel.rasxod).toLocaleString(
-                            "en-EN"
-                          ) || "-"}{" "}
-                          so'm
-                        </p>
-                        <p>
-                          <span className="font-medium">Minut:</span>{" "}
-                          {parseFloat(selectedModel.minute).toLocaleString(
-                            "en-EN"
-                          ) || "-"}{" "}
-                          minut
-                        </p>
-                        <p>
-                          <span className="font-medium">Sub-modellar:</span>{" "}
-                          {selectedModel.submodels &&
-                          selectedModel.submodels.length > 0
-                            ? `${selectedModel.submodels.length} ta`
-                            : "Yo'q"}
-                        </p>
-                        <p>
-                          <span className="font-medium">O'lchamlar:</span>{" "}
-                          {selectedModel.sizes && selectedModel.sizes.length > 0
-                            ? `${selectedModel.sizes.length} ta`
-                            : "Yo'q"}
-                        </p>
+                    {size.color?.isNew && (
+                      <div className="text-xs text-green-600 flex items-center gap-1">
+                        <Plus className="h-3 w-3" />
+                        Yangi
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Tab 3: Sizes and Quantities */}
-            <TabsContent value="sizes" className="space-y-6">
-              {!selectedModel ? (
-                <div className="text-center p-6 bg-amber-50 rounded-md">
-                  <p className="text-amber-600 font-medium">
-                    Iltimos, avval modelni tanlang
-                  </p>
-                </div>
-              ) : selectedModel.sizes && selectedModel.sizes.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Label className="font-medium flex items-center">
-                      <Ruler className="inline-block mr-2" size={16} />
-                      O'lchamlarni Tanlang va Miqdorlarni Kiriting
-                    </Label>
-                    {selectedSizes.length > 0 && (
-                      <Badge variant="secondary" className="px-2 py-1">
-                        {selectedSizes.length} ta o'lcham tanlangan
-                      </Badge>
                     )}
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="border rounded-md p-3 bg-slate-50">
-                      <h3 className="font-medium mb-3">Mavjud O'lchamlar</h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[300px] overflow-y-auto p-1">
-                        {selectedModel.sizes.map((size) => (
-                          <div
-                            key={size.id}
-                            className="flex items-center space-x-2"
-                          >
-                            <Checkbox
-                              id={`size-${size.id}`}
-                              checked={selectedSizes.some(
-                                (s) => s.id === size.id
-                              )}
-                              onCheckedChange={() => handleSizeToggle(size)}
-                            />
-                            <label
-                              htmlFor={`size-${size.id}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {size.name}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="border rounded-md p-3">
-                      <h3 className="font-medium mb-3">
-                        Tanlangan o'lchamlar uchun miqdorlar
-                      </h3>
-                      {selectedSizes.length === 0 ? (
-                        <div className="text-center py-4 text-gray-500">
-                          Hali o'lchamlar tanlanmagan
-                        </div>
-                      ) : (
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto p-1">
-                          {sizesWithQuantity.map((size) => (
-                            <div
-                              key={size.id}
-                              className="flex items-center space-x-3"
-                            >
-                              <span className="text-sm font-medium min-w-[80px]">
-                                {size.name}:
-                              </span>
-                              <Input
-                                type="number"
-                                value={size.quantity}
-                                onChange={(e) =>
-                                  handleSizeQuantityChange(
-                                    size.id,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-24"
-                              />
-                              <span className="text-sm text-gray-500">
-                                dona
-                              </span>
-                            </div>
-                          ))}
-
-                          <div className="pt-2 mt-3 border-t">
-                            <div className="flex justify-between items-center font-medium">
-                              <span>Jami:</span>
-                              <span>{totalQuantity} dona</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center p-6 bg-gray-50 rounded-md">
-                  <p className="text-gray-600">
-                    Bu modelda o'lchamlar mavjud emas
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Tab 4: Instructions */}
-            <TabsContent value="instructions" className="space-y-6">
-              <div className="space-y-4">
-                {formData?.instructions?.map((instruction, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between gap-2"
-                  >
+                    {/* Quantity input */}
                     <Input
-                      type="text"
-                      value={instruction?.title || ""}
-                      placeholder="Nomi"
-                      onChange={(e) =>
-                        handleInstructionChange(index, e.target.value, "title")
-                      }
-                      className="w-full"
+                      type="number"
+                      placeholder="Miqdori"
+                      className="w-[120px] bg-white"
+                      value={size.quantity}
+                      onChange={(e) => {
+                        const newSizes = [...payload.model.sizes];
+                        newSizes[index] = {
+                          ...newSizes[index],
+                          quantity: Number.parseInt(e.target.value),
+                        };
+                        setPayload({
+                          ...payload,
+                          model: {
+                            ...payload.model,
+                            sizes: newSizes,
+                          },
+                        });
+                      }}
                     />
-                    <Input
-                      type="text"
-                      placeholder="Izoh"
-                      value={instruction?.description || ""}
-                      onChange={(e) =>
-                        handleInstructionChange(
-                          index,
-                          e.target.value,
-                          "description"
-                        )
-                      }
-                      className="w-full"
-                    />
+
+                    {/* Remove button */}
                     <Button
                       type="button"
-                      variant="ghost"
-                      onClick={() => handleInstructionDelete(index)}
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        const newSizes = payload.model.sizes.filter(
+                          (_, i) => i !== index
+                        );
+                        setPayload({
+                          ...payload,
+                          model: {
+                            ...payload.model,
+                            sizes: newSizes,
+                          },
+                        });
+                      }}
+                      className="text-red-500 hover:text-red-600"
                     >
-                      <Trash className="text-red-500" />
+                      <Trash2 />
                     </Button>
                   </div>
                 ))}
-                <Button type="button" onClick={handleInstructionAdd}>
-                  <Plus className="text-green-500" />
-                  Instruksiya qo'shish
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
 
-          <div className="mt-8 flex justify-between gap-2 flex-wrap">
-            <div>
-              {selectedModel && selectedSizes.length > 0 && (
-                <div className="bg-blue-50 rounded-md px-4 py-2 text-blue-800">
-                  <span className="font-medium">Jami:</span> {totalQuantity}{" "}
-                  dona
+                {/* sum of quantity */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Jami:</span>
+                  <span className="text-lg font-semibold">
+                    {payload.model.sizes.reduce(
+                      (sum, size) =>
+                        sum + (Number.parseInt(size.quantity) || 0),
+                      0
+                    )}
+                  </span>
                 </div>
-              )}
-            </div>
-            <div className="flex items-center justify-end flex-wrap gap-2 w-full">
-              <Button type="button" variant="ghost" onClick={handlePaste}>
-                <ClipboardPaste />
-                Joylash
-              </Button>
-              <div className="flex items-center gap-2 flex-wrap">
+
+                {/* Add new size button */}
                 <Button
                   type="button"
                   variant="outline"
+                  className="mt-2 w-fit"
                   onClick={() => {
-                    // Reset form
-                    setFormData({
-                      name: "",
-                      quantity: 1,
-                      start_date: "",
-                      end_date: "",
-                      comment: "",
-                      model_id: null,
-                      material_id: null,
-                      contragent_id: null,
-                      contragent_name: "",
+                    setPayload({
+                      ...payload,
+                      model: {
+                        ...payload.model,
+                        sizes: [
+                          ...payload.model.sizes,
+                          {
+                            id: "",
+                            quantity: "",
+                            color: {
+                              id: null,
+                              name: "",
+                              isNew: false,
+                            },
+                          },
+                        ],
+                      },
                     });
-                    setSelectedModel(null);
-                    setSelectedMaterial(null);
-                    setSelectedContragent(null);
-                    setContragentInput("");
-                    setSelectedSubmodels([]);
-                    setSelectedSizes([]);
-                    setSizesWithQuantity([]);
                   }}
                 >
-                  Bekor qilish
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    submitting ||
-                    loading ||
-                    !selectedModel ||
-                    selectedSizes.length === 0
-                  }
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {submitting ? "Yuborilmoqda..." : "Buyurtma yaratish"}
+                  <Plus />
+                  Qo'shish
                 </Button>
               </div>
-            </div>
+            </>
+          )}
+
+          <div className="flex justify-end">
+            <Button type="submit" className="mt-4" disabled={isSending}>
+              {isSending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saqlanmoqda...
+                </>
+              ) : (
+                <>
+                  <Save />
+                  Saqlash
+                </>
+              )}
+            </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 };
 
