@@ -35,10 +35,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
 const EditOrder = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { id } = useParams();
 
@@ -47,7 +45,6 @@ const EditOrder = () => {
   const [contragents, setContragents] = useState([]);
   const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [orderLoading, setOrderLoading] = useState(true);
   const [modelOpen, setModelOpen] = useState(false);
   const [materialOpen, setMaterialOpen] = useState(false);
   const [contragentOpen, setContragentOpen] = useState(false);
@@ -109,7 +106,6 @@ const EditOrder = () => {
   const fetchOrderData = async () => {
     if (!id) return;
 
-    setOrderLoading(true);
     try {
       const response = await api.get(`/supervisor/orders/${id}`);
       const orderData = response.data;
@@ -139,13 +135,22 @@ const EditOrder = () => {
           sizes:
             orderData.order_model?.sizes?.map((size) => ({
               id: size.size.id,
+              sizeId: size.id, // Store the size's ID for later use in the payload
               name: size.size.name,
               quantity: size.quantity,
-              color: {
-                id: null, // Colors are not in the API response, so we'll leave this empty
-                name: "",
-                isNew: false,
-              },
+              color: size.color
+                ? {
+                    id: size.color.id,
+                    name: size.color.name,
+                    isNew: false,
+                    isNewlyCreated: false, // Existing colors from the database
+                  }
+                : {
+                    id: null,
+                    name: "",
+                    isNew: false,
+                    isNewlyCreated: false,
+                  },
             })) || [],
           sizesList: [], // Will be populated when model is selected
         },
@@ -173,8 +178,6 @@ const EditOrder = () => {
         description: "Buyurtma ma'lumotlarini yuklashda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setOrderLoading(false);
     }
   };
 
@@ -203,18 +206,28 @@ const EditOrder = () => {
       payload.model.sizes
         ?.map((size) => {
           const sizeData = {
-            id: size.id,
+            // Only include id if sizeId exists (for existing sizes)
+            ...(size.sizeId && { id: size.sizeId }),
             quantity: Number.parseInt(size.quantity) || 0,
+            size_id: size.id, // The size ID (e.g., 5770)
           };
-          // Only include color_id OR color_name, not both
+
+          // For new colors, always use color_name
           if (size.color?.isNew) {
             sizeData.color_name = size.color.name;
-          } else if (size.color?.id) {
+          }
+          // For existing colors that were previously created in this session
+          else if (size.color?.isNewlyCreated) {
+            sizeData.color_name = size.color.name;
+          }
+          // For pre-existing colors from the database
+          else if (size.color?.id) {
             sizeData.color_id = size.color.id;
           }
+
           return sizeData;
         })
-        .filter((size) => size.id && size.quantity > 0) || [];
+        .filter((size) => (size.id || size.size_id) && size.quantity > 0) || [];
 
     const totalQuantity = sizes.reduce(
       (sum, size) => sum + (size.quantity || 0),
@@ -259,9 +272,11 @@ const EditOrder = () => {
           backgroundColor: "green",
           color: "white",
         },
-        duration: 1200,
+        duration: 1000,
       });
-      navigate(`/supervisor/orders/${id}`);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -424,6 +439,7 @@ const EditOrder = () => {
                 placeholder="Buyurtma narxi"
                 value={payload.price}
                 min={0}
+                step={0.01}
                 className="bg-white"
                 required
                 onChange={(e) => {
@@ -440,6 +456,7 @@ const EditOrder = () => {
                 placeholder="Rasxod"
                 value={payload.rasxod}
                 min={0}
+                step={0.01}
                 className="bg-white"
                 required
                 onChange={(e) => {
@@ -751,12 +768,20 @@ const EditOrder = () => {
                                     );
                                     const searchValue = input?.value || "";
                                     if (searchValue.trim()) {
+                                      const newColor = {
+                                        id: Date.now(), // Temporary ID for local state
+                                        name: searchValue.trim(),
+                                        isNewlyCreated: true, // Mark as newly created in this session
+                                      };
+
+                                      // Add the new color to the colors state
+                                      setColors([...colors, newColor]);
+
                                       const newSizes = [...payload.model.sizes];
                                       newSizes[index] = {
                                         ...newSizes[index],
                                         color: {
-                                          id: null,
-                                          name: searchValue.trim(),
+                                          ...newColor,
                                           isNew: true,
                                         },
                                       };
@@ -789,6 +814,9 @@ const EditOrder = () => {
                                         id: color.id,
                                         name: color.name,
                                         isNew: false,
+                                        // Preserve the isNewlyCreated flag if this color was created in this session
+                                        isNewlyCreated:
+                                          color.isNewlyCreated || false,
                                       },
                                     };
                                     setPayload({
