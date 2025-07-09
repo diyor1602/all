@@ -45,7 +45,6 @@ const EditOrder = () => {
   const [contragents, setContragents] = useState([]);
   const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [orderLoading, setOrderLoading] = useState(true);
   const [modelOpen, setModelOpen] = useState(false);
   const [materialOpen, setMaterialOpen] = useState(false);
   const [contragentOpen, setContragentOpen] = useState(false);
@@ -107,7 +106,6 @@ const EditOrder = () => {
   const fetchOrderData = async () => {
     if (!id) return;
 
-    setOrderLoading(true);
     try {
       const response = await api.get(`/orderManager/orders/${id}`);
       const orderData = response.data;
@@ -180,8 +178,6 @@ const EditOrder = () => {
         description: "Buyurtma ma'lumotlarini yuklashda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setOrderLoading(false);
     }
   };
 
