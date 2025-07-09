@@ -259,6 +259,7 @@ const EditOrder = () => {
         },
         duration: 1200,
       });
+      fetchData();
     } catch (error) {
       toast({
         title: "Xatolik",
