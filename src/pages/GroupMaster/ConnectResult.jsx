@@ -333,45 +333,7 @@ const ConnectResult = () => {
               </div>
             </div>
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {/* Average Dailiy Earning for Master */}
-              <div className="p-4 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl border border-sky-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-sky-500 rounded-lg">
-                    <CircleDollarSign className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-sky-600 font-medium">
-                      Siz ishlab topgan summa
-                    </p>
-                    <p className="text-lg font-bold text-sky-800">
-                      {Number.parseFloat(
-                        data.order?.actualTodayEarned || 0
-                      ).toLocaleString("ru-RU")}{" "}
-                      so'm
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {/* Total Quantity */}
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500 rounded-lg">
-                    <Target className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">
-                      Umumiy miqdor
-                    </p>
-                    <p className="text-xl font-bold text-blue-800">
-                      {data.order?.quantity} ta
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Today's Workers */}
               <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-purple-500 rounded-lg">
@@ -388,7 +350,6 @@ const ConnectResult = () => {
                 </div>
               </div>
 
-              {/* Today's Production */}
               <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-orange-500 rounded-lg">
@@ -404,6 +365,42 @@ const ConnectResult = () => {
                   </div>
                 </div>
               </div>
+
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500 rounded-lg">
+                    <Target className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-600 font-medium">
+                      Umumiy miqdor
+                    </p>
+                    <p className="text-xl font-bold text-blue-800">
+                      {data.order?.quantity} ta
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl border border-teal-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-teal-500 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-teal-600 font-medium">
+                      O'rtacha oylik (1 ishchi)
+                    </p>
+                    <p className="text-lg font-bold text-teal-800">
+                      {Number.parseFloat(
+                        data.order?.perEmployeeEarning || 0
+                      ).toLocaleString("ru-RU")}{" "}
+                      so'm
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl border border-emerald-200">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-emerald-500 rounded-lg">
@@ -423,19 +420,18 @@ const ConnectResult = () => {
                 </div>
               </div>
 
-              {/* Average Monthly Earning */}
-              <div className="p-4 bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl border border-teal-200">
+              <div className="p-4 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl border border-sky-200">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-teal-500 rounded-lg">
-                    <BarChart3 className="h-5 w-5 text-white" />
+                  <div className="p-2 bg-sky-500 rounded-lg">
+                    <CircleDollarSign className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-teal-600 font-medium">
-                      O'rtacha oylik (1 ishchi)
+                    <p className="text-sm text-sky-600 font-medium">
+                      Siz ishlab topgan summa
                     </p>
-                    <p className="text-lg font-bold text-teal-800">
+                    <p className="text-lg font-bold text-sky-800">
                       {Number.parseFloat(
-                        data.order?.perEmployeeEarning || 0
+                        data.order?.actualTodayEarned || 0
                       ).toLocaleString("ru-RU")}{" "}
                       so'm
                     </p>

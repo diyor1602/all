@@ -777,31 +777,118 @@ const OrderView = () => {
             </div>
           )}
 
-          {order?.order_model?.sizes && order.order_model.sizes.length > 0 && (
-            <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
-              <h4 className="font-medium text-gray-700 mb-3 flex items-center">
-                <RulerIcon className="h-4 w-4 mr-2 text-indigo-500" />
-                <span>O'lchamlar</span>
-              </h4>
-              <div className="flex items-center flex-wrap gap-3">
-                {order?.order_model?.sizes?.map((size) => (
-                  <Badge
-                    key={size.id}
-                    className="bg-white text-indigo-700 border border-indigo-200 px-3 py-2 text-base w-fit hover:bg-indigo-50"
-                  >
-                    <span className="font-bold">{size?.size?.name}</span>{" "}
-                    {size?.quantity ? (
-                      <span className="font-medium mx-1 text-black">
-                        {size?.quantity} ta
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+          {order?.order_model?.sizes &&
+            order.order_model.sizes.length > 0 &&
+            (() => {
+              // Get unique sizes and colors
+              const sizes = [
+                ...new Set(
+                  order.order_model.sizes.map((size) => size.size?.name)
+                ),
+              ].sort((a, b) => a.localeCompare(b));
+              const colors = [
+                ...new Set(
+                  order.order_model.sizes.map((size) => size.color?.name)
+                ),
+              ].sort((a, b) => a.localeCompare(b));
+
+              // Create a map for quick lookup
+              const sizeColorMap = new Map();
+              order.order_model.sizes.forEach((item) => {
+                const key = `${item.size?.name}-${item.color?.name}`;
+                sizeColorMap.set(key, item.quantity || 0);
+              });
+
+              // Calculate row and column totals
+              const rowTotals = new Map();
+              const colTotals = new Map(colors.map((color) => [color, 0]));
+
+              sizes.forEach((size) => {
+                let total = 0;
+                colors.forEach((color) => {
+                  const quantity = sizeColorMap.get(`${size}-${color}`) || 0;
+                  total += quantity;
+                  colTotals.set(color, (colTotals.get(color) || 0) + quantity);
+                });
+                rowTotals.set(size, total);
+              });
+
+              const grandTotal = Array.from(rowTotals.values()).reduce(
+                (sum, val) => sum + val,
+                0
+              );
+
+              return (
+                <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
+                  <h4 className="font-medium text-gray-700 mb-3 flex items-center">
+                    <RulerIcon className="h-4 w-4 mr-2 text-indigo-500" />
+                    <span>O'lchamlar</span>
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border-collapse bg-white">
+                      <thead>
+                        <tr>
+                          <th className="bg-yellow-100 border border-gray-300 p-2 text-center">
+                            O'lcham
+                          </th>
+                          {colors.map((color, index) => (
+                            <th
+                              key={index}
+                              className="border border-gray-300 p-2 text-center"
+                            >
+                              {color}
+                            </th>
+                          ))}
+                          <th className="bg-blue-200 border border-gray-300 p-2 text-center font-semibold">
+                            Jami
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sizes.map((size) => (
+                          <tr key={size}>
+                            <td className="bg-yellow-50 border border-gray-300 p-2 font-medium text-center">
+                              {size}
+                            </td>
+                            {colors.map((color, index) => {
+                              const quantity =
+                                sizeColorMap.get(`${size}-${color}`) || 0;
+                              return (
+                                <td
+                                  key={`${size}-${color}`}
+                                  className="border border-gray-200 p-2 text-center"
+                                >
+                                  {quantity || ""}
+                                </td>
+                              );
+                            })}
+                            <td className="bg-blue-100 border border-gray-300 p-2 text-center font-medium">
+                              {rowTotals.get(size) || 0}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr>
+                          <td className="bg-green-50 border border-gray-300 p-2 font-semibold text-center">
+                            Jami
+                          </td>
+                          {colors.map((color) => (
+                            <td
+                              key={`total-${color}`}
+                              className="bg-green-50 border border-gray-300 p-2 text-center font-semibold"
+                            >
+                              {colTotals.get(color) || 0}
+                            </td>
+                          ))}
+                          <td className="bg-blue-100 border border-gray-300 p-2 text-center font-bold">
+                            {grandTotal}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
 
           {order?.order_model?.model?.images?.length > 0 ? (
             <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
