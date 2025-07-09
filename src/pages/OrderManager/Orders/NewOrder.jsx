@@ -332,6 +332,7 @@ const NewOrder = () => {
                 placeholder="Buyurtma narxi"
                 value={payload.price}
                 min={0}
+                step={0.01}
                 className="bg-white"
                 required
                 onChange={(e) => {
@@ -348,6 +349,7 @@ const NewOrder = () => {
                 placeholder="Rasxod"
                 value={payload.rasxod}
                 min={0}
+                step={0.01}
                 className="bg-white"
                 required
                 onChange={(e) => {
