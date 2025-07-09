@@ -130,10 +130,16 @@ const NewOrder = () => {
             quantity: Number.parseInt(size.quantity) || 0,
           };
 
-          // Only include color_id OR color_name, not both
+          // For new colors, always use color_name
           if (size.color?.isNew) {
             sizeData.color_name = size.color.name;
-          } else if (size.color?.id) {
+          }
+          // For existing colors that were previously created in this session
+          else if (size.color?.isNewlyCreated) {
+            sizeData.color_name = size.color.name;
+          }
+          // For pre-existing colors from the database
+          else if (size.color?.id) {
             sizeData.color_id = size.color.id;
           }
 
@@ -652,13 +658,23 @@ const NewOrder = () => {
                                     );
                                     const searchValue = input?.value || "";
                                     if (searchValue.trim()) {
+                                      const newColor = {
+                                        id: Date.now(), // Temporary ID for local state
+                                        name: searchValue.trim(),
+                                        isNewlyCreated: true, // Mark as newly created in this session
+                                      };
+
+                                      // Add the new color to the colors state
+                                      setColors([...colors, newColor]);
+
+                                      // Update the selected color in the form
                                       const newSizes = [...payload.model.sizes];
                                       newSizes[index] = {
                                         ...newSizes[index],
                                         color: {
-                                          id: null,
-                                          name: searchValue.trim(),
+                                          ...newColor,
                                           isNew: true,
+                                          isNewlyCreated: true, // Mark as newly created in this session
                                         },
                                       };
                                       setPayload({
@@ -690,6 +706,9 @@ const NewOrder = () => {
                                         id: color.id,
                                         name: color.name,
                                         isNew: false,
+                                        // Preserve the isNewlyCreated flag if this color was created in this session
+                                        isNewlyCreated:
+                                          color.isNewlyCreated || false,
                                       },
                                     };
                                     setPayload({
