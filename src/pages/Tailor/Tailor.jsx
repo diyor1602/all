@@ -128,7 +128,9 @@ const Tailor = () => {
       toast({
         variant: "destructive",
         title: "Xatolik!",
-        description: "Ishni bajarishda xatolik yuz berdi.",
+        description:
+          error.response?.data?.message ||
+          "Ishni bajarishda xatolik yuz berdi.",
       });
     } finally {
       setLoadingStates((prev) => ({ ...prev, [index]: false }));
@@ -203,11 +205,9 @@ const Tailor = () => {
                 <div className="flex flex-col">
                   <div className="font-semibold">{tarif.name}</div>
                   <div className="text-xs text-gray-500">
-                    {tarif.second} sekund
+                    {tarif.summa} so'm / {tarif.second} sekund
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {tarif.summa} so'm
-                  </div>
+                  <div className="text-xs text-gray-500"></div>
                 </div>
                 <div className="flex items-center">
                   <Button
