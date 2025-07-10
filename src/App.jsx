@@ -33,6 +33,7 @@ import Tv from "./pages/Tv/Tv";
 import Casher from "./pages/Casher/Casher";
 import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
+import Tailor from "./pages/Tailor/Tailor";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -91,6 +92,7 @@ function App() {
           <Route path="/casher/*" element={<Casher />} />
           <Route path="/resultChecker/*" element={<ResultChecker />} />
           <Route path="/ceo/*" element={<Ceo />} />
+          <Route path="/tailor/*" element={<Tailor />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

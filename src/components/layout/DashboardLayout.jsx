@@ -18,6 +18,7 @@ import SupplierLayout from "./DashboardLayouts/SupplierLayout";
 import CasherLayout from "./DashboardLayouts/CasherLayout";
 import ResultCheckerLayout from "./DashboardLayouts/ResultCheckerLayout";
 import CeoLayout from "./DashboardLayouts/CeoLayout";
+import TailorLayout from "./DashboardLayouts/TailorLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -40,6 +41,7 @@ const layouts = {
   casher: CasherLayout,
   resultChecker: ResultCheckerLayout,
   ceo: CeoLayout,
+  tailor: TailorLayout,
   nolayout: NoLayout,
 };
 
