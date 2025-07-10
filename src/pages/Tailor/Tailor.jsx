@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, animate } from "framer-motion";
@@ -10,25 +12,56 @@ import Coin from "/coin.png";
 
 const Tailor = () => {
   const { toast } = useToast();
-
   const [balance, setBalance] = useState(0);
   const [displayBalance, setDisplayBalance] = useState(0);
   const [inputs, setInputs] = useState([{ code: "", tarif: null }]);
   const [loadingStates, setLoadingStates] = useState({});
   const [coins, setCoins] = useState([]);
-
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const balanceRef = useRef(null);
+
+  const animateBalance = (fromValue, toValue, isInitial = false) => {
+    // Ensure both values are numbers
+    const from = Number(fromValue) || 0;
+    const to = Number(toValue) || 0;
+    const difference = Math.abs(to - from);
+
+    // Calculate duration based on difference and whether it's initial load
+    let duration;
+    if (isInitial) {
+      // For initial load, use up to 5 seconds based on the value
+      duration = Math.min(5, Math.max(1.5, to / 10000)); // Adjust divisor as needed
+    } else {
+      // For updates, shorter duration based on difference
+      duration = Math.min(2, Math.max(0.8, difference / 5000));
+    }
+
+    animate(from, to, {
+      type: "spring",
+      bounce: 0.2,
+      duration: duration,
+      ease: "easeOut",
+      onUpdate: (latest) => {
+        setDisplayBalance(Math.floor(Number(latest)));
+      },
+    });
+  };
 
   const fetchBalance = async () => {
     try {
       const response = await api.get("/tailor/balance");
-      animate(balance, response.data, {
-        type: "spring",
-        bounce: 0.4,
-        duration: 1.8,
-        onUpdate: (latest) => setDisplayBalance(Math.floor(latest)),
-      });
-      setBalance(response.data);
+      const newBalance = Number(response.data) || 0;
+
+      if (isInitialLoad) {
+        // On initial load, animate from 0 to balance
+        animateBalance(0, newBalance, true);
+        setIsInitialLoad(false);
+      } else {
+        // On updates, animate from current display balance to new balance
+        animateBalance(Number(displayBalance) || 0, newBalance, false);
+      }
+
+      setBalance(newBalance);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -47,7 +80,6 @@ const Tailor = () => {
       const response = await api.get("/tailor/tarifications/search", {
         params: { code },
       });
-
       const updatedInputs = [...inputs];
       updatedInputs[index].tarif = response.data;
       setInputs(updatedInputs);
@@ -72,17 +104,9 @@ const Tailor = () => {
       await api.post("/tailor/tarificationLog", {
         tarification_id: tarifId,
       });
-
-      toast({
-        variant: "default",
-        title: "Bajarildi!",
-        description: "Ish muvaffaqiyatli qo'shildi.",
-      });
-
       const button = document.getElementById(`submit-btn-${index}`);
       const coinStart = button?.getBoundingClientRect();
       const coinEnd = balanceRef.current?.getBoundingClientRect();
-
       if (coinStart && coinEnd) {
         playCoinSound();
         const newCoins = Array.from({ length: 5 }).map(() => {
@@ -98,7 +122,6 @@ const Tailor = () => {
         });
         setCoins((prev) => [...prev, ...newCoins]);
       }
-
       await getTarif(inputs[index].code, index);
       await fetchBalance();
     } catch (error) {
@@ -146,10 +169,8 @@ const Tailor = () => {
           {displayBalance.toLocaleString()} so'm
         </div>
       </div>
-
       {inputs.map((input, index) => {
         const tarif = input.tarif;
-
         return (
           <div
             key={index}
@@ -162,7 +183,6 @@ const Tailor = () => {
             >
               <X className="w-4 h-4" />
             </button>
-
             <div className="flex gap-2 items-center">
               <Input
                 placeholder="Tarif kodi (masalan: A55)"
@@ -178,49 +198,49 @@ const Tailor = () => {
                 Qidirish
               </Button>
             </div>
-
             {tarif && (
-              <div className="border rounded-lg p-3 bg-gray-50 flex items-center justify-between">
+              <div className="border rounded-lg p-3 bg-gray-50 flex justify-between">
                 <div className="flex flex-col">
                   <div className="font-semibold">{tarif.name}</div>
                   <div className="text-xs text-gray-500">
                     {tarif.second} sekund
                   </div>
                   <div className="text-xs text-gray-500">
-                    {tarif.summa} so‘m
+                    {tarif.summa} so'm
                   </div>
                 </div>
-                <Button
-                  id={`submit-btn-${index}`}
-                  className="mt-3"
-                  onClick={() => handleSubmit(tarif.id, index)}
-                  disabled={loadingStates[index]}
-                >
-                  {loadingStates[index] ? (
-                    <>
-                      <Loader2 className="animate-spin" />
-                      Qo'shilmoqda...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="mr-2 h-4 w-4" />
-                      Bajarildi ({tarif.tarification_logs?.[0]?.quantity || 0})
-                    </>
-                  )}
-                </Button>
+                <div className="flex items-center">
+                  <Button
+                    id={`submit-btn-${index}`}
+                    className=" h-full flex items-center justify-center"
+                    onClick={() => handleSubmit(tarif.id, index)}
+                    disabled={loadingStates[index]}
+                  >
+                    {loadingStates[index] ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        Qo'shilmoqda...
+                      </>
+                    ) : (
+                      <>
+                        <Check />
+                        Bajarildi ({tarif.tarification_logs?.[0]?.quantity || 0}
+                        )
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
         );
       })}
-
       <div className="w-full flex justify-end">
         <Button variant="outline" onClick={addNewInput}>
           <CirclePlus className="mr-2 h-4 w-4" />
           Yangi kod qo'shish
         </Button>
       </div>
-
       {/* Coin Animation Portal */}
       {createPortal(
         <AnimatePresence>
