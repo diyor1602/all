@@ -63,10 +63,20 @@ const TailorPage = () => {
         if (isInitialLoad && balanceData.length > 0) {
           // Create input fields with the balance data
           const newInputs = balanceData.map((item) => {
-            const tarif = item.tarification;
+            const tarif = item.tarification
+              ? {
+                  ...item.tarification,
+                  tarification_logs: [
+                    {
+                      quantity: item.quantity || 0,
+                    },
+                  ],
+                }
+              : null;
+
             return {
               code: tarif?.code || "",
-              tarif: tarif || null,
+              tarif: tarif,
               searchResults: [],
               selectedTarif: tarif?.id || null,
               tarification_id: tarif?.id || null,
@@ -105,10 +115,10 @@ const TailorPage = () => {
 
   const getTarif = async (code, index) => {
     if (!code || code.length < 2) return;
-    
+
     try {
-      setLoadingStates(prev => ({ ...prev, [`search-${index}`]: true }));
-      
+      setLoadingStates((prev) => ({ ...prev, [`search-${index}`]: true }));
+
       const response = await api.get("/tailor/tarifications/search", {
         params: { code },
       });
@@ -129,7 +139,8 @@ const TailorPage = () => {
         updatedInputs[index].searchResults = [];
         updatedInputs[index].tarif = null;
         updatedInputs[index].selectedTarif = null;
-        if (code.length >= 2) { // Only show error if user actually tried to search
+        if (code.length >= 2) {
+          // Only show error if user actually tried to search
           toast({
             variant: "destructive",
             title: "Xatolik!",
@@ -152,7 +163,7 @@ const TailorPage = () => {
           error.response?.data?.message || "Tarif topishda xatolik yuz berdi.",
       });
     } finally {
-      setLoadingStates(prev => ({ ...prev, [`search-${index}`]: false }));
+      setLoadingStates((prev) => ({ ...prev, [`search-${index}`]: false }));
     }
   };
 
@@ -223,16 +234,16 @@ const TailorPage = () => {
   const handleInputChange = (index, value) => {
     const updatedInputs = [...inputs];
     updatedInputs[index].code = value;
-    
+
     // Only clear tarif if the input is being cleared or changed
     if (!value) {
       updatedInputs[index].tarif = null;
       updatedInputs[index].searchResults = [];
       updatedInputs[index].selectedTarif = null;
     }
-    
+
     setInputs(updatedInputs);
-    
+
     // Auto-search when code is 2 or more characters
     if (value && value.length >= 2) {
       getTarif(value, index);
@@ -346,7 +357,9 @@ const TailorPage = () => {
             {input.tarif && (
               <div className="border rounded-lg p-3 bg-gray-50 flex justify-between">
                 <div className="flex flex-col">
-                  <div className="font-semibold">{tarif.name}</div>
+                  <div className="font-semibold">
+                    {tarif.code} / {tarif.name}
+                  </div>
                   <div className="text-xs text-gray-500">
                     {tarif.summa} so'm / {tarif.second} sekund
                   </div>
