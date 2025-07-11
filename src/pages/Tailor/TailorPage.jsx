@@ -127,16 +127,17 @@ const TailorPage = () => {
       const response = await api.post("/tailor/tarificationLog", {
         tarification_id: tarifId,
       });
-      
       // Update the tarif with the new quantity from the response
       const updatedInputs = [...inputs];
       if (response.data?.log) {
         updatedInputs[index].tarif = {
           ...updatedInputs[index].tarif,
-          tarification_logs: [{
-            ...(updatedInputs[index].tarif?.tarification_logs?.[0] || {}),
-            quantity: response.data.log.quantity
-          }]
+          tarification_logs: [
+            {
+              ...(updatedInputs[index].tarif?.tarification_logs?.[0] || {}),
+              quantity: response.data.log.quantity,
+            },
+          ],
         };
       }
       const button = document.getElementById(`submit-btn-${index}`);
@@ -157,12 +158,12 @@ const TailorPage = () => {
         });
         setCoins((prev) => [...prev, ...newCoins]);
       }
-      
+
       // Instead of calling getTarif again, just update the balance
       await fetchBalance();
-      
+
       // Clear the input field but keep the selected tarif
-      updatedInputs[index].code = '';
+      updatedInputs[index].code = "";
       updatedInputs[index].searchResults = [];
       setInputs(updatedInputs);
     } catch (error) {
@@ -306,7 +307,8 @@ const TailorPage = () => {
                     ) : (
                       <>
                         <Check />
-                        Bajarildi ({tarif.tarification_logs?.[0]?.quantity || 0})
+                        Bajarildi ({tarif.tarification_logs?.[0]?.quantity || 0}
+                        )
                       </>
                     )}
                   </Button>
