@@ -50,12 +50,33 @@ const TailorPage = () => {
     try {
       const response = await api.get("/tailor/balance");
       let newBalance = 0;
-      
+      let balanceData = [];
+
       // If response.data is an array, calculate total balance from all items
       if (Array.isArray(response.data)) {
-        newBalance = response.data.reduce((total, item) => {
-          return total + (Number(item.amount_earned) || 0) * (Number(item.quantity) || 0);
+        balanceData = response.data;
+        newBalance = balanceData.reduce((total, item) => {
+          return total + (Number(item.amount_earned) || 0);
         }, 0);
+
+        // Only auto-populate inputs on initial load and if we have balance data
+        if (isInitialLoad && balanceData.length > 0) {
+          // Create input fields with the balance data
+          const newInputs = balanceData.map((item) => {
+            const tarif = item.tarification;
+            return {
+              code: tarif?.code || "",
+              tarif: tarif || null,
+              searchResults: [],
+              selectedTarif: tarif?.id || null,
+              tarification_id: tarif?.id || null,
+              quantity: item.quantity || 0,
+            };
+          });
+
+          // Update the inputs with all data at once
+          setInputs(newInputs);
+        }
       } else {
         // Fallback to direct number if response is not an array
         newBalance = Number(response.data) || 0;
@@ -83,7 +104,11 @@ const TailorPage = () => {
   }, []);
 
   const getTarif = async (code, index) => {
+    if (!code || code.length < 2) return;
+    
     try {
+      setLoadingStates(prev => ({ ...prev, [`search-${index}`]: true }));
+      
       const response = await api.get("/tailor/tarifications/search", {
         params: { code },
       });
@@ -95,18 +120,22 @@ const TailorPage = () => {
         if (response.data.length === 1) {
           updatedInputs[index].tarif = response.data[0];
           updatedInputs[index].selectedTarif = response.data[0].id;
+          updatedInputs[index].code = response.data[0].code; // Update code to match the found tarif
         } else {
           updatedInputs[index].tarif = null;
+          updatedInputs[index].selectedTarif = null;
         }
       } else {
         updatedInputs[index].searchResults = [];
         updatedInputs[index].tarif = null;
         updatedInputs[index].selectedTarif = null;
-        toast({
-          variant: "destructive",
-          title: "Xatolik!",
-          description: "Hech qanday tarif topilmadi.",
-        });
+        if (code.length >= 2) { // Only show error if user actually tried to search
+          toast({
+            variant: "destructive",
+            title: "Xatolik!",
+            description: `"${code}" kodi bo'yicha tarif topilmadi.`,
+          });
+        }
       }
       setInputs(updatedInputs);
     } catch (error) {
@@ -122,6 +151,8 @@ const TailorPage = () => {
         description:
           error.response?.data?.message || "Tarif topishda xatolik yuz berdi.",
       });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [`search-${index}`]: false }));
     }
   };
 
@@ -192,10 +223,20 @@ const TailorPage = () => {
   const handleInputChange = (index, value) => {
     const updatedInputs = [...inputs];
     updatedInputs[index].code = value;
-    updatedInputs[index].tarif = null;
-    updatedInputs[index].searchResults = [];
-    updatedInputs[index].selectedTarif = null;
+    
+    // Only clear tarif if the input is being cleared or changed
+    if (!value) {
+      updatedInputs[index].tarif = null;
+      updatedInputs[index].searchResults = [];
+      updatedInputs[index].selectedTarif = null;
+    }
+    
     setInputs(updatedInputs);
+    
+    // Auto-search when code is 2 or more characters
+    if (value && value.length >= 2) {
+      getTarif(value, index);
+    }
   };
 
   const addNewInput = () => {
