@@ -49,7 +49,17 @@ const TailorPage = () => {
   const fetchBalance = async () => {
     try {
       const response = await api.get("/tailor/balance");
-      const newBalance = Number(response.data) || 0;
+      let newBalance = 0;
+      
+      // If response.data is an array, calculate total balance from all items
+      if (Array.isArray(response.data)) {
+        newBalance = response.data.reduce((total, item) => {
+          return total + (Number(item.amount_earned) || 0) * (Number(item.quantity) || 0);
+        }, 0);
+      } else {
+        // Fallback to direct number if response is not an array
+        newBalance = Number(response.data) || 0;
+      }
 
       if (isInitialLoad) {
         // On initial load, animate from 0 to balance
@@ -215,9 +225,18 @@ const TailorPage = () => {
   return (
     <div className="flex flex-col gap-4 relative overflow-hidden">
       <div className="flex items-center gap-2 flex-col">
-        <span className="font-semibold text-lg">
+        <div className="flex items-center gap-2">
+          {localStorage.getItem("imgUrl") &&
+            localStorage.getItem("imgUrl") !== "null" && (
+              <img
+                className="w-20 h-20 rounded-full object-cover"
+                src={localStorage.getItem("imgUrl")}
+                alt="User"
+              />
+            )}
+
           {localStorage.getItem("name")}
-        </span>
+        </div>
         <div
           ref={balanceRef}
           className="text-yellow-500 font-bold text-2xl transition-all"
