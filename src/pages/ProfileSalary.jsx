@@ -704,87 +704,95 @@ const SalaryDetails = () => {
                 <CardContent>
                   {employee.employee_tarification_logs?.length > 0 ? (
                     <div className="space-y-4">
-                      {employee.employee_tarification_logs.map((log) => (
-                        <div
-                          key={log.id}
-                          className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-primary" />
-                              <span className="font-medium">
-                                {formatDate(log.date)}
-                              </span>
-                            </div>
-                            <div className="flex gap-2">
-                              <Badge variant="outline" className="bg-blue-50">
-                                Miqdor: {log.quantity}
-                              </Badge>
-                              <Badge variant="outline" className="bg-green-50">
-                                {(
-                                  Number.parseFloat(log.tarification.summa) *
-                                  log.quantity
-                                ).toLocaleString("ru-RU", {
-                                  maximumFractionDigits: 2,
-                                })}{" "}
-                                so'm
-                              </Badge>
-                            </div>
-                          </div>
-
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                              <div className="flex flex-col">
-                                <span className="text-muted-foreground flex items-center gap-1">
-                                  <Hash className="h-3 w-3" />
-                                  Kod
-                                </span>
+                      {employee.employee_tarification_logs
+                        ?.sort((a, b) => {
+                          return new Date(b.date) - new Date(a.date);
+                        })
+                        .map((log) => (
+                          <div
+                            key={log.id}
+                            className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-primary" />
                                 <span className="font-medium">
-                                  {log.tarification.code}
+                                  {formatDate(log.date)}
                                 </span>
                               </div>
-                              <div className="flex flex-col">
-                                <span className="text-muted-foreground flex items-center gap-1">
-                                  <Timer className="h-3 w-3" />
-                                  Sekund
-                                </span>
-                                <span className="font-medium">
-                                  {log.tarification.second}
-                                </span>
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-muted-foreground flex items-center gap-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  Birlik narxi
-                                </span>
-                                <span className="font-medium text-green-600">
-                                  {Number.parseFloat(
-                                    log.tarification.summa
-                                  ).toLocaleString("ru-RU", {
-                                    maximumFractionDigits: 2,
-                                  })}{" "}
-                                  сўм
-                                </span>
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-muted-foreground flex items-center gap-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  Jami
-                                </span>
-                                <span className="font-medium text-green-600">
+                              <div className="flex gap-2">
+                                <Badge variant="outline" className="bg-blue-50">
+                                  Miqdor: {log.quantity}
+                                </Badge>
+                                <Badge
+                                  variant="outline"
+                                  className="bg-green-50"
+                                >
                                   {(
                                     Number.parseFloat(log.tarification.summa) *
                                     log.quantity
                                   ).toLocaleString("ru-RU", {
                                     maximumFractionDigits: 2,
                                   })}{" "}
-                                  сўм
-                                </span>
+                                  so'm
+                                </Badge>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <Hash className="h-3 w-3" />
+                                    Kod
+                                  </span>
+                                  <span className="font-medium">
+                                    {log.tarification.code}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <Timer className="h-3 w-3" />
+                                    Sekund
+                                  </span>
+                                  <span className="font-medium">
+                                    {log.tarification.second}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    Birlik narxi
+                                  </span>
+                                  <span className="font-medium text-green-600">
+                                    {Number.parseFloat(
+                                      log.tarification.summa
+                                    ).toLocaleString("ru-RU", {
+                                      maximumFractionDigits: 2,
+                                    })}{" "}
+                                    сўм
+                                  </span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    Jami
+                                  </span>
+                                  <span className="font-medium text-green-600">
+                                    {(
+                                      Number.parseFloat(
+                                        log.tarification.summa
+                                      ) * log.quantity
+                                    ).toLocaleString("ru-RU", {
+                                      maximumFractionDigits: 2,
+                                    })}{" "}
+                                    сўм
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   ) : (
                     <div className="text-center py-8">
