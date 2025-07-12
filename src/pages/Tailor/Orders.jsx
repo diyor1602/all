@@ -1,37 +1,58 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, animate } from "framer-motion";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Check, CirclePlus, Loader2, X } from "lucide-react";
+import {
+  Check,
+  CirclePlus,
+  Loader2,
+  X,
+  ChevronsUpDown,
+  Plus,
+} from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import Coin from "/coin.png";
 
 const Orders = () => {
   const { toast } = useToast();
   const [displayBalance, setDisplayBalance] = useState(0);
-  const [inputs, setInputs] = useState([{ code: "", tarif: null }]);
+  const [models, setModels] = useState([]);
+  const [selectedModels, setSelectedModels] = useState([]);
+  const [modelInputs, setModelInputs] = useState({}); // Object with modelId as key and inputs array as value
   const [loadingStates, setLoadingStates] = useState({});
   const [coins, setCoins] = useState([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [openComboboxes, setOpenComboboxes] = useState({});
+  const [showModelSelection, setShowModelSelection] = useState(false);
   const balanceRef = useRef(null);
 
-  const [models, setModels] = useState([]);
-
   const animateBalance = (fromValue, toValue, isInitial = false) => {
-    // Ensure both values are numbers
     const from = Number(fromValue) || 0;
     const to = Number(toValue) || 0;
     const difference = Math.abs(to - from);
-
-    // Calculate duration based on difference and whether it's initial load
     let duration;
+
     if (isInitial) {
-      // For initial load, use up to 5 seconds based on the value
-      duration = Math.min(5, Math.max(1.5, to / 10000)); // Adjust divisor as needed
+      duration = Math.min(5, Math.max(1.5, to / 10000));
     } else {
-      // For updates, shorter duration based on difference
       duration = Math.min(2, Math.max(0.8, difference / 5000));
     }
 
@@ -49,14 +70,82 @@ const Orders = () => {
   const fetchBalance = async () => {
     try {
       const response = await api.get("/tailor/balance");
-      const newBalance = Number(response.data) || 0;
+      let newBalance = 0;
+      let balanceData = [];
+
+      if (Array.isArray(response.data)) {
+        balanceData = response.data;
+        newBalance = balanceData.reduce((total, item) => {
+          return total + (Number(item.amount_earned) || 0);
+        }, 0);
+
+        if (isInitialLoad && balanceData.length > 0 && models.length > 0) {
+          // Group balance data by model for auto-selection
+          const modelGroups = {};
+          const modelsToSelect = [];
+
+          balanceData.forEach((item) => {
+            // Get model ID from the balance item
+            const modelId = item.model?.id;
+
+            if (modelId) {
+              // Find the corresponding model from our models list
+              const modelData = models.find((m) => m.model?.id === modelId);
+
+              if (modelData) {
+                // Add model to selection if not already added
+                if (!modelsToSelect.find((m) => m.id === modelData.id)) {
+                  modelsToSelect.push(modelData);
+                }
+
+                // Initialize model group if it doesn't exist
+                if (!modelGroups[modelData.id]) {
+                  modelGroups[modelData.id] = [];
+                }
+
+                // Find the matching tarification in the model's tarifications
+                const matchingTarif = modelData.tarifications?.find(
+                  (t) => t.id === item.tarification?.id
+                );
+
+                if (matchingTarif) {
+                  // Create the input with auto-selected tarification
+                  const tarifWithLogs = {
+                    ...matchingTarif,
+                    tarification_logs: [
+                      {
+                        quantity: item.quantity || 0,
+                      },
+                    ],
+                  };
+
+                  modelGroups[modelData.id].push({
+                    code: matchingTarif.code || "",
+                    tarif: tarifWithLogs,
+                    searchResults: [],
+                    selectedTarif: matchingTarif.id,
+                    tarification_id: matchingTarif.id,
+                    quantity: item.quantity || 0,
+                  });
+                }
+              }
+            }
+          });
+
+          // Set the selected models and their inputs
+          if (modelsToSelect.length > 0) {
+            setSelectedModels(modelsToSelect);
+            setModelInputs(modelGroups);
+          }
+        }
+      } else {
+        newBalance = Number(response.data) || 0;
+      }
 
       if (isInitialLoad) {
-        // On initial load, animate from 0 to balance
         animateBalance(0, newBalance, true);
         setIsInitialLoad(false);
       } else {
-        // On updates, animate from current display balance to new balance
         animateBalance(Number(displayBalance) || 0, newBalance, false);
       }
     } catch (error) {
@@ -69,42 +158,27 @@ const Orders = () => {
   };
 
   useEffect(() => {
-    fetchBalance();
+    const getModels = async () => {
+      try {
+        const response = await api.get("/tailor/models");
+        setModels(response.data || []);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Modellarni olishda xatolik yuz berdi.",
+        });
+      }
+    };
+    getModels();
   }, []);
 
+  // Fetch balance after models are loaded
   useEffect(() => {
-    fetchModels();
-  }, []);
-
-  const fetchModels = async () => {
-    try {
-      const response = await api.get("/tailor/models");
-      setModels(response.data);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik!",
-        description: "Modellar olishda xatolik yuz berdi.",
-      });
+    if (models.length > 0) {
+      fetchBalance();
     }
-  };
-
-  const getTarif = async (code, index) => {
-    try {
-      const response = await api.get("/tailor/tarifications/search", {
-        params: { code },
-      });
-      const updatedInputs = [...inputs];
-      updatedInputs[index].tarif = response.data;
-      setInputs(updatedInputs);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik!",
-        description: "Tarif topilmadi.",
-      });
-    }
-  };
+  }, [models]);
 
   const playCoinSound = () => {
     const audio = new Audio("/coins.wav");
@@ -112,15 +186,35 @@ const Orders = () => {
     audio.play();
   };
 
-  const handleSubmit = async (tarifId, index) => {
-    setLoadingStates((prev) => ({ ...prev, [index]: true }));
+  const handleSubmit = async (tarifId, modelId, inputIndex) => {
+    const loadingKey = `${modelId}-${inputIndex}`;
+    setLoadingStates((prev) => ({ ...prev, [loadingKey]: true }));
+
     try {
-      await api.post("/tailor/tarificationLog", {
+      const response = await api.post("/tailor/tarificationLog", {
         tarification_id: tarifId,
       });
-      const button = document.getElementById(`submit-btn-${index}`);
+
+      const updatedModelInputs = { ...modelInputs };
+      if (response.data?.log && updatedModelInputs[modelId]) {
+        updatedModelInputs[modelId][inputIndex].tarif = {
+          ...updatedModelInputs[modelId][inputIndex].tarif,
+          tarification_logs: [
+            {
+              ...(updatedModelInputs[modelId][inputIndex].tarif
+                ?.tarification_logs?.[0] || {}),
+              quantity: response.data.log.quantity,
+            },
+          ],
+        };
+      }
+
+      const button = document.getElementById(
+        `submit-btn-${modelId}-${inputIndex}`
+      );
       const coinStart = button?.getBoundingClientRect();
       const coinEnd = balanceRef.current?.getBoundingClientRect();
+
       if (coinStart && coinEnd) {
         playCoinSound();
         const newCoins = Array.from({ length: 5 }).map(() => {
@@ -136,8 +230,13 @@ const Orders = () => {
         });
         setCoins((prev) => [...prev, ...newCoins]);
       }
-      await getTarif(inputs[index].code, index);
+
       await fetchBalance();
+
+      // Clear the input
+      updatedModelInputs[modelId][inputIndex].code = "";
+      updatedModelInputs[modelId][inputIndex].searchResults = [];
+      setModelInputs(updatedModelInputs);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -147,37 +246,158 @@ const Orders = () => {
           "Ishni bajarishda xatolik yuz berdi.",
       });
     } finally {
-      setLoadingStates((prev) => ({ ...prev, [index]: false }));
+      setLoadingStates((prev) => ({ ...prev, [loadingKey]: false }));
     }
   };
 
-  const handleInputChange = (index, value) => {
-    const updatedInputs = [...inputs];
-    updatedInputs[index].code = value;
-    updatedInputs[index].tarif = null;
-    setInputs(updatedInputs);
+  const handleTarifSelectFromCombobox = (modelId, inputIndex, tarification) => {
+    const updatedModelInputs = { ...modelInputs };
+    if (updatedModelInputs[modelId]) {
+      updatedModelInputs[modelId][inputIndex].tarif = tarification;
+      updatedModelInputs[modelId][inputIndex].selectedTarif = tarification.id;
+      updatedModelInputs[modelId][inputIndex].code = tarification.code;
+      setModelInputs(updatedModelInputs);
+    }
+    setOpenComboboxes((prev) => ({
+      ...prev,
+      [`${modelId}-${inputIndex}`]: false,
+    }));
   };
 
-  const addNewInput = () => {
-    setInputs([...inputs, { code: "", tarif: null }]);
+  const addNewInput = (modelId) => {
+    const updatedModelInputs = { ...modelInputs };
+    if (!updatedModelInputs[modelId]) {
+      updatedModelInputs[modelId] = [];
+    }
+    updatedModelInputs[modelId].push({
+      code: "",
+      tarif: null,
+      searchResults: [],
+      selectedTarif: null,
+    });
+    setModelInputs(updatedModelInputs);
   };
 
-  const removeInput = (index) => {
-    const updated = [...inputs];
-    updated.splice(index, 1);
-    setInputs(updated);
+  const removeInput = (modelId, inputIndex) => {
+    const updatedModelInputs = { ...modelInputs };
+    if (updatedModelInputs[modelId]) {
+      updatedModelInputs[modelId].splice(inputIndex, 1);
+      // If no inputs left for this model, remove the model
+      if (updatedModelInputs[modelId].length === 0) {
+        delete updatedModelInputs[modelId];
+        setSelectedModels((prev) =>
+          prev.filter((model) => model.id !== modelId)
+        );
+      }
+      setModelInputs(updatedModelInputs);
+    }
+  };
+
+  const addModel = (model) => {
+    if (!selectedModels.find((m) => m.id === model.id)) {
+      setSelectedModels((prev) => [...prev, model]);
+      // Initialize with one empty input for this model
+      const updatedModelInputs = { ...modelInputs };
+      updatedModelInputs[model.id] = [
+        {
+          code: "",
+          tarif: null,
+          searchResults: [],
+          selectedTarif: null,
+        },
+      ];
+      setModelInputs(updatedModelInputs);
+    }
+    setShowModelSelection(false);
+  };
+
+  const removeModel = (modelId) => {
+    setSelectedModels((prev) => prev.filter((model) => model.id !== modelId));
+    const updatedModelInputs = { ...modelInputs };
+    delete updatedModelInputs[modelId];
+    setModelInputs(updatedModelInputs);
   };
 
   const handleCoinAnimationComplete = (id) => {
     setCoins((prev) => prev.filter((coin) => coin.id !== id));
   };
 
+  // If no models are selected, show initial model selection
+  if (selectedModels.length === 0) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2 flex-col">
+          <div className="flex items-center gap-2">
+            {localStorage.getItem("imgUrl") &&
+              localStorage.getItem("imgUrl") !== "null" && (
+                <img
+                  className="w-20 h-20 rounded-full object-cover"
+                  src={localStorage.getItem("imgUrl") || "/placeholder.svg"}
+                  alt="User"
+                />
+              )}
+            {localStorage.getItem("name")}
+          </div>
+          <div
+            ref={balanceRef}
+            className="text-yellow-500 font-bold text-2xl transition-all"
+          >
+            {displayBalance.toLocaleString()} so'm
+          </div>
+        </div>
+
+        <div className="text-center mb-4">
+          <h2 className="text-xl font-semibold mb-2">Model tanlang</h2>
+          <p className="text-gray-600">
+            Ish boshlash uchun bir yoki bir nechta model tanlang
+          </p>
+        </div>
+
+        <div className="grid gap-3">
+          {models.map((modelItem) => (
+            <div
+              key={modelItem.id}
+              onClick={() => addModel(modelItem)}
+              className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-semibold text-lg">
+                    {modelItem.model?.name} - {modelItem.submodel?.name}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {modelItem.group?.name}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Rasxod: {modelItem.model?.rasxod} | Vaqt:{" "}
+                    {modelItem.model?.minute} daqiqa
+                  </div>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {modelItem.tarifications?.length || 0} ta tarif
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4 relative overflow-hidden">
       <div className="flex items-center gap-2 flex-col">
-        <span className="font-semibold text-lg">
+        <div className="flex items-center gap-2">
+          {localStorage.getItem("imgUrl") &&
+            localStorage.getItem("imgUrl") !== "null" && (
+              <img
+                className="w-20 h-20 rounded-full object-cover"
+                src={localStorage.getItem("imgUrl") || "/placeholder.svg"}
+                alt="User"
+              />
+            )}
           {localStorage.getItem("name")}
-        </span>
+        </div>
         <div
           ref={balanceRef}
           className="text-yellow-500 font-bold text-2xl transition-all"
@@ -185,76 +405,235 @@ const Orders = () => {
           {displayBalance.toLocaleString()} so'm
         </div>
       </div>
-      {inputs.map((input, index) => {
-        const tarif = input.tarif;
-        return (
-          <div
-            key={index}
-            className="border p-4 rounded-xl shadow-sm bg-white space-y-3 relative"
+
+      {/* Selected Models Header */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <span className="text-sm font-medium">Tanlangan modellar:</span>
+        {selectedModels.map((model) => (
+          <Badge
+            key={model.id}
+            variant="secondary"
+            className="flex items-center gap-1"
           >
+            {model.model?.name} - {model.submodel?.name}
             <button
-              onClick={() => removeInput(index)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-400 transition-all"
-              title="O'chirish"
+              onClick={() => removeModel(model.id)}
+              className="ml-1 hover:text-red-500"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3" />
             </button>
-            <div className="flex gap-2 items-center">
-              <Input
-                placeholder="Tarif kodi (masalan: A55)"
-                value={input.code}
-                onChange={(e) => handleInputChange(index, e.target.value)}
-                className="max-w-xs"
-              />
-              <Button
-                variant="secondary"
-                onClick={() => getTarif(input.code, index)}
-                disabled={!input.code}
-              >
-                Qidirish
-              </Button>
-            </div>
-            {tarif && (
-              <div className="border rounded-lg p-3 bg-gray-50 flex justify-between">
-                <div className="flex flex-col">
-                  <div className="font-semibold">{tarif.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {tarif.summa} so'm / {tarif.second} sekund
-                  </div>
-                  <div className="text-xs text-gray-500"></div>
-                </div>
-                <div className="flex items-center">
-                  <Button
-                    id={`submit-btn-${index}`}
-                    className=" h-full flex items-center justify-center"
-                    onClick={() => handleSubmit(tarif.id, index)}
-                    disabled={loadingStates[index]}
-                  >
-                    {loadingStates[index] ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        Qo'shilmoqda...
-                      </>
-                    ) : (
-                      <>
-                        <Check />
-                        Bajarildi ({tarif.tarification_logs?.[0]?.quantity || 0}
-                        )
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
-      <div className="w-full flex justify-end">
-        <Button variant="outline" onClick={addNewInput}>
-          <CirclePlus className="mr-2 h-4 w-4" />
-          Yangi kod qo'shish
+          </Badge>
+        ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowModelSelection(true)}
+          className="h-6"
+        >
+          <Plus className="w-3 h-3 mr-1" />
+          Model qo'shish
         </Button>
       </div>
+
+      {/* Model Selection Modal */}
+      {showModelSelection && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Model qo'shish</h3>
+              <button
+                onClick={() => setShowModelSelection(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="grid gap-3">
+              {models
+                .filter(
+                  (modelItem) =>
+                    !selectedModels.find((m) => m.id === modelItem.id)
+                )
+                .map((modelItem) => (
+                  <div
+                    key={modelItem.id}
+                    onClick={() => addModel(modelItem)}
+                    className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-semibold">
+                          {modelItem.model?.name} - {modelItem.submodel?.name}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {modelItem.group?.name}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Rasxod: {modelItem.model?.rasxod} | Vaqt:{" "}
+                          {modelItem.model?.minute} daqiqa
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {modelItem.tarifications?.length || 0} ta tarif
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Model-specific Input Groups */}
+      {selectedModels.map((model) => (
+        <div
+          key={model.id}
+          className="border-2 border-blue-200 rounded-xl p-4 bg-blue-50/30"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="font-semibold text-lg">
+                {model.model?.name} - {model.submodel?.name}
+              </h3>
+              <p className="text-sm text-gray-600">{model.group?.name}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => addNewInput(model.id)}
+            >
+              <CirclePlus className="w-4 h-4 mr-1" />
+              Tarif qo'shish
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {(modelInputs[model.id] || []).map((input, inputIndex) => {
+              const tarif = input.tarif;
+              const comboboxKey = `${model.id}-${inputIndex}`;
+
+              return (
+                <div
+                  key={inputIndex}
+                  className="border rounded-lg p-3 bg-white shadow-sm relative"
+                >
+                  <button
+                    onClick={() => removeInput(model.id, inputIndex)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-red-400 transition-all"
+                    title="O'chirish"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex gap-2 items-center mb-3">
+                    <Popover
+                      open={openComboboxes[comboboxKey] || false}
+                      onOpenChange={(open) =>
+                        setOpenComboboxes((prev) => ({
+                          ...prev,
+                          [comboboxKey]: open,
+                        }))
+                      }
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openComboboxes[comboboxKey] || false}
+                          className="w-[400px] justify-between bg-transparent"
+                        >
+                          {input.tarif
+                            ? `${input.tarif.code} - ${input.tarif.name}`
+                            : "Tarif tanlang..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Tarif qidiring..." />
+                          <CommandList>
+                            <CommandEmpty>Tarif topilmadi.</CommandEmpty>
+                            <CommandGroup>
+                              {model.tarifications?.map((tarification) => (
+                                <CommandItem
+                                  key={tarification.id}
+                                  value={`${tarification.code} ${tarification.name}`}
+                                  onSelect={() =>
+                                    handleTarifSelectFromCombobox(
+                                      model.id,
+                                      inputIndex,
+                                      tarification
+                                    )
+                                  }
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      input.selectedTarif === tarification.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <div className="font-medium">
+                                      {tarification.code} - {tarification.name}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {tarification.summa} so'm /{" "}
+                                      {tarification.second} sekund
+                                    </div>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {input.tarif && (
+                    <div className="border rounded-lg p-3 bg-gray-50 flex justify-between">
+                      <div className="flex flex-col">
+                        <div className="font-semibold">
+                          {tarif.code} / {tarif.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {tarif.summa} so'm / {tarif.second} sekund
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <Button
+                          id={`submit-btn-${model.id}-${inputIndex}`}
+                          className="h-full flex items-center justify-center"
+                          onClick={() =>
+                            handleSubmit(tarif.id, model.id, inputIndex)
+                          }
+                          disabled={loadingStates[`${model.id}-${inputIndex}`]}
+                        >
+                          {loadingStates[`${model.id}-${inputIndex}`] ? (
+                            <>
+                              <Loader2 className="animate-spin" />
+                              Qo'shilmoqda...
+                            </>
+                          ) : (
+                            <>
+                              <Check />
+                              Bajarildi (
+                              {tarif.tarification_logs?.[0]?.quantity || 0})
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
       {/* Coin Animation Portal */}
       {createPortal(
         <AnimatePresence>
