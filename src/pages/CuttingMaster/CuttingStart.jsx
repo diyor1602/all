@@ -382,7 +382,7 @@ const CuttingStart = () => {
                   size="sm"
                   className="rounded-full"
                 >
-                  {size.size?.name} ({size?.quantity} ta)
+                  {size.size?.name} {size.color?.name} ({size?.quantity} ta)
                 </Button>
               ))}
             </div>

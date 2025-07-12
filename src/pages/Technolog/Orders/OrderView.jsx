@@ -850,7 +850,7 @@ const OrderView = () => {
                             <td className="bg-yellow-50 border border-gray-300 p-2 font-medium text-center">
                               {size}
                             </td>
-                            {colors.map((color, index) => {
+                            {colors.map((color) => {
                               const quantity =
                                 sizeColorMap.get(`${size}-${color}`) || 0;
                               return (
