@@ -540,15 +540,15 @@ const Orders = () => {
                           variant="outline"
                           role="combobox"
                           aria-expanded={openComboboxes[comboboxKey] || false}
-                          className="w-[400px] justify-between bg-transparent"
+                          className="w-fit max-w-[300px] justify-between bg-transparent truncate"
                         >
                           {input.tarif
-                            ? `${input.tarif.code} - ${input.tarif.name}`
+                            ? `${input.tarif.code}`
                             : "Tarif tanlang..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0">
+                      <PopoverContent className="w-fit max-w-[300px] p-0">
                         <Command>
                           <CommandInput placeholder="Tarif qidiring..." />
                           <CommandList>
