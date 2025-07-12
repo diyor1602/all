@@ -465,9 +465,6 @@ const Orders = () => {
                         <div className="font-semibold">
                           {modelItem.model?.name} - {modelItem.submodel?.name}
                         </div>
-                        <div className="text-sm text-gray-600">
-                          {modelItem.group?.name}
-                        </div>
                         <div className="text-xs text-gray-500 mt-1">
                           Rasxod: {modelItem.model?.rasxod} | Vaqt:{" "}
                           {modelItem.model?.minute} daqiqa
@@ -495,7 +492,6 @@ const Orders = () => {
               <h3 className="font-semibold text-lg">
                 {model.model?.name} - {model.submodel?.name}
               </h3>
-              <p className="text-sm text-gray-600">{model.group?.name}</p>
             </div>
             <Button
               variant="outline"
@@ -503,7 +499,7 @@ const Orders = () => {
               onClick={() => addNewInput(model.id)}
             >
               <CirclePlus className="w-4 h-4 mr-1" />
-              Tarif qo'shish
+              Ish qo'shish
             </Button>
           </div>
 
