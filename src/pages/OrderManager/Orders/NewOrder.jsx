@@ -582,7 +582,10 @@ const NewOrder = () => {
               <div className="mt-4 flex flex-col gap-4">
                 <div className="font-medium">O'lcham va ranglar</div>
                 {payload?.model?.sizes?.map((size, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 flex-wrap bg-blue-50 p-2 rounded-lg"
+                  >
                     {/* Size selection */}
                     <Select
                       value={size.id?.toString() || ""}
