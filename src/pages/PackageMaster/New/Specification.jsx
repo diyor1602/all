@@ -447,6 +447,7 @@ const Specification = () => {
                                   e.target.value
                                 )
                               }
+                              step="0.01"
                               required
                               min="1"
                             />
@@ -459,6 +460,7 @@ const Specification = () => {
                               onChange={(e) =>
                                 handleKgChange(sizeObj.size_id, e.target.value)
                               }
+                              step="0.01"
                               required
                               min="1"
                             />
