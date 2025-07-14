@@ -5,6 +5,7 @@ import {
   BanknoteArrowUp,
   CircleDollarSign,
   ClipboardCheck,
+  CloudSun,
   Gem,
   Home,
   Rotate3d,
@@ -66,6 +67,12 @@ const navigation = [
     name: "Kunlik balans",
     href: "/casher/daily",
     icon: TentTree,
+    onMobile: false,
+  },
+  {
+    name: "Oylik balans",
+    href: "/casher/monthly",
+    icon: CloudSun,
     onMobile: false,
   },
 ];
