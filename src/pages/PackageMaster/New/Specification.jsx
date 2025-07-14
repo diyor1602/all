@@ -236,11 +236,11 @@ const Specification = () => {
   };
 
   const handleCapacityChange = (sizeId, value) => {
-    setCapacities({ ...capacities, [sizeId]: parseInt(value) });
+    setCapacities({ ...capacities, [sizeId]: parseFloat(value) });
   };
 
   const handleKgChange = (sizeId, value) => {
-    setKgs({ ...kgs, [sizeId]: parseInt(value) });
+    setKgs({ ...kgs, [sizeId]: parseFloat(value) });
   };
 
   const toggleOrderSelection = (order) => {
