@@ -788,86 +788,94 @@ const Orders = () => {
                       </div>
                     )}
 
-                    <button
-                      onClick={() => removeInput(model.id, inputIndex)}
-                      className="absolute top-2 right-2 text-gray-400 hover:text-red-400 transition-all z-10"
-                      title="O'chirish"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-
-                    <div className="flex gap-2 items-center mb-3 relative z-10">
-                      <Popover
-                        open={openComboboxes[comboboxKey] || false}
-                        onOpenChange={(open) =>
-                          setOpenComboboxes((prev) => ({
-                            ...prev,
-                            [comboboxKey]: open,
-                          }))
-                        }
+                    <div className="flex items-center justify-between flex-row-reverse mb-3">
+                      <Button
+                        onClick={() => removeInput(model.id, inputIndex)}
+                        variant="ghost"
+                        size="icon"
+                        className="text-gray-400 hover:text-red-400 transition-all z-10"
+                        title="O'chirish"
                       >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openComboboxes[comboboxKey] || false}
-                            className="w-fit max-w-[300px] justify-between bg-transparent truncate"
-                          >
-                            {input.tarif
-                              ? `${input.tarif.code}`
-                              : "Tarif tanlang..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-fit max-w-[300px] p-0">
-                          <Command>
-                            <CommandInput placeholder="Tarif qidiring..." />
-                            <CommandList>
-                              <CommandEmpty>Tarif topilmadi.</CommandEmpty>
-                              <CommandGroup>
-                                {model.tarifications?.map((tarification) => (
-                                  <CommandItem
-                                    key={tarification.id}
-                                    value={`${tarification.code} ${tarification.name}`}
-                                    onSelect={() =>
-                                      handleTarifSelectFromCombobox(
-                                        model.id,
-                                        inputIndex,
-                                        tarification
-                                      )
-                                    }
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        input.selectedTarif === tarification.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    <div className="flex flex-col">
-                                      <div className="font-medium">
-                                        {tarification.code} -{" "}
-                                        {tarification.name}
+                        <X className="w-4 h-4" />
+                      </Button>
+
+                      <div className="flex gap-2 items-center relative z-10">
+                        <Popover
+                          open={openComboboxes[comboboxKey] || false}
+                          onOpenChange={(open) =>
+                            setOpenComboboxes((prev) => ({
+                              ...prev,
+                              [comboboxKey]: open,
+                            }))
+                          }
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={
+                                openComboboxes[comboboxKey] || false
+                              }
+                              className="w-fit max-w-[300px] justify-between bg-transparent truncate"
+                            >
+                              {input.tarif
+                                ? `${input.tarif.code}`
+                                : "Tarif tanlang..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-fit max-w-[300px] p-0">
+                            <Command>
+                              <CommandInput placeholder="Tarif qidiring..." />
+                              <CommandList>
+                                <CommandEmpty>Tarif topilmadi.</CommandEmpty>
+                                <CommandGroup>
+                                  {model.tarifications?.map((tarification) => (
+                                    <CommandItem
+                                      key={tarification.id}
+                                      value={`${tarification.code} ${tarification.name}`}
+                                      onSelect={() =>
+                                        handleTarifSelectFromCombobox(
+                                          model.id,
+                                          inputIndex,
+                                          tarification
+                                        )
+                                      }
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          input.selectedTarif ===
+                                            tarification.id
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      <div className="flex flex-col">
+                                        <div className="font-medium">
+                                          {tarification.code} -{" "}
+                                          {tarification.name}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                          {Number.parseFloat(
+                                            tarification.summa
+                                          )?.toLocaleString("ru-RU", {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          })}{" "}
+                                          so'm / {tarification.second} sekund
+                                        </div>
                                       </div>
-                                      <div className="text-xs text-gray-500">
-                                        {Number.parseFloat(
-                                          tarification.summa
-                                        )?.toLocaleString("ru-RU", {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        })}{" "}
-                                        so'm / {tarification.second} sekund
-                                      </div>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
+
                     {input.tarif && (
                       <div
                         className="border rounded-lg p-3 bg-gray-50 flex justify-between relative z-10 cursor-pointer select-none"
