@@ -342,7 +342,11 @@ const Orders = () => {
             ref={balanceRef}
             className="text-yellow-500 font-bold text-2xl transition-all"
           >
-            {displayBalance.toLocaleString()} so'm
+            {displayBalance.toLocaleString("ru-RU", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{" "}
+            so'm
           </div>
         </div>
 
@@ -354,31 +358,26 @@ const Orders = () => {
         </div>
 
         <div className="grid gap-3">
-          {models.map((modelItem) => (
-            <div
-              key={modelItem.id}
-              onClick={() => addModel(modelItem)}
-              className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="font-semibold text-lg">
-                    {modelItem.model?.name} - {modelItem.submodel?.name}
+          {models
+            ?.sort((a, b) => a.model?.name.localeCompare(b.model?.name))
+            ?.map((modelItem) => (
+              <div
+                key={modelItem.id}
+                onClick={() => addModel(modelItem)}
+                className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors bg-white"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-semibold text-lg">
+                      {modelItem.model?.name} - {modelItem.submodel?.name}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {modelItem.group?.name}
+                  <div className="text-sm text-gray-500">
+                    {modelItem.tarifications?.length || 0} ta tarif
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Rasxod: {modelItem.model?.rasxod} | Vaqt:{" "}
-                    {modelItem.model?.minute} daqiqa
-                  </div>
-                </div>
-                <div className="text-sm text-gray-500">
-                  {modelItem.tarifications?.length || 0} ta tarif
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     );
@@ -402,7 +401,11 @@ const Orders = () => {
           ref={balanceRef}
           className="text-yellow-500 font-bold text-2xl transition-all"
         >
-          {displayBalance.toLocaleString()} so'm
+          {displayBalance.toLocaleString("ru-RU", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}{" "}
+          so'm
         </div>
       </div>
 
@@ -454,20 +457,17 @@ const Orders = () => {
                   (modelItem) =>
                     !selectedModels.find((m) => m.id === modelItem.id)
                 )
+                .sort((a, b) => a.model?.name.localeCompare(b.model?.name))
                 .map((modelItem) => (
                   <div
                     key={modelItem.id}
                     onClick={() => addModel(modelItem)}
                     className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-center">
                       <div>
                         <div className="font-semibold">
                           {modelItem.model?.name} - {modelItem.submodel?.name}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Rasxod: {modelItem.model?.rasxod} | Vaqt:{" "}
-                          {modelItem.model?.minute} daqiqa
                         </div>
                       </div>
                       <div className="text-sm text-gray-500">
@@ -575,8 +575,13 @@ const Orders = () => {
                                       {tarification.code} - {tarification.name}
                                     </div>
                                     <div className="text-xs text-gray-500">
-                                      {tarification.summa} so'm /{" "}
-                                      {tarification.second} sekund
+                                      {parseFloat(
+                                        tarification.summa
+                                      )?.toLocaleString("ru-RU", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}{" "}
+                                      so'm / {tarification.second} sekund
                                     </div>
                                   </div>
                                 </CommandItem>
@@ -595,7 +600,11 @@ const Orders = () => {
                           {tarif.code} / {tarif.name}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {tarif.summa} so'm / {tarif.second} sekund
+                          {parseFloat(tarif.summa)?.toLocaleString("ru-RU", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          so'm / {tarif.second} sekund
                         </div>
                       </div>
                       <div className="flex items-center">
