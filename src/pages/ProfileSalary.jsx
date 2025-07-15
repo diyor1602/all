@@ -230,8 +230,7 @@ const SalaryDetails = () => {
   const employee = employeeData;
   const totalTarificationAmount =
     employee.employee_tarification_logs?.reduce(
-      (sum, log) =>
-        sum + Number.parseFloat(log.tarification.summa) * log.quantity,
+      (sum, log) => sum + Number.parseFloat(log.amount_earned),
       0
     ) || 0;
 
@@ -779,10 +778,8 @@ const SalaryDetails = () => {
                                     Jami
                                   </span>
                                   <span className="font-medium text-green-600">
-                                    {(
-                                      Number.parseFloat(
-                                        log.tarification.summa
-                                      ) * log.quantity
+                                    {Number.parseFloat(
+                                      log.amount_earned
                                     ).toLocaleString("ru-RU", {
                                       maximumFractionDigits: 2,
                                     })}{" "}

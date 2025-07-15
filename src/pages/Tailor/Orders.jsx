@@ -503,11 +503,7 @@ const Orders = () => {
             ref={balanceRef}
             className="text-yellow-500 font-bold text-2xl transition-all"
           >
-            {displayBalance.toLocaleString("ru-RU", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{" "}
-            so'm
+            {displayBalance.toFixed()} so'm
           </div>
         </div>
         <div className="text-center mb-4">
