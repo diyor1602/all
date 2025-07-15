@@ -405,7 +405,7 @@ const Monthly = () => {
     },
     {
       label: "Jami aktiv ishchilar",
-      value: monthly.employee_count,
+      value: monthly.average_employee_count,
       bg: "bg-lime-300",
       prefix: "ta",
     },
