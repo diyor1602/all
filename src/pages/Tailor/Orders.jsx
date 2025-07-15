@@ -238,7 +238,7 @@ const Orders = () => {
 
     // Visual feedback
     toast({
-      title: "Batch ga qo'shildi!",
+      title: "Paketga qo'shildi!",
       description: `${input.tarif.code} - ${input.tarif.name}`,
       duration: 2000,
     });
@@ -317,9 +317,6 @@ const Orders = () => {
       }
 
       await fetchBalance();
-
-      // DON'T clear batch items - keep them for reuse
-      // setBatchItems([])
 
       // Show results
       if (successCount > 0 && failureCount > 0) {
