@@ -8,6 +8,7 @@ import Salary from "./Salary/Salary";
 import Employees from "./Employees/Employees";
 import Daily from "./Daily/Daily";
 import Monthly from "./Monthly/Monthly";
+import Tailor from "./Tailor/Tailor";
 
 const Casher = () => {
   return (
@@ -21,6 +22,7 @@ const Casher = () => {
       <Route path="employees" element={<Employees />} />
       <Route path="daily" element={<Daily />} />
       <Route path="monthly" element={<Monthly />} />
+      <Route path="tailor" element={<Tailor />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

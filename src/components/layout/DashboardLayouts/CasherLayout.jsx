@@ -9,6 +9,7 @@ import {
   Gem,
   Home,
   Rotate3d,
+  Sprout,
   TentTree,
   Users,
 } from "lucide-react";
@@ -73,6 +74,12 @@ const navigation = [
     name: "Oylik balans",
     href: "/casher/monthly",
     icon: CloudSun,
+    onMobile: false,
+  },
+  {
+    name: "Tikuvchilar",
+    href: "/casher/tailor",
+    icon: Sprout,
     onMobile: false,
   },
 ];
