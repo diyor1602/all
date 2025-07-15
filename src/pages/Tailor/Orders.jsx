@@ -332,7 +332,7 @@ const Orders = () => {
               localStorage.getItem("imgUrl") !== "null" && (
                 <img
                   className="w-20 h-20 rounded-full object-cover"
-                  src={localStorage.getItem("imgUrl") || "/placeholder.svg"}
+                  src={localStorage.getItem("imgUrl")}
                   alt="User"
                 />
               )}
@@ -391,7 +391,7 @@ const Orders = () => {
             localStorage.getItem("imgUrl") !== "null" && (
               <img
                 className="w-20 h-20 rounded-full object-cover"
-                src={localStorage.getItem("imgUrl") || "/placeholder.svg"}
+                src={localStorage.getItem("imgUrl")}
                 alt="User"
               />
             )}
