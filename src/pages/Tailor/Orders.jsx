@@ -351,10 +351,9 @@ const Orders = () => {
         </div>
 
         <div className="text-center mb-4">
-          <h2 className="text-xl font-semibold mb-2">Model tanlang</h2>
-          <p className="text-gray-600">
-            Ish boshlash uchun bir yoki bir nechta model tanlang
-          </p>
+          <h2 className="text-xl font-semibold mb-2">
+            Ish boshlash uchun model tanlang
+          </h2>
         </div>
 
         <div className="grid gap-3">
