@@ -93,8 +93,8 @@ const Tailor = () => {
                     {index + 1}
                   </td>
                   <td className="border border-gray-300 p-2">
-                    {user?.image && (
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      {user?.image && (
                         <img
                           src={user?.image}
                           alt={user.employee_name}
@@ -107,9 +107,9 @@ const Tailor = () => {
                             setImgDialog(true);
                           }}
                         />
-                      </div>
-                    )}
-                    <span className="truncate">{user.employee_name}</span>
+                      )}
+                      <span className="truncate">{user.employee_name}</span>
+                    </div>
                   </td>
                   <td className="border border-gray-300 p-2 text-center">
                     {parseFloat(user.total_earned)?.toLocaleString("en-EN", {
