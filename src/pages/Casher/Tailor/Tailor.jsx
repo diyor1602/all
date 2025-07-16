@@ -107,9 +107,9 @@ const Tailor = () => {
                             setImgDialog(true);
                           }}
                         />
-                        <span className="truncate">{user.employee_name}</span>
                       </div>
                     )}
+                    <span className="truncate">{user.employee_name}</span>
                   </td>
                   <td className="border border-gray-300 p-2 text-center">
                     {parseFloat(user.total_earned)?.toLocaleString("en-EN", {
