@@ -42,7 +42,7 @@ const navigation = [
     onMobile: false,
   },
   {
-    name: "Top earners",
+    name: "Reyting",
     href: "/groupMaster/topEarners",
     icon: Medal,
     onMobile: true,
