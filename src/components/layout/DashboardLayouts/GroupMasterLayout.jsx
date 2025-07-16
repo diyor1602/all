@@ -1,5 +1,13 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, FilePlus, Home, ListChecks, Shirt } from "lucide-react";
+import {
+  BadgePercent,
+  Bot,
+  FilePlus,
+  Home,
+  ListChecks,
+  Medal,
+  Shirt,
+} from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -25,6 +33,18 @@ const navigation = [
     name: "Natija",
     href: "/groupMaster/result",
     icon: FilePlus,
+    onMobile: true,
+  },
+  {
+    name: "Tarif",
+    href: "/groupMaster/tarifs",
+    icon: Bot,
+    onMobile: false,
+  },
+  {
+    name: "Top earners",
+    href: "/groupMaster/topEarners",
+    icon: Medal,
     onMobile: true,
   },
 ];
