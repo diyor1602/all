@@ -12,6 +12,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+const calculateMinutes = (works) => {
+  const minutes = parseFloat(
+    works?.reduce((acc, work) => acc + parseFloat(work.second), 0) / 60
+  )?.toFixed(2);
+  const color = minutes >= 2 ? "text-red-500" : "text-green-500";
+  return [minutes, color];
+};
+
 const Tailor = () => {
   const { toast } = useToast();
 
@@ -84,6 +92,7 @@ const Tailor = () => {
                 <th className="border border-gray-300 p-2">№</th>
                 <th className="border border-gray-300 p-2">F.I.SH</th>
                 <th className="border border-gray-300 p-2">Summa</th>
+                <th className="border border-gray-300 p-2">Daqiqa</th>
               </tr>
             </thead>
             <tbody>
@@ -116,6 +125,11 @@ const Tailor = () => {
                       maximumFractionDigits: 0,
                     })}{" "}
                     so'm
+                  </td>
+                  <td className="border border-gray-300 p-2 text-center">
+                    <span className={calculateMinutes(user.works)[1]}>
+                      {calculateMinutes(user.works)[0]}
+                    </span>
                   </td>
                 </tr>
               ))}
