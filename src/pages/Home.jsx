@@ -19,6 +19,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import YesterdayAbsence from "./SuperHR/Stats/YesterdayAbsence";
+import TailorRating from "./TailorRating";
 
 const Home = () => {
   // App data states - these will only be used after authentication
@@ -188,7 +189,9 @@ const Home = () => {
   };
 
   // Main app content
-  return (
+  return localStorage.getItem("role") === "tailor" ? (
+    <TailorRating />
+  ) : (
     <>
       {localStorage.getItem("role") === "superhr" && (
         <div className="mb-4">
