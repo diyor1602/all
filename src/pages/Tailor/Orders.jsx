@@ -46,7 +46,14 @@ const Orders = () => {
   const [showModelSelection, setShowModelSelection] = useState(false);
 
   // Batch selection states
-  const [batchItems, setBatchItems] = useState([]);
+  const [batchItems, setBatchItems] = useState(() => {
+    // Load batch items from localStorage on initial render
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("tailorBatchItems");
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [batchLoading, setBatchLoading] = useState(false);
   const [longPressStates, setLongPressStates] = useState({});
 
@@ -218,6 +225,13 @@ const Orders = () => {
     }));
   }, []);
 
+  // Save batch items to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("tailorBatchItems", JSON.stringify(batchItems));
+    }
+  }, [batchItems]);
+
   const handleAddToBatch = (modelId, inputIndex) => {
     const itemKey = `${modelId}-${inputIndex}`;
     const input = modelInputs[modelId]?.[inputIndex];
@@ -245,7 +259,13 @@ const Orders = () => {
   };
 
   const removeBatchItem = (itemKey) => {
-    setBatchItems((prev) => prev.filter((item) => item.key !== itemKey));
+    setBatchItems((prev) => {
+      const newItems = prev.filter((item) => item.key !== itemKey);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("tailorBatchItems", JSON.stringify(newItems));
+      }
+      return newItems;
+    });
   };
 
   const handleBatchSubmit = async () => {
