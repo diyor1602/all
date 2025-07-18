@@ -27,7 +27,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Eye, RotateCcw, Search, Download, Loader2 } from "lucide-react";
+import { RotateCcw, Search, Download, Loader2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -41,7 +41,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
 
 const formatPhoneNumber = (phone) => {
   return phone
@@ -68,7 +67,6 @@ const useDebounce = (value, delay) => {
 
 const Employees = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   // States
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -389,7 +387,6 @@ const Employees = () => {
           <TableRow>
             <TableHead className="border text-center">#</TableHead>
             <TableHead className="border">F.I.O</TableHead>
-            <TableHead className="border">Harakatlar</TableHead>
             <TableHead className="border">Bo'lim</TableHead>
             <TableHead className="border">Lavozimi</TableHead>
             <TableHead className="border">Telefon</TableHead>
@@ -452,19 +449,6 @@ const Employees = () => {
                         </TooltipProvider>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right border">
-                  <div className="flex items-center justify-center gap-2">
-                    <Eye
-                      size={16}
-                      className="text-blue-500 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer"
-                      onClick={() =>
-                        navigate(
-                          `/internalAccountant/employees/view/${employee.id}`
-                        )
-                      }
-                    />
                   </div>
                 </TableCell>
                 <TableCell className="border">
