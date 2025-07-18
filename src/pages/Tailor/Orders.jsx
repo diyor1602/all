@@ -116,9 +116,6 @@ const Orders = () => {
                 if (!modelGroups[modelData.id]) {
                   modelGroups[modelData.id] = [];
                 }
-                const matchingTarif = modelData.tarifications?.find(
-                  (t) => t.id === item.tarification?.id
-                );
                 // Search for the tarif in the new tarification_categories structure
                 let foundTarif = null;
                 let selectedCategoryId = null;
@@ -891,7 +888,7 @@ const Orders = () => {
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-fit max-w-[300px] p-0 ml-10">
+                          <PopoverContent className="w-fit max-w-[300px] p-0 ml-10 mb-20">
                             <Command>
                               <CommandInput placeholder="Tarif qidiring..." />
                               <CommandList>
