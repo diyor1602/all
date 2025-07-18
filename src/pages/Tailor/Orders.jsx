@@ -888,9 +888,9 @@ const Orders = () => {
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-fit max-w-[300px] p-0 ml-10 max-h-[200px]">
+                          <PopoverContent className="w-fit max-w-[300px] p-0 ml-10">
                             <Command>
-                              <CommandInput placeholder="Tarif qidiring..." />
+                              {/* <CommandInput placeholder="Tarif qidiring..." /> */}
                               <CommandList>
                                 <CommandEmpty>Tarif topilmadi.</CommandEmpty>
                                 {!input.selectedCategoryId ? (
