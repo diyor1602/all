@@ -85,6 +85,56 @@ const Work = () => {
 
   const [empComboOpen, setEmpComboOpen] = useState(false);
   const [workPopoverOpen, setWorkPopoverOpen] = useState({});
+  
+  // Search and sort states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: 'code', direction: 'asc' });
+
+  // Handle sorting
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Apply sorting and filtering to tarifLogs
+  const sortedAndFilteredLogs = useMemo(() => {
+    let filtered = [...(tarifLogs || [])];
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(log => 
+        (log?.tarification?.code?.toLowerCase().includes(term) ||
+         log?.tarification?.name?.toLowerCase().includes(term) ||
+         log?.employee?.name?.toLowerCase().includes(term))
+      );
+    }
+    
+    // Apply sorting
+    return filtered.sort((a, b) => {
+      let compare = 0;
+      
+      if (sortConfig.key === 'code') {
+        compare = (a?.tarification?.code || '').localeCompare(b?.tarification?.code || '', undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        });
+      } else if (sortConfig.key === 'employee') {
+        compare = (a?.employee?.name || '').localeCompare(b?.employee?.name || '');
+      } else if (sortConfig.key === 'quantity') {
+        compare = (a.quantity || 0) - (b.quantity || 0);
+      } else if (sortConfig.key === 'amount') {
+        compare = (a.amount_earned || 0) - (b.amount_earned || 0);
+      } else if (sortConfig.key === 'date') {
+        compare = new Date(a.date) - new Date(b.date);
+      }
+      
+      return sortConfig.direction === 'asc' ? compare : -compare;
+    });
+  }, [tarifLogs, searchTerm, sortConfig]);
 
   const editExistingWork = async () => {
     setEditing(true);
@@ -728,41 +778,68 @@ const Work = () => {
           </div>
 
           <div className="bg-white p-4">
+            <div className="mb-4">
+              <Input
+                placeholder="Qidirish (kod, nomi, xodim)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-md mb-4"
+              />
+            </div>
             <table className="border border-collapse w-full">
               <thead>
                 <tr>
-                  <th className="border border-gray-300 p-2">Kodi</th>
+                  <th 
+                    className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('code')}
+                  >
+                    <div className="flex items-center justify-between">
+                      Kodi
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </div>
+                  </th>
                   <th className="border border-gray-300 p-2">Nomi</th>
-                  <th className="border border-gray-300 p-2">Xodim</th>
-                  <th className="border border-gray-300 p-2">Miqdori</th>
-                  <th className="border border-gray-300 p-2">Summa</th>
-                  <th className="border border-gray-300 p-2">Sana</th>
+                  <th 
+                    className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('employee')}
+                  >
+                    <div className="flex items-center justify-between">
+                      Xodim
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </div>
+                  </th>
+                  <th 
+                    className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('quantity')}
+                  >
+                    <div className="flex items-center justify-between">
+                      Miqdori
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </div>
+                  </th>
+                  <th 
+                    className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('amount')}
+                  >
+                    <div className="flex items-center justify-between">
+                      Summa
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </div>
+                  </th>
+                  <th 
+                    className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('date')}
+                  >
+                    <div className="flex items-center justify-between">
+                      Sana
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {tarifLogs?.length > 0 ? (
-                  tarifLogs
-                    ?.sort((a, b) => {
-                      // First sort by tarif code
-                      const codeCompare = a?.tarification?.code?.localeCompare(
-                        b?.tarification?.code,
-                        undefined,
-                        {
-                          numeric: true,
-                          sensitivity: "base",
-                        }
-                      );
-
-                      // If tarif codes are the same, sort by employee name
-                      if (codeCompare === 0) {
-                        return a?.employee?.name?.localeCompare(
-                          b?.employee?.name
-                        );
-                      }
-
-                      return codeCompare;
-                    })
-                    .map((tarifLog, index) => (
+                {sortedAndFilteredLogs.length > 0 ? (
+                  sortedAndFilteredLogs.map((tarifLog, index) => (
                       <tr key={index}>
                         <td className="border border-gray-300 p-2 text-center">
                           {tarifLog?.tarification?.code}
