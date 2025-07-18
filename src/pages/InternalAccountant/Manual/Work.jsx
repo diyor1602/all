@@ -85,16 +85,19 @@ const Work = () => {
 
   const [empComboOpen, setEmpComboOpen] = useState(false);
   const [workPopoverOpen, setWorkPopoverOpen] = useState({});
-  
+
   // Search and sort states
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: 'code', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({
+    key: "code",
+    direction: "asc",
+  });
 
   // Handle sorting
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
@@ -102,37 +105,44 @@ const Work = () => {
   // Apply sorting and filtering to tarifLogs
   const sortedAndFilteredLogs = useMemo(() => {
     let filtered = [...(tarifLogs || [])];
-    
+
     // Apply search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(log => 
-        (log?.tarification?.code?.toLowerCase().includes(term) ||
-         log?.tarification?.name?.toLowerCase().includes(term) ||
-         log?.employee?.name?.toLowerCase().includes(term))
+      filtered = filtered.filter(
+        (log) =>
+          log?.tarification?.code?.toLowerCase().includes(term) ||
+          log?.tarification?.name?.toLowerCase().includes(term) ||
+          log?.employee?.name?.toLowerCase().includes(term)
       );
     }
-    
+
     // Apply sorting
     return filtered.sort((a, b) => {
       let compare = 0;
-      
-      if (sortConfig.key === 'code') {
-        compare = (a?.tarification?.code || '').localeCompare(b?.tarification?.code || '', undefined, {
-          numeric: true,
-          sensitivity: 'base',
-        });
-      } else if (sortConfig.key === 'employee') {
-        compare = (a?.employee?.name || '').localeCompare(b?.employee?.name || '');
-      } else if (sortConfig.key === 'quantity') {
+
+      if (sortConfig.key === "code") {
+        compare = (a?.tarification?.code || "").localeCompare(
+          b?.tarification?.code || "",
+          undefined,
+          {
+            numeric: true,
+            sensitivity: "base",
+          }
+        );
+      } else if (sortConfig.key === "employee") {
+        compare = (a?.employee?.name || "").localeCompare(
+          b?.employee?.name || ""
+        );
+      } else if (sortConfig.key === "quantity") {
         compare = (a.quantity || 0) - (b.quantity || 0);
-      } else if (sortConfig.key === 'amount') {
+      } else if (sortConfig.key === "amount") {
         compare = (a.amount_earned || 0) - (b.amount_earned || 0);
-      } else if (sortConfig.key === 'date') {
+      } else if (sortConfig.key === "date") {
         compare = new Date(a.date) - new Date(b.date);
       }
-      
-      return sortConfig.direction === 'asc' ? compare : -compare;
+
+      return sortConfig.direction === "asc" ? compare : -compare;
     });
   }, [tarifLogs, searchTerm, sortConfig]);
 
@@ -783,15 +793,15 @@ const Work = () => {
                 placeholder="Qidirish (kod, nomi, xodim)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-md mb-4"
+                className="mb-4"
               />
             </div>
             <table className="border border-collapse w-full">
               <thead>
                 <tr>
-                  <th 
+                  <th
                     className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('code')}
+                    onClick={() => handleSort("code")}
                   >
                     <div className="flex items-center justify-between">
                       Kodi
@@ -799,36 +809,36 @@ const Work = () => {
                     </div>
                   </th>
                   <th className="border border-gray-300 p-2">Nomi</th>
-                  <th 
+                  <th
                     className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('employee')}
+                    onClick={() => handleSort("employee")}
                   >
                     <div className="flex items-center justify-between">
                       Xodim
                       <ChevronsUpDown className="h-4 w-4 opacity-50" />
                     </div>
                   </th>
-                  <th 
+                  <th
                     className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('quantity')}
+                    onClick={() => handleSort("quantity")}
                   >
                     <div className="flex items-center justify-between">
                       Miqdori
                       <ChevronsUpDown className="h-4 w-4 opacity-50" />
                     </div>
                   </th>
-                  <th 
+                  <th
                     className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('amount')}
+                    onClick={() => handleSort("amount")}
                   >
                     <div className="flex items-center justify-between">
                       Summa
                       <ChevronsUpDown className="h-4 w-4 opacity-50" />
                     </div>
                   </th>
-                  <th 
+                  <th
                     className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('date')}
+                    onClick={() => handleSort("date")}
                   >
                     <div className="flex items-center justify-between">
                       Sana
@@ -840,74 +850,74 @@ const Work = () => {
               <tbody>
                 {sortedAndFilteredLogs.length > 0 ? (
                   sortedAndFilteredLogs.map((tarifLog, index) => (
-                      <tr key={index}>
-                        <td className="border border-gray-300 p-2 text-center">
-                          {tarifLog?.tarification?.code}
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          {tarifLog?.tarification?.name}
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          {tarifLog?.employee?.name}
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          {editingID === tarifLog?.id ? (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                value={newQuantity}
-                                onChange={(e) => {
-                                  setNewQuantity(e.target.value);
-                                }}
-                                disabled={editing}
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                disabled={editing}
-                                onClick={editExistingWork}
-                              >
-                                <Check className="text-green-500" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                disabled={editing}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingID("");
-                                  setNewQuantity("");
-                                }}
-                              >
-                                <X className="text-red-500" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <div
-                              className="flex items-center gap-2 cursor-pointer"
+                    <tr key={index}>
+                      <td className="border border-gray-300 p-2 text-center">
+                        {tarifLog?.tarification?.code}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {tarifLog?.tarification?.name}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {tarifLog?.employee?.name}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {editingID === tarifLog?.id ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              value={newQuantity}
+                              onChange={(e) => {
+                                setNewQuantity(e.target.value);
+                              }}
+                              disabled={editing}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={editing}
+                              onClick={editExistingWork}
+                            >
+                              <Check className="text-green-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={editing}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setEditingID(tarifLog?.id);
-                                setNewQuantity(tarifLog?.quantity);
+                                setEditingID("");
+                                setNewQuantity("");
                               }}
                             >
-                              {tarifLog?.quantity}
-                              <Button variant="ghost" size="icon">
-                                <Pencil />
-                              </Button>
-                            </div>
-                          )}
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          {parseFloat(tarifLog?.amount_earned).toLocaleString(
-                            "ru-RU"
-                          )}{" "}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center">
-                          {tarifLog?.date?.split("-")?.reverse()?.join(".")}
-                        </td>
-                      </tr>
-                    ))
+                              <X className="text-red-500" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingID(tarifLog?.id);
+                              setNewQuantity(tarifLog?.quantity);
+                            }}
+                          >
+                            {tarifLog?.quantity}
+                            <Button variant="ghost" size="icon">
+                              <Pencil />
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {parseFloat(tarifLog?.amount_earned).toLocaleString(
+                          "ru-RU"
+                        )}{" "}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-center">
+                        {tarifLog?.date?.split("-")?.reverse()?.join(".")}
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td colSpan={6} className="text-center">
