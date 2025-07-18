@@ -277,6 +277,9 @@ const Orders = () => {
     const input = modelInputs[modelId]?.[inputIndex];
     const model = selectedModels.find((m) => m.id === modelId);
 
+    // if it is already in batch, return
+    if (batchItems.find((item) => item.key === itemKey)) return;
+
     if (!input?.tarif || !model) return;
 
     const newBatchItem = {
