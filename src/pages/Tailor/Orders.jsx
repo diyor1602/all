@@ -945,8 +945,10 @@ const Orders = () => {
                                         }
                                       }}
                                     >
-                                      <ChevronLeft className="mr-2 h-4 w-4" />
-                                      <span>Orqaga</span>
+                                      <ChevronLeft />
+                                      <span className="font-bold text-red-500 text-2xl">
+                                        Orqaga
+                                      </span>
                                     </CommandItem>
                                     <CommandGroup>
                                       {model.tarification_categories
