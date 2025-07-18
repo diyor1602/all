@@ -45,7 +45,33 @@ const Orders = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [openComboboxes, setOpenComboboxes] = useState({});
   const [showModelSelection, setShowModelSelection] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState({});
+
+  const getOnlyBalance = async () => {
+    try {
+      const response = await api.get("/tailor/balance");
+      let newBalance = 0;
+      let balanceData = [];
+      if (Array.isArray(response.data)) {
+        balanceData = response.data;
+        newBalance = balanceData.reduce((total, item) => {
+          return total + (Number(item.amount_earned) || 0);
+        }, 0);
+      } else {
+        newBalance = Number(response.data) || 0;
+      }
+      setDisplayBalance(newBalance);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Balansni olishda xatolik yuz berdi.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    getOnlyBalance();
+  }, []);
 
   // Batch selection states
   const [batchItems, setBatchItems] = useState(() => {
@@ -61,27 +87,6 @@ const Orders = () => {
 
   const balanceRef = useRef(null);
   const longPressTimers = useRef({});
-
-  const animateBalance = (fromValue, toValue, isInitial = false) => {
-    const from = Number(fromValue) || 0;
-    const to = Number(toValue) || 0;
-    const difference = Math.abs(to - from);
-    let duration;
-    if (isInitial) {
-      duration = Math.min(5, Math.max(1.5, to / 10000));
-    } else {
-      duration = Math.min(2, Math.max(0.8, difference / 5000));
-    }
-    animate(from, to, {
-      type: "spring",
-      bounce: 0.2,
-      duration: duration,
-      ease: "easeOut",
-      onUpdate: (latest) => {
-        setDisplayBalance(Math.floor(Number(latest)));
-      },
-    });
-  };
 
   const fetchBalance = useCallback(async () => {
     if (!isInitialLoad) return; // Only run on initial load
@@ -175,11 +180,7 @@ const Orders = () => {
       } else {
         newBalance = Number(response.data) || 0;
       }
-      // Only update balance if it has changed
-      const currentBalance = Number(displayBalance) || 0;
-      if (Math.abs(currentBalance - newBalance) > 0.01) {
-        animateBalance(0, newBalance, true);
-      }
+
       setIsInitialLoad(false);
     } catch (error) {
       toast({
@@ -379,6 +380,7 @@ const Orders = () => {
       }
 
       await fetchBalance();
+      await getOnlyBalance();
 
       // Show results
       if (successCount > 0 && failureCount > 0) {
@@ -445,6 +447,7 @@ const Orders = () => {
         setCoins((prev) => [...prev, ...newCoins]);
       }
       await fetchBalance();
+      await getOnlyBalance();
       updatedModelInputs[modelId][inputIndex].code = "";
       updatedModelInputs[modelId][inputIndex].searchResults = [];
       setModelInputs(updatedModelInputs);
