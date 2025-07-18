@@ -910,7 +910,8 @@ const Work = () => {
                       </td>
                       <td className="border border-gray-300 p-2">
                         {parseFloat(tarifLog?.amount_earned).toLocaleString(
-                          "ru-RU"
+                          "ru-RU",
+                          { minimumFractionDigits: 0, maximumFractionDigits: 0 }
                         )}{" "}
                       </td>
                       <td className="border border-gray-300 p-2 text-center">
