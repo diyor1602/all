@@ -11,6 +11,7 @@ import {
   Loader2,
   X,
   ChevronsUpDown,
+  ChevronLeft,
   Plus,
   Send,
   Package2,
@@ -44,6 +45,7 @@ const Orders = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [openComboboxes, setOpenComboboxes] = useState({});
   const [showModelSelection, setShowModelSelection] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState({});
 
   // Batch selection states
   const [batchItems, setBatchItems] = useState(() => {
@@ -81,7 +83,9 @@ const Orders = () => {
     });
   };
 
-  const fetchBalance = async () => {
+  const fetchBalance = useCallback(async () => {
+    if (!isInitialLoad) return; // Only run on initial load
+
     try {
       const response = await api.get("/tailor/balance");
       let newBalance = 0;
@@ -91,7 +95,9 @@ const Orders = () => {
         newBalance = balanceData.reduce((total, item) => {
           return total + (Number(item.amount_earned) || 0);
         }, 0);
-        if (isInitialLoad && balanceData.length > 0 && models.length > 0) {
+
+        // Only process auto-fill if we have data
+        if (balanceData.length > 0 && models.length > 0) {
           const modelGroups = {};
           const modelsToSelect = [];
           balanceData.forEach((item) => {
@@ -108,37 +114,73 @@ const Orders = () => {
                 const matchingTarif = modelData.tarifications?.find(
                   (t) => t.id === item.tarification?.id
                 );
-                if (matchingTarif) {
+                // Search for the tarif in the new tarification_categories structure
+                let foundTarif = null;
+                let selectedCategoryId = null;
+
+                // First try to find the tarif in the categories
+                if (modelData.tarification_categories) {
+                  for (const category of modelData.tarification_categories) {
+                    const found = category.tarification?.find(
+                      (t) => t.id === item.tarification?.id
+                    );
+                    if (found) {
+                      foundTarif = found;
+                      selectedCategoryId = category.id;
+                      break;
+                    }
+                  }
+                }
+
+                // Fallback to the old structure if not found in categories
+                if (!foundTarif && modelData.tarifications) {
+                  foundTarif = modelData.tarifications.find(
+                    (t) => t.id === item.tarification?.id
+                  );
+                }
+
+                if (foundTarif) {
                   const tarifWithLogs = {
-                    ...matchingTarif,
+                    ...foundTarif,
                     tarification_logs: [{ quantity: item.quantity || 0 }],
                   };
                   modelGroups[modelData.id].push({
-                    code: matchingTarif.code || "",
+                    code: foundTarif.code || "",
                     tarif: tarifWithLogs,
                     searchResults: [],
-                    selectedTarif: matchingTarif.id,
-                    tarification_id: matchingTarif.id,
+                    selectedTarif: foundTarif.id,
+                    selectedCategoryId: selectedCategoryId,
+                    tarification_id: foundTarif.id,
                     quantity: item.quantity || 0,
                   });
                 }
               }
             }
           });
-          if (modelsToSelect.length > 0) {
+          // Only update states if we actually have models to select
+          // and only if the data has changed to prevent unnecessary re-renders
+          if (
+            modelsToSelect.length > 0 &&
+            JSON.stringify(selectedModels) !== JSON.stringify(modelsToSelect)
+          ) {
             setSelectedModels(modelsToSelect);
-            setModelInputs(modelGroups);
+            setModelInputs((prevInputs) => {
+              // Only update if there are actual changes
+              return JSON.stringify(prevInputs) !== JSON.stringify(modelGroups)
+                ? modelGroups
+                : prevInputs;
+            });
           }
         }
       } else {
         newBalance = Number(response.data) || 0;
       }
-      if (isInitialLoad) {
+      // Only update balance if it has changed
+      const currentBalance = Number(displayBalance) || 0;
+      if (Math.abs(currentBalance - newBalance) > 0.01) {
         animateBalance(0, newBalance, true);
-        setIsInitialLoad(false);
-      } else {
-        animateBalance(Number(displayBalance) || 0, newBalance, false);
       }
+      setIsInitialLoad(false);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -146,7 +188,7 @@ const Orders = () => {
         description: "Balansni olishda xatolik yuz berdi.",
       });
     }
-  };
+  }, [isInitialLoad, models, selectedModels, modelInputs]);
 
   useEffect(() => {
     const getModels = async () => {
@@ -165,10 +207,10 @@ const Orders = () => {
   }, []);
 
   useEffect(() => {
-    if (models.length > 0) {
+    if (models.length > 0 && isInitialLoad) {
       fetchBalance();
     }
-  }, [models]);
+  }, [models, isInitialLoad, fetchBalance]);
 
   const playCoinSound = () => {
     const audio = new Audio("/coins.wav");
@@ -419,12 +461,18 @@ const Orders = () => {
     }
   };
 
-  const handleTarifSelectFromCombobox = (modelId, inputIndex, tarification) => {
+  const handleTarifSelectFromCombobox = (
+    modelId,
+    inputIndex,
+    categoryId,
+    tarification
+  ) => {
     const updatedModelInputs = { ...modelInputs };
     if (updatedModelInputs[modelId]) {
       updatedModelInputs[modelId][inputIndex].tarif = tarification;
       updatedModelInputs[modelId][inputIndex].selectedTarif = tarification.id;
       updatedModelInputs[modelId][inputIndex].code = tarification.code;
+      updatedModelInputs[modelId][inputIndex].selectedCategoryId = categoryId;
       setModelInputs(updatedModelInputs);
     }
     setOpenComboboxes((prev) => ({
@@ -443,6 +491,7 @@ const Orders = () => {
       tarif: null,
       searchResults: [],
       selectedTarif: null,
+      selectedCategoryId: null,
     });
     setModelInputs(updatedModelInputs);
   };
@@ -550,7 +599,8 @@ const Orders = () => {
                     </div>
                   </div>
                   <div className="text-sm text-gray-500">
-                    {modelItem.tarifications?.length || 0} ta tarif
+                    {modelItem.tarification_categories?.length || 0} ta
+                    kategoriya
                   </div>
                 </div>
               </div>
@@ -723,7 +773,8 @@ const Orders = () => {
                         </div>
                       </div>
                       <div className="text-sm text-gray-500">
-                        {modelItem.tarifications?.length || 0} ta tarif
+                        {modelItem.tarification_categories?.length || 0} ta
+                        kategoriya
                       </div>
                     </div>
                   </div>
@@ -842,46 +893,110 @@ const Orders = () => {
                               <CommandInput placeholder="Tarif qidiring..." />
                               <CommandList>
                                 <CommandEmpty>Tarif topilmadi.</CommandEmpty>
-                                <CommandGroup>
-                                  {model.tarifications?.map((tarification) => (
+                                {!input.selectedCategoryId ? (
+                                  <CommandGroup heading="Kategoriyalar">
+                                    {model.tarification_categories?.map(
+                                      (category) => (
+                                        <CommandItem
+                                          key={category.id}
+                                          value={category.name}
+                                          onSelect={() => {
+                                            const updatedModelInputs = {
+                                              ...modelInputs,
+                                            };
+                                            if (updatedModelInputs[model.id]) {
+                                              updatedModelInputs[model.id][
+                                                inputIndex
+                                              ].selectedCategoryId =
+                                                category.id;
+                                              setModelInputs(
+                                                updatedModelInputs
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          <div className="flex flex-col w-full">
+                                            <div className="font-medium">
+                                              {category.name}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                              {category.tarification?.length ||
+                                                0}{" "}
+                                              ta tarif
+                                            </div>
+                                          </div>
+                                        </CommandItem>
+                                      )
+                                    )}
+                                  </CommandGroup>
+                                ) : (
+                                  <>
                                     <CommandItem
-                                      key={tarification.id}
-                                      value={`${tarification.code} ${tarification.name}`}
-                                      onSelect={() =>
-                                        handleTarifSelectFromCombobox(
-                                          model.id,
-                                          inputIndex,
-                                          tarification
-                                        )
-                                      }
+                                      className="mb-2 border-b"
+                                      onSelect={() => {
+                                        const updatedModelInputs = {
+                                          ...modelInputs,
+                                        };
+                                        if (updatedModelInputs[model.id]) {
+                                          updatedModelInputs[model.id][
+                                            inputIndex
+                                          ].selectedCategoryId = null;
+                                          setModelInputs(updatedModelInputs);
+                                        }
+                                      }}
                                     >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          input.selectedTarif ===
-                                            tarification.id
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                      <div className="flex flex-col">
-                                        <div className="font-medium">
-                                          {tarification.code} -{" "}
-                                          {tarification.name}
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                          {Number.parseFloat(
-                                            tarification.summa
-                                          )?.toLocaleString("ru-RU", {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          })}{" "}
-                                          so'm / {tarification.second} sekund
-                                        </div>
-                                      </div>
+                                      <ChevronLeft className="mr-2 h-4 w-4" />
+                                      <span>Orqaga</span>
                                     </CommandItem>
-                                  ))}
-                                </CommandGroup>
+                                    <CommandGroup>
+                                      {model.tarification_categories
+                                        ?.find(
+                                          (cat) =>
+                                            cat.id === input.selectedCategoryId
+                                        )
+                                        ?.tarification?.map((tarification) => (
+                                          <CommandItem
+                                            key={tarification.id}
+                                            value={`${tarification.code} ${tarification.name}`}
+                                            onSelect={() =>
+                                              handleTarifSelectFromCombobox(
+                                                model.id,
+                                                inputIndex,
+                                                input.selectedCategoryId,
+                                                tarification
+                                              )
+                                            }
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                input.selectedTarif ===
+                                                  tarification.id
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              )}
+                                            />
+                                            <div className="flex flex-col">
+                                              <div className="font-medium">
+                                                {tarification.code} -{" "}
+                                                {tarification.name}
+                                              </div>
+                                              <div className="text-xs text-gray-500">
+                                                {Number.parseFloat(
+                                                  tarification.summa
+                                                )?.toLocaleString("ru-RU", {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                                })}{" "}
+                                                so'm / {tarification.second}{" "}
+                                                sekund
+                                              </div>
+                                            </div>
+                                          </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                  </>
+                                )}
                               </CommandList>
                             </Command>
                           </PopoverContent>
