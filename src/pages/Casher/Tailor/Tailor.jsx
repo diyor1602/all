@@ -30,6 +30,7 @@ const Tailor = () => {
   const [expandedRows, setExpandedRows] = useState({});
   const [selectedUser, setSelectedUser] = useState({});
   const [imgDialog, setImgDialog] = useState(false);
+  const [maxQuantity, setMaxQuantity] = useState(0);
 
   const handleDirection = (direction) => {
     const currentDate = new Date(selectedDay);
@@ -45,6 +46,19 @@ const Tailor = () => {
         },
       });
       const data = await response.data?.top_earners;
+
+      // Calculate max quantity among all employees
+      const maxQty = Math.max(
+        ...data.map(
+          (user) =>
+            user.works?.reduce(
+              (max, work) => Math.max(max, work.quantity),
+              0
+            ) || 0
+        )
+      );
+      setMaxQuantity(maxQty);
+
       setUsers(data);
     } catch (error) {
       toast({
@@ -90,10 +104,11 @@ const Tailor = () => {
           <table className="w-full border border-collapse my-5 bg-white">
             <thead>
               <tr>
-                <th className="border border-gray-300 p-2 w-12">№</th>
-                <th className="border border-gray-300 p-2">F.I.SH</th>
-                <th className="border border-gray-300 p-2">Summa</th>
-                <th className="border border-gray-300 p-2">Daqiqa</th>
+                <th className="border border-gray-300 p-1 w-12">№</th>
+                <th className="border border-gray-300 p-1">F.I.SH</th>
+                <th className="border border-gray-300 p-1">Summa</th>
+                <th className="border border-gray-300 p-1">Soni</th>
+                <th className="border border-gray-300 p-1">Daqiqa</th>
               </tr>
             </thead>
             <tbody>
@@ -109,10 +124,10 @@ const Tailor = () => {
                       }));
                     }}
                   >
-                    <td className="border border-gray-300 p-2 text-center w-12">
+                    <td className="border border-gray-300 p-1 text-center w-12">
                       {index + 1}
                     </td>
-                    <td className="border border-gray-300 p-2 max-w-[200px] md:max-w-[auto]">
+                    <td className="border border-gray-300 p-1 max-w-[200px] md:max-w-[auto]">
                       <div className="flex items-center gap-2">
                         {user?.image && (
                           <img
@@ -129,16 +144,44 @@ const Tailor = () => {
                             }}
                           />
                         )}
-                        <span className="truncate">{user.employee_name}</span>
+                        <span className="truncate">
+                          {user.employee_name?.split(" ")[0]}
+                        </span>
                       </div>
                     </td>
-                    <td className="border border-gray-300 p-2 text-center">
+                    <td className="border border-gray-300 p-1 text-center">
                       {parseFloat(user.total_earned)?.toLocaleString("en-EN", {
                         maximumFractionDigits: 0,
                       })}{" "}
                       so'm
                     </td>
-                    <td className="border border-gray-300 p-2 text-center">
+                    <td className="border border-gray-300 p-1 text-center">
+                      {(() => {
+                        const quantity = user.works?.reduce((max, work) => {
+                          return Math.max(max, work.quantity);
+                        }, 0);
+                        const percentage =
+                          maxQuantity > 0 ? (quantity / maxQuantity) * 100 : 0;
+                        let bgColor = "";
+
+                        if (percentage >= 80) {
+                          bgColor = "bg-green-100 text-green-800";
+                        } else if (percentage >= 40) {
+                          bgColor = "bg-yellow-100 text-yellow-800";
+                        } else {
+                          bgColor = "bg-red-100 text-red-800";
+                        }
+
+                        return (
+                          <span
+                            className={`rounded-full px-2 py-1 text-sm font-medium ${bgColor}`}
+                          >
+                            {quantity}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td className="border border-gray-300 p-1 text-center">
                       <span className={calculateMinutes(user.works)[1]}>
                         {calculateMinutes(user.works)[0]}
                       </span>
@@ -151,16 +194,16 @@ const Tailor = () => {
                           <table className="w-full border-collapse">
                             <thead>
                               <tr className="bg-gray-100">
-                                <th className="border border-gray-300 p-2 text-left">
+                                <th className="border border-gray-300 p-1 text-left">
                                   Ish nomi
                                 </th>
-                                <th className="border border-gray-300 p-2 text-center">
+                                <th className="border border-gray-300 p-1 text-center">
                                   Soni
                                 </th>
-                                <th className="border border-gray-300 p-2 text-center">
-                                  Vaqt (sekund)
+                                <th className="border border-gray-300 p-1 text-center">
+                                  Sekund
                                 </th>
-                                <th className="border border-gray-300 p-2 text-right">
+                                <th className="border border-gray-300 p-1 text-right">
                                   Summa
                                 </th>
                               </tr>
@@ -170,13 +213,13 @@ const Tailor = () => {
                                 ?.sort((a, b) => b.quantity - a.quantity)
                                 ?.map((work, workIndex) => (
                                   <tr key={workIndex}>
-                                    <td className="border border-gray-300 p-2">
+                                    <td className="border border-gray-300 p-1">
                                       {work.code} - {work.operation}
                                     </td>
-                                    <td className="border border-gray-300 p-2 text-center">
+                                    <td className="border border-gray-300 p-1 text-center">
                                       {work.quantity}
                                     </td>
-                                    <td className="border border-gray-300 p-2 text-center">
+                                    <td className="border border-gray-300 p-1 text-center">
                                       {parseFloat(work.second)?.toLocaleString(
                                         "en-EN",
                                         {
@@ -185,7 +228,8 @@ const Tailor = () => {
                                         }
                                       )}
                                     </td>
-                                    <td className="border border-gray-300 p-2 text-right">
+                                    {/* find the maxium tarif quantity */}
+                                    <td className="border border-gray-300 p-1 text-right">
                                       {parseFloat(work.earned)?.toLocaleString(
                                         "en-EN",
                                         {
