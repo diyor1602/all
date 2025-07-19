@@ -227,7 +227,8 @@ const EditOrder = () => {
 
           return sizeData;
         })
-        .filter((size) => (size.id || size.size_id) && size.quantity > 0) || [];
+        .filter((size) => (size.id || size.size_id) && size.quantity >= 0) ||
+      [];
 
     const totalQuantity = sizes.reduce(
       (sum, size) => sum + (size.quantity || 0),
