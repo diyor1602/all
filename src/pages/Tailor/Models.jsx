@@ -227,6 +227,8 @@ const Models = () => {
                         onValueChange={(value) => {
                           model.works[index].cat_id = value;
                           model.works[index].id = "";
+                          model.works[index].name = "";
+                          model.works[index].code = "";
                           setSelectedModels((prev) => [...prev]);
                         }}
                       >
