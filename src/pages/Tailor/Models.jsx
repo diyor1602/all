@@ -90,15 +90,66 @@ const Models = () => {
     }
   };
 
+  const autoSelectFromBalance = (balanceData, modelsData) => {
+    const selected = [];
+
+    balanceData.forEach((entry) => {
+      const modelId = entry.model?.id;
+      const tarificationId = entry.tarification?.id;
+
+      const fullModel = modelsData.find((m) => m.model?.id === modelId);
+      if (!fullModel) return;
+
+      let modelInSelected = selected.find((s) => s.model.model?.id === modelId);
+
+      const category = fullModel.tarification_categories?.find((cat) =>
+        cat.tarification?.some((t) => t.id === tarificationId)
+      );
+
+      const tarification = category?.tarification?.find(
+        (t) => t.id === tarificationId
+      );
+
+      if (!tarification || !category) return;
+
+      const workData = {
+        id: tarification.id,
+        name: tarification.name,
+        code: tarification.code,
+        summa: tarification.summa,
+        second: tarification.second,
+        cat_id: category.id,
+      };
+
+      if (!modelInSelected) {
+        selected.push({
+          model: fullModel,
+          works: [workData],
+        });
+      } else {
+        modelInSelected.works.push(workData);
+      }
+    });
+
+    setSelectedModels(selected);
+  };
+
   const getBalance = async () => {
     try {
       const response = await api.get("/tailor/balance");
-      setBalance(response.data);
+      const balanceData = response.data;
+      setBalance(balanceData);
+
       setDisplayBalance(
-        response.data?.reduce((total, item) => {
+        balanceData?.reduce((total, item) => {
           return total + (Number(item.amount_earned) || 0);
         }, 0)
       );
+
+      // Call auto select
+      if (models.length > 0) {
+        autoSelectFromBalance(balanceData, models);
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -111,9 +162,36 @@ const Models = () => {
   };
 
   useEffect(() => {
-    getPackets();
-    getModels();
-    getBalance();
+    const loadData = async () => {
+      try {
+        const modelsRes = await api.get("/tailor/models");
+        setModels(modelsRes.data || []);
+
+        const packetsRes = await api.get("/tailor/packets");
+        setPackets(packetsRes.data || []);
+
+        const balanceRes = await api.get("/tailor/balance");
+        setBalance(balanceRes.data || []);
+
+        setDisplayBalance(
+          balanceRes.data?.reduce((total, item) => {
+            return total + (Number(item.amount_earned) || 0);
+          }, 0)
+        );
+
+        autoSelectFromBalance(balanceRes.data, modelsRes.data);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description:
+            error.response?.data?.message ||
+            "Ma'lumotlarni yuklashda xatolik yuz berdi.",
+        });
+      }
+    };
+
+    loadData();
   }, []);
 
   const handleDone = async (id) => {
@@ -350,7 +428,9 @@ const Models = () => {
       </Dialog>
       <div className="flex flex-col items-center gap-1">
         <div>{localStorage.getItem("name")}</div>
-        <div>{parseInt(displayBalance)?.toLocaleString("ru-RU")} so'm</div>
+        <div className="text-2xl font-bold text-yellow-500">
+          {parseInt(displayBalance)?.toLocaleString("ru-RU")} so'm
+        </div>
       </div>
       {selectedModels.length > 0 ? (
         <>
