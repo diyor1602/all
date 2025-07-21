@@ -32,6 +32,8 @@ const Models = () => {
   const [packetDialogOpen, setPacketDialogOpen] = useState(false);
   const [selectedTarifForPacket, setSelectedTarifForPacket] = useState(null);
   const [sendingPacketId, setSendingPacketId] = useState(null);
+  const [dialogPacketId, setDialogPacketId] = useState(null);
+  const [creatingPacketId, setCreatingPacketId] = useState(null);
 
   const removeTarificationFromSelected = (tarifId) => {
     setSelectedModels((prev) =>
@@ -126,13 +128,14 @@ const Models = () => {
   };
 
   const handleAddPacket = async (id) => {
+    setCreatingPacketId(id);
     try {
       await api.post("/tailor/packets", {
         items: [{ tarification_id: id }],
       });
       await getPackets();
       removeTarificationFromSelected(id);
-      setPacketDialogOpen(false); // close dialog
+      setPacketDialogOpen(false);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -141,10 +144,13 @@ const Models = () => {
           error.response?.data?.message ||
           "Paket qo'shishda xatolik yuz berdi.",
       });
+    } finally {
+      setCreatingPacketId(null);
     }
   };
 
   const handleAddPacketExisting = async (id) => {
+    setDialogPacketId(id);
     try {
       await api.patch(`/tailor/packets/${id}`, {
         items: [{ tarification_id: selectedTarifForPacket }],
@@ -160,6 +166,8 @@ const Models = () => {
           error.response?.data?.message ||
           "Paket qo'shishda xatolik yuz berdi.",
       });
+    } finally {
+      setDialogPacketId(null);
     }
   };
 
@@ -205,21 +213,28 @@ const Models = () => {
             <DialogTitle>Paketlar</DialogTitle>
             <DialogDescription>Paket tanlang</DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-scroll">
+          <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
             {packets?.map((packet, index) => (
-              <div
+              <button
                 key={index}
-                className="bg-green-50 p-4 rounded-md flex cursor-pointer justify-between gap-3 shadow-md border border-green-500"
-                onClick={() => {
-                  handleAddPacketExisting(packet.id);
-                }}
+                className={`bg-green-50 p-4 text-lg rounded-md flex justify-between items-center gap-3 shadow-md border border-green-500 transition-all duration-300 ${
+                  dialogPacketId === packet.id
+                    ? "opacity-50 pointer-events-none"
+                    : "cursor-pointer"
+                }`}
+                onClick={() => handleAddPacketExisting(packet.id)}
+                disabled={dialogPacketId === packet.id}
               >
-                <div className="truncate font-medium">
+                <div className="truncate font-medium flex-1">
                   {packet.tarification_packets_items
                     ?.map((item) => item.tarification?.code)
                     .join(", ")}
                 </div>
-              </div>
+
+                {dialogPacketId === packet.id && (
+                  <Loader2 className="animate-spin w-5 h-5 text-green-600" />
+                )}
+              </button>
             ))}
             <Button
               variant="link"
@@ -227,8 +242,13 @@ const Models = () => {
               onClick={() => {
                 handleAddPacket(selectedTarifForPacket);
               }}
+              disabled={creatingPacketId === selectedTarifForPacket}
             >
-              Yangi paketga qo'shish
+              {creatingPacketId === selectedTarifForPacket ? (
+                <Loader2 className="animate-spin text-green-600" />
+              ) : (
+                "Yangi paketga qo'shish"
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -294,7 +314,6 @@ const Models = () => {
                 key={index}
                 className="text-sm rounded-sm px-2 py-1 bg-gray-200 flex items-center gap-2"
               >
-                {console.log(model)}
                 {model.model?.model?.name} - {model.model?.submodel?.name}
                 <X
                   className="cursor-pointer"
