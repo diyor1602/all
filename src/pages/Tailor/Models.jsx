@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
-import { Box, Check, Loader2, Plus, PlusCircle, X } from "lucide-react";
+import { Box, Check, Loader2, Plus, PlusCircle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,6 +31,7 @@ const Models = () => {
   const [displayBalance, setDisplayBalance] = useState(0);
   const [packetDialogOpen, setPacketDialogOpen] = useState(false);
   const [selectedTarifForPacket, setSelectedTarifForPacket] = useState(null);
+  const [sendingPacketId, setSendingPacketId] = useState(null);
 
   const removeTarificationFromSelected = (tarifId) => {
     setSelectedModels((prev) =>
@@ -159,6 +160,40 @@ const Models = () => {
           error.response?.data?.message ||
           "Paket qo'shishda xatolik yuz berdi.",
       });
+    }
+  };
+
+  const handleSendPacket = async (id) => {
+    setSendingPacketId(id);
+    try {
+      const packet = packets.find((p) => p.id === id);
+      if (!packet) {
+        throw new Error("Paket topilmadi.");
+      }
+
+      const requests = packet.tarification_packets_items.map((item) =>
+        api.post("/tailor/tarificationLog", {
+          tarification_id: item.tarification_id,
+        })
+      );
+
+      await Promise.all(requests);
+
+      const audio = new Audio(CoinsAudio);
+      audio.play();
+
+      await getBalance();
+      await getPackets();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Paket yuborishda xatolik yuz berdi.",
+      });
+    } finally {
+      setSendingPacketId(null);
     }
   };
 
@@ -294,7 +329,7 @@ const Models = () => {
                           key={index}
                           className="flex items-center gap-2 bg-white border border-gray-300 p-2 rounded-lg shadow-sm"
                         >
-                          <div className="flex flex-col gap-1 items-center">
+                          <div className="flex flex-col items-center">
                             <span className="text-sm font-medium text-gray-800">
                               {item.tarification?.code}
                             </span>
@@ -313,6 +348,26 @@ const Models = () => {
                       ))}
                     </div>
                   </div>
+                  <Button
+                    className="w-full mt-4 h-[60px]"
+                    disabled={sendingPacketId === packet.id}
+                    onClick={() => {
+                      setSendingPacketId(packet.id);
+                      handleSendPacket(packet.id);
+                    }}
+                  >
+                    {sendingPacketId === packet.id ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        Bajarilmoqda
+                      </>
+                    ) : (
+                      <>
+                        <Send />
+                        Bajarish
+                      </>
+                    )}
+                  </Button>
                 </div>
               ))}
             </div>
