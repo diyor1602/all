@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
-import { Check, Loader2, Plus, PlusCircle, X } from "lucide-react";
+import { Box, Check, Loader2, Plus, PlusCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,6 +29,8 @@ const Models = () => {
   const [modelsOpen, setModelsOpen] = useState(false);
   const [sendingID, setSendingID] = useState(null);
   const [displayBalance, setDisplayBalance] = useState(0);
+  const [packetDialogOpen, setPacketDialogOpen] = useState(false);
+  const [selectedTarifForPacket, setSelectedTarifForPacket] = useState(null);
 
   const getPackets = async () => {
     try {
@@ -38,7 +40,9 @@ const Models = () => {
       toast({
         variant: "destructive",
         title: "Xatolik!",
-        description: "Paketlarni olishda xatolik yuz berdi.",
+        description:
+          error.response?.data?.message ||
+          "Paketlarni olishda xatolik yuz berdi.",
       });
     }
   };
@@ -51,7 +55,9 @@ const Models = () => {
       toast({
         variant: "destructive",
         title: "Xatolik!",
-        description: "Modellarni olishda xatolik yuz berdi.",
+        description:
+          error.response?.data?.message ||
+          "Modellarni olishda xatolik yuz berdi.",
       });
     }
   };
@@ -69,7 +75,9 @@ const Models = () => {
       toast({
         variant: "destructive",
         title: "Xatolik!",
-        description: "Balansni olishda xatolik yuz berdi.",
+        description:
+          error.response?.data?.message ||
+          "Balansni olishda xatolik yuz berdi.",
       });
     }
   };
@@ -93,15 +101,86 @@ const Models = () => {
       toast({
         variant: "destructive",
         title: "Xatolik!",
-        description: "Ishni bajarishda xatolik yuz berdi.",
+        description:
+          error.response?.data?.message ||
+          "Ishni bajarishda xatolik yuz berdi.",
       });
     } finally {
       setSendingID(null);
     }
   };
 
+  const handleAddPacket = async (id) => {
+    try {
+      await api.post("/tailor/packets", {
+        items: [{ tarification_id: id }],
+      });
+      await getPackets();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Paket qo'shishda xatolik yuz berdi.",
+      });
+    }
+  };
+
+  const handleAddPacketExisting = async (id) => {
+    try {
+      await api.patch(`/tailor/packets/${id}`, {
+        items: [{ tarification_id: selectedTarifForPacket }],
+      });
+      await getPackets();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Paket qo'shishda xatolik yuz berdi.",
+      });
+    }
+  };
+
   return (
     <>
+      <Dialog open={packetDialogOpen} onOpenChange={setPacketDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Paketlar</DialogTitle>
+            <DialogDescription>Paket tanlang</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-scroll">
+            {packets?.map((packet, index) => (
+              <div
+                key={index}
+                className="bg-green-50 p-4 rounded-md flex cursor-pointer justify-between gap-3 shadow-md border border-green-500"
+                onClick={() => {
+                  handleAddPacketExisting(packet.id);
+                }}
+              >
+                <div className="truncate font-medium">
+                  {packet.tarification_packets_items
+                    ?.map((item) => item.tarification?.code)
+                    .join(", ")}
+                </div>
+              </div>
+            ))}
+            <Button
+              variant="link"
+              className="mt-4 w-fit"
+              onClick={() => {
+                handleAddPacket(selectedTarifForPacket);
+              }}
+            >
+              Yangi paketga qo'shish
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={modelsOpen} onOpenChange={setModelsOpen}>
         <DialogContent>
           <DialogHeader>
@@ -217,6 +296,43 @@ const Models = () => {
                       className="flex flex-col gap-2 bg-white p-2 rounded-md border border-gray-200 relative"
                     >
                       <div className="grid grid-cols-2 gap-2 mt-5">
+                        <Box
+                          onClick={() => {
+                            if (!work.id) {
+                              toast({
+                                variant: "destructive",
+                                title: "Diqqat!",
+                                description: "Avval ishni tanlang.",
+                                duration: 1200,
+                              });
+                              return;
+                            }
+                            if (
+                              packets.some((packet) =>
+                                packet.tarification_packets_items.some(
+                                  (item) => item.tarification_id === work.id
+                                )
+                              )
+                            ) {
+                              toast({
+                                variant: "destructive",
+                                title: "Diqqat!",
+                                description:
+                                  "Bu ishni allaqachon paketga qo'shilgan.",
+                                duration: 1200,
+                              });
+                              return;
+                            }
+                            if (packets.length === 0) {
+                              handleAddPacket(work.id);
+                            } else {
+                              setSelectedTarifForPacket(work.id);
+                              setPacketDialogOpen(true);
+                            }
+                          }}
+                          size={16}
+                          className="absolute top-2 left-2 cursor-pointer"
+                        />
                         <X
                           onClick={() => {
                             model.works.splice(index, 1);
