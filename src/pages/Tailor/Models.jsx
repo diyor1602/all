@@ -32,6 +32,20 @@ const Models = () => {
   const [packetDialogOpen, setPacketDialogOpen] = useState(false);
   const [selectedTarifForPacket, setSelectedTarifForPacket] = useState(null);
 
+  const removeTarificationFromSelected = (tarifId) => {
+    setSelectedModels((prev) =>
+      prev
+        .map((model) => {
+          const filteredWorks = model.works.filter(
+            (work) => work.id !== tarifId
+          );
+          if (filteredWorks.length === 0) return null;
+          return { ...model, works: filteredWorks };
+        })
+        .filter(Boolean)
+    );
+  };
+
   const getPackets = async () => {
     try {
       const response = await api.get("/tailor/packets");
@@ -116,6 +130,8 @@ const Models = () => {
         items: [{ tarification_id: id }],
       });
       await getPackets();
+      removeTarificationFromSelected(id);
+      setPacketDialogOpen(false); // close dialog
     } catch (error) {
       toast({
         variant: "destructive",
@@ -133,6 +149,8 @@ const Models = () => {
         items: [{ tarification_id: selectedTarifForPacket }],
       });
       await getPackets();
+      removeTarificationFromSelected(selectedTarifForPacket);
+      setPacketDialogOpen(false); // close dialog
     } catch (error) {
       toast({
         variant: "destructive",
@@ -262,6 +280,43 @@ const Models = () => {
               <Plus /> Model qo'shish
             </Button>
           </div>
+          {packets.length > 0 && (
+            <div className="flex flex-col gap-2 mt-4">
+              {packets.map((packet, index) => (
+                <div
+                  key={index}
+                  className="p-4 rounded-xl bg-yellow-100 border border-yellow-500 shadow-sm"
+                >
+                  <div className="flex items-center gap-3 justify-between flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {packet.tarification_packets_items?.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 bg-white border border-gray-300 p-2 rounded-lg shadow-sm"
+                        >
+                          <div className="flex flex-col gap-1 items-center">
+                            <span className="text-sm font-medium text-gray-800">
+                              {item.tarification?.code}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {balance?.find(
+                                (b) =>
+                                  b.tarification?.id === item.tarification?.id
+                              )?.quantity || "0"}
+                            </span>
+                          </div>
+                          <X
+                            className="cursor-pointer text-gray-500 hover:text-red-500 transition"
+                            size={14}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex flex-col gap-2 mt-4">
             {selectedModels.map((model, index) => (
               <div
@@ -408,9 +463,18 @@ const Models = () => {
                                   )
                                   ?.tarification?.filter(
                                     (tarification) =>
+                                      // not already selected in this model
                                       !model.works.some(
                                         (w) =>
                                           w.id === tarification.id && w !== work
+                                      ) &&
+                                      // not already included in any packet
+                                      !packets.some((packet) =>
+                                        packet.tarification_packets_items.some(
+                                          (item) =>
+                                            item.tarification_id ===
+                                            tarification.id
+                                        )
                                       )
                                   )
                                   ?.map((tarification, index) => (
