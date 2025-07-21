@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CoinsAudio from "/coins.wav";
 
 const Models = () => {
   const { toast } = useToast();
@@ -86,6 +87,8 @@ const Models = () => {
         tarification_id: id,
       });
       await getBalance();
+      const audio = new Audio(CoinsAudio);
+      audio.play();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -184,18 +187,9 @@ const Models = () => {
             {selectedModels.map((model, index) => (
               <div
                 key={index}
-                className="bg-white p-4 rounded-md border-2 border-blue-300 relative"
+                className="p-4 rounded-md border-2 border-blue-300"
               >
-                <X
-                  className="cursor-pointer absolute top-2 right-2"
-                  size={14}
-                  onClick={() => {
-                    setSelectedModels((prev) =>
-                      prev.filter((item) => item.model.id !== model.model.id)
-                    );
-                  }}
-                />
-                <div className="flex items-center gap-2 justify-between flex-wrap mt-4">
+                <div className="flex items-center gap-2 justify-between flex-wrap">
                   <div className="truncate font-medium">
                     {model.model?.model?.name} - {model.model?.submodel?.name}
                   </div>
@@ -220,76 +214,123 @@ const Models = () => {
                   {model.works?.map((work, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 justify-between"
+                      className="flex flex-col gap-2 bg-white p-2 rounded-md border border-gray-200 relative"
                     >
-                      <Select
-                        value={work.cat_id}
-                        onValueChange={(value) => {
-                          model.works[index].cat_id = value;
-                          model.works[index].id = "";
-                          model.works[index].name = "";
-                          model.works[index].code = "";
-                          setSelectedModels((prev) => [...prev]);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Kategoriyani tanlang" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {model.model?.tarification_categories?.map(
-                            (category, index) => (
-                              <SelectItem key={index} value={category.id}>
-                                {category.name}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                      {work.cat_id && (
-                        <>
-                          <Select
-                            value={work.id}
-                            onValueChange={(value) => {
-                              const selectedTarification =
-                                model.model?.tarification_categories
+                      <div className="grid grid-cols-2 gap-2 mt-5">
+                        <X
+                          onClick={() => {
+                            model.works.splice(index, 1);
+                            setSelectedModels((prev) => [...prev]);
+                            if (model.works.length === 0) {
+                              setSelectedModels((prev) =>
+                                prev.filter((item) => item.id !== model.id)
+                              );
+                            }
+                          }}
+                          size={16}
+                          className="absolute top-2 right-2 cursor-pointer"
+                        />
+                        <Select
+                          value={work.cat_id}
+                          onValueChange={(value) => {
+                            model.works[index].cat_id = value;
+                            model.works[index].id = "";
+                            model.works[index].name = "";
+                            model.works[index].code = "";
+                            model.works[index].summa = "";
+                            model.works[index].second = "";
+                            setSelectedModels((prev) => [...prev]);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Kategoriyani tanlang" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {model.model?.tarification_categories?.map(
+                              (category, index) => (
+                                <SelectItem key={index} value={category.id}>
+                                  <div className="break-words whitespace-normal max-w-[250px] text-left">
+                                    {category.name}
+                                  </div>
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {work.cat_id && (
+                          <>
+                            <Select
+                              value={work.id}
+                              onValueChange={(value) => {
+                                const selectedTarification =
+                                  model.model?.tarification_categories
+                                    ?.find(
+                                      (category) => category.id === work.cat_id
+                                    )
+                                    ?.tarification?.find((t) => t.id === value);
+                                model.works[index].id = value;
+                                model.works[index].name =
+                                  selectedTarification?.name || "";
+                                model.works[index].code =
+                                  selectedTarification?.code || "";
+                                model.works[index].summa =
+                                  selectedTarification?.summa || "";
+                                model.works[index].second =
+                                  selectedTarification?.second || "";
+                                setSelectedModels((prev) => [...prev]);
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Ishni tanlang">
+                                  {work.code || ""}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {model.model?.tarification_categories
                                   ?.find(
                                     (category) => category.id === work.cat_id
                                   )
-                                  ?.tarification?.find((t) => t.id === value);
-                              model.works[index].id = value;
-                              model.works[index].name =
-                                selectedTarification?.name || "";
-                              model.works[index].code =
-                                selectedTarification?.code || "";
-                              setSelectedModels((prev) => [...prev]);
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Ishni tanlang">
-                                {work.code || ""}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {model.model?.tarification_categories
-                                ?.find(
-                                  (category) => category.id === work.cat_id
-                                )
-                                ?.tarification?.map((tarification, index) => (
-                                  <SelectItem
-                                    key={index}
-                                    value={tarification.id}
-                                  >
-                                    {tarification.code} - {tarification.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
+                                  ?.tarification?.filter(
+                                    (tarification) =>
+                                      !model.works.some(
+                                        (w) =>
+                                          w.id === tarification.id && w !== work
+                                      )
+                                  )
+                                  ?.map((tarification, index) => (
+                                    <SelectItem
+                                      key={index}
+                                      value={tarification.id}
+                                    >
+                                      <div className="break-words whitespace-normal max-w-[250px]">
+                                        {tarification.code} -{" "}
+                                        {tarification.name}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        {work.id && (
+                          <div>
+                            <div>{work.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {parseInt(work.summa)} so'm / {work.second} sekund
+                            </div>
+                          </div>
+                        )}
+                        {work.cat_id && (
                           <Button
                             onClick={() => {
                               setSendingID(work.id);
                               handleDone(work.id);
                             }}
                             disabled={sendingID === work.id || !work.id}
+                            className="h-[60px]"
                           >
                             {sendingID === work.id ? (
                               <>
@@ -307,8 +348,8 @@ const Models = () => {
                               </>
                             )}
                           </Button>
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
