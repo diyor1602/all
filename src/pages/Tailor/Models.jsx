@@ -226,6 +226,7 @@ const Models = () => {
                         value={work.cat_id}
                         onValueChange={(value) => {
                           model.works[index].cat_id = value;
+                          model.works[index].id = "";
                           setSelectedModels((prev) => [...prev]);
                         }}
                       >
@@ -247,12 +248,24 @@ const Models = () => {
                           <Select
                             value={work.id}
                             onValueChange={(value) => {
+                              const selectedTarification =
+                                model.model?.tarification_categories
+                                  ?.find(
+                                    (category) => category.id === work.cat_id
+                                  )
+                                  ?.tarification?.find((t) => t.id === value);
                               model.works[index].id = value;
+                              model.works[index].name =
+                                selectedTarification?.name || "";
+                              model.works[index].code =
+                                selectedTarification?.code || "";
                               setSelectedModels((prev) => [...prev]);
                             }}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Ishni tanlang" />
+                              <SelectValue placeholder="Ishni tanlang">
+                                {work.code || ""}
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {model.model?.tarification_categories
@@ -264,7 +277,7 @@ const Models = () => {
                                     key={index}
                                     value={tarification.id}
                                   >
-                                    {tarification.name}
+                                    {tarification.code} - {tarification.name}
                                   </SelectItem>
                                 ))}
                             </SelectContent>
