@@ -46,6 +46,45 @@ const Models = () => {
   const [deletingTarifPacketId, setDeletingTarifPacketId] = useState(null);
   const [deletingPacketId, setDeletingPacketId] = useState(null);
 
+  const getFormattedYesterday = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const mm = String(yesterday.getMonth() + 1).padStart(2, "0");
+    const dd = String(yesterday.getDate()).padStart(2, "0");
+    const yyyy = yesterday.getFullYear();
+    return `${mm}-${dd}-${yyyy}`;
+  };
+
+  const handleLoadYesterdayWorks = async () => {
+    try {
+      const date = getFormattedYesterday();
+      const response = await api.get(`/tailor/balance?date=${date}`);
+      const yesterdayBalance = response.data;
+
+      if (yesterdayBalance.length === 0) {
+        toast({
+          title: "Diqqat",
+          description: "Kechagi ishlar topilmadi.",
+        });
+        return;
+      }
+
+      autoSelectFromBalance(yesterdayBalance, models);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Kechagi ishlar yuklandi.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description:
+          error.response?.data?.message ||
+          "Kechagi ishlarni olishda xatolik yuz berdi.",
+      });
+    }
+  };
+
   const removeTarificationFromSelected = (tarifId) => {
     setSelectedModels((prev) =>
       prev
@@ -431,7 +470,16 @@ const Models = () => {
         <div className="text-2xl font-bold text-yellow-500">
           {parseInt(displayBalance)?.toLocaleString("ru-RU")} so'm
         </div>
+
+        <Button
+          onClick={handleLoadYesterdayWorks}
+          className="mt-2"
+          variant="outline"
+        >
+          Kechagi ishlarni qilish
+        </Button>
       </div>
+
       {selectedModels.length > 0 ? (
         <>
           <div className="flex gap-2 w-full flex-wrap mt-4 items-center">
