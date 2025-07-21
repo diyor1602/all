@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
-import { Box, Check, Loader2, Plus, PlusCircle, Send, X } from "lucide-react";
+import {
+  Box,
+  Check,
+  Loader2,
+  Plus,
+  PlusCircle,
+  Send,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,6 +43,8 @@ const Models = () => {
   const [sendingPacketId, setSendingPacketId] = useState(null);
   const [dialogPacketId, setDialogPacketId] = useState(null);
   const [creatingPacketId, setCreatingPacketId] = useState(null);
+  const [deletingTarifPacketId, setDeletingTarifPacketId] = useState(null);
+  const [deletingPacketId, setDeletingPacketId] = useState(null);
 
   const removeTarificationFromSelected = (tarifId) => {
     setSelectedModels((prev) =>
@@ -205,6 +216,42 @@ const Models = () => {
     }
   };
 
+  const handleDeletingtTarifPacketId = async (id) => {
+    setDeletingTarifPacketId(id);
+    try {
+      await api.delete(`/tailor/packets/item/${id}`);
+      await getPackets();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Paket yuborishda xatolik yuz berdi.",
+      });
+    } finally {
+      setDeletingTarifPacketId(null);
+    }
+  };
+
+  const handleDeletingPacket = async (id) => {
+    setDeletingPacketId(id);
+    try {
+      await api.delete(`/tailor/packets/${id}`);
+      await getPackets();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Paket yuborishda xatolik yuz berdi.",
+      });
+    } finally {
+      setDeletingPacketId(null);
+    }
+  };
+
   return (
     <>
       <Dialog open={packetDialogOpen} onOpenChange={setPacketDialogOpen}>
@@ -359,34 +406,62 @@ const Models = () => {
                               )?.quantity || "0"}
                             </span>
                           </div>
-                          <X
-                            className="cursor-pointer text-gray-500 hover:text-red-500 transition"
-                            size={14}
-                          />
+                          {deletingTarifPacketId === item.id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <X
+                              className="cursor-pointer text-gray-500 hover:text-red-500 transition"
+                              size={14}
+                              onClick={() => {
+                                handleDeletingtTarifPacketId(item.id);
+                              }}
+                            />
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
-                  <Button
-                    className="w-full mt-4 h-[60px]"
-                    disabled={sendingPacketId === packet.id}
-                    onClick={() => {
-                      setSendingPacketId(packet.id);
-                      handleSendPacket(packet.id);
-                    }}
-                  >
-                    {sendingPacketId === packet.id ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        Bajarilmoqda
-                      </>
-                    ) : (
-                      <>
-                        <Send />
-                        Bajarish
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      className="w-full mt-4 h-[60px]"
+                      disabled={sendingPacketId === packet.id}
+                      onClick={() => {
+                        setSendingPacketId(packet.id);
+                        handleSendPacket(packet.id);
+                      }}
+                    >
+                      {sendingPacketId === packet.id ? (
+                        <>
+                          <Loader2 className="animate-spin" />
+                          Bajarilmoqda
+                        </>
+                      ) : (
+                        <>
+                          <Send />
+                          Bajarish
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      className="w-fit mt-4 h-[60px]"
+                      variant="outline"
+                      disabled={deletingPacketId === packet.id}
+                      onClick={() => {
+                        setDeletingPacketId(packet.id);
+                        handleDeletingPacket(packet.id);
+                      }}
+                    >
+                      {deletingPacketId === packet.id ? (
+                        <>
+                          <Loader2 className="animate-spin" />
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 />
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
