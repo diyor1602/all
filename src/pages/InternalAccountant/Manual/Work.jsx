@@ -88,6 +88,7 @@ const Work = () => {
 
   // Search and sort states
   const [searchTerm, setSearchTerm] = useState("");
+  const [employeeSearch, setEmployeeSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({
     key: "code",
     direction: "asc",
@@ -107,14 +108,22 @@ const Work = () => {
     let filtered = [...(tarifLogs || [])];
 
     // Apply search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (log) =>
+    if (searchTerm || employeeSearch) {
+      const term = searchTerm?.toLowerCase() || "";
+      const employeeTerm = employeeSearch?.toLowerCase() || "";
+
+      filtered = filtered.filter((log) => {
+        const matchesSearch =
+          !searchTerm ||
           log?.tarification?.code?.toLowerCase().includes(term) ||
-          log?.tarification?.name?.toLowerCase().includes(term) ||
-          log?.employee?.name?.toLowerCase().includes(term)
-      );
+          log?.tarification?.name?.toLowerCase().includes(term);
+
+        const matchesEmployee =
+          !employeeSearch ||
+          log?.employee?.name?.toLowerCase().includes(employeeTerm);
+
+        return matchesSearch && matchesEmployee;
+      });
     }
 
     // Apply sorting
@@ -144,7 +153,7 @@ const Work = () => {
 
       return sortConfig.direction === "asc" ? compare : -compare;
     });
-  }, [tarifLogs, searchTerm, sortConfig]);
+  }, [tarifLogs, searchTerm, employeeSearch, sortConfig]);
 
   const editExistingWork = async () => {
     setEditing(true);
@@ -788,12 +797,16 @@ const Work = () => {
           </div>
 
           <div className="bg-white p-4">
-            <div className="mb-4">
+            <div className="mb-4 flex items-center gap-2">
               <Input
-                placeholder="Qidirish (kod, nomi, xodim)"
+                placeholder="Ish bo'yicha qidirish"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="mb-4"
+              />
+              <Input
+                placeholder="Xodim bo'yicha qidirish"
+                value={employeeSearch}
+                onChange={(e) => setEmployeeSearch(e.target.value)}
               />
             </div>
             <table className="border border-collapse w-full">
