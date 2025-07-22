@@ -505,6 +505,7 @@ const Models = () => {
               size="sm"
               variant="outline"
               onClick={() => setModelsOpen(true)}
+              className="bg-green-500 text-white hover:bg-green-600 hover:text-white"
             >
               <Plus /> Model qo'shish
             </Button>
@@ -617,6 +618,7 @@ const Models = () => {
                       });
                       setSelectedModels((prev) => [...prev]);
                     }}
+                    className="bg-yellow-500 text-white hover:bg-yellow-600 hover:text-white"
                   >
                     <PlusCircle /> Ish qo'shish
                   </Button>
@@ -663,7 +665,7 @@ const Models = () => {
                             }
                           }}
                           size={16}
-                          className="absolute top-2 left-2 cursor-pointer"
+                          className="absolute top-2 left-2 cursor-pointer text-red-500"
                         />
                         <X
                           onClick={() => {
