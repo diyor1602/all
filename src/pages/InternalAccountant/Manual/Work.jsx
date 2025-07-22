@@ -712,14 +712,75 @@ const Work = () => {
               </div>
             </div>
           </div>
-
           {order?.comment && (
             <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
               <MessageSquareIcon className="h-4 w-4 text-gray-500 mt-1" />
               <span className="text-sm">{order?.comment}</span>
             </div>
           )}
+          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+            <span className="text-sm">
+              Ishchilarga <span className="font-bold">ajratilgan</span> jami
+              summa:
+            </span>
+            <span className="text-sm font-bold">
+              {(
+                parseFloat(order?.order_model?.rasxod || 0) *
+                parseFloat(order?.quantity || 0)
+              ).toLocaleString("ru-RU", {
+                maximumFractionDigits: 0,
+              })}{" "}
+              so'm
+            </span>
+          </div>
+          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+            <span className="text-sm">
+              Ishchilar <span className="font-bold">topgan</span> jami summa:
+            </span>
+            <span className="text-sm font-bold">
+              {tarifLogs
+                ?.reduce((acc, log) => acc + parseFloat(log?.amount_earned), 0)
+                ?.toLocaleString("ru-RU", {
+                  maximumFractionDigits: 0,
+                })}{" "}
+              so'm
+            </span>
+          </div>{" "}
+          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-4 flex-wrap">
+            <span className="text-sm">Sarflangan foiz:</span>
+            <span className="text-sm font-bold">
+              {(
+                (tarifLogs?.reduce(
+                  (acc, log) => acc + parseFloat(log?.amount_earned || 0),
+                  0
+                ) /
+                  (parseFloat(order?.order_model?.rasxod || 0) *
+                    parseFloat(order?.quantity || 0))) *
+                100
+              ).toLocaleString("ru-RU", {
+                maximumFractionDigits: 2,
+              })}
+              %
+            </span>
 
+            <span className="text-sm">Farqi:</span>
+            <span className="text-sm font-bold">
+              {(() => {
+                const allocated =
+                  parseFloat(order?.order_model?.rasxod || 0) *
+                  parseFloat(order?.quantity || 0);
+                const earned = tarifLogs?.reduce(
+                  (acc, log) => acc + parseFloat(log?.amount_earned || 0),
+                  0
+                );
+                const diff = allocated - earned;
+                const sign = diff > 0 ? "" : "";
+                return `${sign}${diff.toLocaleString("ru-RU", {
+                  maximumFractionDigits: 0,
+                })} so'm`;
+              })()}
+            </span>
+          </div>
           {order?.order_model?.sizes && order.order_model.sizes.length > 0 && (
             <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
               <h4 className="font-medium text-gray-700 mb-3 flex items-center">
