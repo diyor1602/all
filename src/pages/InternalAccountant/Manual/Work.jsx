@@ -725,12 +725,15 @@ const Work = () => {
             </span>
             <span className="text-sm font-bold">
               {(
-                parseFloat(order?.order_model?.rasxod || 0) *
-                parseFloat(order?.quantity || 0)
+                parseFloat(
+                  selectedTarifLang == "uz"
+                    ? totalSpendSummaUZ
+                    : totalSpendSummaRU || 0
+                ) * parseFloat(order?.quantity || 0)
               ).toLocaleString("ru-RU", {
                 maximumFractionDigits: 0,
               })}{" "}
-              so'm
+              {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
             </span>
           </div>
           <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
@@ -743,9 +746,9 @@ const Work = () => {
                 ?.toLocaleString("ru-RU", {
                   maximumFractionDigits: 0,
                 })}{" "}
-              so'm
+              {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
             </span>
-          </div>{" "}
+          </div>
           <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-4 flex-wrap">
             <span className="text-sm">Sarflangan foiz:</span>
             <span className="text-sm font-bold">
@@ -754,7 +757,11 @@ const Work = () => {
                   (acc, log) => acc + parseFloat(log?.amount_earned || 0),
                   0
                 ) /
-                  (parseFloat(order?.order_model?.rasxod || 0) *
+                  (parseFloat(
+                    selectedTarifLang == "uz"
+                      ? totalSpendSummaUZ
+                      : totalSpendSummaRU || 0
+                  ) *
                     parseFloat(order?.quantity || 0))) *
                 100
               ).toLocaleString("ru-RU", {
@@ -767,17 +774,23 @@ const Work = () => {
             <span className="text-sm font-bold">
               {(() => {
                 const allocated =
-                  parseFloat(order?.order_model?.rasxod || 0) *
-                  parseFloat(order?.quantity || 0);
+                  parseFloat(
+                    selectedTarifLang == "uz"
+                      ? totalSpendSummaUZ
+                      : totalSpendSummaRU || 0
+                  ) * parseFloat(order?.quantity || 0);
                 const earned = tarifLogs?.reduce(
                   (acc, log) => acc + parseFloat(log?.amount_earned || 0),
                   0
                 );
                 const diff = allocated - earned;
                 const sign = diff > 0 ? "" : "";
-                return `${sign}${diff.toLocaleString("ru-RU", {
-                  maximumFractionDigits: 0,
-                })} so'm`;
+                return `${sign}${diff.toLocaleString(
+                  selectedTarifLang == "uz" ? "ru-RU" : "ru-RU",
+                  {
+                    maximumFractionDigits: 0,
+                  }
+                )} ${selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}`;
               })()}
             </span>
           </div>
