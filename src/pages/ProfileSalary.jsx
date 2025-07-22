@@ -211,7 +211,7 @@ const SalaryDetails = () => {
               setSelectedMonth(e.target.value);
               setFilters(range);
             }}
-            className="w-48"
+            className="w-48 bg-white"
           />
         </div>
         <Card>
@@ -248,7 +248,7 @@ const SalaryDetails = () => {
               setSelectedMonth(e.target.value);
               setFilters(range);
             }}
-            className="w-48"
+            className="w-48 bg-white"
           />
         </div>
         <div className="text-sm text-muted-foreground">
@@ -455,7 +455,7 @@ const SalaryDetails = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-2 mb-4">
+            <TabsList className="grid grid-cols-3 mb-4">
               <TabsTrigger value="attendance">
                 Davomat
                 {employee.attendances?.length > 0 && (
@@ -472,6 +472,7 @@ const SalaryDetails = () => {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="model">Model</TabsTrigger>
             </TabsList>
             <TabsContent value="attendance" className="space-y-4">
               <Card>
@@ -719,7 +720,13 @@ const SalaryDetails = () => {
                                   {formatDate(log.date)}
                                 </span>
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 flex-wrap">
+                                <Badge
+                                  variant="outline"
+                                  className="bg-orange-100 truncate"
+                                >
+                                  {log.model?.name} - {log.submodel?.name || ""}
+                                </Badge>
                                 <Badge variant="outline" className="bg-blue-50">
                                   Miqdor: {log.quantity}
                                 </Badge>
@@ -728,7 +735,7 @@ const SalaryDetails = () => {
                                   className="bg-green-50"
                                 >
                                   {(
-                                    Number.parseFloat(log.tarification.summa) *
+                                    Number.parseFloat(log.tarification?.summa) *
                                     log.quantity
                                   ).toLocaleString("ru-RU", {
                                     maximumFractionDigits: 2,
@@ -797,6 +804,82 @@ const SalaryDetails = () => {
                       <p className="text-muted-foreground">
                         Tanlangan sana oralig'ida tarifikatsiya ma'lumotlari
                         topilmadi
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="model" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                    Model qaydnomasi
+                  </CardTitle>
+                  <CardDescription>
+                    {employee.employee_tarification_logs?.length > 0
+                      ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString(
+                          "ru-RU",
+                          {
+                            maximumFractionDigits: 2,
+                          }
+                        )} so'm`
+                      : "Tarifikatsiya ma'lumotlari mavjud emas"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {employee.employee_tarification_logs?.length > 0 ? (
+                    <div className="space-y-4">
+                      {(() => {
+                        const groupedByModelSubmodel = {};
+
+                        employee.employee_tarification_logs?.forEach((log) => {
+                          const modelName = log.model?.name || "Noma'lum model";
+                          const submodelName =
+                            log.submodel?.name || "Noma'lum submodel";
+                          const key = `${modelName} - ${submodelName}`;
+
+                          if (!groupedByModelSubmodel[key]) {
+                            groupedByModelSubmodel[key] = 0;
+                          }
+
+                          groupedByModelSubmodel[key] += parseFloat(
+                            log.amount_earned || 0
+                          );
+                        });
+
+                        const sortedModelGroups = Object.entries(
+                          groupedByModelSubmodel
+                        ).sort((a, b) => b[1] - a[1]);
+
+                        return (
+                          <div className="space-y-2">
+                            {sortedModelGroups.map(([combinedName, total]) => (
+                              <div
+                                key={combinedName}
+                                className="flex justify-between items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                              >
+                                <div className="font-medium">
+                                  {combinedName}
+                                </div>
+                                <div className="text-green-600 font-semibold">
+                                  {total.toLocaleString("ru-RU", {
+                                    maximumFractionDigits: 2,
+                                  })}{" "}
+                                  so'm
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">
+                        Tanlangan sana oralig'ida model ma'lumotlari topilmadi
                       </p>
                     </div>
                   )}

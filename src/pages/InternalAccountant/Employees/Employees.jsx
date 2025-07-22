@@ -27,7 +27,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { RotateCcw, Search, Download, Loader2 } from "lucide-react";
+import { RotateCcw, Search, Download, Loader2, Eye } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -41,6 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Link } from "react-router-dom";
 
 const formatPhoneNumber = (phone) => {
   return phone
@@ -387,6 +388,7 @@ const Employees = () => {
           <TableRow>
             <TableHead className="border text-center">#</TableHead>
             <TableHead className="border">F.I.O</TableHead>
+            <TableHead className="border">Ko'rish</TableHead>
             <TableHead className="border">Bo'lim</TableHead>
             <TableHead className="border">Lavozimi</TableHead>
             <TableHead className="border">Telefon</TableHead>
@@ -450,6 +452,13 @@ const Employees = () => {
                       </div>
                     </div>
                   </div>
+                </TableCell>
+                <TableCell className="border">
+                  <Button size="icon" variant="ghost" asChild>
+                    <Link to={`/internalAccountant/employees/${employee.id}`}>
+                      <Eye className="text-blue-500" />
+                    </Link>
+                  </Button>
                 </TableCell>
                 <TableCell className="border">
                   <div className="flex flex-col text-xs">
