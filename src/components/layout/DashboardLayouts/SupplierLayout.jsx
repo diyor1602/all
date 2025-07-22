@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Home, Calendar1 } from "lucide-react";
+import { BadgePercent, Home, Calendar1, Sprout } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -15,6 +15,7 @@ const navigation = [
     icon: Calendar1,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function SupplierLayout({ children }) {

@@ -14,6 +14,7 @@ import Kpi from "./pages/Kpi";
 import Profile from "./pages/Profile";
 import ProfileSalary from "./pages/ProfileSalary";
 import Issue from "./pages/Issue";
+import TailorRating from "./pages/TailorRating";
 import SuperHr from "./pages/SuperHR/SuperHr";
 import Technolog from "./pages/Technolog/Technolog";
 import CuttingMaster from "./pages/CuttingMaster/CuttingMaster";
@@ -67,6 +68,7 @@ function App() {
           <Route path="/profileSalary" element={<ProfileSalary />} />
           <Route path="/issue" element={<Issue />} />
           <Route path="/kpi" element={<Kpi />} />
+          <Route path="/tailorRating" element={<TailorRating />} />
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />

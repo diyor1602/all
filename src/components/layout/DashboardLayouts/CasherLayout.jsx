@@ -78,7 +78,7 @@ const navigation = [
   },
   {
     name: "Tikuvchilar",
-    href: "/casher/tailor",
+    href: "/tailorRating",
     icon: Sprout,
     onMobile: false,
   },

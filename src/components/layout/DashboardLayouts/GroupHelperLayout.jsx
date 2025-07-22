@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, FilePlus, Home, ListChecks } from "lucide-react";
+import { BadgePercent, FilePlus, Home, ListChecks, Sprout } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -21,6 +21,7 @@ const navigation = [
     icon: FilePlus,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function GroupHelperLayout({ children }) {

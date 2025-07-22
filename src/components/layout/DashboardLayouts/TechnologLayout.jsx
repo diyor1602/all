@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Home, Box, Bot, Plane } from "lucide-react";
+import { BadgePercent, Home, Box, Bot, Plane, Sprout } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -27,6 +27,7 @@ const navigation = [
     icon: Plane,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function TechnologLayout({ children }) {

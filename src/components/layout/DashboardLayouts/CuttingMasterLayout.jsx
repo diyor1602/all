@@ -5,6 +5,7 @@ import {
   PackageOpen,
   Printer,
   Scissors,
+  Sprout,
 } from "lucide-react";
 
 const navigation = [
@@ -33,6 +34,7 @@ const navigation = [
     icon: Scissors,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function CuttingMasterLayout({ children }) {

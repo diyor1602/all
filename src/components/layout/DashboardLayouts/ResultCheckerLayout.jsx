@@ -1,5 +1,11 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Building2, CircleCheckBig, Home } from "lucide-react";
+import {
+  BadgePercent,
+  Building2,
+  CircleCheckBig,
+  Home,
+  Sprout,
+} from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -21,6 +27,7 @@ const navigation = [
     icon: CircleCheckBig,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function ResultCheckerLayout({ children }) {

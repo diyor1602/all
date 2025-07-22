@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Home, Car, CalendarCheck } from "lucide-react";
+import { BadgePercent, Home, Car, CalendarCheck, Sprout } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -21,6 +21,7 @@ const navigation = [
     icon: Car,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function TransportLayout({ children }) {

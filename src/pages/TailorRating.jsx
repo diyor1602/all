@@ -40,7 +40,7 @@ const TailorRating = () => {
 
   const fetchData = async () => {
     try {
-      const response = await api.get("/tailor/topEarners", {
+      const response = await api.get("/topEarners", {
         params: {
           date: selectedDay,
         },
@@ -63,7 +63,7 @@ const TailorRating = () => {
     } catch (error) {
       toast({
         title: "Xatolik!",
-        description: "Data olishda xatolik",
+        description: error?.response?.data?.message || "Data olishda xatolik",
         variant: "destructive",
       });
     }

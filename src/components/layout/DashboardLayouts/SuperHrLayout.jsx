@@ -7,6 +7,7 @@ import {
   ChartColumnDecreasing,
   Swords,
   BadgePercent,
+  Sprout,
 } from "lucide-react";
 
 const navigation = [
@@ -42,6 +43,7 @@ const navigation = [
     icon: Settings,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function SuperHrLayout({ children }) {

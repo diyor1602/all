@@ -5,6 +5,7 @@ import {
   BadgePlus,
   Home,
   Settings,
+  Sprout,
 } from "lucide-react";
 
 const navigation = [
@@ -33,6 +34,7 @@ const navigation = [
     icon: Settings,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function WarehouseManagerLayout({ children }) {

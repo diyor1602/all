@@ -1,5 +1,12 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Home, Box, Puzzle, Building2 } from "lucide-react";
+import {
+  BadgePercent,
+  Home,
+  Box,
+  Puzzle,
+  Building2,
+  Sprout,
+} from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -27,6 +34,7 @@ const navigation = [
     icon: Building2,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function OrderManagerLayout({ children }) {

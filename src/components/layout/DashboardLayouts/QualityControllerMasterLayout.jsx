@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Home, Box, CircleCheckBig } from "lucide-react";
+import { BadgePercent, Home, Box, CircleCheckBig, Sprout } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -21,6 +21,7 @@ const navigation = [
     icon: CircleCheckBig,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function QualityControllerMasterLayout({ children }) {
