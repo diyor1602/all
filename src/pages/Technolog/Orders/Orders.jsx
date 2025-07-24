@@ -59,6 +59,9 @@ const Orders = () => {
   const [statusFilter, setStatusFilter] = useState(
     localStorage.getItem("statusFilter") || "tailoring"
   );
+  const [tarifFilter, setTarifFilter] = useState(
+    localStorage.getItem("tarifFilter") || "all"
+  );
   const [sortBy, setSortBy] = useState(
     localStorage.getItem("sortBy") || "newest"
   );
@@ -102,7 +105,19 @@ const Orders = () => {
       const matchesStatus =
         statusFilter === "all" || order.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
+      // Tarif filter
+      const matchesTarif =
+        tarifFilter === "all" ||
+        (tarifFilter === "yes" &&
+          order.order_model?.submodels?.some(
+            (submodel) => submodel?.has_tarifications
+          )) ||
+        (tarifFilter === "no" &&
+          !order.order_model?.submodels?.some(
+            (submodel) => submodel?.has_tarifications
+          ));
+
+      return matchesSearch && matchesStatus && matchesTarif;
     })
     .sort((a, b) => {
       if (sortBy === "newest") return b.id - a.id;
@@ -153,6 +168,23 @@ const Orders = () => {
                 className="pl-8 w-full sm:w-64 bg-white"
               />
             </div>
+
+            <Select
+              value={tarifFilter}
+              onValueChange={(value) => {
+                setTarifFilter(value);
+                localStorage.setItem("tarifFilter", value);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-40 bg-white">
+                <SelectValue placeholder="Tarifikatsiya" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barchasi</SelectItem>
+                <SelectItem value="yes">Tarif borlari</SelectItem>
+                <SelectItem value="no">Tarif yo'qlari</SelectItem>
+              </SelectContent>
+            </Select>
 
             <Select
               value={statusFilter}
@@ -323,9 +355,20 @@ const Orders = () => {
                     {order.order_model?.submodels?.map((submodel) => (
                       <Badge
                         key={submodel.id}
-                        className="bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5 hover:bg-gray-100"
+                        className={
+                          submodel.has_tarifications
+                            ? "bg-gray-50 text-gray-700 flex gap-2 hover:bg-gray-100 hover:text-gray-600"
+                            : "bg-red-50 text-red-500 flex gap-2 hover:bg-red-100 hover:text-red-600"
+                        }
                       >
-                        <Box size={14} className="text-gray-500" />
+                        <Box
+                          size={14}
+                          className={
+                            submodel.has_tarifications
+                              ? "text-gray-700"
+                              : "text-red-500"
+                          }
+                        />
                         {submodel?.submodel?.name}
                       </Badge>
                     ))}
