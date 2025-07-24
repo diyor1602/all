@@ -473,8 +473,7 @@ const Models = () => {
 
         <Button
           onClick={handleLoadYesterdayWorks}
-          className="mt-2"
-          variant="outline"
+          className="mt-2 bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
         >
           Kechagi ishlarni qilish
         </Button>
