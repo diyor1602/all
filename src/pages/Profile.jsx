@@ -347,6 +347,12 @@ const Profile = () => {
                       {data.department || "-"}
                     </p>
                   </div>
+                  {data.group && (
+                    <div className="border-b pb-2">
+                      <p className="text-sm text-gray-500">Guruh</p>
+                      <p className="font-medium text-lg">{data.group}</p>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-4">
                   <div className="border-b pb-2">
