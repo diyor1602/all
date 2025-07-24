@@ -161,12 +161,12 @@ const Models = () => {
       };
 
       if (!modelInSelected) {
-        selected.push({
+        selected.unshift({
           model: fullModel,
           works: [workData],
         });
       } else {
-        modelInSelected.works.push(workData);
+        modelInSelected.works.unshift(workData);
       }
     });
 
@@ -428,7 +428,7 @@ const Models = () => {
             {models
               ?.filter(
                 (model) =>
-                  !selectedModels.includes(model) &&
+                  !selectedModels.some((s) => s.model.id === model.id) &&
                   model.tarification_categories?.length > 0
               )
               ?.map((model, index) => (
@@ -437,7 +437,6 @@ const Models = () => {
                   className="bg-white p-4 rounded-md flex cursor-pointer justify-between gap-3 shadow-md border border-gray-200"
                   onClick={() => {
                     setSelectedModels((prev) => [
-                      ...prev,
                       {
                         model: model,
                         works: [
@@ -450,6 +449,7 @@ const Models = () => {
                           },
                         ],
                       },
+                      ...prev,
                     ]);
                     setModelsOpen(false);
                   }}
@@ -608,7 +608,7 @@ const Models = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      model.works.push({
+                      model.works.unshift({
                         id: "",
                         name: "",
                         summa: "",
@@ -670,15 +670,19 @@ const Models = () => {
                           onClick={() => {
                             model.works.splice(index, 1);
                             setSelectedModels((prev) => [...prev]);
+
                             if (model.works.length === 0) {
                               setSelectedModels((prev) =>
-                                prev.filter((item) => item.id !== model.id)
+                                prev.filter(
+                                  (item) => item.model.id !== model.model.id
+                                )
                               );
                             }
                           }}
                           size={30}
                           className="absolute top-2 right-2 cursor-pointer"
                         />
+
                         <Select
                           value={work.cat_id}
                           onValueChange={(value) => {
@@ -828,7 +832,6 @@ const Models = () => {
                 className="bg-white p-4 rounded-md flex cursor-pointer justify-between gap-3 shadow-md border border-gray-200"
                 onClick={() => {
                   setSelectedModels((prev) => [
-                    ...prev,
                     {
                       model: model,
                       works: [
@@ -841,6 +844,7 @@ const Models = () => {
                         },
                       ],
                     },
+                    ...prev,
                   ]);
                 }}
               >
