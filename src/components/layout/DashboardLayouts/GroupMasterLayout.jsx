@@ -7,7 +7,6 @@ import {
   ListChecks,
   Medal,
   Shirt,
-  Sprout,
 } from "lucide-react";
 
 const navigation = [
@@ -44,11 +43,10 @@ const navigation = [
   },
   {
     name: "Reyting",
-    href: "/groupMaster/topEarners",
+    href: "/tailorRating",
     icon: Medal,
     onMobile: true,
   },
-  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
 ];
 
 export default function GroupMasterLayout({ children }) {
