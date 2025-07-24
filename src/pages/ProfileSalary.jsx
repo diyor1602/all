@@ -857,7 +857,6 @@ const SalaryDetails = () => {
                           <div className="space-y-2">
                             {sortedModelGroups.map(
                               ([combinedName, total], index) => {
-                                // Define an array of background colors with good contrast
                                 const colors = [
                                   "bg-blue-200 hover:bg-blue-300",
                                   "bg-green-200 hover:bg-green-300",
@@ -866,7 +865,6 @@ const SalaryDetails = () => {
                                   "bg-pink-200 hover:bg-pink-300",
                                   "bg-indigo-200 hover:bg-indigo-300",
                                 ];
-                                // Cycle through colors using modulo
                                 const colorClass =
                                   colors[index % colors.length];
 
