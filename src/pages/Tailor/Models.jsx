@@ -608,13 +608,16 @@ const Models = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => {
+                      const lastCatId = model.works[0]?.cat_id || "";
+
                       model.works.unshift({
                         id: "",
                         name: "",
                         summa: "",
                         second: "",
-                        cat_id: "",
+                        cat_id: lastCatId,
                       });
+
                       setSelectedModels((prev) => [...prev]);
                     }}
                     className="bg-yellow-500 text-white hover:bg-yellow-600 hover:text-white"
