@@ -628,7 +628,7 @@ const Models = () => {
                       key={index}
                       className="flex flex-col gap-2 bg-white p-2 rounded-md border border-gray-200 relative"
                     >
-                      <div className="grid grid-cols-2 gap-2 mt-5">
+                      <div className="grid grid-cols-2 gap-2 mt-10">
                         <ShoppingBasket
                           onClick={() => {
                             if (!work.id) {
@@ -663,7 +663,7 @@ const Models = () => {
                               setPacketDialogOpen(true);
                             }
                           }}
-                          size={16}
+                          size={30}
                           className="absolute top-2 left-2 cursor-pointer text-red-500"
                         />
                         <X
@@ -676,7 +676,7 @@ const Models = () => {
                               );
                             }
                           }}
-                          size={16}
+                          size={30}
                           className="absolute top-2 right-2 cursor-pointer"
                         />
                         <Select
