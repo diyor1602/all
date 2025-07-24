@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import {
-  Box,
+  ShoppingBasket,
   Check,
   Loader2,
   Plus,
@@ -629,7 +629,7 @@ const Models = () => {
                       className="flex flex-col gap-2 bg-white p-2 rounded-md border border-gray-200 relative"
                     >
                       <div className="grid grid-cols-2 gap-2 mt-5">
-                        <Box
+                        <ShoppingBasket
                           onClick={() => {
                             if (!work.id) {
                               toast({
