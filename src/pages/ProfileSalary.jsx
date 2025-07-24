@@ -455,7 +455,7 @@ const SalaryDetails = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-3 mb-4">
+            <TabsList className="mb-4">
               <TabsTrigger value="attendance">
                 Davomat
                 {employee.attendances?.length > 0 && (
@@ -472,7 +472,9 @@ const SalaryDetails = () => {
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="model">Model</TabsTrigger>
+              <TabsTrigger value="model" className="bg-green-500 text-white">
+                Model
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="attendance" className="space-y-4">
               <Card>
