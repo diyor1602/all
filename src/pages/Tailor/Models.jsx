@@ -69,7 +69,7 @@ const Models = () => {
         return;
       }
 
-      autoSelectFromBalance(yesterdayBalance, models);
+      autoSelectFromBalance(yesterdayBalance, models, packets);
       toast({
         title: "Muvaffaqiyatli",
         description: "Kechagi ishlar yuklandi.",
@@ -129,12 +129,18 @@ const Models = () => {
     }
   };
 
-  const autoSelectFromBalance = (balanceData, modelsData) => {
+  const autoSelectFromBalance = (balanceData, modelsData, packetsData) => {
     const selected = [];
+
+    const packetTarificationIds = packetsData.flatMap((p) =>
+      p.tarification_packets_items.map((item) => item.tarification_id)
+    );
 
     balanceData.forEach((entry) => {
       const modelId = entry.model?.id;
       const tarificationId = entry.tarification?.id;
+
+      if (packetTarificationIds.includes(tarificationId)) return;
 
       const fullModel = modelsData.find((m) => m.model?.id === modelId);
       if (!fullModel) return;
@@ -187,9 +193,10 @@ const Models = () => {
 
       // Call auto select
       if (models.length > 0) {
-        autoSelectFromBalance(balanceData, models);
+        autoSelectFromBalance(balanceData, models, packets);
       }
     } catch (error) {
+      console.log(error);
       toast({
         variant: "destructive",
         title: "Xatolik!",
@@ -203,22 +210,28 @@ const Models = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const modelsRes = await api.get("/tailor/models");
-        setModels(modelsRes.data || []);
+        const [modelsRes, packetsRes, balanceRes] = await Promise.all([
+          api.get("/tailor/models"),
+          api.get("/tailor/packets"),
+          api.get("/tailor/balance"),
+        ]);
 
-        const packetsRes = await api.get("/tailor/packets");
-        setPackets(packetsRes.data || []);
+        const modelsData = modelsRes.data || [];
+        const packetsData = packetsRes.data || [];
+        const balanceData = balanceRes.data || [];
 
-        const balanceRes = await api.get("/tailor/balance");
-        setBalance(balanceRes.data || []);
+        setModels(modelsData);
+        setPackets(packetsData);
+        setBalance(balanceData);
 
         setDisplayBalance(
-          balanceRes.data?.reduce((total, item) => {
+          balanceData.reduce((total, item) => {
             return total + (Number(item.amount_earned) || 0);
           }, 0)
         );
 
-        autoSelectFromBalance(balanceRes.data, modelsRes.data);
+        // ✅ Call after all 3 are ready
+        autoSelectFromBalance(balanceData, modelsData, packetsData);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -336,15 +349,42 @@ const Models = () => {
   const handleDeletingtTarifPacketId = async (id) => {
     setDeletingTarifPacketId(id);
     try {
+      // Delete the packet item
       await api.delete(`/tailor/packets/item/${id}`);
-      await getPackets();
+
+      // ✅ Fetch updated data
+      const [updatedPacketsRes, updatedBalanceRes, updatedModelsRes] =
+        await Promise.all([
+          api.get("/tailor/packets"),
+          api.get("/tailor/balance"),
+          api.get("/tailor/models"),
+        ]);
+
+      const updatedPackets = updatedPacketsRes.data || [];
+      const updatedBalance = updatedBalanceRes.data || [];
+      const updatedModels = updatedModelsRes.data || [];
+
+      // ✅ Set new states
+      setPackets(updatedPackets);
+      setBalance(updatedBalance);
+      setModels(updatedModels);
+
+      setDisplayBalance(
+        updatedBalance.reduce(
+          (total, item) => total + (Number(item.amount_earned) || 0),
+          0
+        )
+      );
+
+      // ✅ Refresh selected models correctly
+      autoSelectFromBalance(updatedBalance, updatedModels, updatedPackets);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Xatolik!",
         description:
           error.response?.data?.message ||
-          "Paket yuborishda xatolik yuz berdi.",
+          "Paket elementini o‘chirishda xatolik yuz berdi.",
       });
     } finally {
       setDeletingTarifPacketId(null);
@@ -479,6 +519,91 @@ const Models = () => {
         </Button>
       </div>
 
+      {packets.length > 0 && (
+        <div className="flex flex-col gap-2 mt-4">
+          {packets.map((packet, index) => (
+            <div
+              key={index}
+              className="p-4 rounded-xl bg-yellow-100 border border-yellow-500 shadow-sm"
+            >
+              <div className="flex items-center gap-3 justify-between flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {packet.tarification_packets_items?.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 bg-white border border-gray-300 p-2 rounded-lg shadow-sm"
+                    >
+                      <div className="flex flex-col items-center">
+                        <span className="text-sm font-medium text-gray-800">
+                          {item.tarification?.code}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {balance?.find(
+                            (b) => b.tarification?.id === item.tarification?.id
+                          )?.quantity || "0"}
+                        </span>
+                      </div>
+                      {deletingTarifPacketId === item.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <X
+                          className="cursor-pointer text-gray-500 hover:text-red-500 transition"
+                          size={14}
+                          onClick={() => {
+                            handleDeletingtTarifPacketId(item.id);
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="w-full mt-4 h-[60px]"
+                  disabled={sendingPacketId === packet.id}
+                  onClick={() => {
+                    setSendingPacketId(packet.id);
+                    handleSendPacket(packet.id);
+                  }}
+                >
+                  {sendingPacketId === packet.id ? (
+                    <>
+                      <Loader2 className="animate-spin" />
+                      Bajarilmoqda
+                    </>
+                  ) : (
+                    <>
+                      <Send />
+                      Bajarish
+                    </>
+                  )}
+                </Button>
+                <Button
+                  className="w-fit mt-4 h-[60px]"
+                  variant="outline"
+                  disabled={deletingPacketId === packet.id}
+                  onClick={() => {
+                    setDeletingPacketId(packet.id);
+                    handleDeletingPacket(packet.id);
+                  }}
+                >
+                  {deletingPacketId === packet.id ? (
+                    <>
+                      <Loader2 className="animate-spin" />
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {selectedModels.length > 0 ? (
         <>
           <div className="flex gap-2 w-full flex-wrap mt-4 items-center">
@@ -509,91 +634,6 @@ const Models = () => {
               <Plus /> Model qo'shish
             </Button>
           </div>
-          {packets.length > 0 && (
-            <div className="flex flex-col gap-2 mt-4">
-              {packets.map((packet, index) => (
-                <div
-                  key={index}
-                  className="p-4 rounded-xl bg-yellow-100 border border-yellow-500 shadow-sm"
-                >
-                  <div className="flex items-center gap-3 justify-between flex-wrap">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {packet.tarification_packets_items?.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 bg-white border border-gray-300 p-2 rounded-lg shadow-sm"
-                        >
-                          <div className="flex flex-col items-center">
-                            <span className="text-sm font-medium text-gray-800">
-                              {item.tarification?.code}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {balance?.find(
-                                (b) =>
-                                  b.tarification?.id === item.tarification?.id
-                              )?.quantity || "0"}
-                            </span>
-                          </div>
-                          {deletingTarifPacketId === item.id ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            <X
-                              className="cursor-pointer text-gray-500 hover:text-red-500 transition"
-                              size={14}
-                              onClick={() => {
-                                handleDeletingtTarifPacketId(item.id);
-                              }}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      className="w-full mt-4 h-[60px]"
-                      disabled={sendingPacketId === packet.id}
-                      onClick={() => {
-                        setSendingPacketId(packet.id);
-                        handleSendPacket(packet.id);
-                      }}
-                    >
-                      {sendingPacketId === packet.id ? (
-                        <>
-                          <Loader2 className="animate-spin" />
-                          Bajarilmoqda
-                        </>
-                      ) : (
-                        <>
-                          <Send />
-                          Bajarish
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      className="w-fit mt-4 h-[60px]"
-                      variant="outline"
-                      disabled={deletingPacketId === packet.id}
-                      onClick={() => {
-                        setDeletingPacketId(packet.id);
-                        handleDeletingPacket(packet.id);
-                      }}
-                    >
-                      {deletingPacketId === packet.id ? (
-                        <>
-                          <Loader2 className="animate-spin" />
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 />
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
           <div className="flex flex-col gap-2 mt-4">
             {selectedModels.map((model, index) => (
               <div
