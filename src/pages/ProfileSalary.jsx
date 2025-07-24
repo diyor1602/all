@@ -695,7 +695,7 @@ const SalaryDetails = () => {
                       ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString(
                           "ru-RU",
                           {
-                            maximumFractionDigits: 2,
+                            maximumFractionDigits: 0,
                           }
                         )} so'm`
                       : "Tarifikatsiya ma'lumotlari mavjud emas"}
@@ -822,7 +822,7 @@ const SalaryDetails = () => {
                       ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString(
                           "ru-RU",
                           {
-                            maximumFractionDigits: 2,
+                            maximumFractionDigits: 0,
                           }
                         )} so'm`
                       : "Tarifikatsiya ma'lumotlari mavjud emas"}
@@ -855,22 +855,39 @@ const SalaryDetails = () => {
 
                         return (
                           <div className="space-y-2">
-                            {sortedModelGroups.map(([combinedName, total]) => (
-                              <div
-                                key={combinedName}
-                                className="flex justify-between items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                              >
-                                <div className="font-medium">
-                                  {combinedName}
-                                </div>
-                                <div className="text-green-600 font-semibold">
-                                  {total.toLocaleString("ru-RU", {
-                                    maximumFractionDigits: 2,
-                                  })}{" "}
-                                  so'm
-                                </div>
-                              </div>
-                            ))}
+                            {sortedModelGroups.map(
+                              ([combinedName, total], index) => {
+                                // Define an array of background colors with good contrast
+                                const colors = [
+                                  "bg-blue-200 hover:bg-blue-300",
+                                  "bg-green-200 hover:bg-green-300",
+                                  "bg-yellow-200 hover:bg-yellow-300",
+                                  "bg-purple-200 hover:bg-purple-300",
+                                  "bg-pink-200 hover:bg-pink-300",
+                                  "bg-indigo-200 hover:bg-indigo-300",
+                                ];
+                                // Cycle through colors using modulo
+                                const colorClass =
+                                  colors[index % colors.length];
+
+                                return (
+                                  <div
+                                    key={combinedName}
+                                    className={`flex justify-between items-center p-3 border rounded-lg transition-colors ${colorClass} shadow-sm`}
+                                  >
+                                    <div className="font-medium text-gray-800">
+                                      {combinedName}
+                                    </div>
+                                    <div className="text-green-700 font-semibold">
+                                      {total.toLocaleString("ru-RU", {
+                                        maximumFractionDigits: 0,
+                                      })}{" "}
+                                      so'm
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            )}
                           </div>
                         );
                       })()}
