@@ -196,7 +196,6 @@ const Models = () => {
         autoSelectFromBalance(balanceData, models, packets);
       }
     } catch (error) {
-      console.log(error);
       toast({
         variant: "destructive",
         title: "Xatolik!",
