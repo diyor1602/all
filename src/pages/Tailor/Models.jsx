@@ -740,7 +740,7 @@ const Models = () => {
                           <SelectTrigger>
                             <SelectValue placeholder="Kategoriyani tanlang" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="max-h-[250px] overflow-y-auto">
                             {model.model?.tarification_categories?.map(
                               (category, index) => (
                                 <SelectItem key={index} value={category.id}>
@@ -780,7 +780,7 @@ const Models = () => {
                                   {work.code || ""}
                                 </SelectValue>
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="max-h-[250px] overflow-y-auto">
                                 {model.model?.tarification_categories
                                   ?.find(
                                     (category) => category.id === work.cat_id
