@@ -93,6 +93,9 @@ const Work = () => {
     key: "code",
     direction: "asc",
   });
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
 
   // Handle sorting
   const handleSort = (key) => {
@@ -393,6 +396,15 @@ const Work = () => {
       return;
     }
 
+    if (!selectedDate) {
+      toast({
+        title: "Xatolik",
+        description: "Sanani tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedWorks.length === 0) {
       toast({
         title: "Xatolik",
@@ -447,6 +459,7 @@ const Work = () => {
 
       const payload = {
         employee_id: selectedEmployee,
+        date: selectedDate,
         tarifications: selectedWorks.map((work) => ({
           id: work.id,
           quantity: Number.parseInt(work.quantity),
@@ -1070,7 +1083,7 @@ const Work = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Employee Selection */}
-              <div className="space-y-2">
+              <div className="flex items-center gap-2">
                 <Popover open={empComboOpen} onOpenChange={setEmpComboOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -1114,6 +1127,13 @@ const Work = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
+                <Input
+                  type="date"
+                  max={new Date().toISOString().split("T")[0]}
+                  value={selectedDate}
+                  className="w-fit"
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                />
               </div>
 
               {/* Works Selection */}
@@ -1261,8 +1281,8 @@ const Work = () => {
                                 const currentQuantity =
                                   Number.parseInt(work.quantity) || 0;
                                 return currentQuantity > availableLimit
-                                  ? "border-red-500 focus:border-red-500"
-                                  : "";
+                                  ? "border-red-500 focus:border-red-500 bg-white"
+                                  : "bg-white";
                               })()}
                             />
                             {(() => {
