@@ -536,7 +536,14 @@ const Employees = () => {
             </TableRow>
           ) : (
             employees.data.map((employee, index) => (
-              <TableRow key={employee.id}>
+              <TableRow
+                key={employee.id}
+                className={
+                  employee.absence_count > 3
+                    ? "bg-red-200 hover:bg-red-300"
+                    : ""
+                }
+              >
                 <TableCell className="border text-center">
                   {index + 1}
                 </TableCell>
