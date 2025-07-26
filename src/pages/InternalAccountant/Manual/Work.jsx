@@ -1119,7 +1119,12 @@ const Work = () => {
                                   setEmpComboOpen(false);
                                 }}
                               >
-                                {employee.name}
+                                <div className="flex flex-col gap-1">
+                                  {employee.name}
+                                  <span className="text-xs text-muted-foreground">
+                                    {employee.group?.name}
+                                  </span>
+                                </div>
                               </CommandItem>
                             ))}
                         </CommandGroup>
@@ -1512,9 +1517,10 @@ const Work = () => {
               {employees
                 ?.filter(
                   (employee) =>
+                    employee.group_id === selectedSubmodel?.group?.group?.id &&
                     !tarifLogs?.some((log) => log.employee?.id === employee.id)
                 )
-                ?.sort?.((a, b) => a.name.localeCompare(b.name))
+                ?.sort((a, b) => a.name.localeCompare(b.name))
                 ?.map((employee, index) => (
                   <div
                     key={index}
