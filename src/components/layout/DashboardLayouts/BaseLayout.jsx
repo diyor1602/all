@@ -116,7 +116,7 @@ export default function BaseLayout({ children, navigation }) {
             >
               <Link to="/issue">
                 <MessageCircleMore className="h-4 w-4" />
-                Fikr bildirish
+                Muammo yozish
               </Link>
             </Button>
             <hr className="my-2" />
