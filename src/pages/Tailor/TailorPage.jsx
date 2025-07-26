@@ -61,8 +61,11 @@ const TailorPage = () => {
 
         // Only auto-populate inputs on initial load and if we have balance data
         if (isInitialLoad && balanceData.length > 0) {
-          // Create input fields with the balance data
-          const newInputs = balanceData.map((item) => {
+          const sortedData = balanceData.sort((a, b) =>
+            b.model.name.localeCompare(a.model.name)
+          );
+
+          const newInputs = sortedData.map((item) => {
             const tarif = item.tarification
               ? {
                   ...item.tarification,
@@ -84,7 +87,6 @@ const TailorPage = () => {
             };
           });
 
-          // Update the inputs with all data at once
           setInputs(newInputs);
         }
       } else {
