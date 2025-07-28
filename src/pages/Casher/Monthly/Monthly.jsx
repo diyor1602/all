@@ -18,7 +18,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -28,33 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  Edit,
-  TrendingUp,
-  Calculator,
-  Loader2,
-  Copy,
-  ClipboardPaste,
-} from "lucide-react";
+import { TrendingUp, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  monthly_expence_types,
-  monthly_expence_currency,
-} from "@/lib/monthlyExpenceTypes";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const formatNumber = (number) => {
   return Number.parseFloat(number || 0).toLocaleString("ru-RU");
@@ -62,23 +36,17 @@ const formatNumber = (number) => {
 
 const Monthly = () => {
   const [monthly, setMonthly] = useState({});
-  const [selectedDate, setSelectedDate] = useState(
+  const [startDate, setStartDate] = useState(
     new Date().toISOString().split("T")[0].split("-")[0] +
       "-" +
-      new Date().toISOString().split("T")[0].split("-")[1]
+      new Date().toISOString().split("T")[0].split("-")[1] +
+      "-01"
   );
-  const [monthlyExpenses, setMonthlyExpenses] = useState({});
-  const [showExpenses, setShowExpenses] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isPasteDialogOpen, setIsPasteDialogOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState(null);
-  const [newExpense, setNewExpense] = useState({ type: "", amount: "" });
-  const [pasteData, setPasteData] = useState("");
-  const [isPasting, setIsPasting] = useState(false);
+  const [endDate, setEndDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
   const [dollarRate, setDollarRate] = useState(
     localStorage.getItem("dollarRate") || 12700
   );
@@ -92,21 +60,15 @@ const Monthly = () => {
     fetchMonthly();
   };
 
-  const navigateDate = (direction) => {
-    const currentDate = new Date(selectedDate);
-    currentDate.setMonth(currentDate.getMonth() + direction);
-    setSelectedDate(
-      currentDate.toISOString().split("T")[0].split("-")[0] +
-        "-" +
-        currentDate.toISOString().split("T")[0].split("-")[1]
-    );
-  };
-
   const fetchMonthly = async () => {
     setLoading(true);
     try {
       const response = await api.get("/casher/monthlyReport", {
-        params: { date: selectedDate, dollar_rate: dollarRate },
+        params: {
+          start_date: startDate,
+          end_date: endDate,
+          dollar_rate: dollarRate,
+        },
       });
       setMonthly(response.data);
     } catch (error) {
@@ -120,227 +82,9 @@ const Monthly = () => {
     }
   };
 
-  const fetchMonthlyExpenses = async () => {
-    try {
-      const response = await api.get("/casher/monthlyExpense", {
-        params: { month: selectedDate },
-      });
-      setMonthlyExpenses(response.data);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Oylik harajatlar ma'lumotlarni olishda xatolik",
-      });
-    }
-  };
-
-  const copyExpenses = async () => {
-    try {
-      if (!monthlyExpenses?.expenses || monthlyExpenses.expenses.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "Diqqat",
-          description: "Nusxalash uchun harajatlar mavjud emas",
-          duration: 1500,
-        });
-        return;
-      }
-
-      // Create a clean copy of expenses without IDs and month-specific data
-      const expensesToCopy = monthlyExpenses.expenses.map((expense) => ({
-        name: expense.name,
-        type: expense.type,
-        amount: expense.amount,
-      }));
-
-      const jsonData = JSON.stringify(expensesToCopy, null, 2);
-
-      // Copy to clipboard
-      await navigator.clipboard.writeText(jsonData);
-
-      toast({
-        title: "Muvaffaqiyat",
-        description: `${expensesToCopy.length} ta harajat nusxalandi`,
-        style: {
-          background: "green",
-          color: "white",
-        },
-        duration: 1500,
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Nusxalashda xatolik yuz berdi",
-      });
-    }
-  };
-
-  const pasteExpenses = async () => {
-    if (!pasteData.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Diqqat",
-        description: "Qo'yish uchun ma'lumot kiriting",
-        duration: 1500,
-      });
-      return;
-    }
-
-    setIsPasting(true);
-    try {
-      const expensesToPaste = JSON.parse(pasteData);
-
-      if (!Array.isArray(expensesToPaste)) {
-        throw new Error("Ma'lumot massiv formatida bo'lishi kerak");
-      }
-
-      const month = selectedDate.slice(0, 7);
-      let successCount = 0;
-      let errorCount = 0;
-
-      // Send each expense to backend one by one
-      for (const expense of expensesToPaste) {
-        try {
-          if (!expense.name || !expense.amount || !expense.type) {
-            errorCount++;
-            continue;
-          }
-
-          await api.post("/casher/monthlyExpense", {
-            ...expense,
-            month,
-            amount: Number.parseFloat(expense.amount),
-          });
-
-          successCount++;
-        } catch (error) {
-          errorCount++;
-        }
-      }
-
-      toast({
-        title: "Jarayon tugadi",
-        description: `${successCount} ta harajat qo'shildi${
-          errorCount > 0 ? `, ${errorCount} ta xatolik` : ""
-        }`,
-        style: {
-          background: errorCount > 0 ? "orange" : "green",
-          color: "white",
-        },
-        duration: 2000,
-      });
-
-      setPasteData("");
-      setIsPasteDialogOpen(false);
-      fetchMonthlyExpenses();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description:
-          "Ma'lumotni tahlil qilishda xatolik. JSON formatini tekshiring.",
-      });
-    } finally {
-      setIsPasting(false);
-    }
-  };
-
-  const addExpense = async () => {
-    if (!newExpense.name || !newExpense.amount || !newExpense.type) {
-      toast({
-        variant: "destructive",
-        title: "Diqqat",
-        description: "Harajat nomi, miqdori va turi bo'sh bo'lishi mumkin emas",
-        duration: 1500,
-      });
-      return;
-    }
-    setSending(true);
-    try {
-      const month = selectedDate.slice(0, 7);
-      await api.post("/casher/monthlyExpense", {
-        ...newExpense,
-        month,
-        amount: Number.parseFloat(newExpense.amount),
-      });
-
-      toast({
-        title: "Muvaffaqiyat",
-        description: "Harajat qo'shildi",
-        style: {
-          background: "green",
-          color: "white",
-        },
-        duration: 1500,
-      });
-
-      setNewExpense({ name: "", amount: "", type: "" });
-      setIsAddDialogOpen(false);
-      fetchMonthlyExpenses();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Harajat qo'shishda xatolik",
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const editExpense = async () => {
-    if (
-      !editingExpense.name ||
-      !editingExpense.amount ||
-      !editingExpense.type
-    ) {
-      toast({
-        variant: "destructive",
-        title: "Diqqat",
-        description: "Harajat nomi, miqdori va turi bo'sh bo'lishi mumkin emas",
-        duration: 1500,
-      });
-      return;
-    }
-    setSending(true);
-    try {
-      await api.patch(`/casher/monthlyExpense/${editingExpense.id}`, {
-        name: editingExpense.name,
-        type: editingExpense.type,
-        amount: Number.parseFloat(editingExpense.amount),
-      });
-
-      toast({
-        title: "Muvaffaqiyat",
-        description: "Harajat yangilandi",
-        style: {
-          background: "green",
-          color: "white",
-        },
-        duration: 1500,
-      });
-
-      setIsEditDialogOpen(false);
-      setEditingExpense(null);
-      fetchMonthlyExpenses();
-      fetchMonthly();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Harajat yangilashda xatolik",
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
   useEffect(() => {
     fetchMonthly();
-    fetchMonthlyExpenses();
-  }, [selectedDate]);
+  }, [startDate, endDate]);
 
   const metrics = [
     {
@@ -416,28 +160,18 @@ const Monthly = () => {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-3xl font-bold text-slate-800">Oylik hisobot</h1>
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigateDate(-1)}
-            className="hover:bg-slate-100"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
           <Input
-            type="month"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
             className="w-fit bg-white border-slate-200"
           />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigateDate(1)}
-            className="hover:bg-slate-100"
-          >
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          <Input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-fit bg-white border-slate-200"
+          />
         </div>
       </div>
       <div
@@ -447,8 +181,6 @@ const Monthly = () => {
         )}
       >
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-
           {/* Main Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {metrics.map((metric, index) => (
@@ -540,335 +272,6 @@ const Monthly = () => {
                 </Button>
                 <Button onClick={updateDollarRate}>Saqlash</Button>
               </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Monthly Expenses */}
-          <Card className="border-0 shadow-md">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <CardTitle className="text-slate-800">
-                  Oylik harajatlar
-                </CardTitle>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Dialog
-                    open={isAddDialogOpen}
-                    onOpenChange={setIsAddDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="gap-2">
-                        <Plus />
-                        Qo'shish
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Yangi harajat qo'shish</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="type">Turi</Label>
-                          <Select
-                            value={newExpense.type}
-                            onValueChange={(value) =>
-                              setNewExpense({
-                                ...newExpense,
-                                type: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Turi" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.entries(monthly_expence_types).map(
-                                ([key, value]) => (
-                                  <SelectItem key={key} value={key}>
-                                    {value}
-                                  </SelectItem>
-                                )
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="name">Nomi</Label>
-                          <Input
-                            id="name"
-                            value={newExpense.name}
-                            onChange={(e) =>
-                              setNewExpense({
-                                ...newExpense,
-                                name: e.target.value,
-                              })
-                            }
-                            placeholder="Harajat nomi"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="amount">
-                            Miqdori ({formatNumber(newExpense.amount)})
-                          </Label>
-                          <Input
-                            id="amount"
-                            type="number"
-                            value={newExpense.amount}
-                            onChange={(e) =>
-                              setNewExpense({
-                                ...newExpense,
-                                amount: e.target.value,
-                              })
-                            }
-                            placeholder="0"
-                          />
-                        </div>
-                        <Button
-                          onClick={addExpense}
-                          className="w-full"
-                          disabled={sending}
-                        >
-                          {sending ? (
-                            <Loader2 className="animate-spin" />
-                          ) : (
-                            "Qo'shish"
-                          )}
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* Copy Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={copyExpenses}
-                    className="gap-2"
-                    disabled={!monthlyExpenses?.expenses?.length}
-                  >
-                    <Copy className="h-4 w-4" />
-                    Nusxalash
-                  </Button>
-
-                  {/* Paste Button */}
-                  <Dialog
-                    open={isPasteDialogOpen}
-                    onOpenChange={setIsPasteDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <ClipboardPaste className="h-4 w-4" />
-                        Qo'yish
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Harajatlarni qo'yish</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="paste-data">
-                            JSON ma'lumotlarni qo'ying:
-                          </Label>
-                          <Textarea
-                            id="paste-data"
-                            value={pasteData}
-                            onChange={(e) => setPasteData(e.target.value)}
-                            placeholder='[{"name": "Harajat nomi", "type": "fixed", "amount": 1000000}, ...]'
-                            className="min-h-[200px] font-mono text-sm"
-                          />
-                        </div>
-                        <div className="text-sm text-slate-600">
-                          <p className="font-medium mb-2">Format:</p>
-                          <code className="bg-slate-100 p-2 rounded block">
-                            {`[
-  {
-    "name": "Harajat nomi",
-    "type": "fixed",
-    "amount": 1000000
-  }
-]`}
-                          </code>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setPasteData("");
-                              setIsPasteDialogOpen(false);
-                            }}
-                          >
-                            Bekor qilish
-                          </Button>
-                          <Button
-                            onClick={pasteExpenses}
-                            disabled={isPasting || !pasteData.trim()}
-                          >
-                            {isPasting ? (
-                              <Loader2 className="animate-spin mr-2" />
-                            ) : null}
-                            Qo'yish
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowExpenses(!showExpenses)}
-                    className="gap-2"
-                  >
-                    {showExpenses ? (
-                      <>
-                        Yashirish <ChevronUp className="h-4 w-4" />
-                      </>
-                    ) : (
-                      <>
-                        Ko'rsatish <ChevronDown className="h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            {showExpenses && (
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table className="border border-slate-200">
-                    <TableHeader className="bg-slate-50">
-                      <TableRow>
-                        <TableHead className="w-16 border border-slate-200 text-center">
-                          №
-                        </TableHead>
-                        <TableHead className="border border-slate-200 text-center">
-                          Nomi
-                        </TableHead>
-                        <TableHead className="border border-slate-200 text-center">
-                          Turi
-                        </TableHead>
-                        <TableHead className="border border-slate-200 text-center">
-                          Miqdori
-                        </TableHead>
-                        <TableHead className="w-20 border border-slate-200 text-center">
-                          Amallar
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {monthlyExpenses?.expenses?.map((expense, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-medium border border-slate-200 text-center">
-                            {i + 1}
-                          </TableCell>
-                          <TableCell className="border border-slate-200">
-                            {expense.name}
-                          </TableCell>
-                          <TableCell className="border border-slate-200 text-center">
-                            {monthly_expence_types[expense.type]}
-                          </TableCell>
-                          <TableCell className="font-mono border border-slate-200">
-                            {formatNumber(expense.amount)}{" "}
-                            {monthly_expence_currency[expense.type]}
-                          </TableCell>
-                          <TableCell className="border border-slate-200">
-                            <div className="flex justify-center w-full">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setEditingExpense(expense);
-                                  setIsEditDialogOpen(true);
-                                }}
-                              >
-                                <Edit />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            )}
-          </Card>
-
-          {/* Edit Dialog */}
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Harajatni tahrirlash</DialogTitle>
-              </DialogHeader>
-              {editingExpense && (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="edit-type">Turi</Label>
-                    <Select
-                      value={editingExpense.type}
-                      onValueChange={(value) =>
-                        setEditingExpense({
-                          ...editingExpense,
-                          type: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Turi" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(monthly_expence_types).map(
-                          ([key, value]) => (
-                            <SelectItem key={key} value={key}>
-                              {value}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-name">Nomi</Label>
-                    <Input
-                      id="edit-name"
-                      value={editingExpense.name}
-                      onChange={(e) =>
-                        setEditingExpense({
-                          ...editingExpense,
-                          name: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-amount">
-                      Miqdori ({formatNumber(editingExpense.amount)})
-                    </Label>
-                    <Input
-                      id="edit-amount"
-                      type="number"
-                      value={editingExpense.amount}
-                      onChange={(e) =>
-                        setEditingExpense({
-                          ...editingExpense,
-                          amount: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <Button
-                    onClick={editExpense}
-                    className="w-full"
-                    disabled={sending}
-                  >
-                    {sending ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      "Yangilash"
-                    )}
-                  </Button>
-                </div>
-              )}
             </DialogContent>
           </Dialog>
 
