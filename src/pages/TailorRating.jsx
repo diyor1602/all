@@ -40,11 +40,18 @@ const TailorRating = () => {
 
   const fetchData = async () => {
     try {
-      const response = await api.get("/topEarners", {
-        params: {
-          date: selectedDay,
-        },
-      });
+      const response = await api.get(
+        `${
+          localStorage.getItem("role") === "groupMaster"
+            ? "groupMaster/topEarners"
+            : "topEarners"
+        }`,
+        {
+          params: {
+            date: selectedDay,
+          },
+        }
+      );
       const data = await response.data?.top_earners;
 
       // Calculate max quantity among all employees
