@@ -60,9 +60,15 @@ const navigation = [
     onMobile: false,
   },
   {
-    name: "KPI",
+    name: "Tikuv KPI",
     href: "/kpi",
     icon: BadgePercent,
+    onMobile: false,
+  },
+  {
+    name: "Bichuv KPI",
+    href: "/casher/cuttingKpi",
+    icon: SquareScissors,
     onMobile: false,
   },
   {
@@ -81,12 +87,6 @@ const navigation = [
     name: "Tikuvchilar",
     href: "/tailorRating",
     icon: Sprout,
-    onMobile: false,
-  },
-  {
-    name: "Bichuv KPI",
-    href: "/casher/cuttingKpi",
-    icon: SquareScissors,
     onMobile: false,
   },
 ];
