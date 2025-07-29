@@ -45,6 +45,8 @@ const Models = () => {
   const [creatingPacketId, setCreatingPacketId] = useState(null);
   const [deletingTarifPacketId, setDeletingTarifPacketId] = useState(null);
   const [deletingPacketId, setDeletingPacketId] = useState(null);
+  const [myWorksDialogOpen, setMyWorksDialogOpen] = useState(false);
+  const [myWorks, setMyWorks] = useState([]);
 
   const getFormattedYesterday = () => {
     const yesterday = new Date();
@@ -114,17 +116,18 @@ const Models = () => {
     }
   };
 
-  const getModels = async () => {
+  const handleLoadMyWorks = async () => {
+    setMyWorksDialogOpen(true);
     try {
-      const response = await api.get("/tailor/models");
-      setModels(response.data || []);
+      const response = await api.get("/tailor/myWorks");
+      setMyWorks(response.data || []);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Xatolik!",
         description:
           error.response?.data?.message ||
-          "Modellarni olishda xatolik yuz berdi.",
+          "Mening ishlarni olishda xatolik yuz berdi.",
       });
     }
   };
@@ -410,6 +413,132 @@ const Models = () => {
 
   return (
     <>
+      <Dialog open={myWorksDialogOpen} onOpenChange={setMyWorksDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mening ishlarim</DialogTitle>
+            <DialogDescription>Biriktirilgan ishlar</DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
+            {Object.entries(
+              myWorks?.reduce((acc, work) => {
+                const modelName = work.model?.name || "Noma'lum model";
+                if (!acc[modelName]) acc[modelName] = [];
+                acc[modelName].push(work);
+                return acc;
+              }, {})
+            ).map(([modelName, works]) => (
+              <div key={modelName}>
+                <div className="font-bold text-blue-600 border-b border-gray-300 pb-1 mb-2">
+                  {modelName}
+                </div>
+                <div className="flex flex-col gap-2">
+                  {works.map((myWork) => {
+                    const isInBalance = balance?.some(
+                      (b) => b.tarification?.id === myWork.id
+                    );
+                    const isInPacket = packets?.some((packet) =>
+                      packet.tarification_packets_items?.some(
+                        (item) => item.tarification_id === myWork.id
+                      )
+                    );
+                    const isInSelected = selectedModels?.some((m) =>
+                      m.works?.some((w) => w.id === myWork.id)
+                    );
+
+                    const isUsed = isInBalance || isInPacket || isInSelected;
+
+                    return (
+                      <div
+                        key={myWork.id}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <div className="truncate font-medium">
+                          {myWork.code} - {myWork.name}
+                        </div>
+                        <Button
+                          variant={isUsed ? "secondary" : "outline"}
+                          size="sm"
+                          disabled={isUsed || sendingID === myWork.id}
+                          onClick={async () => {
+                            const modelObj = models.find(
+                              (m) => m.model?.id === myWork.model.id
+                            );
+                            if (!modelObj) return;
+
+                            const category =
+                              modelObj.tarification_categories?.find((cat) =>
+                                cat.tarification?.some(
+                                  (t) => t.id === myWork.id
+                                )
+                              );
+                            if (!category) return;
+
+                            const alreadySelected = selectedModels.find(
+                              (s) => s.model.id === modelObj.id
+                            );
+
+                            const workData = {
+                              id: myWork.id,
+                              name: myWork.name,
+                              code: myWork.code,
+                              summa: myWork.summa,
+                              second: myWork.second,
+                              cat_id: category.id,
+                            };
+
+                            if (alreadySelected) {
+                              alreadySelected.works.unshift(workData);
+                              setSelectedModels([...selectedModels]);
+                            } else {
+                              setSelectedModels((prev) => [
+                                {
+                                  model: modelObj,
+                                  works: [workData],
+                                },
+                                ...prev,
+                              ]);
+                            }
+
+                            // ✅ Send backend request
+                            setSendingID(myWork.id);
+                            try {
+                              await api.post("/tailor/tarificationLog", {
+                                tarification_id: myWork.id,
+                              });
+                              const audio = new Audio("/coins.wav");
+                              audio.play();
+                              await getBalance(); // refresh balance
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Xatolik!",
+                                description:
+                                  error.response?.data?.message ||
+                                  "Ishni qo'shishda xatolik yuz berdi.",
+                              });
+                            } finally {
+                              setSendingID(null);
+                            }
+                          }}
+                        >
+                          {sendingID === myWork.id
+                            ? "⏳ Bajarilmoqda"
+                            : isUsed
+                            ? "✅ Qo'shilgan"
+                            : "➕ Qo'shish"}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={packetDialogOpen} onOpenChange={setPacketDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -510,12 +639,20 @@ const Models = () => {
           {parseInt(displayBalance)?.toLocaleString("ru-RU")} so'm
         </div>
 
-        <Button
-          onClick={handleLoadYesterdayWorks}
-          className="mt-2 bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
-        >
-          Kechagi ishlarni qilish
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleLoadYesterdayWorks}
+            className="mt-2 bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
+          >
+            Kechagi ishlarni qilish
+          </Button>
+          <Button
+            onClick={handleLoadMyWorks}
+            className="mt-2 bg-green-500 text-white hover:bg-green-600 hover:text-white"
+          >
+            Mening ishlarim
+          </Button>
+        </div>
       </div>
 
       {packets.length > 0 && (
