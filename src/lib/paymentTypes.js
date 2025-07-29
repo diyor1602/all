@@ -5,11 +5,12 @@ const payment_types = {
   monthly: "Oylik",
   fixed_percentage_bonus: "Foiz umumiy songa",
   fixed_percentage_bonus_group: "Foiz guruhi uchun",
-  fixed_tailored_bonus: "Tikilgan umumiy songa",
-  fixed_tailored_bonus_group: "1 ta patokda tikilgan songa",
-  fixed_cutted_bonus: "Kesilgan umumiy songa",
-  fixed_packaged_bonus: "Qadoqlangan umumiy songa",
-  fixed_completed_bonus: "Yakunlangan umumiy songa",
+  cutting_bonus: "Kesish foizi uchun",
+  // fixed_tailored_bonus: "Tikilgan umumiy songa",
+  // fixed_tailored_bonus_group: "1 ta patokda tikilgan songa",
+  // fixed_cutted_bonus: "Kesilgan umumiy songa",
+  // fixed_packaged_bonus: "Qadoqlangan umumiy songa",
+  // fixed_completed_bonus: "Yakunlangan umumiy songa",
 };
 
 export default payment_types;
