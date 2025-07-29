@@ -10,6 +10,7 @@ import {
   Home,
   Rotate3d,
   Sprout,
+  SquareScissors,
   TentTree,
   Users,
 } from "lucide-react";
@@ -80,6 +81,12 @@ const navigation = [
     name: "Tikuvchilar",
     href: "/tailorRating",
     icon: Sprout,
+    onMobile: false,
+  },
+  {
+    name: "Bichuv KPI",
+    href: "/casher/cuttingKpi",
+    icon: SquareScissors,
     onMobile: false,
   },
 ];
