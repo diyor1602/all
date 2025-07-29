@@ -212,7 +212,7 @@ const ViewEmployees = () => {
               setSelectedMonth(e.target.value);
               setFilters(range);
             }}
-            className="w-48"
+            className="w-48 bg-white"
           />
         </div>
         <Card>
