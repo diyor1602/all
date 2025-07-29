@@ -11,10 +11,16 @@ import {
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
-    name: "KPI",
+    name: "Tikuv KPI",
     href: "/kpi",
     icon: BadgePercent,
     onMobile: false,
+  },
+  {
+    name: "Kesish KPI",
+    href: "/cuttingMaster/cuttingKpi",
+    icon: BadgePercent,
+    onMobile: true,
   },
   {
     name: "Buyurtmalar",

@@ -421,7 +421,7 @@ const CuttingKpi = () => {
             <DialogTitle>{selectedGroup?.name}</DialogTitle>
             <DialogDescription>
               <div>
-                Jami tikilgan:{" "}
+                Jami kesilgan:{" "}
                 <span className="font-bold">
                   {groupPlans?.find(
                     (plan) => plan.department_id === selectedGroup?.id
@@ -545,7 +545,7 @@ const CuttingKpi = () => {
             <DialogDescription>
               <div className="space-y-1">
                 <div>
-                  Jami tikilgan:{" "}
+                  Jami kesilgan:{" "}
                   <span className="font-bold">
                     {calculateTotalProgress(
                       groupPlans,
@@ -822,7 +822,7 @@ const CuttingKpi = () => {
                             totalProgress.requiredDailyOutput
                           ).toLocaleString()}
                         </span>{" "}
-                        ta tikish kerak.
+                        ta kesish kerak.
                       </div>
                     )}
                   </div>
