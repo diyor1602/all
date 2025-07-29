@@ -18,7 +18,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -240,25 +239,7 @@ const CuttingKpi = () => {
   const [departments, setDepartments] = useState([]);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [groupPlans, setGroupPlans] = useState([]);
-  const [addPayload, setAddPayload] = useState({
-    department_id: null,
-    group_name: null,
-    quantity: null,
-    month: month?.split("-")[1],
-    year: month?.split("-")[0],
-  });
-  const [editPayload, setEditPayload] = useState({
-    id: null,
-    department_id: null,
-    group_name: null,
-    quantity: null,
-    month: month?.split("-")[1],
-    year: month?.split("-")[0],
-  });
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loadingGroupPlans, setLoadingGroupPlans] = useState(false);
-  const [sending, setSending] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -315,87 +296,6 @@ const CuttingKpi = () => {
   useEffect(() => {
     fetchGroupPlans();
   }, [month]);
-
-  const handleAddGroupPlan = async () => {
-    const payload = {
-      department_id: addPayload.department_id,
-      quantity: addPayload.quantity,
-      month: parseInt(month?.split("-")[1]),
-      year: parseInt(month?.split("-")[0]),
-    };
-    try {
-      setSending(true);
-      await api.post("/cuttingMaster/cuttingPlans", payload);
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Guruh plani qo'shildi",
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
-        duration: 1200,
-      });
-      setAddDialogOpen(false);
-      setAddPayload({
-        department_id: null,
-        group_name: null,
-        quantity: null,
-        month: month?.split("-")[1],
-        year: month?.split("-")[0],
-      });
-      await fetchGroupPlans();
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
-        variant: "destructive",
-        duration: 1200,
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleEditGroupPlan = async () => {
-    const payload = {
-      department_id: editPayload.department_id,
-      quantity: parseFloat(editPayload.quantity),
-      month: parseInt(month?.split("-")[1]),
-      year: parseInt(month?.split("-")[0]),
-    };
-    try {
-      setSending(true);
-      await api.patch(`/cuttingMaster/cuttingPlans/${editPayload.id}`, payload);
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Guruh plani yangilandi",
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
-        duration: 1200,
-      });
-      setEditDialogOpen(false);
-      setEditPayload({
-        id: null,
-        department_id: null,
-        group_name: null,
-        quantity: null,
-        month: month?.split("-")[1],
-        year: month?.split("-")[0],
-      });
-      await fetchGroupPlans();
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
-        variant: "destructive",
-        duration: 1200,
-      });
-    } finally {
-      setSending(false);
-    }
-  };
 
   // Loading skeleton
   if (loading) {
