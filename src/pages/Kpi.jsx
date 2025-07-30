@@ -41,7 +41,7 @@ const groupColors = [
   "bg-cyan-300",
 ];
 
-const keywords = ["Тикув", "TikuvG"];
+const keywords = ["Тикув", "Tikuv"];
 
 // Function to calculate working days between two dates (excluding Sundays)
 const getWorkingDays = (startDate, endDate) => {
