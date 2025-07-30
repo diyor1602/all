@@ -41,6 +41,8 @@ const groupColors = [
   "bg-cyan-300",
 ];
 
+const keywords = ["Тикув", "TikuvG"];
+
 // Function to calculate working days between two dates (excluding Sundays)
 const getWorkingDays = (startDate, endDate) => {
   let count = 0;
@@ -872,7 +874,13 @@ const Kpi = () => {
       ) : (
         <div className="grid grid-cols-1 gap-6 mt-4 bg-white">
           {departments
-            ?.filter((dept) => dept?.groups?.length > 0)
+            ?.filter(
+              (dept) =>
+                dept?.groups?.length > 0 &&
+                keywords.some((keyword) =>
+                  dept?.name?.toLowerCase().includes(keyword.toLowerCase())
+                )
+            )
             ?.sort((a, b) => b?.groups?.length - a?.groups?.length)
             .map((department) => (
               <div
