@@ -836,112 +836,127 @@ const SalaryDetails = () => {
                   {employee.employee_tarification_logs?.length > 0 ? (
                     <div className="space-y-4">
                       {(() => {
-                        const groupedByModelSubmodel = {};
+                        const groupedByModel = {};
 
+                        // Step 1: Group logs by model
                         employee.employee_tarification_logs?.forEach((log) => {
+                          const modelId = log.model?.id || "unknown";
                           const modelName = log.model?.name || "Noma'lum model";
-                          const submodelName =
-                            log.submodel?.name || "Noma'lum submodel";
-                          const key = `${modelName} - ${submodelName}`;
 
-                          if (!groupedByModelSubmodel[key]) {
-                            groupedByModelSubmodel[key] = 0;
+                          if (!groupedByModel[modelId]) {
+                            groupedByModel[modelId] = {
+                              modelName,
+                              logs: [],
+                            };
                           }
 
-                          groupedByModelSubmodel[key] += parseFloat(
-                            log.amount_earned || 0
-                          );
+                          groupedByModel[modelId].logs.push(log);
                         });
-
-                        const sortedModelGroups = Object.entries(
-                          groupedByModelSubmodel
-                        ).sort((a, b) => b[1] - a[1]);
 
                         return (
                           <div className="space-y-2">
-                            {sortedModelGroups.map(
-                              ([combinedName, total], index) => {
-                                const isOpen = expandedModel === combinedName;
+                            {Object.entries(groupedByModel).map(
+                              ([modelId, group], index) => {
+                                const isOpen = expandedModel === modelId;
 
-                                const colorClasses = [
-                                  "bg-blue-200 hover:bg-blue-300",
-                                  "bg-green-200 hover:bg-green-300",
-                                  "bg-yellow-200 hover:bg-yellow-300",
-                                  "bg-purple-200 hover:bg-purple-300",
-                                  "bg-pink-200 hover:bg-pink-300",
-                                  "bg-indigo-200 hover:bg-indigo-300",
-                                ];
-                                const colorClass =
-                                  colorClasses[index % colorClasses.length];
+                                // Step 2: Group works under this model by work CODE
+                                const workMap = {};
+                                group.logs.forEach((log) => {
+                                  const workCode =
+                                    log.tarification?.code || "NOMA'LUM";
+                                  const workName =
+                                    log.tarification?.name || "Noma'lum ish";
 
-                                // Filter the logs for this model-submodel group
-                                const matchingLogs =
-                                  employee.employee_tarification_logs.filter(
-                                    (log) => {
-                                      const modelName =
-                                        log.model?.name || "Noma'lum model";
-                                      const submodelName =
-                                        log.submodel?.name ||
-                                        "Noma'lum submodel";
-                                      return (
-                                        `${modelName} - ${submodelName}` ===
-                                        combinedName
-                                      );
-                                    }
+                                  if (!workMap[workCode]) {
+                                    workMap[workCode] = {
+                                      name: workName,
+                                      totalQty: 0,
+                                      totalSum: 0,
+                                    };
+                                  }
+
+                                  workMap[workCode].totalQty += log.quantity;
+                                  workMap[workCode].totalSum += parseFloat(
+                                    log.amount_earned || 0
                                   );
+                                });
+
+                                // Step 3: Total summary for the model
+                                const totalSumForModel = group.logs.reduce(
+                                  (sum, log) =>
+                                    sum + parseFloat(log.amount_earned || 0),
+                                  0
+                                );
+
+                                // Step 4: Assign a color
+                                const colors = [
+                                  "bg-blue-100 hover:bg-blue-200",
+                                  "bg-green-100 hover:bg-green-200",
+                                  "bg-yellow-100 hover:bg-yellow-200",
+                                  "bg-purple-100 hover:bg-purple-200",
+                                  "bg-pink-100 hover:bg-pink-200",
+                                  "bg-indigo-100 hover:bg-indigo-200",
+                                ];
+
+                                const colorClass =
+                                  colors[index % colors.length];
 
                                 return (
-                                  <div key={combinedName}>
+                                  <div key={modelId}>
+                                    {/* Clickable model row */}
                                     <div
-                                      className={`flex justify-between items-center p-3 border rounded-lg transition-colors cursor-pointer ${colorClass} shadow-sm`}
                                       onClick={() =>
                                         setExpandedModel(
-                                          isOpen ? null : combinedName
+                                          isOpen ? null : modelId
                                         )
                                       }
+                                      className={`cursor-pointer p-3 border rounded-lg ${colorClass} flex justify-between items-center`}
                                     >
                                       <div className="font-medium text-gray-800">
-                                        {combinedName}
+                                        {group.modelName}
                                       </div>
                                       <div className="text-green-700 font-semibold">
-                                        {total.toLocaleString("ru-RU")} so'm
+                                        {totalSumForModel.toLocaleString(
+                                          "ru-RU"
+                                        )}{" "}
+                                        so'm
                                       </div>
                                     </div>
 
+                                    {/* Expanded list of works under this model */}
                                     {isOpen && (
-                                      <div className="p-4 border rounded-b-lg bg-white space-y-2">
-                                        {matchingLogs.map((log) => (
-                                          <div
-                                            key={log.id}
-                                            className="border p-3 rounded-md bg-gray-50 space-y-1 text-sm"
-                                          >
-                                            <div className="flex justify-between">
-                                              <span className="font-medium">
-                                                Sana: {formatDate(log.date)}
-                                              </span>
-                                              <span>
-                                                Miqdor:{" "}
-                                                <strong>{log.quantity}</strong>
-                                              </span>
+                                      <div className="bg-white p-4 border rounded-b-md space-y-2">
+                                        {Object.entries(workMap).map(
+                                          ([code, data]) => (
+                                            <div
+                                              key={code}
+                                              className="p-3 border rounded-md bg-gray-50 text-sm"
+                                            >
+                                              <div className="flex justify-between items-center flex-wrap gap-2">
+                                                <div className="font-medium">
+                                                  {code}, {data.name}
+                                                </div>
+                                                <div>
+                                                  <div>
+                                                    Bajarildi:{" "}
+                                                    <span className="font-semibold">
+                                                      {data.totalQty} ta
+                                                    </span>
+                                                  </div>
+                                                  <div>
+                                                    Summa:{" "}
+                                                    <span className="font-semibold text-green-700">
+                                                      {data.totalSum.toLocaleString(
+                                                        "ru-RU"
+                                                      )}{" "}
+                                                      so'm
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              </div>
                                             </div>
-                                            <div className="text-xs text-muted-foreground">
-                                              {log.tarification?.code}
-                                              {" - "}
-                                              {log.tarification?.name}
-                                            </div>
-                                            <div className="text-xs">
-                                              Jami:{" "}
-                                              <strong className="text-green-700">
-                                                {parseFloat(
-                                                  log.amount_earned
-                                                ).toLocaleString("ru-RU", {
-                                                  maximumFractionDigits: 0,
-                                                })}{" "}
-                                                so'm
-                                              </strong>
-                                            </div>
-                                          </div>
-                                        ))}
+                                          )
+                                        )}
                                       </div>
                                     )}
                                   </div>

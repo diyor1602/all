@@ -110,6 +110,8 @@ const SalaryDetails = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const [expandedModel, setExpandedModel] = useState(null);
+
   const getAbsenceData = (date) => {
     return employeeData?.absences?.find(
       (absence) => absence.start_date === date
@@ -833,45 +835,133 @@ const SalaryDetails = () => {
                   {employee.employee_tarification_logs?.length > 0 ? (
                     <div className="space-y-4">
                       {(() => {
-                        const groupedByModelSubmodel = {};
+                        const groupedByModel = {};
 
+                        // Step 1: Group logs by model
                         employee.employee_tarification_logs?.forEach((log) => {
+                          const modelId = log.model?.id || "unknown";
                           const modelName = log.model?.name || "Noma'lum model";
-                          const submodelName =
-                            log.submodel?.name || "Noma'lum submodel";
-                          const key = `${modelName} - ${submodelName}`;
 
-                          if (!groupedByModelSubmodel[key]) {
-                            groupedByModelSubmodel[key] = 0;
+                          if (!groupedByModel[modelId]) {
+                            groupedByModel[modelId] = {
+                              modelName,
+                              logs: [],
+                            };
                           }
 
-                          groupedByModelSubmodel[key] += parseFloat(
-                            log.amount_earned || 0
-                          );
+                          groupedByModel[modelId].logs.push(log);
                         });
-
-                        const sortedModelGroups = Object.entries(
-                          groupedByModelSubmodel
-                        ).sort((a, b) => b[1] - a[1]);
 
                         return (
                           <div className="space-y-2">
-                            {sortedModelGroups.map(([combinedName, total]) => (
-                              <div
-                                key={combinedName}
-                                className="flex justify-between items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                              >
-                                <div className="font-medium">
-                                  {combinedName}
-                                </div>
-                                <div className="text-green-600 font-semibold">
-                                  {total.toLocaleString("ru-RU", {
-                                    maximumFractionDigits: 2,
-                                  })}{" "}
-                                  so'm
-                                </div>
-                              </div>
-                            ))}
+                            {Object.entries(groupedByModel).map(
+                              ([modelId, group], index) => {
+                                const isOpen = expandedModel === modelId;
+
+                                // Step 2: Group works under this model by work CODE
+                                const workMap = {};
+                                group.logs.forEach((log) => {
+                                  const workCode =
+                                    log.tarification?.code || "NOMA'LUM";
+                                  const workName =
+                                    log.tarification?.name || "Noma'lum ish";
+
+                                  if (!workMap[workCode]) {
+                                    workMap[workCode] = {
+                                      name: workName,
+                                      totalQty: 0,
+                                      totalSum: 0,
+                                    };
+                                  }
+
+                                  workMap[workCode].totalQty += log.quantity;
+                                  workMap[workCode].totalSum += parseFloat(
+                                    log.amount_earned || 0
+                                  );
+                                });
+
+                                // Step 3: Total summary for the model
+                                const totalSumForModel = group.logs.reduce(
+                                  (sum, log) =>
+                                    sum + parseFloat(log.amount_earned || 0),
+                                  0
+                                );
+
+                                // Step 4: Assign a color
+                                const colors = [
+                                  "bg-blue-100 hover:bg-blue-200",
+                                  "bg-green-100 hover:bg-green-200",
+                                  "bg-yellow-100 hover:bg-yellow-200",
+                                  "bg-purple-100 hover:bg-purple-200",
+                                  "bg-pink-100 hover:bg-pink-200",
+                                  "bg-indigo-100 hover:bg-indigo-200",
+                                ];
+
+                                const colorClass =
+                                  colors[index % colors.length];
+
+                                return (
+                                  <div key={modelId}>
+                                    {/* Clickable model row */}
+                                    <div
+                                      onClick={() =>
+                                        setExpandedModel(
+                                          isOpen ? null : modelId
+                                        )
+                                      }
+                                      className={`cursor-pointer p-3 border rounded-lg ${colorClass} flex justify-between items-center`}
+                                    >
+                                      <div className="font-medium text-gray-800">
+                                        {group.modelName}
+                                      </div>
+                                      <div className="text-green-700 font-semibold">
+                                        {totalSumForModel.toLocaleString(
+                                          "ru-RU"
+                                        )}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+
+                                    {/* Expanded list of works under this model */}
+                                    {isOpen && (
+                                      <div className="bg-white p-4 border rounded-b-md space-y-2">
+                                        {Object.entries(workMap).map(
+                                          ([code, data]) => (
+                                            <div
+                                              key={code}
+                                              className="p-3 border rounded-md bg-gray-50 text-sm"
+                                            >
+                                              <div className="flex justify-between items-center flex-wrap gap-2">
+                                                <div className="font-medium">
+                                                  {code}, {data.name}
+                                                </div>
+                                                <div>
+                                                  <div>
+                                                    Bajarildi:{" "}
+                                                    <span className="font-semibold">
+                                                      {data.totalQty} ta
+                                                    </span>
+                                                  </div>
+                                                  <div>
+                                                    Summa:{" "}
+                                                    <span className="font-semibold text-green-700">
+                                                      {data.totalSum.toLocaleString(
+                                                        "ru-RU"
+                                                      )}{" "}
+                                                      so'm
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                            )}
                           </div>
                         );
                       })()}
