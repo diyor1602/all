@@ -102,8 +102,8 @@ const analyzeProgress = (plan) => {
   const projectedTotal = completed + avgDailyOutput * workingDaysRemaining;
 
   // Calculate required daily output to meet target
-  const requiredDailyOutput = remaining / workingDaysRemaining;
-
+  const requiredDailyOutput =
+    workingDaysRemaining > 0 ? remaining / workingDaysRemaining : 0;
   return {
     completed,
     target,
@@ -181,7 +181,7 @@ const calculatePreviousPlan = (month, year, plan, daily_outputs) => {
 };
 
 // Function to calculate total progress across all groups
-const calculateTotalProgress = (groupPlans, month) => {
+const calculateTotalProgress = (groupPlans) => {
   // Filter out groups without a plan (quantity is 0 or null/undefined)
   const groupsWithPlan = groupPlans.filter((plan) => plan.quantity > 0);
 

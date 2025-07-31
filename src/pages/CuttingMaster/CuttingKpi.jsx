@@ -87,7 +87,8 @@ const analyzeProgress = (plan) => {
   const projectedTotal = completed + avgDailyOutput * workingDaysRemaining;
 
   // Calculate required daily output to meet target
-  const requiredDailyOutput = remaining / workingDaysRemaining;
+  const requiredDailyOutput =
+    workingDaysRemaining > 0 ? remaining / workingDaysRemaining : 0;
 
   return {
     completed,
