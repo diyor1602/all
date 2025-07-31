@@ -429,17 +429,43 @@ const HolidayPage = () => {
               <ChevronLeft />
             </Button>
 
-            <div className="flex items-center space-x-1">
-              {pagination.links.slice(1, -1).map((link, index) => (
-                <Button
-                  key={index}
-                  variant={link.active ? "default" : "outline"}
-                  onClick={() => handlePageChange(parseInt(link.label))}
-                  disabled={!link.url}
-                >
-                  {link.label}
-                </Button>
-              ))}
+            <div className="flex flex-wrap gap-1 justify-center max-w-full">
+              {Array.from({ length: pagination.last_page }, (_, i) => i + 1)
+                .filter((page) => {
+                  return (
+                    page === 1 || // always show first
+                    page === pagination.last_page || // always show last
+                    Math.abs(page - pagination.current_page) <= 1 // show current, prev, next
+                  );
+                })
+                .reduce((acc, page, i, arr) => {
+                  if (i > 0 && page - arr[i - 1] > 1) {
+                    acc.push("ellipsis");
+                  }
+                  acc.push(page);
+                  return acc;
+                }, [])
+                .map((item, index) =>
+                  item === "ellipsis" ? (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-2 text-muted-foreground"
+                    >
+                      ...
+                    </span>
+                  ) : (
+                    <Button
+                      key={item}
+                      variant={
+                        item === pagination.current_page ? "default" : "outline"
+                      }
+                      onClick={() => handlePageChange(item)}
+                      className="h-8 px-3 text-xs"
+                    >
+                      {item}
+                    </Button>
+                  )
+                )}
             </div>
 
             <Button
