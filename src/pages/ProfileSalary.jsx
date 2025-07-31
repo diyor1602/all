@@ -108,6 +108,8 @@ const SalaryDetails = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const [expandedModel, setExpandedModel] = useState(null);
+
   const getAbsenceData = (date) => {
     return employeeData?.absences?.find(
       (absence) => absence.start_date === date
@@ -859,7 +861,9 @@ const SalaryDetails = () => {
                           <div className="space-y-2">
                             {sortedModelGroups.map(
                               ([combinedName, total], index) => {
-                                const colors = [
+                                const isOpen = expandedModel === combinedName;
+
+                                const colorClasses = [
                                   "bg-blue-200 hover:bg-blue-300",
                                   "bg-green-200 hover:bg-green-300",
                                   "bg-yellow-200 hover:bg-yellow-300",
@@ -868,22 +872,78 @@ const SalaryDetails = () => {
                                   "bg-indigo-200 hover:bg-indigo-300",
                                 ];
                                 const colorClass =
-                                  colors[index % colors.length];
+                                  colorClasses[index % colorClasses.length];
+
+                                // Filter the logs for this model-submodel group
+                                const matchingLogs =
+                                  employee.employee_tarification_logs.filter(
+                                    (log) => {
+                                      const modelName =
+                                        log.model?.name || "Noma'lum model";
+                                      const submodelName =
+                                        log.submodel?.name ||
+                                        "Noma'lum submodel";
+                                      return (
+                                        `${modelName} - ${submodelName}` ===
+                                        combinedName
+                                      );
+                                    }
+                                  );
 
                                 return (
-                                  <div
-                                    key={combinedName}
-                                    className={`flex justify-between items-center p-3 border rounded-lg transition-colors ${colorClass} shadow-sm`}
-                                  >
-                                    <div className="font-medium text-gray-800">
-                                      {combinedName}
+                                  <div key={combinedName}>
+                                    <div
+                                      className={`flex justify-between items-center p-3 border rounded-lg transition-colors cursor-pointer ${colorClass} shadow-sm`}
+                                      onClick={() =>
+                                        setExpandedModel(
+                                          isOpen ? null : combinedName
+                                        )
+                                      }
+                                    >
+                                      <div className="font-medium text-gray-800">
+                                        {combinedName}
+                                      </div>
+                                      <div className="text-green-700 font-semibold">
+                                        {total.toLocaleString("ru-RU")} so'm
+                                      </div>
                                     </div>
-                                    <div className="text-green-700 font-semibold">
-                                      {total.toLocaleString("ru-RU", {
-                                        maximumFractionDigits: 0,
-                                      })}{" "}
-                                      so'm
-                                    </div>
+
+                                    {isOpen && (
+                                      <div className="p-4 border rounded-b-lg bg-white space-y-2">
+                                        {matchingLogs.map((log) => (
+                                          <div
+                                            key={log.id}
+                                            className="border p-3 rounded-md bg-gray-50 space-y-1 text-sm"
+                                          >
+                                            <div className="flex justify-between">
+                                              <span className="font-medium">
+                                                Sana: {formatDate(log.date)}
+                                              </span>
+                                              <span>
+                                                Miqdor:{" "}
+                                                <strong>{log.quantity}</strong>
+                                              </span>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                              {log.tarification?.code}
+                                              {" - "}
+                                              {log.tarification?.name}
+                                            </div>
+                                            <div className="text-xs">
+                                              Jami:{" "}
+                                              <strong className="text-green-700">
+                                                {parseFloat(
+                                                  log.amount_earned
+                                                ).toLocaleString("ru-RU", {
+                                                  maximumFractionDigits: 0,
+                                                })}{" "}
+                                                so'm
+                                              </strong>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               }
