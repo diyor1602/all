@@ -18,6 +18,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -46,49 +47,65 @@ const getWorkingDays = (startDate, endDate) => {
 };
 
 // Function to analyze daily outputs and predict progress
-const analyzeProgress = (plan) => {
+const analyzeProgress = (plan, month) => {
   if (!plan.days || plan.days.length === 0) {
     return null;
   }
 
+  const [selectedYear, selectedMonth] = month.split("-").map(Number);
   const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() + 1;
-  const currentDay = today.getDate();
+  const isCurrentMonth =
+    today.getFullYear() === selectedYear &&
+    today.getMonth() + 1 === selectedMonth;
+  const isPastMonth = today > new Date(selectedYear, selectedMonth, 0);
 
-  // Get the last date in daily outputs
+  // Sort daily outputs
   const sortedOutputs = [...plan.days].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
   const lastOutputDate = new Date(sortedOutputs[sortedOutputs.length - 1].date);
   const lastOutputDay = lastOutputDate.getDate();
 
-  // Calculate working days passed and remaining
-  const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
-  const endOfMonth = new Date(currentYear, currentMonth, 0);
+  // Start & end of selected month
+  const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
+  const endOfMonth = new Date(selectedYear, selectedMonth, 0);
 
-  // Calculate working days passed (from start of month to last output day)
+  // Calculate working days
   const workingDaysPassed = getWorkingDays(
     startOfMonth,
-    new Date(currentYear, currentMonth - 1, lastOutputDay)
+    new Date(selectedYear, selectedMonth - 1, lastOutputDay)
   );
+  const workingDaysTotal = getWorkingDays(startOfMonth, endOfMonth);
+  let workingDaysRemaining;
 
-  // Calculate remaining working days (from tomorrow to end of month, excluding Sundays)
-  const tomorrow = new Date(currentYear, currentMonth - 1, currentDay + 1);
-  const workingDaysRemaining = getWorkingDays(tomorrow, endOfMonth);
+  if (isPastMonth) {
+    workingDaysRemaining = 0;
+  } else if (isCurrentMonth) {
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    workingDaysRemaining = getWorkingDays(tomorrow, endOfMonth);
+  } else {
+    workingDaysRemaining =
+      workingDaysTotal -
+      getWorkingDays(
+        startOfMonth,
+        new Date(selectedYear, selectedMonth - 1, lastOutputDay)
+      );
+  }
 
-  // Calculate current progress
+  // Calculate progress
   const completed = plan.monthly_total || 0;
   const target = plan.quantity;
   const remaining = Math.max(0, target - completed);
 
-  // Calculate average daily output
-  const avgDailyOutput = completed / workingDaysPassed;
-  const projectedTotal = completed + avgDailyOutput * workingDaysRemaining;
-
-  // Calculate required daily output to meet target
+  const avgDailyOutput =
+    workingDaysPassed > 0 ? completed / workingDaysPassed : 0;
   const requiredDailyOutput =
     workingDaysRemaining > 0 ? remaining / workingDaysRemaining : 0;
+
+  const projectedTotal = isPastMonth
+    ? completed
+    : completed + avgDailyOutput * workingDaysRemaining;
 
   return {
     completed,
@@ -167,31 +184,41 @@ const calculatePreviousPlan = (month, year, plan, days) => {
 };
 
 // Function to calculate total progress across all groups
-const calculateTotalProgress = (groupPlans) => {
-  // Filter out groups without a plan (quantity is 0 or null/undefined)
+const calculateTotalProgress = (groupPlans, month) => {
+  // Filter out groups without a plan
   const groupsWithPlan = groupPlans.filter((plan) => plan.quantity > 0);
-
   if (!groupsWithPlan?.length) return null;
 
+  const [selectedYear, selectedMonth] = month.split("-").map(Number);
   const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() + 1;
-  const currentDay = today.getDate();
+  const isCurrentMonth =
+    today.getFullYear() === selectedYear &&
+    today.getMonth() + 1 === selectedMonth;
 
-  // Calculate working days in the month
-  const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
-  const endOfMonth = new Date(currentYear, currentMonth, 0);
+  // Calculate working days in the selected month
+  const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
+  const endOfMonth = new Date(selectedYear, selectedMonth, 0);
   const totalWorkingDays = getWorkingDays(startOfMonth, endOfMonth);
 
-  // Calculate working days passed
-  const workingDaysPassed = getWorkingDays(
-    startOfMonth,
-    new Date(currentYear, currentMonth - 1, currentDay)
-  );
+  let workingDaysPassed, workingDaysRemaining;
 
-  const workingDaysRemaining = totalWorkingDays - workingDaysPassed;
+  if (isCurrentMonth) {
+    const currentDay = today.getDate();
+    workingDaysPassed = getWorkingDays(
+      startOfMonth,
+      new Date(selectedYear, selectedMonth - 1, currentDay)
+    );
+    workingDaysRemaining = totalWorkingDays - workingDaysPassed;
+  } else if (today > endOfMonth) {
+    // Past month
+    workingDaysPassed = totalWorkingDays;
+    workingDaysRemaining = 0;
+  } else {
+    // Future month
+    workingDaysPassed = 0;
+    workingDaysRemaining = totalWorkingDays;
+  }
 
-  // Calculate totals across groups with plans
   const totals = groupsWithPlan.reduce(
     (acc, plan) => {
       acc.totalCompleted += parseFloat(plan.monthly_total || 0);
@@ -201,7 +228,6 @@ const calculateTotalProgress = (groupPlans) => {
     { totalCompleted: 0, totalTarget: 0 }
   );
 
-  // Rest of the function remains the same...
   const remaining = Math.max(0, totals.totalTarget - totals.totalCompleted);
   const progress =
     totals.totalTarget > 0
@@ -229,8 +255,8 @@ const calculateTotalProgress = (groupPlans) => {
     workingDaysRemaining,
     onTrack: projectedTotal >= totals.totalTarget,
     lastUpdated: today.toLocaleDateString("ru-RU"),
-    groupsWithPlanCount: groupsWithPlan.length, // Added to show how many groups are included
-    totalGroups: groupPlans.length, // Added to show total number of groups
+    groupsWithPlanCount: groupsWithPlan.length,
+    totalGroups: groupPlans.length,
   };
 };
 
@@ -240,17 +266,37 @@ const CuttingKpi = () => {
   const [departments, setDepartments] = useState([]);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [groupPlans, setGroupPlans] = useState([]);
+  const [addPayload, setAddPayload] = useState({
+    department_id: null,
+    group_name: null,
+    quantity: null,
+    month: month?.split("-")[1],
+    year: month?.split("-")[0],
+  });
+  const [editPayload, setEditPayload] = useState({
+    id: null,
+    department_id: null,
+    group_name: null,
+    quantity: null,
+    month: month?.split("-")[1],
+    year: month?.split("-")[0],
+  });
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loadingGroupPlans, setLoadingGroupPlans] = useState(false);
+  const [sending, setSending] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [image, setImage] = useState(null);
   const [showTotalProgress, setShowTotalProgress] = useState(false);
 
+  const role = localStorage.getItem("role");
+
   const fetchGroupPlans = async () => {
     setLoadingGroupPlans(true);
     try {
-      const response = await api.get("/cuttingMaster/cuttingPlans", {
+      const response = await api.get(`/${role}/cuttingPlans`, {
         params: {
           year: month?.split("-")[0],
           month: month?.split("-")[1],
@@ -297,6 +343,87 @@ const CuttingKpi = () => {
   useEffect(() => {
     fetchGroupPlans();
   }, [month]);
+
+  const handleAddGroupPlan = async () => {
+    const payload = {
+      department_id: addPayload.department_id,
+      quantity: addPayload.quantity,
+      month: parseInt(month?.split("-")[1]),
+      year: parseInt(month?.split("-")[0]),
+    };
+    try {
+      setSending(true);
+      await api.post(`/${role}/cuttingPlans`, payload);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Guruh plani qo'shildi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1200,
+      });
+      setAddDialogOpen(false);
+      setAddPayload({
+        department_id: null,
+        group_name: null,
+        quantity: null,
+        month: month?.split("-")[1],
+        year: month?.split("-")[0],
+      });
+      await fetchGroupPlans();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Nimadir xato ketdi",
+        variant: "destructive",
+        duration: 1200,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleEditGroupPlan = async () => {
+    const payload = {
+      department_id: editPayload.department_id,
+      quantity: parseFloat(editPayload.quantity),
+      month: parseInt(month?.split("-")[1]),
+      year: parseInt(month?.split("-")[0]),
+    };
+    try {
+      setSending(true);
+      await api.patch(`/${role}/cuttingPlans/${editPayload.id}`, payload);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Guruh plani yangilandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1200,
+      });
+      setEditDialogOpen(false);
+      setEditPayload({
+        id: null,
+        department_id: null,
+        group_name: null,
+        quantity: null,
+        month: month?.split("-")[1],
+        year: month?.split("-")[0],
+      });
+      await fetchGroupPlans();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Nimadir xato ketdi",
+        variant: "destructive",
+        duration: 1200,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
 
   // Loading skeleton
   if (loading) {
@@ -385,6 +512,58 @@ const CuttingKpi = () => {
               ));
             })()}
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{addPayload.group_name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-4">
+            <Input
+              type="number"
+              placeholder="Miqdor"
+              value={addPayload.quantity}
+              onChange={(e) =>
+                setAddPayload({ ...addPayload, quantity: e.target.value })
+              }
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={handleAddGroupPlan}
+              disabled={sending}
+            >
+              {sending ? "Yuklanmoqda..." : "Qo'shish"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editPayload.group_name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-4">
+            <Input
+              type="number"
+              placeholder="Miqdor"
+              value={editPayload.quantity}
+              onChange={(e) =>
+                setEditPayload({ ...editPayload, quantity: e.target.value })
+              }
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={handleEditGroupPlan}
+              disabled={sending}
+            >
+              {sending ? "Yuklanmoqda..." : "Yangilash"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={showTotalProgress} onOpenChange={setShowTotalProgress}>
@@ -580,7 +759,7 @@ const CuttingKpi = () => {
           </div>
 
           {(() => {
-            const totalProgress = calculateTotalProgress(groupPlans);
+            const totalProgress = calculateTotalProgress(groupPlans, month);
             if (!totalProgress) return null;
 
             return (
@@ -763,7 +942,33 @@ const CuttingKpi = () => {
                       )}
 
                       <div className="mt-3 p-3 bg-white/50 rounded-lg space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div
+                          className="flex items-center justify-between"
+                          onClick={() => {
+                            if (localStorage.getItem("role") === "casher") {
+                              const plan = groupPlans?.find(
+                                (plan) => plan.department_id === department.id
+                              );
+
+                              if (plan) {
+                                setEditPayload({
+                                  id: plan.id,
+                                  department_id: plan.department_id,
+                                  group_name: department.name,
+                                  quantity: plan.quantity,
+                                });
+                                setEditDialogOpen(true);
+                              } else {
+                                setAddPayload({
+                                  department_id: department.id,
+                                  quantity: null,
+                                  group_name: department.name,
+                                });
+                                setAddDialogOpen(true);
+                              }
+                            }
+                          }}
+                        >
                           <div className="flex items-center gap-2">
                             <ClipboardList className="w-4 h-4 text-gray-500" />
                             <span className="text-sm text-gray-600">Plan:</span>
@@ -817,7 +1022,7 @@ const CuttingKpi = () => {
                           )
                             return null;
 
-                          const analysis = analyzeProgress(plan);
+                          const analysis = analyzeProgress(plan, month);
                           if (!analysis) return null;
 
                           return (
@@ -861,10 +1066,15 @@ const CuttingKpi = () => {
                                 )}
                                 <div>
                                   <p className="text-xs font-medium">
-                                    {analysis.onTrack
+                                    {analysis.workingDaysRemaining === 0
+                                      ? analysis.completed >= analysis.target
+                                        ? "Planni bajardi ✅"
+                                        : "Planni bajarmadi ❌"
+                                      : analysis.onTrack
                                       ? "Planni bajara oladi"
                                       : "Planni bajarish uchun harakat qilish kerak"}
                                   </p>
+
                                   <p className="text-xs mt-0.5">
                                     {analysis.onTrack ? (
                                       `Rejada: ~${Math.round(
@@ -872,7 +1082,7 @@ const CuttingKpi = () => {
                                           analysis.workingDaysRemaining +
                                           analysis.completed
                                       ).toLocaleString()} / ${analysis.target.toLocaleString()}`
-                                    ) : (
+                                    ) : analysis.workingDaysRemaining > 0 ? (
                                       <div>
                                         Kerak:{" "}
                                         <span className="font-medium">
@@ -884,6 +1094,8 @@ const CuttingKpi = () => {
                                         </span>{" "}
                                         kun
                                       </div>
+                                    ) : (
+                                      <div>Oy yakunlandi</div>
                                     )}
                                   </p>
                                 </div>
@@ -898,22 +1110,27 @@ const CuttingKpi = () => {
                                     {analysis.avgDailyOutput.toLocaleString()}
                                   </div>
                                 </div>
-                                <div className="bg-white p-1.5 rounded border text-center">
-                                  <div className="text-gray-500 text-[10px]">
-                                    Kun qoldi
-                                  </div>
-                                  <div className="font-medium">
-                                    {analysis.workingDaysRemaining}
-                                  </div>
-                                </div>
-                                <div className="bg-white p-1.5 rounded border text-center">
-                                  <div className="text-gray-500 text-[10px]">
-                                    Kunlik kerak
-                                  </div>
-                                  <div className="font-medium">
-                                    {analysis.requiredDailyOutput.toLocaleString()}
-                                  </div>
-                                </div>
+                                {analysis.workingDaysRemaining > 0 && (
+                                  <>
+                                    <div className="bg-green-200 p-2 rounded-lg">
+                                      <div className="text-sm text-gray-500">
+                                        Kun qoldi
+                                      </div>
+                                      <div className="font-medium">
+                                        {analysis.workingDaysRemaining} kun
+                                      </div>
+                                    </div>
+                                    <div className="bg-orange-200 p-2 rounded-lg">
+                                      <div className="text-sm text-gray-500">
+                                        Kunlik kerak
+                                      </div>
+                                      <div className="font-medium">
+                                        {analysis.requiredDailyOutput.toLocaleString()}{" "}
+                                        ta
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
                                 <div className="bg-white p-1.5 rounded border text-center">
                                   <div className="text-gray-500 text-[10px]">
                                     So'nggi yangilanish

@@ -67,7 +67,7 @@ const navigation = [
   },
   {
     name: "Bichuv KPI",
-    href: "/casher/cuttingKpi",
+    href: "/cuttingKpi",
     icon: SquareScissors,
     onMobile: false,
   },

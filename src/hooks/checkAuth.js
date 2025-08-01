@@ -5,6 +5,7 @@ const allowPaths = [
   "profileSalary",
   "kpi",
   "tailorRating",
+  "cuttingKpi",
 ];
 
 const isTokenValid = (tok) => {

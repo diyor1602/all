@@ -8,7 +8,6 @@ import Salary from "./Salary/Salary";
 import Employees from "./Employees/Employees";
 import Daily from "./Daily/Daily";
 import Monthly from "./Monthly/Monthly";
-import CuttingKpi from "./CuttingKPI/CuttingKpi";
 
 const Casher = () => {
   return (
@@ -22,7 +21,6 @@ const Casher = () => {
       <Route path="employees" element={<Employees />} />
       <Route path="daily" element={<Daily />} />
       <Route path="monthly" element={<Monthly />} />
-      <Route path="cuttingKpi" element={<CuttingKpi />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

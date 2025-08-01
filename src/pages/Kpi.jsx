@@ -61,49 +61,66 @@ const getWorkingDays = (startDate, endDate) => {
 };
 
 // Function to analyze daily outputs and predict progress
-const analyzeProgress = (plan) => {
+const analyzeProgress = (plan, month) => {
   if (!plan.daily_outputs || plan.daily_outputs.length === 0) {
     return null;
   }
 
+  const [selectedYear, selectedMonth] = month.split("-").map(Number);
   const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() + 1;
-  const currentDay = today.getDate();
+  const isCurrentMonth =
+    today.getFullYear() === selectedYear &&
+    today.getMonth() + 1 === selectedMonth;
+  const isPastMonth = today > new Date(selectedYear, selectedMonth, 0);
 
-  // Get the last date in daily outputs
+  // Sort daily outputs
   const sortedOutputs = [...plan.daily_outputs].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
   const lastOutputDate = new Date(sortedOutputs[sortedOutputs.length - 1].date);
   const lastOutputDay = lastOutputDate.getDate();
 
-  // Calculate working days passed and remaining
-  const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
-  const endOfMonth = new Date(currentYear, currentMonth, 0);
+  // Start & end of selected month
+  const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
+  const endOfMonth = new Date(selectedYear, selectedMonth, 0);
 
-  // Calculate working days passed (from start of month to last output day)
+  // Calculate working days
   const workingDaysPassed = getWorkingDays(
     startOfMonth,
-    new Date(currentYear, currentMonth - 1, lastOutputDay)
+    new Date(selectedYear, selectedMonth - 1, lastOutputDay)
   );
+  const workingDaysTotal = getWorkingDays(startOfMonth, endOfMonth);
+  let workingDaysRemaining;
 
-  // Calculate remaining working days (from tomorrow to end of month, excluding Sundays)
-  const tomorrow = new Date(currentYear, currentMonth - 1, currentDay + 1);
-  const workingDaysRemaining = getWorkingDays(tomorrow, endOfMonth);
+  if (isPastMonth) {
+    workingDaysRemaining = 0;
+  } else if (isCurrentMonth) {
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    workingDaysRemaining = getWorkingDays(tomorrow, endOfMonth);
+  } else {
+    workingDaysRemaining =
+      workingDaysTotal -
+      getWorkingDays(
+        startOfMonth,
+        new Date(selectedYear, selectedMonth - 1, lastOutputDay)
+      );
+  }
 
-  // Calculate current progress
+  // Calculate progress
   const completed = plan.monthly_total || 0;
   const target = plan.quantity;
   const remaining = Math.max(0, target - completed);
 
-  // Calculate average daily output
-  const avgDailyOutput = completed / workingDaysPassed;
-  const projectedTotal = completed + avgDailyOutput * workingDaysRemaining;
-
-  // Calculate required daily output to meet target
+  const avgDailyOutput =
+    workingDaysPassed > 0 ? completed / workingDaysPassed : 0;
   const requiredDailyOutput =
     workingDaysRemaining > 0 ? remaining / workingDaysRemaining : 0;
+
+  const projectedTotal = isPastMonth
+    ? completed
+    : completed + avgDailyOutput * workingDaysRemaining;
+
   return {
     completed,
     target,
@@ -181,31 +198,41 @@ const calculatePreviousPlan = (month, year, plan, daily_outputs) => {
 };
 
 // Function to calculate total progress across all groups
-const calculateTotalProgress = (groupPlans) => {
-  // Filter out groups without a plan (quantity is 0 or null/undefined)
+const calculateTotalProgress = (groupPlans, month) => {
+  // Filter out groups without a plan
   const groupsWithPlan = groupPlans.filter((plan) => plan.quantity > 0);
-
   if (!groupsWithPlan?.length) return null;
 
+  const [selectedYear, selectedMonth] = month.split("-").map(Number);
   const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() + 1;
-  const currentDay = today.getDate();
+  const isCurrentMonth =
+    today.getFullYear() === selectedYear &&
+    today.getMonth() + 1 === selectedMonth;
 
-  // Calculate working days in the month
-  const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
-  const endOfMonth = new Date(currentYear, currentMonth, 0);
+  // Calculate working days in the selected month
+  const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
+  const endOfMonth = new Date(selectedYear, selectedMonth, 0);
   const totalWorkingDays = getWorkingDays(startOfMonth, endOfMonth);
 
-  // Calculate working days passed
-  const workingDaysPassed = getWorkingDays(
-    startOfMonth,
-    new Date(currentYear, currentMonth - 1, currentDay)
-  );
+  let workingDaysPassed, workingDaysRemaining;
 
-  const workingDaysRemaining = totalWorkingDays - workingDaysPassed;
+  if (isCurrentMonth) {
+    const currentDay = today.getDate();
+    workingDaysPassed = getWorkingDays(
+      startOfMonth,
+      new Date(selectedYear, selectedMonth - 1, currentDay)
+    );
+    workingDaysRemaining = totalWorkingDays - workingDaysPassed;
+  } else if (today > endOfMonth) {
+    // Past month
+    workingDaysPassed = totalWorkingDays;
+    workingDaysRemaining = 0;
+  } else {
+    // Future month
+    workingDaysPassed = 0;
+    workingDaysRemaining = totalWorkingDays;
+  }
 
-  // Calculate totals across groups with plans
   const totals = groupsWithPlan.reduce(
     (acc, plan) => {
       acc.totalCompleted += parseFloat(plan.monthly_total || 0);
@@ -215,7 +242,6 @@ const calculateTotalProgress = (groupPlans) => {
     { totalCompleted: 0, totalTarget: 0 }
   );
 
-  // Rest of the function remains the same...
   const remaining = Math.max(0, totals.totalTarget - totals.totalCompleted);
   const progress =
     totals.totalTarget > 0
@@ -243,8 +269,8 @@ const calculateTotalProgress = (groupPlans) => {
     workingDaysRemaining,
     onTrack: projectedTotal >= totals.totalTarget,
     lastUpdated: today.toLocaleDateString("ru-RU"),
-    groupsWithPlanCount: groupsWithPlan.length, // Added to show how many groups are included
-    totalGroups: groupPlans.length, // Added to show total number of groups
+    groupsWithPlanCount: groupsWithPlan.length,
+    totalGroups: groupPlans.length,
   };
 };
 
@@ -1059,7 +1085,7 @@ const Kpi = () => {
                                 )
                                   return null;
 
-                                const analysis = analyzeProgress(plan);
+                                const analysis = analyzeProgress(plan, month);
                                 if (!analysis) return null;
 
                                 return (
@@ -1103,10 +1129,16 @@ const Kpi = () => {
                                       )}
                                       <div>
                                         <p className="text-xs font-medium">
-                                          {analysis.onTrack
+                                          {analysis.workingDaysRemaining === 0
+                                            ? analysis.completed >=
+                                              analysis.target
+                                              ? "Planni bajardi ✅"
+                                              : "Planni bajarmadi ❌"
+                                            : analysis.onTrack
                                             ? "Planni bajara oladi"
                                             : "Planni bajarish uchun harakat qilish kerak"}
                                         </p>
+
                                         <p className="text-xs mt-0.5">
                                           {analysis.onTrack ? (
                                             `Rejada: ~${Math.round(
@@ -1114,7 +1146,8 @@ const Kpi = () => {
                                                 analysis.workingDaysRemaining +
                                                 analysis.completed
                                             ).toLocaleString()} / ${analysis.target.toLocaleString()}`
-                                          ) : (
+                                          ) : analysis.workingDaysRemaining >
+                                            0 ? (
                                             <div>
                                               Kerak:{" "}
                                               <span className="font-medium">
@@ -1126,6 +1159,8 @@ const Kpi = () => {
                                               </span>{" "}
                                               kun
                                             </div>
+                                          ) : (
+                                            <div>Oy yakunlandi</div>
                                           )}
                                         </p>
                                       </div>
@@ -1140,22 +1175,29 @@ const Kpi = () => {
                                           {analysis.avgDailyOutput.toLocaleString()}
                                         </div>
                                       </div>
-                                      <div className="bg-white p-1.5 rounded border text-center">
-                                        <div className="text-gray-500 text-[10px]">
-                                          Kun qoldi
-                                        </div>
-                                        <div className="font-medium">
-                                          {analysis.workingDaysRemaining}
-                                        </div>
-                                      </div>
-                                      <div className="bg-white p-1.5 rounded border text-center">
-                                        <div className="text-gray-500 text-[10px]">
-                                          Kunlik kerak
-                                        </div>
-                                        <div className="font-medium">
-                                          {analysis.requiredDailyOutput.toLocaleString()}
-                                        </div>
-                                      </div>
+                                      {analysis.workingDaysRemaining > 0 && (
+                                        <>
+                                          <div className="bg-green-200 p-2 rounded-lg">
+                                            <div className="text-sm text-gray-500">
+                                              Kun qoldi
+                                            </div>
+                                            <div className="font-medium">
+                                              {analysis.workingDaysRemaining}{" "}
+                                              kun
+                                            </div>
+                                          </div>
+                                          <div className="bg-orange-200 p-2 rounded-lg">
+                                            <div className="text-sm text-gray-500">
+                                              Kunlik kerak
+                                            </div>
+                                            <div className="font-medium">
+                                              {analysis.requiredDailyOutput.toLocaleString()}{" "}
+                                              ta
+                                            </div>
+                                          </div>
+                                        </>
+                                      )}
+
                                       <div className="bg-white p-1.5 rounded border text-center">
                                         <div className="text-gray-500 text-[10px]">
                                           So'nggi yangilanish

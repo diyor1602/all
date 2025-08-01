@@ -18,7 +18,7 @@ const navigation = [
   },
   {
     name: "Kesish KPI",
-    href: "/cuttingMaster/cuttingKpi",
+    href: "/cuttingKpi",
     icon: BadgePercent,
     onMobile: true,
   },
