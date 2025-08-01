@@ -453,7 +453,7 @@ const Employees = () => {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="border">
+                <TableCell className="border text-center">
                   <Button size="icon" variant="ghost" asChild>
                     <Link to={`/internalAccountant/employees/${employee.id}`}>
                       <Eye className="text-blue-500" />
