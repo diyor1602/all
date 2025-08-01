@@ -11,7 +11,7 @@ const navigation = [
   },
   {
     name: "Buyurtmalar",
-    href: "/packageMaster/new-spec",
+    href: "/packageMaster/spec",
     icon: PackageOpen,
     onMobile: true,
   },
