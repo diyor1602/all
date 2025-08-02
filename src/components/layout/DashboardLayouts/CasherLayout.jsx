@@ -12,6 +12,7 @@ import {
   Sprout,
   SquareScissors,
   TentTree,
+  Truck,
   Users,
 } from "lucide-react";
 
@@ -87,6 +88,12 @@ const navigation = [
     name: "Tikuvchilar",
     href: "/tailorRating",
     icon: Sprout,
+    onMobile: false,
+  },
+  {
+    name: "Jo'natmalar",
+    href: "/truck",
+    icon: Truck,
     onMobile: false,
   },
 ];

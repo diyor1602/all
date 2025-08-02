@@ -45,7 +45,12 @@ const navigation = [
     onMobile: true,
   },
   { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
-  { name: "Jo'natma", href: "/truck", icon: Truck, onMobile: false },
+  {
+    name: "Jo'natmalar",
+    href: "/truck",
+    icon: Truck,
+    onMobile: false,
+  },
 ];
 
 export default function SuperHrLayout({ children }) {

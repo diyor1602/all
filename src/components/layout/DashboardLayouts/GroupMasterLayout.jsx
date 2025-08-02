@@ -7,6 +7,7 @@ import {
   ListChecks,
   Medal,
   Shirt,
+  Truck,
 } from "lucide-react";
 
 const navigation = [
@@ -46,6 +47,12 @@ const navigation = [
     href: "/tailorRating",
     icon: Medal,
     onMobile: true,
+  },
+  {
+    name: "Jo'natmalar",
+    href: "/truck",
+    icon: Truck,
+    onMobile: false,
   },
 ];
 

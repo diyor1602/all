@@ -1,10 +1,16 @@
 import BaseLayout from "./BaseLayout";
-import { CircleDollarSign, Home, Leaf } from "lucide-react";
+import { CircleDollarSign, Home, Leaf, Truck } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   { name: "Ish", href: "/tailor", icon: CircleDollarSign, onMobile: true },
   { name: "Yangisi", href: "/tailor/models", icon: Leaf, onMobile: true },
+  {
+    name: "Jo'natmalar",
+    href: "/truck",
+    icon: Truck,
+    onMobile: false,
+  },
 ];
 
 export default function TailorLayout({ children }) {

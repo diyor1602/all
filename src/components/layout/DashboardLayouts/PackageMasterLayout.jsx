@@ -1,5 +1,12 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Home, PackageOpen, Sprout, Truck } from "lucide-react";
+import {
+  BadgePercent,
+  Home,
+  PackageOpen,
+  Sprout,
+  Truck,
+  TruckElectric,
+} from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -18,10 +25,16 @@ const navigation = [
   {
     name: "Jo'natma",
     href: "/packageMaster/truck",
-    icon: Truck,
+    icon: TruckElectric,
     onMobile: true,
   },
   { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
+  {
+    name: "Jo'natmalar",
+    href: "/truck",
+    icon: Truck,
+    onMobile: false,
+  },
 ];
 
 export default function PackageMasterLayout({ children }) {

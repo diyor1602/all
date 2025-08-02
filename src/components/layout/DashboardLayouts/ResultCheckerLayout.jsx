@@ -5,6 +5,7 @@ import {
   CircleCheckBig,
   Home,
   Sprout,
+  Truck,
 } from "lucide-react";
 
 const navigation = [
@@ -28,6 +29,12 @@ const navigation = [
     onMobile: true,
   },
   { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
+  {
+    name: "Jo'natmalar",
+    href: "/truck",
+    icon: Truck,
+    onMobile: false,
+  },
 ];
 
 export default function ResultCheckerLayout({ children }) {
