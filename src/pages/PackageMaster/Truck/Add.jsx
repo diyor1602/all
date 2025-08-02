@@ -92,7 +92,7 @@ const Add = () => {
         ...prev.items,
         {
           model_id: modelObj.model.id,
-          quantity: 0,
+          quantity: defaultDetail[0]?.quantity || 0,
           details: defaultDetail,
         },
       ],
@@ -113,9 +113,12 @@ const Add = () => {
           quantity: order.quantity,
         };
 
+        const newDetails = [...item.details, newDetail];
+
         return {
           ...item,
-          details: [...item.details, newDetail],
+          details: newDetails,
+          quantity: parseInt(newDetails[0]?.quantity) || 0,
         };
       });
 
@@ -124,6 +127,7 @@ const Add = () => {
   };
 
   const handleSend = async () => {
+    console.log(form);
     const valid = form.items.every((item) => item.quantity > 0);
     if (!valid) {
       toast({
@@ -201,6 +205,7 @@ const Add = () => {
         return {
           ...item,
           details: updatedDetails,
+          quantity: parseInt(updatedDetails[0]?.quantity) || 0,
         };
       });
 
@@ -292,10 +297,7 @@ const Add = () => {
               <div>
                 Umumiy soni:{" "}
                 <span className="font-semibold">
-                  {details.reduce(
-                    (acc, detail) => acc + (parseInt(detail.quantity) || 0),
-                    0
-                  )}
+                  {parseInt(details[0]?.quantity) || 0}
                 </span>
               </div>
             </div>
@@ -379,12 +381,10 @@ const Add = () => {
                             ].quantity = val;
 
                             // Update total quantity from all details
-                            updatedItems[itemIndex].quantity = updatedItems[
-                              itemIndex
-                            ].details.reduce(
-                              (acc, d) => acc + (parseInt(d.quantity) || 0),
-                              0
-                            );
+                            updatedItems[itemIndex].quantity =
+                              parseInt(
+                                updatedItems[itemIndex].details[0]?.quantity
+                              ) || 0;
 
                             setForm({ ...form, items: updatedItems });
                           }}

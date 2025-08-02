@@ -21,6 +21,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { statuses } from "@/lib/status";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const All = () => {
   const { toast } = useToast();
@@ -200,30 +208,27 @@ const All = () => {
 
           {/* Search and Filter */}
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Model nomi bo'yicha qidirish..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="w-full md:w-48">
-              <select
-                className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">Barcha holatlar</option>
-                <option value="active">Aktiv</option>
-                <option value="draft">Qoralama</option>
-                <option value="completed">Tugallangan</option>
-              </select>
-            </div>
+            <Input
+              type="text"
+              placeholder="Model nomi bo'yicha qidirish..."
+              value={searchTerm}
+              className="bg-white"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value)}
+            >
+              <SelectTrigger className="bg-white w-fit">
+                <SelectValue placeholder="Barcha holatlar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barcha holatlar</SelectItem>
+                <SelectItem value="active">Aktiv</SelectItem>
+                <SelectItem value="draft">Qoralama</SelectItem>
+                <SelectItem value="completed">Tugallangan</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
