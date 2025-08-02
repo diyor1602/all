@@ -127,7 +127,6 @@ const Add = () => {
   };
 
   const handleSend = async () => {
-    console.log(form);
     const valid = form.items.every((item) => item.quantity > 0);
     if (!valid) {
       toast({

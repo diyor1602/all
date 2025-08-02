@@ -36,6 +36,7 @@ import Casher from "./pages/Casher/Casher";
 import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
 import Tailor from "./pages/Tailor/Tailor";
+import Truck from "./pages/Truck";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -70,6 +71,7 @@ function App() {
           <Route path="/issue" element={<Issue />} />
           <Route path="/kpi" element={<Kpi />} />
           <Route path="/cuttingKpi" element={<CuttingKpi />} />
+          <Route path="/truck" element={<Truck />} />
           <Route path="/tailorRating" element={<TailorRating />} />
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />
