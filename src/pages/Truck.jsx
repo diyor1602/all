@@ -80,8 +80,7 @@ const TruckPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Truck className="text-blue-600" size={24} />
-              Jo'natish rejasi #{selectedPlan?.id} /{" "}
-              <span className="font-bold text-green-600">{percentage} %</span>
+              Jo'natish rejasi #{selectedPlan?.id}
             </DialogTitle>
           </DialogHeader>
 
@@ -141,6 +140,12 @@ const TruckPage = () => {
                       </p>
                       <p className="text-sm text-gray-600">Qolgan</p>
                     </div>
+                  </div>
+                  <div className="mt-5 flex flex-col gap-2">
+                    <Progress value={percentage} />
+                    <p className="text-lg font-semibold text-gray-600 text-center">
+                      {percentage}% bajarildi
+                    </p>
                   </div>
                 </CardContent>
               </Card>
