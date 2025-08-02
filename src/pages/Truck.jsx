@@ -82,8 +82,8 @@ const TruckPage = () => {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <Truck className="text-blue-600" size={24} />
-              Jo'natish rejasi #{selectedPlan?.id}
+              <Truck className="text-blue-600" size={24} />#{selectedPlan?.id} /{" "}
+              {selectedPlan?.date?.split("-").reverse().join(".")}
             </DialogTitle>
           </DialogHeader>
 
