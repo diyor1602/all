@@ -44,6 +44,9 @@ const TruckPage = () => {
   return (
     <>
       <h1 className="text-2xl font-bold mb-4">Jo'natmalar</h1>
+      {data.length == 0 && (
+        <p className="text-center text-gray-600">Jo'natmalar topilmadi</p>
+      )}
       <div className="grid md:grid-cols-2 grid-cols-1 gap-32">
         {data.map((plan) => {
           const totals = plan.items.reduce(
