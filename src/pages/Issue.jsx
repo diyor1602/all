@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
+import { Switch } from "@/components/ui/switch";
 
 const Issue = () => {
   const { toast } = useToast();
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [forAdmins, setForAdmins] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,6 +19,7 @@ const Issue = () => {
       if (image) {
         formData.append("image", image);
       }
+      formData.append("for_admins", forAdmins);
       await api.post("/issue", formData);
       toast({
         title: "Muvaffaqiyatli",
@@ -47,6 +50,12 @@ const Issue = () => {
           Fikr Bildirish
         </h1>
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Rahbariyatga yuborish
+            </label>
+            <Switch checked={forAdmins} onCheckedChange={setForAdmins} />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tavsif
