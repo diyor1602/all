@@ -1177,8 +1177,8 @@ const Kpi = () => {
                                       </div>
                                       {analysis.workingDaysRemaining > 0 && (
                                         <>
-                                          <div className="bg-green-200 p-2 rounded-lg">
-                                            <div className="text-sm text-gray-500">
+                                          <div className="bg-green-200 p-2 rounded-lg text-center">
+                                            <div className="text-[10px] text-gray-500">
                                               Kun qoldi
                                             </div>
                                             <div className="font-medium">
@@ -1186,8 +1186,8 @@ const Kpi = () => {
                                               kun
                                             </div>
                                           </div>
-                                          <div className="bg-orange-200 p-2 rounded-lg">
-                                            <div className="text-sm text-gray-500">
+                                          <div className="bg-orange-200 p-2 rounded-lg text-center">
+                                            <div className="text-[10px] text-gray-500">
                                               Kunlik kerak
                                             </div>
                                             <div className="font-medium">
