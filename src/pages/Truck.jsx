@@ -159,97 +159,108 @@ const TruckPage = () => {
                   Modellar va buyurtmalar
                 </h3>
 
-                {selectedPlan.items.map((item, index) => {
-                  const completionPercentage =
-                    item.quantity > 0
-                      ? (item.completed / item.quantity) * 100
-                      : 0;
+                {[...selectedPlan.items]
+                  .sort((a, b) => {
+                    const percentA =
+                      a.quantity > 0 ? a.completed / a.quantity : 0;
+                    const percentB =
+                      b.quantity > 0 ? b.completed / b.quantity : 0;
+                    return percentA - percentB;
+                  })
+                  .map((item, index) => {
+                    const completionPercentage =
+                      item.quantity > 0
+                        ? (item.completed / item.quantity) * 100
+                        : 0;
 
-                  return (
-                    <Card
-                      key={item.id}
-                      className="border-l-4 border-l-blue-500"
-                    >
-                      <CardHeader>
-                        <CardTitle className="text-base flex items-center justify-between">
-                          <span className="flex items-center gap-2">
-                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
-                              #{index + 1}
-                            </span>
-                            {item.model?.name}
-                          </span>
-                          <Badge variant="outline">
-                            {item.completed}/{item.quantity}
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div>
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>Progress</span>
-                              <span className="font-medium">
-                                {Math.round(completionPercentage)}%
+                    return (
+                      <Card
+                        key={item.id}
+                        className="border-l-4 border-l-blue-500"
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-base flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                                #{index + 1}
                               </span>
-                            </div>
-                            <Progress
-                              value={completionPercentage}
-                              className="h-2"
-                            />
-                          </div>
-
-                          {item.details && item.details.length > 0 && (
+                              {item.model?.name}
+                            </span>
+                            <Badge variant="outline">
+                              {item.completed}/{item.quantity}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
                             <div>
-                              <Separator className="my-3" />
-                              <h4 className="font-medium text-gray-700 mb-3">
-                                Buyurtma tafsilotlari:
-                              </h4>
-                              <div className="space-y-3">
-                                {item.details.map((detail) => (
-                                  <div
-                                    key={detail.id}
-                                    className="bg-gray-50 p-3 rounded-lg"
-                                  >
-                                    <div className="flex justify-between items-start mb-2">
-                                      <div>
-                                        <p className="font-medium text-gray-800">
-                                          {detail.order?.name}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                          {detail.submodel?.name}
-                                        </p>
-                                      </div>
-                                      <div className="text-right">
-                                        <div
-                                          className={
-                                            "px-2 py-1 rounded-full text-sm text-white " +
-                                            statuses[detail.order?.status]
-                                              ?.color
-                                          }
-                                        >
-                                          {statuses[detail.order?.status]?.text}
+                              <div className="flex justify-between text-sm mb-1">
+                                <span>Progress</span>
+                                <span className="font-medium">
+                                  {Math.round(completionPercentage)}%
+                                </span>
+                              </div>
+                              <Progress
+                                value={completionPercentage}
+                                className="h-2"
+                              />
+                            </div>
+
+                            {item.details && item.details.length > 0 && (
+                              <div>
+                                <Separator className="my-3" />
+                                <h4 className="font-medium text-gray-700 mb-3">
+                                  Buyurtma tafsilotlari:
+                                </h4>
+                                <div className="space-y-3">
+                                  {item.details.map((detail) => (
+                                    <div
+                                      key={detail.id}
+                                      className="bg-gray-50 p-3 rounded-lg"
+                                    >
+                                      <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                          <p className="font-medium text-gray-800">
+                                            {detail.order?.name}
+                                          </p>
+                                          <p className="text-sm text-gray-600">
+                                            {detail.submodel?.name}
+                                          </p>
                                         </div>
-                                        <p className="text-sm text-gray-600 mt-1">
-                                          Miqdor: {detail.quantity}
-                                        </p>
+                                        <div className="text-right">
+                                          <div
+                                            className={
+                                              "px-2 py-1 rounded-full text-sm text-white " +
+                                              statuses[detail.order?.status]
+                                                ?.color
+                                            }
+                                          >
+                                            {
+                                              statuses[detail.order?.status]
+                                                ?.text
+                                            }
+                                          </div>
+                                          <p className="text-sm text-gray-600 mt-1">
+                                            Miqdor: {detail.quantity}
+                                          </p>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {item.comment && (
-                            <div className="mt-3 p-2 bg-yellow-50 border-l-2 border-yellow-400 text-sm">
-                              <strong>Element izohi:</strong> {item.comment}
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                            {item.comment && (
+                              <div className="mt-3 p-2 bg-yellow-50 border-l-2 border-yellow-400 text-sm">
+                                <strong>Element izohi:</strong> {item.comment}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
               </div>
             </div>
           )}
