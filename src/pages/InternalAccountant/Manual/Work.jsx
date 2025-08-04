@@ -560,7 +560,7 @@ const Work = () => {
       showHead: "firstPage",
     });
 
-    doc.save("limitdan-otganlar.pdf");
+    doc.save("limitdan-o'tganlar.pdf");
   };
 
   if (loading) {
