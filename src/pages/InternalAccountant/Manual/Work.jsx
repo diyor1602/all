@@ -97,6 +97,35 @@ const Work = () => {
     new Date().toISOString().split("T")[0]
   );
 
+  const overLimitTarifs = useMemo(() => {
+    if (!order || !order.quantity || !tarifLogs?.length) return [];
+
+    const grouped = {};
+
+    tarifLogs.forEach((log) => {
+      const id = log.tarification?.id;
+      if (!id) return;
+
+      if (!grouped[id]) {
+        grouped[id] = {
+          id,
+          code: log.tarification?.code,
+          name: log.tarification?.name,
+          total: 0,
+          users: [],
+        };
+      }
+
+      grouped[id].total += Number(log.quantity || 0);
+      grouped[id].users.push({
+        name: log.employee?.name || "Noma'lum",
+        quantity: Number(log.quantity || 0),
+      });
+    });
+
+    return Object.values(grouped).filter((item) => item.total > order.quantity);
+  }, [tarifLogs, order]);
+
   // Handle sorting
   const handleSort = (key) => {
     let direction = "asc";
@@ -423,32 +452,6 @@ const Work = () => {
       toast({
         title: "Xatolik",
         description: "Barcha ishlar uchun tarif va miqdorni to'ldiring",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check limit validation
-    const limitExceededWorks = selectedWorks.filter((work) => {
-      const tarification = getSelectedTarification(work.id);
-      if (tarification) {
-        const availableLimit = tarification.limit;
-        return Number.parseInt(work.quantity) > availableLimit;
-      }
-      return false;
-    });
-
-    if (limitExceededWorks.length > 0) {
-      const workNames = limitExceededWorks
-        .map((work) => {
-          const tarification = getSelectedTarification(work.id);
-          return `${tarification.code} - ${tarification.name}`;
-        })
-        .join(", ");
-
-      toast({
-        title: "Limit oshib ketdi",
-        description: `Quyidagi ishlar uchun limit oshib ketgan: ${workNames}`,
         variant: "destructive",
       });
       return;
@@ -883,6 +886,65 @@ const Work = () => {
             </Button>
           </div>
 
+          {overLimitTarifs.length > 0 && (
+            <div className="mt-8 bg-red-50 p-4 border border-red-300 rounded-lg">
+              <h3 className="text-red-600 text-lg font-semibold mb-4">
+                Limitdan o'tganlar
+              </h3>
+              <table className="w-full border border-collapse">
+                <thead className="bg-red-100 text-red-800">
+                  <tr>
+                    <th className="border border-red-300 p-2">#</th>
+                    <th className="border border-red-300 p-2">Kod</th>
+                    <th className="border border-red-300 p-2">Nomi</th>
+                    <th className="border border-red-300 p-2">
+                      Jami bajarilgan
+                    </th>
+                    <th className="border border-red-300 p-2">
+                      Foydalanuvchilar
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overLimitTarifs.map((tarif, index) => (
+                    <tr
+                      key={tarif.id}
+                      className="bg-white text-red-700 align-top"
+                    >
+                      <td className="border border-red-300 p-2 text-center">
+                        {index + 1}
+                      </td>
+                      <td className="border border-red-300 p-2">
+                        {tarif.code}
+                      </td>
+                      <td className="border border-red-300 p-2">
+                        {tarif.name}
+                      </td>
+                      <td className="border border-red-300 p-2">
+                        {tarif.total}
+                      </td>
+                      <td className="border border-red-300 p-2">
+                        <ul className="space-y-1">
+                          {tarif.users.map((user, idx) => (
+                            <li
+                              key={idx}
+                              className="flex justify-between text-sm"
+                            >
+                              <span>{user.name}</span>
+                              <span className="font-semibold">
+                                {user.quantity} ta
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           <div className="bg-white p-4">
             <div className="mb-4 flex items-center gap-2">
               <Input
@@ -1083,14 +1145,14 @@ const Work = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Employee Selection */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Popover open={empComboOpen} onOpenChange={setEmpComboOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
                       aria-expanded={empComboOpen}
-                      className="min-w-[200px] justify-between"
+                      className="w-fit justify-between"
                     >
                       {selectedEmployee
                         ? employees?.find((emp) => emp.id === selectedEmployee)
@@ -1294,25 +1356,6 @@ const Work = () => {
                               const tarification = getSelectedTarification(
                                 work.id
                               );
-                              const availableLimit = tarification
-                                ? tarification.limit
-                                : 0;
-
-                              const currentQuantity =
-                                Number.parseInt(work.quantity) || 0;
-
-                              if (
-                                tarification &&
-                                currentQuantity > availableLimit
-                              ) {
-                                return (
-                                  <p className="text-red-500 text-xs">
-                                    Maksimal miqdor: {availableLimit} ta (Limit:{" "}
-                                    {tarification.limit}, Bajarilgan:{" "}
-                                    {tarification.total_quantity || 0})
-                                  </p>
-                                );
-                              }
 
                               if (tarification) {
                                 return (
@@ -1483,17 +1526,7 @@ const Work = () => {
               <Button
                 onClick={handleSubmit}
                 disabled={
-                  !selectedEmployee ||
-                  selectedWorks.length === 0 ||
-                  submitting ||
-                  selectedWorks.some((work) => {
-                    const tarification = getSelectedTarification(work.id);
-                    if (tarification && work.quantity) {
-                      const availableLimit = tarification.limit;
-                      return Number.parseInt(work.quantity) > availableLimit;
-                    }
-                    return false;
-                  })
+                  !selectedEmployee || selectedWorks.length === 0 || submitting
                 }
                 className="w-full flex items-center gap-2"
                 size="lg"
