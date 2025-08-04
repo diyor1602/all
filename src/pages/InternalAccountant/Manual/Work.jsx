@@ -28,6 +28,7 @@ import {
   X,
   Check,
   ChevronsUpDown,
+  Download,
 } from "lucide-react";
 import {
   Command,
@@ -46,6 +47,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
 import { cn } from "@/lib/utils";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -500,6 +503,57 @@ const Work = () => {
     }
   };
 
+  const loadFont = async () => {
+    const response = await fetch("/DejaVuSans.ttf");
+    const fontData = await response.arrayBuffer();
+    const base64Font = btoa(
+      new Uint8Array(fontData).reduce(
+        (data, byte) => data + String.fromCharCode(byte),
+        ""
+      )
+    );
+    return base64Font;
+  };
+
+  const handleDownload = async () => {
+    const doc = new jsPDF();
+
+    // Load and register DejaVuSans font
+    const base64Font = await loadFont();
+    doc.addFileToVFS("DejaVuSans.ttf", base64Font);
+    doc.addFont("DejaVuSans.ttf", "DejaVuSans", "normal");
+    doc.setFont("DejaVuSans");
+
+    doc.setFontSize(16);
+    doc.text("Limitdan o'tganlar", 14, 20);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [["#", "Kod", "Nomi", "Jami bajarilgan", "Foydalanuvchilar"]],
+      body: overLimitTarifs.map((tarif, index) => [
+        index + 1,
+        tarif.code,
+        tarif.name,
+        tarif.total,
+        tarif.users
+          .map((user) => `${user.name}: ${user.quantity} ta`)
+          .join("\n"),
+      ]),
+      styles: { font: "DejaVuSans", fontSize: 10, cellPadding: 3 },
+      headStyles: {
+        fillColor: [220, 53, 69],
+        textColor: 255,
+      },
+      bodyStyles: {
+        textColor: [90, 0, 0],
+        valign: "top",
+      },
+      showHead: "firstPage",
+    });
+
+    doc.save("limitdan-otganlar.pdf");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -888,60 +942,72 @@ const Work = () => {
 
           {overLimitTarifs.length > 0 && (
             <div className="mt-8 bg-red-50 p-4 border border-red-300 rounded-lg">
-              <h3 className="text-red-600 text-lg font-semibold mb-4">
-                Limitdan o'tganlar
-              </h3>
-              <table className="w-full border border-collapse">
-                <thead className="bg-red-100 text-red-800">
-                  <tr>
-                    <th className="border border-red-300 p-2">#</th>
-                    <th className="border border-red-300 p-2">Kod</th>
-                    <th className="border border-red-300 p-2">Nomi</th>
-                    <th className="border border-red-300 p-2">
-                      Jami bajarilgan
-                    </th>
-                    <th className="border border-red-300 p-2">
-                      Foydalanuvchilar
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {overLimitTarifs.map((tarif, index) => (
-                    <tr
-                      key={tarif.id}
-                      className="bg-white text-red-700 align-top"
-                    >
-                      <td className="border border-red-300 p-2 text-center">
-                        {index + 1}
-                      </td>
-                      <td className="border border-red-300 p-2">
-                        {tarif.code}
-                      </td>
-                      <td className="border border-red-300 p-2">
-                        {tarif.name}
-                      </td>
-                      <td className="border border-red-300 p-2">
-                        {tarif.total}
-                      </td>
-                      <td className="border border-red-300 p-2">
-                        <ul className="space-y-1">
-                          {tarif.users.map((user, idx) => (
-                            <li
-                              key={idx}
-                              className="flex justify-between text-sm"
-                            >
-                              <span>{user.name}</span>
-                              <span className="font-semibold">
-                                {user.quantity} ta
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </td>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-red-600 text-lg font-semibold">
+                  Limitdan o'tganlar
+                </h3>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    handleDownload();
+                  }}
+                >
+                  <Download />
+                </Button>
+              </div>
+              <div className="max-h-[60vh] overflow-auto">
+                <table className="w-full border border-collapse">
+                  <thead className="bg-red-100 text-red-800">
+                    <tr>
+                      <th className="border border-red-300 p-2">#</th>
+                      <th className="border border-red-300 p-2">Kod</th>
+                      <th className="border border-red-300 p-2">Nomi</th>
+                      <th className="border border-red-300 p-2">
+                        Jami bajarilgan
+                      </th>
+                      <th className="border border-red-300 p-2">
+                        Foydalanuvchilar
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {overLimitTarifs.map((tarif, index) => (
+                      <tr
+                        key={tarif.id}
+                        className="bg-white text-red-700 align-top"
+                      >
+                        <td className="border border-red-300 p-2 text-center">
+                          {index + 1}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          {tarif.code}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          {tarif.name}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          {tarif.total}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          <ul className="space-y-1">
+                            {tarif.users.map((user, idx) => (
+                              <li
+                                key={idx}
+                                className="flex justify-between text-sm"
+                              >
+                                <span>{user.name}</span>
+                                <span className="font-semibold">
+                                  {user.quantity} ta
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
