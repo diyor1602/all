@@ -538,8 +538,14 @@ const Work = () => {
         tarif.name,
         tarif.total,
         tarif.total - order.quantity,
-        tarif.users
-          .map((user) => `${user.name}: ${user.quantity} ta`)
+        Object.entries(
+          tarif.users.reduce((acc, user) => {
+            if (!acc[user.name]) acc[user.name] = 0;
+            acc[user.name] += user.quantity;
+            return acc;
+          }, {})
+        )
+          .map(([name, total]) => `${name}: ${total} ta`)
           .join("\n"),
       ]),
       styles: { font: "DejaVuSans", fontSize: 10, cellPadding: 3 },
@@ -997,17 +1003,29 @@ const Work = () => {
                         </td>
                         <td className="border border-red-300 p-2">
                           <ul className="space-y-1">
-                            {tarif.users.map((user, idx) => (
-                              <li
-                                key={idx}
-                                className="flex justify-between text-sm"
-                              >
-                                <span>{user.name}</span>
-                                <span className="font-semibold">
-                                  {user.quantity} ta
-                                </span>
-                              </li>
-                            ))}
+                            {Object.entries(
+                              tarif.users.reduce((acc, user) => {
+                                if (!acc[user.name]) {
+                                  acc[user.name] = 0;
+                                }
+                                acc[user.name] += user.quantity;
+                                return acc;
+                              }, {})
+                            )
+                              .sort(([aName], [bName]) =>
+                                aName.localeCompare(bName)
+                              )
+                              .map(([name, totalQuantity], idx) => (
+                                <li
+                                  key={idx}
+                                  className="flex justify-between text-sm"
+                                >
+                                  <span>{name}</span>
+                                  <span className="font-semibold">
+                                    {totalQuantity} ta
+                                  </span>
+                                </li>
+                              ))}
                           </ul>
                         </td>
                       </tr>
