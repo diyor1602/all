@@ -949,93 +949,6 @@ const Work = () => {
             </Button>
           </div>
 
-          {overLimitTarifs.length > 0 && (
-            <div className="mt-8 bg-red-50 p-4 border border-red-300 rounded-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-red-600 text-lg font-semibold">
-                  Limitdan o'tganlar
-                </h3>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    handleDownload();
-                  }}
-                >
-                  <Download />
-                </Button>
-              </div>
-              <div className="max-h-[60vh] overflow-auto">
-                <table className="w-full border border-collapse">
-                  <thead className="bg-red-100 text-red-800">
-                    <tr>
-                      <th className="border border-red-300 p-2">#</th>
-                      <th className="border border-red-300 p-2">Kod</th>
-                      <th className="border border-red-300 p-2">Nomi</th>
-                      <th className="border border-red-300 p-2">
-                        Jami bajarilgan
-                      </th>
-                      <th className="border border-red-300 p-2">Ortiqcha</th>
-                      <th className="border border-red-300 p-2">
-                        Foydalanuvchilar
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {overLimitTarifs.map((tarif, index) => (
-                      <tr
-                        key={tarif.id}
-                        className="bg-white text-red-700 align-top"
-                      >
-                        <td className="border border-red-300 p-2 text-center">
-                          {index + 1}
-                        </td>
-                        <td className="border border-red-300 p-2">
-                          {tarif.code}
-                        </td>
-                        <td className="border border-red-300 p-2">
-                          {tarif.name}
-                        </td>
-                        <td className="border border-red-300 p-2">
-                          {tarif.total}
-                        </td>
-                        <td className="border border-red-300 p-2">
-                          {tarif.total - order.quantity}
-                        </td>
-                        <td className="border border-red-300 p-2">
-                          <ul className="space-y-1">
-                            {Object.entries(
-                              tarif.users.reduce((acc, user) => {
-                                if (!acc[user.name]) {
-                                  acc[user.name] = 0;
-                                }
-                                acc[user.name] += user.quantity;
-                                return acc;
-                              }, {})
-                            )
-                              .sort(([aName], [bName]) =>
-                                aName.localeCompare(bName)
-                              )
-                              .map(([name, totalQuantity], idx) => (
-                                <li
-                                  key={idx}
-                                  className="flex justify-between text-sm"
-                                >
-                                  <span>{name}</span>
-                                  <span className="font-semibold">
-                                    {totalQuantity} ta
-                                  </span>
-                                </li>
-                              ))}
-                          </ul>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
           <div className="bg-white p-4">
             <div className="mb-4 flex items-center gap-2">
               <Input
@@ -1631,6 +1544,93 @@ const Work = () => {
               </Button>
             </CardContent>
           </Card>
+
+          {overLimitTarifs.length > 0 && (
+            <div className="mt-8 bg-red-50 p-4 border border-red-300 rounded-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-red-600 text-lg font-semibold">
+                  Limitdan o'tganlar
+                </h3>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    handleDownload();
+                  }}
+                >
+                  <Download />
+                </Button>
+              </div>
+              <div className="max-h-[60vh] overflow-auto">
+                <table className="w-full border border-collapse">
+                  <thead className="bg-red-100 text-red-800">
+                    <tr>
+                      <th className="border border-red-300 p-2">#</th>
+                      <th className="border border-red-300 p-2">Kod</th>
+                      <th className="border border-red-300 p-2">Nomi</th>
+                      <th className="border border-red-300 p-2">
+                        Jami bajarilgan
+                      </th>
+                      <th className="border border-red-300 p-2">Ortiqcha</th>
+                      <th className="border border-red-300 p-2">
+                        Foydalanuvchilar
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {overLimitTarifs.map((tarif, index) => (
+                      <tr
+                        key={tarif.id}
+                        className="bg-white text-red-700 align-top"
+                      >
+                        <td className="border border-red-300 p-2 text-center">
+                          {index + 1}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          {tarif.code}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          {tarif.name}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          {tarif.total}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          {tarif.total - order.quantity}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          <ul className="space-y-1">
+                            {Object.entries(
+                              tarif.users.reduce((acc, user) => {
+                                if (!acc[user.name]) {
+                                  acc[user.name] = 0;
+                                }
+                                acc[user.name] += user.quantity;
+                                return acc;
+                              }, {})
+                            )
+                              .sort(([aName], [bName]) =>
+                                aName.localeCompare(bName)
+                              )
+                              .map(([name, totalQuantity], idx) => (
+                                <li
+                                  key={idx}
+                                  className="flex justify-between text-sm"
+                                >
+                                  <span>{name}</span>
+                                  <span className="font-semibold">
+                                    {totalQuantity} ta
+                                  </span>
+                                </li>
+                              ))}
+                          </ul>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Employees that has no work */}
           <Card className="p-4">
