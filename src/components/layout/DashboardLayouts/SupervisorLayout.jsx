@@ -35,6 +35,7 @@ const navigation = [
     icon: NotebookPen,
     onMobile: true,
   },
+  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
   {
     name: "Jo'natmalar",
     href: "/truck",
