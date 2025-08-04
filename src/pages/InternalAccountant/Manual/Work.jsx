@@ -529,12 +529,15 @@ const Work = () => {
 
     autoTable(doc, {
       startY: 30,
-      head: [["#", "Kod", "Nomi", "Jami bajarilgan", "Foydalanuvchilar"]],
+      head: [
+        ["#", "Kod", "Nomi", "Jami bajarilgan", "Ortiqcha", "Foydalanuvchilar"],
+      ],
       body: overLimitTarifs.map((tarif, index) => [
         index + 1,
         tarif.code,
         tarif.name,
         tarif.total,
+        tarif.total - order.quantity,
         tarif.users
           .map((user) => `${user.name}: ${user.quantity} ta`)
           .join("\n"),
@@ -965,6 +968,7 @@ const Work = () => {
                       <th className="border border-red-300 p-2">
                         Jami bajarilgan
                       </th>
+                      <th className="border border-red-300 p-2">Ortiqcha</th>
                       <th className="border border-red-300 p-2">
                         Foydalanuvchilar
                       </th>
@@ -987,6 +991,9 @@ const Work = () => {
                         </td>
                         <td className="border border-red-300 p-2">
                           {tarif.total}
+                        </td>
+                        <td className="border border-red-300 p-2">
+                          {tarif.total - order.quantity}
                         </td>
                         <td className="border border-red-300 p-2">
                           <ul className="space-y-1">
