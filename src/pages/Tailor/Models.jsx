@@ -49,11 +49,16 @@ const Models = () => {
   const [myWorks, setMyWorks] = useState([]);
 
   const getFormattedYesterday = () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const mm = String(yesterday.getMonth() + 1).padStart(2, "0");
-    const dd = String(yesterday.getDate()).padStart(2, "0");
-    const yyyy = yesterday.getFullYear();
+    const date = new Date();
+    const dayOfWeek = date.getDay();
+
+    const daysBack = dayOfWeek === 1 ? 2 : 1;
+    date.setDate(date.getDate() - daysBack);
+
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const yyyy = date.getFullYear();
+
     return `${mm}-${dd}-${yyyy}`;
   };
 
