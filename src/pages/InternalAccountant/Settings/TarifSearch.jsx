@@ -91,7 +91,17 @@ const TarifSearch = () => {
           </CardHeader>
           <CardContent className="p-6 space-y-4">
             {tarif.model?.name && (
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer"
+                onClick={() => {
+                  navigator.clipboard.writeText(tarif.model.name);
+                  toast({
+                    title: "Muvaffaqiyatli",
+                    description: "Model nomidan nusxa olindi",
+                    duration: 1000,
+                  });
+                }}
+              >
                 <Folder className="h-5 w-5 text-primary flex-shrink-0" />
                 <div>
                   <p className="text-sm text-gray-500">Model</p>
