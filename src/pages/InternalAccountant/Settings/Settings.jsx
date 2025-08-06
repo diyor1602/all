@@ -8,11 +8,13 @@ import {
   History,
   Plane,
   QrCode,
+  Siren,
   TreePalm,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 import Nakladnoy from "./Nakladnoy";
 import NakladnoySkaner from "./NakladnoySkaner";
+import TarifSearch from "./TarifSearch";
 
 const Settings = () => {
   return (
@@ -21,6 +23,7 @@ const Settings = () => {
       <Route path="attendance-history" element={<AttendanceHistory />} />
       <Route path="nakladnoy" element={<Nakladnoy />} />
       <Route path="nakladnoy-skaner" element={<NakladnoySkaner />} />
+      <Route path="tarif-search" element={<TarifSearch />} />
     </Routes>
   );
 };
@@ -68,6 +71,12 @@ const SettingsPage = () => {
       icon: TreePalm,
       link: "/internalAccountant/settings/nakladnoy-skaner",
       color: "bg-emerald-500",
+    },
+    {
+      name: "Tarif qidirish",
+      icon: Siren,
+      link: "/internalAccountant/settings/tarif-search",
+      color: "bg-red-500",
     },
   ];
 
