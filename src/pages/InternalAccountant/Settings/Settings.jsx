@@ -104,7 +104,7 @@ const SettingsPage = () => {
         className="flex justify-between items-center mb-8"
       >
         <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-          Asosiy
+          Qo'shimcha
         </h2>
       </motion.div>
 
