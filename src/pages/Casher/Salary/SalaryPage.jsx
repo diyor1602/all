@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -29,8 +27,6 @@ import {
   HandCoins,
   CreditCard,
   MessageSquare,
-  Calendar,
-  Building2,
   Users,
   Loader2,
   DollarSign,
@@ -87,6 +83,7 @@ const SalaryPage = () => {
     start_date: "",
     end_date: "",
   });
+  const [searchText, setSearchText] = useState("");
 
   const formatDateLocal = (date) => {
     const year = date.getFullYear();
@@ -357,6 +354,14 @@ const SalaryPage = () => {
     updateFilters(newFilters);
   };
 
+  const handleSearchChange = (searchText) => {
+    const newFilters = {
+      ...filters,
+      searchText,
+    };
+    updateFilters(newFilters);
+  };
+
   const openPaymentDialog = (employee, type) => {
     const maxAmount = calculateMaxAmount(employee, type);
     const { advanceTotal, salaryTotal } = calculatePaymentTotals(
@@ -488,481 +493,451 @@ const SalaryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <DollarSign className="h-8 w-8" />
-              Oylik va Avans Boshqaruvi
-            </CardTitle>
-          </CardHeader>
-        </Card>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 flex-wrap">
+        <Input
+          type="month"
+          value={selectedMonth}
+          onChange={handleMonthChange}
+          className="bg-white w-fit"
+        />
 
-        {/* Filters */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Filtrlar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-gray-500" />
+        <Select
+          onValueChange={handleDepartmentChange}
+          value={filters.department_id}
+        >
+          <SelectTrigger className="bg-white w-fit">
+            <SelectValue placeholder="Bo'lim tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            {departments.map((department) => (
+              <SelectItem key={department.id} value={department.id.toString()}>
+                {department.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          onValueChange={handleGroupChange}
+          value={filters.group_id}
+          disabled={!filters.department_id || groups.length === 0}
+        >
+          <SelectTrigger className="bg-white w-fit">
+            <SelectValue placeholder="Guruh tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            {groups
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((group) => (
+                <SelectItem key={group.id} value={group.id.toString()}>
+                  {group.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+
+        <Input
+          type="text"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Xodim qidirish"
+          className="bg-white w-fit"
+        />
+      </div>
+      {employees.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white">Jami Xodimlar</p>
+                  <p className="text-2xl font-bold">
+                    {formatNumber(employees.length)}
+                  </p>
+                </div>
+                <Users className="h-8 w-8 text-white" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100">Jami Balans</p>
+                  <p className="text-2xl font-bold">
+                    {formatNumber(totalStats.totalBalance)}
+                  </p>
+                </div>
+                <DollarSign className="h-8 w-8 text-green-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100">Jami Topgan</p>
+                  <p className="text-2xl font-bold">
+                    {formatNumber(totalStats.totalEarned)}
+                  </p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100">Jami To'langan</p>
+                  <p className="text-2xl font-bold">
+                    {formatNumber(totalStats.totalPaid)}
+                  </p>
+                </div>
+                <HandCoins className="h-8 w-8 text-purple-200" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Employee Table */}
+      <Card className="border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Xodimlar ro'yxati
+            </div>
+            {filters.department_id && (
+              <Badge variant="secondary" className="ml-2">
+                {getSelectedDepartmentName()}
+                {filters.group_id && ` - ${getSelectedGroupName()}`}
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={downloading}
+              onClick={handleDownload}
+            >
+              {downloading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Download />
+              )}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse whitespace-nowrap">
+              <thead>
+                <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    №
+                  </th>
+                  <th className="border border-gray-200 p-1 text-left font-semibold">
+                    Xodim
+                  </th>
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    Balansi
+                  </th>
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    Topgan puli
+                  </th>
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    To'langan pul
+                  </th>
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    Avans
+                  </th>
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    Oylik
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                className={cn("", loading && "cursor-not-allowed opacity-50")}
+              >
+                {employees
+                  ?.sort((a, b) => a.name.localeCompare(b.name))
+                  .filter((employee) =>
+                    employee.name
+                      .toLowerCase()
+                      .includes(searchText.toLowerCase())
+                  )
+                  .map((employee, index) => {
+                    const { advanceTotal, salaryTotal } =
+                      calculatePaymentTotals(employee?.paid_amounts);
+
+                    return (
+                      <tr
+                        key={employee.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="border border-gray-200 p-1 text-center font-medium">
+                          {index + 1}
+                        </td>
+                        <td className="border border-gray-200 p-1">
+                          <div className="font-medium text-gray-900">
+                            {employee?.name}
+                          </div>
+                        </td>
+                        <td className="border border-gray-200 p-1 text-center">
+                          <Badge
+                            variant={
+                              Number.parseFloat(employee?.balance) > 0
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {formatNumber(employee?.balance)}
+                          </Badge>
+                        </td>
+                        <td className="border border-gray-200 p-1 text-center">
+                          <Link
+                            to={`/casher/salary/${employee.id}`}
+                            target="_blank"
+                            className="text-green-600 font-medium"
+                          >
+                            {formatNumber(employee?.earning?.total_earned)}
+                          </Link>
+                        </td>
+                        <td className="border border-gray-200 p-1 text-center">
+                          <span className="text-green-600 font-medium">
+                            {formatNumber(employee?.total_paid)}
+                          </span>
+                        </td>
+                        <td className="border border-gray-200 p-1 text-center">
+                          <div className="w-full flex items-center justify-center">
+                            <Button
+                              variant="ghost"
+                              onClick={() =>
+                                openPaymentDialog(employee, "advance")
+                              }
+                              disabled={
+                                paymentLoading[`${employee.id}_advance`]
+                              }
+                              className="h-auto p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 flex flex-col items-center gap-1"
+                            >
+                              {paymentLoading[`${employee.id}_advance`] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                formatNumber(advanceTotal)
+                              )}
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="border border-gray-200 p-1 text-center">
+                          <div className="flex items-center justify-center gap-2 w-full">
+                            <Button
+                              variant="ghost"
+                              onClick={() =>
+                                openPaymentDialog(employee, "salary")
+                              }
+                              disabled={paymentLoading[`${employee.id}_salary`]}
+                              className="h-auto p-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex flex-col items-center gap-1"
+                            >
+                              {paymentLoading[`${employee.id}_salary`] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                formatNumber(salaryTotal)
+                              )}
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+
+            {employees.length === 0 && !loading && (
+              <div className="text-center py-12">
+                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 text-lg">Xodimlar topilmadi</p>
+                <p className="text-gray-400">Filtrlarni o'zgartirib ko'ring</p>
+              </div>
+            )}
+
+            {loading && (
+              <div className="text-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
+                <p className="text-gray-500">Ma'lumotlar yuklanmoqda...</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Payment Dialog */}
+      <Dialog open={paymentDialog.open} onOpenChange={closePaymentDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {paymentDialog.type === "advance" ? (
+                <HandCoins className="h-5 w-5 text-orange-500" />
+              ) : (
+                <CreditCard className="h-5 w-5 text-green-500" />
+              )}
+              {paymentDialog.type === "advance" ? "Avans" : "Oylik"} to'lash
+            </DialogTitle>
+            <DialogDescription>
+              <strong>{paymentDialog.employee?.name}</strong> uchun{" "}
+              {paymentDialog.type === "advance" ? "avans" : "oylik"} miqdorini
+              o'zgartirish
+              <br />
+              <span className="text-sm text-gray-600">
+                Maksimal miqdor:{" "}
+                <strong>{formatNumber(paymentDialog.maxAmount)}</strong>
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Payment History */}
+            {paymentDialog.employee && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-gray-500" />
+                  <h4 className="font-medium text-gray-900">
+                    {paymentDialog.type === "advance" ? "Avans" : "Oylik"}{" "}
+                    tarixi
+                  </h4>
+                </div>
+
+                <div className="max-h-40 overflow-y-auto border rounded-lg">
+                  {getPaymentHistory(paymentDialog.employee, paymentDialog.type)
+                    .length > 0 ? (
+                    <div className="divide-y">
+                      {getPaymentHistory(
+                        paymentDialog.employee,
+                        paymentDialog.type
+                      ).map((payment, index) => (
+                        <div key={index} className="p-3 hover:bg-gray-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-4 w-4 text-green-500" />
+                              <span className="font-medium">
+                                {formatNumber(payment.amount)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <Clock className="h-3 w-3" />
+                              {formatDate(payment.date)}
+                            </div>
+                          </div>
+                          {payment.comment && (
+                            <div className="mt-1 text-sm text-gray-600 flex items-start gap-2">
+                              <MessageSquare className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                              <span>{payment.comment}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-gray-500">
+                      Hali{" "}
+                      {paymentDialog.type === "advance" ? "avans" : "oylik"}{" "}
+                      to'lanmagan
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <Separator />
+
+            {/* New Payment Form */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                To'lovni o'zgartirish
+              </h4>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Miqdor: {formatNumber(paymentForm.amount)}
+                </label>
                 <Input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={handleMonthChange}
-                  className="bg-white border-2 border-gray-200 focus:border-blue-500 transition-colors"
+                  type="number"
+                  placeholder="Miqdorni kiriting"
+                  value={paymentForm.amount}
+                  onChange={(e) =>
+                    setPaymentForm((prev) => ({
+                      ...prev,
+                      amount: e.target.value,
+                    }))
+                  }
+                  className="border-2 focus:border-blue-500"
+                  max={paymentDialog.maxAmount}
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-gray-500" />
-                <Select
-                  onValueChange={handleDepartmentChange}
-                  value={filters.department_id}
-                >
-                  <SelectTrigger className="bg-white border-2 border-gray-200 focus:border-blue-500 min-w-[200px]">
-                    <SelectValue placeholder="Bo'lim tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((department) => (
-                      <SelectItem
-                        key={department.id}
-                        value={department.id.toString()}
-                      >
-                        {department.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-gray-500" />
-                <Select
-                  onValueChange={handleGroupChange}
-                  value={filters.group_id}
-                  disabled={!filters.department_id || groups.length === 0}
-                >
-                  <SelectTrigger className="bg-white border-2 border-gray-200 focus:border-blue-500 min-w-[200px]">
-                    <SelectValue placeholder="Guruh tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groups
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((group) => (
-                        <SelectItem key={group.id} value={group.id.toString()}>
-                          {group.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Izoh (ixtiyoriy)
+                </label>
+                <Textarea
+                  placeholder="Izoh yozing..."
+                  value={paymentForm.comment}
+                  onChange={(e) =>
+                    setPaymentForm((prev) => ({
+                      ...prev,
+                      comment: e.target.value,
+                    }))
+                  }
+                  className="border-2 focus:border-blue-500 resize-none"
+                  rows={3}
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Cards */}
-        {employees.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="border-0 shadow-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-white">Jami Xodimlar</p>
-                    <p className="text-2xl font-bold">
-                      {formatNumber(employees.length)}
-                    </p>
-                  </div>
-                  <Users className="h-8 w-8 text-white" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg bg-gradient-to-r from-green-500 to-green-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100">Jami Balans</p>
-                    <p className="text-2xl font-bold">
-                      {formatNumber(totalStats.totalBalance)}
-                    </p>
-                  </div>
-                  <DollarSign className="h-8 w-8 text-green-200" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100">Jami Topgan</p>
-                    <p className="text-2xl font-bold">
-                      {formatNumber(totalStats.totalEarned)}
-                    </p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-blue-200" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100">Jami To'langan</p>
-                    <p className="text-2xl font-bold">
-                      {formatNumber(totalStats.totalPaid)}
-                    </p>
-                  </div>
-                  <HandCoins className="h-8 w-8 text-purple-200" />
-                </div>
-              </CardContent>
-            </Card>
           </div>
-        )}
 
-        {/* Employee Table */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Xodimlar ro'yxati
-              </div>
-              {filters.department_id && (
-                <Badge variant="secondary" className="ml-2">
-                  {getSelectedDepartmentName()}
-                  {filters.group_id && ` - ${getSelectedGroupName()}`}
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={downloading}
-                onClick={handleDownload}
-              >
-                {downloading ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Download />
-                )}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse whitespace-nowrap">
-                <thead>
-                  <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                    <th className="border border-gray-200 p-1 text-center font-semibold">
-                      №
-                    </th>
-                    <th className="border border-gray-200 p-1 text-left font-semibold">
-                      Xodim
-                    </th>
-                    <th className="border border-gray-200 p-1 text-center font-semibold">
-                      Balansi
-                    </th>
-                    <th className="border border-gray-200 p-1 text-center font-semibold">
-                      Topgan puli
-                    </th>
-                    <th className="border border-gray-200 p-1 text-center font-semibold">
-                      To'langan pul
-                    </th>
-                    <th className="border border-gray-200 p-1 text-center font-semibold">
-                      Avans
-                    </th>
-                    <th className="border border-gray-200 p-1 text-center font-semibold">
-                      Oylik
-                    </th>
-                  </tr>
-                </thead>
-                <tbody
-                  className={cn("", loading && "cursor-not-allowed opacity-50")}
-                >
-                  {employees
-                    ?.sort((a, b) => a.name.localeCompare(b.name))
-                    .map((employee, index) => {
-                      const { advanceTotal, salaryTotal } =
-                        calculatePaymentTotals(employee?.paid_amounts);
-
-                      return (
-                        <tr
-                          key={employee.id}
-                          className="hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="border border-gray-200 p-1 text-center font-medium">
-                            {index + 1}
-                          </td>
-                          <td className="border border-gray-200 p-1">
-                            <div className="font-medium text-gray-900">
-                              {employee?.name}
-                            </div>
-                          </td>
-                          <td className="border border-gray-200 p-1 text-center">
-                            <Badge
-                              variant={
-                                Number.parseFloat(employee?.balance) > 0
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              {formatNumber(employee?.balance)}
-                            </Badge>
-                          </td>
-                          <td className="border border-gray-200 p-1 text-center">
-                            <Link
-                              to={`/casher/salary/${employee.id}`}
-                              target="_blank"
-                              className="text-green-600 font-medium"
-                            >
-                              {formatNumber(employee?.earning?.total_earned)}
-                            </Link>
-                          </td>
-                          <td className="border border-gray-200 p-1 text-center">
-                            <span className="text-green-600 font-medium">
-                              {formatNumber(employee?.total_paid)}
-                            </span>
-                          </td>
-                          <td className="border border-gray-200 p-1 text-center">
-                            <div className="w-full flex items-center justify-center">
-                              <Button
-                                variant="ghost"
-                                onClick={() =>
-                                  openPaymentDialog(employee, "advance")
-                                }
-                                disabled={
-                                  paymentLoading[`${employee.id}_advance`]
-                                }
-                                className="h-auto p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 flex flex-col items-center gap-1"
-                              >
-                                {paymentLoading[`${employee.id}_advance`] ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  formatNumber(advanceTotal)
-                                )}
-                              </Button>
-                            </div>
-                          </td>
-                          <td className="border border-gray-200 p-1 text-center">
-                            <div className="flex items-center justify-center gap-2 w-full">
-                              <Button
-                                variant="ghost"
-                                onClick={() =>
-                                  openPaymentDialog(employee, "salary")
-                                }
-                                disabled={
-                                  paymentLoading[`${employee.id}_salary`]
-                                }
-                                className="h-auto p-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex flex-col items-center gap-1"
-                              >
-                                {paymentLoading[`${employee.id}_salary`] ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  formatNumber(salaryTotal)
-                                )}
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-
-              {employees.length === 0 && !loading && (
-                <div className="text-center py-12">
-                  <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">Xodimlar topilmadi</p>
-                  <p className="text-gray-400">
-                    Filtrlarni o'zgartirib ko'ring
-                  </p>
-                </div>
-              )}
-
-              {loading && (
-                <div className="text-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-                  <p className="text-gray-500">Ma'lumotlar yuklanmoqda...</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Enhanced Payment Dialog */}
-        <Dialog open={paymentDialog.open} onOpenChange={closePaymentDialog}>
-          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {paymentDialog.type === "advance" ? (
-                  <HandCoins className="h-5 w-5 text-orange-500" />
-                ) : (
-                  <CreditCard className="h-5 w-5 text-green-500" />
-                )}
-                {paymentDialog.type === "advance" ? "Avans" : "Oylik"} to'lash
-              </DialogTitle>
-              <DialogDescription>
-                <strong>{paymentDialog.employee?.name}</strong> uchun{" "}
-                {paymentDialog.type === "advance" ? "avans" : "oylik"} miqdorini
-                o'zgartirish
-                <br />
-                <span className="text-sm text-gray-600">
-                  Maksimal miqdor:{" "}
-                  <strong>{formatNumber(paymentDialog.maxAmount)}</strong>
-                </span>
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Payment History */}
-              {paymentDialog.employee && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <History className="h-4 w-4 text-gray-500" />
-                    <h4 className="font-medium text-gray-900">
-                      {paymentDialog.type === "advance" ? "Avans" : "Oylik"}{" "}
-                      tarixi
-                    </h4>
-                  </div>
-
-                  <div className="max-h-40 overflow-y-auto border rounded-lg">
-                    {getPaymentHistory(
-                      paymentDialog.employee,
-                      paymentDialog.type
-                    ).length > 0 ? (
-                      <div className="divide-y">
-                        {getPaymentHistory(
-                          paymentDialog.employee,
-                          paymentDialog.type
-                        ).map((payment, index) => (
-                          <div key={index} className="p-3 hover:bg-gray-50">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <DollarSign className="h-4 w-4 text-green-500" />
-                                <span className="font-medium">
-                                  {formatNumber(payment.amount)}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <Clock className="h-3 w-3" />
-                                {formatDate(payment.date)}
-                              </div>
-                            </div>
-                            {payment.comment && (
-                              <div className="mt-1 text-sm text-gray-600 flex items-start gap-2">
-                                <MessageSquare className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                <span>{payment.comment}</span>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-4 text-center text-gray-500">
-                        Hali{" "}
-                        {paymentDialog.type === "advance" ? "avans" : "oylik"}{" "}
-                        to'lanmagan
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <Separator />
-
-              {/* New Payment Form */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  To'lovni o'zgartirish
-                </h4>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Miqdor: {formatNumber(paymentForm.amount)}
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="Miqdorni kiriting"
-                    value={paymentForm.amount}
-                    onChange={(e) =>
-                      setPaymentForm((prev) => ({
-                        ...prev,
-                        amount: e.target.value,
-                      }))
-                    }
-                    className="border-2 focus:border-blue-500"
-                    max={paymentDialog.maxAmount}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Izoh (ixtiyoriy)
-                  </label>
-                  <Textarea
-                    placeholder="Izoh yozing..."
-                    value={paymentForm.comment}
-                    onChange={(e) =>
-                      setPaymentForm((prev) => ({
-                        ...prev,
-                        comment: e.target.value,
-                      }))
-                    }
-                    className="border-2 focus:border-blue-500 resize-none"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={closePaymentDialog}>
-                Bekor qilish
-              </Button>
-              <Button
-                onClick={handlePayment}
-                disabled={
-                  !paymentForm.amount ||
-                  paymentLoading[
-                    `${paymentDialog.employee?.id}_${paymentDialog.type}`
-                  ]
-                }
-                className={cn(
-                  "min-w-[100px]",
-                  paymentDialog.type === "advance"
-                    ? "bg-orange-500 hover:bg-orange-600"
-                    : "bg-green-500 hover:bg-green-600"
-                )}
-              >
-                {paymentLoading[
+          <DialogFooter>
+            <Button variant="outline" onClick={closePaymentDialog}>
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={handlePayment}
+              disabled={
+                !paymentForm.amount ||
+                paymentLoading[
                   `${paymentDialog.employee?.id}_${paymentDialog.type}`
-                ] ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    {paymentDialog.type === "advance" ? (
-                      <HandCoins className="h-4 w-4 mr-2" />
-                    ) : (
-                      <CreditCard className="h-4 w-4 mr-2" />
-                    )}
-                    To'lash
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+                ]
+              }
+              className={cn(
+                "min-w-[100px]",
+                paymentDialog.type === "advance"
+                  ? "bg-orange-500 hover:bg-orange-600"
+                  : "bg-green-500 hover:bg-green-600"
+              )}
+            >
+              {paymentLoading[
+                `${paymentDialog.employee?.id}_${paymentDialog.type}`
+              ] ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  {paymentDialog.type === "advance" ? (
+                    <HandCoins className="h-4 w-4 mr-2" />
+                  ) : (
+                    <CreditCard className="h-4 w-4 mr-2" />
+                  )}
+                  To'lash
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
