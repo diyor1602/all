@@ -1,5 +1,3 @@
-"use client";
-
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +13,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import payment_types from "@/lib/paymentTypes";
 import api from "@/utils/api";
@@ -37,6 +34,24 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+
+const getMonthName = (month) => {
+  const months = [
+    "Yanvar",
+    "Fevral",
+    "Mart",
+    "Aprel",
+    "May",
+    "Iyun",
+    "Iyul",
+    "Avgust",
+    "Sentabr",
+    "Oktabr",
+    "Noyabr",
+    "Dekabr",
+  ];
+  return months[month];
+};
 
 // Oylik boshlanish va tugash sanalarini olish uchun yordamchi funksiya
 const getMonthRange = (year, month) => {
@@ -452,533 +467,574 @@ const SalaryDetails = () => {
 
         {/* Main Content */}
         <div className="md:col-span-2 space-y-6">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="mb-4">
-              <TabsTrigger value="attendance">
-                Davomat
-                {employee.attendances?.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {employee.attendances.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="tarification">
-                Tarifikatsiya
-                {employee.employee_tarification_logs?.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {employee.employee_tarification_logs.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="model" className="bg-green-500 text-white">
-                Model
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="attendance" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    Davomat qaydnomasi (
-                    {employee.attendance_salaries
-                      ?.reduce(
-                        (sum, salary) =>
-                          sum + Number.parseFloat(salary.amount || 0),
-                        0
-                      )
-                      ?.toLocaleString("ru-RU")}{" "}
-                    so'm )
-                  </CardTitle>
-                  <CardDescription className="grid grid-cols-3 gap-4 pt-2">
-                    {employee.attendances?.length > 0
-                      ? `${employee.attendances.length} kunlik davomat`
-                      : "Davomat ma'lumotlari mavjud emas"}
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">
-                        {
-                          employee.attendances.filter(
-                            (a) => a.status === "present"
-                          ).length
-                        }{" "}
-                        kun kelgan
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <XCircle className="h-4 w-4 text-red-500" />
-                      <span className="text-sm">
-                        {
-                          employee.attendances.filter(
-                            (a) => a.status === "absent"
-                          ).length
-                        }{" "}
-                        kun kelmagan
-                      </span>
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {employee.attendances?.length > 0 ? (
-                    <div className="space-y-3">
-                      {employee.attendances
-                        ?.sort((a, b) => {
-                          const dateA = new Date(a.date);
-                          const dateB = new Date(b.date);
-                          return dateB - dateA;
-                        })
-                        .map((attendance) => (
-                          <div
-                            key={attendance.id}
-                            className={`flex items-center justify-between p-4 border rounded-lg flex-wrap gap-2 ${
-                              attendance.status === "present"
-                                ? "border-green-200 bg-green-50"
-                                : "border-red-200 bg-red-50"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {attendance.status === "present" ? (
-                                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                              ) : (
-                                <XCircle className="h-5 w-5 text-red-500" />
-                              )}
-                              <div>
-                                <p className="font-medium">
-                                  {formatDate(attendance.date)}
-                                </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={activeTab === "attendance" ? "default" : "outline"}
+              onClick={() => setActiveTab("attendance")}
+            >
+              Davomat
+            </Button>
+            <Button
+              variant={activeTab === "tarification" ? "default" : "outline"}
+              onClick={() => setActiveTab("tarification")}
+            >
+              Nakladnoy
+            </Button>
+            <Button
+              className="bg-green-500 hover:bg-green-600"
+              onClick={() => setActiveTab("model")}
+            >
+              Model
+            </Button>
+            <Button
+              variant={activeTab === "salary" ? "default" : "outline"}
+              onClick={() => setActiveTab("salary")}
+            >
+              Maosh
+            </Button>
+          </div>
+          {activeTab === "attendance" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Davomat qaydnomasi (
+                  {employee.attendance_salaries
+                    ?.reduce(
+                      (sum, salary) =>
+                        sum + Number.parseFloat(salary.amount || 0),
+                      0
+                    )
+                    ?.toLocaleString("ru-RU")}{" "}
+                  so'm )
+                </CardTitle>
+                <CardDescription className="grid grid-cols-3 gap-4 pt-2">
+                  {employee.attendances?.length > 0
+                    ? `${employee.attendances.length} kunlik davomat`
+                    : "Davomat ma'lumotlari mavjud emas"}
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">
+                      {
+                        employee.attendances.filter(
+                          (a) => a.status === "present"
+                        ).length
+                      }{" "}
+                      kun kelgan
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-4 w-4 text-red-500" />
+                    <span className="text-sm">
+                      {
+                        employee.attendances.filter(
+                          (a) => a.status === "absent"
+                        ).length
+                      }{" "}
+                      kun kelmagan
+                    </span>
+                  </div>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {employee.attendances?.length > 0 ? (
+                  <div className="space-y-3">
+                    {employee.attendances
+                      ?.sort((a, b) => {
+                        const dateA = new Date(a.date);
+                        const dateB = new Date(b.date);
+                        return dateB - dateA;
+                      })
+                      .map((attendance) => (
+                        <div
+                          key={attendance.id}
+                          className={`flex items-center justify-between p-4 border rounded-lg flex-wrap gap-2 ${
+                            attendance.status === "present"
+                              ? "border-green-200 bg-green-50"
+                              : "border-red-200 bg-red-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {attendance.status === "present" ? (
+                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-red-500" />
+                            )}
+                            <div>
+                              <p className="font-medium">
+                                {formatDate(attendance.date)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {attendance.status === "present"
+                                  ? "Kelgan"
+                                  : "Kelmagan"}
+                              </p>
+                              {employee?.attendance_salaries?.find(
+                                (a) => a.attendance_id === attendance.id
+                              ) && (
                                 <p className="text-xs text-muted-foreground">
-                                  {attendance.status === "present"
-                                    ? "Kelgan"
-                                    : "Kelmagan"}
+                                  Topgan puli:{" "}
+                                  <span className="font-semibold">
+                                    {parseFloat(
+                                      employee.attendance_salaries.find(
+                                        (a) => a.attendance_id === attendance.id
+                                      )?.amount || 0
+                                    )?.toLocaleString("ru-RU")}{" "}
+                                  </span>
+                                  so'm
                                 </p>
-                                {employee?.attendance_salaries?.find(
-                                  (a) => a.attendance_id === attendance.id
-                                ) && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Topgan puli:{" "}
-                                    <span className="font-semibold">
-                                      {parseFloat(
-                                        employee.attendance_salaries.find(
-                                          (a) =>
-                                            a.attendance_id === attendance.id
-                                        )?.amount || 0
-                                      )?.toLocaleString("ru-RU")}{" "}
-                                    </span>
-                                    so'm
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-sm space-y-1">
-                              {attendance.check_in && (
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3 text-muted-foreground" />
-                                  <span>
-                                    Keldi:{" "}
-                                    {formatTime(
-                                      attendance.check_in.split(" ")[1]
-                                    )}
-                                  </span>
-                                  {attendance.check_in_image && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => {
-                                        setSelectedImage(
-                                          attendance.check_in_image
-                                        );
-                                        setImageDialogOpen(true);
-                                      }}
-                                    >
-                                      <Images />
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
-                              {attendance.check_out && (
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3 text-muted-foreground" />
-                                  <span>
-                                    Ketdi:{" "}
-                                    {formatTime(
-                                      attendance.check_out.split(" ")[1]
-                                    )}
-                                  </span>
-                                  {attendance.check_out_image && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => {
-                                        setSelectedImage(
-                                          attendance.check_out_image
-                                        );
-                                        setImageDialogOpen(true);
-                                      }}
-                                    >
-                                      <Images />
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
-                              {getAbsenceData(attendance.date) && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  {getAbsenceData(attendance.date)?.image && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => {
-                                        setSelectedImage(
-                                          getAbsenceData(attendance.date)?.image
-                                        );
-                                        setImageDialogOpen(true);
-                                      }}
-                                    >
-                                      <Images />
-                                    </Button>
-                                  )}
-                                  <div className="rounded-full bg-red-500 text-white px-2 py-1 w-fit text-xs">
-                                    Sababsiz
-                                  </div>
-                                  <div>
-                                    {getAbsenceData(attendance.date)?.comment}
-                                  </div>
-                                </div>
-                              )}
-                              {getHolidayData(attendance.date) && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  {getHolidayData(attendance.date)?.image && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => {
-                                        setSelectedImage(
-                                          getHolidayData(attendance.date)?.image
-                                        );
-                                        setImageDialogOpen(true);
-                                      }}
-                                    >
-                                      <Images />
-                                    </Button>
-                                  )}
-                                  <div className="rounded-full bg-green-500 text-white px-2 py-1 w-fit text-xs">
-                                    Sababli
-                                  </div>
-                                  <div>
-                                    {getHolidayData(attendance.date)?.comment}
-                                  </div>
-                                </div>
                               )}
                             </div>
                           </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <CalendarClock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">
-                        Tanlangan sana oralig'ida davomat ma'lumotlari topilmadi
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                          <div className="text-sm space-y-1">
+                            {attendance.check_in && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3 text-muted-foreground" />
+                                <span>
+                                  Keldi:{" "}
+                                  {formatTime(
+                                    attendance.check_in.split(" ")[1]
+                                  )}
+                                </span>
+                                {attendance.check_in_image && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setSelectedImage(
+                                        attendance.check_in_image
+                                      );
+                                      setImageDialogOpen(true);
+                                    }}
+                                  >
+                                    <Images />
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                            {attendance.check_out && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3 text-muted-foreground" />
+                                <span>
+                                  Ketdi:{" "}
+                                  {formatTime(
+                                    attendance.check_out.split(" ")[1]
+                                  )}
+                                </span>
+                                {attendance.check_out_image && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setSelectedImage(
+                                        attendance.check_out_image
+                                      );
+                                      setImageDialogOpen(true);
+                                    }}
+                                  >
+                                    <Images />
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                            {getAbsenceData(attendance.date) && (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {getAbsenceData(attendance.date)?.image && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setSelectedImage(
+                                        getAbsenceData(attendance.date)?.image
+                                      );
+                                      setImageDialogOpen(true);
+                                    }}
+                                  >
+                                    <Images />
+                                  </Button>
+                                )}
+                                <div className="rounded-full bg-red-500 text-white px-2 py-1 w-fit text-xs">
+                                  Sababsiz
+                                </div>
+                                <div>
+                                  {getAbsenceData(attendance.date)?.comment}
+                                </div>
+                              </div>
+                            )}
+                            {getHolidayData(attendance.date) && (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {getHolidayData(attendance.date)?.image && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setSelectedImage(
+                                        getHolidayData(attendance.date)?.image
+                                      );
+                                      setImageDialogOpen(true);
+                                    }}
+                                  >
+                                    <Images />
+                                  </Button>
+                                )}
+                                <div className="rounded-full bg-green-500 text-white px-2 py-1 w-fit text-xs">
+                                  Sababli
+                                </div>
+                                <div>
+                                  {getHolidayData(attendance.date)?.comment}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <CalendarClock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      Tanlangan sana oralig'ida davomat ma'lumotlari topilmadi
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          {activeTab === "tarification" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                  Tarifikatsiya qaydnomasi
+                </CardTitle>
+                <CardDescription>
+                  {employee.employee_tarification_logs?.length > 0
+                    ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString(
+                        "ru-RU",
+                        {
+                          maximumFractionDigits: 0,
+                        }
+                      )} so'm`
+                    : "Tarifikatsiya ma'lumotlari mavjud emas"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {employee.employee_tarification_logs?.length > 0 ? (
+                  <div className="space-y-4">
+                    {employee.employee_tarification_logs
+                      ?.sort((a, b) => {
+                        return new Date(b.date) - new Date(a.date);
+                      })
+                      .map((log) => (
+                        <div
+                          key={log.id}
+                          className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-primary" />
+                              <span className="font-medium">
+                                {formatDate(log.date)}
+                              </span>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              <Badge
+                                variant="outline"
+                                className="bg-orange-100 truncate"
+                              >
+                                {log.model?.name} - {log.submodel?.name || ""}
+                              </Badge>
+                              <Badge variant="outline" className="bg-blue-50">
+                                Miqdor: {log.quantity}
+                              </Badge>
+                              <Badge variant="outline" className="bg-green-50">
+                                {(
+                                  Number.parseFloat(log.tarification?.summa) *
+                                  log.quantity
+                                ).toLocaleString("ru-RU", {
+                                  maximumFractionDigits: 2,
+                                })}{" "}
+                                so'm
+                              </Badge>
+                            </div>
+                          </div>
 
-            <TabsContent value="tarification" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5 text-primary" />
-                    Tarifikatsiya qaydnomasi
-                  </CardTitle>
-                  <CardDescription>
-                    {employee.employee_tarification_logs?.length > 0
-                      ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString(
-                          "ru-RU",
-                          {
-                            maximumFractionDigits: 0,
-                          }
-                        )} so'm`
-                      : "Tarifikatsiya ma'lumotlari mavjud emas"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {employee.employee_tarification_logs?.length > 0 ? (
-                    <div className="space-y-4">
-                      {employee.employee_tarification_logs
-                        ?.sort((a, b) => {
-                          return new Date(b.date) - new Date(a.date);
-                        })
-                        .map((log) => (
-                          <div
-                            key={log.id}
-                            className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-primary" />
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                              <div className="flex flex-col">
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <Hash className="h-3 w-3" />
+                                  Kod
+                                </span>
                                 <span className="font-medium">
-                                  {formatDate(log.date)}
+                                  {log.tarification.code}
                                 </span>
                               </div>
-                              <div className="flex gap-2 flex-wrap">
-                                <Badge
-                                  variant="outline"
-                                  className="bg-orange-100 truncate"
-                                >
-                                  {log.model?.name} - {log.submodel?.name || ""}
-                                </Badge>
-                                <Badge variant="outline" className="bg-blue-50">
-                                  Miqdor: {log.quantity}
-                                </Badge>
-                                <Badge
-                                  variant="outline"
-                                  className="bg-green-50"
-                                >
-                                  {(
-                                    Number.parseFloat(log.tarification?.summa) *
-                                    log.quantity
+                              <div className="flex flex-col">
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <Timer className="h-3 w-3" />
+                                  Sekund
+                                </span>
+                                <span className="font-medium">
+                                  {log.tarification.second}
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <DollarSign className="h-3 w-3" />
+                                  Birlik narxi
+                                </span>
+                                <span className="font-medium text-green-600">
+                                  {Number.parseFloat(
+                                    log.tarification.summa
                                   ).toLocaleString("ru-RU", {
                                     maximumFractionDigits: 2,
                                   })}{" "}
-                                  so'm
-                                </Badge>
+                                  сўм
+                                </span>
                               </div>
-                            </div>
-
-                            <div className="space-y-3">
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                                <div className="flex flex-col">
-                                  <span className="text-muted-foreground flex items-center gap-1">
-                                    <Hash className="h-3 w-3" />
-                                    Kod
-                                  </span>
-                                  <span className="font-medium">
-                                    {log.tarification.code}
-                                  </span>
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-muted-foreground flex items-center gap-1">
-                                    <Timer className="h-3 w-3" />
-                                    Sekund
-                                  </span>
-                                  <span className="font-medium">
-                                    {log.tarification.second}
-                                  </span>
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-muted-foreground flex items-center gap-1">
-                                    <DollarSign className="h-3 w-3" />
-                                    Birlik narxi
-                                  </span>
-                                  <span className="font-medium text-green-600">
-                                    {Number.parseFloat(
-                                      log.tarification.summa
-                                    ).toLocaleString("ru-RU", {
-                                      maximumFractionDigits: 2,
-                                    })}{" "}
-                                    сўм
-                                  </span>
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-muted-foreground flex items-center gap-1">
-                                    <DollarSign className="h-3 w-3" />
-                                    Jami
-                                  </span>
-                                  <span className="font-medium text-green-600">
-                                    {Number.parseFloat(
-                                      log.amount_earned
-                                    ).toLocaleString("ru-RU", {
-                                      maximumFractionDigits: 2,
-                                    })}{" "}
-                                    сўм
-                                  </span>
-                                </div>
+                              <div className="flex flex-col">
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <DollarSign className="h-3 w-3" />
+                                  Jami
+                                </span>
+                                <span className="font-medium text-green-600">
+                                  {Number.parseFloat(
+                                    log.amount_earned
+                                  ).toLocaleString("ru-RU", {
+                                    maximumFractionDigits: 2,
+                                  })}{" "}
+                                  сўм
+                                </span>
                               </div>
                             </div>
                           </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">
-                        Tanlangan sana oralig'ida tarifikatsiya ma'lumotlari
-                        topilmadi
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="model" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5 text-primary" />
-                    Model qaydnomasi
-                  </CardTitle>
-                  <CardDescription>
-                    {employee.employee_tarification_logs?.length > 0
-                      ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString(
-                          "ru-RU",
-                          {
-                            maximumFractionDigits: 0,
-                          }
-                        )} so'm`
-                      : "Tarifikatsiya ma'lumotlari mavjud emas"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {employee.employee_tarification_logs?.length > 0 ? (
-                    <div className="space-y-4">
-                      {(() => {
-                        const groupedByModel = {};
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      Tanlangan sana oralig'ida tarifikatsiya ma'lumotlari
+                      topilmadi
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          {activeTab === "model" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                  Model qaydnomasi
+                </CardTitle>
+                <CardDescription>
+                  {employee.employee_tarification_logs?.length > 0
+                    ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString(
+                        "ru-RU",
+                        {
+                          maximumFractionDigits: 0,
+                        }
+                      )} so'm`
+                    : "Tarifikatsiya ma'lumotlari mavjud emas"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {employee.employee_tarification_logs?.length > 0 ? (
+                  <div className="space-y-4">
+                    {(() => {
+                      const groupedByModel = {};
 
-                        // Step 1: Group logs by model
-                        employee.employee_tarification_logs?.forEach((log) => {
-                          const modelId = log.model?.id || "unknown";
-                          const modelName = log.model?.name || "Noma'lum model";
+                      // Step 1: Group logs by model
+                      employee.employee_tarification_logs?.forEach((log) => {
+                        const modelId = log.model?.id || "unknown";
+                        const modelName = log.model?.name || "Noma'lum model";
 
-                          if (!groupedByModel[modelId]) {
-                            groupedByModel[modelId] = {
-                              modelName,
-                              logs: [],
-                            };
-                          }
+                        if (!groupedByModel[modelId]) {
+                          groupedByModel[modelId] = {
+                            modelName,
+                            logs: [],
+                          };
+                        }
 
-                          groupedByModel[modelId].logs.push(log);
-                        });
+                        groupedByModel[modelId].logs.push(log);
+                      });
 
-                        return (
-                          <div className="space-y-2">
-                            {Object.entries(groupedByModel).map(
-                              ([modelId, group], index) => {
-                                const isOpen = expandedModel === modelId;
+                      return (
+                        <div className="space-y-2">
+                          {Object.entries(groupedByModel).map(
+                            ([modelId, group], index) => {
+                              const isOpen = expandedModel === modelId;
 
-                                // Step 2: Group works under this model by work CODE
-                                const workMap = {};
-                                group.logs.forEach((log) => {
-                                  const workCode =
-                                    log.tarification?.code || "NOMA'LUM";
-                                  const workName =
-                                    log.tarification?.name || "Noma'lum ish";
+                              // Step 2: Group works under this model by work CODE
+                              const workMap = {};
+                              group.logs.forEach((log) => {
+                                const workCode =
+                                  log.tarification?.code || "NOMA'LUM";
+                                const workName =
+                                  log.tarification?.name || "Noma'lum ish";
 
-                                  if (!workMap[workCode]) {
-                                    workMap[workCode] = {
-                                      name: workName,
-                                      totalQty: 0,
-                                      totalSum: 0,
-                                    };
-                                  }
+                                if (!workMap[workCode]) {
+                                  workMap[workCode] = {
+                                    name: workName,
+                                    totalQty: 0,
+                                    totalSum: 0,
+                                  };
+                                }
 
-                                  workMap[workCode].totalQty += log.quantity;
-                                  workMap[workCode].totalSum += parseFloat(
-                                    log.amount_earned || 0
-                                  );
-                                });
-
-                                // Step 3: Total summary for the model
-                                const totalSumForModel = group.logs.reduce(
-                                  (sum, log) =>
-                                    sum + parseFloat(log.amount_earned || 0),
-                                  0
+                                workMap[workCode].totalQty += log.quantity;
+                                workMap[workCode].totalSum += parseFloat(
+                                  log.amount_earned || 0
                                 );
+                              });
 
-                                // Step 4: Assign a color
-                                const colors = [
-                                  "bg-blue-100 hover:bg-blue-200",
-                                  "bg-green-100 hover:bg-green-200",
-                                  "bg-yellow-100 hover:bg-yellow-200",
-                                  "bg-purple-100 hover:bg-purple-200",
-                                  "bg-pink-100 hover:bg-pink-200",
-                                  "bg-indigo-100 hover:bg-indigo-200",
-                                ];
+                              // Step 3: Total summary for the model
+                              const totalSumForModel = group.logs.reduce(
+                                (sum, log) =>
+                                  sum + parseFloat(log.amount_earned || 0),
+                                0
+                              );
 
-                                const colorClass =
-                                  colors[index % colors.length];
+                              // Step 4: Assign a color
+                              const colors = [
+                                "bg-blue-100 hover:bg-blue-200",
+                                "bg-green-100 hover:bg-green-200",
+                                "bg-yellow-100 hover:bg-yellow-200",
+                                "bg-purple-100 hover:bg-purple-200",
+                                "bg-pink-100 hover:bg-pink-200",
+                                "bg-indigo-100 hover:bg-indigo-200",
+                              ];
 
-                                return (
-                                  <div key={modelId}>
-                                    {/* Clickable model row */}
-                                    <div
-                                      onClick={() =>
-                                        setExpandedModel(
-                                          isOpen ? null : modelId
-                                        )
-                                      }
-                                      className={`cursor-pointer p-3 border rounded-lg ${colorClass} flex justify-between items-center`}
-                                    >
-                                      <div className="font-medium text-gray-800">
-                                        {group.modelName}
-                                      </div>
-                                      <div className="text-green-700 font-semibold">
-                                        {totalSumForModel.toLocaleString(
-                                          "ru-RU"
-                                        )}{" "}
-                                        so'm
-                                      </div>
+                              const colorClass = colors[index % colors.length];
+
+                              return (
+                                <div key={modelId}>
+                                  {/* Clickable model row */}
+                                  <div
+                                    onClick={() =>
+                                      setExpandedModel(isOpen ? null : modelId)
+                                    }
+                                    className={`cursor-pointer p-3 border rounded-lg ${colorClass} flex justify-between items-center`}
+                                  >
+                                    <div className="font-medium text-gray-800">
+                                      {group.modelName}
                                     </div>
+                                    <div className="text-green-700 font-semibold">
+                                      {totalSumForModel.toLocaleString("ru-RU")}{" "}
+                                      so'm
+                                    </div>
+                                  </div>
 
-                                    {/* Expanded list of works under this model */}
-                                    {isOpen && (
-                                      <div className="bg-white p-4 border rounded-b-md space-y-2">
-                                        {Object.entries(workMap).map(
-                                          ([code, data]) => (
-                                            <div
-                                              key={code}
-                                              className="p-3 border rounded-md bg-gray-50 text-sm"
-                                            >
-                                              <div className="flex justify-between items-center flex-wrap gap-2">
-                                                <div className="font-medium">
-                                                  {code}, {data.name}
+                                  {/* Expanded list of works under this model */}
+                                  {isOpen && (
+                                    <div className="bg-white p-4 border rounded-b-md space-y-2">
+                                      {Object.entries(workMap).map(
+                                        ([code, data]) => (
+                                          <div
+                                            key={code}
+                                            className="p-3 border rounded-md bg-gray-50 text-sm"
+                                          >
+                                            <div className="flex justify-between items-center flex-wrap gap-2">
+                                              <div className="font-medium">
+                                                {code}, {data.name}
+                                              </div>
+                                              <div>
+                                                <div>
+                                                  Bajarildi:{" "}
+                                                  <span className="font-semibold">
+                                                    {data.totalQty} ta
+                                                  </span>
                                                 </div>
                                                 <div>
-                                                  <div>
-                                                    Bajarildi:{" "}
-                                                    <span className="font-semibold">
-                                                      {data.totalQty} ta
-                                                    </span>
-                                                  </div>
-                                                  <div>
-                                                    Summa:{" "}
-                                                    <span className="font-semibold text-green-700">
-                                                      {data.totalSum.toLocaleString(
-                                                        "ru-RU"
-                                                      )}{" "}
-                                                      so'm
-                                                    </span>
-                                                  </div>
+                                                  Summa:{" "}
+                                                  <span className="font-semibold text-green-700">
+                                                    {data.totalSum.toLocaleString(
+                                                      "ru-RU"
+                                                    )}{" "}
+                                                    so'm
+                                                  </span>
                                                 </div>
                                               </div>
                                             </div>
-                                          )
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              }
-                            )}
-                          </div>
-                        );
-                      })()}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      Tanlangan sana oralig'ida model ma'lumotlari topilmadi
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          {activeTab === "salary" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Oylik</CardTitle>
+                <CardDescription>
+                  <span className="font-semibold">
+                    {getMonthName(selectedMonth?.split("-")[1] * 1 - 1)}
+                  </span>{" "}
+                  oyida olingan maoshlar
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {employee?.salaryPayments?.map((payment) => (
+                  <div key={payment.id}>
+                    <div className="flex justify-between items-center">
+                      <div
+                        className={
+                          payment.type === "advance"
+                            ? "text-orange-700 font-medium"
+                            : "text-green-700 font-medium"
+                        }
+                      >
+                        {payment.type === "advance" ? "Avans" : "Oylik"}
+                      </div>
+                      <div
+                        className={
+                          payment.type === "advance"
+                            ? "text-orange-700 font-semibold"
+                            : "text-green-700 font-semibold"
+                        }
+                      >
+                        {parseFloat(payment.amount).toLocaleString("ru-RU")}{" "}
+                        so'm
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">
-                        Tanlangan sana oralig'ida model ma'lumotlari topilmadi
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  </div>
+                ))}
+                <div className="flex justify-between items-center mt-4 border-t pt-4">
+                  <div className="font-medium">Jami</div>
+                  <div className="font-semibold">
+                    {parseFloat(
+                      employee?.salaryPayments?.reduce(
+                        (sum, payment) => sum + parseFloat(payment.amount || 0),
+                        0
+                      )
+                    ).toLocaleString("ru-RU")}{" "}
+                    so'm
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
