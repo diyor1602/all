@@ -408,6 +408,10 @@ const Home = () => {
                       className={`border-b border-gray-200 hover:bg-gray-50 ${
                         output.hasChanged ? "animate-highlight" : ""
                       }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavigate(output.order_id);
+                      }}
                     >
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         {getMedalForRank(rank)}
@@ -415,13 +419,7 @@ const Home = () => {
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         {output.model.name}
                       </td>
-                      <td
-                        className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleNavigate(output.order_id);
-                        }}
-                      >
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         <TooltipProvider delayDuration={100}>
                           <Tooltip>
                             <TooltipTrigger>
@@ -489,6 +487,10 @@ const Home = () => {
                       className={`border-b border-gray-200 hover:bg-gray-50 ${
                         output.hasChanged ? "animate-highlight" : ""
                       }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavigate(output.order_id);
+                      }}
                     >
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         {getMedalForRank(rank)}
@@ -496,13 +498,7 @@ const Home = () => {
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         {output.model.name}
                       </td>
-                      <td
-                        className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleNavigate(output.order_id);
-                        }}
-                      >
+                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         <TooltipProvider delayDuration={100}>
                           <Tooltip>
                             <TooltipTrigger>
