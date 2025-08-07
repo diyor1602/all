@@ -965,7 +965,8 @@ const Models = () => {
                           <div>
                             <div>{work.name}</div>
                             <div className="text-sm text-gray-500">
-                              {parseInt(work.summa)} so'm / {work.second} sekund
+                              {parseInt(work.summa)} so'm /{" "}
+                              {parseFloat(work.second).toFixed(2)} sekund
                             </div>
                           </div>
                         )}
