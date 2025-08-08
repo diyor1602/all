@@ -57,7 +57,9 @@ import {
 } from "@/components/ui/select";
 
 const formatNumber = (number) => {
-  return Number.parseFloat(number || 0).toLocaleString("ru-RU");
+  return Number.parseFloat(number || 0).toLocaleString("ru-RU", {
+    maximumFractionDigits: 0,
+  });
 };
 
 const Daily = () => {
@@ -346,7 +348,20 @@ const Daily = () => {
     },
     {
       title: "Foyda",
-      value: `${formatNumber(daily.net_profit_uzs)} so'm`,
+      value:
+        daily.orders?.length === 0
+          ? `-${formatNumber(
+              daily.aup +
+                daily.kpi +
+                daily.daily_expenses +
+                daily.tarification +
+                daily.transport_attendance +
+                daily.orders?.reduce(
+                  (acc, order) => acc + order.rasxod_limit_uzs,
+                  0
+                )
+            )} so'm`
+          : `${formatNumber(daily.net_profit_uzs)} so'm`,
       icon: Calculator,
       color: "text-emerald-600",
       bg: "bg-emerald-300",

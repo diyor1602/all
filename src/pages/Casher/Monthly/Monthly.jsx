@@ -31,7 +31,9 @@ import { TrendingUp, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const formatNumber = (number) => {
-  return Number.parseFloat(number || 0).toLocaleString("ru-RU");
+  return Number.parseFloat(number || 0).toLocaleString("ru-RU", {
+    maximumFractionDigits: 0,
+  });
 };
 
 const Monthly = () => {
