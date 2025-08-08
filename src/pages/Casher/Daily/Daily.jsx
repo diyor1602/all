@@ -351,15 +351,11 @@ const Daily = () => {
       value:
         daily.orders?.length === 0
           ? `-${formatNumber(
-              daily.aup +
-                daily.kpi +
-                daily.daily_expenses +
-                daily.tarification +
-                daily.transport_attendance +
-                daily.orders?.reduce(
-                  (acc, order) => acc + order.rasxod_limit_uzs,
-                  0
-                )
+              parseFloat(daily.aup) +
+                parseFloat(daily.kpi) +
+                parseFloat(daily.daily_expenses) +
+                parseFloat(daily.tarification) +
+                parseFloat(daily.transport_attendance)
             )} so'm`
           : `${formatNumber(daily.net_profit_uzs)} so'm`,
       icon: Calculator,
