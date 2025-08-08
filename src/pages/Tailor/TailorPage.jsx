@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence, animate } from "framer-motion";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Check, CirclePlus, Loader2, X } from "lucide-react";
-import Coin from "/coin.png";
+import { animate } from "framer-motion";
+import CoinsAudio from "/coins.wav";
+const coinsAudio = new Audio(CoinsAudio);
 
 const TailorPage = () => {
   const { toast } = useToast();
@@ -15,7 +15,6 @@ const TailorPage = () => {
     { code: "", tarif: null, searchResults: [], selectedTarif: null },
   ]);
   const [loadingStates, setLoadingStates] = useState({});
-  const [coins, setCoins] = useState([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const balanceRef = useRef(null);
 
@@ -170,9 +169,8 @@ const TailorPage = () => {
   };
 
   const playCoinSound = () => {
-    const audio = new Audio("/coins.wav");
-    audio.volume = 1;
-    audio.play();
+    coinsAudio.currentTime = 0;
+    coinsAudio.play();
   };
 
   const handleSubmit = async (tarifId, index) => {
@@ -210,7 +208,6 @@ const TailorPage = () => {
             delay: Math.random() * 0.2,
           };
         });
-        setCoins((prev) => [...prev, ...newCoins]);
       }
 
       // Instead of calling getTarif again, just update the balance
@@ -270,10 +267,6 @@ const TailorPage = () => {
     const updated = [...inputs];
     updated.splice(index, 1);
     setInputs(updated);
-  };
-
-  const handleCoinAnimationComplete = (id) => {
-    setCoins((prev) => prev.filter((coin) => coin.id !== id));
   };
 
   return (
@@ -399,40 +392,6 @@ const TailorPage = () => {
           Yangi kod qo'shish
         </Button>
       </div>
-      {/* Coin Animation Portal */}
-      {createPortal(
-        <AnimatePresence>
-          {coins.map((coin) => (
-            <motion.img
-              key={coin.id}
-              src={Coin}
-              initial={{
-                position: "fixed",
-                left: coin.startX,
-                top: coin.startY,
-                opacity: 1,
-                scale: 1,
-              }}
-              animate={{
-                left: coin.endX,
-                top: coin.endY,
-                opacity: 0,
-                scale: 0.5,
-              }}
-              exit={{ opacity: 0 }}
-              transition={{
-                duration: 1,
-                delay: coin.delay,
-                ease: "easeInOut",
-              }}
-              onAnimationComplete={() => handleCoinAnimationComplete(coin.id)}
-              className="w-4 h-4 z-50 pointer-events-none"
-              alt="coin"
-            />
-          ))}
-        </AnimatePresence>,
-        document.body
-      )}
     </div>
   );
 };

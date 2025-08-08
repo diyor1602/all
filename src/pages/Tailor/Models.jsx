@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CoinsAudio from "/coins.wav";
+const coinsAudio = new Audio(CoinsAudio);
 
 const Models = () => {
   const { toast } = useToast();
@@ -260,8 +261,8 @@ const Models = () => {
         tarification_id: id,
       });
       await getBalance();
-      const audio = new Audio(CoinsAudio);
-      audio.play();
+      coinsAudio.currentTime = 0;
+      coinsAudio.play();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -334,10 +335,8 @@ const Models = () => {
       );
 
       await Promise.all(requests);
-
-      const audio = new Audio(CoinsAudio);
-      audio.play();
-
+      coinsAudio.currentTime = 0;
+      coinsAudio.play();
       await getBalance();
       await getPackets();
     } catch (error) {
