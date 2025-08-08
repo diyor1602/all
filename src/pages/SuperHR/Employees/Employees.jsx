@@ -539,7 +539,7 @@ const Employees = () => {
               <TableRow
                 key={employee.id}
                 className={
-                  employee.absence_count > 3
+                  employee.attendance_absent_count - employee.holidays_count > 3
                     ? "bg-red-200 hover:bg-red-300"
                     : ""
                 }
