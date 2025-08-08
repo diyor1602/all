@@ -37,9 +37,11 @@ const TailorRating = () => {
     currentDate.setDate(currentDate.getDate() + direction);
     setSelectedDay(currentDate.toISOString().split("T")[0]);
   };
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const response = await api.get(
         `${
           localStorage.getItem("role") === "groupMaster"
@@ -73,6 +75,8 @@ const TailorRating = () => {
         description: error?.response?.data?.message || "Data olishda xatolik",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,7 +112,13 @@ const TailorRating = () => {
         </div>
 
         <div className="overflow-x-auto w-full">
-          <table className="w-full border border-collapse my-5 bg-white">
+          <table
+            className={
+              loading
+                ? "w-full border border-collapse my-5 bg-white opacity-50 cursor-not-allowed"
+                : "w-full border border-collapse my-5 bg-white"
+            }
+          >
             <thead>
               <tr>
                 <th className="border border-gray-300 p-1 w-12">№</th>
