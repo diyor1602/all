@@ -645,7 +645,9 @@ const Employees = () => {
                           </Badge>
                         </TooltipTrigger>
                         <TooltipContent>
-                          Sababsiz kelmagan kunlari
+                          Ohirgi 30 kun ichida{" "}
+                          <span className="font-semibold">SABABSIZ</span>{" "}
+                          kelmagan kunlari
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
