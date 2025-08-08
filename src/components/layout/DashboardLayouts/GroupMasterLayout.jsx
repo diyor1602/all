@@ -30,12 +30,12 @@ const navigation = [
     icon: Shirt,
     onMobile: true,
   },
-  // {
-  //   name: "Natija",
-  //   href: "/groupMaster/result",
-  //   icon: FilePlus,
-  //   onMobile: true,
-  // },
+  {
+    name: "Natija",
+    href: "/groupMaster/result",
+    icon: FilePlus,
+    onMobile: true,
+  },
   {
     name: "Tarif",
     href: "/groupMaster/tarifs",

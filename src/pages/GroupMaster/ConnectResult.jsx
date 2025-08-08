@@ -254,9 +254,9 @@ const ConnectResult = () => {
                               : "bg-gray-200 text-black cursor-not-allowed"
                           }`}
                           disabled={!enabled}
-                          onClick={() =>
-                            enabled && handleOpenDialog(submodel, time)
-                          }
+                          // onClick={() =>
+                          //   enabled && handleOpenDialog(submodel, time)
+                          // }
                         >
                           <div>{time?.time?.slice(0, 5)}</div>
                           <div>{output?.quantity || ""}</div>
