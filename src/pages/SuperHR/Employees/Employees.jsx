@@ -641,7 +641,13 @@ const Employees = () => {
                   +{formatPhoneNumber(employee.phone)}
                 </TableCell>
                 <TableCell className="border">
-                  {getStatusBadge(employee.status)}
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(employee.status)}
+                    <Badge className="bg-red-500 hover:bg-red-600">
+                      {employee.attendance_absent_count -
+                        employee.holidays_count}
+                    </Badge>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
