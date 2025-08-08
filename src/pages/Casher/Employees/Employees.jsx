@@ -245,27 +245,20 @@ const Employees = () => {
       : employees.meta.total;
   };
 
-  // Initial data load
-  useEffect(() => {
-    fetchDepartments();
-    fetchEmployees();
-  }, []);
-
-  // Fetch employees when page changes
-  useEffect(() => {
-    fetchEmployees();
-  }, [filters.page]);
-
-  // Fetch employees when debounced values change
   useEffect(() => {
     fetchEmployees();
   }, [
+    filters.page,
     debouncedSearch,
     debouncedDepartment,
     debouncedGroup,
     debouncedStatus,
     debouncedType,
   ]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   // Handle payment type change with validation rules
   const handlePaymentTypeChange = (paymentType) => {

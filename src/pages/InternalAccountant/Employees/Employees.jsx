@@ -277,21 +277,19 @@ const Employees = () => {
     }
   };
 
-  // Initial data load
+  useEffect(() => {
+    fetchEmployees();
+  }, [
+    filters.page,
+    debouncedSearch,
+    debouncedDepartment,
+    debouncedGroup,
+    debouncedStatus,
+  ]);
+
   useEffect(() => {
     fetchDepartments();
-    fetchEmployees();
   }, []);
-
-  // Fetch employees when page changes
-  useEffect(() => {
-    fetchEmployees();
-  }, [filters.page]);
-
-  // Fetch employees when debounced values change
-  useEffect(() => {
-    fetchEmployees();
-  }, [debouncedSearch, debouncedDepartment, debouncedGroup, debouncedStatus]);
 
   return (
     <div className="space-y-2">
