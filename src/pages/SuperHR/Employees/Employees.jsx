@@ -636,10 +636,19 @@ const Employees = () => {
                 <TableCell className="border">
                   <div className="flex items-center gap-2">
                     {getStatusBadge(employee.status)}
-                    <Badge className="bg-red-500 hover:bg-red-600">
-                      {employee.attendance_absent_count -
-                        employee.holidays_count}
-                    </Badge>
+                    <TooltipProvider>
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger>
+                          <Badge className="bg-red-500 hover:bg-red-600">
+                            {employee.attendance_absent_count -
+                              employee.holidays_count}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Sababsiz kelmagan kunlari
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </TableCell>
               </TableRow>
