@@ -303,27 +303,20 @@ const Employees = () => {
     }
   };
 
-  // Initial data load
-  useEffect(() => {
-    fetchDepartments();
-    fetchEmployees();
-  }, []);
-
-  // Fetch employees when page changes
-  useEffect(() => {
-    fetchEmployees();
-  }, [filters.page]);
-
-  // Fetch employees when debounced values change
   useEffect(() => {
     fetchEmployees();
   }, [
+    filters.page,
     debouncedSearch,
     debouncedDepartment,
     debouncedGroup,
     debouncedStatus,
     debouncedType,
   ]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Xodimni ishdan ketkazishni xohlaysizmi?")) return;
