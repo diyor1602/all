@@ -17,7 +17,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import payment_types from "@/lib/paymentTypes";
 import api from "@/utils/api";
 import {
   Briefcase,
