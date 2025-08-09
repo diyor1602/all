@@ -734,6 +734,11 @@ const Employees = () => {
           value={pageNumber}
           onChange={(e) => setPageNumber(parseInt(e.target.value))}
           className="w-24 text-center bg-white"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handlePageChange(pageNumber);
+            }
+          }}
         />
         <Button
           size="icon"
