@@ -36,6 +36,7 @@ import {
   UserPlus,
   Download,
   Loader2,
+  Zap,
 } from "lucide-react";
 import {
   Tooltip,
@@ -80,6 +81,7 @@ const Employees = () => {
   const navigate = useNavigate();
 
   // States
+  const [pageNumber, setPageNumber] = useState(1);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -98,7 +100,7 @@ const Employees = () => {
     group_id: "",
     status: "working",
     search: "",
-    page: 1,
+    page: pageNumber,
     type: "",
   });
 
@@ -725,6 +727,22 @@ const Employees = () => {
           </PaginationContent>
         </Pagination>
       )}
+      {/* Get to the page number */}
+      <div className="flex items-center gap-2 justify-center">
+        <Input
+          type="number"
+          value={pageNumber}
+          onChange={(e) => setPageNumber(parseInt(e.target.value))}
+          className="w-24 text-center bg-white"
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => handlePageChange(pageNumber)}
+        >
+          <Zap size={16} className="text-blue-500" />
+        </Button>
+      </div>
       <ImageDialog
         open={imageDialogOpen}
         onOpenChange={setImageDialogOpen}
