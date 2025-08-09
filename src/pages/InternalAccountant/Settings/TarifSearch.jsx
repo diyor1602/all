@@ -11,6 +11,7 @@ import {
   Clock,
   DollarSign,
   Folder,
+  Package,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -90,7 +91,7 @@ const TarifSearch = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
-            {tarif.model?.name && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div
                 className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer"
                 onClick={() => {
@@ -108,10 +109,26 @@ const TarifSearch = () => {
                   <p className="font-medium">{tarif.model.name}</p>
                 </div>
               </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <Package className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500">Submodel</p>
+                  <p className="font-mono font-medium">
+                    {tarif.submodel?.name || "—"}
+                  </p>
+                </div>
+              </div>
+              <div
+                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer"
+                onClick={() => {
+                  navigator.clipboard.writeText(tarif.tarification?.code);
+                  toast({
+                    title: "Muvaffaqiyatli",
+                    description: "Kodi nusxa olindi",
+                    duration: 1000,
+                  });
+                }}
+              >
                 <Hash className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm text-gray-500">Kodi</p>
@@ -120,7 +137,6 @@ const TarifSearch = () => {
                   </p>
                 </div>
               </div>
-
               <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                 <Tag className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
