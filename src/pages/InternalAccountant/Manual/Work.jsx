@@ -129,6 +129,37 @@ const Work = () => {
     return Object.values(grouped).filter((item) => item.total > order.quantity);
   }, [tarifLogs, order]);
 
+  const underLimitTarifs = useMemo(() => {
+    if (!order || !order.quantity || !tarifLogs?.length) return [];
+
+    const grouped = {};
+
+    tarifLogs.forEach((log) => {
+      const id = log.tarification?.id;
+      if (!id) return;
+
+      if (!grouped[id]) {
+        grouped[id] = {
+          id,
+          code: log.tarification?.code,
+          name: log.tarification?.name,
+          total: 0,
+          users: [],
+        };
+      }
+
+      grouped[id].total += Number(log.quantity || 0);
+      grouped[id].users.push({
+        name: log.employee?.name || "Noma'lum",
+        quantity: Number(log.quantity || 0),
+      });
+    });
+
+    return Object.values(grouped).filter(
+      (item) => item.total <= order.quantity
+    );
+  }, [tarifLogs, order]);
+
   // Handle sorting
   const handleSort = (key) => {
     let direction = "asc";
@@ -1544,6 +1575,85 @@ const Work = () => {
               </Button>
             </CardContent>
           </Card>
+
+          {underLimitTarifs.length > 0 && (
+            <div className="mt-8 bg-green-50 p-4 border border-green-300 rounded-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-green-600 text-lg font-semibold">
+                  Limitdan o'tmaganlar
+                </h3>
+              </div>
+              <div className="max-h-[60vh] overflow-auto">
+                <table className="w-full border border-collapse">
+                  <thead className="bg-green-100 text-green-800">
+                    <tr>
+                      <th className="border border-green-300 p-2">#</th>
+                      <th className="border border-green-300 p-2">Kod</th>
+                      <th className="border border-green-300 p-2">Nomi</th>
+                      <th className="border border-green-300 p-2">
+                        Jami bajarilgan
+                      </th>
+                      <th className="border border-green-300 p-2">Qolgan</th>
+                      <th className="border border-green-300 p-2">
+                        Foydalanuvchilar
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {underLimitTarifs.map((tarif, index) => (
+                      <tr
+                        key={tarif.id}
+                        className="bg-white text-green-700 align-top"
+                      >
+                        <td className="border border-green-300 p-2 text-center">
+                          {index + 1}
+                        </td>
+                        <td className="border border-green-300 p-2">
+                          {tarif.code}
+                        </td>
+                        <td className="border border-green-300 p-2">
+                          {tarif.name}
+                        </td>
+                        <td className="border border-green-300 p-2">
+                          {tarif.total}
+                        </td>
+                        <td className="border border-green-300 p-2">
+                          {order.quantity - tarif.total}
+                        </td>
+                        <td className="border border-green-300 p-2">
+                          <ul className="space-y-1">
+                            {Object.entries(
+                              tarif.users.reduce((acc, user) => {
+                                if (!acc[user.name]) {
+                                  acc[user.name] = 0;
+                                }
+                                acc[user.name] += user.quantity;
+                                return acc;
+                              }, {})
+                            )
+                              .sort(([aName], [bName]) =>
+                                aName.localeCompare(bName)
+                              )
+                              .map(([name, totalQuantity], idx) => (
+                                <li
+                                  key={idx}
+                                  className="flex justify-between text-sm"
+                                >
+                                  <span>{name}</span>
+                                  <span className="font-semibold">
+                                    {totalQuantity} ta
+                                  </span>
+                                </li>
+                              ))}
+                          </ul>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {overLimitTarifs.length > 0 && (
             <div className="mt-8 bg-red-50 p-4 border border-red-300 rounded-lg">
