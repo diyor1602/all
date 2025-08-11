@@ -978,223 +978,6 @@ const Work = () => {
             </Button>
           </div>
 
-          <div className="bg-white p-4">
-            <div className="mb-4 flex items-center gap-2">
-              <Input
-                placeholder="Ish bo'yicha qidirish"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Input
-                placeholder="Xodim bo'yicha qidirish"
-                value={employeeSearch}
-                onChange={(e) => setEmployeeSearch(e.target.value)}
-              />
-            </div>
-            <div className="mt-4 w-full max-h-[80vh] overflow-y-auto">
-              <table className="border border-collapse w-full">
-                <thead className="sticky top-0 bg-gray-50 z-10">
-                  <tr>
-                    <th
-                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("code")}
-                    >
-                      <div className="flex items-center justify-between">
-                        Kodi
-                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                      </div>
-                    </th>
-                    <th className="border border-gray-300 p-2">Nomi</th>
-                    <th
-                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("employee")}
-                    >
-                      <div className="flex items-center justify-between">
-                        Xodim
-                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                      </div>
-                    </th>
-                    <th
-                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("quantity")}
-                    >
-                      <div className="flex items-center justify-between">
-                        Miqdori
-                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                      </div>
-                    </th>
-                    <th
-                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("amount")}
-                    >
-                      <div className="flex items-center justify-between">
-                        Summa
-                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                      </div>
-                    </th>
-                    <th
-                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("date")}
-                    >
-                      <div className="flex items-center justify-between">
-                        Sana
-                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedAndFilteredLogs.length > 0 ? (
-                    <>
-                      {sortedAndFilteredLogs.map((tarifLog, index) => (
-                        <tr key={index}>
-                          <td
-                            className="border border-gray-300 p-2 text-center"
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                tarifLog?.tarification?.code
-                              );
-                              toast({
-                                title: "Nusxa olindi",
-                                duration: 700,
-                              });
-                            }}
-                          >
-                            <span className="cursor-pointer">
-                              {tarifLog?.tarification?.code}
-                            </span>
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {tarifLog?.tarification?.name}
-                          </td>
-                          <td
-                            className="border border-gray-300 p-2"
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                tarifLog?.employee?.name
-                              );
-                              toast({
-                                title: "Nusxa olindi",
-                                duration: 700,
-                              });
-                            }}
-                          >
-                            <span className="cursor-pointer">
-                              {tarifLog?.employee?.name}
-                            </span>
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {editingID === tarifLog?.id ? (
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  type="number"
-                                  className="w-20"
-                                  size="sm"
-                                  value={newQuantity}
-                                  onChange={(e) => {
-                                    setNewQuantity(e.target.value);
-                                  }}
-                                  disabled={editing}
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  disabled={editing}
-                                  onClick={editExistingWork}
-                                >
-                                  <Check className="text-green-500" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  disabled={editing}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingID("");
-                                    setNewQuantity("");
-                                  }}
-                                >
-                                  <X className="text-red-500" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <div
-                                className="flex items-center gap-2 cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingID(tarifLog?.id);
-                                  setNewQuantity(tarifLog?.quantity);
-                                }}
-                              >
-                                {tarifLog?.quantity}
-                                <Button variant="ghost" size="icon">
-                                  <Pencil />
-                                </Button>
-                              </div>
-                            )}
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {parseFloat(tarifLog?.amount_earned).toLocaleString(
-                              "ru-RU",
-                              {
-                                minimumFractionDigits: 0,
-                                maximumFractionDigits: 0,
-                              }
-                            )}{" "}
-                          </td>
-                          <td className="border border-gray-300 p-2 text-center">
-                            {tarifLog?.date?.split("-")?.reverse()?.join(".")}
-                          </td>
-                        </tr>
-                      ))}
-
-                      {/* ✅ Sum row at the bottom */}
-                      <tr className="bg-gray-100 font-bold sticky bottom-0 z-10">
-                        <td
-                          className="border border-gray-300 p-2 text-center"
-                          colSpan={3}
-                        >
-                          Jami ({sortedAndFilteredLogs.length})
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          {sortedAndFilteredLogs
-                            .reduce(
-                              (acc, log) =>
-                                acc + parseFloat(log?.quantity || 0),
-                              0
-                            )
-                            .toLocaleString("ru-RU", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })}
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          {sortedAndFilteredLogs
-                            .reduce(
-                              (acc, log) =>
-                                acc + parseFloat(log?.amount_earned || 0),
-                              0
-                            )
-                            .toLocaleString("ru-RU", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })}
-                        </td>
-                        <td className="border border-gray-300 p-2" />
-                      </tr>
-                    </>
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="text-center">
-                        Ishlar topilmadi
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
           {/* Work Assignment Form */}
           <Card className="bg-white shadow-lg">
             <CardHeader>
@@ -1599,6 +1382,223 @@ const Work = () => {
               </Button>
             </CardContent>
           </Card>
+
+          <div className="bg-white p-4">
+            <div className="mb-4 flex items-center gap-2">
+              <Input
+                placeholder="Ish bo'yicha qidirish"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Input
+                placeholder="Xodim bo'yicha qidirish"
+                value={employeeSearch}
+                onChange={(e) => setEmployeeSearch(e.target.value)}
+              />
+            </div>
+            <div className="mt-4 w-full max-h-[80vh] overflow-y-auto">
+              <table className="border border-collapse w-full">
+                <thead className="sticky top-0 bg-gray-50 z-10">
+                  <tr>
+                    <th
+                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSort("code")}
+                    >
+                      <div className="flex items-center justify-between">
+                        Kodi
+                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                      </div>
+                    </th>
+                    <th className="border border-gray-300 p-2">Nomi</th>
+                    <th
+                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSort("employee")}
+                    >
+                      <div className="flex items-center justify-between">
+                        Xodim
+                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                      </div>
+                    </th>
+                    <th
+                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSort("quantity")}
+                    >
+                      <div className="flex items-center justify-between">
+                        Miqdori
+                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                      </div>
+                    </th>
+                    <th
+                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSort("amount")}
+                    >
+                      <div className="flex items-center justify-between">
+                        Summa
+                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                      </div>
+                    </th>
+                    <th
+                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSort("date")}
+                    >
+                      <div className="flex items-center justify-between">
+                        Sana
+                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedAndFilteredLogs.length > 0 ? (
+                    <>
+                      {sortedAndFilteredLogs.map((tarifLog, index) => (
+                        <tr key={index}>
+                          <td
+                            className="border border-gray-300 p-2 text-center"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                tarifLog?.tarification?.code
+                              );
+                              toast({
+                                title: "Nusxa olindi",
+                                duration: 700,
+                              });
+                            }}
+                          >
+                            <span className="cursor-pointer">
+                              {tarifLog?.tarification?.code}
+                            </span>
+                          </td>
+                          <td className="border border-gray-300 p-2">
+                            {tarifLog?.tarification?.name}
+                          </td>
+                          <td
+                            className="border border-gray-300 p-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                tarifLog?.employee?.name
+                              );
+                              toast({
+                                title: "Nusxa olindi",
+                                duration: 700,
+                              });
+                            }}
+                          >
+                            <span className="cursor-pointer">
+                              {tarifLog?.employee?.name}
+                            </span>
+                          </td>
+                          <td className="border border-gray-300 p-2">
+                            {editingID === tarifLog?.id ? (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  className="w-20"
+                                  size="sm"
+                                  value={newQuantity}
+                                  onChange={(e) => {
+                                    setNewQuantity(e.target.value);
+                                  }}
+                                  disabled={editing}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  disabled={editing}
+                                  onClick={editExistingWork}
+                                >
+                                  <Check className="text-green-500" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  disabled={editing}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingID("");
+                                    setNewQuantity("");
+                                  }}
+                                >
+                                  <X className="text-red-500" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div
+                                className="flex items-center gap-2 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingID(tarifLog?.id);
+                                  setNewQuantity(tarifLog?.quantity);
+                                }}
+                              >
+                                {tarifLog?.quantity}
+                                <Button variant="ghost" size="icon">
+                                  <Pencil />
+                                </Button>
+                              </div>
+                            )}
+                          </td>
+                          <td className="border border-gray-300 p-2">
+                            {parseFloat(tarifLog?.amount_earned).toLocaleString(
+                              "ru-RU",
+                              {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                              }
+                            )}{" "}
+                          </td>
+                          <td className="border border-gray-300 p-2 text-center">
+                            {tarifLog?.date?.split("-")?.reverse()?.join(".")}
+                          </td>
+                        </tr>
+                      ))}
+
+                      {/* ✅ Sum row at the bottom */}
+                      <tr className="bg-gray-100 font-bold sticky bottom-0 z-10">
+                        <td
+                          className="border border-gray-300 p-2 text-center"
+                          colSpan={3}
+                        >
+                          Jami ({sortedAndFilteredLogs.length})
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          {sortedAndFilteredLogs
+                            .reduce(
+                              (acc, log) =>
+                                acc + parseFloat(log?.quantity || 0),
+                              0
+                            )
+                            .toLocaleString("ru-RU", {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            })}
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          {sortedAndFilteredLogs
+                            .reduce(
+                              (acc, log) =>
+                                acc + parseFloat(log?.amount_earned || 0),
+                              0
+                            )
+                            .toLocaleString("ru-RU", {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            })}
+                        </td>
+                        <td className="border border-gray-300 p-2" />
+                      </tr>
+                    </>
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="text-center">
+                        Ishlar topilmadi
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {underLimitTarifs.length > 0 && (
             <div className="mt-8 bg-green-50 p-4 border border-green-300 rounded-lg">
