@@ -155,9 +155,7 @@ const Work = () => {
       });
     });
 
-    return Object.values(grouped).filter(
-      (item) => item.total <= order.quantity
-    );
+    return Object.values(grouped).filter((item) => item.total < order.quantity);
   }, [tarifLogs, order]);
 
   // Handle sorting
