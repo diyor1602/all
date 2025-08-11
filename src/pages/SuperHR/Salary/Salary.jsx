@@ -35,6 +35,7 @@ import {
   Search,
   UserLock,
   UserRoundCheck,
+  Zap,
 } from "lucide-react";
 import {
   Dialog,
@@ -102,6 +103,7 @@ const Salary = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loadingEdit, setLoadingEdit] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
 
   // Setup debounced values
   const debouncedSearch = useDebounce(filters.search, 500);
@@ -689,7 +691,9 @@ const Salary = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => navigate(`/superhr/salary/${employee.id}`)}
+                    onClick={() =>
+                      navigate(`/superhr/employees/view/${employee.id}`)
+                    }
                   >
                     <Eye className="h-4 w-4 text-blue-500" />
                   </Button>
@@ -791,6 +795,28 @@ const Salary = () => {
           </PaginationContent>
         </Pagination>
       )}
+
+      {/* Get to the page number */}
+      <div className="flex items-center gap-2 justify-center">
+        <Input
+          type="number"
+          value={pageNumber}
+          onChange={(e) => setPageNumber(parseInt(e.target.value))}
+          className="w-24 text-center bg-white"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handlePageChange(pageNumber);
+            }
+          }}
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => handlePageChange(pageNumber)}
+        >
+          <Zap size={16} className="text-blue-500" />
+        </Button>
+      </div>
 
       <ImageDialog
         open={imageDialogOpen}
