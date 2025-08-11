@@ -9,6 +9,7 @@ import {
   BadgePercent,
   Sprout,
   Truck,
+  CircleDollarSign,
 } from "lucide-react";
 
 const navigation = [
@@ -43,6 +44,12 @@ const navigation = [
     href: "/superhr/settings",
     icon: Settings,
     onMobile: true,
+  },
+  {
+    name: "Oylik",
+    href: "/superhr/salary",
+    icon: CircleDollarSign,
+    onMobile: false,
   },
   { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
   {
