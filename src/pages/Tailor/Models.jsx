@@ -1008,6 +1008,11 @@ const Models = () => {
           <div className="text-center text-lg font-medium">
             Ish boshlash uchun modelni tanlang
           </div>
+          {models.length === 0 && (
+            <div className="text-center text-gray-600">
+              Bu guruhga tegishli modellar topilmadi
+            </div>
+          )}
           {models
             ?.filter((model) => model.tarification_categories?.length > 0)
             ?.map((model, index) => (
