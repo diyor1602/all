@@ -1054,8 +1054,21 @@ const Work = () => {
                           <td className="border border-gray-300 p-2">
                             {tarifLog?.tarification?.name}
                           </td>
-                          <td className="border border-gray-300 p-2">
-                            {tarifLog?.employee?.name}
+                          <td
+                            className="border border-gray-300 p-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                tarifLog?.employee?.name
+                              );
+                              toast({
+                                title: "Nusxa olindi",
+                                duration: 700,
+                              });
+                            }}
+                          >
+                            <span className="cursor-pointer">
+                              {tarifLog?.employee?.name}
+                            </span>
                           </td>
                           <td className="border border-gray-300 p-2">
                             {editingID === tarifLog?.id ? (
