@@ -1048,8 +1048,21 @@ const Work = () => {
                     <>
                       {sortedAndFilteredLogs.map((tarifLog, index) => (
                         <tr key={index}>
-                          <td className="border border-gray-300 p-2 text-center">
-                            {tarifLog?.tarification?.code}
+                          <td
+                            className="border border-gray-300 p-2 text-center"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                tarifLog?.tarification?.code
+                              );
+                              toast({
+                                title: "Nusxa olindi",
+                                duration: 700,
+                              });
+                            }}
+                          >
+                            <span className="cursor-pointer">
+                              {tarifLog?.tarification?.code}
+                            </span>
                           </td>
                           <td className="border border-gray-300 p-2">
                             {tarifLog?.tarification?.name}
@@ -1620,7 +1633,18 @@ const Work = () => {
                           {index + 1}
                         </td>
                         <td className="border border-green-300 p-2">
-                          {tarif.code}
+                          <span
+                            className="cursor-pointer"
+                            onClick={() => {
+                              navigator.clipboard.writeText(tarif.code);
+                              toast({
+                                title: "Nusxa olindi",
+                                duration: 700,
+                              });
+                            }}
+                          >
+                            {tarif.code}
+                          </span>
                         </td>
                         <td className="border border-green-300 p-2">
                           {tarif.name}
@@ -1650,7 +1674,18 @@ const Work = () => {
                                   key={idx}
                                   className="flex justify-between text-sm"
                                 >
-                                  <span>{name}</span>
+                                  <span
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(name);
+                                      toast({
+                                        title: "Nusxa olindi",
+                                        duration: 700,
+                                      });
+                                    }}
+                                  >
+                                    {name}
+                                  </span>
                                   <span className="font-semibold">
                                     {totalQuantity} ta
                                   </span>
@@ -1707,7 +1742,18 @@ const Work = () => {
                           {index + 1}
                         </td>
                         <td className="border border-red-300 p-2">
-                          {tarif.code}
+                          <span
+                            className="cursor-pointer"
+                            onClick={() => {
+                              navigator.clipboard.writeText(tarif.code);
+                              toast({
+                                title: "Nusxa olindi",
+                                duration: 700,
+                              });
+                            }}
+                          >
+                            {tarif.code}
+                          </span>
                         </td>
                         <td className="border border-red-300 p-2">
                           {tarif.name}
@@ -1737,7 +1783,18 @@ const Work = () => {
                                   key={idx}
                                   className="flex justify-between text-sm"
                                 >
-                                  <span>{name}</span>
+                                  <span
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(name);
+                                      toast({
+                                        title: "Nusxa olindi",
+                                        duration: 700,
+                                      });
+                                    }}
+                                  >
+                                    {name}
+                                  </span>
                                   <span className="font-semibold">
                                     {totalQuantity} ta
                                   </span>
@@ -1772,7 +1829,18 @@ const Work = () => {
                     className="p-2 bg-blue-50 border-blue-200 flex items-center gap-2"
                   >
                     <div>{index + 1}.</div>
-                    <div>{employee.name}</div>
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => {
+                        navigator.clipboard.writeText(employee.name);
+                        toast({
+                          title: "Nusxa olindi",
+                          duration: 700,
+                        });
+                      }}
+                    >
+                      {employee.name}
+                    </div>
                   </div>
                 ))}
             </div>
