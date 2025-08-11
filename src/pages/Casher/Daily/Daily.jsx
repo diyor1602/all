@@ -773,7 +773,12 @@ const Daily = () => {
                             {monthly_expence_types[expense.type]}
                           </TableCell>
                           <TableCell className="font-mono border border-slate-200">
-                            {formatNumber(expense.amount)}{" "}
+                            {parseFloat(expense.amount).toLocaleString(
+                              "ru-RU",
+                              {
+                                maximumFractionDigits: 2,
+                              }
+                            )}{" "}
                             {monthly_expence_currency[expense.type]}
                           </TableCell>
                           <TableCell className="border border-slate-200">
