@@ -138,7 +138,7 @@ const TarifSearch = () => {
                 </div>
               </div>
               <div
-                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer"
                 onClick={() => {
                   navigator.clipboard.writeText(tarif.tarification?.name);
                   toast({
