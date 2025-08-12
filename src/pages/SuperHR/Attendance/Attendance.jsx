@@ -5,7 +5,14 @@ import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  ImageIcon,
+  UserPlus,
+  UserX,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -109,6 +116,7 @@ const Attendance = () => {
   const [checkOutTime, setCheckOutTime] = useState("");
   const [bulkCheckOutTime, setBulkCheckOutTime] = useState("");
   const [bulkCheckOutDialogOpen, setBulkCheckOutDialogOpen] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
 
   const formatDate = (date) => {
     return date.toISOString().split("T")[0];
@@ -137,6 +145,23 @@ const Attendance = () => {
     const minutes = now.getMinutes().toString().padStart(2, "0");
     setCheckInTime(`${hours}:${minutes}`);
     setAttendanceDialogOpen(true);
+  };
+
+  const handleAbsent = async (employeeId) => {
+    setSelectedEmployeeId(employeeId);
+    const employee = employees.find((emp) => emp.id === employeeId);
+    setSelectedEmployee(employee);
+    const isAbsent = window.confirm(
+      `${employee.name} kelmadi qilishga rozimisiz?`
+    );
+    if (isAbsent) {
+      await api.post("/superhr/attendances", {
+        employee_id: employeeId,
+        date: selectedDate,
+        status: "absent",
+      });
+      getData();
+    }
   };
 
   const handleMarkAttendance = async () => {
@@ -407,18 +432,7 @@ const Attendance = () => {
       return;
     }
 
-    // Otherwise handle as check-in
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const time = hours * 60 + minutes;
-    if (time < 9 * 60 + 30) {
-      setSelectedEmployeeId(employeeId);
-      setCheckInTime(`07:30`);
-      handleMarkAttendance();
-    } else {
-      openAttendanceDialog(employeeId);
-    }
+    openAttendanceDialog(employeeId);
   };
 
   const openCheckOutDialog = (employeeId) => {
@@ -651,10 +665,16 @@ const Attendance = () => {
   }, [selectedDepartment, departments]);
 
   useEffect(() => {
-    fetchEmployees();
-    fetchAttendance();
-    fetchDepartments();
+    getData();
   }, [selectedDate]);
+
+  const getData = async () => {
+    setPageLoading(true);
+    await fetchEmployees();
+    await fetchAttendance();
+    await fetchDepartments();
+    setPageLoading(false);
+  };
 
   useEffect(() => {
     setFilteredEmployees(filterEmployees());
@@ -666,8 +686,6 @@ const Attendance = () => {
     selectedGroup,
     searchQuery,
   ]);
-
-  const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
   return (
     <>
@@ -764,7 +782,11 @@ const Attendance = () => {
       </div>
 
       <div className="mt-4 overflow-auto max-h-[84vh]">
-        <table className="w-full border-2 border-collapse whitespace-nowrap bg-white text-sm">
+        <table
+          className={`${
+            pageLoading ? "opacity-50 cursor-not-allowed" : ""
+          } w-full border-2 border-collapse whitespace-nowrap bg-white text-sm`}
+        >
           <thead>
             <tr>
               <th className="p-1 border-2 w-10">
@@ -815,26 +837,26 @@ const Attendance = () => {
                     <td className="p-1 border-2 text-center">{employee?.id}</td>
                     <td className="p-1 border-2">{employee?.name}</td>
                     <td className="p-1 border-2 text-center">
-                      {attendanceRecord ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <span>
-                            {statusTranslation[attendanceRecord.status]}
-                          </span>
-                        </div>
-                      ) : // Only show "Keldi" button for today's date
-                      isToday ? (
+                      <div className="flex items-center justify-center gap-2">
+                        {attendanceRecord && (
+                          <div className="flex items-center justify-center gap-2">
+                            <span>
+                              {statusTranslation[attendanceRecord.status]}
+                            </span>
+                          </div>
+                        )}
                         <Button
-                          size="sm"
+                          size="icon"
+                          variant="ghost"
                           disabled={loading}
                           onClick={() => {
-                            handleMarkAttendanceFast(employee.id);
+                            handleAbsent(employee.id);
                           }}
+                          className="text-red-500"
                         >
-                          Keldi
+                          <UserX />
                         </Button>
-                      ) : (
-                        "-"
-                      )}
+                      </div>
                     </td>
                     <td className="p-1 border-2 text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -891,11 +913,22 @@ const Attendance = () => {
                         ) : (
                           "-"
                         )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={loading}
+                          onClick={() => {
+                            handleMarkAttendanceFast(employee.id);
+                          }}
+                          className="text-green-500"
+                        >
+                          <UserPlus />
+                        </Button>
                       </div>
                     </td>
                     <td className="p-1 border-2 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        {attendanceRecord?.check_out ? (
+                        {attendanceRecord?.check_out && (
                           <>
                             <span>
                               {new Date(
@@ -945,20 +978,20 @@ const Attendance = () => {
                               </Dialog>
                             )}
                           </>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openCheckOutDialog(employee.id)}
-                            disabled={
-                              !attendance?.find(
-                                (a) => a.employee_id === employee.id
-                              )?.check_in
-                            }
-                          >
-                            Ketdi
-                          </Button>
                         )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => openCheckOutDialog(employee.id)}
+                          disabled={
+                            !attendance?.find(
+                              (a) => a.employee_id === employee.id
+                            )?.check_in
+                          }
+                          className="text-yellow-500"
+                        >
+                          <CircleDollarSign />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -967,7 +1000,7 @@ const Attendance = () => {
           </tbody>
         </table>
       </div>
-      {selectedEmployees.length > 0 && isToday && (
+      {selectedEmployees.length > 0 && (
         <div className="mt-4 flex justify-end gap-2">
           <Button
             onClick={() => {
