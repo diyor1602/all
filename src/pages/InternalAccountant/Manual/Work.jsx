@@ -130,8 +130,9 @@ const Work = () => {
   }, [tarifLogs, order]);
 
   const underLimitTarifs = useMemo(() => {
-    if (!order || !order.quantity || !tarifLogs?.length) return [];
+    if (!order || !order.quantity || !tarifications?.length) return [];
 
+    // Group from tarifLogs
     const grouped = {};
 
     tarifLogs.forEach((log) => {
@@ -155,8 +156,22 @@ const Work = () => {
       });
     });
 
-    return Object.values(grouped).filter((item) => item.total < order.quantity);
-  }, [tarifLogs, order]);
+    const merged = tarifications.map((tarif) => {
+      if (grouped[tarif.id]) {
+        return grouped[tarif.id];
+      } else {
+        return {
+          id: tarif.id,
+          code: tarif.code,
+          name: tarif.name,
+          total: 0,
+          users: [], // no one worked on it
+        };
+      }
+    });
+
+    return merged.filter((item) => item.total < order.quantity);
+  }, [tarifLogs, tarifications, order]);
 
   // Handle sorting
   const handleSort = (key) => {
