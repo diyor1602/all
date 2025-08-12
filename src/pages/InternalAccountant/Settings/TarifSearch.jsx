@@ -137,7 +137,17 @@ const TarifSearch = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+              <div
+                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                onClick={() => {
+                  navigator.clipboard.writeText(tarif.tarification?.name);
+                  toast({
+                    title: "Muvaffaqiyatli",
+                    description: "Nomi nusxa olindi",
+                    duration: 1000,
+                  });
+                }}
+              >
                 <Tag className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm text-gray-500">Nomi</p>
