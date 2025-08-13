@@ -108,7 +108,6 @@ const NewOrder = () => {
     if (
       !payload.name ||
       !payload.model.id ||
-      !payload.model.material_id ||
       !payload.model.submodels.length ||
       !payload.model.sizes.length
     ) {
@@ -154,10 +153,10 @@ const NewOrder = () => {
     const formattedPayload = {
       name: payload.name,
       quantity: totalQuantity,
-      price: payload.price,
+      price: payload.price || 0,
       start_date: payload.start_date,
       end_date: payload.end_date,
-      rasxod: payload.rasxod,
+      rasxod: payload.rasxod || 0,
       comment: payload.comment,
       model: {
         id: payload.model.id,
@@ -177,6 +176,13 @@ const NewOrder = () => {
       formattedPayload.contragent_name = payload.contragent.name;
     } else if (payload.contragent.id) {
       formattedPayload.contragent_id = payload.contragent.id;
+    }
+
+    if (payload.model.material?.isNew) {
+      formattedPayload.model.material_name = payload.model.material.name;
+      delete formattedPayload.model.material_id;
+    } else {
+      formattedPayload.model.material_id = payload.model.material_id;
     }
 
     setIsSending(true);
@@ -387,6 +393,7 @@ const NewOrder = () => {
                                 ...payload,
                                 model: {
                                   ...model,
+                                  submodels: [], // reset selection to empty
                                   sizesList: model.sizes,
                                   sizes: [
                                     {
@@ -401,6 +408,7 @@ const NewOrder = () => {
                                   ],
                                 },
                               });
+
                               setModelOpen(false);
                             }}
                           >
@@ -450,9 +458,40 @@ const NewOrder = () => {
                 </PopoverTrigger>
                 <PopoverContent className="p-0">
                   <Command>
-                    <CommandInput placeholder="Materialni qidirish..." />
+                    <CommandInput placeholder="Materialni qidirish yoki yaratish..." />
                     <CommandList>
-                      <CommandEmpty>Material topilmadi</CommandEmpty>
+                      <CommandEmpty>
+                        <div className="p-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              const input = document.querySelector(
+                                '[placeholder="Materialni qidirish yoki yaratish..."]'
+                              );
+                              const searchValue = input?.value || "";
+                              if (searchValue.trim()) {
+                                setPayload((prev) => ({
+                                  ...prev,
+                                  model: {
+                                    ...prev.model,
+                                    material_id: null,
+                                    material: {
+                                      name: searchValue.trim(),
+                                      isNew: true,
+                                    },
+                                  },
+                                }));
+                                setMaterialOpen(false);
+                              }
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Yangi material yaratish
+                          </Button>
+                        </div>
+                      </CommandEmpty>
                       <CommandGroup>
                         {materials.map((material) => (
                           <CommandItem
@@ -464,7 +503,7 @@ const NewOrder = () => {
                                 model: {
                                   ...prev.model,
                                   material_id: material.id,
-                                  material: material, // Store the full material object
+                                  material: { ...material, isNew: false },
                                 },
                               }));
                               setMaterialOpen(false);
@@ -491,7 +530,14 @@ const NewOrder = () => {
                   </Command>
                 </PopoverContent>
               </Popover>
+              {payload.model.material?.isNew && (
+                <div className="text-sm text-green-600 flex items-center gap-1">
+                  <Plus className="h-3 w-3" />
+                  Yangi material: {payload.model.material.name}
+                </div>
+              )}
             </div>
+
             {/* Comment */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderComment">Izoh</Label>
@@ -517,23 +563,32 @@ const NewOrder = () => {
                     <div key={submodel.id}>
                       <Button
                         variant={
-                          payload.submodels?.includes(submodel.id)
+                          payload.model.submodels?.includes(submodel.id)
                             ? "default"
                             : "outline"
                         }
                         type="button"
                         onClick={() => {
-                          setPayload({
-                            ...payload,
-                            submodels: payload.submodels?.includes(submodel.id)
-                              ? payload.submodels?.filter(
-                                  (id) => id !== submodel.id
-                                )
-                              : [
-                                  ...(payload.submodels?.filter((id) => id) ||
-                                    []),
-                                  submodel.id,
-                                ],
+                          setPayload((prev) => {
+                            const exists = prev.model.submodels?.includes(
+                              submodel.id
+                            );
+                            return {
+                              ...prev,
+                              model: {
+                                ...prev.model,
+                                submodels: exists
+                                  ? prev.model.submodels.filter(
+                                      (id) => id !== submodel.id
+                                    )
+                                  : [
+                                      ...new Set([
+                                        ...(prev.model.submodels || []),
+                                        submodel.id,
+                                      ]),
+                                    ],
+                              },
+                            };
                           });
                         }}
                       >

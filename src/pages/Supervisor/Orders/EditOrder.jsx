@@ -433,40 +433,6 @@ const EditOrder = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="orderPrice">Buyurtma narxi</Label>
-              <Input
-                type="number"
-                id="orderPrice"
-                placeholder="Buyurtma narxi"
-                value={payload.price}
-                min={0}
-                step={0.01}
-                className="bg-white"
-                required
-                onChange={(e) => {
-                  setPayload({ ...payload, price: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderRasxod">Rasxod</Label>
-              <Input
-                type="number"
-                id="orderRasxod"
-                placeholder="Rasxod"
-                value={payload.rasxod}
-                min={0}
-                step={0.01}
-                className="bg-white"
-                required
-                onChange={(e) => {
-                  setPayload({ ...payload, rasxod: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
               <Label htmlFor="orderStartDate">Boshlanish sanasi</Label>
               <Input
                 type="date"
