@@ -515,10 +515,17 @@ const PlanDetails = () => {
                     <div
                       key={order.id}
                       className={cn(
-                        "p-4 rounded-lg shadow-md h-fit border",
+                        "p-4 rounded-lg shadow-md h-fit border cursor-pointer",
                         statuses[order.status]?.secondaryBg,
                         statuses[order.status]?.border
                       )}
+                      onClick={() => {
+                        navigator.clipboard.writeText(order.name);
+                        toast({
+                          title: "Nusxa olindi",
+                          duration: 700,
+                        });
+                      }}
                     >
                       <div className="flex justify-between mb-4 flex-wrap gap-3">
                         <div className="font-semibold">{order.name}</div>
