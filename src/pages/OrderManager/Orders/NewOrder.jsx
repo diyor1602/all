@@ -428,6 +428,7 @@ const NewOrder = () => {
                                 ...payload,
                                 model: {
                                   ...model,
+                                  submodels: [], // reset selection to empty
                                   sizesList: model.sizes,
                                   sizes: [
                                     {
@@ -442,6 +443,7 @@ const NewOrder = () => {
                                   ],
                                 },
                               });
+
                               setModelOpen(false);
                             }}
                           >
@@ -596,23 +598,32 @@ const NewOrder = () => {
                     <div key={submodel.id}>
                       <Button
                         variant={
-                          payload.submodels?.includes(submodel.id)
+                          payload.model.submodels?.includes(submodel.id)
                             ? "default"
                             : "outline"
                         }
                         type="button"
                         onClick={() => {
-                          setPayload({
-                            ...payload,
-                            submodels: payload.submodels?.includes(submodel.id)
-                              ? payload.submodels?.filter(
-                                  (id) => id !== submodel.id
-                                )
-                              : [
-                                  ...(payload.submodels?.filter((id) => id) ||
-                                    []),
-                                  submodel.id,
-                                ],
+                          setPayload((prev) => {
+                            const exists = prev.model.submodels?.includes(
+                              submodel.id
+                            );
+                            return {
+                              ...prev,
+                              model: {
+                                ...prev.model,
+                                submodels: exists
+                                  ? prev.model.submodels.filter(
+                                      (id) => id !== submodel.id
+                                    )
+                                  : [
+                                      ...new Set([
+                                        ...(prev.model.submodels || []),
+                                        submodel.id,
+                                      ]),
+                                    ],
+                              },
+                            };
                           });
                         }}
                       >
