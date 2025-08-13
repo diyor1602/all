@@ -1,12 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import {
-  BadgePercent,
-  Building2,
-  CircleCheckBig,
-  Home,
-  Sprout,
-  Truck,
-} from "lucide-react";
+import { BadgePercent, Building2, Home, Sprout, Truck } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -20,12 +13,6 @@ const navigation = [
     name: "Guruhlar natijasi",
     href: "/resultChecker/result",
     icon: Building2,
-    onMobile: true,
-  },
-  {
-    name: "Xodimlar natijasi",
-    href: "/resultChecker/employeeResult",
-    icon: CircleCheckBig,
     onMobile: true,
   },
   { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
