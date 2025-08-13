@@ -661,23 +661,27 @@ const EditOrder = () => {
                         }
                         type="button"
                         onClick={() => {
-                          setPayload({
-                            ...payload,
-                            model: {
-                              ...payload.model,
-                              submodels: payload.model.submodels?.includes(
-                                submodel.id
-                              )
-                                ? payload.model.submodels?.filter(
-                                    (id) => id !== submodel.id
-                                  )
-                                : [
-                                    ...(payload.model.submodels?.filter(
-                                      (id) => id
-                                    ) || []),
-                                    submodel.id,
-                                  ],
-                            },
+                          setPayload((prev) => {
+                            const exists = prev.model.submodels?.includes(
+                              submodel.id
+                            );
+
+                            return {
+                              ...prev,
+                              model: {
+                                ...prev.model,
+                                submodels: exists
+                                  ? prev.model.submodels.filter(
+                                      (id) => id !== submodel.id
+                                    )
+                                  : Array.from(
+                                      new Set([
+                                        ...(prev.model.submodels || []),
+                                        submodel.id,
+                                      ])
+                                    ),
+                              },
+                            };
                           });
                         }}
                       >
