@@ -40,7 +40,9 @@ import {
 import { Link } from "react-router-dom";
 
 const formatNumber = (num) => {
-  return Number.parseFloat(num)?.toLocaleString("ru-RU");
+  return Number.parseFloat(num)?.toLocaleString("ru-RU", {
+    maximumFractionDigits: 0,
+  });
 };
 
 const formatDate = (dateString) => {
@@ -237,7 +239,7 @@ const SalaryPage = () => {
 
   // Fixed maximum amount calculation - allows redistributing existing payments
   const calculateMaxAmount = (employee, paymentType) => {
-    const totalEarned = Number.parseFloat(employee?.earning?.total_earned || 0);
+    const totalEarned = Number.parseFloat(employee?.total_earned || 0);
     const { advanceTotal, salaryTotal } = calculatePaymentTotals(
       employee?.paid_amounts
     );
@@ -477,7 +479,7 @@ const SalaryPage = () => {
   const totalStats = employees.reduce(
     (acc, emp) => {
       acc.totalBalance += Number.parseFloat(emp?.balance || 0);
-      acc.totalEarned += Number.parseFloat(emp?.earning?.total_earned || 0);
+      acc.totalEarned += Number.parseFloat(emp?.total_earned || 0);
       acc.totalPaid += Number.parseFloat(emp?.total_paid || 0);
       return acc;
     },
@@ -705,7 +707,7 @@ const SalaryPage = () => {
                             target="_blank"
                             className="text-green-600 font-medium"
                           >
-                            {formatNumber(employee?.earning?.total_earned)}
+                            {formatNumber(employee?.total_earned)}
                           </Link>
                         </td>
                         <td className="border border-gray-200 p-1 text-center">
