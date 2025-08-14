@@ -367,10 +367,7 @@ const OrderView = () => {
                                       {item.item.image ? (
                                         <div className="h-10 w-10 overflow-hidden rounded-md flex-shrink-0">
                                           <img
-                                            src={
-                                              item.item.image ||
-                                              "/placeholder.svg"
-                                            }
+                                            src={item.item.image}
                                             alt={item.item.name}
                                             className="h-full w-full object-cover"
                                           />
@@ -643,11 +640,7 @@ const OrderView = () => {
                                       {item.item.image ? (
                                         <div className="h-10 w-10 overflow-hidden rounded-md">
                                           <img
-                                            src={
-                                              item.item.image ||
-                                              "/placeholder.svg" ||
-                                              "/placeholder.svg"
-                                            }
+                                            src={item.item.image}
                                             alt={item.item.name}
                                             className="h-full w-full object-cover"
                                           />

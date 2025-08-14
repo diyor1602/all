@@ -396,7 +396,7 @@ const AttendanceHistory = () => {
           </DialogHeader>
           <div className="max-h-[80vh] overflow-auto">
             <img
-              src={selectedImage.url || "/placeholder.svg"}
+              src={selectedImage.url}
               alt="Attendance image"
               className="w-full rounded-md border"
             />

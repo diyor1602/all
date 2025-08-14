@@ -188,8 +188,7 @@ const Profile = () => {
                         ? Male
                         : data.gender === "female"
                         ? Female
-                        : NoImage) ||
-                      "/placeholder.svg"
+                        : NoImage)
                     }
                     alt="Profile"
                     className="w-full h-full object-cover object-center"

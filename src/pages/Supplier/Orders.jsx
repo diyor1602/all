@@ -425,10 +425,7 @@ const Orders = () => {
                                           {item.item?.image ? (
                                             <div className="w-8 h-8 rounded overflow-hidden">
                                               <img
-                                                src={
-                                                  item.item.image ||
-                                                  "/placeholder.svg"
-                                                }
+                                                src={item.item.image}
                                                 alt={item.item.name}
                                                 className="w-full h-full object-cover"
                                               />

@@ -765,7 +765,7 @@ const ExcelOrders = () => {
                                       className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white rounded overflow-hidden flex-shrink-0 relative border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
                                     >
                                       <img
-                                        src={img.url || "/placeholder.svg"}
+                                        src={img.url}
                                         alt={`${model.model}-${imgIndex}`}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {

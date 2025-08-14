@@ -898,10 +898,7 @@ const Attendance = () => {
                                   </DialogHeader>
                                   <div className="w-full max-h-[80vh] overflow-auto">
                                     <img
-                                      src={
-                                        attendanceRecord.check_in_image ||
-                                        "/placeholder.svg"
-                                      }
+                                      src={attendanceRecord.check_in_image}
                                       alt="Check-in image"
                                       className="w-full"
                                     />
@@ -966,10 +963,7 @@ const Attendance = () => {
                                   </DialogHeader>
                                   <div className="w-full max-h-[80vh] overflow-auto">
                                     <img
-                                      src={
-                                        attendanceRecord.check_out_image ||
-                                        "/placeholder.svg"
-                                      }
+                                      src={attendanceRecord.check_out_image}
                                       alt="Check-out image"
                                       className="w-full"
                                     />

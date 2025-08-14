@@ -593,7 +593,7 @@ const EditEmployees = () => {
                 >
                   {imagePreview ? (
                     <img
-                      src={imagePreview || "/placeholder.svg"}
+                      src={imagePreview}
                       alt="Xodim rasmi"
                       className="w-full h-full object-cover"
                     />

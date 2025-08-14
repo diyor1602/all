@@ -627,10 +627,7 @@ const Attendance = () => {
                                   </DialogHeader>
                                   <div>
                                     <img
-                                      src={
-                                        attendanceRecord.check_in_image ||
-                                        "/placeholder.svg"
-                                      }
+                                      src={attendanceRecord.check_in_image}
                                       alt="Check-in image"
                                       className="w-full rounded-md border"
                                     />
@@ -684,10 +681,7 @@ const Attendance = () => {
                                   </DialogHeader>
                                   <div>
                                     <img
-                                      src={
-                                        attendanceRecord.check_out_image ||
-                                        "/placeholder.svg"
-                                      }
+                                      src={attendanceRecord.check_out_image}
                                       alt="Check-out image"
                                       className="w-full rounded-md border"
                                     />

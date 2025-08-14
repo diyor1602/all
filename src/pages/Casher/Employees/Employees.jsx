@@ -631,7 +631,7 @@ const Employees = () => {
                   <div className="flex items-center gap-2 min-w-[200px] max-w-[250px] text-xs">
                     {employee.img ? (
                       <img
-                        src={employee.img || "/placeholder.svg"}
+                        src={employee.img}
                         alt="-"
                         className="h-8 w-8 rounded-full object-cover cursor-pointer shrink-0"
                         onClick={() => {
@@ -808,11 +808,7 @@ const ImageDialog = ({ open, onOpenChange, image }) => {
         </DialogHeader>
         <div className="flex items-center justify-center">
           {image && (
-            <img
-              src={image || "/placeholder.svg"}
-              alt=""
-              className="w-full h-auto max-h-[90vh]"
-            />
+            <img src={image} alt="" className="w-full h-auto max-h-[90vh]" />
           )}
         </div>
       </DialogContent>

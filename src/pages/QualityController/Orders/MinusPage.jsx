@@ -388,7 +388,7 @@ const MinusPage = () => {
             ) : (
               <div className="relative rounded-lg overflow-hidden group">
                 <img
-                  src={imagePreview || "/placeholder.svg"}
+                  src={imagePreview}
                   alt="Preview"
                   className="w-full h-48 object-cover rounded-lg"
                 />
