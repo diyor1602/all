@@ -365,7 +365,8 @@ const SalaryDetails = () => {
                   </span>
                   <span className="font-medium text-green-600">
                     {Number.parseFloat(employee.balance).toLocaleString(
-                      "ru-RU"
+                      "ru-RU",
+                      { maximumFractionDigits: 0 }
                     )}{" "}
                     so'm
                   </span>
@@ -375,7 +376,9 @@ const SalaryDetails = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Bonus:</span>
                   <span className="font-medium">
-                    {Number.parseFloat(employee.bonus).toLocaleString("ru-RU")}{" "}
+                    {Number.parseFloat(employee.bonus).toLocaleString("ru-RU", {
+                      maximumFractionDigits: 0,
+                    })}{" "}
                     so'm
                   </span>
                 </div>
@@ -386,7 +389,10 @@ const SalaryDetails = () => {
                     Jami ishlangan mablag'lar:
                   </span>
                   <span className="font-medium text-blue-600">
-                    {totalTarificationAmount.toLocaleString("ru-RU")} so'm
+                    {totalTarificationAmount.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 0,
+                    })}{" "}
+                    so'm
                   </span>
                 </div>
               )}
