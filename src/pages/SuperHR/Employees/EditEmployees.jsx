@@ -335,6 +335,14 @@ const EditEmployees = () => {
     ) {
       setFormData((prev) => ({ ...prev, position_id: "" }));
     }
+    // cleart group_id
+    if (
+      formData.group_id &&
+      !isInitialSetupRef.current &&
+      !filteredPositions.some((p) => normalizeId(p.id) === formData.group_id)
+    ) {
+      setFormData((prev) => ({ ...prev, group_id: null }));
+    }
   }, [formData.department_id, allPositions]);
 
   const formatPhoneNumber = (value) => {
@@ -512,6 +520,10 @@ const EditEmployees = () => {
         );
       }
       formDataToSend.append("bonus", initialData.bonus);
+
+      if (!formDataToSend.get("group_id")) {
+        formDataToSend.delete("group_id");
+      }
 
       formDataToSend.append("_method", "PATCH");
 
