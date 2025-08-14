@@ -87,6 +87,7 @@ const Salary = () => {
     group_id: "",
     status: "working",
     type: "simple",
+    payment_type: "monthly",
     search: "",
     page: 1,
   });
@@ -97,6 +98,7 @@ const Salary = () => {
     group_id: "all",
     status: "working",
     type: "simple",
+    payment_type: "monthly",
   });
 
   const [groups, setGroups] = useState([]);
@@ -111,6 +113,7 @@ const Salary = () => {
   const debouncedGroup = useDebounce(filters.group_id, 300);
   const debouncedStatus = useDebounce(filters.status, 300);
   const debouncedType = useDebounce(filters.type, 300);
+  const debouncedPaymentType = useDebounce(filters.payment_type, 300);
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -196,6 +199,7 @@ const Salary = () => {
       group_id: "",
       status: "",
       type: "",
+      payment_type: "",
       search: "",
       page: 1,
     });
@@ -204,6 +208,7 @@ const Salary = () => {
       group_id: "all",
       status: "all",
       type: "all",
+      payment_type: "all",
     });
     setGroups([]);
     fetchEmployees();
@@ -254,6 +259,7 @@ const Salary = () => {
     debouncedGroup,
     debouncedStatus,
     debouncedType,
+    debouncedPaymentType,
   ]);
 
   useEffect(() => {
@@ -552,6 +558,22 @@ const Salary = () => {
             <SelectItem value="working">Ishlamoqda</SelectItem>
             <SelectItem value="kicked">Ishdan bo'shatilgan</SelectItem>
             <SelectItem value="reserv">Zaxirada</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={selectValues.payment_type}
+          onValueChange={(value) => handleFilterChange("payment_type", value)}
+        >
+          <SelectTrigger className="bg-white">
+            <SelectValue placeholder="To'lov turi tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barcha to'lov turlari</SelectItem>
+            <SelectItem value="monthly">Oylik</SelectItem>
+            <SelectItem value="hourly">Soatlik</SelectItem>
+            <SelectItem value="daily">Kunlik</SelectItem>
+            <SelectItem value="piece_work">Ishbay</SelectItem>
           </SelectContent>
         </Select>
 
