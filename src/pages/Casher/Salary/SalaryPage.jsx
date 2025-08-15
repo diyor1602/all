@@ -68,6 +68,8 @@ const SalaryPage = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState({});
+  const [orders, setOrders] = useState([]);
+  const [selectedOrders, setSelectedOrders] = useState([]);
   const [paymentDialog, setPaymentDialog] = useState({
     open: false,
     employee: null,
@@ -87,6 +89,22 @@ const SalaryPage = () => {
   });
   const [searchText, setSearchText] = useState("");
 
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await api.get("/casher/orders");
+        setOrders(response.data);
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Bunday ma'lumot topilmadi",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchOrders();
+  }, []);
+
   const formatDateLocal = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -103,10 +121,10 @@ const SalaryPage = () => {
         group_id: filters.group_id,
         start_date: filters.start_date,
         end_date: filters.end_date,
+        order_ids: selectedOrders,
       };
 
-      const response = await api.get(`/casher/pdf/employees`, {
-        params,
+      const response = await api.post(`/casher/pdf/employees`, params, {
         responseType: "blob",
       });
 
@@ -207,7 +225,11 @@ const SalaryPage = () => {
     try {
       setLoading(true);
       const response = await api.get("/casher/groups", {
-        params: { ...filtersToUse, type: "simple" },
+        params: {
+          ...filtersToUse,
+          type: "simple",
+          order_ids: [...selectedOrders],
+        },
       });
       setSalary(response.data);
     } catch (error) {
@@ -220,6 +242,10 @@ const SalaryPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSalaryData(filters);
+  }, [selectedOrders]);
 
   // Calculate payment totals from the new format
   const calculatePaymentTotals = (paidAmounts) => {
@@ -547,6 +573,31 @@ const SalaryPage = () => {
           className="bg-white w-fit"
         />
       </div>
+
+      {orders.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {orders
+            .sort((a, b) => a.id - b.id)
+            .map((order) => (
+              <Button
+                variant={
+                  selectedOrders?.includes(order.id) ? "default" : "outline"
+                }
+                key={order.id}
+                onClick={() =>
+                  setSelectedOrders((prev) =>
+                    prev.includes(order.id)
+                      ? prev.filter((id) => id !== order.id)
+                      : [...prev, order.id]
+                  )
+                }
+              >
+                {order.id}
+              </Button>
+            ))}
+        </div>
+      )}
+
       {employees.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="border-0 shadow-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white">

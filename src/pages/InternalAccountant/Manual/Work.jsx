@@ -100,6 +100,24 @@ const Work = () => {
     new Date().toISOString().split("T")[0]
   );
 
+  const [attendanceSalary, setAttendanceSalary] = useState(0);
+
+  useEffect(() => {
+    const fetchAttendanceSalary = async () => {
+      try {
+        const response = await api.get(`/internalAccountant/orderSalary/${id}`);
+        setAttendanceSalary(response.data);
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Ma'lumot olishda xatolik",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchAttendanceSalary();
+  }, []);
+
   const overLimitTarifs = useMemo(() => {
     if (!order || !order.quantity || !tarifLogs?.length) return [];
 
@@ -872,24 +890,45 @@ const Work = () => {
               {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
             </span>
           </div>
+          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+            <span className="text-sm">
+              Oylikchilar <span className="font-bold">topgan</span> jami summa:
+            </span>
+            <span className="text-sm font-bold">
+              {attendanceSalary?.total_salary?.toLocaleString("ru-RU", {
+                maximumFractionDigits: 0,
+              })}{" "}
+              {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
+            </span>
+          </div>
           <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-4 flex-wrap">
             <span className="text-sm">Sarflangan foiz:</span>
             <span className="text-sm font-bold">
-              {(
-                (tarifLogs?.reduce(
-                  (acc, log) => acc + parseFloat(log?.amount_earned || 0),
+              {(() => {
+                const earnedFromTarifs = tarifLogs?.reduce(
+                  (acc, log) => acc + (parseFloat(log?.amount_earned) || 0),
                   0
-                ) /
+                );
+
+                const earnedFromAttendance =
+                  parseFloat(attendanceSalary?.total_salary) || 0;
+
+                const totalEarned = earnedFromTarifs + earnedFromAttendance;
+
+                const totalAllocated =
                   (parseFloat(
-                    selectedTarifLang == "uz"
+                    selectedTarifLang === "uz"
                       ? totalSpendSummaUZ
-                      : totalSpendSummaRU || 0
-                  ) *
-                    parseFloat(order?.quantity || 0))) *
-                100
-              ).toLocaleString("ru-RU", {
-                maximumFractionDigits: 2,
-              })}
+                      : totalSpendSummaRU
+                  ) || 0) * (parseFloat(order?.quantity) || 0);
+
+                const percentage =
+                  totalAllocated > 0 ? (totalEarned / totalAllocated) * 100 : 0;
+
+                return percentage.toLocaleString("ru-RU", {
+                  maximumFractionDigits: 2,
+                });
+              })()}
               %
             </span>
 
@@ -906,7 +945,8 @@ const Work = () => {
                   (acc, log) => acc + parseFloat(log?.amount_earned || 0),
                   0
                 );
-                const diff = allocated - earned;
+                const diff =
+                  allocated - earned + attendanceSalary?.total_salary;
                 const sign = diff > 0 ? "" : "";
                 return `${sign}${diff.toLocaleString(
                   selectedTarifLang == "uz" ? "ru-RU" : "ru-RU",
