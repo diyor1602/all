@@ -294,6 +294,11 @@ const Employees = () => {
       const payload = {
         payment_type: selectedEmployee.payment_type,
         type: selectedEmployee.type,
+        group_id: employees.data.find((emp) => emp.id === selectedEmployee.id)
+          .group?.id,
+        department_id: employees.data.find(
+          (emp) => emp.id === selectedEmployee.id
+        ).department?.id,
       };
 
       // Apply validation rules for API payload

@@ -300,6 +300,11 @@ const Salary = () => {
       const payload = {
         payment_type: selectedEmployee.payment_type,
         type: selectedEmployee.type,
+        group_id: employees.data.find((emp) => emp.id === selectedEmployee.id)
+          .group?.id,
+        department_id: employees.data.find(
+          (emp) => emp.id === selectedEmployee.id
+        ).department?.id,
       };
 
       // Apply validation rules for API payload
@@ -332,6 +337,7 @@ const Salary = () => {
       fetchEmployees();
       handleEditClose();
     } catch (error) {
+      console.log(error);
       toast({
         title: "Xatolik",
         description:
