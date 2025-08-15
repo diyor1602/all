@@ -625,6 +625,54 @@ const Work = () => {
     doc.save("limitdan-o'tganlar.pdf");
   };
 
+  const handleDownloadUnderLimit = async () => {
+    const doc = new jsPDF();
+
+    // Load and register DejaVuSans font
+    const base64Font = await loadFont();
+    doc.addFileToVFS("DejaVuSans.ttf", base64Font);
+    doc.addFont("DejaVuSans.ttf", "DejaVuSans", "normal");
+    doc.setFont("DejaVuSans");
+
+    doc.setFontSize(16);
+    doc.text("Limitdan o'tmaganlar", 14, 20);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [
+        ["#", "Kod", "Nomi", "Jami bajarilgan", "Qolgan", "Foydalanuvchilar"],
+      ],
+      body: underLimitTarifs.map((tarif, index) => [
+        index + 1,
+        tarif.code,
+        tarif.name,
+        tarif.total,
+        order.quantity - tarif.total,
+        Object.entries(
+          tarif.users.reduce((acc, user) => {
+            if (!acc[user.name]) acc[user.name] = 0;
+            acc[user.name] += user.quantity;
+            return acc;
+          }, {})
+        )
+          .map(([name, total]) => `${name}: ${total} ta`)
+          .join("\n"),
+      ]),
+      styles: { font: "DejaVuSans", fontSize: 10, cellPadding: 3 },
+      headStyles: {
+        fillColor: [34, 197, 94], // Green color for under-limit
+        textColor: 255,
+      },
+      bodyStyles: {
+        textColor: [21, 128, 61], // Dark green text
+        valign: "top",
+      },
+      showHead: "firstPage",
+    });
+
+    doc.save("limitdan-o'tmagan.pdf");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -1661,6 +1709,14 @@ const Work = () => {
                 <h3 className="text-green-600 text-lg font-semibold">
                   Limitdan o'tmaganlar
                 </h3>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    handleDownloadUnderLimit();
+                  }}
+                >
+                  <Download />
+                </Button>
               </div>
               <div className="max-h-[60vh] overflow-auto">
                 <table className="w-full border border-collapse">
