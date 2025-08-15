@@ -124,13 +124,14 @@ const SalaryPage = () => {
         order_ids: selectedOrders,
       };
 
+      // Make sure your backend endpoint generates Excel instead of PDF
       const response = await api.post(`/casher/pdf/employees`, params, {
-        responseType: "blob",
+        responseType: "blob", // still needed for binary files
       });
 
       const link = document.createElement("a");
       link.href = URL.createObjectURL(response.data);
-      link.download = `Xodimlar oylik-${selectedMonth}.pdf`;
+      link.download = `Xodimlar oylik-${selectedMonth}.xlsx`; // Excel extension
       document.body.appendChild(link);
       link.click();
       link.remove();
