@@ -435,6 +435,86 @@ const Attendance = () => {
     openAttendanceDialog(employeeId);
   };
 
+  const handleMarkAttendanceFast2 = async (employeeId) => {
+    const checkInDate = new Date(selectedDate);
+    checkInDate.setHours(Number.parseInt(7), Number.parseInt(30), 0);
+
+    // Add Uzbekistan timezone offset (GMT+5) by specifying proper ISO format with timezone
+    const localDate = new Date(checkInDate);
+    const isoWithTimezone = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .replace("Z", "+05:00");
+    try {
+      await api.post("/superhr/attendances", {
+        employee_id: employeeId,
+        date: selectedDate,
+        check_in: isoWithTimezone,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Davomat muvaffaqiyatli belgilandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 500,
+      });
+      fetchAttendance();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Xatolik yuz berdi",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCheckOutAttendanceFast2 = async (employeeId) => {
+    try {
+      const checkOutDate = new Date(selectedDate);
+      checkOutDate.setHours(Number.parseInt(17), Number.parseInt(30), 0);
+
+      // Add Uzbekistan timezone offset (GMT+5) by specifying proper ISO format with timezone
+      const localDate = new Date(checkOutDate);
+      const isoWithTimezone = new Date(
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .replace("Z", "+05:00");
+
+      // Find the attendance record to update
+      const attendanceRecord = attendance.find(
+        (a) => a.employee_id === employeeId
+      );
+
+      if (!attendanceRecord) {
+        throw new Error("Davomat ma'lumoti topilmadi");
+      }
+
+      await api.patch(`/superhr/attendances/${attendanceRecord.id}`, {
+        check_out: isoWithTimezone,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Ketish vaqti muvaffaqiyatli belgilandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 500,
+      });
+      fetchAttendance();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Xatolik yuz berdi",
+        variant: "destructive",
+      });
+    }
+  };
+
   const openCheckOutDialog = (employeeId) => {
     setSelectedEmployeeId(employeeId);
     // Find the employee details to display in the dialog
@@ -921,6 +1001,18 @@ const Attendance = () => {
                         >
                           <UserPlus />
                         </Button>
+                        {/* Add button for making it 7:30 */}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={loading}
+                          onClick={() => {
+                            handleMarkAttendanceFast2(employee.id);
+                          }}
+                          className="text-blue-500"
+                        >
+                          <UserPlus />
+                        </Button>
                       </div>
                     </td>
                     <td className="p-1 border-2 text-center">
@@ -985,6 +1077,18 @@ const Attendance = () => {
                           className="text-yellow-500"
                         >
                           <CircleDollarSign />
+                        </Button>
+                        {/* Add button for making it 7:30 */}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={loading}
+                          onClick={() => {
+                            handleCheckOutAttendanceFast2(employee.id);
+                          }}
+                          className="text-gray-500"
+                        >
+                          <UserPlus />
                         </Button>
                       </div>
                     </td>
