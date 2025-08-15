@@ -224,12 +224,10 @@ const SalaryPage = () => {
 
     try {
       setLoading(true);
-      const response = await api.get("/casher/groups", {
-        params: {
-          ...filtersToUse,
-          type: "simple",
-          order_ids: [...selectedOrders],
-        },
+      const response = await api.post("/casher/groups", {
+        ...filtersToUse,
+        type: "simple",
+        order_ids: [...selectedOrders],
       });
       setSalary(response.data);
     } catch (error) {
@@ -457,14 +455,6 @@ const SalaryPage = () => {
 
     try {
       setPaymentLoading((prev) => ({ ...prev, [loadingKey]: true }));
-
-      const response = await api.post("/casher/salaries", {
-        employee_id: employee.id,
-        type: type,
-        amount: Number.parseFloat(amount),
-        month: selectedMonth,
-        comment: comment || "",
-      });
 
       toast({
         title: "Muvaffaqiyatli",
