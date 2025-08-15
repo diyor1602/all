@@ -930,79 +930,96 @@ const Work = () => {
               Ishchilar <span className="font-bold">topgan</span> jami summa:
             </span>
             <span className="text-sm font-bold">
-              {tarifLogs
-                ?.reduce((acc, log) => acc + parseFloat(log?.amount_earned), 0)
-                ?.toLocaleString("ru-RU", {
-                  maximumFractionDigits: 0,
-                })}{" "}
-              {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
-            </span>
-          </div>
-          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
-            <span className="text-sm">
-              Oylikchilar <span className="font-bold">topgan</span> jami summa:
-            </span>
-            <span className="text-sm font-bold">
-              {attendanceSalary?.total_salary?.toLocaleString("ru-RU", {
+              {attendanceSalary?.tarification_total?.toLocaleString("ru-RU", {
                 maximumFractionDigits: 0,
               })}{" "}
               {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
             </span>
           </div>
-          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-4 flex-wrap">
-            <span className="text-sm">Sarflangan foiz:</span>
+          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+            <span className="text-sm">
+              Oylikchilar <span className="font-bold">topgan</span> jami summa,
+              Davomati uchun:
+            </span>
             <span className="text-sm font-bold">
-              {(() => {
-                const earnedFromTarifs = tarifLogs?.reduce(
-                  (acc, log) => acc + (parseFloat(log?.amount_earned) || 0),
-                  0
-                );
-
-                const earnedFromAttendance =
-                  parseFloat(attendanceSalary?.total_salary) || 0;
-
-                const totalEarned = earnedFromTarifs + earnedFromAttendance;
-
-                const totalAllocated =
-                  (parseFloat(
-                    selectedTarifLang === "uz"
-                      ? totalSpendSummaUZ
-                      : totalSpendSummaRU
-                  ) || 0) * (parseFloat(order?.quantity) || 0);
-
-                const percentage =
-                  totalAllocated > 0 ? (totalEarned / totalAllocated) * 100 : 0;
-
-                return percentage.toLocaleString("ru-RU", {
-                  maximumFractionDigits: 2,
-                });
-              })()}
-              %
+              {attendanceSalary?.salary_total?.toLocaleString("ru-RU", {
+                maximumFractionDigits: 0,
+              })}{" "}
+              {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
+            </span>
+          </div>
+          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+            <span className="text-sm">
+              Universellar <span className="font-bold">bosgan</span> jami summa{" "}
+            </span>
+            <span className="text-sm font-bold">
+              {attendanceSalary?.fixed_with_tarification_total?.toLocaleString(
+                "ru-RU",
+                {
+                  maximumFractionDigits: 0,
+                }
+              )}{" "}
+              {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
+            </span>
+          </div>
+          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-4 flex-wrap">
+            <span className="text-sm">Sarflangan summa:</span>
+            <span className="text-sm font-bold">
+              {parseFloat(
+                parseFloat(attendanceSalary?.tarification_total) +
+                  parseFloat(attendanceSalary?.salary_total) -
+                  parseFloat(attendanceSalary?.fixed_with_tarification_total)
+              )?.toLocaleString("ru-RU", {
+                maximumFractionDigits: 0,
+              })}{" "}
+              so'm
             </span>
 
             <span className="text-sm">Farqi:</span>
             <span className="text-sm font-bold">
-              {(() => {
-                const allocated =
+              {(
+                ((parseFloat(attendanceSalary?.tarification_total || 0) +
+                  parseFloat(attendanceSalary?.salary_total || 0) -
                   parseFloat(
-                    selectedTarifLang == "uz"
+                    attendanceSalary?.fixed_with_tarification_total || 0
+                  )) /
+                  (parseFloat(
+                    selectedTarifLang === "uz"
                       ? totalSpendSummaUZ
                       : totalSpendSummaRU || 0
-                  ) * parseFloat(order?.quantity || 0);
-                const earned = tarifLogs?.reduce(
-                  (acc, log) => acc + parseFloat(log?.amount_earned || 0),
-                  0
-                );
-                const diff =
-                  allocated - earned + attendanceSalary?.total_salary;
-                const sign = diff > 0 ? "" : "";
-                return `${sign}${diff.toLocaleString(
-                  selectedTarifLang == "uz" ? "ru-RU" : "ru-RU",
-                  {
-                    maximumFractionDigits: 0,
-                  }
-                )} ${selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}`;
-              })()}
+                  ) *
+                    parseFloat(order?.quantity || 0))) *
+                100
+              )?.toLocaleString("ru-RU", {
+                maximumFractionDigits: 2,
+              })}
+              %
+            </span>
+
+            <span className="text-sm">Raqamda farqi:</span>
+            <span className="text-sm font-bold">
+              {(
+                parseFloat(
+                  selectedTarifLang === "uz"
+                    ? totalSpendSummaUZ
+                    : totalSpendSummaRU || 0
+                ) *
+                  parseFloat(order?.quantity || 0) -
+                (parseFloat(attendanceSalary?.tarification_total || 0) +
+                  parseFloat(attendanceSalary?.salary_total || 0) -
+                  parseFloat(
+                    attendanceSalary?.fixed_with_tarification_total || 0
+                  ))
+              )?.toLocaleString("ru-RU", {
+                maximumFractionDigits: 0,
+              })}{" "}
+              so'm
+            </span>
+          </div>
+          <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+            <span className="text-sm">Tikilgan vaqti:</span>
+            <span className="text-sm font-bold">
+              {attendanceSalary?.date_range}
             </span>
           </div>
           {order?.order_model?.sizes && order.order_model.sizes.length > 0 && (
