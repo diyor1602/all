@@ -987,7 +987,19 @@ const Work = () => {
                 {attendanceSalary?.tarification_total?.toLocaleString("ru-RU", {
                   maximumFractionDigits: 0,
                 })}{" "}
-                {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
+                /{" "}
+                {parseFloat(
+                  (attendanceSalary?.tarification_total * 100) /
+                    (parseFloat(
+                      selectedTarifLang == "uz"
+                        ? totalSpendSummaUZ
+                        : totalSpendSummaRU || 0
+                    ) *
+                      parseFloat(order?.quantity || 0))
+                )?.toLocaleString("ru-RU", {
+                  maximumFractionDigits: 0,
+                })}{" "}
+                %
               </span>
             </div>
             <div
@@ -1001,8 +1013,7 @@ const Work = () => {
               <span className="text-sm font-bold">
                 {attendanceSalary?.salary_total?.toLocaleString("ru-RU", {
                   maximumFractionDigits: 0,
-                })}{" "}
-                {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
+                })}
               </span>
             </div>
             <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
@@ -1017,7 +1028,6 @@ const Work = () => {
                     maximumFractionDigits: 0,
                   }
                 )}{" "}
-                {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
               </span>
             </div>
             <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-4 flex-wrap">
