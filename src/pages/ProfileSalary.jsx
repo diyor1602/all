@@ -358,7 +358,7 @@ const SalaryDetails = () => {
             <Separator />
 
             <div className="space-y-3">
-              {employee.balance && (
+              {/* {employee.balance && (
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">
                     Hisobdagi mablag'lar:
@@ -371,7 +371,7 @@ const SalaryDetails = () => {
                     so'm
                   </span>
                 </div>
-              )}
+              )} */}
               {employee.bonus && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Bonus:</span>
