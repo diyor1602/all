@@ -44,7 +44,8 @@ const TruckPage = () => {
   const getItemCompleted = (item) => {
     if (!item.details) return 0;
 
-    return item.details.reduce((detailAcc, detail) => {
+    // Collect all sewing outputs across all details
+    const totalSewn = item.details.reduce((detailAcc, detail) => {
       const submodels = detail.order?.order_model?.submodels || [];
       return (
         detailAcc +
@@ -57,6 +58,9 @@ const TruckPage = () => {
         }, 0)
       );
     }, 0);
+
+    // ✅ Cap total at the shipment item planned quantity
+    return Math.min(totalSewn, item.quantity || 0);
   };
 
   // helper: totals for all plans
