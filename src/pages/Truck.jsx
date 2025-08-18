@@ -192,7 +192,13 @@ const TruckPage = () => {
                           selectedPlan.items.reduce(
                             (acc, item) => acc + getItemCompleted(item),
                             0
-                          )}
+                          ) >
+                        0
+                          ? selectedPlan.items.reduce(
+                              (acc, item) => acc + getItemCompleted(item),
+                              0
+                            )
+                          : 0}
                       </p>
                       <p className="text-sm text-gray-600">Qolgan</p>
                     </div>
