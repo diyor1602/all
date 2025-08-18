@@ -20,7 +20,6 @@ const TruckPage = () => {
   const [data, setData] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-
   const [percentage, setPercentage] = useState(0);
 
   useEffect(() => {
@@ -41,6 +40,60 @@ const TruckPage = () => {
     fetchData();
   }, []);
 
+  // helper: get completed (sewing outputs) for a single item
+  const getItemCompleted = (item) => {
+    if (!item.details) return 0;
+
+    return item.details.reduce((detailAcc, detail) => {
+      const submodels = detail.order?.order_model?.submodels || [];
+      return (
+        detailAcc +
+        submodels.reduce((subAcc, sub) => {
+          const outputs = sub.sewing_outputs || [];
+          return (
+            subAcc +
+            outputs.reduce((outAcc, out) => outAcc + (out.quantity || 0), 0)
+          );
+        }, 0)
+      );
+    }, 0);
+  };
+
+  // helper: totals for all plans
+  const calculateAll = () => {
+    if (!data || data.length === 0) return { planned: 0, sewn: 0 };
+
+    return data.reduce(
+      (planAcc, plan) => {
+        const { planned, sewn } = plan.items.reduce(
+          (itemAcc, item) => {
+            itemAcc.planned += item.quantity || 0;
+            itemAcc.sewn += getItemCompleted(item);
+            return itemAcc;
+          },
+          { planned: 0, sewn: 0 }
+        );
+
+        return {
+          planned: planAcc.planned + planned,
+          sewn: planAcc.sewn + sewn,
+        };
+      },
+      { planned: 0, sewn: 0 }
+    );
+  };
+
+  useEffect(() => {
+    const totals = calculateAll();
+    console.log("Planned:", totals.planned);
+    console.log("Sewn outputs:", totals.sewn);
+    console.log(
+      "Progress:",
+      totals.planned > 0 ? (totals.sewn / totals.planned) * 100 : 0,
+      "%"
+    );
+  }, [data]);
+
   return (
     <>
       <h1 className="text-2xl font-bold mb-4">Jo'natmalar</h1>
@@ -52,7 +105,7 @@ const TruckPage = () => {
           const totals = plan.items.reduce(
             (acc, item) => {
               acc.quantity += item.quantity || 0;
-              acc.completed += item.completed || 0;
+              acc.completed += getItemCompleted(item);
               return acc;
             },
             { quantity: 0, completed: 0 }
@@ -118,7 +171,7 @@ const TruckPage = () => {
                     <div className="text-center">
                       <p className="text-2xl font-bold text-green-600">
                         {selectedPlan.items.reduce(
-                          (acc, item) => acc + (item.completed || 0),
+                          (acc, item) => acc + getItemCompleted(item),
                           0
                         )}
                       </p>
@@ -137,7 +190,7 @@ const TruckPage = () => {
                           0
                         ) -
                           selectedPlan.items.reduce(
-                            (acc, item) => acc + (item.completed || 0),
+                            (acc, item) => acc + getItemCompleted(item),
                             0
                           )}
                       </p>
@@ -162,15 +215,15 @@ const TruckPage = () => {
                 {[...selectedPlan.items]
                   .sort((a, b) => {
                     const percentA =
-                      a.quantity > 0 ? a.completed / a.quantity : 0;
+                      a.quantity > 0 ? getItemCompleted(a) / a.quantity : 0;
                     const percentB =
-                      b.quantity > 0 ? b.completed / b.quantity : 0;
+                      b.quantity > 0 ? getItemCompleted(b) / b.quantity : 0;
                     return percentA - percentB;
                   })
                   .map((item, index) => {
                     const completionPercentage =
                       item.quantity > 0
-                        ? (item.completed / item.quantity) * 100
+                        ? (getItemCompleted(item) / item.quantity) * 100
                         : 0;
 
                     return (
@@ -187,7 +240,7 @@ const TruckPage = () => {
                               {item.model?.name}
                             </span>
                             <Badge variant="outline">
-                              {item.completed}/{item.quantity}
+                              {getItemCompleted(item)}/{item.quantity}
                             </Badge>
                           </CardTitle>
                         </CardHeader>

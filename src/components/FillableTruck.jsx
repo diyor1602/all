@@ -1,9 +1,10 @@
 import { Angry, Meh, Smile } from "lucide-react";
 
 const getIcon = (percentage) => {
-  if (percentage < 50) {
+  let newPercentage = percentage > 100 ? 100 : percentage;
+  if (newPercentage < 50) {
     return <Angry className="w-12 h-12 sm:w-15 sm:h-15" />;
-  } else if (percentage < 75) {
+  } else if (newPercentage < 75) {
     return <Meh className="w-12 h-12 sm:w-15 sm:h-15" />;
   } else {
     return <Smile className="w-12 h-12 sm:w-15 sm:h-15" />;
@@ -17,7 +18,7 @@ const FillableTruck = ({ percentage = 0 }) => {
       <div className="w-[280px] h-[140px] sm:w-[400px] sm:h-[200px] bg-gray-200 relative rounded-lg">
         <div
           className="h-[140px] sm:h-[200px] bg-blue-400 absolute top-0 left-0 rounded-l-lg"
-          style={{ width: `${percentage}%` }}
+          style={{ width: `${percentage > 100 ? 100 : percentage}%` }}
         ></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 font-bold text-2xl sm:text-4xl">
           {percentage}%
@@ -35,12 +36,12 @@ const FillableTruck = ({ percentage = 0 }) => {
       </div>
       {/* head */}
       <div className="w-[126px] h-[140px] sm:w-[180px] sm:h-[200px] bg-transparent relative rounded-lg flex items-end">
-        {percentage < 100 && (
-          // place it to the center
+        {percentage >= 0 && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
             {getIcon(percentage)}
           </div>
         )}
+
         <div className="w-[126px] h-[14px] sm:w-[180px] sm:h-[20px] bg-gray-200 absolute bottom-[calc(-11%)] left-0"></div>
         <div className="w-[126px] h-[112px] sm:w-[180px] sm:h-[160px] bg-gray-200 relative rounded-lg"></div>
         <div className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] bg-black rounded-full absolute bottom-[-52px] sm:bottom-[-75px] left-1/2 transform -translate-x-1/2">
