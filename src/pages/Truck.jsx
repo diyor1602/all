@@ -87,17 +87,6 @@ const TruckPage = () => {
     );
   };
 
-  useEffect(() => {
-    const totals = calculateAll();
-    console.log("Planned:", totals.planned);
-    console.log("Sewn outputs:", totals.sewn);
-    console.log(
-      "Progress:",
-      totals.planned > 0 ? (totals.sewn / totals.planned) * 100 : 0,
-      "%"
-    );
-  }, [data]);
-
   return (
     <>
       <h1 className="text-2xl font-bold mb-4">Jo'natmalar</h1>

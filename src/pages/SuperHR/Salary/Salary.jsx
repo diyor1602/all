@@ -337,7 +337,6 @@ const Salary = () => {
       fetchEmployees();
       handleEditClose();
     } catch (error) {
-      console.log(error);
       toast({
         title: "Xatolik",
         description:
