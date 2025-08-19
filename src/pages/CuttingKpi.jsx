@@ -945,7 +945,7 @@ const CuttingKpi = () => {
                         <div
                           className="flex items-center justify-between"
                           onClick={() => {
-                            if (localStorage.getItem("role") === "casher") {
+                            if (localStorage.getItem("role") === "ceo") {
                               const plan = groupPlans?.find(
                                 (plan) => plan.department_id === department.id
                               );

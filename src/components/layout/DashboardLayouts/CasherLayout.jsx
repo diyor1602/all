@@ -5,13 +5,11 @@ import {
   BanknoteArrowUp,
   CircleDollarSign,
   ClipboardCheck,
-  CloudSun,
   Gem,
   Home,
   Rotate3d,
   Sprout,
   SquareScissors,
-  TentTree,
   Truck,
   Users,
 } from "lucide-react";
@@ -70,18 +68,6 @@ const navigation = [
     name: "Bichuv KPI",
     href: "/cuttingKpi",
     icon: SquareScissors,
-    onMobile: false,
-  },
-  {
-    name: "Kunlik balans",
-    href: "/casher/daily",
-    icon: TentTree,
-    onMobile: false,
-  },
-  {
-    name: "Oylik balans",
-    href: "/casher/monthly",
-    icon: CloudSun,
     onMobile: false,
   },
   {

@@ -365,7 +365,7 @@ const Kpi = () => {
     };
     try {
       setSending(true);
-      await api.post("/casher/groupPlans", payload);
+      await api.post("/ceo/groupPlans", payload);
       toast({
         title: "Muvaffaqiyatli",
         description: "Guruh plani qo'shildi",
@@ -405,7 +405,7 @@ const Kpi = () => {
     };
     try {
       setSending(true);
-      await api.patch(`/casher/groupPlans/${editPayload.id}`, payload);
+      await api.patch(`/ceo/groupPlans/${editPayload.id}`, payload);
       toast({
         title: "Muvaffaqiyatli",
         description: "Guruh plani yangilandi",
@@ -1000,9 +1000,7 @@ const Kpi = () => {
                               <div
                                 className="flex items-center justify-between"
                                 onClick={() => {
-                                  if (
-                                    localStorage.getItem("role") === "casher"
-                                  ) {
+                                  if (localStorage.getItem("role") === "ceo") {
                                     const plan = groupPlans?.find(
                                       (plan) => plan.group_id === group.id
                                     );
