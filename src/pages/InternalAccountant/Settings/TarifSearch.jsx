@@ -55,7 +55,6 @@ const TarifSearch = () => {
   };
 
   useEffect(() => {
-    // Focus the input on component mount
     inputRef.current?.focus();
   }, []);
 
