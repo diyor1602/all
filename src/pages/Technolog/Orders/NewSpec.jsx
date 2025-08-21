@@ -69,7 +69,6 @@ const NewSpec = () => {
       (item) => item.quantity < 1
     );
 
-    // check if any name, code is empty
     const hasEmptyFields = spec?.specifications?.some(
       (item) => !item?.name || !item?.code
     );
