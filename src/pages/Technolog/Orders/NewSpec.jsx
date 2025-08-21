@@ -56,7 +56,6 @@ const NewSpec = () => {
       specifications: [...spec.specifications, newRow],
     });
 
-    // Focus on the new row after the state update
     setTimeout(() => {
       if (newRowRef.current) {
         newRowRef.current.focus();
