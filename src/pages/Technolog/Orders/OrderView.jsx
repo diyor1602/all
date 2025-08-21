@@ -1156,97 +1156,101 @@ const OrderView = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {tarifications.map((tarification) => (
-                        <div
-                          key={tarification.id}
-                          className="flex flex-col gap-2 p-3 bg-white rounded-md shadow-sm"
-                        >
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <span className="font-medium text-gray-700">
-                              {tarification?.name}{" "}
-                            </span>
+                      {tarifications
+                        .sort((a, b) => a?.id - b?.id)
+                        .map((tarification) => (
+                          <div
+                            key={tarification.id}
+                            className="flex flex-col gap-2 p-3 bg-white rounded-md shadow-sm"
+                          >
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className="font-medium text-gray-700">
+                                {tarification?.name}{" "}
+                              </span>
 
-                            <Badge
-                              variant="outline"
-                              className="bg-indigo-100 text-indigo-800 border-indigo-200"
-                            >
-                              {tarification?.tarifications?.length} ta
-                            </Badge>
-                          </div>
-                          <div className="flex items-center justify-between gap-2 flex-wrap text-sm ">
-                            <div className="flex items-center gap-2">
-                              <Coins size={20} />
-                              {tarification?.tarifications
-                                ?.reduce(
-                                  (acc, item) => acc + parseFloat(item?.summa),
-                                  0
-                                )
-                                ?.toLocaleString({
-                                  minimumFractionDigits: 2,
-                                })}{" "}
-                              so'm
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Hourglass size={20} />
-                              {tarification?.tarifications
-                                ?.reduce(
-                                  (acc, item) => acc + parseFloat(item?.second),
-                                  0
-                                )
-                                ?.toLocaleString({
-                                  minimumFractionDigits: 2,
-                                })}{" "}
-                              sekund
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap justify-between gap-2 mt-4">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Button
+                              <Badge
                                 variant="outline"
-                                size="sm"
-                                className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                onClick={() => {
-                                  setTarifDialogOpen(true);
-                                  setSelectedTarification(tarification);
-                                }}
+                                className="bg-indigo-100 text-indigo-800 border-indigo-200"
                               >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Ko'rish
-                              </Button>
+                                {tarification?.tarifications?.length} ta
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 flex-wrap text-sm ">
+                              <div className="flex items-center gap-2">
+                                <Coins size={20} />
+                                {tarification?.tarifications
+                                  ?.reduce(
+                                    (acc, item) =>
+                                      acc + parseFloat(item?.summa),
+                                    0
+                                  )
+                                  ?.toLocaleString({
+                                    minimumFractionDigits: 2,
+                                  })}{" "}
+                                so'm
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Hourglass size={20} />
+                                {tarification?.tarifications
+                                  ?.reduce(
+                                    (acc, item) =>
+                                      acc + parseFloat(item?.second),
+                                    0
+                                  )
+                                  ?.toLocaleString({
+                                    minimumFractionDigits: 2,
+                                  })}{" "}
+                                sekund
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap justify-between gap-2 mt-4">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                  onClick={() => {
+                                    setTarifDialogOpen(true);
+                                    setSelectedTarification(tarification);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Ko'rish
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                                  onClick={() => {
+                                    navigate(
+                                      `/technologist/edit-tarif/${tarification?.id}`
+                                    );
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  O'zgartirish
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => {
+                                    deleteTarif(tarification?.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  O'chirish
+                                </Button>
+                              </div>
                               <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-                                onClick={() => {
-                                  navigate(
-                                    `/technologist/edit-tarif/${tarification?.id}`
-                                  );
-                                }}
+                                size="icon"
+                                className="h-8 w-8 rounded-full text-white"
+                                onClick={() => handleCopyTarif(tarification)}
                               >
-                                <Edit className="h-4 w-4 mr-1" />
-                                O'zgartirish
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => {
-                                  deleteTarif(tarification?.id);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                O'chirish
+                                <Files className="h-4 w-4" />
                               </Button>
                             </div>
-                            <Button
-                              size="icon"
-                              className="h-8 w-8 rounded-full text-white"
-                              onClick={() => handleCopyTarif(tarification)}
-                            >
-                              <Files className="h-4 w-4" />
-                            </Button>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   </CardContent>
                 </Card>
