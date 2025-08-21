@@ -65,7 +65,6 @@ const NewSpec = () => {
   };
 
   const saveSpecifications = async () => {
-    // Check if any quantity is less than 1
     const hasInvalidQuantity = spec?.specifications?.some(
       (item) => item.quantity < 1
     );
