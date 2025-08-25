@@ -30,7 +30,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DialogDescription } from "@radix-ui/react-dialog";
-import payment_types from "@/lib/paymentTypes";
 
 const EditEmployees = () => {
   const { id } = useParams();
@@ -466,19 +465,6 @@ const EditEmployees = () => {
         return;
       }
 
-      if (
-        ["monthly", "daily", "hourly"].includes(formData.payment_type) &&
-        !formData.salary
-      ) {
-        toast({
-          title: "Diqqat",
-          description: "Iltimos, maosh summani kiriting",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
       // Create FormData object for multipart/form-data
       const formDataToSend = new FormData();
 
@@ -500,26 +486,6 @@ const EditEmployees = () => {
       if (imageFile) {
         formDataToSend.append("img", imageFile);
       }
-
-      if (["monthly", "daily", "hourly"].includes(formData.payment_type)) {
-        formDataToSend.append("salary", formData.salary);
-      } else {
-        formDataToSend.delete("salary");
-      }
-
-      if (formDataToSend.get("type") == "aup") {
-        formDataToSend.delete("salary");
-        formDataToSend.delete("payment_type");
-        formDataToSend.append(
-          "salary",
-          initialData.type == "aup" ? initialData?.salary : 0
-        );
-        formDataToSend.append(
-          "payment_type",
-          initialData.type == "aup" ? initialData?.payment_type : "monthly"
-        );
-      }
-      formDataToSend.append("bonus", initialData.bonus);
 
       if (!formDataToSend.get("group_id")) {
         formDataToSend.delete("group_id");
@@ -936,11 +902,6 @@ const EditEmployees = () => {
                   <Select
                     onValueChange={(value) => {
                       handleSelectChange("type", value);
-                      setFormData((prev) => ({
-                        ...prev,
-                        payment_type: "",
-                        salary: "",
-                      }));
                     }}
                     value={formData.type}
                   >
@@ -954,67 +915,6 @@ const EditEmployees = () => {
                   </Select>
                 </div>
               </div>
-
-              {formData.type == "simple" && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="payment_type">
-                      To'lov turi <span className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleSelectChange("payment_type", value)
-                      }
-                      value={formData.payment_type}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="To'lov turi tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(payment_types).map(([key, value]) => (
-                          <SelectItem key={key} value={key}>
-                            {value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {["monthly", "daily", "hourly"].includes(
-                    formData.payment_type
-                  ) && (
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="salary">
-                          1{" "}
-                          {formData.payment_type === "monthly"
-                            ? "oy"
-                            : formData.payment_type === "daily"
-                            ? "kun"
-                            : "soat"}{" "}
-                          summa <span className="text-red-500">*</span> (
-                          {parseFloat(formData.salary).toLocaleString("en")}{" "}
-                          so'm)
-                        </Label>
-                        <Input
-                          id="salary"
-                          name="salary"
-                          type="number"
-                          value={formData.salary}
-                          onChange={handleInputChange}
-                          placeholder={`1 ${
-                            formData.payment_type === "monthly"
-                              ? "oy"
-                              : formData.payment_type === "daily"
-                              ? "kun"
-                              : "soat"
-                          } summa`}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="comment">Izoh</Label>
