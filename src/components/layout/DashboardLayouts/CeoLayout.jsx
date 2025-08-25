@@ -3,6 +3,7 @@ import {
   BadgePercent,
   BanknoteArrowDown,
   BanknoteArrowUp,
+  Calculator,
   CircleDollarSign,
   ClipboardCheck,
   CloudSun,
@@ -52,6 +53,12 @@ const navigation = [
     name: "Oylik",
     href: "/ceo/salary",
     icon: Gem,
+    onMobile: false,
+  },
+  {
+    name: "Hisob",
+    href: "/ceo/calc",
+    icon: Calculator,
     onMobile: false,
   },
   {
