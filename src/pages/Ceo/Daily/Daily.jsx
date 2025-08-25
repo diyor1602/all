@@ -979,7 +979,10 @@ const Daily = () => {
                               {formatNumber(order?.price_uzs)} so'm
                             </div>
                             <div className="font-mono">
-                              {formatNumber(order?.price_usd)} $
+                              {parseFloat(order?.price_usd)?.toLocaleString(
+                                "ru-RU"
+                              )}{" "}
+                              $
                             </div>
                           </div>
                         </TableCell>
