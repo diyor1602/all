@@ -42,6 +42,7 @@ import {
   Loader2,
   Copy,
   ClipboardPaste,
+  TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -347,6 +348,30 @@ const Daily = () => {
       bg: "bg-orange-300",
     },
     {
+      title: "Harajat",
+      value:
+        daily.orders?.length === 0
+          ? `-${formatNumber(
+              parseFloat(daily.aup) +
+                parseFloat(daily.kpi) +
+                parseFloat(daily.daily_expenses) +
+                parseFloat(daily.tarification) +
+                parseFloat(daily.transport_attendance)
+            )} so'm`
+          : `${formatNumber(daily.total_fixed_cost_uzs)} so'm`,
+      percentage:
+        daily.orders?.length === 0
+          ? 0
+          : parseFloat(
+              (daily.total_fixed_cost_uzs / daily.total_earned_uzs) * 100
+            )?.toLocaleString("ru-RU", {
+              maximumFractionDigits: 0,
+            }),
+      icon: TrendingDown,
+      color: "text-red-600",
+      bg: "bg-red-300",
+    },
+    {
       title: "Foyda",
       value:
         daily.orders?.length === 0
@@ -358,6 +383,14 @@ const Daily = () => {
                 parseFloat(daily.transport_attendance)
             )} so'm`
           : `${formatNumber(daily.net_profit_uzs)} so'm`,
+      percentage:
+        daily.orders?.length === 0
+          ? 0
+          : parseFloat(
+              (daily.net_profit_uzs / daily.total_earned_uzs) * 100
+            )?.toLocaleString("ru-RU", {
+              maximumFractionDigits: 0,
+            }),
       icon: Calculator,
       color: "text-emerald-600",
       bg: "bg-emerald-300",
@@ -455,7 +488,7 @@ const Daily = () => {
           {/* Header */}
 
           {/* Main Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {metrics.map((metric, index) => (
               <Card
                 key={index}
@@ -471,7 +504,8 @@ const Daily = () => {
                         {metric.title}
                       </p>
                       <p className="text-2xl font-bold text-slate-900">
-                        {metric.value}
+                        {metric.value}{" "}
+                        {metric.percentage ? ` / ${metric.percentage}%` : ""}
                       </p>
                     </div>
                     <div
