@@ -378,6 +378,32 @@ const New = () => {
       return;
     }
 
+    // check items' quantity
+    const hasInvalidQuantity = formData.items.some(
+      (item) => !item.quantity || item.quantity <= 0
+    );
+    if (hasInvalidQuantity) {
+      toast({
+        title: "Diqqat",
+        description: "Mahsulotlar sonini tekshiring",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // check items' price
+    const hasInvalidPrice = formData.items.some(
+      (item) => !item.price || item.price <= 0
+    );
+    if (hasInvalidPrice) {
+      toast({
+        title: "Diqqat",
+        description: "Mahsulotlar narxini tekshiring",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
       const dataToSubmit = { ...formData };
@@ -409,7 +435,8 @@ const New = () => {
       toast({
         title: "Xatolik",
         description:
-          error.response.data.error || "Chiqim yaratishda xatolik yuz berdi",
+          error.response?.data?.message ||
+          "Chiqim yaratishda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
