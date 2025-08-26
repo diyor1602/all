@@ -336,6 +336,20 @@ const Departments = () => {
 
                             <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-200">
                               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="text-center p-3 bg-indigo-50 rounded-lg">
+                                  <div className="flex items-center justify-center gap-2 mb-1">
+                                    <DollarSign className="h-4 w-4 text-indigo-600" />
+                                    <span className="text-sm font-medium text-indigo-800">
+                                      Jami ajratilgan summa
+                                    </span>
+                                  </div>
+                                  <div className="text-lg font-bold text-indigo-700">
+                                    {formatNumber(
+                                      orderDetails[order.order_id].total_summa
+                                    )}{" "}
+                                    so'm
+                                  </div>
+                                </div>
                                 <div className="text-center p-3 bg-orange-50 rounded-lg">
                                   <div className="flex items-center justify-center gap-2 mb-1">
                                     <TrendingUp className="h-4 w-4 text-orange-600" />
@@ -351,21 +365,6 @@ const Departments = () => {
                                           .salary_total -
                                         orderDetails[order.order_id]
                                           .fixed_with_tarification_total
-                                    )}{" "}
-                                    so'm
-                                  </div>
-                                </div>
-
-                                <div className="text-center p-3 bg-indigo-50 rounded-lg">
-                                  <div className="flex items-center justify-center gap-2 mb-1">
-                                    <DollarSign className="h-4 w-4 text-indigo-600" />
-                                    <span className="text-sm font-medium text-indigo-800">
-                                      Jami ajratilgan summa
-                                    </span>
-                                  </div>
-                                  <div className="text-lg font-bold text-indigo-700">
-                                    {formatNumber(
-                                      orderDetails[order.order_id].total_summa
                                     )}{" "}
                                     so'm
                                   </div>
