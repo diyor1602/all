@@ -237,7 +237,7 @@ const Monthly = () => {
           loading && "opacity-50 cursor-not-allowed"
         )}
       >
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="space-y-6">
           {/* Main Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {metrics.map((metric, index) => (
