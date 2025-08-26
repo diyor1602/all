@@ -193,6 +193,29 @@ const Departments = () => {
     return { totalAllocated, totalSpent, difference, percentage };
   };
 
+  const calculateOverallTotals = (groups, orderDetails) => {
+    let totalAllocated = 0;
+    let totalSpent = 0;
+
+    groups.forEach((group) => {
+      group.orders.forEach((order) => {
+        const details = orderDetails[order.order_id];
+        if (details) {
+          totalAllocated += details.total_summa || 0;
+          totalSpent +=
+            (details.tarification_total || 0) +
+            (details.salary_total || 0) -
+            (details.fixed_with_tarification_total || 0);
+        }
+      });
+    });
+
+    const difference = totalSpent - totalAllocated;
+    const percentage = totalAllocated ? (totalSpent / totalAllocated) * 100 : 0;
+
+    return { totalAllocated, totalSpent, difference, percentage };
+  };
+
   return (
     <div className="space-y-6 bg-gray-50 min-h-screen">
       <div className="space-y-4">
@@ -247,6 +270,98 @@ const Departments = () => {
             </div>
           </CardContent>
         </Card>
+
+        {data?.groups && data.groups.length > 0 && (
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <TrendingUp className="h-7 w-7" />
+                Umumiy Ko'rsatkichlar
+                <Badge
+                  variant="secondary"
+                  className="ml-auto bg-white/20 text-white border-white/30"
+                >
+                  {data.groups.reduce(
+                    (total, group) => total + group.orders.length,
+                    0
+                  )}{" "}
+                  ta buyurtma
+                </Badge>
+              </CardTitle>
+              {(() => {
+                const { totalAllocated, totalSpent, difference, percentage } =
+                  calculateOverallTotals(data.groups, orderDetails);
+                const isOverBudget = difference > 0;
+
+                return (
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div className="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                      <DollarSign className="h-6 w-6 text-blue-200" />
+                      <div>
+                        <div className="text-xs text-blue-100">
+                          Jami ajratilgan
+                        </div>
+                        <div className="text-xl font-bold text-white">
+                          {formatNumber(totalAllocated)} so'm
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                      <TrendingUp className="h-6 w-6 text-orange-200" />
+                      <div>
+                        <div className="text-xs text-blue-100">
+                          Jami sarflangan
+                        </div>
+                        <div className="text-xl font-bold text-white">
+                          {formatNumber(totalSpent)} so'm
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                      <TrendingUp
+                        className={`h-6 w-6 ${
+                          isOverBudget ? "text-red-200" : "text-emerald-200"
+                        }`}
+                      />
+                      <div>
+                        <div className="text-xs text-blue-100">Foizda</div>
+                        <div
+                          className={`text-xl font-bold ${
+                            isOverBudget ? "text-red-100" : "text-emerald-100"
+                          }`}
+                        >
+                          {formatNumber(percentage)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                      <DollarSign
+                        className={`h-6 w-6 ${
+                          isOverBudget ? "text-red-200" : "text-green-200"
+                        }`}
+                      />
+                      <div>
+                        <div className="text-xs text-blue-100">
+                          {isOverBudget ? "Ortiqcha" : "Qolgan"}
+                        </div>
+                        <div
+                          className={`text-xl font-bold ${
+                            isOverBudget ? "text-red-100" : "text-green-100"
+                          }`}
+                        >
+                          {formatNumber(Math.abs(difference))} so'm
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </CardHeader>
+          </Card>
+        )}
       </div>
 
       <div className="space-y-6">
