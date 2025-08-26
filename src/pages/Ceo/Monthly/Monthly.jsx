@@ -27,7 +27,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TrendingUp, Calculator, TrendingDown } from "lucide-react";
+import {
+  TrendingUp,
+  Calculator,
+  TrendingDown,
+  ScrollText,
+  Wallet,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const formatNumber = (number) => {
@@ -137,6 +143,23 @@ const Monthly = () => {
     },
   ];
 
+  const amountMetrics = [
+    {
+      title: "Umumiy tikilgan soni",
+      value: `${formatNumber(monthly.total_output_quantity)} ta`,
+      icon: ScrollText,
+      color: "text-amber-600",
+      bg: "bg-amber-300",
+    },
+    {
+      title: "Bir donasi narxi",
+      value: `${formatNumber(monthly.cost_per_unit_overall_uzs)} so'm`,
+      icon: Wallet,
+      color: "text-teal-600",
+      bg: "bg-teal-300",
+    },
+  ];
+
   const additionalMetrics = [
     {
       label: "Jami harajatlar",
@@ -218,6 +241,38 @@ const Monthly = () => {
           {/* Main Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {metrics.map((metric, index) => (
+              <Card
+                key={index}
+                className={cn(
+                  "border-0 shadow-md hover:shadow-lg transition-shadow",
+                  metric.bg
+                )}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600 mb-1">
+                        {metric.title}
+                      </p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {metric.value}{" "}
+                        {metric.percentage ? ` / ${metric.percentage}%` : ""}
+                      </p>
+                    </div>
+                    <div
+                      className={`p-3 rounded-full bg-slate-100 ${metric.color}`}
+                    >
+                      <metric.icon className="h-6 w-6" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Amount metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {amountMetrics.map((metric, index) => (
               <Card
                 key={index}
                 className={cn(
