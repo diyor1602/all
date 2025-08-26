@@ -24,6 +24,13 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const keywords = ["tikuv", "тикув"];
 
@@ -55,6 +62,9 @@ const Departments = () => {
   const [data, setData] = useState([]);
   const [orderDetails, setOrderDetails] = useState({});
   const [loadingOrders, setLoadingOrders] = useState({});
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState(null);
+  const [dialogData, setDialogData] = useState([]);
 
   const { first: defaultStart, last: defaultEnd } = getMonthBounds();
 
@@ -162,7 +172,7 @@ const Departments = () => {
   }, [selectedDepartment, startDate, endDate]);
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
+    <div className="space-y-6 bg-gray-50 min-h-screen">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <Building2 className="h-8 w-8 text-blue-600" />
@@ -230,7 +240,7 @@ const Departments = () => {
                   <Users className="h-6 w-6 text-blue-600" />
                   {item.group_name}
                   <Badge variant="secondary" className="ml-auto">
-                    {item.orders.length} buyurtma
+                    {item.orders.length} ta buyurtma
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -309,7 +319,22 @@ const Departments = () => {
                                   Moliyaviy Ko'rsatkichlar
                                 </h4>
                                 <div className="space-y-2 text-sm">
-                                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                                  <div
+                                    className="flex justify-between items-center p-2 bg-green-50 rounded cursor-pointer hover:bg-green-100"
+                                    onClick={() => {
+                                      setDialogType(
+                                        `Ishchilar topgan summa: ${formatNumber(
+                                          orderDetails[order.order_id]
+                                            .tarification_total
+                                        )} so'm`
+                                      );
+                                      setDialogOpen(true);
+                                      setDialogData(
+                                        orderDetails[order.order_id]
+                                          .tarification_employees
+                                      );
+                                    }}
+                                  >
                                     <span className="text-gray-600">
                                       Ishchilar topgan:
                                     </span>
@@ -321,7 +346,22 @@ const Departments = () => {
                                       so'm
                                     </span>
                                   </div>
-                                  <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                                  <div
+                                    className="flex justify-between items-center p-2 bg-blue-50 rounded cursor-pointer hover:bg-blue-100"
+                                    onClick={() => {
+                                      setDialogType(
+                                        `Oylikchilar topgan summa: ${formatNumber(
+                                          orderDetails[order.order_id]
+                                            .salary_total
+                                        )} so'm`
+                                      );
+                                      setDialogOpen(true);
+                                      setDialogData(
+                                        orderDetails[order.order_id]
+                                          .salary_employees
+                                      );
+                                    }}
+                                  >
                                     <span className="text-gray-600">
                                       Oylikchilar topgan:
                                     </span>
@@ -333,7 +373,22 @@ const Departments = () => {
                                       so'm
                                     </span>
                                   </div>
-                                  <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                                  <div
+                                    className="flex justify-between items-center p-2 bg-purple-50 rounded cursor-pointer hover:bg-purple-100"
+                                    onClick={() => {
+                                      setDialogType(
+                                        `Universallar bosgan summa: ${formatNumber(
+                                          orderDetails[order.order_id]
+                                            .fixed_with_tarification_total
+                                        )} so'm`
+                                      );
+                                      setDialogOpen(true);
+                                      setDialogData(
+                                        orderDetails[order.order_id]
+                                          .fixed_with_tarification_employees
+                                      );
+                                    }}
+                                  >
                                     <span className="text-gray-600">
                                       Universallar bosgan:
                                     </span>
@@ -507,6 +562,35 @@ const Departments = () => {
             </Card>
           ))}
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogType}</DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <tbody>
+                {dialogData
+                  ?.sort((a, b) => b.salary - a.salary)
+                  .map((employee, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 p-2">
+                        {employee.name}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-right">
+                        {parseFloat(employee.salary)?.toLocaleString("ru-RU", {
+                          maximumFractionDigits: 0,
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
