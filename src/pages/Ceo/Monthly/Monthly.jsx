@@ -153,7 +153,13 @@ const Monthly = () => {
     },
     {
       title: "Bir donasi narxi",
-      value: `${formatNumber(monthly.cost_per_unit_overall_uzs)} so'm`,
+      value: `${formatNumber(
+        monthly.cost_per_unit_overall_uzs
+      )} so'm / ${parseFloat(
+        monthly.cost_per_unit_overall_uzs / dollarRate
+      ).toLocaleString("ru-RU", {
+        maximumFractionDigits: 2,
+      })} dollar`,
       icon: Wallet,
       color: "text-teal-600",
       bg: "bg-teal-300",

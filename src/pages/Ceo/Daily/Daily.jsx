@@ -409,7 +409,13 @@ const Daily = () => {
     },
     {
       title: "Bir donasi narxi",
-      value: `${formatNumber(daily.cost_per_unit_overall_uzs)} so'm`,
+      value: `${formatNumber(
+        daily.cost_per_unit_overall_uzs
+      )} so'm / ${parseFloat(
+        daily.cost_per_unit_overall_uzs / dollarRate
+      ).toLocaleString("ru-RU", {
+        maximumFractionDigits: 2,
+      })} dollar`,
       icon: Wallet,
       color: "text-teal-600",
       bg: "bg-teal-300",
