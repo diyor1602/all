@@ -23,6 +23,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -171,6 +172,27 @@ const Departments = () => {
     fetchData();
   }, [selectedDepartment, startDate, endDate]);
 
+  const calculateGroupTotals = (orders, orderDetails) => {
+    let totalAllocated = 0;
+    let totalSpent = 0;
+
+    orders.forEach((o) => {
+      const details = orderDetails[o.order_id];
+      if (details) {
+        totalAllocated += details.total_summa || 0;
+        totalSpent +=
+          (details.tarification_total || 0) +
+          (details.salary_total || 0) -
+          (details.fixed_with_tarification_total || 0);
+      }
+    });
+
+    const difference = totalSpent - totalAllocated;
+    const percentage = totalAllocated ? (totalSpent / totalAllocated) * 100 : 0;
+
+    return { totalAllocated, totalSpent, difference, percentage };
+  };
+
   return (
     <div className="space-y-6 bg-gray-50 min-h-screen">
       <div className="space-y-4">
@@ -264,10 +286,31 @@ const Departments = () => {
                         key={order.order_id}
                         className="border border-gray-200 hover:border-blue-200 transition-colors"
                       >
-                        <CardHeader className="pb-3">
+                        <CardHeader className="pb-3 relative">
+                          <X
+                            className="absolute top-3 right-3 h-5 w-5 text-gray-500 cursor-pointer hover:text-red-600"
+                            onClick={() => {
+                              setData((prev) => ({
+                                ...prev,
+                                groups: prev.groups.map((g) =>
+                                  g.group_name === item.group_name
+                                    ? {
+                                        ...g,
+                                        orders: g.orders.filter(
+                                          (o) => o.order_id !== order.order_id
+                                        ),
+                                      }
+                                    : g
+                                ),
+                              }));
+                            }}
+                          />
                           <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                             <CheckCircle className="h-5 w-5 text-green-500" />
-                            {order.order_name}
+                            {order.order_name} /{" "}
+                            <span className="text-gray-500">
+                              {order.order_id}
+                            </span>
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
