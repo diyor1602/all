@@ -265,6 +265,81 @@ const Departments = () => {
                     {item.orders.length} ta buyurtma
                   </Badge>
                 </CardTitle>
+                {(() => {
+                  const { totalAllocated, totalSpent, difference, percentage } =
+                    calculateGroupTotals(item.orders, orderDetails);
+                  const isOverBudget = difference > 0;
+
+                  return (
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+                      <div className="flex items-center gap-2 p-2 bg-white/50 rounded">
+                        <DollarSign className="h-4 w-4 text-indigo-600" />
+                        <div>
+                          <div className="text-xs text-gray-600">
+                            Jami ajratilgan
+                          </div>
+                          <div className="font-semibold text-indigo-700">
+                            {formatNumber(totalAllocated)} so'm
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 p-2 bg-white/50 rounded">
+                        <TrendingUp className="h-4 w-4 text-orange-600" />
+                        <div>
+                          <div className="text-xs text-gray-600">
+                            Jami sarflangan
+                          </div>
+                          <div className="font-semibold text-orange-700">
+                            {formatNumber(totalSpent)} so'm
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex items-center gap-2 p-2 bg-white/50 rounded`}
+                      >
+                        <TrendingUp
+                          className={`h-4 w-4 ${
+                            isOverBudget ? "text-red-600" : "text-emerald-600"
+                          }`}
+                        />
+                        <div>
+                          <div className="text-xs text-gray-600">Foizda</div>
+                          <div
+                            className={`font-semibold ${
+                              isOverBudget ? "text-red-700" : "text-emerald-700"
+                            }`}
+                          >
+                            {formatNumber(percentage)}%
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex items-center gap-2 p-2 bg-white/50 rounded`}
+                      >
+                        <DollarSign
+                          className={`h-4 w-4 ${
+                            isOverBudget ? "text-red-600" : "text-green-600"
+                          }`}
+                        />
+                        <div>
+                          <div className="text-xs text-gray-600">
+                            {isOverBudget ? "Ortiqcha" : "Qolgan"}
+                          </div>
+                          <div
+                            className={`font-semibold ${
+                              isOverBudget ? "text-red-700" : "text-green-700"
+                            }`}
+                          >
+                            {formatNumber(Math.abs(difference))} so'm
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -623,9 +698,12 @@ const Departments = () => {
                         {employee.name}
                       </td>
                       <td className="border border-gray-300 p-2 text-right">
-                        {parseFloat(employee.salary)?.toLocaleString("ru-RU", {
-                          maximumFractionDigits: 0,
-                        })}
+                        {Number.parseFloat(employee.salary)?.toLocaleString(
+                          "ru-RU",
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )}
                       </td>
                     </tr>
                   ))}
