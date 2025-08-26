@@ -97,6 +97,25 @@ const Add = () => {
         ]);
         setCurrencies(currenciesResponse.data);
         setSources(sourcesResponse.data);
+
+        // ✅ Auto-select first source
+        if (sourcesResponse.data.length > 0) {
+          const firstSource = sourcesResponse.data[0];
+          setForm((prev) => ({ ...prev, source_id: firstSource.name }));
+          setSelectedSourceName(firstSource.name);
+        }
+
+        // ✅ Auto-select kim orqali (from localStorage)
+        const savedVia = localStorage.getItem("viaEmployee"); // example key
+        if (savedVia) {
+          try {
+            const parsed = JSON.parse(savedVia); // should contain {id, name}
+            setForm((prev) => ({ ...prev, via_id: parsed.id }));
+            setSelectedViaName(parsed.name);
+          } catch {
+            console.warn("Invalid localStorage value for viaEmployee");
+          }
+        }
       } catch (error) {
         toast({
           variant: "destructive",
@@ -165,6 +184,9 @@ const Add = () => {
     setSelectedViaName(employee.name);
     setViaOpen(false);
     setEmployeeSearch("");
+
+    // ✅ Save for future auto-select
+    localStorage.setItem("viaEmployee", JSON.stringify(employee));
   };
 
   const handleSourceSelect = (source) => {
