@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,265 +8,266 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+
+const keywords = ["tikuv", "тикув"];
+
+const pad2 = (n) => String(n).padStart(2, "0");
+
+const formatNumber = (num) => {
+  return parseFloat(num).toLocaleString("ru-RU", {
+    maximumFractionDigits: 0,
+  });
+};
+
+function getMonthBounds() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+
+  const first = `${y}-${pad2(m + 1)}-01`;
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  const last = `${y}-${pad2(m + 1)}-${pad2(lastDay)}`;
+
+  return { first, last };
+}
 
 const Departments = () => {
   const { toast } = useToast();
 
   const [departments, setDepartments] = useState([]);
-  const [groups, setGroups] = useState([]);
-  const [rawDepartmentData, setRawDepartmentData] = useState([]);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [filters, setFilters] = useState({
-    department_id: "",
-    group_id: "",
-    start_date: "",
-    end_date: "",
-  });
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [data, setData] = useState([]);
+  const [orderDetails, setOrderDetails] = useState({});
+  const [loadingOrders, setLoadingOrders] = useState({});
 
-  const formatDateLocal = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  const { first: defaultStart, last: defaultEnd } = getMonthBounds();
 
-  const initializeFilters = () => {
-    const savedFilters = localStorage.getItem("salary2-filters");
-    let parsedFilters = savedFilters ? JSON.parse(savedFilters) : {};
-
-    if (!parsedFilters.start_date || !parsedFilters.end_date) {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const value = `${year}-${month}`;
-
-      const firstDay = `${value}-01`;
-      const lastDayDate = new Date(year, Number.parseInt(month), 0);
-      const lastDay = formatDateLocal(lastDayDate);
-
-      parsedFilters = {
-        department_id: parsedFilters.department_id || "",
-        group_id: parsedFilters.group_id || "",
-        start_date: firstDay,
-        end_date: lastDay,
-      };
-    }
-
-    setFilters(parsedFilters);
-    localStorage.setItem("salary2-filters", JSON.stringify(parsedFilters));
-    return parsedFilters;
-  };
-
-  const fetchDepartments = async () => {
-    try {
-      const response = await api.get("/ceo/departments");
-      const rawData = response.data || [];
-      setRawDepartmentData(rawData);
-
-      const flatDepartments =
-        rawData.flatMap((item) => item?.departments) || [];
-      setDepartments(flatDepartments);
-
-      return { rawData, flatDepartments };
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Bunday ma'lumot topilmadi",
-        variant: "destructive",
-      });
-      return { rawData: [], flatDepartments: [] };
-    }
-  };
-
-  const loadGroupsForDepartment = (departmentId, rawData) => {
-    const selectedDepartmentGroups = [];
-
-    rawData.forEach((mainDept) => {
-      const department = mainDept.departments?.find(
-        (dept) => dept.id.toString() === departmentId
-      );
-      if (department && department.groups) {
-        selectedDepartmentGroups.push(...department.groups);
-      }
-    });
-
-    setGroups(selectedDepartmentGroups);
-    return selectedDepartmentGroups;
-  };
-
-  const fetchSalaryData = async (filtersToUse) => {
-    if (
-      !filtersToUse.department_id ||
-      !filtersToUse.start_date ||
-      !filtersToUse.end_date
-    ) {
-      return;
-    }
-
-    // try {
-    //   const response = await api.get("/ceo/groups", {
-    //     params: {
-    //       ...filtersToUse,
-    //       type: "simple",
-    //     },
-    //   });
-    // } catch (error) {
-    //   toast({
-    //     title: "Xatolik",
-    //     description: "Bunday ma'lumot topilmadi",
-    //     variant: "destructive",
-    //   });
-    // }
-  };
+  const [startDate, setStartDate] = useState(
+    localStorage.getItem("salaryStartDate") || defaultStart
+  );
+  const [endDate, setEndDate] = useState(
+    localStorage.getItem("salaryEndDate") || defaultEnd
+  );
 
   useEffect(() => {
-    fetchSalaryData(filters);
-  }, [filters]);
+    localStorage.setItem("salaryStartDate", startDate);
+    localStorage.setItem("salaryEndDate", endDate);
+  }, [startDate, endDate]);
 
   useEffect(() => {
-    const initializeComponent = async () => {
-      const initialFilters = initializeFilters();
-      const { rawData, flatDepartments } = await fetchDepartments();
-
-      let finalFilters = { ...initialFilters };
-
-      if (!initialFilters.department_id && flatDepartments.length > 0) {
-        const firstDepartmentId = flatDepartments[0].id.toString();
-        const groups = loadGroupsForDepartment(firstDepartmentId, rawData);
-
-        finalFilters = {
-          ...initialFilters,
-          department_id: firstDepartmentId,
-          group_id: groups.length === 1 ? groups[0].id.toString() : "",
-        };
-      } else if (initialFilters.department_id) {
-        const groups = loadGroupsForDepartment(
-          initialFilters.department_id,
-          rawData
+    const fetchDepartments = async () => {
+      try {
+        const response = await api.get("/ceo/departments");
+        const flatDepartments = response.data.flatMap(
+          (item) => item.departments || []
         );
 
-        if (groups.length === 1 && !initialFilters.group_id) {
-          finalFilters = {
-            ...initialFilters,
-            group_id: groups[0].id.toString(),
-          };
+        setDepartments(flatDepartments);
+
+        const selectedDept = flatDepartments?.find((dept) =>
+          keywords.some((keyword) =>
+            dept.name?.toLowerCase().includes(keyword.toLowerCase())
+          )
+        );
+
+        if (selectedDept) {
+          setSelectedDepartment(String(selectedDept.id));
         }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description:
+            error.response?.data?.message ||
+            "Bo'limlarni olishda xatolik yuz berdi!",
+        });
       }
-
-      if (JSON.stringify(finalFilters) !== JSON.stringify(initialFilters)) {
-        setFilters(finalFilters);
-        localStorage.setItem("salary2-filters", JSON.stringify(finalFilters));
-      }
-
-      await fetchSalaryData(finalFilters);
-      setIsInitialized(true);
     };
 
-    initializeComponent();
-  }, []);
+    fetchDepartments();
+  }, [toast]);
+
+  const fetchData = async () => {
+    try {
+      const response = await api.get("/ceo/groupsOrders", {
+        params: {
+          department_id: selectedDepartment,
+          start_date: startDate,
+          end_date: endDate,
+        },
+      });
+      setData(response.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Bo'limni olishda xatolik yuz berdi!",
+      });
+    }
+  };
 
   useEffect(() => {
-    if (isInitialized) {
-      fetchSalaryData(filters);
+    if (data?.groups) {
+      data.groups.forEach((group) => {
+        group.orders.forEach((order) => {
+          if (!orderDetails[order.order_id] && !loadingOrders[order.order_id]) {
+            // mark as loading
+            setLoadingOrders((prev) => ({ ...prev, [order.order_id]: true }));
+
+            // fetch individually
+            api
+              .get(`/ceo/orderSalary/${order.order_id}`)
+              .then((res) => {
+                setOrderDetails((prev) => ({
+                  ...prev,
+                  [order.order_id]: res.data,
+                }));
+              })
+              .catch((err) => {
+                console.error(`Error fetching order ${order.order_id}`, err);
+              })
+              .finally(() => {
+                setLoadingOrders((prev) => ({
+                  ...prev,
+                  [order.order_id]: false,
+                }));
+              });
+          }
+        });
+      });
     }
-  }, [filters, isInitialized]);
+  }, [data]);
 
-  const updateFilters = (newFilters) => {
-    setFilters(newFilters);
-    localStorage.setItem("salary2-filters", JSON.stringify(newFilters));
-  };
-
-  const handleStartDateChange = (e) => {
-    const newFilters = {
-      ...filters,
-      start_date: e.target.value,
-    };
-
-    updateFilters(newFilters);
-  };
-
-  const handleEndDateChange = (e) => {
-    const newFilters = {
-      ...filters,
-      end_date: e.target.value,
-    };
-
-    updateFilters(newFilters);
-  };
-
-  const handleDepartmentChange = (departmentId) => {
-    const groups = loadGroupsForDepartment(departmentId, rawDepartmentData);
-
-    const newFilters = {
-      ...filters,
-      department_id: departmentId,
-      group_id: groups.length === 1 ? groups[0].id.toString() : "",
-    };
-
-    updateFilters(newFilters);
-  };
-
-  const handleGroupChange = (groupId) => {
-    const newFilters = {
-      ...filters,
-      group_id: groupId,
-    };
-
-    updateFilters(newFilters);
-  };
+  useEffect(() => {
+    if (!selectedDepartment) return;
+    fetchData();
+  }, [selectedDepartment, startDate, endDate]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4 flex-wrap">
-        <Input
-          type="date"
-          value={filters.start_date}
-          onChange={handleStartDateChange}
-          className="bg-white w-fit"
-        />
-        <Input
-          type="date"
-          value={filters.end_date}
-          onChange={handleEndDateChange}
-          className="bg-white w-fit"
-        />
-
+    <>
+      <div className="flex items-center gap-2">
         <Select
-          onValueChange={handleDepartmentChange}
-          value={filters.department_id}
+          value={selectedDepartment}
+          onValueChange={(value) => setSelectedDepartment(value)}
         >
           <SelectTrigger className="bg-white w-fit">
-            <SelectValue placeholder="Bo'lim tanlang" />
+            <SelectValue placeholder="Bo'lim" />
           </SelectTrigger>
           <SelectContent>
             {departments.map((department) => (
-              <SelectItem key={department.id} value={department.id.toString()}>
+              <SelectItem key={department.id} value={String(department.id)}>
                 {department.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select
-          onValueChange={handleGroupChange}
-          value={filters.group_id}
-          disabled={!filters.department_id || groups.length === 0}
-        >
-          <SelectTrigger className="bg-white w-fit">
-            <SelectValue placeholder="Guruh tanlang" />
-          </SelectTrigger>
-          <SelectContent>
-            {groups
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map((group) => (
-                <SelectItem key={group.id} value={group.id.toString()}>
-                  {group.name}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+        <Input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="w-fit bg-white"
+        />
+        <Input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="w-fit bg-white"
+        />
       </div>
-    </div>
+      <div className="mt-5 grid grid-cols-1 gap-4">
+        {data?.groups
+          ?.sort((a, b) => a.group_name.localeCompare(b.group_name))
+          .map((item, index) => (
+            <div key={index} className="bg-white p-2 rounded shadow">
+              <div>{item.group_name}</div>
+              <div className="flex flex-col gap-2 mt-4">
+                {item.orders.map((order) => (
+                  <div key={order.order_id} className="bg-gray-100 p-2 rounded">
+                    <div>{order.order_name}</div>
+                    <div>
+                      {loadingOrders[order.order_id] ? (
+                        <span className="text-gray-400">⏳ Yuklanmoqda...</span>
+                      ) : orderDetails[order.order_id] ? (
+                        <div>
+                          <div>
+                            Boshlangan sana:{" "}
+                            {orderDetails[order.order_id].date_range
+                              ?.split(" — ")[0]
+                              ?.split("-")
+                              ?.reverse()
+                              ?.join(".")}
+                          </div>
+                          <div>
+                            Yakunlangan sana:{" "}
+                            {orderDetails[order.order_id].date_range
+                              ?.split(" — ")[1]
+                              ?.split("-")
+                              ?.reverse()
+                              ?.join(".")}
+                          </div>
+                          <div>
+                            Ischilar topgan summa:{" "}
+                            {formatNumber(
+                              orderDetails[order.order_id].tarification_total
+                            )}
+                          </div>
+                          <div>
+                            Oylikchilar topgan jami summa, Davomati uchun:{" "}
+                            {formatNumber(
+                              orderDetails[order.order_id].salary_total
+                            )}
+                          </div>
+                          <div>
+                            Universallar bosgan summa:{" "}
+                            {formatNumber(
+                              orderDetails[order.order_id]
+                                .fixed_with_tarification_total
+                            )}
+                          </div>
+                          <div>
+                            Sarflangan summa:{" "}
+                            {formatNumber(
+                              orderDetails[order.order_id].tarification_total +
+                                orderDetails[order.order_id].salary_total -
+                                orderDetails[order.order_id]
+                                  .fixed_with_tarification_total
+                            )}
+                          </div>
+                          <div>
+                            Jami summa:{" "}
+                            {formatNumber(
+                              orderDetails[order.order_id].total_summa
+                            )}
+                          </div>
+                          <div>
+                            Foizda:{" "}
+                            {formatNumber(
+                              ((orderDetails[order.order_id]
+                                .tarification_total +
+                                orderDetails[order.order_id].salary_total -
+                                orderDetails[order.order_id]
+                                  .fixed_with_tarification_total) /
+                                orderDetails[order.order_id].total_summa) *
+                                100
+                            )}{" "}
+                            %
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-red-500">❌ Ma’lumot yo‘q</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+      </div>
+    </>
   );
 };
 
