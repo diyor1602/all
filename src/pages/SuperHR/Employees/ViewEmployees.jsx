@@ -25,11 +25,14 @@ import {
   Calendar,
   CalendarClock,
   CheckCircle2,
+  ClipboardList,
   Clock,
+  DollarSign,
   Hash,
   Images,
   MessageCircle,
   Phone,
+  Timer,
   Users,
   XCircle,
 } from "lucide-react";
@@ -82,7 +85,7 @@ const getStatusColor = (status) => {
   }
 };
 
-const ViewEmployees = () => {
+const SalaryDetails = () => {
   const { id } = useParams();
   const { toast } = useToast();
 
@@ -106,6 +109,8 @@ const ViewEmployees = () => {
   const [activeTab, setActiveTab] = useState("attendance");
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+
+  const [expandedModel, setExpandedModel] = useState(null);
 
   const getAbsenceData = (date) => {
     return employeeData?.absences?.find(
@@ -229,10 +234,15 @@ const ViewEmployees = () => {
   }
 
   const { employee } = employeeData;
+  const totalTarificationAmount =
+    employee.employee_tarification_logs?.reduce(
+      (sum, log) => sum + Number.parseFloat(log.amount_earned),
+      0
+    ) || 0;
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
-      {/* Month Filter */}
+      {/* Month Filter .*/}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <Input
@@ -244,7 +254,7 @@ const ViewEmployees = () => {
               setSelectedMonth(e.target.value);
               setFilters(range);
             }}
-            className="w-48"
+            className="w-48 bg-white"
           />
         </div>
         <div className="text-sm text-muted-foreground">
@@ -335,6 +345,41 @@ const ViewEmployees = () => {
             </div>
 
             <Separator />
+
+            <div className="space-y-3">
+              {employee.balance && employee.type !== "aup" && (
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">
+                    Hisobdagi mablag'lar:
+                  </span>
+                  <span className="font-medium text-green-600">
+                    {Number.parseFloat(employee.balance).toLocaleString(
+                      "ru-RU"
+                    )}{" "}
+                    so'm
+                  </span>
+                </div>
+              )}
+              {employee.bonus && employee.type !== "aup" && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Bonus:</span>
+                  <span className="font-medium">
+                    {Number.parseFloat(employee.bonus).toLocaleString("ru-RU")}{" "}
+                    so'm
+                  </span>
+                </div>
+              )}
+              {totalTarificationAmount > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Jami ishlangan mablag'lar:
+                  </span>
+                  <span className="font-medium text-blue-600">
+                    {totalTarificationAmount.toLocaleString("ru-RU")} so'm
+                  </span>
+                </div>
+              )}
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col items-start pt-0">
             <div className="text-xs text-muted-foreground w-full space-y-1">
@@ -380,18 +425,25 @@ const ViewEmployees = () => {
                   <span>{formatDate(employee.hiring_date)}</span>
                 </div>
               )}
-              {employee?.type === "simple" && (
+              <div className="flex justify-between">
+                <span>To'lov turi:</span>
+                <span className="capitalize">
+                  {payment_types[employee.payment_type]}
+                </span>
+              </div>
+              {employee.type !== "aup" && (
                 <>
-                  <div className="flex justify-between">
-                    <span>To'lov turi:</span>
-                    <span className="capitalize">
-                      {payment_types[employee.payment_type]}
-                    </span>
-                  </div>
                   <div className="flex justify-between">
                     <span>Maosh:</span>
                     <span className="capitalize">
                       {parseFloat(employee.salary || 0).toLocaleString("ru-RU")}{" "}
+                      so'm
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>KPI:</span>
+                    <span className="capitalize">
+                      {parseFloat(employee.kpi || 0).toLocaleString("ru-RU")}{" "}
                       so'm
                     </span>
                   </div>
@@ -424,7 +476,7 @@ const ViewEmployees = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-1 mb-4">
+            <TabsList className="grid grid-cols-3 mb-4">
               <TabsTrigger value="attendance">
                 Davomat
                 {employee.attendances?.length > 0 && (
@@ -433,6 +485,15 @@ const ViewEmployees = () => {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="tarification">
+                Tarifikatsiya
+                {employee.employee_tarification_logs?.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {employee.employee_tarification_logs.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="model">Model</TabsTrigger>
             </TabsList>
             <TabsContent value="attendance" className="space-y-4">
               <Card>
@@ -440,6 +501,20 @@ const ViewEmployees = () => {
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
                     Davomat qaydnomasi
+                    {employee.type !== "aup" && (
+                      <>
+                        {" ("}
+                        {employee.attendance_salaries
+                          ?.reduce(
+                            (sum, salary) =>
+                              sum + Number.parseFloat(salary.amount || 0),
+                            0
+                          )
+                          ?.toLocaleString("ru-RU")}{" "}
+                        so'm
+                        {")"}
+                      </>
+                    )}
                   </CardTitle>
                   <CardDescription className="grid grid-cols-3 gap-4 pt-2">
                     {employee.attendances?.length > 0
@@ -481,7 +556,7 @@ const ViewEmployees = () => {
                         .map((attendance) => (
                           <div
                             key={attendance.id}
-                            className={`flex items-center justify-between p-4 border rounded-lg ${
+                            className={`flex items-center justify-between p-4 border rounded-lg flex-wrap gap-2 ${
                               attendance.status === "present"
                                 ? "border-green-200 bg-green-50"
                                 : "border-red-200 bg-red-50"
@@ -502,6 +577,21 @@ const ViewEmployees = () => {
                                     ? "Kelgan"
                                     : "Kelmagan"}
                                 </p>
+                                {employee?.attendance_salaries?.find(
+                                  (a) => a.attendance_id === attendance.id
+                                ) &&
+                                  employee.type !== "aup" && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Topgan puli:{" "}
+                                      {parseFloat(
+                                        employee.attendance_salaries.find(
+                                          (a) =>
+                                            a.attendance_id === attendance.id
+                                        )?.amount || 0
+                                      )?.toLocaleString("ru-RU")}{" "}
+                                      so'm
+                                    </p>
+                                  )}
                               </div>
                             </div>
                             <div className="text-sm space-y-1">
@@ -618,6 +708,288 @@ const ViewEmployees = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="tarification" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                    Tarifikatsiya qaydnomasi
+                  </CardTitle>
+                  <CardDescription>
+                    {employee.employee_tarification_logs?.length > 0
+                      ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString()} so'm`
+                      : "Tarifikatsiya ma'lumotlari mavjud emas"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {employee.employee_tarification_logs?.length > 0 ? (
+                    <div className="space-y-4">
+                      {employee.employee_tarification_logs
+                        ?.sort((a, b) => {
+                          return new Date(b.date) - new Date(a.date);
+                        })
+                        .map((log) => (
+                          <div
+                            key={log.id}
+                            className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-primary" />
+                                <span className="font-medium">
+                                  {formatDate(log.date)}
+                                </span>
+                              </div>
+                              <div className="flex gap-2 flex-wrap">
+                                <Badge
+                                  variant="outline"
+                                  className="bg-orange-100 truncate"
+                                >
+                                  {log.model?.name} - {log.submodel?.name || ""}
+                                </Badge>
+                                <Badge variant="outline" className="bg-blue-50">
+                                  Miqdor: {log.quantity}
+                                </Badge>
+                                <Badge
+                                  variant="outline"
+                                  className="bg-green-50"
+                                >
+                                  {(
+                                    Number.parseFloat(log.tarification.summa) *
+                                    log.quantity
+                                  ).toLocaleString()}{" "}
+                                  so'm
+                                </Badge>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <Hash className="h-3 w-3" />
+                                    Kod
+                                  </span>
+                                  <span className="font-medium">
+                                    {log.tarification.code}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <Timer className="h-3 w-3" />
+                                    Sekund
+                                  </span>
+                                  <span className="font-medium">
+                                    {log.tarification.second}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    Birlik narxi
+                                  </span>
+                                  <span className="font-medium text-green-600">
+                                    {Number.parseFloat(
+                                      log.tarification.summa
+                                    ).toLocaleString()}{" "}
+                                    сўм
+                                  </span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    Jami
+                                  </span>
+                                  <span className="font-medium text-green-600">
+                                    {Number.parseFloat(
+                                      log.amount_earned
+                                    ).toLocaleString()}{" "}
+                                    сўм
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">
+                        Tanlangan sana oralig'ida tarifikatsiya ma'lumotlari
+                        topilmadi
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="model" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                    Model qaydnomasi
+                  </CardTitle>
+                  <CardDescription>
+                    {employee.employee_tarification_logs?.length > 0
+                      ? `Bajarilgan ishlar ro'yxati • Jami: ${totalTarificationAmount.toLocaleString(
+                          "ru-RU",
+                          {
+                            maximumFractionDigits: 2,
+                          }
+                        )} so'm`
+                      : "Tarifikatsiya ma'lumotlari mavjud emas"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {employee.employee_tarification_logs?.length > 0 ? (
+                    <div className="space-y-4">
+                      {(() => {
+                        const groupedByModel = {};
+
+                        // Step 1: Group logs by model
+                        employee.employee_tarification_logs?.forEach((log) => {
+                          const modelId = log.model?.id || "unknown";
+                          const modelName = log.model?.name || "Noma'lum model";
+
+                          if (!groupedByModel[modelId]) {
+                            groupedByModel[modelId] = {
+                              modelName,
+                              logs: [],
+                            };
+                          }
+
+                          groupedByModel[modelId].logs.push(log);
+                        });
+
+                        return (
+                          <div className="space-y-2">
+                            {Object.entries(groupedByModel).map(
+                              ([modelId, group], index) => {
+                                const isOpen = expandedModel === modelId;
+
+                                // Step 2: Group works under this model by work CODE
+                                const workMap = {};
+                                group.logs.forEach((log) => {
+                                  const workCode =
+                                    log.tarification?.code || "NOMA'LUM";
+                                  const workName =
+                                    log.tarification?.name || "Noma'lum ish";
+
+                                  if (!workMap[workCode]) {
+                                    workMap[workCode] = {
+                                      name: workName,
+                                      totalQty: 0,
+                                      totalSum: 0,
+                                    };
+                                  }
+
+                                  workMap[workCode].totalQty += log.quantity;
+                                  workMap[workCode].totalSum += parseFloat(
+                                    log.amount_earned || 0
+                                  );
+                                });
+
+                                // Step 3: Total summary for the model
+                                const totalSumForModel = group.logs.reduce(
+                                  (sum, log) =>
+                                    sum + parseFloat(log.amount_earned || 0),
+                                  0
+                                );
+
+                                // Step 4: Assign a color
+                                const colors = [
+                                  "bg-blue-100 hover:bg-blue-200",
+                                  "bg-green-100 hover:bg-green-200",
+                                  "bg-yellow-100 hover:bg-yellow-200",
+                                  "bg-purple-100 hover:bg-purple-200",
+                                  "bg-pink-100 hover:bg-pink-200",
+                                  "bg-indigo-100 hover:bg-indigo-200",
+                                ];
+
+                                const colorClass =
+                                  colors[index % colors.length];
+
+                                return (
+                                  <div key={modelId}>
+                                    {/* Clickable model row */}
+                                    <div
+                                      onClick={() =>
+                                        setExpandedModel(
+                                          isOpen ? null : modelId
+                                        )
+                                      }
+                                      className={`cursor-pointer p-3 border rounded-lg ${colorClass} flex justify-between items-center`}
+                                    >
+                                      <div className="font-medium text-gray-800">
+                                        {group.modelName}
+                                      </div>
+                                      <div className="text-green-700 font-semibold">
+                                        {totalSumForModel.toLocaleString(
+                                          "ru-RU"
+                                        )}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+
+                                    {/* Expanded list of works under this model */}
+                                    {isOpen && (
+                                      <div className="bg-white p-4 border rounded-b-md space-y-2">
+                                        {Object.entries(workMap).map(
+                                          ([code, data]) => (
+                                            <div
+                                              key={code}
+                                              className="p-3 border rounded-md bg-gray-50 text-sm"
+                                            >
+                                              <div className="flex justify-between items-center flex-wrap gap-2">
+                                                <div className="font-medium">
+                                                  {code}, {data.name}
+                                                </div>
+                                                <div>
+                                                  <div>
+                                                    Bajarildi:{" "}
+                                                    <span className="font-semibold">
+                                                      {data.totalQty} ta
+                                                    </span>
+                                                  </div>
+                                                  <div>
+                                                    Summa:{" "}
+                                                    <span className="font-semibold text-green-700">
+                                                      {data.totalSum.toLocaleString(
+                                                        "ru-RU"
+                                                      )}{" "}
+                                                      so'm
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">
+                        Tanlangan sana oralig'ida model ma'lumotlari topilmadi
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -640,4 +1012,4 @@ const ViewEmployees = () => {
   );
 };
 
-export default ViewEmployees;
+export default SalaryDetails;
