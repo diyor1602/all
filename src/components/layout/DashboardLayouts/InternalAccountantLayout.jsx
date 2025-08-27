@@ -4,7 +4,6 @@ import {
   Home,
   Users,
   Settings,
-  Calendar1,
   Sprout,
   Truck,
 } from "lucide-react";
@@ -16,12 +15,6 @@ const navigation = [
     href: "/kpi",
     icon: BadgePercent,
     onMobile: false,
-  },
-  {
-    name: "Davomat",
-    href: "/internalAccountant/attendance",
-    icon: Calendar1,
-    onMobile: true,
   },
   {
     name: "Xodimlar",

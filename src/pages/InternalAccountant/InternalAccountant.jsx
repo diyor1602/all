@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Attendance from "./Attendance/Attendance";
 import Employees from "./Employees/Employees";
 import Settings from "./Settings/Settings";
 import Work from "./Work/Work";
@@ -11,7 +10,6 @@ import SalaryDetails from "./Employees/SalaryDetails";
 const InternalAccountant = () => {
   return (
     <Routes>
-      <Route path="attendance" element={<Attendance />} />
       <Route path="employees" element={<Employees />} />
       <Route path="employees/:id" element={<SalaryDetails />} />
       <Route path="settings/*" element={<Settings />} />
