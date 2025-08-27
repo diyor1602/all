@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Loader2,
   X,
+  Shirt,
 } from "lucide-react";
 import {
   Dialog,
@@ -66,6 +67,8 @@ const Departments = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState(null);
   const [dialogData, setDialogData] = useState([]);
+  const [dialogSubmodel, setDialogSubmodel] = useState(null);
+  const [dialogSubmodelData, setDialogSubmodelData] = useState([]);
 
   const { first: defaultStart, last: defaultEnd } = getMonthBounds();
 
@@ -544,6 +547,29 @@ const Departments = () => {
                                     </span>
                                   </div>
                                 </div>
+                                <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                                  <Shirt className="h-4 w-4" />
+                                  Submodellar
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-600">
+                                      {order.submodels?.map((submodel, i) => (
+                                        <div
+                                          key={i}
+                                          className="bg-gray-100 px-3 py-1 rounded cursor-pointer hover:bg-gray-200 font-medium"
+                                          onClick={() => {
+                                            setDialogSubmodelData(submodel);
+                                            setDialogSubmodel(true);
+                                          }}
+                                        >
+                                          {submodel.submodel_name} /{" "}
+                                          {submodel.total_sewn}
+                                        </div>
+                                      ))}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
 
                               <div className="space-y-3">
@@ -822,6 +848,35 @@ const Departments = () => {
                       </td>
                     </tr>
                   ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={dialogSubmodel} onOpenChange={setDialogSubmodel}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogSubmodelData.submodel_name}</DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <tbody>
+                {dialogSubmodelData?.outputs?.map((output, index) => (
+                  <tr key={index}>
+                    <td className="border border-gray-300 p-2">
+                      {output.created_at}
+                    </td>
+                    <td className="border border-gray-300 p-2 text-right">
+                      {Number.parseFloat(output.quantity)?.toLocaleString(
+                        "ru-RU",
+                        {
+                          maximumFractionDigits: 0,
+                        }
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
