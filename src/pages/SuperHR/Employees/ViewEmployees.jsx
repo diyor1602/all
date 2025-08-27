@@ -347,19 +347,6 @@ const SalaryDetails = () => {
             <Separator />
 
             <div className="space-y-3">
-              {employee.balance && employee.type !== "aup" && (
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">
-                    Hisobdagi mablag'lar:
-                  </span>
-                  <span className="font-medium text-green-600">
-                    {Number.parseFloat(employee.balance).toLocaleString(
-                      "ru-RU"
-                    )}{" "}
-                    so'm
-                  </span>
-                </div>
-              )}
               {employee.bonus && employee.type !== "aup" && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Bonus:</span>
@@ -375,7 +362,10 @@ const SalaryDetails = () => {
                     Jami ishlangan mablag'lar:
                   </span>
                   <span className="font-medium text-blue-600">
-                    {totalTarificationAmount.toLocaleString("ru-RU")} so'm
+                    {totalTarificationAmount.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 0,
+                    })}{" "}
+                    so'm
                   </span>
                 </div>
               )}
