@@ -457,6 +457,14 @@ const SalaryPage = () => {
     try {
       setPaymentLoading((prev) => ({ ...prev, [loadingKey]: true }));
 
+      await api.post("/ceo/salaries", {
+        employee_id: employee.id,
+        type,
+        amount,
+        comment,
+        month: selectedMonth,
+      });
+
       toast({
         title: "Muvaffaqiyatli",
         description: `${type === "advance" ? "Avans" : "Oylik"} to'landi`,
@@ -951,6 +959,7 @@ const SalaryPage = () => {
             </Button>
             <Button
               onClick={handlePayment}
+              type="button"
               disabled={
                 !paymentForm.amount ||
                 paymentLoading[
