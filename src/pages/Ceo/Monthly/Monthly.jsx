@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -45,8 +45,11 @@ import {
   Car,
   Wrench,
   Scissors,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const formatNumber = (number) => {
   return Number.parseFloat(number || 0).toLocaleString("ru-RU", {
@@ -74,6 +77,8 @@ const Monthly = () => {
   const [newDollarRate, setNewDollarRate] = useState(dollarRate);
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
   const [expenseOrder, setExpenseOrder] = useState(null);
+  const pdfContentRef = useRef(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const handleExpenceDialog = (order) => {
     setExpenseOrder(order);
@@ -126,17 +131,17 @@ const Monthly = () => {
       value:
         monthly.orders?.length === 0
           ? `-${formatNumber(
-              parseFloat(monthly.aup) +
-                parseFloat(monthly.kpi) +
-                parseFloat(monthly.daily_expenses) +
-                parseFloat(monthly.tarification) +
-                parseFloat(monthly.transport_attendance)
+              Number.parseFloat(monthly.aup) +
+                Number.parseFloat(monthly.kpi) +
+                Number.parseFloat(monthly.daily_expenses) +
+                Number.parseFloat(monthly.tarification) +
+                Number.parseFloat(monthly.transport_attendance)
             )} so'm`
           : `${formatNumber(monthly.total_fixed_cost_uzs)} so'm`,
       percentage:
         monthly.orders?.length === 0
           ? 0
-          : parseFloat(
+          : Number.parseFloat(
               (monthly.total_fixed_cost_uzs / monthly.total_earned_uzs) * 100
             )?.toLocaleString("ru-RU", {
               maximumFractionDigits: 0,
@@ -151,7 +156,7 @@ const Monthly = () => {
       percentage:
         monthly.orders?.length === 0
           ? 0
-          : parseFloat(
+          : Number.parseFloat(
               (monthly.net_profit_uzs / monthly.total_earned_uzs) * 100
             )?.toLocaleString("ru-RU", {
               maximumFractionDigits: 0,
@@ -174,7 +179,7 @@ const Monthly = () => {
       title: "Bir donasi narxi",
       value: `${formatNumber(
         monthly.cost_per_unit_overall_uzs
-      )} so'm / ${parseFloat(
+      )} so'm / ${Number.parseFloat(
         monthly.cost_per_unit_overall_uzs / dollarRate
       ).toLocaleString("ru-RU", {
         maximumFractionDigits: 2,
@@ -236,6 +241,99 @@ const Monthly = () => {
       prefix: "ta",
     },
   ];
+
+  const generatePDF = async () => {
+    if (!expenseOrder || !pdfContentRef.current) return;
+
+    setIsGeneratingPdf(true);
+    try {
+      const element = pdfContentRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        logging: false,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector("[data-pdf-content]");
+          if (clonedElement) {
+            clonedElement.style.padding = "20px";
+          }
+        },
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+      const pdfHeight = pdf.internal.pageSize.getHeight() - 20;
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = 10;
+      const imgY = 10;
+
+      if (imgHeight * ratio > pdfHeight) {
+        let position = 0;
+        const pageHeight = pdfHeight / ratio;
+
+        while (position < imgHeight) {
+          const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff",
+            width: element.scrollWidth,
+            height: Math.min(pageHeight, imgHeight - position),
+            y: position,
+            logging: false,
+          });
+
+          const pageImgData = canvas.toDataURL("image/png");
+
+          if (position > 0) {
+            pdf.addPage();
+          }
+
+          pdf.addImage(
+            pageImgData,
+            "PNG",
+            imgX,
+            imgY,
+            canvas.width * ratio,
+            canvas.height * ratio
+          );
+
+          position += pageHeight;
+        }
+      } else {
+        pdf.addImage(
+          imgData,
+          "PNG",
+          imgX,
+          imgY,
+          imgWidth * ratio,
+          imgHeight * ratio
+        );
+      }
+
+      const fileName = `Harajat_${expenseOrder?.order?.id}_${
+        expenseOrder?.order?.name
+      }_${new Date().toISOString().split("T")[0]}.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "PDF yaratishda xatolik yuz berdi",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -488,9 +586,9 @@ const Monthly = () => {
                               {formatNumber(order?.price_uzs)} so'm
                             </div>
                             <div className="font-mono">
-                              {parseFloat(order?.price_usd)?.toLocaleString(
-                                "ru-RU"
-                              )}{" "}
+                              {Number.parseFloat(
+                                order?.price_usd
+                              )?.toLocaleString("ru-RU")}{" "}
                               $
                             </div>
                           </div>
@@ -653,10 +751,35 @@ const Monthly = () => {
                   )}
                 </DialogDescription>
               </div>
+              <Button
+                onClick={generatePDF}
+                disabled={isGeneratingPdf}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+              >
+                <Download className="w-4 h-4" />
+                {isGeneratingPdf ? "PDF yaratilmoqda..." : "PDF yuklab olish"}
+              </Button>
             </div>
           </DialogHeader>
 
-          <div className="space-y-8 py-6">
+          <div
+            ref={pdfContentRef}
+            data-pdf-content
+            className="space-y-8 py-6 bg-white px-6"
+          >
+            <div className="print:block mb-8 text-center border-b pb-4">
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                Harajatlar hisoboti
+              </h1>
+              <p className="text-slate-600">
+                {expenseOrder?.order?.id} – {expenseOrder?.order?.name} -{" "}
+                {expenseOrder?.submodels?.map((sub) => sub.name).join(", ")}
+              </p>
+              <p className="text-sm text-slate-500 mt-2">
+                Yaratilgan sana: {new Date().toLocaleDateString("ru-RU")}
+              </p>
+            </div>
+
             {/* Responsible Users */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
               <div className="flex items-center gap-3 mb-4">
@@ -968,7 +1091,9 @@ const Monthly = () => {
                 </div>
                 <span className="text-balance">
                   {expenseOrder?.net_profit_uzs > 0 ? "Sof foyda" : "Zarar"}:{" "}
-                  {formatNumber(expenseOrder?.net_profit_uzs)} so'm
+                  <span className="font-mono">
+                    {formatNumber(expenseOrder?.net_profit_uzs || 0)} so'm
+                  </span>
                 </span>
               </div>
             </div>
