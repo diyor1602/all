@@ -156,7 +156,14 @@ const Departments = () => {
                 }));
               })
               .catch((err) => {
-                console.error(`Error fetching order ${order.order_id}`, err);
+                toast({
+                  variant: "destructive",
+                  title: "Xatolik!",
+                  description:
+                    err.response?.data?.message ||
+                    "Bo'limni olishda xatolik yuz berdi!",
+                  duration: 1200,
+                });
               })
               .finally(() => {
                 setLoadingOrders((prev) => ({

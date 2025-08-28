@@ -108,13 +108,9 @@ const Add = () => {
         // ✅ Auto-select kim orqali (from localStorage)
         const savedVia = localStorage.getItem("viaEmployee"); // example key
         if (savedVia) {
-          try {
-            const parsed = JSON.parse(savedVia); // should contain {id, name}
-            setForm((prev) => ({ ...prev, via_id: parsed.id }));
-            setSelectedViaName(parsed.name);
-          } catch {
-            console.warn("Invalid localStorage value for viaEmployee");
-          }
+          const parsed = JSON.parse(savedVia); // should contain {id, name}
+          setForm((prev) => ({ ...prev, via_id: parsed.id }));
+          setSelectedViaName(parsed.name);
         }
       } catch (error) {
         toast({
