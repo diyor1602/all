@@ -1353,7 +1353,6 @@ const Work = () => {
                               <Input
                                 type="number"
                                 min="1"
-                                onWheel={(e) => e.target.blur()}
                                 max={(() => {
                                   const tarification = getSelectedTarification(
                                     work.id
