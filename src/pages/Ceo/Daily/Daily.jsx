@@ -736,7 +736,7 @@ const Daily = () => {
                   <div
                     key={index}
                     className={cn(
-                      "flex justify-between items-center p-3 bg-50 rounded-lg",
+                      "flex justify-between items-center p-3 bg-50 rounded-lg flex-wrap",
                       metric.bg
                     )}
                   >
@@ -745,6 +745,9 @@ const Daily = () => {
                     </span>
                     <Badge variant="ghost" className="font-mono border-none">
                       {formatNumber(metric.value)} {metric.prefix || "so'm"}
+                      {metric.value
+                        ? ` / ${formatNumber(metric.value / dollarRate)} $`
+                        : ""}
                     </Badge>
                   </div>
                 ))}
