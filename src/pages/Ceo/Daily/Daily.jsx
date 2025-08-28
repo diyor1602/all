@@ -107,6 +107,25 @@ const Daily = () => {
   const pdfContentRef = useRef(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
+  const calculatePercentage = (value, total) => {
+    if (!total) return 0;
+    if (!value) return 0;
+    return ((value / total) * 100).toFixed(2);
+  };
+
+  const calculateTotal = (expenseOrder) => {
+    return (
+      (expenseOrder?.costs_uzs?.allocatedAup || 0) +
+      (expenseOrder?.costs_uzs?.bonus || 0) +
+      (expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly || 0) +
+      (expenseOrder?.costs_uzs?.allocatedTransport || 0) +
+      (expenseOrder?.costs_uzs?.amortizationExpense || 0) +
+      (expenseOrder?.costs_uzs?.incomePercentageExpense || 0) +
+      (expenseOrder?.costs_uzs?.remainder || 0) +
+      (expenseOrder?.costs_uzs?.tarification || 0)
+    );
+  };
+
   const handleExpenceDialog = (order) => {
     setExpenseOrder(order);
     setExpenseDialogOpen(true);
@@ -1538,12 +1557,20 @@ const Daily = () => {
                   {
                     label: "AUP",
                     value: expenseOrder?.costs_uzs?.allocatedAup,
+                    percentage: calculatePercentage(
+                      expenseOrder?.costs_uzs?.allocatedAup,
+                      calculateTotal(expenseOrder)
+                    ),
                     icon: Building2,
                     color: "blue",
                   },
                   {
                     label: "KPI",
                     value: expenseOrder?.costs_uzs?.bonus,
+                    percentage: calculatePercentage(
+                      expenseOrder?.costs_uzs?.bonus,
+                      calculateTotal(expenseOrder)
+                    ),
                     icon: UserCheck,
                     color: "green",
                   },
@@ -1551,82 +1578,108 @@ const Daily = () => {
                     label: "O'zgarmas harajat",
                     value:
                       expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly,
+                    percentage: calculatePercentage(
+                      expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly,
+                      calculateTotal(expenseOrder)
+                    ),
                     icon: Calculator,
                     color: "purple",
                   },
                   {
                     label: "Transport",
                     value: expenseOrder?.costs_uzs?.allocatedTransport,
+                    percentage: calculatePercentage(
+                      expenseOrder?.costs_uzs?.allocatedTransport,
+                      calculateTotal(expenseOrder)
+                    ),
                     icon: Car,
                     color: "orange",
                   },
                   {
                     label: "Amortizatsiya",
                     value: expenseOrder?.costs_uzs?.amortizationExpense,
+                    percentage: calculatePercentage(
+                      expenseOrder?.costs_uzs?.amortizationExpense,
+                      calculateTotal(expenseOrder)
+                    ),
                     icon: Wrench,
                     color: "cyan",
                   },
                   {
                     label: "Soliq",
                     value: expenseOrder?.costs_uzs?.incomePercentageExpense,
+                    percentage: calculatePercentage(
+                      expenseOrder?.costs_uzs?.incomePercentageExpense,
+                      calculateTotal(expenseOrder)
+                    ),
                     icon: Receipt,
                     color: "red",
                   },
                   {
                     label: "Tikuv uchun",
                     value: expenseOrder?.costs_uzs?.remainder,
+                    percentage: calculatePercentage(
+                      expenseOrder?.costs_uzs?.remainder,
+                      calculateTotal(expenseOrder)
+                    ),
                     icon: Scissors,
                     color: "pink",
                   },
                   {
                     label: "Tikuvchilar",
                     value: expenseOrder?.costs_uzs?.tarification,
+                    percentage: calculatePercentage(
+                      expenseOrder?.costs_uzs?.tarification,
+                      calculateTotal(expenseOrder)
+                    ),
                     icon: Users,
                     color: "indigo",
                   },
-                ].map(({ label, value, icon: Icon, color }, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "w-6 h-6 rounded-lg flex items-center justify-center",
-                          color === "blue" && "bg-blue-100",
-                          color === "green" && "bg-green-100",
-                          color === "purple" && "bg-purple-100",
-                          color === "orange" && "bg-orange-100",
-                          color === "cyan" && "bg-cyan-100",
-                          color === "red" && "bg-red-100",
-                          color === "pink" && "bg-pink-100",
-                          color === "indigo" && "bg-indigo-100"
-                        )}
-                      >
-                        <Icon
+                ].map(
+                  ({ label, value, icon: Icon, percentage = 0, color }, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
                           className={cn(
-                            "w-3 h-3",
-                            color === "blue" && "text-blue-600",
-                            color === "green" && "text-green-600",
-                            color === "purple" && "text-purple-600",
-                            color === "orange" && "text-orange-600",
-                            color === "cyan" && "text-cyan-600",
-                            color === "red" && "text-red-600",
-                            color === "pink" && "text-pink-600",
-                            color === "indigo" && "text-indigo-600"
+                            "w-6 h-6 rounded-lg flex items-center justify-center",
+                            color === "blue" && "bg-blue-100",
+                            color === "green" && "bg-green-100",
+                            color === "purple" && "bg-purple-100",
+                            color === "orange" && "bg-orange-100",
+                            color === "cyan" && "bg-cyan-100",
+                            color === "red" && "bg-red-100",
+                            color === "pink" && "bg-pink-100",
+                            color === "indigo" && "bg-indigo-100"
                           )}
-                        />
+                        >
+                          <Icon
+                            className={cn(
+                              "w-3 h-3",
+                              color === "blue" && "text-blue-600",
+                              color === "green" && "text-green-600",
+                              color === "purple" && "text-purple-600",
+                              color === "orange" && "text-orange-600",
+                              color === "cyan" && "text-cyan-600",
+                              color === "red" && "text-red-600",
+                              color === "pink" && "text-pink-600",
+                              color === "indigo" && "text-indigo-600"
+                            )}
+                          />
+                        </div>
+                        <span className="font-medium text-slate-700">
+                          {label}
+                        </span>
                       </div>
-                      <span className="font-medium text-slate-700">
-                        {label}
+                      <span className="font-mono font-semibold text-slate-900">
+                        {formatNumber(value)} / {formatNumber(percentage)} %{" "}
+                        <span className="text-sm text-slate-500">so'm</span>
                       </span>
                     </div>
-                    <span className="font-mono font-semibold text-slate-900">
-                      {formatNumber(value)}{" "}
-                      <span className="text-sm text-slate-500">so'm</span>
-                    </span>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
 
               {/* Total */}
@@ -1645,7 +1698,7 @@ const Daily = () => {
                       (expenseOrder?.costs_uzs?.allocatedAup || 0) +
                         (expenseOrder?.costs_uzs?.bonus || 0) +
                         (expenseOrder?.costs_uzs
-                          ?.allocatedDailyExpenseMonthly || 0) +
+                          ?.allocatedMonthlyExpenseMonthly || 0) +
                         (expenseOrder?.costs_uzs?.allocatedTransport || 0) +
                         (expenseOrder?.costs_uzs?.amortizationExpense || 0) +
                         (expenseOrder?.costs_uzs?.incomePercentageExpense ||
