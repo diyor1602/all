@@ -491,7 +491,7 @@ const Daily = () => {
       bg: "bg-orange-300",
     },
     {
-      label: "Jami aktiv ishchilar",
+      label: "O'rtacha aktiv ishchilar",
       value: daily.employee_count,
       bg: "bg-lime-300",
       prefix: "ta",
@@ -1234,7 +1234,7 @@ const Daily = () => {
                                     <div>
                                       {formatNumber(
                                         order?.costs_uzs
-                                          ?.allocatedDailyExpenseMonthly
+                                          ?.allocatedMonthlyExpenseMonthly
                                       )}{" "}
                                       so'm
                                     </div>
@@ -1550,7 +1550,7 @@ const Daily = () => {
                   {
                     label: "O'zgarmas harajat",
                     value:
-                      expenseOrder?.costs_uzs?.allocatedDailyExpenseMonthly,
+                      expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly,
                     icon: Calculator,
                     color: "purple",
                   },

@@ -235,7 +235,7 @@ const Monthly = () => {
       bg: "bg-orange-300",
     },
     {
-      label: "Jami aktiv ishchilar",
+      label: "O'rtacha aktiv ishchilar",
       value: monthly.average_employee_count,
       bg: "bg-lime-300",
       prefix: "ta",
