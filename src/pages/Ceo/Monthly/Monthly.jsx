@@ -16,6 +16,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -33,6 +34,17 @@ import {
   TrendingDown,
   ScrollText,
   Wallet,
+  Receipt,
+  Users,
+  DollarSign,
+  Package,
+  Target,
+  PieChart,
+  Building2,
+  UserCheck,
+  Car,
+  Wrench,
+  Scissors,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +72,13 @@ const Monthly = () => {
   );
   const [dollarDialogOpen, setDollarDialogOpen] = useState(false);
   const [newDollarRate, setNewDollarRate] = useState(dollarRate);
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [expenseOrder, setExpenseOrder] = useState(null);
+
+  const handleExpenceDialog = (order) => {
+    setExpenseOrder(order);
+    setExpenseDialogOpen(true);
+  };
 
   const updateDollarRate = async () => {
     localStorage.setItem("dollarRate", newDollarRate);
@@ -428,6 +447,7 @@ const Monthly = () => {
                             ? "bg-green-100 hover:bg-green-200"
                             : "bg-red-100 hover:bg-red-200"
                         )}
+                        onClick={() => handleExpenceDialog(order)}
                       >
                         <TableCell className="font-medium border border-slate-200 text-center">
                           {order?.order?.id}
@@ -603,6 +623,358 @@ const Monthly = () => {
           </Card>
         </div>
       </div>
+      {/* Expense Dialog */}
+      <Dialog open={expenseDialogOpen} onOpenChange={setExpenseDialogOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-6 border-b border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-2">
+                <DialogTitle className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                    <Receipt className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <span className="text-balance">
+                    {expenseOrder?.order?.id} – {expenseOrder?.order?.name}
+                  </span>
+                </DialogTitle>
+                <DialogDescription className="text-base">
+                  {expenseOrder?.submodels?.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {expenseOrder?.submodels?.map((sub, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="bg-slate-100 text-slate-700"
+                        >
+                          {sub.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-8 py-6">
+            {/* Responsible Users */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-blue-600" />
+                </div>
+                <h4 className="font-semibold text-slate-900">Mas'ul xodim</h4>
+              </div>
+              <p className="text-slate-700 font-medium">
+                {expenseOrder?.responsibleUser
+                  ?.map((u) => u.employee.name)
+                  .join(", ")}
+              </p>
+            </div>
+
+            {/* Prices */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                    <DollarSign className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div className="text-sm font-medium text-slate-500">
+                    Narxi (UZS)
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-2xl text-slate-900">
+                  {formatNumber(expenseOrder?.price_uzs)}{" "}
+                  <span className="text-lg text-slate-600">so'm</span>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div className="text-sm font-medium text-slate-500">
+                    Narxi (USD)
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-2xl text-slate-900">
+                  {Number.parseFloat(expenseOrder?.price_usd)?.toLocaleString(
+                    "ru-RU"
+                  )}{" "}
+                  <span className="text-lg text-slate-600">$</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quantity & Costs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <Package className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div className="text-sm font-medium text-slate-500">
+                    Tikilgan
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-xl text-slate-900">
+                  {formatNumber(expenseOrder?.total_quantity)}{" "}
+                  <span className="text-base text-slate-600">ta</span>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+                    <Calculator className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="text-sm font-medium text-slate-500">
+                    Topgan puli
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-xl text-slate-900">
+                  {formatNumber(expenseOrder?.total_output_cost_uzs)}{" "}
+                  <span className="text-base text-slate-600">so'm</span>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center">
+                    <Target className="w-4 h-4 text-cyan-600" />
+                  </div>
+                  <div className="text-sm font-medium text-slate-500">
+                    1 ta siga harajat
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-xl text-slate-900">
+                  {formatNumber(expenseOrder?.cost_per_unit_uzs)}{" "}
+                  <span className="text-base text-slate-600">so'm</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Profitability */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div className="text-sm font-medium text-slate-500">
+                    1 ta donadan foyda
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-xl text-slate-900">
+                  {formatNumber(expenseOrder?.profit_per_unit_uzs)}{" "}
+                  <span className="text-base text-slate-600">so'm</span>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
+                    <PieChart className="w-4 h-4 text-teal-600" />
+                  </div>
+                  <div className="text-sm font-medium text-slate-500">
+                    Rentabellik
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-xl text-slate-900">
+                  {formatNumber(expenseOrder?.profitability_percent)}{" "}
+                  <span className="text-base text-slate-600">%</span>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+                    <Calculator className="w-4 h-4 text-red-600" />
+                  </div>
+                  <div className="text-sm font-medium text-slate-500">
+                    Chok %
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-xl text-slate-900">
+                  {formatNumber(expenseOrder?.rasxod_percent_of_price)}{" "}
+                  <span className="text-base text-slate-600">%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Fixed Costs breakdown */}
+            <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-6 rounded-2xl border border-slate-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <Receipt className="w-4 h-4 text-slate-600" />
+                </div>
+                <h4 className="font-semibold text-slate-900 text-lg">
+                  Xarajatlar
+                </h4>
+                <div className="ml-auto font-semibold ">
+                  {expenseOrder?.order?.name} -{" "}
+                  {expenseOrder?.submodels?.length > 0 &&
+                    expenseOrder?.submodels?.map((submodel) => submodel.name)}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  {
+                    label: "AUP",
+                    value: expenseOrder?.costs_uzs?.allocatedAup,
+                    icon: Building2,
+                    color: "blue",
+                  },
+                  {
+                    label: "KPI",
+                    value: expenseOrder?.costs_uzs?.bonus,
+                    icon: UserCheck,
+                    color: "green",
+                  },
+                  {
+                    label: "O'zgarmas harajat",
+                    value:
+                      expenseOrder?.costs_uzs?.allocatedDailyExpenseMonthly,
+                    icon: Calculator,
+                    color: "purple",
+                  },
+                  {
+                    label: "Transport",
+                    value: expenseOrder?.costs_uzs?.allocatedTransport,
+                    icon: Car,
+                    color: "orange",
+                  },
+                  {
+                    label: "Amortizatsiya",
+                    value: expenseOrder?.costs_uzs?.amortizationExpense,
+                    icon: Wrench,
+                    color: "cyan",
+                  },
+                  {
+                    label: "Soliq",
+                    value: expenseOrder?.costs_uzs?.incomePercentageExpense,
+                    icon: Receipt,
+                    color: "red",
+                  },
+                  {
+                    label: "Tikuv uchun",
+                    value: expenseOrder?.costs_uzs?.remainder,
+                    icon: Scissors,
+                    color: "pink",
+                  },
+                  {
+                    label: "Tikuvchilar",
+                    value: expenseOrder?.costs_uzs?.tarification,
+                    icon: Users,
+                    color: "indigo",
+                  },
+                ].map(({ label, value, icon: Icon, color }, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "w-6 h-6 rounded-lg flex items-center justify-center",
+                          color === "blue" && "bg-blue-100",
+                          color === "green" && "bg-green-100",
+                          color === "purple" && "bg-purple-100",
+                          color === "orange" && "bg-orange-100",
+                          color === "cyan" && "bg-cyan-100",
+                          color === "red" && "bg-red-100",
+                          color === "pink" && "bg-pink-100",
+                          color === "indigo" && "bg-indigo-100"
+                        )}
+                      >
+                        <Icon
+                          className={cn(
+                            "w-3 h-3",
+                            color === "blue" && "text-blue-600",
+                            color === "green" && "text-green-600",
+                            color === "purple" && "text-purple-600",
+                            color === "orange" && "text-orange-600",
+                            color === "cyan" && "text-cyan-600",
+                            color === "red" && "text-red-600",
+                            color === "pink" && "text-pink-600",
+                            color === "indigo" && "text-indigo-600"
+                          )}
+                        />
+                      </div>
+                      <span className="font-medium text-slate-700">
+                        {label}
+                      </span>
+                    </div>
+                    <span className="font-mono font-semibold text-slate-900">
+                      {formatNumber(value)}{" "}
+                      <span className="text-sm text-slate-500">so'm</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total */}
+              <div className="mt-6 p-4 bg-white rounded-xl border-2 border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-slate-200 flex items-center justify-center">
+                      <Calculator className="w-3 h-3 text-slate-600" />
+                    </div>
+                    <span className="font-bold text-slate-900">
+                      Jami harajat:
+                    </span>
+                  </div>
+                  <span className="font-mono font-bold text-lg text-slate-900">
+                    {formatNumber(
+                      (expenseOrder?.costs_uzs?.allocatedAup || 0) +
+                        (expenseOrder?.costs_uzs?.bonus || 0) +
+                        (expenseOrder?.costs_uzs
+                          ?.allocatedDailyExpenseMonthly || 0) +
+                        (expenseOrder?.costs_uzs?.allocatedTransport || 0) +
+                        (expenseOrder?.costs_uzs?.amortizationExpense || 0) +
+                        (expenseOrder?.costs_uzs?.incomePercentageExpense ||
+                          0) +
+                        (expenseOrder?.costs_uzs?.remainder || 0) +
+                        (expenseOrder?.costs_uzs?.tarification || 0)
+                    )}{" "}
+                    <span className="text-base text-slate-500">so'm</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Net Profit */}
+            <div className="text-center">
+              <div
+                className={cn(
+                  "inline-flex items-center gap-3 px-8 py-6 rounded-2xl font-bold text-2xl sm:text-3xl font-mono border-2",
+                  expenseOrder?.net_profit_uzs > 0
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : "bg-red-50 text-red-700 border-red-200"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center",
+                    expenseOrder?.net_profit_uzs > 0
+                      ? "bg-green-100"
+                      : "bg-red-100"
+                  )}
+                >
+                  <TrendingUp
+                    className={cn(
+                      "w-5 h-5",
+                      expenseOrder?.net_profit_uzs > 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    )}
+                  />
+                </div>
+                <span className="text-balance">
+                  {expenseOrder?.net_profit_uzs > 0 ? "Sof foyda" : "Zarar"}:{" "}
+                  {formatNumber(expenseOrder?.net_profit_uzs)} so'm
+                </span>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
