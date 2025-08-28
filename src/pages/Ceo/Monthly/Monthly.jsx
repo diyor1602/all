@@ -259,7 +259,7 @@ const Monthly = () => {
         onclone: (clonedDoc) => {
           const clonedElement = clonedDoc.querySelector("[data-pdf-content]");
           if (clonedElement) {
-            clonedElement.style.padding = "20px";
+            clonedElement.style.padding = "0px";
           }
         },
       });
@@ -765,7 +765,7 @@ const Monthly = () => {
           <div
             ref={pdfContentRef}
             data-pdf-content
-            className="space-y-8 py-6 bg-white px-6"
+            className="space-y-8 bg-white px-6"
           >
             <div className="print:block mb-8 text-center border-b pb-4">
               <h1 className="text-2xl font-bold text-slate-900 mb-2">
