@@ -92,7 +92,7 @@ const SalaryPage = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await api.get("/salary/orders");
+        const response = await api.get("/casher/orders");
         setOrders(response.data);
       } catch (error) {
         toast({
@@ -125,7 +125,7 @@ const SalaryPage = () => {
       };
 
       // Make sure your backend endpoint generates Excel instead of PDF
-      const response = await api.post(`/salary/pdf/employees`, params, {
+      const response = await api.post(`/casher/pdf/employees`, params, {
         responseType: "blob", // still needed for binary files
       });
 
@@ -179,7 +179,7 @@ const SalaryPage = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await api.get("/salary/departments");
+      const response = await api.get("/casher/departments");
       const rawData = response.data || [];
       setRawDepartmentData(rawData);
 
@@ -225,7 +225,7 @@ const SalaryPage = () => {
 
     try {
       setLoading(true);
-      const response = await api.post("/salary/groups", {
+      const response = await api.post("/casher/groups", {
         ...filtersToUse,
         type: "simple",
         order_ids: [...selectedOrders],
@@ -457,7 +457,7 @@ const SalaryPage = () => {
     try {
       setPaymentLoading((prev) => ({ ...prev, [loadingKey]: true }));
 
-      await api.post("/salary/salaries", {
+      await api.post("/casher/salaries", {
         employee_id: employee.id,
         type,
         amount,
@@ -753,7 +753,7 @@ const SalaryPage = () => {
                         </td>
                         <td className="border border-gray-200 p-1 text-center">
                           <Link
-                            to={`/salary/salary/${employee.id}`}
+                            to={`/casher/salary/${employee.id}`}
                             target="_blank"
                             className="text-green-600 font-medium"
                           >
