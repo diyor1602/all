@@ -146,7 +146,7 @@ const Orders = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 flex-wrap">
           <div className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <div>Buyurtmalar</div>
             <Badge className="text-sm">{filteredOrders.length} ta</Badge>
