@@ -16,12 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString("ru-RU", {
+const formatDate = (dateString) =>
+  new Date(dateString).toLocaleDateString("ru-RU", {
     month: "long",
     day: "numeric",
   });
-};
 
 const formatTime = (timeString) => (timeString ? timeString.slice(0, 5) : "");
 
@@ -36,15 +35,19 @@ const Attendance = ({ userData }) => {
   const absentDays =
     userData.attendances?.filter((a) => a.status === "absent").length || 0;
 
-  const totalEarned =
-    userData?.attendance_salaries?.reduce(
-      (sum, s) => sum + parseFloat(s.amount || 0),
-      0
-    ) || 0;
-
   const getSalaryForAttendance = (id) =>
     userData?.attendance_salaries?.find((a) => a.attendance_id === id)
       ?.amount || 0;
+
+  const getHolidayData = (date) =>
+    userData?.holidays?.find(
+      (holiday) =>
+        new Date(date) >= new Date(holiday.start_date) &&
+        new Date(date) <= new Date(holiday.end_date)
+    );
+
+  const getAbsenceData = (date) =>
+    userData?.absences?.find((absence) => absence.start_date === date);
 
   const handleImageClick = (image, date, time) => {
     setSelectedImage(image);
@@ -53,10 +56,75 @@ const Attendance = ({ userData }) => {
     setImageDialogOpen(true);
   };
 
+  /** Render helpers */
+  const renderCheck = (time, image, label, date) => (
+    <div className="flex items-center gap-1">
+      <Clock className="h-4 w-4 text-gray-400" />
+      {formatTime(time.split(" ")[1])}
+      {image && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() =>
+            handleImageClick(
+              image,
+              date,
+              `${label}: ${formatTime(time.split(" ")[1])}`
+            )
+          }
+        >
+          <Images className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  );
+
+  const renderHoliday = (holiday) => (
+    <div className="flex items-center gap-2 flex-wrap">
+      {holiday.image && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            setSelectedImage(holiday.image);
+            setImageDialogOpen(true);
+          }}
+        >
+          <Images />
+        </Button>
+      )}
+      <div className="rounded-full bg-green-500 text-white px-2 py-1 w-fit text-xs">
+        Sababli
+      </div>
+      <div>{holiday.comment}</div>
+    </div>
+  );
+
+  const renderAbsence = (absence) => (
+    <div className="flex items-center gap-2 flex-wrap">
+      {absence.image && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            setSelectedImage(absence.image);
+            setImageDialogOpen(true);
+          }}
+        >
+          <Images />
+        </Button>
+      )}
+      <div className="rounded-full bg-red-500 text-white px-2 py-1 w-fit text-xs">
+        Sababsiz
+      </div>
+      <div>{absence.comment}</div>
+    </div>
+  );
+
   return (
     <>
       <div className="flex flex-col gap-6">
-        {/* Summary Section */}
+        {/* Summary */}
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 rounded-2xl bg-green-100 text-center shadow-sm">
             <p className="text-green-700 font-bold text-lg">{attendedDays}</p>
@@ -68,7 +136,7 @@ const Attendance = ({ userData }) => {
           </div>
         </div>
 
-        {/* Attendance List */}
+        {/* Attendance list */}
         {userData.attendances?.length > 0 ? (
           <div className="space-y-3">
             {userData.attendances
@@ -76,6 +144,8 @@ const Attendance = ({ userData }) => {
               .map((attendance, i) => {
                 const isPresent = attendance.status === "present";
                 const salary = getSalaryForAttendance(attendance.id);
+                const holidayData = getHolidayData(attendance.date);
+                const absenceData = getAbsenceData(attendance.date);
 
                 return (
                   <motion.div
@@ -88,13 +158,13 @@ const Attendance = ({ userData }) => {
                       delay: i * 0.05,
                     }}
                     viewport={{ once: true }}
-                    className={`flex items-center justify-between p-4 rounded-xl shadow-sm hover:shadow-md transition border-l-4 ${
+                    className={`flex items-center justify-between flex-wrap gap-2 p-4 rounded-xl shadow-sm hover:shadow-md transition border-l-4 ${
                       isPresent
                         ? "border-green-500 bg-green-50/40"
                         : "border-red-500 bg-red-50/40"
                     }`}
                   >
-                    {/* Left side */}
+                    {/* Left */}
                     <div className="flex items-center gap-3">
                       {isPresent ? (
                         <CheckCircle2 className="h-6 w-6 text-green-500" />
@@ -117,53 +187,27 @@ const Attendance = ({ userData }) => {
                       </div>
                     </div>
 
-                    {/* Right side */}
+                    {/* Right */}
                     <div className="flex items-center gap-3 text-sm text-gray-600">
-                      {attendance.check_in && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4 text-gray-400" />
-                          {formatTime(attendance.check_in.split(" ")[1])}
-                          {attendance.check_in_image && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleImageClick(
-                                  attendance.check_in_image,
-                                  attendance.date,
-                                  `Keldi: ${formatTime(
-                                    attendance.check_in.split(" ")[1]
-                                  )}`
-                                )
-                              }
-                            >
-                              <Images className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                      {attendance.check_out && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4 text-gray-400" />
-                          {formatTime(attendance.check_out.split(" ")[1])}
-                          {attendance.check_out_image && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleImageClick(
-                                  attendance.check_out_image,
-                                  attendance.date,
-                                  `Ketdi: ${formatTime(
-                                    attendance.check_out.split(" ")[1]
-                                  )}`
-                                )
-                              }
-                            >
-                              <Images className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
+                      {attendance.check_in &&
+                        renderCheck(
+                          attendance.check_in,
+                          attendance.check_in_image,
+                          "Keldi",
+                          attendance.date
+                        )}
+                      {attendance.check_out &&
+                        renderCheck(
+                          attendance.check_out,
+                          attendance.check_out_image,
+                          "Ketdi",
+                          attendance.date
+                        )}
+                      {attendance.status === "absent" && (
+                        <>
+                          {holidayData && renderHoliday(holidayData)}
+                          {absenceData && renderAbsence(absenceData)}
+                        </>
                       )}
                     </div>
                   </motion.div>
