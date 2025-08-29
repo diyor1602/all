@@ -49,7 +49,7 @@ const Card = ({
     className={`
       ${color} relative overflow-hidden cursor-pointer
       rounded-3xl p-6 text-white w-full h-[180px]
-      flex flex-col justify-between shadow-xl transition-all
+      flex flex-col justify-between transition-all
       ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor}` : ""}
     `}
   >
