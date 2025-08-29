@@ -146,7 +146,7 @@ const Attendance = ({ userData }) => {
                     initial={{ opacity: 0, scale: 0.8 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     transition={{
-                      duration: 0.25,
+                      duration: 0.15,
                       ease: "easeOut",
                       delay: i * 0.05,
                     }}
