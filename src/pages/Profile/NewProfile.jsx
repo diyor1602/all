@@ -5,7 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { motion } from "framer-motion";
-import { CalendarDays, Briefcase, Wallet, Banknote } from "lucide-react";
+import {
+  CalendarDays,
+  Briefcase,
+  Wallet,
+  Banknote,
+  Loader2,
+} from "lucide-react";
 import Advance from "./Advance";
 import Attendance from "./Attendance";
 import Salary from "./Salary";
@@ -26,19 +32,38 @@ const formatNumber = (number) => {
 };
 
 // ---------- Card ----------
-const Card = ({ title, value, color, Icon, isActive, onClick, ringColor }) => (
+const Card = ({
+  title,
+  value,
+  color,
+  Icon,
+  isActive,
+  onClick,
+  ringColor,
+  loading,
+}) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.97 }}
     onClick={onClick}
     className={`
-      ${color} rounded-2xl p-5 text-white flex flex-col items-center justify-center min-h-[140px] transition-all cursor-pointer
+      ${color} rounded-2xl p-5 text-white flex flex-col items-center justify-center min-h-[140px] transition-all cursor-pointer relative overflow-hidden
       ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor} ring-0` : ""}
     `}
   >
-    <Icon size={36} className="mb-2 opacity-90" />
-    <div className="text-lg font-semibold">{title}</div>
-    <div className="text-2xl font-bold mt-1">{value} so'm</div>
+    {loading ? (
+      <div className="animate-pulse flex flex-col items-center">
+        <div className="w-10 h-10 rounded-full bg-white/30 mb-3" />
+        <div className="h-4 w-20 bg-white/30 rounded mb-2" />
+        <div className="h-5 w-24 bg-white/30 rounded" />
+      </div>
+    ) : (
+      <>
+        <Icon size={36} className="mb-2 opacity-90" />
+        <div className="text-lg font-semibold">{title}</div>
+        <div className="text-2xl font-bold mt-1">{value} so'm</div>
+      </>
+    )}
   </motion.div>
 );
 
@@ -81,9 +106,6 @@ const NewProfile = () => {
 
     fetchData();
   }, [selectedMonth]);
-
-  const attendedDays =
-    userData.attendances?.filter((a) => a.status === "present").length || 0;
 
   const baseCards = [
     {
@@ -142,7 +164,6 @@ const NewProfile = () => {
         ]
       : baseCards;
 
-  // Map each card key to a component
   const cardComponents = {
     davomat: <Attendance userData={userData} />,
     ish: <Work userData={userData} />,
@@ -171,6 +192,7 @@ const NewProfile = () => {
             isActive={i === activeIndex}
             onClick={() => setActiveIndex(i)}
             ringColor={c.ringColor}
+            loading={loading}
           />
         ))}
       </div>
@@ -192,6 +214,7 @@ const NewProfile = () => {
                 Icon={c.Icon}
                 isActive={i === activeIndex}
                 ringColor={c.ringColor}
+                loading={loading}
               />
             </SwiperSlide>
           ))}
@@ -199,7 +222,15 @@ const NewProfile = () => {
       </div>
 
       {/* Render component of the active card */}
-      <div className="mt-5">{cardComponents[cards[activeIndex]?.key]}</div>
+      <div className="mt-5">
+        {loading ? (
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+          </div>
+        ) : (
+          cardComponents[cards[activeIndex]?.key]
+        )}
+      </div>
     </div>
   );
 };
