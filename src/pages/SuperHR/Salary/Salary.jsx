@@ -86,8 +86,8 @@ const Salary = () => {
     department_id: "",
     group_id: "",
     status: "working",
-    type: "simple",
-    payment_type: "monthly",
+    type: "",
+    payment_type: "",
     search: "",
     page: 1,
   });
@@ -97,8 +97,8 @@ const Salary = () => {
     department_id: "all",
     group_id: "all",
     status: "working",
-    type: "simple",
-    payment_type: "monthly",
+    type: "all",
+    payment_type: "all",
   });
 
   const [groups, setGroups] = useState([]);
