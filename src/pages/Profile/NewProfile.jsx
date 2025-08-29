@@ -26,11 +26,15 @@ const formatNumber = (number) => {
 };
 
 // ---------- Card ----------
-const Card = ({ title, value, color, Icon }) => (
+const Card = ({ title, value, color, Icon, isActive, onClick, ringColor }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.97 }}
-    className={`${color} rounded-2xl p-5 shadow-md text-white flex flex-col items-center justify-center min-h-[140px] transition-all`}
+    onClick={onClick}
+    className={`
+      ${color} rounded-2xl p-5 shadow-md text-white flex flex-col items-center justify-center min-h-[140px] transition-all cursor-pointer
+      ${isActive ? `ring-2 ring-offset-2 ${ringColor}` : ""}
+    `}
   >
     <Icon size={36} className="mb-2 opacity-90" />
     <div className="text-lg font-semibold">{title}</div>
@@ -93,6 +97,7 @@ const NewProfile = () => {
       ),
       color: "bg-gradient-to-r from-indigo-500 to-blue-600",
       Icon: CalendarDays,
+      ringColor: "ring-blue-400",
     },
     {
       key: "ish",
@@ -105,6 +110,7 @@ const NewProfile = () => {
       ),
       color: "bg-gradient-to-r from-emerald-500 to-green-600",
       Icon: Briefcase,
+      ringColor: "ring-green-400",
     },
     {
       key: "avans",
@@ -114,6 +120,7 @@ const NewProfile = () => {
       ),
       color: "bg-gradient-to-r from-orange-500 to-red-500",
       Icon: Wallet,
+      ringColor: "ring-orange-400",
     },
     {
       key: "maosh",
@@ -123,6 +130,7 @@ const NewProfile = () => {
       ),
       color: "bg-gradient-to-r from-purple-500 to-pink-600",
       Icon: Banknote,
+      ringColor: "ring-purple-400",
     },
   ];
 
@@ -173,6 +181,9 @@ const NewProfile = () => {
             value={c.value}
             color={c.color}
             Icon={c.Icon}
+            isActive={i === activeIndex}
+            onClick={() => setActiveIndex(i)}
+            ringColor={c.ringColor}
           />
         ))}
       </div>
@@ -192,14 +203,16 @@ const NewProfile = () => {
                 value={c.value}
                 color={c.color}
                 Icon={c.Icon}
+                isActive={i === activeIndex}
+                ringColor={c.ringColor}
               />
             </SwiperSlide>
           ))}
         </Swiper>
-
-        {/* Render component of the active card */}
-        <div>{cardComponents[cards[activeIndex]?.key]}</div>
       </div>
+
+      {/* Render component of the active card */}
+      <div className="mt-5">{cardComponents[cards[activeIndex]?.key]}</div>
     </div>
   );
 };
