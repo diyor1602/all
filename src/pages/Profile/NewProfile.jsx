@@ -43,25 +43,48 @@ const Card = ({
   loading,
 }) => (
   <motion.div
-    whileHover={{ scale: 1.05 }}
+    whileHover={{ scale: 1.04 }}
     whileTap={{ scale: 0.97 }}
     onClick={onClick}
     className={`
-      ${color} rounded-2xl p-5 text-white flex flex-col items-center justify-center min-h-[140px] transition-all cursor-pointer relative overflow-hidden
-      ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor} ring-0` : ""}
+      ${color} relative overflow-hidden cursor-pointer
+      rounded-3xl p-6 text-white w-full h-[180px]
+      flex flex-col justify-between shadow-xl transition-all
+      ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor}` : ""}
     `}
   >
+    {/* Decorative background overlay */}
+    <div className="absolute inset-0 opacity-20">
+      <div className="w-[200%] h-[200%] bg-gradient-to-br from-white/20 to-transparent rotate-45 translate-x-[-25%] translate-y-[-25%]" />
+    </div>
+
     {loading ? (
-      <div className="animate-pulse flex flex-col items-center">
-        <div className="w-10 h-10 rounded-full bg-white/30 mb-3" />
-        <div className="h-4 w-20 bg-white/30 rounded mb-2" />
-        <div className="h-5 w-24 bg-white/30 rounded" />
+      <div className="animate-pulse flex flex-col justify-between h-full">
+        <div className="flex justify-between items-center">
+          <div className="w-10 h-10 rounded-lg bg-white/30" />
+          <div className="w-14 h-8 rounded bg-white/20" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 w-28 bg-white/30 rounded" />
+          <div className="h-6 w-32 bg-white/30 rounded" />
+        </div>
       </div>
     ) : (
       <>
-        <Icon size={36} className="mb-2 opacity-90" />
-        <div className="text-lg font-semibold">{title}</div>
-        <div className="text-2xl font-bold mt-1">{value} so'm</div>
+        {/* Top row */}
+        <div className="flex justify-between items-center">
+          <Icon size={36} className="opacity-90" />
+          {/* Fake “logo” area like VISA/MasterCard */}
+          <div className="text-sm font-bold tracking-wider uppercase opacity-80">
+            VIZZANO
+          </div>
+        </div>
+
+        {/* Bottom row */}
+        <div>
+          <div className="text-sm opacity-80">{title}</div>
+          <div className="text-2xl font-bold mt-1">{value} so'm</div>
+        </div>
       </>
     )}
   </motion.div>
