@@ -182,7 +182,7 @@ const Attendance = ({ userData }) => {
 
       {/* Image Dialog */}
       <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="md:max-w-lg">
           <DialogHeader>
             <DialogTitle>{selectedDate}</DialogTitle>
             <DialogDescription>{selectedHour}</DialogDescription>
@@ -191,8 +191,8 @@ const Attendance = ({ userData }) => {
             {selectedImage && (
               <img
                 src={selectedImage}
-                alt="Attendance"
-                className="max-w-full max-h-[600px] rounded-lg shadow"
+                alt="Davomat"
+                className="max-w-full md:max-h-[600px] max-h-[60vh] rounded-lg shadow"
               />
             )}
           </div>
