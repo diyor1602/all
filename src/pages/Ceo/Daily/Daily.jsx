@@ -599,7 +599,6 @@ const Daily = () => {
       }_${new Date().toISOString().split("T")[0]}.pdf`;
       pdf.save(fileName);
     } catch (error) {
-      console.error("PDF generation error:", error);
       toast({
         variant: "destructive",
         title: "Xatolik",
