@@ -148,7 +148,7 @@ const Attendance = ({ userData }) => {
                     transition={{
                       duration: 0.15,
                       ease: "easeOut",
-                      delay: i * 0.05,
+                      delay: i * 0.025,
                     }}
                     viewport={{ once: true }}
                     className={`flex items-center justify-between flex-wrap gap-2 p-4 rounded-xl shadow-sm hover:shadow-md transition border-l-4 ${
