@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  CalendarClock,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Images,
-} from "lucide-react";
+import { CalendarClock, CheckCircle2, XCircle, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -59,7 +53,6 @@ const Attendance = ({ userData }) => {
   /** Render helpers */
   const renderCheck = (time, image, label, date) => (
     <div className="flex items-center gap-1">
-      <Clock className="h-4 w-4 text-gray-400" />
       {formatTime(time.split(" ")[1])}
       {image && (
         <Button
