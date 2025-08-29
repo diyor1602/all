@@ -37,7 +37,7 @@ import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
 import Tailor from "./pages/Tailor/Tailor";
 import Truck from "./pages/Truck";
-import NewProfile from "./pages/NewProfile";
+import NewProfile from "./pages/Profile/NewProfile";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();

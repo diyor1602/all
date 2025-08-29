@@ -6,7 +6,12 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { motion } from "framer-motion";
 import { CalendarDays, Briefcase, Wallet, Banknote } from "lucide-react";
+import Advance from "./Advance";
+import Attendance from "./Attendance";
+import Salary from "./Salary";
+import Work from "./Work";
 
+// ---------- Helpers ----------
 const formatDate = (date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -20,6 +25,7 @@ const formatNumber = (number) => {
   });
 };
 
+// ---------- Card ----------
 const Card = ({ title, value, color, Icon }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
@@ -40,6 +46,7 @@ const NewProfile = () => {
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toISOString().slice(0, 7)
   );
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -119,7 +126,6 @@ const NewProfile = () => {
     },
   ];
 
-  // Reorder if payment_type === "piece_work"
   const cards =
     userData.payment_type === "piece_work"
       ? [
@@ -127,6 +133,27 @@ const NewProfile = () => {
           ...baseCards.filter((c) => c.key !== "ish"),
         ]
       : baseCards;
+
+  // Map each card key to a component
+  const cardComponents = {
+    davomat: <Attendance attendedDays={attendedDays} />,
+    ish: <Work logs={userData.employee_tarification_logs} />,
+    avans: (
+      <Advance
+        amount={formatNumber(
+          userData.salaryPayments?.find((p) => p.type === "advance")?.amount ||
+            0
+        )}
+      />
+    ),
+    maosh: (
+      <Salary
+        amount={formatNumber(
+          userData.salaryPayments?.find((p) => p.type === "salary")?.amount || 0
+        )}
+      />
+    ),
+  };
 
   return (
     <div className="w-full">
@@ -152,7 +179,12 @@ const NewProfile = () => {
 
       {/* Mobile slider */}
       <div className="md:hidden mt-5">
-        <Swiper spaceBetween={16} slidesPerView={1} loop={true}>
+        <Swiper
+          spaceBetween={16}
+          slidesPerView={1}
+          loop={true}
+          onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
+        >
           {cards.map((c, i) => (
             <SwiperSlide key={i}>
               <Card
@@ -164,6 +196,9 @@ const NewProfile = () => {
             </SwiperSlide>
           ))}
         </Swiper>
+
+        {/* Render component of the active card */}
+        <div>{cardComponents[cards[activeIndex]?.key]}</div>
       </div>
     </div>
   );
