@@ -32,8 +32,8 @@ const Card = ({ title, value, color, Icon, isActive, onClick, ringColor }) => (
     whileTap={{ scale: 0.97 }}
     onClick={onClick}
     className={`
-      ${color} rounded-2xl p-5 shadow-md text-white flex flex-col items-center justify-center min-h-[140px] transition-all cursor-pointer
-      ${isActive ? `ring-2 ring-offset-2 ${ringColor}` : ""}
+      ${color} rounded-2xl p-5 text-white flex flex-col items-center justify-center min-h-[140px] transition-all cursor-pointer
+      ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor} ring-0` : ""}
     `}
   >
     <Icon size={36} className="mb-2 opacity-90" />
@@ -144,23 +144,10 @@ const NewProfile = () => {
 
   // Map each card key to a component
   const cardComponents = {
-    davomat: <Attendance attendedDays={attendedDays} />,
-    ish: <Work logs={userData.employee_tarification_logs} />,
-    avans: (
-      <Advance
-        amount={formatNumber(
-          userData.salaryPayments?.find((p) => p.type === "advance")?.amount ||
-            0
-        )}
-      />
-    ),
-    maosh: (
-      <Salary
-        amount={formatNumber(
-          userData.salaryPayments?.find((p) => p.type === "salary")?.amount || 0
-        )}
-      />
-    ),
+    davomat: <Attendance userData={userData} />,
+    ish: <Work userData={userData} />,
+    avans: <Advance userData={userData} />,
+    maosh: <Salary userData={userData} />,
   };
 
   return (
