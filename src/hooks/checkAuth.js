@@ -7,6 +7,7 @@ const allowPaths = [
   "tailorRating",
   "cuttingKpi",
   "truck",
+  "newProfile",
 ];
 
 const isTokenValid = (tok) => {
