@@ -65,6 +65,8 @@ const useDebounce = (value, delay) => {
   return debouncedValue;
 };
 
+const LOCAL_STORAGE_KEY = "salary_filters";
+
 const Salary = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -82,7 +84,9 @@ const Salary = () => {
     },
   });
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
+
+  // Load filters from localStorage or use defaults
+  const savedFilters = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {
     department_id: "",
     group_id: "",
     status: "working",
@@ -90,22 +94,24 @@ const Salary = () => {
     payment_type: "",
     search: "",
     page: 1,
-  });
+  };
 
-  // SelectItem qiymatlari uchun useState
+  const [filters, setFilters] = useState(savedFilters);
+
+  // SelectItem values
   const [selectValues, setSelectValues] = useState({
-    department_id: "all",
-    group_id: "all",
-    status: "working",
-    type: "all",
-    payment_type: "all",
+    department_id: savedFilters.department_id || "all",
+    group_id: savedFilters.group_id || "all",
+    status: savedFilters.status || "working",
+    type: savedFilters.type || "all",
+    payment_type: savedFilters.payment_type || "all",
   });
 
   const [groups, setGroups] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loadingEdit, setLoadingEdit] = useState(false);
-  const [pageNumber, setPageNumber] = useState(1);
+  const [pageNumber, setPageNumber] = useState(savedFilters.page || 1);
 
   // Setup debounced values
   const debouncedSearch = useDebounce(filters.search, 500);
@@ -114,6 +120,11 @@ const Salary = () => {
   const debouncedStatus = useDebounce(filters.status, 300);
   const debouncedType = useDebounce(filters.type, 300);
   const debouncedPaymentType = useDebounce(filters.payment_type, 300);
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
+  }, [filters]);
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -135,7 +146,6 @@ const Salary = () => {
     try {
       const params = new URLSearchParams();
 
-      // Add all non-empty filters to params
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== "") {
           params.append(key, value);
@@ -160,7 +170,6 @@ const Salary = () => {
     const department_id = value === "all" ? "" : value;
     setFilters((prev) => ({ ...prev, department_id, group_id: "", page: 1 }));
 
-    // Update groups based on selected department
     if (value && value !== "all") {
       const selectedDepartment = departments
         .flatMap((main) => main.departments)
@@ -170,7 +179,6 @@ const Salary = () => {
       setGroups([]);
     }
 
-    // Update select value
     setSelectValues((prev) => ({
       ...prev,
       department_id: value,
@@ -178,23 +186,19 @@ const Salary = () => {
     }));
   };
 
-  // Handle filter changes
   const handleFilterChange = (name, value) => {
     const newValue = value === "all" ? "" : value;
     setFilters((prev) => ({ ...prev, [name]: newValue, page: 1 }));
-
-    // Update select value
     setSelectValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle pagination
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
+    setPageNumber(page);
   };
 
-  // Reset filters
   const resetFilters = () => {
-    setFilters({
+    const defaultFilters = {
       department_id: "",
       group_id: "",
       status: "",
@@ -202,19 +206,21 @@ const Salary = () => {
       payment_type: "",
       search: "",
       page: 1,
-    });
-    setSelectValues({
+    };
+    const defaultSelects = {
       department_id: "all",
       group_id: "all",
       status: "all",
       type: "all",
       payment_type: "all",
-    });
+    };
+    setFilters(defaultFilters);
+    setSelectValues(defaultSelects);
     setGroups([]);
+    localStorage.removeItem(LOCAL_STORAGE_KEY); // clear storage
     fetchEmployees();
   };
 
-  // Get status badge color
   const getStatusBadge = (status) => {
     switch (status) {
       case "working":
