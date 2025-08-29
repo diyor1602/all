@@ -18,7 +18,6 @@ import { motion } from "framer-motion";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
-    year: "numeric",
     month: "long",
     day: "numeric",
   });
