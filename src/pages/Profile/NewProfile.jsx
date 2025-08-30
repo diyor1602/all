@@ -12,7 +12,6 @@ import {
   Banknote,
   Loader2,
 } from "lucide-react";
-import Advance from "./Advance";
 import Attendance from "./Attendance";
 import Salary from "./Salary";
 import Work from "./Work";
@@ -217,8 +216,8 @@ const NewProfile = () => {
   const cardComponents = {
     davomat: <Attendance userData={userData} />,
     ish: <Work userData={userData} />,
-    avans: <Advance userData={userData} />,
-    maosh: <Salary userData={userData} />,
+    avans: <Salary userData={userData} type="advance" />,
+    maosh: <Salary userData={userData} type="salary" />,
   };
 
   return (
