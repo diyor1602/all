@@ -41,11 +41,22 @@ const Card = ({
   onClick,
   ringColor,
   loading,
+  bgImage,
 }) => (
   <motion.div
     whileHover={{ scale: 1.04 }}
     whileTap={{ scale: 0.97 }}
     onClick={onClick}
+    style={
+      bgImage
+        ? {
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }
+        : {}
+    }
     className={`
       ${color} relative overflow-hidden cursor-pointer
       rounded-3xl p-6 text-white w-full
@@ -53,41 +64,48 @@ const Card = ({
       ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor}` : ""}
     `}
   >
-    {loading ? (
-      <div className="animate-pulse flex flex-col justify-between h-full">
-        <div className="flex justify-between items-center">
-          <div className="w-10 h-10 rounded-lg bg-white/30" />
-          <div className="w-14 h-8 rounded bg-white/20" />
-        </div>
-        <div className="space-y-2 mt-4">
-          <div className="h-4 w-28 bg-white/30 rounded" />
-          <div className="h-6 w-32 bg-white/30 rounded" />
-          <div className="h-6 w-full bg-white/30 rounded" />
-        </div>
-      </div>
-    ) : (
-      <>
-        {/* Top row */}
-        <div className="flex justify-between items-center">
-          <Icon size={36} className="opacity-90" />
-          {/* Fake “logo” area like VISA/MasterCard */}
-          <div className="text-sm font-bold tracking-wider uppercase">
-            VIZZANO
-          </div>
-        </div>
-
-        {/* Bottom row */}
-        <div className="mt-6">
-          <div className="text-sm uppercase">{title}</div>
-          <div className="text-2xl font-bold mt-1">
-            {value} <span className="text-xl font-normal">so'm</span>
-          </div>
-          <div className="text-sm mt-2 uppercase truncate">
-            {localStorage.getItem("name")}
-          </div>
-        </div>
-      </>
+    {/* 🔹 Overlay only if bgImage exists */}
+    {bgImage && (
+      <div className="absolute inset-0 bg-black/40 pointer-events-none" />
     )}
+
+    {/* Content above overlay */}
+    <div className="relative z-10">
+      {loading ? (
+        <div className="animate-pulse flex flex-col justify-between h-full">
+          <div className="flex justify-between items-center">
+            <div className="w-10 h-10 rounded-lg bg-white/30" />
+            <div className="w-14 h-8 rounded bg-white/20" />
+          </div>
+          <div className="space-y-2 mt-4">
+            <div className="h-4 w-28 bg-white/30 rounded" />
+            <div className="h-6 w-32 bg-white/30 rounded" />
+            <div className="h-6 w-full bg-white/30 rounded" />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Top row */}
+          <div className="flex justify-between items-center">
+            <Icon size={36} className="opacity-90" />
+            <div className="text-sm font-bold tracking-wider uppercase">
+              VIZZANO
+            </div>
+          </div>
+
+          {/* Bottom row */}
+          <div className="mt-6">
+            <div className="text-sm uppercase">{title}</div>
+            <div className="text-2xl font-bold mt-1">
+              {value} <span className="text-xl font-normal">so'm</span>
+            </div>
+            <div className="text-sm mt-2 uppercase truncate">
+              {localStorage.getItem("name")}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   </motion.div>
 );
 
@@ -144,6 +162,8 @@ const NewProfile = () => {
       color: "bg-gradient-to-r from-indigo-500 to-blue-600",
       Icon: CalendarDays,
       ringColor: "ring-blue-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200",
     },
     {
       key: "ish",
@@ -157,6 +177,8 @@ const NewProfile = () => {
       color: "bg-gradient-to-r from-emerald-500 to-green-600",
       Icon: Briefcase,
       ringColor: "ring-green-400",
+      bgImage:
+        "https://img.freepik.com/free-photo/lone-tree_181624-46361.jpg?semt=ais_hybrid&w=740&q=80",
     },
     {
       key: "avans",
@@ -167,6 +189,8 @@ const NewProfile = () => {
       color: "bg-gradient-to-r from-orange-500 to-red-500",
       Icon: Wallet,
       ringColor: "ring-orange-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1528164344705-47542687000d?q=80&w=1192&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
     {
       key: "maosh",
@@ -177,6 +201,8 @@ const NewProfile = () => {
       color: "bg-gradient-to-r from-purple-500 to-pink-600",
       Icon: Banknote,
       ringColor: "ring-purple-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1618108345761-031721b1ca3c?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
   ];
 
@@ -217,6 +243,7 @@ const NewProfile = () => {
             onClick={() => setActiveIndex(i)}
             ringColor={c.ringColor}
             loading={loading}
+            bgImage={c.bgImage}
           />
         ))}
       </div>
@@ -239,6 +266,7 @@ const NewProfile = () => {
                 isActive={i === activeIndex}
                 ringColor={c.ringColor}
                 loading={loading}
+                bgImage={c.bgImage}
               />
             </SwiperSlide>
           ))}
