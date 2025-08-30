@@ -7,7 +7,7 @@ const Salary = ({ userData, type }) => {
 
   return (
     <div className={`mt-4 p-4 rounded-xl ${colors[type]} flex flex-col gap-3`}>
-      {salaryPayment.amount > 0 ? (
+      {salaryPayment?.amount > 0 ? (
         <div className="flex items-center gap-2 justify-between flex-wrap">
           <p
             className={`font-medium text-${

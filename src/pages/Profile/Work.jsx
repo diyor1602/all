@@ -1,5 +1,3 @@
-import React from "react";
-
 const Work = ({ userData }) => {
   const logs = userData.employee_tarification_logs;
   return (

@@ -169,7 +169,7 @@ const NewProfile = () => {
       title: "Ish",
       value: formatNumber(
         userData.employee_tarification_logs?.reduce(
-          (sum, salary) => sum + Number.parseFloat(salary.amount || 0),
+          (sum, salary) => sum + Number.parseFloat(salary.amount_earned || 0),
           0
         )
       ),
