@@ -163,7 +163,7 @@ const NewProfile = () => {
       Icon: CalendarDays,
       ringColor: "ring-blue-400",
       bgImage:
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200",
+        "https://images.unsplash.com/photo-1528164344705-47542687000d?q=80&w=1192&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
     {
       key: "ish",
@@ -178,7 +178,7 @@ const NewProfile = () => {
       Icon: Briefcase,
       ringColor: "ring-green-400",
       bgImage:
-        "https://img.freepik.com/free-photo/lone-tree_181624-46361.jpg?semt=ais_hybrid&w=740&q=80",
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200",
     },
     {
       key: "avans",
