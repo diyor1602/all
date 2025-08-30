@@ -48,7 +48,7 @@ const Card = ({
     onClick={onClick}
     className={`
       ${color} relative overflow-hidden cursor-pointer
-      rounded-3xl p-6 text-white w-full h-[180px]
+      rounded-3xl p-6 text-white w-full
       flex flex-col justify-between transition-all
       ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor}` : ""}
     `}
@@ -64,9 +64,10 @@ const Card = ({
           <div className="w-10 h-10 rounded-lg bg-white/30" />
           <div className="w-14 h-8 rounded bg-white/20" />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 mt-4">
           <div className="h-4 w-28 bg-white/30 rounded" />
           <div className="h-6 w-32 bg-white/30 rounded" />
+          <div className="h-6 w-full bg-white/30 rounded" />
         </div>
       </div>
     ) : (
@@ -75,15 +76,20 @@ const Card = ({
         <div className="flex justify-between items-center">
           <Icon size={36} className="opacity-90" />
           {/* Fake “logo” area like VISA/MasterCard */}
-          <div className="text-sm font-bold tracking-wider uppercase opacity-80">
+          <div className="text-sm font-bold tracking-wider uppercase">
             VIZZANO
           </div>
         </div>
 
         {/* Bottom row */}
-        <div>
-          <div className="text-sm opacity-80">{title}</div>
-          <div className="text-2xl font-bold mt-1">{value} so'm</div>
+        <div className="mt-6">
+          <div className="text-sm uppercase">{title}</div>
+          <div className="text-2xl font-bold mt-1">
+            {value} <span className="text-xl font-normal">so'm</span>
+          </div>
+          <div className="text-sm mt-2 uppercase truncate">
+            {localStorage.getItem("name")}
+          </div>
         </div>
       </>
     )}
