@@ -177,7 +177,7 @@ const NewProfile = () => {
       Icon: Briefcase,
       ringColor: "ring-green-400",
       bgImage:
-        "https://images.unsplash.com/photo-1464802686167-b939a6910659?q=80&w=1150&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1569411378499-565391f5ffe0?q=80&w=1070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
     {
       key: "avans",
