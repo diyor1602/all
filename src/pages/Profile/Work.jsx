@@ -1,6 +1,14 @@
-import { ClipboardList, ChevronDown, ChevronUp, Package } from "lucide-react";
+import {
+  ClipboardList,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+} from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const formatNumber = (num) =>
+  num.toLocaleString("ru-RU", { maximumFractionDigits: 0 });
 
 const Work = ({ userData }) => {
   const logs = userData.employee_tarification_logs;
@@ -13,7 +21,7 @@ const Work = ({ userData }) => {
   ];
 
   return (
-    <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-green-50 to-green-100">
+    <div className="mt-4">
       {/* Tabs */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         {tabs.map((tab) => {
@@ -45,7 +53,7 @@ const Work = ({ userData }) => {
       {/* Content */}
       {activeTab === "model" &&
         (logs?.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-5">
             {(() => {
               const groupedByModel = {};
 
@@ -62,7 +70,7 @@ const Work = ({ userData }) => {
               });
 
               return (
-                <div className="space-y-3">
+                <div className="space-y-5">
                   {Object.entries(groupedByModel).map(
                     ([modelId, group], index) => {
                       const isOpen = expandedModel === modelId;
@@ -103,7 +111,7 @@ const Work = ({ userData }) => {
                       return (
                         <div
                           key={modelId}
-                          className="rounded-xl overflow-hidden"
+                          className="rounded-xl overflow-hidden shadow-sm"
                         >
                           {/* Model Header */}
                           <div
@@ -112,14 +120,12 @@ const Work = ({ userData }) => {
                             }
                             className={`cursor-pointer p-4 bg-gradient-to-r ${colorClass} flex justify-between items-center`}
                           >
-                            <div className="flex items-center gap-3">
-                              <span className="font-semibold text-gray-800">
-                                {group.modelName}
-                              </span>
+                            <div className="font-semibold text-gray-800">
+                              {group.modelName}
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-green-800 text-sm">
-                                {totalSumForModel.toLocaleString("ru-RU")} so'm
+                                {formatNumber(totalSumForModel)} so'm
                               </span>
                               {isOpen ? (
                                 <ChevronUp className="h-5 w-5 text-gray-600" />
@@ -130,6 +136,7 @@ const Work = ({ userData }) => {
                           </div>
 
                           {/* Expanded Works */}
+                          {/* Expanded Works */}
                           <AnimatePresence>
                             {isOpen && (
                               <motion.div
@@ -137,30 +144,56 @@ const Work = ({ userData }) => {
                                 animate={{ height: "auto", opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
                                 transition={{ duration: 0.3 }}
-                                className="bg-white px-4 pb-4 space-y-2"
+                                className="px-4 pb-4 pt-3 space-y-3"
                               >
-                                {Object.entries(workMap).map(([code, data]) => (
-                                  <div
-                                    key={code}
-                                    className="p-3 border rounded-lg flex justify-between items-start bg-gray-50"
-                                  >
-                                    <div className="text-sm font-medium text-gray-700">
-                                      {code} — {data.name}
-                                    </div>
-                                    <div className="text-right text-xs">
-                                      <div>
-                                        <span className="font-semibold">
-                                          {data.totalQty}
-                                        </span>{" "}
-                                        ta
+                                {Object.entries(workMap).map(
+                                  ([code, data], idx) => {
+                                    const cardColors = [
+                                      "from-pink-100 to-pink-50",
+                                      "from-blue-100 to-blue-50",
+                                      "from-green-100 to-green-50",
+                                      "from-yellow-100 to-yellow-50",
+                                      "from-indigo-100 to-indigo-50",
+                                      "from-purple-100 to-purple-50",
+                                    ];
+                                    const bgClass =
+                                      cardColors[idx % cardColors.length];
+
+                                    return (
+                                      <div
+                                        key={code}
+                                        className={`p-4 rounded-xl shadow-md bg-gradient-to-br ${bgClass} 
+                        flex flex-col gap-3 transition-transform hover:scale-[1.02]`}
+                                      >
+                                        {/* Code + Work Name */}
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <div className="font-bold text-gray-800 text-sm">
+                                              {code}
+                                            </div>
+                                            <div className="text-gray-600 text-xs">
+                                              {data.name}
+                                            </div>
+                                          </div>
+                                          <CheckCircle2 className="w-5 h-5 text-green-600 opacity-70" />
+                                        </div>
+
+                                        {/* Quantity + Sum */}
+                                        <div className="flex justify-between items-center">
+                                          <div className="text-gray-700 text-sm">
+                                            <span className="font-semibold text-base">
+                                              {data.totalQty}
+                                            </span>{" "}
+                                            ta
+                                          </div>
+                                          <div className="bg-green-600 text-white text-xs px-3 py-1 rounded-full font-semibold shadow-sm">
+                                            {formatNumber(data.totalSum)} so'm
+                                          </div>
+                                        </div>
                                       </div>
-                                      <div className="text-green-700 font-semibold">
-                                        {data.totalSum.toLocaleString("ru-RU")}{" "}
-                                        so'm
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
+                                    );
+                                  }
+                                )}
                               </motion.div>
                             )}
                           </AnimatePresence>
