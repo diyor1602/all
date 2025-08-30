@@ -53,11 +53,6 @@ const Card = ({
       ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor}` : ""}
     `}
   >
-    {/* Decorative background overlay */}
-    <div className="absolute inset-0 opacity-20">
-      <div className="w-[200%] h-[200%] bg-gradient-to-br from-white/20 to-transparent rotate-45 translate-x-[-25%] translate-y-[-25%]" />
-    </div>
-
     {loading ? (
       <div className="animate-pulse flex flex-col justify-between h-full">
         <div className="flex justify-between items-center">
