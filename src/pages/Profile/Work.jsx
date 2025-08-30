@@ -1,8 +1,11 @@
+import { ClipboardList, ChevronDown, ChevronUp, Package } from "lucide-react";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Work = ({ userData }) => {
   const logs = userData.employee_tarification_logs;
-  const [activeTab, setActiveTab] = useState("model"); // "model" or "day"
+  const [activeTab, setActiveTab] = useState("model");
+  const [expandedModel, setExpandedModel] = useState(null);
 
   const tabs = [
     { id: "model", title: "Model", subtitle: "bo'yicha" },
@@ -10,30 +13,25 @@ const Work = ({ userData }) => {
   ];
 
   return (
-    <div className="mt-4 p-4 rounded-xl bg-green-50">
-      <div className="grid grid-cols-2 gap-4 md:gap-6 w-full">
+    <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-green-50 to-green-100">
+      {/* Tabs */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <div
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`p-4 rounded-2xl text-center shadow-md cursor-pointer transition-all duration-300 
+              className={`p-3 rounded-xl text-center shadow-sm cursor-pointer transition-all duration-300 
                 ${
                   isActive
-                    ? "bg-green-700 text-white scale-105 shadow-lg"
+                    ? "bg-green-600 text-white scale-[1.03] shadow-lg"
                     : "bg-white text-gray-700 hover:bg-gray-100"
                 }`}
             >
+              <p className="font-bold text-base">{tab.title}</p>
               <p
-                className={`font-bold text-lg ${
-                  isActive ? "text-white" : "text-gray-800"
-                }`}
-              >
-                {tab.title}
-              </p>
-              <p
-                className={`text-sm ${
+                className={`text-xs ${
                   isActive ? "text-green-100" : "text-gray-500"
                 }`}
               >
@@ -43,6 +41,145 @@ const Work = ({ userData }) => {
           );
         })}
       </div>
+
+      {/* Content */}
+      {activeTab === "model" &&
+        (logs?.length > 0 ? (
+          <div className="space-y-3">
+            {(() => {
+              const groupedByModel = {};
+
+              logs?.forEach((log) => {
+                const modelId = log.model?.id || "unknown";
+                const modelName = log.model?.name || "Noma'lum model";
+                if (!groupedByModel[modelId]) {
+                  groupedByModel[modelId] = {
+                    modelName,
+                    logs: [],
+                  };
+                }
+                groupedByModel[modelId].logs.push(log);
+              });
+
+              return (
+                <div className="space-y-3">
+                  {Object.entries(groupedByModel).map(
+                    ([modelId, group], index) => {
+                      const isOpen = expandedModel === modelId;
+
+                      const workMap = {};
+                      group.logs.forEach((log) => {
+                        const workCode = log.tarification?.code || "NOMA'LUM";
+                        const workName =
+                          log.tarification?.name || "Noma'lum ish";
+                        if (!workMap[workCode]) {
+                          workMap[workCode] = {
+                            name: workName,
+                            totalQty: 0,
+                            totalSum: 0,
+                          };
+                        }
+                        workMap[workCode].totalQty += log.quantity;
+                        workMap[workCode].totalSum += parseFloat(
+                          log.amount_earned || 0
+                        );
+                      });
+
+                      const totalSumForModel = group.logs.reduce(
+                        (sum, log) => sum + parseFloat(log.amount_earned || 0),
+                        0
+                      );
+
+                      const colors = [
+                        "from-blue-100 to-blue-200",
+                        "from-green-100 to-green-200",
+                        "from-yellow-100 to-yellow-200",
+                        "from-purple-100 to-purple-200",
+                        "from-pink-100 to-pink-200",
+                        "from-indigo-100 to-indigo-200",
+                      ];
+                      const colorClass = colors[index % colors.length];
+
+                      return (
+                        <div
+                          key={modelId}
+                          className="rounded-xl overflow-hidden"
+                        >
+                          {/* Model Header */}
+                          <div
+                            onClick={() =>
+                              setExpandedModel(isOpen ? null : modelId)
+                            }
+                            className={`cursor-pointer p-4 bg-gradient-to-r ${colorClass} flex justify-between items-center`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="font-semibold text-gray-800">
+                                {group.modelName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-green-800 text-sm">
+                                {totalSumForModel.toLocaleString("ru-RU")} so'm
+                              </span>
+                              {isOpen ? (
+                                <ChevronUp className="h-5 w-5 text-gray-600" />
+                              ) : (
+                                <ChevronDown className="h-5 w-5 text-gray-600" />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Expanded Works */}
+                          <AnimatePresence>
+                            {isOpen && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="bg-white px-4 pb-4 space-y-2"
+                              >
+                                {Object.entries(workMap).map(([code, data]) => (
+                                  <div
+                                    key={code}
+                                    className="p-3 border rounded-lg flex justify-between items-start bg-gray-50"
+                                  >
+                                    <div className="text-sm font-medium text-gray-700">
+                                      {code} — {data.name}
+                                    </div>
+                                    <div className="text-right text-xs">
+                                      <div>
+                                        <span className="font-semibold">
+                                          {data.totalQty}
+                                        </span>{" "}
+                                        ta
+                                      </div>
+                                      <div className="text-green-700 font-semibold">
+                                        {data.totalSum.toLocaleString("ru-RU")}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">
+              Tanlangan sana oralig'ida model ma'lumotlari topilmadi
+            </p>
+          </div>
+        ))}
     </div>
   );
 };
