@@ -136,7 +136,6 @@ const Work = ({ userData }) => {
                           </div>
 
                           {/* Expanded Works */}
-                          {/* Expanded Works */}
                           <AnimatePresence>
                             {isOpen && (
                               <motion.div
@@ -146,8 +145,13 @@ const Work = ({ userData }) => {
                                 transition={{ duration: 0.3 }}
                                 className="px-4 pb-4 pt-3 space-y-3"
                               >
-                                {Object.entries(workMap).map(
-                                  ([code, data], idx) => {
+                                {Object.entries(workMap)
+                                  .sort((a, b) => {
+                                    const aCode = a[0];
+                                    const bCode = b[0];
+                                    return aCode.localeCompare(bCode);
+                                  })
+                                  .map(([code, data], idx) => {
                                     const cardColors = [
                                       "from-pink-100 to-pink-50",
                                       "from-blue-100 to-blue-50",
@@ -192,8 +196,7 @@ const Work = ({ userData }) => {
                                         </div>
                                       </div>
                                     );
-                                  }
-                                )}
+                                  })}
                               </motion.div>
                             )}
                           </AnimatePresence>
