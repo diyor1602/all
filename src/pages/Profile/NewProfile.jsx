@@ -117,7 +117,17 @@ const NewProfile = () => {
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toISOString().slice(0, 7)
   );
-  const [activeIndex, setActiveIndex] = useState(0);
+
+  // ✅ Load activeIndex from localStorage
+  const [activeIndex, setActiveIndex] = useState(() => {
+    const saved = localStorage.getItem("activeIndex");
+    return saved ? Number(saved) : 0;
+  });
+
+  // ✅ Save activeIndex to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("activeIndex", activeIndex);
+  }, [activeIndex]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -163,7 +173,7 @@ const NewProfile = () => {
       Icon: CalendarDays,
       ringColor: "ring-blue-400",
       bgImage:
-        "https://images.unsplash.com/photo-1528164344705-47542687000d?q=80&w=1192&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1528164344705-47542687000d?q=80&w=1192&auto=format&fit=crop",
     },
     {
       key: "ish",
@@ -178,7 +188,7 @@ const NewProfile = () => {
       Icon: Briefcase,
       ringColor: "ring-green-400",
       bgImage:
-        "https://images.unsplash.com/photo-1569411378499-565391f5ffe0?q=80&w=1070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1569411378499-565391f5ffe0?q=80&w=1070&auto=format&fit=crop",
     },
     {
       key: "avans",
@@ -190,7 +200,7 @@ const NewProfile = () => {
       Icon: Wallet,
       ringColor: "ring-orange-400",
       bgImage:
-        "https://images.unsplash.com/photo-1523199455310-87b16c0eed11?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1523199455310-87b16c0eed11?q=80&w=1170&auto=format&fit=crop",
     },
     {
       key: "maosh",
@@ -202,7 +212,7 @@ const NewProfile = () => {
       Icon: Banknote,
       ringColor: "ring-blue-400",
       bgImage:
-        "https://images.unsplash.com/photo-1618108345761-031721b1ca3c?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1618108345761-031721b1ca3c?q=80&w=1170&auto=format&fit=crop",
     },
     {
       key: "kpi",
@@ -212,7 +222,7 @@ const NewProfile = () => {
       Icon: Banknote,
       ringColor: "ring-gray-400",
       bgImage:
-        "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=80&w=1170&auto=format&fit=crop",
     },
   ];
 
@@ -265,6 +275,7 @@ const NewProfile = () => {
           spaceBetween={16}
           slidesPerView={1}
           loop={true}
+          initialSlide={activeIndex} // ✅ Restore last active slide
           onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
         >
           {cards.map((c, i) => (
