@@ -20,7 +20,7 @@ const Work = ({ userData }) => {
 
   const tabs = [
     { id: "model", title: "Model", subtitle: "bo'yicha" },
-    { id: "day", title: "Kuni", subtitle: "bo'yicha" },
+    { id: "day", title: "Kun", subtitle: "bo'yicha" },
   ];
 
   return (
