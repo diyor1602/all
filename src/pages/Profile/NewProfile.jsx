@@ -15,6 +15,7 @@ import {
 import Attendance from "./Attendance";
 import Salary from "./Salary";
 import Work from "./Work";
+import Kpi from "./Kpi";
 
 // ---------- Helpers ----------
 const formatDate = (date) => {
@@ -203,6 +204,16 @@ const NewProfile = () => {
       bgImage:
         "https://images.unsplash.com/photo-1618108345761-031721b1ca3c?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
+    {
+      key: "kpi",
+      title: "KPI",
+      value: formatNumber(userData.bonus || 0),
+      color: "bg-gradient-to-r from-purple-500 to-pink-600",
+      Icon: Banknote,
+      ringColor: "ring-purple-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1670884307164-a652a34f23da?q=80&w=1528&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    },
   ];
 
   const cards =
@@ -218,6 +229,7 @@ const NewProfile = () => {
     ish: <Work userData={userData} />,
     avans: <Salary userData={userData} type="advance" />,
     maosh: <Salary userData={userData} type="salary" />,
+    kpi: <Kpi userData={userData} />,
   };
 
   return (
@@ -230,7 +242,7 @@ const NewProfile = () => {
       />
 
       {/* Desktop grid */}
-      <div className="hidden md:grid grid-cols-4 gap-4 mt-5">
+      <div className="hidden md:grid grid-cols-3 gap-4 mt-5">
         {cards.map((c, i) => (
           <Card
             key={i}
