@@ -90,7 +90,7 @@ const Kpi = ({ userData }) => {
           <h3 className="text-base mb-5 flex items-center gap-2 text-gray-500">
             {formatNumber(mockPrice * mockDone)} so'm
           </h3>
-          <div className="w-full h-64 flex items-center justify-center">
+          <div className="w-full h-48 md:h-64 flex items-center justify-center">
             <ResponsiveContainer>
               <RadialBarChart
                 innerRadius="70%"
