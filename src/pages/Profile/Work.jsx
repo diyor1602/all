@@ -71,8 +71,13 @@ const Work = ({ userData }) => {
 
               return (
                 <div className="space-y-5">
-                  {Object.entries(groupedByModel).map(
-                    ([modelId, group], index) => {
+                  {Object.entries(groupedByModel)
+                    .sort((a, b) => {
+                      const aName = a[1].modelName.toLowerCase();
+                      const bName = b[1].modelName.toLowerCase();
+                      return aName.localeCompare(bName);
+                    })
+                    .map(([modelId, group], index) => {
                       const isOpen = expandedModel === modelId;
 
                       const workMap = {};
@@ -202,8 +207,7 @@ const Work = ({ userData }) => {
                           </AnimatePresence>
                         </div>
                       );
-                    }
-                  )}
+                    })}
                 </div>
               );
             })()}
