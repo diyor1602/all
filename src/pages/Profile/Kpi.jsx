@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Wallet,
   Clock,
-  Percent,
 } from "lucide-react";
 import {
   RadialBarChart,
@@ -40,18 +39,17 @@ const StatItem = ({ icon: Icon, label, value, color }) => (
 const Kpi = ({ userData }) => {
   const progress = ((mockDone / mockPlan) * 100).toFixed(2);
 
-  const chartData = [
-    { name: "Progress", value: progress, fill: "#4ade80" }, // soft green
-  ];
+  const chartData = [{ name: "Progress", value: progress, fill: "#4ade80" }]; // soft green
 
   return (
     <div className="bg-gradient-to-br from-white to-gray-100 rounded-3xl shadow-xl p-8 text-gray-900 font-[SF Pro Display]">
       {/* Title like iOS */}
       <h2 className="text-3xl font-bold tracking-tight mb-8">KPI Hisoboti</h2>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        {/* Left side stats */}
-        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {/* Responsive layout: mobile = column-reverse, desktop = row */}
+      <div className="flex flex-col-reverse md:flex-row gap-8">
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1">
           <StatItem
             icon={Target}
             label="Belgilangan reja"
@@ -90,10 +88,10 @@ const Kpi = ({ userData }) => {
           />
         </div>
 
-        {/* Right side radial chart */}
-        <div className="flex flex-col items-center justify-center bg-white backdrop-blur-md rounded-3xl p-8 shadow-md border border-gray-100">
+        {/* Radial chart */}
+        <div className="flex flex-col items-center justify-center bg-white backdrop-blur-md rounded-3xl p-8 shadow-md border border-gray-100 w-full md:w-1/3">
           <h3 className="text-base mb-5 flex items-center gap-2 text-gray-500">
-            <Percent size={16} /> Foiz bajarilgan
+            {formatNumber(mockPrice * mockDone)} so'm
           </h3>
           <div className="w-full h-64 flex items-center justify-center">
             <ResponsiveContainer>
@@ -111,7 +109,7 @@ const Kpi = ({ userData }) => {
                   tick={false}
                 />
                 <RadialBar
-                  background={{ fill: "#f3f4f6" }} // light gray background
+                  background={{ fill: "#f3f4f6" }}
                   dataKey="value"
                   cornerRadius={30}
                 />
