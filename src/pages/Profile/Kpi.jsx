@@ -44,7 +44,7 @@ const Kpi = ({ userData }) => {
   return (
     <div className="bg-gradient-to-br from-white to-gray-100 rounded-3xl shadow-xl p-8 text-gray-900 font-[SF Pro Display]">
       {/* Title like iOS */}
-      <h2 className="text-3xl font-bold tracking-tight mb-8">KPI Hisoboti</h2>
+      {/* <h2 className="text-3xl font-bold tracking-tight mb-8">KPI Hisoboti</h2> */}
 
       {/* Responsive layout: mobile = column-reverse, desktop = row */}
       <div className="flex flex-col-reverse md:flex-row gap-8">
