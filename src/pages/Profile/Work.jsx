@@ -3,7 +3,6 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle2,
-  CalendarDays,
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
