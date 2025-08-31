@@ -55,6 +55,7 @@ const Settings = ({ userData }) => {
       toast({
         title: "Login bo'sh bo'lmasligi kerak!",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -68,7 +69,7 @@ const Settings = ({ userData }) => {
 
     try {
       await api.post(`/profile/${userData.id}`, formData);
-      toast({ title: "Rasm yangilandi ✅" });
+      toast({ title: "Rasm yangilandi ✅", duration: 2000 });
       setIsEditingImg(false);
       setPreviewImg(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -78,6 +79,7 @@ const Settings = ({ userData }) => {
         title: "Xatolik!",
         variant: "destructive",
         description: error.response?.data?.error || "Rasmni yangilab bo'lmadi",
+        duration: 2000,
       });
     } finally {
       setLoadingImg(false);
@@ -90,6 +92,7 @@ const Settings = ({ userData }) => {
       toast({
         title: "Login bo'sh bo'lmasligi kerak!",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -116,6 +119,7 @@ const Settings = ({ userData }) => {
         title: "Xatolik!",
         variant: "destructive",
         description: error.response?.data?.error || "Loginni yangilab bo'lmadi",
+        duration: 2000,
       });
       setNewUsername(userData.username); // reset if error
     } finally {
@@ -142,6 +146,7 @@ const Settings = ({ userData }) => {
       toast({
         title: "Parol kamida 6 ta bo'lishi kerak!",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -149,6 +154,7 @@ const Settings = ({ userData }) => {
       toast({
         title: "Login bo'sh bo'lmasligi kerak!",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -171,6 +177,7 @@ const Settings = ({ userData }) => {
         title: "Xatolik!",
         variant: "destructive",
         description: error.response?.data?.error || "Parol yangilab bo'lmadi",
+        duration: 2000,
       });
     } finally {
       setLoadingPassword(false);
