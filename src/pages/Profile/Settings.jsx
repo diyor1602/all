@@ -231,7 +231,7 @@ const Settings = ({ userData }) => {
 
       {/* === USERNAME === */}
       <div className="bg-white rounded-2xl p-4 shadow space-y-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <span className="text-gray-600 font-medium">Login:</span>
           {isEditingUsername ? (
             <div className="flex items-center space-x-2">
