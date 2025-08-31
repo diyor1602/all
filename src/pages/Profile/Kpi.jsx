@@ -42,10 +42,7 @@ const Kpi = ({ userData }) => {
   const chartData = [{ name: "Progress", value: progress, fill: "#4ade80" }]; // soft green
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-100 rounded-3xl shadow-xl p-8 text-gray-900 font-[SF Pro Display]">
-      {/* Title like iOS */}
-      {/* <h2 className="text-3xl font-bold tracking-tight mb-8">KPI Hisoboti</h2> */}
-
+    <div className="rounded-3xl text-gray-900 font-[SF Pro Display]">
       {/* Responsive layout: mobile = column-reverse, desktop = row */}
       <div className="flex flex-col-reverse md:flex-row gap-8">
         {/* Stats */}
