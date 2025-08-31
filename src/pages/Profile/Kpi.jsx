@@ -25,7 +25,7 @@ const formatNumber = (number) => {
   });
 };
 
-const test = true;
+const test = false;
 
 const StatItem = ({ icon: Icon, label, value, color }) => (
   <div className="flex flex-col bg-white backdrop-blur-md rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
