@@ -118,7 +118,7 @@ const Card = ({
   </motion.div>
 );
 
-const NewProfile = () => {
+const Profile = () => {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -331,4 +331,4 @@ const NewProfile = () => {
   );
 };
 
-export default NewProfile;
+export default Profile;

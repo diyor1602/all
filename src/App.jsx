@@ -11,9 +11,8 @@ import { Toaster } from "@/components/ui/toaster";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import Home from "./pages/Home";
 import Kpi from "./pages/Kpi";
+import Profile from "./pages/Profile/Profile";
 import CuttingKpi from "./pages/CuttingKpi";
-import Profile from "./pages/Profile";
-import ProfileSalary from "./pages/ProfileSalary";
 import Issue from "./pages/Issue";
 import TailorRating from "./pages/TailorRating";
 import SuperHr from "./pages/SuperHR/SuperHr";
@@ -37,7 +36,6 @@ import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
 import Tailor from "./pages/Tailor/Tailor";
 import Truck from "./pages/Truck";
-import NewProfile from "./pages/Profile/NewProfile";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -68,8 +66,6 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/newProfile" element={<NewProfile />} />
-          <Route path="/profileSalary" element={<ProfileSalary />} />
           <Route path="/issue" element={<Issue />} />
           <Route path="/kpi" element={<Kpi />} />
           <Route path="/cuttingKpi" element={<CuttingKpi />} />

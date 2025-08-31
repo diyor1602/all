@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Wallet,
   Clock,
+  PartyPopper,
 } from "lucide-react";
 import {
   RadialBarChart,
@@ -24,6 +25,8 @@ const formatNumber = (number) => {
   });
 };
 
+const test = true;
+
 const StatItem = ({ icon: Icon, label, value, color }) => (
   <div className="flex flex-col bg-white backdrop-blur-md rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
     <div className="flex items-center justify-between mb-2">
@@ -40,6 +43,14 @@ const Kpi = ({ userData }) => {
   const progress = ((mockDone / mockPlan) * 100).toFixed(2);
 
   const chartData = [{ name: "Progress", value: progress, fill: "#4ade80" }]; // soft green
+
+  if (test) {
+    return (
+      <div className="rounded-3xl text-blue-500 font-[SF Pro Display] w-full h-[calc(50vh)] flex items-center justify-center text-4xl">
+        Tez orada <PartyPopper size={36} className="ml-2" />
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-3xl text-gray-900 font-[SF Pro Display]">

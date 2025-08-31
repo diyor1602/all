@@ -2,12 +2,10 @@ const allowPaths = [
   "home",
   "profile",
   "issue",
-  "profileSalary",
   "kpi",
   "tailorRating",
   "cuttingKpi",
   "truck",
-  "newProfile",
 ];
 
 const isTokenValid = (tok) => {
