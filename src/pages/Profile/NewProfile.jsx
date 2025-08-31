@@ -11,11 +11,14 @@ import {
   Wallet,
   Banknote,
   Loader2,
+  Trees,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import Attendance from "./Attendance";
 import Salary from "./Salary";
 import Work from "./Work";
 import Kpi from "./Kpi";
+import Settings from "./Settings";
 
 // ---------- Helpers ----------
 const formatDate = (date) => {
@@ -97,7 +100,13 @@ const Card = ({
           <div className="mt-6">
             <div className="text-sm uppercase">{title}</div>
             <div className="text-2xl font-bold mt-1">
-              {value} <span className="text-xl font-normal">so'm</span>
+              {value ? (
+                <>
+                  {value} <span className="text-xl font-normal">so'm</span>
+                </>
+              ) : (
+                "-"
+              )}
             </div>
             <div className="text-sm mt-2 uppercase truncate">
               {localStorage.getItem("name")}
@@ -145,6 +154,8 @@ const NewProfile = () => {
           },
         });
         setUserData(response.data);
+        localStorage.setItem("imgUrl", response.data.img);
+        localStorage.setItem("username", response.data.username);
       } catch (error) {
         toast({
           title: "Xatolik",
@@ -219,10 +230,20 @@ const NewProfile = () => {
       title: "KPI",
       value: formatNumber(userData.bonus || 0),
       color: "bg-gradient-to-r from-purple-500 to-pink-600",
-      Icon: Banknote,
+      Icon: Trees,
       ringColor: "ring-gray-400",
       bgImage:
         "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=80&w=1170&auto=format&fit=crop",
+    },
+    {
+      key: "sozlamalar",
+      title: "Sozlamalar",
+      value: null, // no value
+      color: "bg-gray-900 text-gray-800", // neutral style
+      Icon: SettingsIcon,
+      ringColor: "ring-gray-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1533073526757-2c8ca1df9f1c?q=80&w=1170&auto=format&fit=crop",
     },
   ];
 
@@ -240,6 +261,7 @@ const NewProfile = () => {
     avans: <Salary userData={userData} type="advance" />,
     maosh: <Salary userData={userData} type="salary" />,
     kpi: <Kpi userData={userData} />,
+    sozlamalar: <Settings userData={userData} />,
   };
 
   return (
