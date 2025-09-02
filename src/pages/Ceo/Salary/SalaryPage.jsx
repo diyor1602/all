@@ -174,6 +174,11 @@ const SalaryPage = () => {
       setSelectedMonth(parsedFilters.start_date.substring(0, 7));
     }
 
+    // if type is empty, set it to "aup"
+    if (!parsedFilters.type) {
+      parsedFilters.type = "aup";
+    }
+
     setFilters(parsedFilters);
     localStorage.setItem("salary2-filters", JSON.stringify(parsedFilters));
     return parsedFilters;
@@ -229,7 +234,7 @@ const SalaryPage = () => {
       setLoading(true);
       const response = await api.post("/ceo/groups", {
         ...filtersToUse,
-        type: "aup",
+        type: filtersToUse.type === "all" ? "" : filtersToUse.type,
         order_ids: [...selectedOrders],
       });
       setSalary(response.data);
@@ -383,11 +388,12 @@ const SalaryPage = () => {
     updateFilters(newFilters);
   };
 
-  const handleSearchChange = (searchText) => {
+  const handleTypeChange = (type) => {
     const newFilters = {
       ...filters,
-      searchText,
+      type,
     };
+
     updateFilters(newFilters);
   };
 
@@ -565,6 +571,17 @@ const SalaryPage = () => {
           </SelectContent>
         </Select>
 
+        <Select onValueChange={handleTypeChange} value={filters.type}>
+          <SelectTrigger className="bg-white w-fit">
+            <SelectValue placeholder="Turini tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barchasi</SelectItem>
+            <SelectItem value="aup">AUP</SelectItem>
+            <SelectItem value="simple">Oddiy</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Input
           type="text"
           value={searchText}
@@ -737,7 +754,7 @@ const SalaryPage = () => {
                           {payment_types[employee?.payment_type]}
                         </td>
                         <td className="border border-gray-200 p-1 text-center">
-                          -
+                          {formatNumber(employee?.salary)}
                         </td>
                         <td className="border border-gray-200 p-1 text-center">
                           {employee?.attendance_days}
