@@ -931,39 +931,56 @@ const Departments = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{dialogType}</DialogTitle>
-            <DialogDescription>
-              Sana: {dialogData?.[0]?.date?.split("-").reverse().join(".")} |
-              Jami:{" "}
-              {Number.parseFloat(dialogData?.[0]?.total || 0).toLocaleString(
-                "ru-RU",
-                {
-                  maximumFractionDigits: 0,
-                }
-              )}
-            </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <tbody>
-                {dialogData?.[0]?.employees
-                  ?.sort((a, b) => b.salary - a.salary)
-                  .map((employee, index) => (
-                    <tr key={index}>
-                      <td className="border border-gray-300 p-2">
-                        {employee.name}
-                      </td>
-                      <td className="border border-gray-300 p-2 text-right">
-                        {Number.parseFloat(employee.salary).toLocaleString(
-                          "ru-RU",
-                          {
-                            maximumFractionDigits: 0,
-                          }
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+
+          <div className="max-h-[calc(100vh-20rem)] overflow-y-auto space-y-6">
+            {dialogData?.map((groupObj, idx) => {
+              const group = Object.values(groupObj)?.[0]; // unwrap the dynamic key
+              return (
+                <div key={idx}>
+                  <h3 className="font-semibold mb-2">
+                    📅 Sana: {group.date} | 💰 Jami:{" "}
+                    {Number.parseFloat(group.total || 0).toLocaleString(
+                      "ru-RU",
+                      {
+                        maximumFractionDigits: 0,
+                      }
+                    )}
+                  </h3>
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 p-2 text-left">
+                          Xodim
+                        </th>
+                        <th className="border border-gray-300 p-2 text-right">
+                          Oylik
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.employees
+                        ?.sort((a, b) => b.salary - a.salary)
+                        ?.filter((employee) => employee.salary > 0)
+                        .map((employee) => (
+                          <tr key={employee.employee_id}>
+                            <td className="border border-gray-300 p-2">
+                              {employee.name}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-right">
+                              {Number.parseFloat(
+                                employee.salary
+                              ).toLocaleString("ru-RU", {
+                                maximumFractionDigits: 0,
+                              })}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>
