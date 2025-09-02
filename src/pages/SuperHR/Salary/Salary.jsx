@@ -390,7 +390,11 @@ const Salary = () => {
         )
       )
         return;
-      await api.patch(`/superhr/employees/${employee.id}`, { type: "simple" });
+      await api.patch(`/superhr/employees/${employee.id}`, {
+        type: "simple",
+        group_id: employee.group?.id,
+        department_id: employee.department?.id,
+      });
     } else {
       if (
         !window.confirm(
@@ -398,7 +402,11 @@ const Salary = () => {
         )
       )
         return;
-      await api.patch(`/superhr/employees/${employee.id}`, { type: "aup" });
+      await api.patch(`/superhr/employees/${employee.id}`, {
+        type: "aup",
+        group_id: employee.group?.id,
+        department_id: employee.department?.id,
+      });
     }
     fetchEmployees();
   };
