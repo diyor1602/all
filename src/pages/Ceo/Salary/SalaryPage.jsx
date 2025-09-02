@@ -38,6 +38,7 @@ import {
   Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import payment_types from "@/lib/paymentTypes";
 
 const formatNumber = (num) => {
   return Number.parseFloat(num)?.toLocaleString("ru-RU", {
@@ -86,6 +87,7 @@ const SalaryPage = () => {
     group_id: "",
     start_date: "",
     end_date: "",
+    type: "aup",
   });
   const [searchText, setSearchText] = useState("");
 
@@ -227,7 +229,7 @@ const SalaryPage = () => {
       setLoading(true);
       const response = await api.post("/ceo/groups", {
         ...filtersToUse,
-        type: "simple",
+        type: "aup",
         order_ids: [...selectedOrders],
       });
       setSalary(response.data);
@@ -503,12 +505,11 @@ const SalaryPage = () => {
 
   const totalStats = employees.reduce(
     (acc, emp) => {
-      acc.totalBalance += Number.parseFloat(emp?.balance || 0);
       acc.totalEarned += Number.parseFloat(emp?.total_earned || 0);
       acc.totalPaid += Number.parseFloat(emp?.total_paid || 0);
       return acc;
     },
-    { totalBalance: 0, totalEarned: 0, totalPaid: 0 }
+    { totalEarned: 0, totalPaid: 0 }
   );
 
   // Get payment history for the current type
@@ -573,7 +574,7 @@ const SalaryPage = () => {
         />
       </div>
 
-      {orders.length > 0 && (
+      {/* {orders.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           {orders
             .sort((a, b) => a.id - b.id)
@@ -595,10 +596,10 @@ const SalaryPage = () => {
               </Button>
             ))}
         </div>
-      )}
+      )} */}
 
       {employees.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="border-0 shadow-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -609,20 +610,6 @@ const SalaryPage = () => {
                   </p>
                 </div>
                 <Users className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-green-500 to-green-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100">Jami Balans</p>
-                  <p className="text-2xl font-bold">
-                    {formatNumber(totalStats.totalBalance)}
-                  </p>
-                </div>
-                <DollarSign className="h-8 w-8 text-green-200" />
               </div>
             </CardContent>
           </Card>
@@ -697,7 +684,13 @@ const SalaryPage = () => {
                     Xodim
                   </th>
                   <th className="border border-gray-200 p-1 text-center font-semibold">
-                    Balansi
+                    To'lov turi
+                  </th>
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    To'lov miqdori
+                  </th>
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    Kelgan kunlari
                   </th>
                   <th className="border border-gray-200 p-1 text-center font-semibold">
                     Topgan puli
@@ -741,15 +734,13 @@ const SalaryPage = () => {
                           </div>
                         </td>
                         <td className="border border-gray-200 p-1 text-center">
-                          <Badge
-                            variant={
-                              Number.parseFloat(employee?.balance) > 0
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {formatNumber(employee?.balance)}
-                          </Badge>
+                          {payment_types[employee?.payment_type]}
+                        </td>
+                        <td className="border border-gray-200 p-1 text-center">
+                          -
+                        </td>
+                        <td className="border border-gray-200 p-1 text-center">
+                          {employee?.attendance_days}
                         </td>
                         <td className="border border-gray-200 p-1 text-center">
                           <Link
