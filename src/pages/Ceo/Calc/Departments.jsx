@@ -69,6 +69,7 @@ const Departments = () => {
   const [dialogData, setDialogData] = useState([]);
   const [dialogSubmodel, setDialogSubmodel] = useState(null);
   const [dialogSubmodelData, setDialogSubmodelData] = useState([]);
+  const [extraDaysDialogOpen, setExtraDaysDialogOpen] = useState(false);
 
   const { first: defaultStart, last: defaultEnd } = getMonthBounds();
 
@@ -193,7 +194,8 @@ const Departments = () => {
         totalSpent +=
           (details.tarification_total || 0) +
           (details.salary_total || 0) -
-          (details.fixed_with_tarification_total || 0);
+          (details.fixed_with_tarification_total || 0) +
+          (details.extra_days_total || 0);
       }
     });
 
@@ -666,6 +668,36 @@ const Departments = () => {
                                       so'm
                                     </span>
                                   </div>
+                                  {orderDetails[order.order_id]
+                                    .extra_days_total > 0 && (
+                                    <div
+                                      className="flex justify-between items-center p-2 bg-red-50 rounded cursor-pointer hover:bg-red-100"
+                                      onClick={() => {
+                                        setDialogType(
+                                          `Qo'shimcha kun kelganlar jami: ${formatNumber(
+                                            orderDetails[order.order_id]
+                                              .extra_days_total
+                                          )} so'm`
+                                        );
+                                        setExtraDaysDialogOpen(true);
+                                        setDialogData(
+                                          orderDetails[order.order_id]
+                                            .extra_days
+                                        );
+                                      }}
+                                    >
+                                      <span className="text-gray-600">
+                                        Qo'shimcha kun:
+                                      </span>
+                                      <span className="font-semibold text-red-700">
+                                        {formatNumber(
+                                          orderDetails[order.order_id]
+                                            .extra_days_total
+                                        )}{" "}
+                                        so'm
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
@@ -699,7 +731,9 @@ const Departments = () => {
                                           orderDetails[order.order_id]
                                             .salary_total -
                                           orderDetails[order.order_id]
-                                            .fixed_with_tarification_total
+                                            .fixed_with_tarification_total +
+                                          orderDetails[order.order_id]
+                                            .extra_days_total
                                       )}{" "}
                                       so'm
                                     </div>
@@ -712,7 +746,9 @@ const Departments = () => {
                                         orderDetails[order.order_id]
                                           .salary_total -
                                         orderDetails[order.order_id]
-                                          .fixed_with_tarification_total) /
+                                          .fixed_with_tarification_total +
+                                        orderDetails[order.order_id]
+                                          .extra_days_total) /
                                         orderDetails[order.order_id]
                                           .total_summa) *
                                       100;
@@ -764,7 +800,9 @@ const Departments = () => {
                                       orderDetails[order.order_id]
                                         .salary_total -
                                       orderDetails[order.order_id]
-                                        .fixed_with_tarification_total;
+                                        .fixed_with_tarification_total +
+                                      orderDetails[order.order_id]
+                                        .extra_days_total;
                                     const total =
                                       orderDetails[order.order_id].total_summa;
                                     const difference = spent - total;
@@ -884,6 +922,46 @@ const Departments = () => {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={extraDaysDialogOpen} onOpenChange={setExtraDaysDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogType}</DialogTitle>
+            <DialogDescription>
+              Sana: {dialogData?.[0]?.date?.split("-").reverse().join(".")} |
+              Jami:{" "}
+              {Number.parseFloat(dialogData?.[0]?.total || 0).toLocaleString(
+                "ru-RU",
+                {
+                  maximumFractionDigits: 0,
+                }
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <tbody>
+                {dialogData?.[0]?.employees
+                  ?.sort((a, b) => b.salary - a.salary)
+                  .map((employee, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 p-2">
+                        {employee.name}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-right">
+                        {Number.parseFloat(employee.salary).toLocaleString(
+                          "ru-RU",
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
