@@ -591,7 +591,7 @@ const SalaryPage = () => {
         />
       </div>
 
-      {/* {orders.length > 0 && (
+      {orders.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           {orders
             .sort((a, b) => a.id - b.id)
@@ -613,7 +613,7 @@ const SalaryPage = () => {
               </Button>
             ))}
         </div>
-      )} */}
+      )}
 
       {employees.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

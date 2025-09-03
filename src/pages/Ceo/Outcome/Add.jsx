@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
+import api from "@/utils/api";
 import {
   Select,
   SelectContent,
@@ -10,162 +8,120 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  ArrowLeft,
-  Loader2,
-  Check,
-  ChevronsUpDown,
-  User,
-  Users,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 
-const Add = () => {
+const Add = ({ onSuccess }) => {
+  // Accept onSuccess callback prop
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
+  // State for dropdown data
+  const [currincies, setCurrincies] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [purposes, setPurposes] = useState([]);
+
+  const [sending, setSending] = useState(false);
+
+  // Form payload state
+  const [payload, setPayload] = useState({
     amount: "",
     currency_id: "",
-    destination_id: "",
-    via_id: "",
     purpose: "",
     comment: "",
+    date: new Date().toISOString().split("T")[0],
   });
 
-  const [currencies, setCurrencies] = useState([]);
-  const [employeeOptions, setEmployeeOptions] = useState([]);
-  const [destinationOptions, setDestinationOptions] = useState([]);
-  const [employeeSearch, setEmployeeSearch] = useState("");
-  const [destinationSearch, setDestinationSearch] = useState("");
-  const [viaOpen, setViaOpen] = useState(false);
-  const [destinationOpen, setDestinationOpen] = useState(false);
-  const [searchingEmployees, setSearchingEmployees] = useState(false);
-  const [searchingDestinations, setSearchingDestinations] = useState(false);
-
-  // Selected employee names for display
-  const [selectedViaName, setSelectedViaName] = useState("");
-  const [selectedDestinationName, setSelectedDestinationName] = useState("");
-
+  // Fetch initial data on component mount
   useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (employeeSearch.trim().length < 2) {
-        setEmployeeOptions([]);
-        return;
-      }
-
-      try {
-        setSearchingEmployees(true);
-        const res = await api.get(`/ceo/employees?search=${employeeSearch}`);
-        setEmployeeOptions(res.data.data || []);
-      } catch (error) {
-        setEmployeeOptions([]);
-      } finally {
-        setSearchingEmployees(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [employeeSearch]);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (destinationSearch.trim().length < 2) {
-        setDestinationOptions([]);
-        return;
-      }
-
-      try {
-        setSearchingDestinations(true);
-        const res = await api.get(`/ceo/employees?search=${destinationSearch}`);
-        setDestinationOptions(res.data.data || []);
-      } catch (error) {
-        setDestinationOptions([]);
-      } finally {
-        setSearchingDestinations(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [destinationSearch]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [currenciesResponse] = await Promise.all([
-          api.get("/ceo/currencies"),
-        ]);
-        setCurrencies(currenciesResponse.data);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Xatolik!",
-          description:
-            error.response?.data?.message ||
-            "Ma'lumotlarni olishda xatolik yuz berdi!",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
-  }, []);
+  }, []); // Empty dependency array - runs once on mount
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchData = async () => {
+    try {
+      // Fetch currencies, comments, and purposes in parallel
+      const [currenciesResponse, commentsResponse, purposesResponse] =
+        await Promise.all([
+          api.get("/ceo/currencies"),
+          api.get("/ceo/comments", {
+            params: {
+              type: "expense",
+            },
+          }),
+          api.get("/ceo/purposes", {
+            params: {
+              type: "expense",
+            },
+          }),
+        ]);
 
-    if (
-      !form.amount ||
-      !form.currency_id ||
-      !form.destination_id ||
-      !form.via_id
-    ) {
+      // Update state with fetched data
+      setCurrincies(currenciesResponse.data);
+      setComments(commentsResponse.data);
+      setPurposes(purposesResponse.data);
+
+      // Set default currency to "So'm" if available
+      const soM = currenciesResponse.data.find(
+        (currency) => currency.name.toLowerCase() === "so'm"
+      );
+      if (soM) {
+        setPayload((prevPayload) => ({
+          ...prevPayload,
+          currency_id: soM.id,
+        }));
+      }
+    } catch (error) {
+      // Show error toast if data fetching fails
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Ma'lumotlarni olishda xatolik yuz berdi!",
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!payload.amount || !payload.currency_id || !payload.date) {
       toast({
         variant: "destructive",
         title: "Diqqat!",
         description: "Barcha maydonlar to'ldirilishi shart!",
+        duration: 2000,
       });
       return;
     }
-
     try {
-      setLoading(true);
-
-      const payload = {
-        amount: form.amount,
-        currency_id: form.currency_id,
-        purpose: form.purpose,
-        comment: form.comment,
-        destination_id: form.destination_id,
-        via_id: form.via_id,
-      };
+      setSending(true);
 
       await api.post("/ceo/expenses", payload);
 
       toast({
         title: "Muvaffaqiyatli!",
         description: "Chiqim qo'shildi!",
+        style: {
+          background: "green",
+          color: "white",
+        },
+        duration: 2000,
       });
-      navigate("/ceo/outcome");
+
+      // Reset form
+      setPayload({
+        amount: "",
+        purpose: "",
+        comment: "",
+        currency_id: payload.currency_id, // Keep the currency selected
+        date: new Date().toISOString().split("T")[0], // Reset to today
+      });
+
+      // Call the onSuccess callback to refresh parent data
+      if (onSuccess) {
+        onSuccess();
+      }
+
+      fetchData(); // Refresh dropdown data if needed
     } catch (error) {
       toast({
         variant: "destructive",
@@ -175,269 +131,112 @@ const Add = () => {
           "Chiqim qo'shishda xatolik yuz berdi!",
       });
     } finally {
-      setLoading(false);
+      setSending(false);
     }
   };
 
-  const handleViaSelect = (employee) => {
-    setForm({ ...form, via_id: employee.id });
-    setSelectedViaName(employee.name);
-    setViaOpen(false);
-    setEmployeeSearch("");
-  };
-
-  const handleDestinationSelect = (employee) => {
-    setForm({ ...form, destination_id: employee.id });
-    setSelectedDestinationName(employee.name);
-    setDestinationOpen(false);
-    setDestinationSearch("");
-  };
-
   return (
-    <Card className="max-w-2xl mx-auto my-8">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold">
-          <div className="w-full flex items-center gap-2 justify-between">
-            <Button onClick={() => navigate("/ceo/outcome")} variant="outline">
-              <ArrowLeft className="w-4 h-4" />
-              Orqaga
-            </Button>
-            <div>Yangi Chiqim Qo'shish</div>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>
-                Miqdor ({parseFloat(form.amount || 0).toLocaleString("ru-Ru")})
-              </Label>
-              <Input
-                type="number"
-                placeholder="Miqdor"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              />
-            </div>
+    <div className="p-4 md:p-8 bg-white rounded-xl shadow-md">
+      <div className="text-2xl font-bold mb-5">Chiqim qilish</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Amount Input */}
+        <div className="flex flex-col gap-2">
+          <Label>
+            Miqdori{" "}
+            {payload.amount
+              ? `(${parseFloat(payload.amount)?.toLocaleString("ru-RU", {
+                  maximumFractionDigits: 2,
+                })})`
+              : ""}
+          </Label>
+          <Input
+            type="number"
+            placeholder="Miqdori"
+            value={payload.amount}
+            onChange={(e) => setPayload({ ...payload, amount: e.target.value })}
+          />
+        </div>
 
-            <div>
-              <Label>Valyuta</Label>
-              <Select
-                value={form.currency_id}
-                onValueChange={(value) => {
-                  setForm((prevForm) => ({
-                    ...prevForm,
-                    currency_id: value,
-                  }));
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem
-                      key={currency.id}
-                      value={currency.id.toString()}
-                    >
-                      {currency.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+        {/* Currency Select */}
+        <div className="flex flex-col gap-2">
+          <Label>Valyuta</Label>
+          <Select
+            value={payload.currency_id}
+            onValueChange={(value) =>
+              setPayload({ ...payload, currency_id: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Valyuta" />
+            </SelectTrigger>
+            <SelectContent>
+              {currincies.map((currency) => (
+                <SelectItem key={currency.id} value={currency.id}>
+                  {currency.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Via Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="via-select">Kim orqali</Label>
-            <Popover open={viaOpen} onOpenChange={setViaOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  id="via-select"
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={viaOpen}
-                  className="w-full justify-between h-10"
-                >
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    <span
-                      className={cn(
-                        "truncate",
-                        !selectedViaName && "text-muted-foreground"
-                      )}
-                    >
-                      {selectedViaName || "Xodimni tanlang..."}
-                    </span>
-                  </div>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start">
-                <Command>
-                  <CommandInput
-                    placeholder="Xodimni qidiring..."
-                    value={employeeSearch}
-                    onValueChange={setEmployeeSearch}
-                  />
-                  <CommandList>
-                    {searchingEmployees ? (
-                      <div className="flex items-center justify-center py-6">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          Qidirilmoqda...
-                        </span>
-                      </div>
-                    ) : (
-                      <>
-                        <CommandEmpty>
-                          <div className="flex items-center justify-center px-6 py-2">
-                            {employeeSearch.length < 2
-                              ? "Qidirish uchun kamida 2 ta harf kiriting"
-                              : "Hech qanday xodim topilmadi"}
-                          </div>
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {employeeOptions.map((employee) => (
-                            <CommandItem
-                              key={employee.id}
-                              value={employee.name}
-                              onSelect={() => handleViaSelect(employee)}
-                              className="flex items-center gap-2"
-                            >
-                              <User className="w-4 h-4" />
-                              <span>{employee.name}</span>
-                              <Check
-                                className={cn(
-                                  "ml-auto h-4 w-4",
-                                  form.via_id === employee.id
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </>
-                    )}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Destination Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="destination-select">Kimga</Label>
-            <Popover open={destinationOpen} onOpenChange={setDestinationOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  id="destination-select"
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={destinationOpen}
-                  className="w-full justify-between h-10"
-                >
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <span
-                      className={cn(
-                        "truncate",
-                        !selectedDestinationName && "text-muted-foreground"
-                      )}
-                    >
-                      {selectedDestinationName || "Xodimni tanlang..."}
-                    </span>
-                  </div>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start">
-                <Command>
-                  <CommandInput
-                    placeholder="Xodimni qidiring..."
-                    value={destinationSearch}
-                    onValueChange={setDestinationSearch}
-                  />
-                  <CommandList>
-                    {searchingDestinations ? (
-                      <div className="flex items-center justify-center py-6">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          Qidirilmoqda...
-                        </span>
-                      </div>
-                    ) : (
-                      <>
-                        <CommandEmpty>
-                          <div className="flex items-center justify-center px-6 py-2">
-                            {destinationSearch.length < 2
-                              ? "Qidirish uchun kamida 2 ta harf kiriting"
-                              : "Hech qanday xodim topilmadi"}
-                          </div>
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {destinationOptions.map((employee) => (
-                            <CommandItem
-                              key={employee.id}
-                              value={employee.name}
-                              onSelect={() => handleDestinationSelect(employee)}
-                              className="flex items-center gap-2"
-                            >
-                              <Users className="w-4 h-4" />
-                              <span>{employee.name}</span>
-                              <Check
-                                className={cn(
-                                  "ml-auto h-4 w-4",
-                                  form.destination_id === employee.id
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </>
-                    )}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div>
-            <Label>Sabab</Label>
+        {/* Purpose Input with Datalist Suggestions */}
+        <div className="flex flex-col gap-2">
+          <Label>Sabab</Label>
+          <div className="relative">
             <Input
-              placeholder="Sababni kiriting"
-              value={form.purpose}
-              onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+              type="text"
+              placeholder="Sabab"
+              value={payload.purpose}
+              onChange={(e) =>
+                setPayload({ ...payload, purpose: e.target.value })
+              }
+              list="purposes-datalist"
             />
+            <datalist id="purposes-datalist">
+              {purposes.map((purpose, index) => (
+                <option key={index} value={purpose} />
+              ))}
+            </datalist>
           </div>
+        </div>
 
-          <div>
-            <Label>Izoh</Label>
+        {/* Comment Input with Datalist Suggestions */}
+        <div className="flex flex-col gap-2">
+          <Label>Ochiqlama</Label>
+          <div className="relative">
             <Input
-              placeholder="Qo'shimcha izoh"
-              value={form.comment}
-              onChange={(e) => setForm({ ...form, comment: e.target.value })}
+              type="text"
+              placeholder="Ochiqlama"
+              value={payload.comment}
+              onChange={(e) =>
+                setPayload({ ...payload, comment: e.target.value })
+              }
+              list="comments-datalist"
             />
+            <datalist id="comments-datalist">
+              {comments.map((comment, index) => (
+                <option key={index} value={comment} />
+              ))}
+            </datalist>
           </div>
+        </div>
 
-          <Button type="submit" disabled={loading} className="mt-2 w-full">
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saqlanmoqda...
-              </>
-            ) : (
-              "Qo'shish"
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        {/* Date Input */}
+        <div className="flex flex-col gap-2">
+          <Label>Sana</Label>
+          <Input
+            type="date"
+            placeholder="Sana"
+            value={payload.date}
+            onChange={(e) => setPayload({ ...payload, date: e.target.value })}
+          />
+        </div>
+
+        <Button onClick={handleSubmit} disabled={sending} className="self-end">
+          {sending ? "Yuborilmoqda..." : "Saqlash"}
+        </Button>
+      </div>
+    </div>
   );
 };
 

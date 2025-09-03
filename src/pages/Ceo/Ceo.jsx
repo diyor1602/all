@@ -13,7 +13,7 @@ import Calc from "./Calc/Calc";
 const Ceo = () => {
   return (
     <Routes>
-      <Route path="income/*" element={<Income />} />
+      <Route path="income" element={<Income />} />
       <Route path="outcome/*" element={<Outcome />} />
       <Route path="balance/*" element={<Balance />} />
       <Route path="requests/*" element={<Requests />} />

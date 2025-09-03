@@ -591,7 +591,7 @@ const SalaryPage = () => {
         />
       </div>
 
-      {/* {orders.length > 0 && (
+      {orders.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           {orders
             .sort((a, b) => a.id - b.id)
@@ -613,7 +613,7 @@ const SalaryPage = () => {
               </Button>
             ))}
         </div>
-      )} */}
+      )}
 
       {employees.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -710,7 +710,10 @@ const SalaryPage = () => {
                     Kelgan kunlari
                   </th>
                   <th className="border border-gray-200 p-1 text-center font-semibold">
-                    Topgan puli
+                    Davomat
+                  </th>
+                  <th className="border border-gray-200 p-1 text-center font-semibold">
+                    Ish
                   </th>
                   <th className="border border-gray-200 p-1 text-center font-semibold">
                     To'langan pul
@@ -765,7 +768,16 @@ const SalaryPage = () => {
                             target="_blank"
                             className="text-green-600 font-medium"
                           >
-                            {formatNumber(employee?.total_earned)}
+                            {formatNumber(employee?.attendance_salary)}
+                          </Link>
+                        </td>
+                        <td className="border border-gray-200 p-1 text-center">
+                          <Link
+                            to={`/ceo/salary/${employee.id}`}
+                            target="_blank"
+                            className="text-green-600 font-medium"
+                          >
+                            {formatNumber(employee?.tarification_salary)}
                           </Link>
                         </td>
                         <td className="border border-gray-200 p-1 text-center">
