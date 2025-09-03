@@ -181,11 +181,11 @@ const Add = ({ onSuccess }) => {
 
         {/* Purpose Input with Datalist Suggestions */}
         <div className="flex flex-col gap-2">
-          <Label>Sabab</Label>
+          <Label>Maxsulot yoki shaxs ismi</Label>
           <div className="relative">
             <Input
               type="text"
-              placeholder="Sabab"
+              placeholder="Maxsulot yoki shaxs ismi"
               value={payload.purpose}
               onChange={(e) =>
                 setPayload({ ...payload, purpose: e.target.value })

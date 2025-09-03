@@ -187,7 +187,7 @@ const Outcome = () => {
               <th className="px-4 py-3 border">№</th>
               <th className="px-4 py-3 border">Sana</th>
               <th className="px-4 py-3 border">Miqdori</th>
-              <th className="px-4 py-3 border">Sabab</th>
+              <th className="px-4 py-3 border">Maxsulot yoki shaxs ismi</th>
               <th className="px-4 py-3 border">Ochiqlama</th>
               <th className="px-4 py-3 border">Chiqim qiluvchi</th>
             </tr>
