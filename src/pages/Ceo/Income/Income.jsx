@@ -220,13 +220,37 @@ const Income = () => {
                       {index + 1}
                     </td>
                     <td className="px-4 py-2 border text-center">
-                      {new Date(item?.created_at).toLocaleString("ru-RU")}
+                      {item?.date?.split("-").reverse().join(".")}
                     </td>
                     <td className="px-4 py-2 border">
                       {item?.amount} {item?.currency?.name}
                     </td>
-                    <td className="px-4 py-2 border">{item?.source || "-"}</td>
-                    <td className="px-4 py-2 border">{item?.purpose || "-"}</td>
+                    <td
+                      className="px-4 py-2 border"
+                      onClick={() => {
+                        navigator.clipboard.writeText(item?.source);
+                        toast({
+                          variant: "default",
+                          title: "Manba nusxalandi!",
+                          duration: 1000,
+                        });
+                      }}
+                    >
+                      {item?.source || "-"}
+                    </td>
+                    <td
+                      className="px-4 py-2 border"
+                      onClick={() => {
+                        navigator.clipboard.writeText(item?.purpose);
+                        toast({
+                          variant: "default",
+                          title: "Sabab nusxalandi!",
+                          duration: 1000,
+                        });
+                      }}
+                    >
+                      {item?.purpose || "-"}
+                    </td>
                     <td className="px-4 py-2 border">
                       {item?.via?.name || "-"}
                     </td>
