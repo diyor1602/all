@@ -9,6 +9,7 @@ import Employees from "./Employees/Employees";
 import Daily from "./Daily/Daily";
 import Monthly from "./Monthly/Monthly";
 import Calc from "./Calc/Calc";
+import Salary2 from "./Salary/Salary2";
 
 const Ceo = () => {
   return (
@@ -23,6 +24,7 @@ const Ceo = () => {
       <Route path="daily" element={<Daily />} />
       <Route path="monthly" element={<Monthly />} />
       <Route path="calc/*" element={<Calc />} />
+      <Route path="salary2" element={<Salary2 />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
