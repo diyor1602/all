@@ -137,7 +137,7 @@ const Salary2 = () => {
 
       const link = document.createElement("a");
       link.href = URL.createObjectURL(response.data);
-      link.download = `Xodimlar oylik-${selectedMonth}.xlsx`; // Excel extension
+      link.download = `${getSelectedGroupName()}-${selectedMonth}.xlsx`; // Excel extension
       document.body.appendChild(link);
       link.click();
       link.remove();
