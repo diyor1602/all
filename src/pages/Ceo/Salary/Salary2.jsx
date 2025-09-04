@@ -70,9 +70,7 @@ const Salary2 = () => {
   const [downloading, setDownloading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState({});
   const [orders, setOrders] = useState([]);
-  const [selectedOrders, setSelectedOrders] = useState([
-    3106, 3157, 2974, 3063,
-  ]);
+  const [selectedOrders, setSelectedOrders] = useState([]);
   const [paymentDialog, setPaymentDialog] = useState({
     open: false,
     employee: null,
@@ -84,7 +82,11 @@ const Salary2 = () => {
     comment: "",
   });
 
-  const [addOrders, setAddOrders] = useState([]);
+  const [addOrders, setAddOrders] = useState([
+    2977, 2983, 2986, 2992, 2999, 3000, 3001, 3002, 3005, 3006, 3016, 3017,
+    3018, 3021, 3024, 3026, 3027, 3032, 3039, 3042, 3044, 3045, 3064, 3067,
+    3068, 3071, 3078, 3079, 3083, 3092, 3093, 3094, 3213, 3247, 3283,
+  ]);
 
   const [filters, setFilters] = useState({
     department_id: "",
@@ -100,6 +102,12 @@ const Salary2 = () => {
       try {
         const response = await api.get("/ceo/orders");
         setOrders(response.data);
+        setSelectedOrders(
+          // store all ids without ids from addOrders
+          response.data
+            .map((order) => order.id)
+            .filter((id) => !addOrders.includes(id))
+        );
       } catch (error) {
         toast({
           title: "Xatolik",
