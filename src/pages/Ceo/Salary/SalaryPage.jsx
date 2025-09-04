@@ -589,6 +589,10 @@ const SalaryPage = () => {
           placeholder="Xodim qidirish"
           className="bg-white w-fit"
         />
+
+        <Button asChild className="ml-auto">
+          <Link to="/ceo/salary2">2-versiya</Link>
+        </Button>
       </div>
 
       {orders.length > 0 && (
