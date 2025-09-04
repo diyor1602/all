@@ -84,6 +84,8 @@ const Salary2 = () => {
     comment: "",
   });
 
+  const [addOrders, setAddOrders] = useState([]);
+
   const [filters, setFilters] = useState({
     department_id: "",
     group_id: "",
@@ -126,7 +128,7 @@ const Salary2 = () => {
         start_date: filters.start_date,
         end_date: filters.end_date,
         minus: [...selectedOrders],
-        // add: [3213],
+        add: [...addOrders],
         type: filters.type,
       };
 
@@ -239,8 +241,8 @@ const Salary2 = () => {
       const response = await api.post("/ceo/groups2", {
         ...filtersToUse,
         type: filtersToUse.type === "all" ? "" : filtersToUse.type,
-        minus: [3106, 3157, 2974, 3063],
-        // add: [3213],
+        minus: [...selectedOrders],
+        add: [...addOrders],
       });
       setSalary(response.data);
     } catch (error) {
@@ -603,16 +605,30 @@ const Salary2 = () => {
             .map((order) => (
               <Button
                 variant={
-                  selectedOrders?.includes(order.id) ? "default" : "outline"
+                  selectedOrders?.includes(order.id)
+                    ? "destructive"
+                    : addOrders?.includes(order.id)
+                    ? "default"
+                    : "outline"
                 }
                 key={order.id}
-                onClick={() =>
-                  setSelectedOrders((prev) =>
-                    prev.includes(order.id)
-                      ? prev.filter((id) => id !== order.id)
-                      : [...prev, order.id]
-                  )
-                }
+                onClick={() => {
+                  if (selectedOrders.includes(order.id)) {
+                    // If it's in selectedOrders → move it to addOrders
+                    setSelectedOrders((prev) =>
+                      prev.filter((id) => id !== order.id)
+                    );
+                    setAddOrders((prev) => [...prev, order.id]);
+                  } else if (addOrders.includes(order.id)) {
+                    // If it's in addOrders → remove it completely
+                    setAddOrders((prev) =>
+                      prev.filter((id) => id !== order.id)
+                    );
+                  } else {
+                    // If it's in none → add to selectedOrders
+                    setSelectedOrders((prev) => [...prev, order.id]);
+                  }
+                }}
               >
                 {order.id}
               </Button>
