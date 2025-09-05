@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CoinsAudio from "/coins.wav";
+import { statuses } from "@/lib/status";
 const coinsAudio = new Audio(CoinsAudio);
 
 const Models = () => {
@@ -629,8 +630,12 @@ const Models = () => {
                   <div className="truncate font-medium">
                     {model.model?.name} - {model.submodel?.name}
                   </div>
-                  <div className="truncate text-sm text-gray-500">
-                    {model.tarification_categories?.length} ta kategoriya
+                  <div
+                    className={`truncate text-xs px-2 py-1 rounded-full text-white ${
+                      statuses[model.status]?.color
+                    }`}
+                  >
+                    {statuses[model.status]?.text}
                   </div>
                 </div>
               ))}
@@ -1040,8 +1045,12 @@ const Models = () => {
                 <div className="truncate font-medium">
                   {model?.model?.name} - {model?.submodel?.name}
                 </div>
-                <div className="truncate text-sm text-gray-500">
-                  {model.tarification_categories?.length} ta kategoriya
+                <div
+                  className={`truncate text-xs text-white p-2 rounded-full ${
+                    statuses[model.status]?.color
+                  }`}
+                >
+                  {statuses[model.status]?.text}
                 </div>
               </div>
             ))}
