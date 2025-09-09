@@ -336,6 +336,9 @@ const Employees = () => {
     try {
       await api.patch(`/superhr/employees/${id}`, {
         status: "kicked",
+        group_id: employees.data.find((emp) => emp.id === id).group?.id,
+        department_id: employees.data.find((emp) => emp.id === id).department
+          ?.id,
         comment,
       });
       toast({
@@ -373,6 +376,9 @@ const Employees = () => {
     try {
       await api.patch(`/superhr/employees/${id}`, {
         status: "working",
+        group_id: employees.data.find((emp) => emp.id === id).group?.id,
+        department_id: employees.data.find((emp) => emp.id === id).department
+          ?.id,
         comment,
       });
       toast({
