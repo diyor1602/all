@@ -38,7 +38,7 @@ const isFutureTime = (timeString) => {
 
 const getStatusVariant = (status) => {
   const statusConfig = statuses[status] || statuses.inactive;
-  return `${statusConfig.secondaryBg} ${statusConfig.textColor} dark:bg-opacity-50 dark:text-opacity-80`;
+  return `${statusConfig.secondaryBg} ${statusConfig.textColor}`;
 };
 
 const getStatusText = (status) => {
@@ -47,14 +47,13 @@ const getStatusText = (status) => {
 
 const getCardBackground = (index) => {
   const colors = [
-    "bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-400 dark:border-blue-500",
-    "bg-emerald-100 dark:bg-emerald-900/40 border-l-4 border-emerald-400 dark:border-emerald-500",
-    "bg-amber-100 dark:bg-amber-900/40 border-l-4 border-amber-400 dark:border-amber-500",
-    "bg-violet-100 dark:bg-violet-900/40 border-l-4 border-violet-400 dark:border-violet-500",
-    "bg-rose-100 dark:bg-rose-900/40 border-l-4 border-rose-400 dark:border-rose-500",
-    "bg-cyan-100 dark:bg-cyan-900/40 border-l-4 border-cyan-400 dark:border-cyan-500",
-    "bg-fuchsia-100 dark:bg-fuchsia-900/40 border-l-4 border-fuchsia-400 dark:border-fuchsia-500",
-    "bg-lime-100 dark:bg-lime-900/40 border-l-4 border-lime-400 dark:border-lime-500",
+    "bg-blue-100 border-l-4 border-blue-400",
+    "bg-emerald-100 border-l-4 border-emerald-400",
+    "bg-amber-100 border-l-4 border-amber-400",
+    "bg-violet-100 border-l-4 border-violet-400",
+    "bg-rose-100 border-l-4 border-rose-400",
+    "bg-cyan-100 border-l-4 border-cyan-400",
+    "bg-lime-100 border-l-4 border-lime-400",
   ];
   return colors[index % colors.length];
 };
@@ -197,9 +196,7 @@ const ResultView = () => {
 
   return (
     <>
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
-        Guruhlar
-      </h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Guruhlar</h1>
 
       <div className="grid grid-cols-1 gap-6">
         {data
@@ -207,19 +204,16 @@ const ResultView = () => {
           ?.map((group, index) => (
             <Card
               key={group?.id}
-              className={`overflow-hidden transition-all duration-300 h-fit transform hover:-translate-y-1 hover:shadow-xl ${getCardBackground(
+              className={`overflow-hidden transition-all duration-300 h-fit ${getCardBackground(
                 index
               )}`}
             >
-              <CardHeader className="bg-gray-50 dark:bg-gray-800 p-4 border-b">
+              <CardHeader className="bg-gray-50 p-4 border-b">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-xl font-semibold">
                     {group?.name}
                   </CardTitle>
-                  <Badge
-                    variant="outline"
-                    className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                  >
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
                     {group.orders?.reduce(
                       (sum, order) => sum + (order.todayTotalQuantity || 0),
                       0
@@ -231,14 +225,14 @@ const ResultView = () => {
                     )}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500">
                   Mas'ul: {group?.responsibleUser?.name}
                 </p>
               </CardHeader>
 
               <CardContent className="p-0">
                 {group?.orders?.length > 0 ? (
-                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  <div className="divide-y divide-gray-200">
                     {group.orders
                       ?.sort(
                         // tailoring should appear first
@@ -249,13 +243,10 @@ const ResultView = () => {
                         }
                       )
                       ?.map((order, index) => (
-                        <div
-                          key={index}
-                          className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                        >
+                        <div key={index} className="p-4 ">
                           <div className="flex justify-between items-start mb-2">
                             <div>
-                              <h3 className="font-medium text-gray-900 dark:text-white">
+                              <h3 className="font-medium text-gray-900">
                                 {order.model?.name} - {order.submodel?.name}
                               </h3>
                               <div className="flex items-center gap-2 mt-1">
@@ -265,7 +256,7 @@ const ResultView = () => {
                                 >
                                   {getStatusText(order.status)}
                                 </Badge>
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                <span className="text-sm text-gray-500">
                                   {order.todayTotalQuantity || 0} /{" "}
                                   {order.todayPlan}
                                 </span>
@@ -273,7 +264,7 @@ const ResultView = () => {
                             </div>
                             <Badge
                               variant="outline"
-                              className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              className="bg-green-50 text-green-700"
                             >
                               Jami: {order.totalQuantity}
                             </Badge>
@@ -300,7 +291,7 @@ const ResultView = () => {
                           </div>
 
                           {order.sewingOutputs?.length >= 0 && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div className="mt-3 pt-3 border-t border-gray-200">
                               <h4 className="text-xs font-medium text-gray-500 mb-2">
                                 Natijalar
                               </h4>
@@ -362,7 +353,7 @@ const ResultView = () => {
                                             key={time.id}
                                             className={`flex items-center w-full justify-between ${
                                               enabled
-                                                ? "bg-gray-400 text-black hover:bg-gray-500"
+                                                ? "bg-gray-400 text-black"
                                                 : "bg-gray-200 text-black cursor-not-allowed"
                                             } py-2 px-4 rounded-md`}
                                             disabled={!enabled}
@@ -427,7 +418,7 @@ const ResultView = () => {
                       ))}
                   </div>
                 ) : (
-                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  <div className="p-4 text-center text-gray-500">
                     Bu guruhga tegishli buyurtmalar mavjud emas.
                   </div>
                 )}
