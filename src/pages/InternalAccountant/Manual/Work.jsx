@@ -105,7 +105,8 @@ const Work = () => {
     direction: "asc",
   });
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    localStorage.getItem("salarySelectedDate") ||
+      new Date().toISOString().split("T")[0]
   );
 
   const [attendanceSalary, setAttendanceSalary] = useState(0);
@@ -1231,7 +1232,13 @@ const Work = () => {
                     max={new Date().toISOString().split("T")[0]}
                     value={selectedDate}
                     className="w-fit"
-                    onChange={(e) => setSelectedDate(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      localStorage.setItem(
+                        "salarySelectedDate",
+                        e.target.value
+                      );
+                    }}
                   />
                 </div>
 
