@@ -598,8 +598,11 @@ const Departments = () => {
                                       );
                                       setDialogOpen(true);
                                       setDialogData(
-                                        orderDetails[order.order_id]
-                                          .tarification_employees
+                                        orderDetails[
+                                          order.order_id
+                                        ].tarification_employees?.filter(
+                                          (employee) => employee.salary > 0
+                                        )
                                       );
                                     }}
                                   >
@@ -625,8 +628,11 @@ const Departments = () => {
                                       );
                                       setDialogOpen(true);
                                       setDialogData(
-                                        orderDetails[order.order_id]
-                                          .salary_employees
+                                        orderDetails[
+                                          order.order_id
+                                        ].salary_employees?.filter(
+                                          (employee) => employee.salary > 0
+                                        )
                                       );
                                     }}
                                   >
@@ -652,8 +658,11 @@ const Departments = () => {
                                       );
                                       setDialogOpen(true);
                                       setDialogData(
-                                        orderDetails[order.order_id]
-                                          .fixed_with_tarification_employees
+                                        orderDetails[
+                                          order.order_id
+                                        ].fixed_with_tarification_employees?.filter(
+                                          (employee) => employee.salary > 0
+                                        )
                                       );
                                     }}
                                   >
@@ -939,7 +948,8 @@ const Departments = () => {
               return (
                 <div key={idx}>
                   <h3 className="font-semibold mb-2">
-                    📅 Sana: {group.date} | 💰 Jami:{" "}
+                    📅 Sana: {group.date?.split("-").reverse().join(".")} | 💰
+                    Jami:{" "}
                     {Number.parseFloat(group.total || 0).toLocaleString(
                       "ru-RU",
                       {

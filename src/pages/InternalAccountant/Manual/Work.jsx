@@ -70,7 +70,10 @@ const Work = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [salaryDialogOpen, setSalaryDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState("");
+  const [dialogData, setDialogData] = useState([]);
+  const [extraDaysDialogOpen, setExtraDaysDialogOpen] = useState(false);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedSubmodel, setSelectedSubmodel] = useState(null);
@@ -693,38 +696,29 @@ const Work = () => {
 
   return (
     <>
-      <Dialog open={salaryDialogOpen} onOpenChange={setSalaryDialogOpen}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{attendanceSalary?.date_range}</DialogTitle>
-            <DialogDescription>
-              {attendanceSalary?.salary_employees?.length} ta foydalanuvchilar /{" "}
-              <span className="font-bold">
-                {parseFloat(attendanceSalary?.salary_total)?.toLocaleString(
-                  "ru-RU",
-                  {
-                    maximumFractionDigits: 0,
-                  }
-                )}
-              </span>{" "}
-              so'm
-            </DialogDescription>
+            <DialogTitle>{dialogType}</DialogTitle>
+            <DialogDescription></DialogDescription>
           </DialogHeader>
-
           <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
             <table className="w-full border-collapse border border-gray-300">
               <tbody>
-                {attendanceSalary?.salary_employees
+                {dialogData
                   ?.sort((a, b) => b.salary - a.salary)
-                  .map((employee) => (
-                    <tr key={employee.id}>
+                  .map((employee, index) => (
+                    <tr key={index}>
                       <td className="border border-gray-300 p-2">
                         {employee.name}
                       </td>
                       <td className="border border-gray-300 p-2 text-right">
-                        {parseFloat(employee.salary)?.toLocaleString("ru-RU", {
-                          maximumFractionDigits: 0,
-                        })}
+                        {Number.parseFloat(employee.salary)?.toLocaleString(
+                          "ru-RU",
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -733,7 +727,64 @@ const Work = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={extraDaysDialogOpen} onOpenChange={setExtraDaysDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogType}</DialogTitle>
+          </DialogHeader>
 
+          <div className="max-h-[calc(100vh-20rem)] overflow-y-auto space-y-6">
+            {dialogData?.map((groupObj, idx) => {
+              const group = Object.values(groupObj)?.[0]; // unwrap the dynamic key
+              return (
+                <div key={idx}>
+                  <h3 className="font-semibold mb-2">
+                    📅 Sana: {group.date?.split("-").reverse().join(".")} | 💰
+                    Jami:{" "}
+                    {Number.parseFloat(group.total || 0).toLocaleString(
+                      "ru-RU",
+                      {
+                        maximumFractionDigits: 0,
+                      }
+                    )}
+                  </h3>
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 p-2 text-left">
+                          Xodim
+                        </th>
+                        <th className="border border-gray-300 p-2 text-right">
+                          Oylik
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.employees
+                        ?.sort((a, b) => b.salary - a.salary)
+                        ?.filter((employee) => employee.salary > 0)
+                        .map((employee) => (
+                          <tr key={employee.employee_id}>
+                            <td className="border border-gray-300 p-2">
+                              {employee.name}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-right">
+                              {Number.parseFloat(
+                                employee.salary
+                              ).toLocaleString("ru-RU", {
+                                maximumFractionDigits: 0,
+                              })}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="space-y-6">
         {/* Header with back button */}
         <div className="flex items-center justify-between">
@@ -980,7 +1031,25 @@ const Work = () => {
                 {selectedTarifLang == "uz" ? "so'm UZ" : "so'm RU"}
               </span>
             </div>
-            <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+            <div
+              className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap"
+              onClick={() => {
+                setDialogType(
+                  `Ishchilar topgan summa: ${attendanceSalary?.tarification_total?.toLocaleString(
+                    "ru-RU",
+                    {
+                      maximumFractionDigits: 0,
+                    }
+                  )} so'm`
+                );
+                setDialogOpen(true);
+                setDialogData(
+                  attendanceSalary?.tarification_employees?.filter(
+                    (employee) => employee.salary > 0
+                  )
+                );
+              }}
+            >
               <span className="text-sm">
                 Ishchilar <span className="font-bold">topgan</span> jami summa:
               </span>
@@ -1005,7 +1074,22 @@ const Work = () => {
             </div>
             <div
               className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap"
-              onClick={() => setSalaryDialogOpen(true)}
+              onClick={() => {
+                setDialogOpen(true);
+                setDialogType(
+                  `Oylikchilar topgan summa: ${attendanceSalary?.salary_total?.toLocaleString(
+                    "ru-RU",
+                    {
+                      maximumFractionDigits: 0,
+                    }
+                  )} so'm`
+                );
+                setDialogData(
+                  attendanceSalary?.salary_employees?.filter(
+                    (employee) => employee.salary > 0
+                  )
+                );
+              }}
             >
               <span className="text-sm">
                 Oylikchilar <span className="font-bold">topgan</span> jami
@@ -1017,7 +1101,24 @@ const Work = () => {
                 })}
               </span>
             </div>
-            <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
+            <div
+              className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap"
+              onClick={() => {
+                setDialogType(
+                  `Universallar bosgan summa: ${parseFloat(
+                    attendanceSalary?.fixed_with_tarification_total
+                  )?.toLocaleString("ru-RU", {
+                    maximumFractionDigits: 0,
+                  })} so'm`
+                );
+                setDialogOpen(true);
+                setDialogData(
+                  attendanceSalary?.fixed_with_tarification_employees?.filter(
+                    (employee) => employee.salary > 0
+                  )
+                );
+              }}
+            >
               <span className="text-sm">
                 Universellar <span className="font-bold">bosgan</span> jami
                 summa{" "}
@@ -1031,13 +1132,39 @@ const Work = () => {
                 )}{" "}
               </span>
             </div>
+            {attendanceSalary?.extra_days_total > 0 && (
+              <div
+                className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap"
+                onClick={() => {
+                  setDialogType(
+                    `Qo'shimcha kun kelganlar jami: ${parseFloat(
+                      attendanceSalary?.extra_days_total
+                    )?.toLocaleString("ru-RU", {
+                      maximumFractionDigits: 0,
+                    })} so'm`
+                  );
+                  setExtraDaysDialogOpen(true);
+                  setDialogData(attendanceSalary?.extra_days);
+                }}
+              >
+                <span className="text-sm">Qo'shimcha kun kelganlar jami </span>
+                <span className="text-sm font-bold">
+                  {attendanceSalary?.extra_days_total?.toLocaleString("ru-RU", {
+                    maximumFractionDigits: 0,
+                  })}{" "}
+                </span>
+              </div>
+            )}
             <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-4 flex-wrap">
               <span className="text-sm">Sarflangan summa:</span>
               <span className="text-sm font-bold">
                 {parseFloat(
                   parseFloat(attendanceSalary?.tarification_total) +
                     parseFloat(attendanceSalary?.salary_total) -
-                    parseFloat(attendanceSalary?.fixed_with_tarification_total)
+                    parseFloat(
+                      attendanceSalary?.fixed_with_tarification_total
+                    ) +
+                    parseFloat(attendanceSalary?.extra_days_total)
                 )?.toLocaleString("ru-RU", {
                   maximumFractionDigits: 0,
                 })}{" "}
@@ -1051,7 +1178,8 @@ const Work = () => {
                     parseFloat(attendanceSalary?.salary_total || 0) -
                     parseFloat(
                       attendanceSalary?.fixed_with_tarification_total || 0
-                    )) /
+                    ) +
+                    parseFloat(attendanceSalary?.extra_days_total || 0)) /
                     (parseFloat(
                       selectedTarifLang === "uz"
                         ? totalSpendSummaUZ
@@ -1078,7 +1206,8 @@ const Work = () => {
                     parseFloat(attendanceSalary?.salary_total || 0) -
                     parseFloat(
                       attendanceSalary?.fixed_with_tarification_total || 0
-                    ))
+                    ) +
+                    parseFloat(attendanceSalary?.extra_days_total || 0))
                 )?.toLocaleString("ru-RU", {
                   maximumFractionDigits: 0,
                 })}{" "}
