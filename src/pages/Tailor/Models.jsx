@@ -642,7 +642,7 @@ const Models = () => {
           </div>
         </DialogContent>
       </Dialog>
-      <div className="bg-red-500 fixed top-0 left-0 right-0 text-white text-center uppercase font-medium">
+      <div className="bg-red-500 fixed top-0 left-0 right-0 text-white text-center uppercase font-medium z-10">
         Diqqat, Ishga e'toborliroq bo'ling
       </div>
       <div className="flex flex-col items-center gap-1">
