@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import CoinsAudio from "/coins.wav";
 import { statuses } from "@/lib/status";
+import MarqueeBanner from "@/components/MarqueBanner";
 const coinsAudio = new Audio(CoinsAudio);
 
 const Models = () => {
@@ -642,9 +643,7 @@ const Models = () => {
           </div>
         </DialogContent>
       </Dialog>
-      <div className="bg-red-500 fixed top-0 left-0 right-0 text-white text-center uppercase font-medium z-10">
-        Diqqat, Ishga e'tiborli bo'ling
-      </div>
+      <MarqueeBanner text="Diqqat! Ishga e'tiborli bo'ling!" />
       <div className="flex flex-col items-center gap-1">
         <div>{localStorage.getItem("name")}</div>
         <div className="text-2xl font-bold text-yellow-500">

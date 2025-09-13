@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Check, CirclePlus, Loader2, X } from "lucide-react";
 import { animate } from "framer-motion";
 import CoinsAudio from "/coins.wav";
+import MarqueeBanner from "@/components/MarqueBanner";
 const coinsAudio = new Audio(CoinsAudio);
 
 const TailorPage = () => {
@@ -271,9 +272,7 @@ const TailorPage = () => {
 
   return (
     <div className="flex flex-col gap-4 relative overflow-hidden">
-      <div className="bg-red-500 fixed top-0 left-0 right-0 text-white text-center uppercase font-medium z-10">
-        Diqqat, Ishga e'tiborli bo'ling
-      </div>
+      <MarqueeBanner text="Diqqat! Ishga e'tiborli bo'ling!" />
       <div className="flex items-center gap-2 flex-col">
         <div className="flex items-center gap-2">
           {localStorage.getItem("imgUrl") &&
