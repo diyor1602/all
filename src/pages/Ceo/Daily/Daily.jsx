@@ -470,31 +470,43 @@ const Daily = () => {
       label: "Jami harajatlar",
       value: daily.total_fixed_cost_uzs,
       bg: "bg-red-300",
+      dollar: true,
     },
     {
       label: "Kunlik o'zgarmas harajatlar",
       value: daily.daily_expenses,
       bg: "bg-green-300",
+      dollar: true,
     },
     {
       label: "AUP",
       value: daily.aup,
       bg: "bg-emerald-300",
+      dollar: true,
+    },
+    {
+      label: "Bitta AUP ga",
+      value: daily.aup / daily.total_output_quantity,
+      bg: "bg-orange-300",
+      dollar: true,
     },
     {
       label: "KPI",
       value: daily.kpi,
       bg: "bg-yellow-300",
+      dollar: true,
     },
     {
       label: "Tikuvchilar",
       value: daily.tarification,
       bg: "bg-pink-300",
+      dollar: true,
     },
     {
       label: "Transport uchun",
       value: daily.transport_attendance,
       bg: "bg-gray-300",
+      dollar: true,
     },
     {
       label: "Tikuv uchun",
@@ -503,17 +515,20 @@ const Daily = () => {
         0
       ),
       bg: "bg-purple-300",
+      dollar: true,
     },
     {
       label: "1 kishi uchun harajat",
       value: daily.per_employee_cost_uzs,
       bg: "bg-orange-300",
+      dollar: true,
     },
     {
       label: "O'rtacha aktiv ishchilar",
       value: daily.employee_count,
       bg: "bg-lime-300",
       prefix: "ta",
+      dollar: false,
     },
   ];
 
@@ -744,7 +759,7 @@ const Daily = () => {
                     </span>
                     <Badge variant="ghost" className="font-mono border-none">
                       {formatNumber(metric.value)} {metric.prefix || "so'm"}
-                      {metric.value
+                      {metric.dollar
                         ? ` / ${formatNumber(metric.value / dollarRate)} $`
                         : ""}
                     </Badge>
