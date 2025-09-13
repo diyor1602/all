@@ -115,14 +115,15 @@ const Daily = () => {
 
   const calculateTotal = (expenseOrder) => {
     return (
-      (expenseOrder?.costs_uzs?.allocatedAup || 0) +
-      (expenseOrder?.costs_uzs?.bonus || 0) +
-      (expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly || 0) +
-      (expenseOrder?.costs_uzs?.allocatedTransport || 0) +
-      (expenseOrder?.costs_uzs?.amortizationExpense || 0) +
-      (expenseOrder?.costs_uzs?.incomePercentageExpense || 0) +
-      (expenseOrder?.costs_uzs?.remainder || 0) +
-      (expenseOrder?.costs_uzs?.tarification || 0)
+      (parseFloat(expenseOrder?.costs_uzs?.allocatedAup) || 0) +
+      (parseFloat(expenseOrder?.costs_uzs?.bonus) || 0) +
+      (parseFloat(expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly) ||
+        0) +
+      (parseFloat(expenseOrder?.costs_uzs?.allocatedTransport) || 0) +
+      (parseFloat(expenseOrder?.costs_uzs?.amortizationExpense) || 0) +
+      (parseFloat(expenseOrder?.costs_uzs?.incomePercentageExpense) || 0) +
+      (parseFloat(expenseOrder?.costs_uzs?.remainder) || 0) +
+      (parseFloat(expenseOrder?.costs_uzs?.tarification) || 0)
     );
   };
 
@@ -1691,8 +1692,8 @@ const Daily = () => {
                         </span>
                       </div>
                       <span className="font-mono font-semibold text-slate-900">
-                        {formatNumber(value)} / {formatNumber(percentage)} %{" "}
-                        <span className="text-sm text-slate-500">so'm</span>
+                        {formatNumber(value)} so'm / {formatNumber(percentage)}{" "}
+                        %
                       </span>
                     </div>
                   )
