@@ -37,6 +37,7 @@ import {
   Download,
   Loader2,
   Zap,
+  AlarmClock,
 } from "lucide-react";
 import {
   Tooltip,
@@ -84,6 +85,19 @@ const Employees = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+  const [attendanceFilter, setAttendanceFilter] = useState(() => {
+    const today = new Date();
+    const priorDate = new Date();
+    priorDate.setDate(today.getDate() - 30);
+
+    return {
+      start_date: priorDate.toISOString().split("T")[0],
+      end_date: today.toISOString().split("T")[0],
+    };
+  });
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [employees, setEmployees] = useState({
@@ -305,6 +319,45 @@ const Employees = () => {
     }
   };
 
+  const handleDownloadAttendance = async () => {
+    setIsDownloading(true);
+    try {
+      // Make the API call with the response type as blob to handle file download
+      const response = await api.get(`/superhr/employees/attendances/export`, {
+        responseType: "blob",
+        params: {
+          start_date: attendanceFilter.start_date,
+          end_date: attendanceFilter.end_date,
+        },
+      });
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `davomat_${attendanceFilter.start_date}_${attendanceFilter.end_date}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message ||
+          "Davomat ro'yxatini yuklab olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   useEffect(() => {
     fetchEmployees();
   }, [
@@ -492,7 +545,7 @@ const Employees = () => {
         </Button>
       </div>
 
-      <div className="flex justify-between gap-2 mt-2">
+      <div className="flex items-center gap-2 mt-2">
         {/* Page info */}
         <div className="flex items-center gap-2">
           <div className="text-sm text-gray-500 text-center">
@@ -502,11 +555,29 @@ const Employees = () => {
           </div>
         </div>
         <Button
-          className="text-sm bg-green-500 hover:bg-green-600  "
+          className="ml-auto"
+          onClick={() => setAttendanceDialogOpen(true)}
+          disabled={isDownloading}
+          size="icon"
+          variant="ghost"
+        >
+          {isDownloading ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <AlarmClock />
+          )}
+        </Button>
+        <Button
           onClick={handleExport}
           disabled={isExporting}
+          size="icon"
+          variant="ghost"
         >
-          {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
+          {isExporting ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <Download className="text-green-600" />
+          )}
         </Button>
       </div>
 
@@ -759,6 +830,64 @@ const Employees = () => {
         onOpenChange={setImageDialogOpen}
         image={selectedImage}
       />
+      <Dialog
+        open={attendanceDialogOpen}
+        onOpenChange={setAttendanceDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Davomat jadvalini yuklab olish</DialogTitle>
+            <DialogDescription>
+              Yuklab olish uchun oraliq sanalarni tanlang
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <div>
+              <div className="text-sm mb-1">Boshlanish sanasi</div>
+              <Input
+                type="date"
+                value={attendanceFilter.start_date}
+                onChange={(e) =>
+                  setAttendanceFilter({
+                    ...attendanceFilter,
+                    start_date: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <div className="text-sm mb-1">Tugash sanasi</div>
+              <Input
+                type="date"
+                value={attendanceFilter.end_date}
+                onChange={(e) =>
+                  setAttendanceFilter({
+                    ...attendanceFilter,
+                    end_date: e.target.value,
+                  })
+                }
+              />
+            </div>
+          </div>
+          <Button
+            onClick={() => {
+              handleDownloadAttendance();
+            }}
+            disabled={
+              !attendanceFilter.start_date ||
+              !attendanceFilter.end_date ||
+              attendanceFilter.start_date > attendanceFilter.end_date ||
+              isDownloading
+            }
+          >
+            {isDownloading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Download />
+            )}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
