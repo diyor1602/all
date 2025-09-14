@@ -347,7 +347,7 @@ const SalaryDetails = () => {
             <Separator />
 
             <div className="space-y-3">
-              {employee.bonus && employee.type !== "aup" && (
+              {employee.salary_visible && employee.bonus && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Bonus:</span>
                   <span className="font-medium">
@@ -356,7 +356,7 @@ const SalaryDetails = () => {
                   </span>
                 </div>
               )}
-              {totalTarificationAmount > 0 && (
+              {employee.salary_visible && totalTarificationAmount > 0 && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">
                     Jami ishlangan mablag'lar:
@@ -415,14 +415,14 @@ const SalaryDetails = () => {
                   <span>{formatDate(employee.hiring_date)}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>To'lov turi:</span>
-                <span className="capitalize">
-                  {payment_types[employee.payment_type]}
-                </span>
-              </div>
-              {employee.type !== "aup" && (
+              {employee.salary_visible && (
                 <>
+                  <div className="flex justify-between">
+                    <span>To'lov turi:</span>
+                    <span className="capitalize">
+                      {payment_types[employee.payment_type]}
+                    </span>
+                  </div>
                   <div className="flex justify-between">
                     <span>Maosh:</span>
                     <span className="capitalize">
@@ -491,7 +491,7 @@ const SalaryDetails = () => {
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
                     Davomat qaydnomasi
-                    {employee.type !== "aup" && (
+                    {employee?.salary_visible && (
                       <>
                         {" ("}
                         {employee.attendance_salaries
@@ -570,7 +570,7 @@ const SalaryDetails = () => {
                                 {employee?.attendance_salaries?.find(
                                   (a) => a.attendance_id === attendance.id
                                 ) &&
-                                  employee.type !== "aup" && (
+                                  employee.salary_visible && (
                                     <p className="text-xs text-muted-foreground">
                                       Topgan puli:{" "}
                                       {parseFloat(

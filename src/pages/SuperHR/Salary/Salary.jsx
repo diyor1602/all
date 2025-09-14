@@ -709,17 +709,23 @@ const Salary = () => {
                   </div>
                 </TableCell>
                 <TableCell className="border">
-                  {payment_types[employee.payment_type]}
+                  {employee.salary_visible
+                    ? payment_types[employee.payment_type]
+                    : "-"}
                 </TableCell>
                 <TableCell className="border">
-                  {Number.parseFloat(employee?.salary || 0)?.toLocaleString(
-                    "ru-RU"
-                  )}
+                  {employee.salary_visible
+                    ? Number.parseFloat(employee?.salary || 0)?.toLocaleString(
+                        "ru-RU"
+                      )
+                    : "-"}
                 </TableCell>
                 <TableCell className="border">
-                  {Number.parseFloat(employee?.bonus || 0)?.toLocaleString(
-                    "ru-RU"
-                  )}
+                  {employee.salary_visible
+                    ? Number.parseFloat(employee?.bonus || 0)?.toLocaleString(
+                        "ru-RU"
+                      )
+                    : "-"}
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}
@@ -737,6 +743,7 @@ const Salary = () => {
                   <Button
                     variant="ghost"
                     size="icon"
+                    disabled={!employee.salary_visible}
                     onClick={() => handleEditClick(employee)}
                   >
                     <Pencil className="h-4 w-4" />
