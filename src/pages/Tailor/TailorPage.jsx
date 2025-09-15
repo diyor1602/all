@@ -272,7 +272,10 @@ const TailorPage = () => {
 
   return (
     <div className="flex flex-col gap-4 relative overflow-hidden">
-      <MarqueeBanner text="Diqqat! Ishga e'tiborli bo'ling!" />
+      <MarqueeBanner
+        text="Diqqat! Ishga e'tiborli bo'ling va sifatli tiking!"
+        additionalText="Диққат! Ишга эътиборли бўлинг ва сифатли тикинг!"
+      />
       <div className="flex items-center gap-2 flex-col">
         <div className="flex items-center gap-2">
           {localStorage.getItem("imgUrl") &&

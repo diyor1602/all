@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-const MarqueeBanner = ({ text }) => {
+const MarqueeBanner = ({ text, additionalText }) => {
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   const [duration, setDuration] = useState(20);
+  const [currentText, setCurrentText] = useState(text);
+  const [key, setKey] = useState(0); // force re-trigger animation
 
   useEffect(() => {
     if (containerRef.current && contentRef.current) {
@@ -11,12 +13,16 @@ const MarqueeBanner = ({ text }) => {
       const contentWidth = contentRef.current.offsetWidth;
 
       const distance = containerWidth + contentWidth;
-
-      const speed = 100;
-
+      const speed = 100; // pixels per second
       setDuration(distance / speed);
     }
-  }, [text]);
+  }, [currentText]);
+
+  const handleAnimationEnd = () => {
+    setCurrentText((prev) => (prev === text ? additionalText : text));
+    // reset animation by changing key
+    setKey((k) => k + 1);
+  };
 
   const marqueeStyles = {
     overflow: "hidden",
@@ -26,7 +32,7 @@ const MarqueeBanner = ({ text }) => {
   const marqueeContentStyles = {
     display: "inline-block",
     paddingLeft: "100%",
-    animation: `marquee ${duration}s linear infinite`,
+    animation: `marquee ${duration}s linear`,
   };
 
   const keyframesCSS = `
@@ -48,8 +54,13 @@ const MarqueeBanner = ({ text }) => {
         className="bg-red-500 fixed top-0 left-0 right-0 text-white text-center uppercase font-medium z-10"
         style={marqueeStyles}
       >
-        <div ref={contentRef} style={marqueeContentStyles}>
-          {text}
+        <div
+          key={key} // reset DOM node for fresh animation
+          ref={contentRef}
+          style={marqueeContentStyles}
+          onAnimationEnd={handleAnimationEnd}
+        >
+          {currentText}
         </div>
       </div>
     </>
