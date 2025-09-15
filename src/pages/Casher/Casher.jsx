@@ -6,8 +6,6 @@ import Requests from "./Requests/Requests";
 import Transfer from "./Transfer/Transfer";
 import Salary from "./Salary/Salary";
 import Employees from "./Employees/Employees";
-import Daily from "./Daily/Daily";
-import Monthly from "./Monthly/Monthly";
 
 const Casher = () => {
   return (
@@ -19,8 +17,6 @@ const Casher = () => {
       <Route path="transfer" element={<Transfer />} />
       <Route path="salary/*" element={<Salary />} />
       <Route path="employees" element={<Employees />} />
-      <Route path="daily" element={<Daily />} />
-      <Route path="monthly" element={<Monthly />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

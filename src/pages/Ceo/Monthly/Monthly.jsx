@@ -51,9 +51,9 @@ import { cn } from "@/lib/utils";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-const formatNumber = (number) => {
+const formatNumber = (number, maximumFractionDigits = 0) => {
   return Number.parseFloat(number || 0).toLocaleString("ru-RU", {
-    maximumFractionDigits: 0,
+    maximumFractionDigits,
   });
 };
 
@@ -264,7 +264,7 @@ const Monthly = () => {
     },
     {
       label: "1 kishi uchun harajat",
-      value: monthly.per_employee_cost_uzs,
+      value: monthly.per_employee_cost_uzs?.total,
       bg: "bg-orange-300",
       dollar: true,
     },
@@ -493,7 +493,7 @@ const Monthly = () => {
                     <Badge variant="ghost" className="font-mono border-none">
                       {formatNumber(metric.value)} {metric.prefix || "so'm"}
                       {metric.dollar
-                        ? ` / ${formatNumber(metric.value / dollarRate)} $`
+                        ? ` / ${formatNumber(metric.value / dollarRate, 2)} $`
                         : ""}
                     </Badge>
                   </div>
