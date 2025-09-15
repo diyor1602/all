@@ -87,6 +87,19 @@ const TarifSearch = () => {
             <CardTitle className="flex items-center gap-2">
               <Info className="h-6 w-6" />
               <span>Tarif ma'lumotlari</span>
+              <span
+                className="ml-auto"
+                onClick={() => {
+                  navigator.clipboard.writeText(tarif.order_id);
+                  toast({
+                    title: "Muvaffaqiyatli",
+                    description: "Buyurtma ID nusxa olindi",
+                    duration: 1000,
+                  });
+                }}
+              >
+                Buyurtma ID: {tarif.order_id}
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
