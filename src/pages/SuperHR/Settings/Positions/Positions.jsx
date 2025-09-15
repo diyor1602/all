@@ -223,11 +223,8 @@ const Positions = () => {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="bg-primary text-white hover:bg-primary-dark"
-                  >
-                    <Plus className="h-4 w-4" /> Yangi lavozim
+                  <Button>
+                    <Plus /> Yangi lavozim
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
