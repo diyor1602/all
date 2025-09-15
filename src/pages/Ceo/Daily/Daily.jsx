@@ -819,14 +819,32 @@ const Daily = () => {
               {additionalMetricsData && (
                 <div className="flex flex-col items-center">
                   {(() => {
-                    // Mapping for custom labels
-                    const metricLabels = {
-                      rasxod_limit_uzs: "Tikuv uchun",
-                      transport: "Transport",
-                      aup: "AUP",
-                      monthly_expense: "Oylik xarajat",
-                      income_percentage_expense: "Soliq",
-                      amortization_expense: "Amortizatsiya",
+                    // Unified mapping: label + color
+                    const metricConfig = {
+                      rasxod_limit_uzs: {
+                        title: "Tikuv uchun",
+                        color: "#3B82F6", // blue
+                      },
+                      transport: {
+                        title: "Transport",
+                        color: "#10B981", // green
+                      },
+                      aup: {
+                        title: "AUP",
+                        color: "#8B5CF6", // purple
+                      },
+                      monthly_expense: {
+                        title: "Oylik xarajat",
+                        color: "#F97316", // orange
+                      },
+                      income_percentage_expense: {
+                        title: "Soliq",
+                        color: "#EC4899", // pink
+                      },
+                      amortization_expense: {
+                        title: "Amortizatsiya",
+                        color: "#DC143C", // crimson
+                      },
                     };
 
                     const { total, ...metrics } = additionalMetricsData;
@@ -836,17 +854,6 @@ const Daily = () => {
                     const sortedMetrics = metricsArray.sort(
                       (a, b) => b[1].percent - a[1].percent
                     );
-
-                    const colors = [
-                      "#3B82F6", // blue
-                      "#10B981", // green
-                      "#8B5CF6", // purple
-                      "#F97316", // orange
-                      "#EC4899", // pink
-                      "#14B8A6", // teal
-                      "#F59E0B", // amber
-                      "#6366F1", // indigo
-                    ];
 
                     const radius = 70;
                     const circumference = 2 * Math.PI * radius;
@@ -862,7 +869,12 @@ const Daily = () => {
                           className="-rotate-90"
                         >
                           <g transform="translate(100,100)">
-                            {sortedMetrics.map(([key, { percent }], i) => {
+                            {sortedMetrics.map(([key, { percent }]) => {
+                              const config = metricConfig[key] || {
+                                title: key.replace(/_/g, " "),
+                                color: "#6366F1", // fallback indigo
+                              };
+
                               const length = (percent / 100) * circumference;
                               const circle = (
                                 <circle
@@ -871,7 +883,7 @@ const Daily = () => {
                                   cx="0"
                                   cy="0"
                                   fill="transparent"
-                                  stroke={colors[i % colors.length]}
+                                  stroke={config.color}
                                   strokeWidth="40"
                                   strokeDasharray={`${length} ${
                                     circumference - length
@@ -887,8 +899,13 @@ const Daily = () => {
 
                         {/* Legend */}
                         <div className="mt-4 w-full space-y-1">
-                          {sortedMetrics.map(
-                            ([key, { amount, percent }], i) => (
+                          {sortedMetrics.map(([key, { amount, percent }]) => {
+                            const config = metricConfig[key] || {
+                              title: key.replace(/_/g, " "),
+                              color: "#6366F1",
+                            };
+
+                            return (
                               <div
                                 key={key}
                                 className="flex items-center justify-between text-sm"
@@ -896,22 +913,18 @@ const Daily = () => {
                                 <div className="flex items-center space-x-2">
                                   <span
                                     className="w-3 h-3 rounded-full"
-                                    style={{
-                                      backgroundColor:
-                                        colors[i % colors.length],
-                                    }}
+                                    style={{ backgroundColor: config.color }}
                                   />
                                   <span className="capitalize">
-                                    {metricLabels[key] ||
-                                      key.replace(/_/g, " ")}
+                                    {config.title}
                                   </span>
                                 </div>
                                 <span className="font-mono">
                                   {percent}% ({formatNumber(amount)} so'm)
                                 </span>
                               </div>
-                            )
-                          )}
+                            );
+                          })}
                         </div>
                       </>
                     );
