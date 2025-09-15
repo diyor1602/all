@@ -7,6 +7,7 @@ import {
   Sprout,
   Truck,
   HandCoins,
+  Box,
 } from "lucide-react";
 
 const navigation = [
@@ -33,6 +34,12 @@ const navigation = [
     name: "Oylik terish",
     href: "/internalAccountant/manual",
     icon: HandCoins,
+    onMobile: false,
+  },
+  {
+    name: "Buyurtmalar",
+    href: "/internalAccountant/work",
+    icon: Box,
     onMobile: false,
   },
   { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
