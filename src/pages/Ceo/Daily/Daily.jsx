@@ -106,6 +106,9 @@ const Daily = () => {
   const [expenseOrder, setExpenseOrder] = useState(null);
   const pdfContentRef = useRef(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [additionalMetricsDialogOpen, setAdditionalMetricsDialogOpen] =
+    useState(false);
+  const [additionalMetricsData, setAdditionalMetricsData] = useState(null);
 
   const calculatePercentage = (value, total) => {
     if (!total) return 0;
@@ -523,6 +526,7 @@ const Daily = () => {
       value: daily.per_employee_cost_uzs?.total,
       bg: "bg-orange-300",
       dollar: true,
+      dialogData: daily.per_employee_cost_uzs,
     },
     {
       label: "O'rtacha aktiv ishchilar",
@@ -752,8 +756,13 @@ const Daily = () => {
                     key={index}
                     className={cn(
                       "flex justify-between items-center p-3 bg-50 rounded-lg flex-wrap",
-                      metric.bg
+                      metric.bg,
+                      metric.dialogData && "cursor-pointer"
                     )}
+                    onClick={() => {
+                      setAdditionalMetricsData(metric.dialogData);
+                      setAdditionalMetricsDialogOpen(true);
+                    }}
                   >
                     <span className="text-sm font-medium text-slate-600">
                       {metric.label}:
@@ -790,6 +799,125 @@ const Daily = () => {
                 </Button>
                 <Button onClick={updateDollarRate}>Saqlash</Button>
               </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={additionalMetricsDialogOpen}
+            onOpenChange={setAdditionalMetricsDialogOpen}
+          >
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  {formatNumber(additionalMetricsData?.total)} so'm
+                </DialogTitle>
+                <DialogDescription>
+                  {formatNumber(additionalMetricsData?.total / dollarRate, 2)}$
+                </DialogDescription>
+              </DialogHeader>
+
+              {additionalMetricsData && (
+                <div className="flex flex-col items-center">
+                  {(() => {
+                    // Mapping for custom labels
+                    const metricLabels = {
+                      rasxod_limit_uzs: "Tikuv uchun",
+                      transport: "Transport",
+                      aup: "AUP",
+                      monthly_expense: "Oylik xarajat",
+                      income_percentage_expense: "Soliq",
+                      amortization_expense: "Amortizatsiya",
+                    };
+
+                    const { total, ...metrics } = additionalMetricsData;
+                    const metricsArray = Object.entries(metrics);
+
+                    // Sort by percentage (descending)
+                    const sortedMetrics = metricsArray.sort(
+                      (a, b) => b[1].percent - a[1].percent
+                    );
+
+                    const colors = [
+                      "#3B82F6", // blue
+                      "#10B981", // green
+                      "#8B5CF6", // purple
+                      "#F97316", // orange
+                      "#EC4899", // pink
+                      "#14B8A6", // teal
+                      "#F59E0B", // amber
+                      "#6366F1", // indigo
+                    ];
+
+                    const radius = 70;
+                    const circumference = 2 * Math.PI * radius;
+                    let offset = 0;
+
+                    return (
+                      <>
+                        {/* Pie chart */}
+                        <svg
+                          width="180"
+                          height="180"
+                          viewBox="0 0 200 200"
+                          className="-rotate-90"
+                        >
+                          <g transform="translate(100,100)">
+                            {sortedMetrics.map(([key, { percent }], i) => {
+                              const length = (percent / 100) * circumference;
+                              const circle = (
+                                <circle
+                                  key={key}
+                                  r={radius}
+                                  cx="0"
+                                  cy="0"
+                                  fill="transparent"
+                                  stroke={colors[i % colors.length]}
+                                  strokeWidth="40"
+                                  strokeDasharray={`${length} ${
+                                    circumference - length
+                                  }`}
+                                  strokeDashoffset={-offset}
+                                />
+                              );
+                              offset += length;
+                              return circle;
+                            })}
+                          </g>
+                        </svg>
+
+                        {/* Legend */}
+                        <div className="mt-4 w-full space-y-1">
+                          {sortedMetrics.map(
+                            ([key, { amount, percent }], i) => (
+                              <div
+                                key={key}
+                                className="flex items-center justify-between text-sm"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <span
+                                    className="w-3 h-3 rounded-full"
+                                    style={{
+                                      backgroundColor:
+                                        colors[i % colors.length],
+                                    }}
+                                  />
+                                  <span className="capitalize">
+                                    {metricLabels[key] ||
+                                      key.replace(/_/g, " ")}
+                                  </span>
+                                </div>
+                                <span className="font-mono">
+                                  {percent}% ({formatNumber(amount)} so'm)
+                                </span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
             </DialogContent>
           </Dialog>
 
