@@ -10,6 +10,7 @@ import Holiday from "./Holiday/Holiday";
 import Lids from "./Lids/Lids";
 import Salary from "./Salary/Salary";
 import All from "./Settings/Positions/All";
+import NewAttendance from "./Attendance/NewAttendance";
 
 const SuperHr = () => {
   return (
@@ -24,6 +25,7 @@ const SuperHr = () => {
       <Route path="stats" element={<Stats />} />
       <Route path="lids/*" element={<Lids />} />
       <Route path="salary" element={<Salary />} />
+      <Route path="new-attendance/:id" element={<NewAttendance />} />
       <Route path="all" element={<All />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
