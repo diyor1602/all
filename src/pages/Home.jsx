@@ -615,18 +615,25 @@ const Home = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
                       {parseFloat(groupEarning.quantity || 0)?.toLocaleString(
-                        "ru-RU"
+                        "ru-RU",
+                        {
+                          maximumFractionDigits: 0,
+                        }
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
                       {parseFloat(
                         groupEarning.per_employee_earning || 0
-                      )?.toLocaleString("ru-RU")}
+                      )?.toLocaleString("ru-RU", {
+                        maximumFractionDigits: 0,
+                      })}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-semibold text-green-600 dark:text-green-400">
                       {parseFloat(
                         groupEarning.today_earning || 0
-                      )?.toLocaleString("ru-RU")}
+                      )?.toLocaleString("ru-RU", {
+                        maximumFractionDigits: 0,
+                      })}
                     </td>
                   </tr>
                 ))}
