@@ -492,6 +492,7 @@ const Monthly = () => {
                       metric.dialogData && "cursor-pointer"
                     )}
                     onClick={() => {
+                      if (!metric.dialogData) return;
                       setAdditionalMetricsData(metric.dialogData);
                       setAdditionalMetricsDialogOpen(true);
                     }}
@@ -566,7 +567,7 @@ const Monthly = () => {
                         color: "#8B5CF6", // purple
                       },
                       monthly_expense: {
-                        title: "Oylik xarajat",
+                        title: "Oylik o'zgarmas xarajat",
                         color: "#F97316", // orange
                       },
                       income_percentage_expense: {
