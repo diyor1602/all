@@ -58,6 +58,7 @@ import {
   Wrench,
   Scissors,
   Download,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -109,13 +110,19 @@ const Daily = () => {
   const [additionalMetricsDialogOpen, setAdditionalMetricsDialogOpen] =
     useState(false);
   const [additionalMetricsData, setAdditionalMetricsData] = useState(null);
-  const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
+  const [downloading, setDownloading] = useState({
+    excel: false,
+    pdf: false,
+  });
 
-  const handleDownloadExcel = async () => {
+  const handleDownload = async (fileType = "excel") => {
     try {
-      setIsDownloadingExcel(true);
+      setDownloading((prev) => ({
+        ...prev,
+        [fileType]: true,
+      }));
 
-      const response = await api.get("/ceo/monthly-export", {
+      const response = await api.get(`/ceo/monthly-export/${fileType}`, {
         params: {
           start_date: selectedDate,
           end_date: selectedDate,
@@ -124,11 +131,21 @@ const Daily = () => {
         responseType: "blob",
       });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const blob = new Blob([response.data], {
+        type:
+          fileType === "excel"
+            ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            : "application/pdf",
+      });
+
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
 
-      link.setAttribute("download", `${selectedDate}.xlsx`);
+      link.setAttribute(
+        "download",
+        `${selectedDate}.${fileType === "excel" ? "xlsx" : "pdf"}`
+      );
       document.body.appendChild(link);
       link.click();
 
@@ -138,10 +155,15 @@ const Daily = () => {
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description: "Oylik ma'lumotlarni olishda xatolik",
+        description:
+          error?.response?.data?.message ||
+          `${fileType.toUpperCase()} ma'lumotlarni olishda xatolik`,
       });
     } finally {
-      setIsDownloadingExcel(false);
+      setDownloading((prev) => ({
+        ...prev,
+        [fileType]: false,
+      }));
     }
   };
 
@@ -1313,13 +1335,26 @@ const Daily = () => {
                   <Button
                     size="icon"
                     variant="ghost"
-                    disabled={isDownloadingExcel}
-                    onClick={handleDownloadExcel}
+                    disabled={downloading.excel}
+                    className="ml-auto"
+                    onClick={() => handleDownload("excel")}
                   >
-                    {isDownloadingExcel ? (
+                    {downloading.excel ? (
                       <Loader2 className="animate-spin" />
                     ) : (
-                      <Download />
+                      <Download className="text-green-500" />
+                    )}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    disabled={downloading.pdf}
+                    onClick={() => handleDownload("pdf")}
+                  >
+                    {downloading.pdf ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <FileText className="text-blue-500" />
                     )}
                   </Button>
                 </div>
