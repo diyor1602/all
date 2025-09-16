@@ -4,7 +4,14 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Clock7, Image, UserPlus, UserX, Zap } from "lucide-react";
+import {
+  CircleDollarSign,
+  Clock7,
+  Image,
+  UserPlus,
+  UserX,
+  Zap,
+} from "lucide-react";
 
 const getDayInUzbek = (day) => {
   const days = [
@@ -332,10 +339,12 @@ const NewAttendance = () => {
                       <div className="flex items-center gap-2 w-full justify-center">
                         <div>{getStatusText(attendance)}</div>
                         <UserX
-                          className="text-red-500 cursor-pointer"
+                          className={`text-red-500 cursor-pointer ${
+                            loading ? "cursor-not-allowed opacity-50" : ""
+                          }`}
                           size={15}
-                          disabled={loading}
                           onClick={() => {
+                            if (loading) return;
                             handleAbsent(key);
                           }}
                         />
@@ -357,17 +366,20 @@ const NewAttendance = () => {
                           />
                         )}
                         <UserPlus
-                          disabled={loading}
-                          className="text-green-500 cursor-pointer"
+                          className={`text-green-500 cursor-pointer ${
+                            loading ? "cursor-not-allowed opacity-50" : ""
+                          }`}
                           size={15}
                         />
                         {/* Add button for making it 7:30 */}
                         <Clock7
-                          disabled={loading}
                           onClick={() => {
+                            if (loading) return;
                             handleMarkAttendanceFast2(key);
                           }}
-                          className="text-blue-500 cursor-pointer"
+                          className={`text-blue-500 cursor-pointer ${
+                            loading ? "cursor-not-allowed opacity-50" : ""
+                          }`}
                           size={15}
                         />
                       </div>
@@ -387,9 +399,16 @@ const NewAttendance = () => {
                             }}
                           />
                         )}
+                        <CircleDollarSign
+                          className={`text-yellow-500 cursor-pointer ${
+                            loading ? "cursor-not-allowed opacity-50" : ""
+                          }`}
+                          size={15}
+                        />
+
                         <Zap
                           onClick={() => {
-                            if (!attendance.check_in) {
+                            if (!attendance.check_in || loading) {
                               return;
                             }
                             handleCheckOutAttendanceFast2(key);
