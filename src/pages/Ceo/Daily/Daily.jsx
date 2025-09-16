@@ -109,6 +109,41 @@ const Daily = () => {
   const [additionalMetricsDialogOpen, setAdditionalMetricsDialogOpen] =
     useState(false);
   const [additionalMetricsData, setAdditionalMetricsData] = useState(null);
+  const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
+
+  const handleDownloadExcel = async () => {
+    try {
+      setIsDownloadingExcel(true);
+
+      const response = await api.get("/ceo/monthly-export", {
+        params: {
+          start_date: selectedDate,
+          end_date: selectedDate,
+          dollar_rate: dollarRate,
+        },
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+
+      link.setAttribute("download", `${selectedDate}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Oylik ma'lumotlarni olishda xatolik",
+      });
+    } finally {
+      setIsDownloadingExcel(false);
+    }
+  };
 
   const calculatePercentage = (value, total) => {
     if (!total) return 0;
@@ -1272,7 +1307,23 @@ const Daily = () => {
           {/* Orders Table */}
           <Card className="border-0 shadow-md">
             <CardHeader>
-              <CardTitle className="text-slate-800">Buyurtmalar</CardTitle>
+              <CardTitle>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="text-slate-800">Buyurtmalar</div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    disabled={isDownloadingExcel}
+                    onClick={handleDownloadExcel}
+                  >
+                    {isDownloadingExcel ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <Download />
+                    )}
+                  </Button>
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto w-full">
