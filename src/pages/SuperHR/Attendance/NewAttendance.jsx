@@ -486,20 +486,22 @@ const NewAttendance = () => {
                       </div>
                     </td>
                     <td className="border border-gray-300 p-1 text-center">
-                      {employeeData?.attendance_salaries?.find(
-                        (att) => att.date === key
-                      )?.amount && (
-                        <div>
-                          {parseFloat(
-                            employeeData?.attendance_salaries?.find(
-                              (att) => att.date === key
-                            )?.amount
-                          )?.toLocaleString("ru-RU", {
-                            maximumFractionDigits: 0,
-                          })}{" "}
-                          so'm
-                        </div>
-                      )}
+                      {employeeData?.salary_visible
+                        ? employeeData?.attendance_salaries?.find(
+                            (att) => att.date === key
+                          )?.amount && (
+                            <div>
+                              {parseFloat(
+                                employeeData?.attendance_salaries?.find(
+                                  (att) => att.date === key
+                                )?.amount
+                              )?.toLocaleString("ru-RU", {
+                                maximumFractionDigits: 0,
+                              })}{" "}
+                              so'm
+                            </div>
+                          )
+                        : "-"}
                     </td>
                   </tr>
                 );
@@ -523,12 +525,16 @@ const NewAttendance = () => {
                 Jami:
               </td>
               <td className="border border-gray-300 p-1 text-center">
-                {employeeData?.attendance_salaries
-                  ?.reduce((sum, item) => {
-                    return sum + (parseFloat(item.amount) || 0);
-                  }, 0)
-                  .toLocaleString("ru-RU", { maximumFractionDigits: 0 })}{" "}
-                so'm
+                {employeeData?.salary_visible
+                  ? `${employeeData?.attendance_salaries
+                      ?.reduce(
+                        (sum, item) => sum + (parseFloat(item.amount) || 0),
+                        0
+                      )
+                      .toLocaleString("ru-RU", {
+                        maximumFractionDigits: 0,
+                      })} so'm`
+                  : "-"}
               </td>
             </tr>
           </tbody>
