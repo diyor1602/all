@@ -339,21 +339,27 @@ const NewAttendance = () => {
           </div>
         </DialogContent>
       </Dialog>
-      <Input
-        type="month"
-        value={selectedMonth}
-        onChange={(e) => {
-          const [y, m] = e.target.value.split("-").map(Number);
-          const range = getMonthRange(y, m - 1);
-          setSelectedMonth(e.target.value);
-          setFilters(range);
-        }}
-        className="w-48 bg-white"
-      />
+      <div className="w-full flex items-center gap-2 justify-between flex-wrap">
+        <Input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => {
+            const [y, m] = e.target.value.split("-").map(Number);
+            const range = getMonthRange(y, m - 1);
+            setSelectedMonth(e.target.value);
+            setFilters(range);
+          }}
+          className="w-48 bg-white"
+        />
+        <div>
+          {employeeData?.name}, {employeeData?.department?.name} |{" "}
+          {employeeData?.position?.name}
+        </div>
+      </div>
 
-      <div>
+      <div className="w-full overflow-auto">
         <table
-          className={`border-collapse border border-gray-300 mt-4 w-full text-sm ${
+          className={`border-collapse border border-gray-300 mt-4 w-full text-sm whitespace-nowrap ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
