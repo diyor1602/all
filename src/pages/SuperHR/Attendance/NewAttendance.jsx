@@ -3,7 +3,14 @@ import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   CircleDollarSign,
   Clock7,
@@ -12,6 +19,7 @@ import {
   UserX,
   Zap,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const getDayInUzbek = (day) => {
   const days = [
@@ -105,6 +113,10 @@ const NewAttendance = () => {
 
   const [imgDialogOpen, setImgDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [timeDialogOpen, setTimeDialogOpen] = useState(false);
+  const [selectedTime, setSelectedTime] = useState("07:30");
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [timeDialogType, setTimeDialogType] = useState("");
 
   useEffect(() => {
     localStorage.setItem("salary2-filters", JSON.stringify(filters));
@@ -189,18 +201,19 @@ const NewAttendance = () => {
     }
   };
 
-  const handleMarkAttendanceFast2 = async (date) => {
-    const checkInDate = new Date(date);
-    checkInDate.setHours(Number.parseInt(7), Number.parseInt(30), 0);
-
-    // Add Uzbekistan timezone offset (GMT+5) by specifying proper ISO format with timezone
-    const localDate = new Date(checkInDate);
-    const isoWithTimezone = new Date(
-      localDate.getTime() - localDate.getTimezoneOffset() * 60000
-    )
-      .toISOString()
-      .replace("Z", "+05:00");
+  const handleMarkAttendanceFast2 = async (date, dialogTime = "07:30") => {
     try {
+      const [hours, minutes] = dialogTime.split(":").map(Number);
+      const checkInDate = new Date(date);
+      checkInDate.setHours(hours, minutes, 0);
+
+      const localDate = new Date(checkInDate);
+      const isoWithTimezone = new Date(
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .replace("Z", "+05:00");
+
       setLoading(true);
       await api.post("/superhr/attendances", {
         employee_id: id,
@@ -210,13 +223,11 @@ const NewAttendance = () => {
       toast({
         title: "Muvaffaqiyatli",
         description: "Davomat muvaffaqiyatli belgilandi",
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
+        style: { backgroundColor: "green", color: "white" },
         duration: 1000,
       });
       fetchSalaryDetails();
+      setTimeDialogOpen(false);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -228,12 +239,12 @@ const NewAttendance = () => {
     }
   };
 
-  const handleCheckOutAttendanceFast2 = async (date) => {
+  const handleCheckOutAttendanceFast2 = async (date, dialogTime = "17:30") => {
     try {
+      const [hours, minutes] = dialogTime.split(":").map(Number);
       const checkOutDate = new Date(date);
-      checkOutDate.setHours(Number.parseInt(17), Number.parseInt(30), 0);
+      checkOutDate.setHours(hours, minutes, 0);
 
-      // Add Uzbekistan timezone offset (GMT+5) by specifying proper ISO format with timezone
       const localDate = new Date(checkOutDate);
       const isoWithTimezone = new Date(
         localDate.getTime() - localDate.getTimezoneOffset() * 60000
@@ -241,7 +252,6 @@ const NewAttendance = () => {
         .toISOString()
         .replace("Z", "+05:00");
 
-      // Find the attendance record to update
       const attendanceRecord = employeeData.attendances.find(
         (a) => a.date === date
       );
@@ -261,13 +271,11 @@ const NewAttendance = () => {
       toast({
         title: "Muvaffaqiyatli",
         description: "Ketish vaqti muvaffaqiyatli belgilandi",
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
+        style: { backgroundColor: "green", color: "white" },
         duration: 1000,
       });
       fetchSalaryDetails();
+      setTimeDialogOpen(false);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -277,8 +285,47 @@ const NewAttendance = () => {
     }
   };
 
+  const handleAttendance = async () => {
+    if (timeDialogType === "check_in") {
+      await handleMarkAttendanceFast2(selectedDate, selectedTime);
+    } else {
+      await handleCheckOutAttendanceFast2(selectedDate, selectedTime);
+    }
+  };
+
   return (
     <div>
+      <Dialog open={timeDialogOpen} onOpenChange={setTimeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {timeDialogType === "check_in" ? "Kelgan" : "Ketgan"} vaqtni
+              belgilash
+            </DialogTitle>
+            <DialogDescription>{employeeData?.name}</DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-4 py-4 w-full">
+            <Input
+              type="time"
+              value={selectedTime}
+              onChange={(e) => setSelectedTime(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTimeDialogOpen(false)}>
+              Bekor qilish
+            </Button>
+            <Button
+              disabled={loading || !selectedTime}
+              onClick={handleAttendance}
+            >
+              {loading ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={imgDialogOpen} onOpenChange={setImgDialogOpen}>
         <DialogContent className="max-w-lg">
           <div className="flex items-center justify-center">
@@ -369,6 +416,13 @@ const NewAttendance = () => {
                           className={`text-green-500 cursor-pointer ${
                             loading ? "cursor-not-allowed opacity-50" : ""
                           }`}
+                          onClick={() => {
+                            if (loading) return;
+                            setSelectedTime("07:30");
+                            setSelectedDate(key);
+                            setTimeDialogOpen(true);
+                            setTimeDialogType("check_in");
+                          }}
                           size={15}
                         />
                         {/* Add button for making it 7:30 */}
@@ -400,15 +454,24 @@ const NewAttendance = () => {
                           />
                         )}
                         <CircleDollarSign
-                          className={`text-yellow-500 cursor-pointer ${
-                            loading ? "cursor-not-allowed opacity-50" : ""
-                          }`}
+                          className={
+                            attendance?.check_in
+                              ? "text-yellow-500 cursor-pointer"
+                              : "text-gray-500 cursor-not-allowed"
+                          }
+                          onClick={() => {
+                            if (loading || !attendance?.check_in) return;
+                            setSelectedTime("17:30");
+                            setSelectedDate(key);
+                            setTimeDialogOpen(true);
+                            setTimeDialogType("check_out");
+                          }}
                           size={15}
                         />
 
                         <Zap
                           onClick={() => {
-                            if (!attendance.check_in || loading) {
+                            if (!attendance?.check_in || loading) {
                               return;
                             }
                             handleCheckOutAttendanceFast2(key);
