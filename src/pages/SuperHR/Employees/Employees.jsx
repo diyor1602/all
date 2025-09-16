@@ -38,6 +38,7 @@ import {
   Loader2,
   Zap,
   AlarmClock,
+  AlarmClockCheck,
 } from "lucide-react";
 import {
   Tooltip,
@@ -660,6 +661,15 @@ const Employees = () => {
                 </TableCell>
                 <TableCell className="text-right border">
                   <div className="flex items-center gap-2">
+                    <Link
+                      to={`/superhr/new-attendance/${employee.id}`}
+                      target="_blank"
+                    >
+                      <AlarmClockCheck
+                        size={16}
+                        className="text-gray-500 hover:text-gray-600 hover:scale-110 transition-all duration-200 cursor-pointer"
+                      />
+                    </Link>
                     <Link
                       to={`/superhr/employees/view/${employee.id}`}
                       target="_blank"
