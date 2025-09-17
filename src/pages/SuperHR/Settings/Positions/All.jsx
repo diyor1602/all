@@ -34,6 +34,7 @@ const colorPalette = [
 const All = () => {
   const [roles, setRoles] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [subDepartments, setSubDepartments] = useState([]);
   const [selectedDep, setSelectedDep] = useState(null);
   const [selectedSub, setSelectedSub] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -46,6 +47,14 @@ const All = () => {
     department_id: 0,
     duties: "",
   });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editPayload, setEditPayload] = useState({
+    name: "",
+    main_department_id: "",
+    department_id: 0,
+    duties: "",
+  });
+  const [editingPos, setEditingPos] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,22 +75,33 @@ const All = () => {
     }
   };
 
+  useEffect(() => {
+    // restore saved dep/sub when departments are loaded
+    if (departments.length > 0) {
+      const savedDepId = localStorage.getItem("positionSelectedDep");
+      const savedSubId = localStorage.getItem("positionSelectedSub");
+
+      const foundDep = departments.find((d) => d.id == savedDepId);
+      const foundSub = foundDep?.departments.find((s) => s.id == savedSubId);
+
+      if (foundDep) {
+        setSelectedDep(foundDep);
+        setSelectedSub(foundSub || foundDep.departments?.[0] || null);
+      } else {
+        // fallback to first department
+        const firstDep = departments[0];
+        setSelectedDep(firstDep);
+        setSelectedSub(firstDep.departments?.[0] || null);
+      }
+    }
+  }, [departments]);
+
   const fetchDepartments = async () => {
     try {
       const response = await api.get("/superhr/departments");
       const deps = response.data;
       setDepartments(deps);
-
-      if (deps?.length > 0) {
-        const firstDep = deps[0];
-        setSelectedDep(firstDep);
-
-        if (firstDep.departments?.length > 0) {
-          setSelectedSub(firstDep.departments[0]); // ✅ auto select first sub-department
-        } else {
-          setSelectedSub(null); // fallback to main dep only
-        }
-      }
+      setSubDepartments(deps.flatMap((dep) => dep.departments));
     } catch {
       toast({
         title: "Xatolik",
@@ -142,6 +162,68 @@ const All = () => {
         title: "Xatolik",
         description:
           error?.response?.data?.message || "Lavozim qo'shishda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!editPayload.name.trim()) {
+      toast({
+        title: "Xatolik",
+        description: "Lavozim nomi kiritilmagan",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    if (!editPayload.main_department_id) {
+      toast({
+        title: "Xatolik",
+        description: "Asosiy bo'lim tanlanmagan",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    if (editPayload.main_department_id !== "0" && !editPayload.department_id) {
+      toast({
+        title: "Xatolik",
+        description: "Bo'lim tanlanmagan",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    try {
+      setSubmitting(true);
+      const response = await api.patch(
+        `/superhr/positions/${editingPos.id}`,
+        editPayload
+      );
+      setRoles([...roles, response.data]);
+      setEditDialogOpen(false);
+      setEditPayload({ name: "", main_department_id: "", department_id: 0 });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Lavozim yangilandi",
+        variant: "default",
+        duration: 1000,
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
+      fetchRoles();
+      fetchDepartments();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message || "Lavozim yangilashda xatolik",
         variant: "destructive",
         duration: 1500,
       });
@@ -213,6 +295,93 @@ const All = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lavozimni tahrirlash</DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Select
+              value={editPayload.main_department_id}
+              onValueChange={(value) =>
+                setEditPayload({
+                  ...editPayload,
+                  main_department_id: value,
+                  department_id: "",
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Asosiy bo'limni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((dep) => (
+                  <SelectItem key={dep.id} value={dep.id}>
+                    {dep.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={editPayload.department_id}
+              onValueChange={(value) =>
+                setEditPayload({ ...editPayload, department_id: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Bo'limni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {subDepartments
+                  .filter(
+                    (dep) =>
+                      dep.main_department_id === editPayload.main_department_id
+                  )
+                  .map((dep) => (
+                    <SelectItem key={dep.id} value={dep.id}>
+                      {dep.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Lavozim nomini kiriting"
+              value={editPayload.name}
+              onChange={(e) =>
+                setEditPayload({ ...editPayload, name: e.target.value })
+              }
+            />
+            <Textarea
+              placeholder="Ushbu lavozimdagi xodimning vazifalarini kiriting"
+              className="min-h-[40vh] max-h-[60vh]"
+              value={editPayload.duties}
+              onChange={(e) =>
+                setEditPayload({ ...editPayload, duties: e.target.value })
+              }
+            />
+          </div>
+          <div className="flex justify-end items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditDialogOpen(false);
+                setEditPayload({
+                  name: "",
+                  main_department_id: "",
+                  department_id: 0,
+                  duties: "",
+                });
+              }}
+            >
+              Bekor qilish
+            </Button>
+            <Button onClick={handleEdit} disabled={submitting}>
+              {submitting ? "Yuborilmoqda" : "Saqlash"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Sidebar */}
       <aside className="w-full md:w-72 border-r md:min-h-[calc(100vh-4rem)] p-4 space-y-6">
         <div className="flex justify-between items-center">
@@ -232,7 +401,14 @@ const All = () => {
                 }`}
                 onClick={() => {
                   setSelectedDep(dep);
-                  setSelectedSub(dep.departments?.[0] || null);
+                  localStorage.setItem("positionSelectedDep", dep.id);
+
+                  const firstSub = dep.departments?.[0] || null;
+                  setSelectedSub(firstSub);
+                  localStorage.setItem(
+                    "positionSelectedSub",
+                    firstSub?.id || ""
+                  );
                 }}
               >
                 {dep.name}
@@ -247,7 +423,10 @@ const All = () => {
                           ? "bg-primary/80 text-white shadow"
                           : "hover:bg-primary/10 text-gray-600"
                       }`}
-                      onClick={() => setSelectedSub(sub)}
+                      onClick={() => {
+                        setSelectedSub(sub);
+                        localStorage.setItem("positionSelectedSub", sub.id);
+                      }}
                     >
                       {sub.name}
                     </button>
@@ -321,6 +500,16 @@ const All = () => {
                             className="rounded-lg shadow-sm"
                             size="icon"
                             variant="outline"
+                            onClick={() => {
+                              setEditingPos(role);
+                              setEditPayload({
+                                name: role.name,
+                                main_department_id: selectedDep?.id,
+                                department_id: selectedSub?.id,
+                                duties: role.duties || "",
+                              });
+                              setEditDialogOpen(true);
+                            }}
                           >
                             <Pencil />
                           </Button>
