@@ -243,7 +243,7 @@ const Positions = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
-            <p>
+            <p className="whitespace-pre-line">
               {viewingPos?.duties || "Bu lavozim uchun vazifalar mavjud emas"}
             </p>
           </div>
