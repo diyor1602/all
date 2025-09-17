@@ -2,17 +2,16 @@ import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Building2, Eye, Pencil } from "lucide-react";
+import { motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Pencil, Plus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -20,26 +19,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+
+const colorPalette = [
+  "bg-rose-100 text-rose-800 border-rose-200",
+  "bg-emerald-100 text-emerald-800 border-emerald-200",
+  "bg-indigo-100 text-indigo-800 border-indigo-200",
+  "bg-amber-100 text-amber-800 border-amber-200",
+  "bg-sky-100 text-sky-800 border-sky-200",
+  "bg-violet-100 text-violet-800 border-violet-200",
+];
 
 const Positions = () => {
   const [roles, setRoles] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [newRole, setNewRole] = useState({
+  const [subDepartments, setSubDepartments] = useState([]);
+  const [selectedDep, setSelectedDep] = useState(null);
+  const [selectedSub, setSelectedSub] = useState(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingPos, setViewingPos] = useState(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [addPayload, setAddPayload] = useState({
     name: "",
     main_department_id: "",
     department_id: 0,
+    duties: "",
   });
-  const [editingRole, setEditingRole] = useState(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editPayload, setEditPayload] = useState({
+    name: "",
+    main_department_id: "",
+    department_id: 0,
+    duties: "",
+  });
+  const [editingPos, setEditingPos] = useState(null);
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!isAddDialogOpen) {
-      setNewRole({ name: "" });
-    }
-  }, [isAddDialogOpen]);
 
   useEffect(() => {
     fetchRoles();
@@ -47,507 +63,467 @@ const Positions = () => {
   }, []);
 
   const fetchRoles = async () => {
-    setIsLoading(true);
     try {
       const response = await api.get("/superhr/positions");
       setRoles(response.data);
-    } catch (error) {
+    } catch {
       toast({
         title: "Xatolik",
         description: "Lavozimlar olishda xatolik",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // restore saved dep/sub when departments are loaded
+    if (departments.length > 0) {
+      const savedDepId = localStorage.getItem("positionSelectedDep");
+      const savedSubId = localStorage.getItem("positionSelectedSub");
+
+      const foundDep = departments.find((d) => d.id == savedDepId);
+      const foundSub = foundDep?.departments.find((s) => s.id == savedSubId);
+
+      if (foundDep) {
+        setSelectedDep(foundDep);
+        setSelectedSub(foundSub || foundDep.departments?.[0] || null);
+      } else {
+        // fallback to first department
+        const firstDep = departments[0];
+        setSelectedDep(firstDep);
+        setSelectedSub(firstDep.departments?.[0] || null);
+      }
+    }
+  }, [departments]);
 
   const fetchDepartments = async () => {
     try {
       const response = await api.get("/superhr/departments");
-      setDepartments(response.data);
-    } catch (error) {
+      const deps = response.data;
+      setDepartments(deps);
+      setSubDepartments(deps.flatMap((dep) => dep.departments));
+    } catch {
       toast({
         title: "Xatolik",
-        description: "Departamentlar olishda xatolik",
+        description: "Bo'limlarni olishda xatolik",
         variant: "destructive",
       });
     }
   };
 
-  const addRole = async () => {
-    if (isLoading) return;
-
-    if (!newRole.name.trim()) {
+  const handleAdd = async () => {
+    if (!addPayload.name.trim()) {
       toast({
         title: "Xatolik",
-        description: "Lavozim tavsifi kiritilmagan",
+        description: "Lavozim nomi kiritilmagan",
         variant: "destructive",
+        duration: 1500,
       });
       return;
     }
-
-    if (!newRole.main_department_id) {
+    if (!addPayload.main_department_id) {
       toast({
         title: "Xatolik",
         description: "Asosiy bo'lim tanlanmagan",
         variant: "destructive",
+        duration: 1500,
       });
       return;
     }
-
-    if (newRole.main_department_id !== "0" && !newRole.department_id) {
+    if (addPayload.main_department_id !== "0" && !addPayload.department_id) {
       toast({
         title: "Xatolik",
         description: "Bo'lim tanlanmagan",
         variant: "destructive",
+        duration: 1500,
       });
       return;
     }
-
-    setIsLoading(true);
     try {
-      const response = await api.post("/superhr/positions", {
-        name: newRole.name,
-        department_id:
-          newRole.main_department_id === "0" ? 0 : newRole.department_id,
-      });
-
+      setSubmitting(true);
+      const response = await api.post("/superhr/positions", addPayload);
       setRoles([...roles, response.data]);
-      setNewRole({ name: "" });
-      setIsAddDialogOpen(false);
-
+      setAddDialogOpen(false);
+      setAddPayload({ name: "", main_department_id: "", department_id: 0 });
       toast({
         title: "Muvaffaqiyatli",
         description: "Lavozim qo'shildi",
+        variant: "default",
+        duration: 1000,
         style: {
-          backgroundColor: "green",
+          background: "green",
           color: "white",
         },
       });
       fetchRoles();
+      fetchDepartments();
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Lavozim qo'shishda xatolik",
+        description:
+          error?.response?.data?.message || "Lavozim qo'shishda xatolik",
         variant: "destructive",
+        duration: 1500,
       });
     } finally {
-      setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const updateRole = async () => {
-    if (isLoading) return;
-
-    if (!editingRole.name.trim()) {
+  const handleEdit = async () => {
+    if (!editPayload.name.trim()) {
       toast({
         title: "Xatolik",
-        description: "Lavozim tavsifi kiritilmagan",
+        description: "Lavozim nomi kiritilmagan",
         variant: "destructive",
+        duration: 1500,
       });
       return;
     }
-
-    setIsLoading(true);
-    try {
-      await api.patch(`/superhr/positions/${editingRole.id}`, {
-        name: editingRole.name,
-        department_id: editingRole.department_id,
+    if (!editPayload.main_department_id) {
+      toast({
+        title: "Xatolik",
+        description: "Asosiy bo'lim tanlanmagan",
+        variant: "destructive",
+        duration: 1500,
       });
-
-      const updatedRoles = roles.map((role) =>
-        role.id === editingRole.id
-          ? {
-              ...role,
-              name: editingRole.name,
-              department_id: editingRole.department_id,
-            }
-          : role
+      return;
+    }
+    if (editPayload.main_department_id !== "0" && !editPayload.department_id) {
+      toast({
+        title: "Xatolik",
+        description: "Bo'lim tanlanmagan",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    try {
+      setSubmitting(true);
+      const response = await api.patch(
+        `/superhr/positions/${editingPos.id}`,
+        editPayload
       );
-
-      setRoles(updatedRoles);
-      setIsEditDialogOpen(false);
-
+      setRoles([...roles, response.data]);
+      setEditDialogOpen(false);
+      setEditPayload({ name: "", main_department_id: "", department_id: 0 });
       toast({
         title: "Muvaffaqiyatli",
         description: "Lavozim yangilandi",
+        variant: "default",
+        duration: 1000,
         style: {
-          backgroundColor: "green",
+          background: "green",
           color: "white",
         },
       });
+      fetchRoles();
+      fetchDepartments();
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Lavozim yangilashda xatolik",
+        description:
+          error?.response?.data?.message || "Lavozim yangilashda xatolik",
         variant: "destructive",
+        duration: 1500,
       });
     } finally {
-      setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleEditClick = (role) => {
-    // Find the main department for this role
-    let mainDepartmentId = "0";
-    departments.forEach((mainDep) => {
-      mainDep.departments.forEach((dep) => {
-        if (dep.id === role.department_id) {
-          mainDepartmentId = String(mainDep.id);
-        }
-      });
-    });
-
-    setEditingRole({
-      ...role,
-      main_department_id: mainDepartmentId,
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const getUnassignedRoles = () => {
-    return roles.filter(
-      (role) => role.department_id === 0 || role.department_id === null
-    );
-  };
-
   return (
-    <div className="container mx-auto py-6">
-      <Card className="shadow-md">
-        <CardHeader className="bg-gray-50">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <CardTitle className="text-xl font-bold text-gray-800">
-              Lavozimlar Boshqaruvi
-            </CardTitle>
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus /> Yangi lavozim
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Yangi lavozim qo'shish</DialogTitle>
-                  </DialogHeader>
-                  <div className="py-4 space-y-4">
-                    <div>
-                      <label
-                        htmlFor="name"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Lavozim tavsifi
-                      </label>
-                      <Input
-                        id="name"
-                        placeholder="Lavozim tavsifi"
-                        value={newRole.name}
-                        onChange={(e) =>
-                          setNewRole({
-                            ...newRole,
-                            name: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="mainDepartment"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Asosiy bo'lim
-                      </label>
-                      <Select
-                        value={String(newRole?.main_department_id || "")}
-                        onValueChange={(value) => {
-                          setNewRole({
-                            ...newRole,
-                            main_department_id: value,
-                            department_id: 0,
-                          });
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Asosiy bo'limni tanlang" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">
-                            Bo'linmaga biriktirilmagan
-                          </SelectItem>
-                          {departments.map((dep) => (
-                            <SelectItem key={dep.id} value={String(dep.id)}>
-                              {dep.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {newRole?.main_department_id &&
-                      newRole.main_department_id !== "0" && (
-                        <div>
-                          <label
-                            htmlFor="subDepartment"
-                            className="block text-sm font-medium mb-1"
-                          >
-                            Bo'lim
-                          </label>
-                          <Select
-                            value={String(newRole?.department_id || "0")}
-                            onValueChange={(value) =>
-                              setNewRole({
-                                ...newRole,
-                                department_id: parseInt(value),
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Bo'limni tanlang" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {departments
-                                .find(
-                                  (dep) =>
-                                    dep.id ===
-                                    parseInt(newRole.main_department_id)
-                                )
-                                ?.departments.map((subdep) => (
-                                  <SelectItem
-                                    key={subdep.id}
-                                    value={String(subdep.id)}
-                                  >
-                                    {subdep.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsAddDialogOpen(false)}
-                    >
-                      Bekor qilish
-                    </Button>
-                    <Button
-                      onClick={addRole}
-                      disabled={isLoading}
-                      className="bg-primary text-white hover:bg-primary-dark"
-                    >
-                      {isLoading ? "Yuborilmoqda..." : "Saqlash"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-2">
-            {departments?.map((department, index) => (
-              <Card
-                key={index}
-                className="hover:shadow-md transition-all border-l-4 border-l-primary cursor-pointer"
-              >
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-center mb-2 border-b-2 pb-2">
-                    <div
-                      className="font-semibold text-2xl truncate"
-                      title={department.name}
-                    >
-                      {department.name}
-                    </div>
-                  </div>
-                  {department?.departments
-                    ?.sort((a, b) => a.name.localeCompare(b.name))
-                    .map((subdep, subIndex) => (
-                      <div key={subIndex}>
-                        <div className="flex items-center justify-center my-4 text-xl">
-                          <div
-                            className="font-medium truncate"
-                            title={subdep.name}
-                          >
-                            {subdep.name}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="ml-2 flex flex-wrap gap-3">
-                            {roles
-                              ?.filter((r) => r.department_id === subdep.id)
-                              .sort((a, b) => a.name.localeCompare(b.name))
-                              .map((role, roleIndex) => (
-                                <Button
-                                  key={roleIndex}
-                                  className="flex items-center gap-2 rounded p-2 text-sm"
-                                  onClick={() => handleEditClick(role)}
-                                >
-                                  {role.name}
-                                </Button>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </CardContent>
-              </Card>
-            ))}
-
-            {/* Unassigned Roles Section */}
-            {getUnassignedRoles().length > 0 && (
-              <Card className="hover:shadow-md transition-all border-l-4 border-l-yellow-500 mt-4">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-center mb-2 border-b-2 pb-2">
-                    <div className="font-semibold text-2xl truncate">
-                      Bo'linmaga biriktirilmagan lavozimlar
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {getUnassignedRoles().map((role, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                      >
-                        <span className="truncate">{role.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditClick(role)}
-                          className="p-1"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Edit Role Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+    <div className="flex flex-col md:flex-row h-full">
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Lavozimni tahrirlash</DialogTitle>
+            <DialogTitle>{viewingPos?.name}</DialogTitle>
+            <DialogDescription>
+              {`${selectedDep?.name} -> ${selectedSub?.name}`}
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div>
-              <label
-                htmlFor="edit-name"
-                className="block text-sm font-medium mb-1"
-              >
-                Lavozim nomi
-              </label>
-              <Input
-                id="edit-name"
-                placeholder="Lavozim nomi"
-                value={editingRole?.name || ""}
-                onChange={(e) =>
-                  setEditingRole({
-                    ...editingRole,
-                    name: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="mainDepartment"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Asosiy bo'lim
-                </label>
-                <Select
-                  value={String(editingRole?.main_department_id || "")}
-                  onValueChange={(value) => {
-                    setEditingRole({
-                      ...editingRole,
-                      main_department_id: value,
-                      department_id: 0, // Reset sub-department when main department changes
-                    });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Asosiy bo'limni tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">
-                      Bo'linmaga biriktirilmagan
-                    </SelectItem>
-                    {departments.map((dep) => (
-                      <SelectItem key={dep.id} value={String(dep.id)}>
-                        {dep.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {editingRole?.main_department_id &&
-                editingRole.main_department_id !== "0" && (
-                  <div>
-                    <label
-                      htmlFor="subDepartment"
-                      className="block text-sm font-medium mb-1"
-                    >
-                      Bo'lim
-                    </label>
-                    <Select
-                      value={String(editingRole?.department_id || "0")}
-                      onValueChange={(value) =>
-                        setEditingRole({
-                          ...editingRole,
-                          department_id: parseInt(value),
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Bo'limni tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments
-                          .find(
-                            (dep) =>
-                              dep.id ===
-                              parseInt(editingRole.main_department_id)
-                          )
-                          ?.departments.map((subdep) => (
-                            <SelectItem
-                              key={subdep.id}
-                              value={String(subdep.id)}
-                            >
-                              {subdep.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-            </div>
+          <div className="flex flex-col gap-2">
+            <p>
+              {viewingPos?.duties || "Bu lavozim uchun vazifalar mavjud emas"}
+            </p>
           </div>
-          <DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lavozim qo'shish</DialogTitle>
+            <DialogDescription>
+              {`${selectedDep?.name} -> ${selectedSub?.name}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Input
+              placeholder="Lavozim nomini kiriting"
+              value={addPayload.name}
+              onChange={(e) =>
+                setAddPayload({ ...addPayload, name: e.target.value })
+              }
+            />
+            <Textarea
+              placeholder="Ushbu lavozimdagi xodimning vazifalarini kiriting"
+              className="min-h-[40vh] max-h-[60vh]"
+              value={addPayload.duties}
+              onChange={(e) =>
+                setAddPayload({ ...addPayload, duties: e.target.value })
+              }
+            />
+          </div>
+          <div className="flex justify-end items-center gap-2 flex-wrap">
             <Button
               variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
+              onClick={() => {
+                setAddDialogOpen(false);
+                setAddPayload({
+                  name: "",
+                  main_department_id: "",
+                  department_id: 0,
+                  duties: "",
+                });
+              }}
             >
               Bekor qilish
             </Button>
-            <Button
-              onClick={updateRole}
-              disabled={isLoading}
-              className="bg-primary text-white hover:bg-primary-dark"
-            >
-              {isLoading ? "Yuborilmoqda..." : "Saqlash"}
+            <Button onClick={handleAdd} disabled={submitting}>
+              {submitting ? "Yuborilmoqda" : "Qo'shish"}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lavozimni tahrirlash</DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Select
+              value={editPayload.main_department_id}
+              onValueChange={(value) =>
+                setEditPayload({
+                  ...editPayload,
+                  main_department_id: value,
+                  department_id: "",
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Asosiy bo'limni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((dep) => (
+                  <SelectItem key={dep.id} value={dep.id}>
+                    {dep.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={editPayload.department_id}
+              onValueChange={(value) =>
+                setEditPayload({ ...editPayload, department_id: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Bo'limni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {subDepartments
+                  .filter(
+                    (dep) =>
+                      dep.main_department_id === editPayload.main_department_id
+                  )
+                  .map((dep) => (
+                    <SelectItem key={dep.id} value={dep.id}>
+                      {dep.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Lavozim nomini kiriting"
+              value={editPayload.name}
+              onChange={(e) =>
+                setEditPayload({ ...editPayload, name: e.target.value })
+              }
+            />
+            <Textarea
+              placeholder="Ushbu lavozimdagi xodimning vazifalarini kiriting"
+              className="min-h-[40vh] max-h-[60vh]"
+              value={editPayload.duties}
+              onChange={(e) =>
+                setEditPayload({ ...editPayload, duties: e.target.value })
+              }
+            />
+          </div>
+          <div className="flex justify-end items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditDialogOpen(false);
+                setEditPayload({
+                  name: "",
+                  main_department_id: "",
+                  department_id: 0,
+                  duties: "",
+                });
+              }}
+            >
+              Bekor qilish
+            </Button>
+            <Button onClick={handleEdit} disabled={submitting}>
+              {submitting ? "Yuborilmoqda" : "Saqlash"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Sidebar */}
+      <aside className="w-full md:w-72 border-r md:min-h-[calc(100vh-4rem)] p-4 space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-primary" />
+            Bo'limlar
+          </h2>
+        </div>
+        <div className="space-y-3">
+          {departments?.map((dep, idx) => (
+            <div key={idx}>
+              <button
+                className={`w-full text-left px-3 py-2 rounded-lg font-medium transition ${
+                  selectedDep?.id === dep.id
+                    ? "bg-primary text-white shadow-md"
+                    : "hover:bg-primary/10 text-gray-700"
+                }`}
+                onClick={() => {
+                  setSelectedDep(dep);
+                  localStorage.setItem("positionSelectedDep", dep.id);
+
+                  const firstSub = dep.departments?.[0] || null;
+                  setSelectedSub(firstSub);
+                  localStorage.setItem(
+                    "positionSelectedSub",
+                    firstSub?.id || ""
+                  );
+                }}
+              >
+                {dep.name}
+              </button>
+              {selectedDep?.id === dep.id && dep.departments?.length > 0 && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {dep.departments.map((sub, sIdx) => (
+                    <button
+                      key={sIdx}
+                      className={`block w-full text-left px-3 py-1 rounded-md text-sm transition ${
+                        selectedSub?.id === sub.id
+                          ? "bg-primary/80 text-white shadow"
+                          : "hover:bg-primary/10 text-gray-600"
+                      }`}
+                      onClick={() => {
+                        setSelectedSub(sub);
+                        localStorage.setItem("positionSelectedSub", sub.id);
+                      }}
+                    >
+                      {sub.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 space-y-6 bg-white">
+        {/* Search */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
+            Lavozimlar
+          </h1>
+          <Button
+            size="icon"
+            className="bg-green-500 hover:bg-green-600"
+            onClick={() => {
+              setAddPayload({
+                name: "",
+                main_department_id: selectedDep?.id,
+                department_id: selectedSub?.id,
+              });
+              setAddDialogOpen(true);
+            }}
+          >
+            <Plus />
+          </Button>
+        </div>
+
+        {/* Roles Grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {roles.filter((role) => role.department_id === selectedSub?.id)
+            .length > 0 ? (
+            roles
+              .filter((role) => role.department_id === selectedSub?.id)
+              .map((role, idx) => {
+                const colorClass = colorPalette[idx % colorPalette.length];
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <Card
+                      className={`rounded-xl shadow-md hover:shadow-xl transition border ${colorClass}`}
+                    >
+                      <CardHeader>
+                        <CardTitle className="text-lg font-semibold truncate">
+                          {role.name}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex justify-end items-center gap-2 flex-wrap">
+                          <Button
+                            className="rounded-lg shadow-sm"
+                            size="icon"
+                            onClick={() => {
+                              setViewingPos(role);
+                              setViewDialogOpen(true);
+                            }}
+                          >
+                            <Eye />
+                          </Button>
+                          <Button
+                            className="rounded-lg shadow-sm"
+                            size="icon"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingPos(role);
+                              setEditPayload({
+                                name: role.name,
+                                main_department_id: selectedDep?.id,
+                                department_id: selectedSub?.id,
+                                duties: role.duties || "",
+                              });
+                              setEditDialogOpen(true);
+                            }}
+                          >
+                            <Pencil />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })
+          ) : (
+            <p className="text-gray-500">Hech qanday lavozim topilmadi</p>
+          )}
+        </div>
+      </main>
     </div>
   );
 };
