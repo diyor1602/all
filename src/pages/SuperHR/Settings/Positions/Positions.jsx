@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 
 const colorPalette = [
   "bg-rose-100 text-rose-800 border-rose-200",
+  "bg-gray-100 text-gray-800 border-gray-200",
   "bg-emerald-100 text-emerald-800 border-emerald-200",
   "bg-indigo-100 text-indigo-800 border-indigo-200",
   "bg-amber-100 text-amber-800 border-amber-200",
