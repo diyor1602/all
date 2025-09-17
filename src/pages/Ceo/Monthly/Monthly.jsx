@@ -205,7 +205,7 @@ const Monthly = () => {
 
   const metrics = [
     {
-      title: "Daromad",
+      title: "Ko'rsatilgan xizmat",
       value: `${formatNumber(monthly.total_earned_uzs)} so'm`,
       icon: TrendingUp,
       color: "text-orange-600",
@@ -808,7 +808,7 @@ const Monthly = () => {
                         Chok
                       </TableHead>
                       <TableHead className="border border-slate-200">
-                        Daromad
+                        Foyda
                       </TableHead>
                     </TableRow>
                   </TableHeader>
