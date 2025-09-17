@@ -3,9 +3,24 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Building2, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Plus, Building2, Eye, Pencil } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 const colorPalette = [
   "bg-rose-100 text-rose-800 border-rose-200",
@@ -21,6 +36,16 @@ const All = () => {
   const [departments, setDepartments] = useState([]);
   const [selectedDep, setSelectedDep] = useState(null);
   const [selectedSub, setSelectedSub] = useState(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingPos, setViewingPos] = useState(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [addPayload, setAddPayload] = useState({
+    name: "",
+    main_department_id: "",
+    department_id: 0,
+    duties: "",
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,10 +91,130 @@ const All = () => {
     }
   };
 
+  const handleAdd = async () => {
+    if (!addPayload.name.trim()) {
+      toast({
+        title: "Xatolik",
+        description: "Lavozim nomi kiritilmagan",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    if (!addPayload.main_department_id) {
+      toast({
+        title: "Xatolik",
+        description: "Asosiy bo'lim tanlanmagan",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    if (addPayload.main_department_id !== "0" && !addPayload.department_id) {
+      toast({
+        title: "Xatolik",
+        description: "Bo'lim tanlanmagan",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    try {
+      setSubmitting(true);
+      const response = await api.post("/superhr/positions", addPayload);
+      setRoles([...roles, response.data]);
+      setAddDialogOpen(false);
+      setAddPayload({ name: "", main_department_id: "", department_id: 0 });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Lavozim qo'shildi",
+        variant: "default",
+        duration: 1000,
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
+      fetchRoles();
+      fetchDepartments();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message || "Lavozim qo'shishda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-full">
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{viewingPos?.name}</DialogTitle>
+            <DialogDescription>
+              {`${selectedDep?.name} -> ${selectedSub?.name}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <p>
+              {viewingPos?.duties || "Bu lavozim uchun vazifalar mavjud emas"}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lavozim qo'shish</DialogTitle>
+            <DialogDescription>
+              {`${selectedDep?.name} -> ${selectedSub?.name}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Input
+              placeholder="Lavozim nomini kiriting"
+              value={addPayload.name}
+              onChange={(e) =>
+                setAddPayload({ ...addPayload, name: e.target.value })
+              }
+            />
+            <Textarea
+              placeholder="Ushbu lavozimdagi xodimning vazifalarini kiriting"
+              className="min-h-[40vh] max-h-[60vh]"
+              value={addPayload.duties}
+              onChange={(e) =>
+                setAddPayload({ ...addPayload, duties: e.target.value })
+              }
+            />
+          </div>
+          <div className="flex justify-end items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAddDialogOpen(false);
+                setAddPayload({
+                  name: "",
+                  main_department_id: "",
+                  department_id: 0,
+                  duties: "",
+                });
+              }}
+            >
+              Bekor qilish
+            </Button>
+            <Button onClick={handleAdd} disabled={submitting}>
+              {submitting ? "Yuborilmoqda" : "Qo'shish"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Sidebar */}
-      <aside className="w-full md:w-72 border-r bg-gradient-to-b from-gray-50 to-gray-100 p-4 space-y-6">
+      <aside className="w-full md:w-72 border-r md:min-h-[calc(100vh-4rem)] p-4 space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Building2 className="w-5 h-5 text-primary" />
@@ -119,18 +264,26 @@ const All = () => {
         {/* Search */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
-            <Users className="w-6 h-6 text-primary" />
             Lavozimlar
           </h1>
-          <Button asChild size="sm" className="shadow-sm">
-            <Link to="/superhr/settings/positions/add">
-              <Plus className="w-4 h-4" />
-            </Link>
+          <Button
+            size="icon"
+            className="bg-green-500 hover:bg-green-600"
+            onClick={() => {
+              setAddPayload({
+                name: "",
+                main_department_id: selectedDep?.id,
+                department_id: selectedSub?.id,
+              });
+              setAddDialogOpen(true);
+            }}
+          >
+            <Plus />
           </Button>
         </div>
 
         {/* Roles Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {roles.filter((role) => role.department_id === selectedSub?.id)
             .length > 0 ? (
             roles
@@ -153,15 +306,25 @@ const All = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <Button
-                          asChild
-                          className="w-full rounded-lg shadow-sm"
-                          variant="secondary"
-                        >
-                          <Link to={`/superhr/settings/positions/${role.id}`}>
-                            Batafsil
-                          </Link>
-                        </Button>
+                        <div className="flex justify-end items-center gap-2 flex-wrap">
+                          <Button
+                            className="rounded-lg shadow-sm"
+                            size="icon"
+                            onClick={() => {
+                              setViewingPos(role);
+                              setViewDialogOpen(true);
+                            }}
+                          >
+                            <Eye />
+                          </Button>
+                          <Button
+                            className="rounded-lg shadow-sm"
+                            size="icon"
+                            variant="outline"
+                          >
+                            <Pencil />
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
