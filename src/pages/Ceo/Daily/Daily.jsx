@@ -84,7 +84,8 @@ const formatNumber = (number, maximumFractionDigits = 0) => {
 const Daily = () => {
   const [daily, setDaily] = useState({});
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    localStorage.getItem("dailySelectedDate") ||
+      new Date().toISOString().split("T")[0]
   );
   const [monthlyExpenses, setMonthlyExpenses] = useState({});
   const [showExpenses, setShowExpenses] = useState(false);
@@ -203,6 +204,10 @@ const Daily = () => {
     const currentDate = new Date(selectedDate);
     currentDate.setDate(currentDate.getDate() + direction);
     setSelectedDate(currentDate.toISOString().split("T")[0]);
+    localStorage.setItem(
+      "dailySelectedDate",
+      currentDate.toISOString().split("T")[0]
+    );
   };
 
   const fetchDaily = async () => {
@@ -702,7 +707,10 @@ const Daily = () => {
           <Input
             type="date"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => {
+              setSelectedDate(e.target.value);
+              localStorage.setItem("dailySelectedDate", e.target.value);
+            }}
             className="w-fit bg-white border-slate-200"
           />
           <Button

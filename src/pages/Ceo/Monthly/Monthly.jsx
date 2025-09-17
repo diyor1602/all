@@ -62,13 +62,15 @@ const formatNumber = (number, maximumFractionDigits = 0) => {
 const Monthly = () => {
   const [monthly, setMonthly] = useState({});
   const [startDate, setStartDate] = useState(
-    new Date().toISOString().split("T")[0].split("-")[0] +
-      "-" +
-      new Date().toISOString().split("T")[0].split("-")[1] +
-      "-01"
+    localStorage.getItem("monthlyStartDate") ||
+      new Date().toISOString().split("T")[0].split("-")[0] +
+        "-" +
+        new Date().toISOString().split("T")[0].split("-")[1] +
+        "-01"
   );
   const [endDate, setEndDate] = useState(
-    new Date().toISOString().split("T")[0]
+    localStorage.getItem("monthlyEndDate") ||
+      new Date().toISOString().split("T")[0]
   );
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -441,13 +443,19 @@ const Monthly = () => {
           <Input
             type="date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => {
+              setStartDate(e.target.value);
+              localStorage.setItem("monthlyStartDate", e.target.value);
+            }}
             className="w-fit bg-white border-slate-200"
           />
           <Input
             type="date"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={(e) => {
+              setEndDate(e.target.value);
+              localStorage.setItem("monthlyEndDate", e.target.value);
+            }}
             className="w-fit bg-white border-slate-200"
           />
         </div>
