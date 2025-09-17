@@ -32,7 +32,7 @@ import {
 
 const statusTranslation = {
   absent: "Kelmagan",
-  present: "Vaqtida kelgan",
+  present: "Kelgan",
   late: "Kech kelgan",
 };
 
