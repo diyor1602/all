@@ -39,6 +39,7 @@ import {
   Zap,
   AlarmClock,
   AlarmClockCheck,
+  CloudDownload,
 } from "lucide-react";
 import {
   Tooltip,
@@ -87,6 +88,7 @@ const Employees = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingAttendance, setIsDownloadingAttendance] = useState(false);
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
   const [attendanceFilter, setAttendanceFilter] = useState(() => {
     const today = new Date();
@@ -317,6 +319,46 @@ const Employees = () => {
       });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportAttendance = async () => {
+    setIsDownloadingAttendance(true);
+    try {
+      // Make the API call with the response type as blob to handle file download
+      const response = await api.get("/superhr/export-attendance/excel", {
+        responseType: "blob",
+        params: {
+          month: new Date().toISOString().slice(0, 7), // "2025-09"
+          department_id: filters.department_id || "",
+          group_id: filters.group_id || "",
+          status: filters.status || "",
+          type: filters.type || "",
+        },
+      });
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Xodimlar ro'yxati yuklab olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloadingAttendance(false);
     }
   };
 
@@ -557,6 +599,18 @@ const Employees = () => {
         </div>
         <Button
           className="ml-auto"
+          onClick={handleExportAttendance}
+          disabled={isDownloadingAttendance}
+          size="icon"
+          variant="ghost"
+        >
+          {isDownloadingAttendance ? (
+            <Loader2 className="animate-spin text-sky-500" />
+          ) : (
+            <CloudDownload className="text-sky-500" />
+          )}
+        </Button>
+        <Button
           onClick={() => setAttendanceDialogOpen(true)}
           disabled={isDownloading}
           size="icon"
