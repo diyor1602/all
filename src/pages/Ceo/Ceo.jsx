@@ -9,6 +9,7 @@ import Employees from "./Employees/Employees";
 import Daily from "./Daily/Daily";
 import Monthly from "./Monthly/Monthly";
 import Calc from "./Calc/Calc";
+import Settings from "./Settings/Settings";
 
 const Ceo = () => {
   return (
@@ -23,6 +24,7 @@ const Ceo = () => {
       <Route path="daily" element={<Daily />} />
       <Route path="monthly" element={<Monthly />} />
       <Route path="calc/*" element={<Calc />} />
+      <Route path="settings/*" element={<Settings />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

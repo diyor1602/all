@@ -10,6 +10,7 @@ import {
   Gem,
   Home,
   Rotate3d,
+  Settings,
   Sprout,
   SquareScissors,
   TentTree,
@@ -101,6 +102,12 @@ const navigation = [
     name: "Jo'natmalar",
     href: "/truck",
     icon: Truck,
+    onMobile: false,
+  },
+  {
+    name: "Qo'chimcha",
+    href: "/ceo/settings",
+    icon: Settings,
     onMobile: false,
   },
 ];
