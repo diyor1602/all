@@ -20,17 +20,13 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   HandCoins,
   CreditCard,
   MessageSquare,
-  Users,
   Loader2,
   DollarSign,
-  TrendingUp,
   User,
   Plus,
   History,
@@ -38,7 +34,6 @@ import {
   Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import payment_types from "@/lib/paymentTypes";
 
 const formatNumber = (num) => {
   return Number.parseFloat(num)?.toLocaleString("ru-RU", {
@@ -69,8 +64,6 @@ const SalaryPage = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState({});
-  const [orders, setOrders] = useState([]);
-  const [selectedOrders, setSelectedOrders] = useState([]);
   const [paymentDialog, setPaymentDialog] = useState({
     open: false,
     employee: null,
@@ -91,21 +84,10 @@ const SalaryPage = () => {
   });
   const [searchText, setSearchText] = useState("");
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await api.get("/ceo/orders");
-        setOrders(response.data);
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Bunday ma'lumot topilmadi",
-          variant: "destructive",
-        });
-      }
-    };
-    fetchOrders();
-  }, []);
+  // Filter employees based on search text
+  const filteredEmployees = employees.filter((employee) =>
+    employee.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const formatDateLocal = (date) => {
     const year = date.getFullYear();
@@ -119,15 +101,16 @@ const SalaryPage = () => {
       setDownloading(true);
 
       const params = {
-        department_id: filters.department_id,
-        group_id: filters.group_id,
+        department_id:
+          filters.department_id === "all" ? "" : filters.department_id,
+        group_id: filters.group_id === "all" ? "" : filters.group_id,
         start_date: filters.start_date,
         end_date: filters.end_date,
-        order_ids: selectedOrders,
+        type: filters.type === "all" ? "" : filters.type,
       };
 
       // Make sure your backend endpoint generates Excel instead of PDF
-      const response = await api.post(`/ceo/pdf/employees`, params, {
+      const response = await api.post(`/ceo/groups2/excel`, params, {
         responseType: "blob", // still needed for binary files
       });
 
@@ -192,7 +175,8 @@ const SalaryPage = () => {
 
       const flatDepartments =
         rawData.flatMap((item) => item?.departments) || [];
-      setDepartments(flatDepartments);
+
+      setDepartments([{ id: "all", name: "Barchasi" }, ...flatDepartments]);
 
       return { rawData, flatDepartments };
     } catch (error) {
@@ -206,19 +190,16 @@ const SalaryPage = () => {
   };
 
   const loadGroupsForDepartment = (departmentId, rawData) => {
-    const selectedDepartmentGroups = [];
+    const department = rawData
+      .flatMap((mainDept) => mainDept.departments || [])
+      .find((dept) => dept.id.toString() === departmentId);
 
-    rawData.forEach((mainDept) => {
-      const department = mainDept.departments?.find(
-        (dept) => dept.id.toString() === departmentId
-      );
-      if (department && department.groups) {
-        selectedDepartmentGroups.push(...department.groups);
-      }
-    });
+    const groups = department
+      ? [{ id: "all", name: "Barchasi" }, ...(department.groups || [])]
+      : [{ id: "all", name: "Barchasi" }];
 
-    setGroups(selectedDepartmentGroups);
-    return selectedDepartmentGroups;
+    setGroups(groups);
+    return groups;
   };
 
   const fetchSalaryData = async (filtersToUse) => {
@@ -232,10 +213,14 @@ const SalaryPage = () => {
 
     try {
       setLoading(true);
-      const response = await api.post("/ceo/groups", {
+      const response = await api.post("/ceo/groups2", {
         ...filtersToUse,
         type: filtersToUse.type === "all" ? "" : filtersToUse.type,
-        order_ids: [...selectedOrders],
+        department_id:
+          filtersToUse.department_id === "all"
+            ? ""
+            : filtersToUse.department_id,
+        group_id: filtersToUse.group_id === "all" ? "" : filtersToUse.group_id,
       });
       setSalary(response.data);
     } catch (error) {
@@ -248,10 +233,6 @@ const SalaryPage = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchSalaryData(filters);
-  }, [selectedOrders]);
 
   // Calculate payment totals from the new format
   const calculatePaymentTotals = (paidAmounts) => {
@@ -499,27 +480,6 @@ const SalaryPage = () => {
     }
   };
 
-  const getSelectedDepartmentName = () => {
-    const dept = departments.find(
-      (d) => d.id.toString() === filters.department_id
-    );
-    return dept?.name || "Bo'lim";
-  };
-
-  const getSelectedGroupName = () => {
-    const group = groups.find((g) => g.id.toString() === filters.group_id);
-    return group?.name || "Guruh";
-  };
-
-  const totalStats = employees.reduce(
-    (acc, emp) => {
-      acc.totalEarned += Number.parseFloat(emp?.total_earned || 0);
-      acc.totalPaid += Number.parseFloat(emp?.total_paid || 0);
-      return acc;
-    },
-    { totalEarned: 0, totalPaid: 0 }
-  );
-
   // Get payment history for the current type
   const getPaymentHistory = (employee, type) => {
     if (!employee?.paid_amounts || !employee.paid_amounts[type]) {
@@ -591,267 +551,195 @@ const SalaryPage = () => {
           placeholder="Xodim qidirish"
           className="bg-white w-fit"
         />
-
-        <Button asChild className="ml-auto">
-          <Link to="/ceo/salary2">2-versiya</Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-auto"
+          disabled={downloading}
+          onClick={handleDownload}
+        >
+          {downloading ? <Loader2 className="animate-spin" /> : <Download />}
         </Button>
       </div>
 
-      {orders.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          {orders
-            .sort((a, b) => a.id - b.id)
-            .map((order) => (
-              <Button
-                variant={
-                  selectedOrders?.includes(order.id) ? "default" : "outline"
-                }
-                key={order.id}
-                onClick={() =>
-                  setSelectedOrders((prev) =>
-                    prev.includes(order.id)
-                      ? prev.filter((id) => id !== order.id)
-                      : [...prev, order.id]
-                  )
-                }
-              >
-                {order.id}
-              </Button>
-            ))}
-        </div>
-      )}
-
-      {employees.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white">Jami Xodimlar</p>
-                  <p className="text-2xl font-bold">
-                    {formatNumber(employees.length)}
-                  </p>
-                </div>
-                <Users className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100">Jami Topgan</p>
-                  <p className="text-2xl font-bold">
-                    {formatNumber(totalStats.totalEarned)}
-                  </p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-blue-200" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100">Jami To'langan</p>
-                  <p className="text-2xl font-bold">
-                    {formatNumber(totalStats.totalPaid)}
-                  </p>
-                </div>
-                <HandCoins className="h-8 w-8 text-purple-200" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Employee Table */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Xodimlar ro'yxati
-            </div>
-            {filters.department_id && (
-              <Badge variant="secondary" className="ml-2">
-                {getSelectedDepartmentName()}
-                {filters.group_id && ` - ${getSelectedGroupName()}`}
-              </Badge>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={downloading}
-              onClick={handleDownload}
-            >
-              {downloading ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Download />
-              )}
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse whitespace-nowrap">
-              <thead>
-                <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    №
-                  </th>
-                  <th className="border border-gray-200 p-1 text-left font-semibold">
-                    Xodim
-                  </th>
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    To'lov turi
-                  </th>
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    To'lov miqdori
-                  </th>
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    Kelgan kunlari
-                  </th>
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    Davomat
-                  </th>
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    Ish
-                  </th>
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    To'langan pul
-                  </th>
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    Avans
-                  </th>
-                  <th className="border border-gray-200 p-1 text-center font-semibold">
-                    Oylik
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                className={cn("", loading && "cursor-not-allowed opacity-50")}
-              >
-                {employees
-                  ?.sort((a, b) => a.name.localeCompare(b.name))
-                  .filter((employee) =>
-                    employee.name
-                      .toLowerCase()
-                      .includes(searchText.toLowerCase())
-                  )
-                  .map((employee, index) => {
-                    const { advanceTotal, salaryTotal } =
-                      calculatePaymentTotals(employee?.paid_amounts);
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse whitespace-nowrap text-xs bg-white">
+          <thead>
+            <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
+              <th className="border border-gray-200 p-1 text-center font-semibold">
+                №
+              </th>
+              <th className="border border-gray-200 p-1 text-left font-semibold">
+                Xodim
+              </th>
+              <th className="border border-gray-200 p-1 text-center font-semibold">
+                Ish kunlari
+              </th>
+              <th className="border border-gray-200 p-1 text-center font-semibold whitespace-normal">
+                Ish haqi <br /> (oylik)
+              </th>
+              <th className="border border-gray-200 p-1 text-center font-semibold whitespace-normal">
+                Ish haqi <br /> (ishbay)
+              </th>
+              <th className="border border-gray-200 p-1 text-center font-semibold">
+                Topgan pul
+              </th>
+              <th className="border border-gray-200 p-1 text-center font-semibold">
+                Avans
+              </th>
 
-                    return (
-                      <tr
-                        key={employee.id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="border border-gray-200 p-1 text-center font-medium">
-                          {index + 1}
-                        </td>
-                        <td className="border border-gray-200 p-1">
-                          <div className="font-medium text-gray-900">
-                            {employee?.name}
-                          </div>
-                        </td>
-                        <td className="border border-gray-200 p-1 text-center">
-                          {payment_types[employee?.payment_type]}
-                        </td>
-                        <td className="border border-gray-200 p-1 text-center">
-                          {formatNumber(employee?.salary)}
-                        </td>
-                        <td className="border border-gray-200 p-1 text-center">
-                          {employee?.attendance_days}
-                        </td>
-                        <td className="border border-gray-200 p-1 text-center">
-                          <Link
-                            to={`/ceo/salary/${employee.id}`}
-                            target="_blank"
-                            className="text-green-600 font-medium"
-                          >
-                            {formatNumber(employee?.attendance_salary)}
-                          </Link>
-                        </td>
-                        <td className="border border-gray-200 p-1 text-center">
-                          <Link
-                            to={`/ceo/salary/${employee.id}`}
-                            target="_blank"
-                            className="text-green-600 font-medium"
-                          >
-                            {formatNumber(employee?.tarification_salary)}
-                          </Link>
-                        </td>
-                        <td className="border border-gray-200 p-1 text-center">
-                          <span className="text-green-600 font-medium">
-                            {formatNumber(employee?.total_paid)}
-                          </span>
-                        </td>
-                        <td className="border border-gray-200 p-1 text-center">
-                          <div className="w-full flex items-center justify-center">
-                            <Button
-                              variant="ghost"
-                              onClick={() =>
-                                openPaymentDialog(employee, "advance")
-                              }
-                              disabled={
-                                paymentLoading[`${employee.id}_advance`]
-                              }
-                              className="h-auto p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 flex flex-col items-center gap-1"
-                            >
-                              {paymentLoading[`${employee.id}_advance`] ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                formatNumber(advanceTotal)
-                              )}
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="border border-gray-200 p-1 text-center">
-                          <div className="flex items-center justify-center gap-2 w-full">
-                            <Button
-                              variant="ghost"
-                              onClick={() =>
-                                openPaymentDialog(employee, "salary")
-                              }
-                              disabled={paymentLoading[`${employee.id}_salary`]}
-                              className="h-auto p-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex flex-col items-center gap-1"
-                            >
-                              {paymentLoading[`${employee.id}_salary`] ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                formatNumber(salaryTotal)
-                              )}
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
+              <th className="border border-gray-200 p-1 text-center font-semibold">
+                Qoldiq
+              </th>
+            </tr>
+          </thead>
+          <tbody className={cn("", loading && "cursor-not-allowed opacity-50")}>
+            {filteredEmployees
+              ?.sort((a, b) => a.name.localeCompare(b.name))
+              .map((employee, index) => {
+                const { advanceTotal, salaryTotal } = calculatePaymentTotals(
+                  employee?.paid_amounts
+                );
 
-            {employees.length === 0 && !loading && (
-              <div className="text-center py-12">
-                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">Xodimlar topilmadi</p>
-                <p className="text-gray-400">Filtrlarni o'zgartirib ko'ring</p>
-              </div>
-            )}
+                return (
+                  <tr
+                    key={employee.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="border border-gray-200 p-1 text-center">
+                      {index + 1}
+                    </td>
+                    <td className="border border-gray-200 p-1">
+                      <div className="text-gray-900">{employee?.name}</div>
+                    </td>
+                    <td className="border border-gray-200 p-1 text-center">
+                      {employee?.attendance_days}
+                    </td>
+                    <td className="border border-gray-200 p-1 text-center">
+                      <Link to={`/ceo/salary/${employee.id}`} target="_blank">
+                        {formatNumber(employee?.attendance_salary)}
+                      </Link>
+                    </td>
+                    <td className="border border-gray-200 p-1 text-center">
+                      <Link to={`/ceo/salary/${employee.id}`} target="_blank">
+                        {formatNumber(employee?.tarification_salary)}
+                      </Link>
+                    </td>
+                    <td className="border border-gray-200 p-1 text-center">
+                      {formatNumber(
+                        parseFloat(employee?.attendance_salary) +
+                          parseFloat(employee?.tarification_salary)
+                      )}
+                    </td>
+                    <td className="border border-gray-200 p-1 text-center">
+                      <div className="w-full flex items-center justify-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openPaymentDialog(employee, "advance")}
+                          disabled={paymentLoading[`${employee.id}_advance`]}
+                          className="h-auto text-orange-600 hover:text-orange-700 hover:bg-orange-50 flex flex-col items-center gap-1 text-xs font-normal"
+                        >
+                          {paymentLoading[`${employee.id}_advance`] ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            formatNumber(advanceTotal)
+                          )}
+                        </Button>
+                      </div>
+                    </td>
+                    <td className="border border-gray-200 p-1 text-center">
+                      {formatNumber(
+                        parseFloat(employee?.attendance_salary) +
+                          parseFloat(employee?.tarification_salary) -
+                          parseFloat(employee?.total_paid)
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
 
-            {loading && (
-              <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-                <p className="text-gray-500">Ma'lumotlar yuklanmoqda...</p>
-              </div>
+            {/* Jami (Total) Row */}
+            {filteredEmployees.length > 0 && (
+              <tr className="bg-gray-50 font-semibold">
+                <td className="border border-gray-200 p-1 text-center">Jami</td>
+                <td className="border border-gray-200 p-1">
+                  {filteredEmployees.length} ta xodim
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {filteredEmployees.reduce(
+                    (sum, emp) => sum + (Number(emp?.attendance_days) || 0),
+                    0
+                  )}
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {formatNumber(
+                    filteredEmployees.reduce(
+                      (sum, emp) => sum + (Number(emp?.attendance_salary) || 0),
+                      0
+                    )
+                  )}
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {formatNumber(
+                    filteredEmployees.reduce(
+                      (sum, emp) =>
+                        sum + (Number(emp?.tarification_salary) || 0),
+                      0
+                    )
+                  )}
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {formatNumber(
+                    filteredEmployees.reduce(
+                      (sum, emp) =>
+                        sum +
+                        (Number(emp?.attendance_salary || 0) +
+                          Number(emp?.tarification_salary || 0)),
+                      0
+                    )
+                  )}
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {formatNumber(
+                    filteredEmployees.reduce((sum, emp) => {
+                      const { advanceTotal } = calculatePaymentTotals(
+                        emp?.paid_amounts || {}
+                      );
+                      return sum + advanceTotal;
+                    }, 0)
+                  )}
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {formatNumber(
+                    filteredEmployees.reduce((sum, emp) => {
+                      const totalEarned = Number(emp?.total_earned || 0);
+                      const totalPaid = Number(emp?.total_paid || 0);
+                      return sum + (totalEarned - totalPaid);
+                    }, 0)
+                  )}
+                </td>
+              </tr>
             )}
+          </tbody>
+        </table>
+
+        {employees.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg">Xodimlar topilmadi</p>
+            <p className="text-gray-400">Filtrlarni o'zgartirib ko'ring</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        {loading && (
+          <div className="text-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
+            <p className="text-gray-500">Ma'lumotlar yuklanmoqda...</p>
+          </div>
+        )}
+      </div>
 
       {/* Enhanced Payment Dialog */}
       <Dialog open={paymentDialog.open} onOpenChange={closePaymentDialog}>
