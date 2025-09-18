@@ -1800,7 +1800,18 @@ const Work = () => {
                                 {tarifLog?.tarification?.code}
                               </span>
                             </td>
-                            <td className="border border-gray-300 p-2">
+                            <td
+                              className="border border-gray-300 p-2"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  tarifLog?.tarification?.name
+                                );
+                                toast({
+                                  title: "Nusxa olindi",
+                                  duration: 700,
+                                });
+                              }}
+                            >
                               {tarifLog?.tarification?.name}
                             </td>
                             <td

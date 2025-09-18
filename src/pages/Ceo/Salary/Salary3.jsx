@@ -81,7 +81,6 @@ const Salary3 = () => {
     start_date: "",
     end_date: "",
     type: "aup",
-    status: "working",
   });
   const [searchText, setSearchText] = useState("");
 
@@ -107,11 +106,11 @@ const Salary3 = () => {
         group_id: filters.group_id === "all" ? "" : filters.group_id,
         start_date: filters.start_date,
         end_date: filters.end_date,
-        status: filters.status,
+        type: filters.type === "all" ? "" : filters.type,
       };
 
       // Make sure your backend endpoint generates Excel instead of PDF
-      const response = await api.post(`/ceo/pdf/employees`, params, {
+      const response = await api.post(`/ceo/groups2/excel`, params, {
         responseType: "blob", // still needed for binary files
       });
 
@@ -161,10 +160,6 @@ const Salary3 = () => {
     // if type is empty, set it to "aup"
     if (!parsedFilters.type) {
       parsedFilters.type = "aup";
-    }
-    // if status is empty, set it to "working"
-    if (!parsedFilters.status) {
-      parsedFilters.status = "working";
     }
 
     setFilters(parsedFilters);
@@ -218,10 +213,9 @@ const Salary3 = () => {
 
     try {
       setLoading(true);
-      const response = await api.post("/ceo/groups", {
+      const response = await api.post("/ceo/groups2", {
         ...filtersToUse,
         type: filtersToUse.type === "all" ? "" : filtersToUse.type,
-        status: filtersToUse.status === "all" ? "" : filtersToUse.status,
         department_id:
           filtersToUse.department_id === "all"
             ? ""
@@ -381,15 +375,6 @@ const Salary3 = () => {
     const newFilters = {
       ...filters,
       type,
-    };
-
-    updateFilters(newFilters);
-  };
-
-  const handleStatusChange = (status) => {
-    const newFilters = {
-      ...filters,
-      status,
     };
 
     updateFilters(newFilters);
@@ -556,17 +541,6 @@ const Salary3 = () => {
             <SelectItem value="all">Barchasi</SelectItem>
             <SelectItem value="aup">AUP</SelectItem>
             <SelectItem value="simple">Oddiy</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select onValueChange={handleStatusChange} value={filters.status}>
-          <SelectTrigger className="bg-white w-fit">
-            <SelectValue placeholder="Holatini tanlang" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Barchasi</SelectItem>
-            <SelectItem value="working">Ishlayotgan</SelectItem>
-            <SelectItem value="kicked">Ishdan ketgan</SelectItem>
           </SelectContent>
         </Select>
 
