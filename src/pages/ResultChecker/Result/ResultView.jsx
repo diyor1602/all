@@ -214,6 +214,7 @@ const ResultView = () => {
                     {group?.name}
                   </CardTitle>
                   <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                    Bugungi umumiy:{" "}
                     {group.orders?.reduce(
                       (sum, order) => sum + (order.todayTotalQuantity || 0),
                       0
