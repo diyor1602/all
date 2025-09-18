@@ -588,9 +588,7 @@ const Salary3 = () => {
               <th className="border border-gray-200 p-1 text-center font-semibold">
                 Avans
               </th>
-              <th className="border border-gray-200 p-1 text-center font-semibold">
-                Oylik
-              </th>
+
               <th className="border border-gray-200 p-1 text-center font-semibold">
                 Qoldiq
               </th>
@@ -647,23 +645,6 @@ const Salary3 = () => {
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             formatNumber(advanceTotal)
-                          )}
-                        </Button>
-                      </div>
-                    </td>
-                    <td className="border border-gray-200 p-1 text-center">
-                      <div className="flex items-center justify-center gap-2 w-full">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openPaymentDialog(employee, "salary")}
-                          disabled={paymentLoading[`${employee.id}_salary`]}
-                          className="h-auto text-green-600 hover:text-green-700 hover:bg-green-50 flex flex-col items-center gap-1 text-xs font-normal"
-                        >
-                          {paymentLoading[`${employee.id}_salary`] ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            formatNumber(salaryTotal)
                           )}
                         </Button>
                       </div>
@@ -727,16 +708,6 @@ const Salary3 = () => {
                         emp?.paid_amounts || {}
                       );
                       return sum + advanceTotal;
-                    }, 0)
-                  )}
-                </td>
-                <td className="border border-gray-200 p-1 text-center">
-                  {formatNumber(
-                    filteredEmployees.reduce((sum, emp) => {
-                      const { salaryTotal } = calculatePaymentTotals(
-                        emp?.paid_amounts || {}
-                      );
-                      return sum + salaryTotal;
                     }, 0)
                   )}
                 </td>
