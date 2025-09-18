@@ -217,11 +217,6 @@ const ResultView = () => {
                     {group.orders?.reduce(
                       (sum, order) => sum + (order.todayTotalQuantity || 0),
                       0
-                    )}{" "}
-                    /{" "}
-                    {group.orders?.reduce(
-                      (sum, order) => sum + (order.orderQuantity || 0),
-                      0
                     )}
                   </Badge>
                 </div>
@@ -233,189 +228,170 @@ const ResultView = () => {
               <CardContent className="p-0">
                 {group?.orders?.length > 0 ? (
                   <div className="divide-y divide-gray-200">
-                    {group.orders
-                      ?.sort(
-                        // tailoring should appear first
-                        (a, b) => {
-                          if (a.status === "tailoring") return -1;
-                          if (b.status === "tailoring") return 1;
-                          return 0;
-                        }
-                      )
-                      ?.map((order, index) => (
-                        <div key={index} className="p-4 ">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="font-medium text-gray-900">
-                                {order.model?.name} - {order.submodel?.name}
-                              </h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge
-                                  variant="outline"
-                                  className={getStatusVariant(order.status)}
-                                >
-                                  {getStatusText(order.status)}
-                                </Badge>
-                                <span className="text-sm text-gray-500">
-                                  {order.totalQuantity || 0} /{" "}
-                                  {order.orderQuantity}
-                                </span>
-                              </div>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700"
-                            >
-                              Bugungi: {order.todayTotalQuantity}
-                            </Badge>
-                          </div>
-
-                          <div className="mt-2">
-                            <div className="flex justify-between text-xs text-gray-500 mb-1">
-                              <span>Progress</span>
-                              <span>
-                                {Math.round(
-                                  (order.totalQuantity / order.orderQuantity) *
-                                    100
-                                ) || 0}
-                                %
+                    {group.orders?.map((order, index) => (
+                      <div key={index} className="p-4 ">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-medium text-gray-900">
+                              {order.model?.name} - {order.submodel?.name}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge
+                                variant="outline"
+                                className={getStatusVariant(order.status)}
+                              >
+                                {getStatusText(order.status)}
+                              </Badge>
+                              <span className="text-sm text-gray-500">
+                                {order.totalQuantity || 0} /{" "}
+                                {order.orderQuantity}
                               </span>
                             </div>
-                            <Progress
-                              value={
-                                (order.totalQuantity / order.orderQuantity) *
-                                  100 || 0
-                              }
-                              className="h-2"
-                            />
                           </div>
-
-                          {order.sewingOutputs?.length >= 0 && (
-                            <div className="mt-3 pt-3 border-t border-gray-200">
-                              <h4 className="text-xs font-medium text-gray-500 mb-2">
-                                Natijalar
-                              </h4>
-                              <div className="space-y-2">
-                                {(() => {
-                                  let foundFirstEmpty = false;
-                                  const hasSewingOutputs =
-                                    order.sewingOutputs?.length > 0;
-                                  const isExpanded =
-                                    expandedOrders[order.id] ||
-                                    hasSewingOutputs;
-
-                                  const buttons =
-                                    times
-                                      ?.filter(
-                                        (time) => time.time !== "07:30:00"
-                                      )
-                                      ?.map((time) => {
-                                        const output =
-                                          order.sewingOutputs?.find(
-                                            (output) =>
-                                              output?.time?.time === time?.time
-                                          );
-                                        const hasQuantity =
-                                          output?.quantity >= 0;
-                                        const isFuture = isFutureTime(
-                                          time?.time
-                                        );
-
-                                        let show = true;
-                                        let enabled = false;
-
-                                        if (hasQuantity) {
-                                          show = true;
-                                          enabled = false;
-                                        } else if (
-                                          !foundFirstEmpty &&
-                                          !isFuture
-                                        ) {
-                                          foundFirstEmpty = true;
-                                          show = true;
-                                          enabled = true;
-                                        } else if (isExpanded) {
-                                          show = true;
-                                          enabled = !isFuture;
-                                        } else {
-                                          show = false;
-                                        }
-
-                                        return { time, output, show, enabled };
-                                      }) || [];
-
-                                  return (
-                                    <>
-                                      {buttons
-                                        .filter((btn) => btn.show)
-                                        .map(({ time, output, enabled }, i) => (
-                                          <Button
-                                            key={time.id}
-                                            className={`flex items-center w-full justify-between ${
-                                              enabled
-                                                ? "bg-gray-400 text-black"
-                                                : "bg-gray-200 text-black cursor-not-allowed"
-                                            } py-2 px-4 rounded-md`}
-                                            disabled={!enabled}
-                                            onClick={() =>
-                                              enabled &&
-                                              handleOpenDialog(order, time)
-                                            }
-                                          >
-                                            <span>
-                                              {time?.time?.substring(0, 5)}
-                                            </span>
-                                            <span className="font-medium">
-                                              {output?.quantity || ""}
-                                            </span>
-                                            {output?.quantity ? (
-                                              <CircleCheck
-                                                className="text-green-500"
-                                                strokeWidth={2}
-                                                size={20}
-                                              />
-                                            ) : (
-                                              <Check
-                                                strokeWidth={2}
-                                                size={20}
-                                              />
-                                            )}
-                                          </Button>
-                                        ))}
-                                      {!hasSewingOutputs &&
-                                        buttons.some((btn) => btn.show) && (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="w-full mt-2 text-xs text-gray-500"
-                                            onClick={() =>
-                                              setExpandedOrders((prev) => ({
-                                                ...prev,
-                                                [order.id]: !prev[order.id],
-                                              }))
-                                            }
-                                          >
-                                            {isExpanded ? (
-                                              <>
-                                                Yopish
-                                                <ChevronUp className="ml-1 h-4 w-4" />
-                                              </>
-                                            ) : (
-                                              <>
-                                                Barcha vaqtlarni ko'rsatish
-                                                <ChevronDown className="ml-1 h-4 w-4" />
-                                              </>
-                                            )}
-                                          </Button>
-                                        )}
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                          )}
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-700"
+                          >
+                            Bugungi: {order.todayTotalQuantity}
+                          </Badge>
                         </div>
-                      ))}
+
+                        <div className="mt-2">
+                          <div className="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Progress</span>
+                            <span>
+                              {Math.round(
+                                (order.totalQuantity / order.orderQuantity) *
+                                  100
+                              ) || 0}
+                              %
+                            </span>
+                          </div>
+                          <Progress
+                            value={
+                              (order.totalQuantity / order.orderQuantity) *
+                                100 || 0
+                            }
+                            className="h-2"
+                          />
+                        </div>
+
+                        {order.sewingOutputs?.length >= 0 && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <h4 className="text-xs font-medium text-gray-500 mb-2">
+                              Natijalar
+                            </h4>
+                            <div className="space-y-2">
+                              {(() => {
+                                let foundFirstEmpty = false;
+                                const hasSewingOutputs =
+                                  order.sewingOutputs?.length > 0;
+                                const isExpanded =
+                                  expandedOrders[order.id] || hasSewingOutputs;
+
+                                const buttons =
+                                  times
+                                    ?.filter((time) => time.time !== "07:30:00")
+                                    ?.map((time) => {
+                                      const output = order.sewingOutputs?.find(
+                                        (output) =>
+                                          output?.time?.time === time?.time
+                                      );
+                                      const hasQuantity = output?.quantity >= 0;
+                                      const isFuture = isFutureTime(time?.time);
+
+                                      let show = true;
+                                      let enabled = false;
+
+                                      if (hasQuantity) {
+                                        show = true;
+                                        enabled = false;
+                                      } else if (
+                                        !foundFirstEmpty &&
+                                        !isFuture
+                                      ) {
+                                        foundFirstEmpty = true;
+                                        show = true;
+                                        enabled = true;
+                                      } else if (isExpanded) {
+                                        show = true;
+                                        enabled = !isFuture;
+                                      } else {
+                                        show = false;
+                                      }
+
+                                      return { time, output, show, enabled };
+                                    }) || [];
+
+                                return (
+                                  <>
+                                    {buttons
+                                      .filter((btn) => btn.show)
+                                      .map(({ time, output, enabled }, i) => (
+                                        <Button
+                                          key={time.id}
+                                          className={`flex items-center w-full justify-between ${
+                                            enabled
+                                              ? "bg-gray-400 text-black"
+                                              : "bg-gray-200 text-black cursor-not-allowed"
+                                          } py-2 px-4 rounded-md`}
+                                          disabled={!enabled}
+                                          onClick={() =>
+                                            enabled &&
+                                            handleOpenDialog(order, time)
+                                          }
+                                        >
+                                          <span>
+                                            {time?.time?.substring(0, 5)}
+                                          </span>
+                                          <span className="font-medium">
+                                            {output?.quantity || ""}
+                                          </span>
+                                          {output?.quantity ? (
+                                            <CircleCheck
+                                              className="text-green-500"
+                                              strokeWidth={2}
+                                              size={20}
+                                            />
+                                          ) : (
+                                            <Check strokeWidth={2} size={20} />
+                                          )}
+                                        </Button>
+                                      ))}
+                                    {!hasSewingOutputs &&
+                                      buttons.some((btn) => btn.show) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="w-full mt-2 text-xs text-gray-500"
+                                          onClick={() =>
+                                            setExpandedOrders((prev) => ({
+                                              ...prev,
+                                              [order.id]: !prev[order.id],
+                                            }))
+                                          }
+                                        >
+                                          {isExpanded ? (
+                                            <>
+                                              Yopish
+                                              <ChevronUp className="ml-1 h-4 w-4" />
+                                            </>
+                                          ) : (
+                                            <>
+                                              Barcha vaqtlarni ko'rsatish
+                                              <ChevronDown className="ml-1 h-4 w-4" />
+                                            </>
+                                          )}
+                                        </Button>
+                                      )}
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="p-4 text-center text-gray-500">
