@@ -228,7 +228,7 @@ const Home = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-500 text-sm font-medium">
-                  Bugungi kiritilgan reja
+                  Kiritilgan reja
                 </p>
                 <p className="text-2xl font-bold text-slate-800">
                   {outputs.reduce(
@@ -393,10 +393,10 @@ const Home = () => {
                     Ishchilar
                   </th>
                   <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Bugungi reja
+                    Reja
                   </th>
                   <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Bugungi natija
+                    Natija
                   </th>
                   <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
                     Jami natija
