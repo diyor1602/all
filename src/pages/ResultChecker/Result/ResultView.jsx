@@ -220,7 +220,7 @@ const ResultView = () => {
                     )}{" "}
                     /{" "}
                     {group.orders?.reduce(
-                      (sum, order) => sum + (order.todayPlan || 0),
+                      (sum, order) => sum + (order.orderQuantity || 0),
                       0
                     )}
                   </Badge>
@@ -257,8 +257,8 @@ const ResultView = () => {
                                   {getStatusText(order.status)}
                                 </Badge>
                                 <span className="text-sm text-gray-500">
-                                  {order.todayTotalQuantity || 0} /{" "}
-                                  {order.todayPlan}
+                                  {order.totalQuantity || 0} /{" "}
+                                  {order.orderQuantity}
                                 </span>
                               </div>
                             </div>
@@ -266,7 +266,7 @@ const ResultView = () => {
                               variant="outline"
                               className="bg-green-50 text-green-700"
                             >
-                              Jami: {order.totalQuantity}
+                              Bugungi: {order.todayTotalQuantity}
                             </Badge>
                           </div>
 
@@ -275,7 +275,7 @@ const ResultView = () => {
                               <span>Progress</span>
                               <span>
                                 {Math.round(
-                                  (order.todayTotalQuantity / order.todayPlan) *
+                                  (order.totalQuantity / order.orderQuantity) *
                                     100
                                 ) || 0}
                                 %
@@ -283,7 +283,7 @@ const ResultView = () => {
                             </div>
                             <Progress
                               value={
-                                (order.todayTotalQuantity / order.todayPlan) *
+                                (order.totalQuantity / order.orderQuantity) *
                                   100 || 0
                               }
                               className="h-2"
