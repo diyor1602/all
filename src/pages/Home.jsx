@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Tooltip,
   TooltipProvider,
@@ -20,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import YesterdayAbsence from "./SuperHR/Stats/YesterdayAbsence";
 import TailorRating from "./TailorRating";
+import { Input } from "@/components/ui/input";
 
 const Home = () => {
   // App data states - these will only be used after authentication
@@ -29,6 +28,9 @@ const Home = () => {
   const [employeeCount, setEmployeeCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [aupCount, setAupCount] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -64,7 +66,11 @@ const Home = () => {
   // Fetch data
   const fetchData = async () => {
     try {
-      const response = await api.get("/sewingOutputs");
+      const response = await api.get("/sewingOutputs", {
+        params: {
+          start_date: selectedDate,
+        },
+      });
       const data = await response.data;
 
       // Process the data
@@ -81,6 +87,10 @@ const Home = () => {
       });
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedDate]);
 
   const handleNavigate = (id) => {
     if (localStorage.getItem("role") === "supervisor") {
@@ -125,14 +135,6 @@ const Home = () => {
 
     setExampleOutputs(sortedOutputs);
   };
-
-  // Format date and time
-  const formattedDate = currentDateTime.toLocaleDateString("ru-RU", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  });
 
   const formattedTime = currentDateTime.toLocaleTimeString("ru-RU", {
     hour: "2-digit",
@@ -203,7 +205,12 @@ const Home = () => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-4">
             <div>
-              <p className="text-slate-600 font-medium">{formattedDate}</p>
+              <Input
+                type="date"
+                className="bg-white"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
             </div>
           </div>
           <div className="text-right">
