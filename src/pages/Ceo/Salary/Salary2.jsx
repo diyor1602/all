@@ -287,7 +287,9 @@ const Salary2 = () => {
 
   // Fixed maximum amount calculation - allows redistributing existing payments
   const calculateMaxAmount = (employee, paymentType) => {
-    const totalEarned = Number.parseFloat(employee?.total_earned || 0);
+    const totalEarned =
+      Number.parseFloat(employee?.tarification_salary || 0) +
+      Number.parseFloat(employee?.attendance_salary || 0);
     const { advanceTotal, salaryTotal } = calculatePaymentTotals(
       employee?.paid_amounts
     );
