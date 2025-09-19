@@ -78,8 +78,7 @@ const SalaryPage = () => {
   const [filters, setFilters] = useState({
     department_id: "",
     group_id: "",
-    start_date: "",
-    end_date: "",
+    month: "",
     type: "aup",
   });
   const [searchText, setSearchText] = useState("");
@@ -104,8 +103,7 @@ const SalaryPage = () => {
         department_id:
           filters.department_id === "all" ? "" : filters.department_id,
         group_id: filters.group_id === "all" ? "" : filters.group_id,
-        start_date: filters.start_date,
-        end_date: filters.end_date,
+        month: filters.month,
         type: filters.type === "all" ? "" : filters.type,
       };
 
@@ -135,26 +133,21 @@ const SalaryPage = () => {
     const savedFilters = localStorage.getItem("salary2-filters");
     let parsedFilters = savedFilters ? JSON.parse(savedFilters) : {};
 
-    if (!parsedFilters.start_date || !parsedFilters.end_date) {
+    if (!parsedFilters.month) {
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const value = `${year}-${month}`;
 
-      const firstDay = `${value}-01`;
-      const lastDayDate = new Date(year, Number.parseInt(month), 0);
-      const lastDay = formatDateLocal(lastDayDate);
-
       parsedFilters = {
         department_id: parsedFilters.department_id || "",
         group_id: parsedFilters.group_id || "",
-        start_date: firstDay,
-        end_date: lastDay,
+        month: value,
       };
 
       setSelectedMonth(value);
     } else {
-      setSelectedMonth(parsedFilters.start_date.substring(0, 7));
+      setSelectedMonth(parsedFilters.month);
     }
 
     // if type is empty, set it to "aup"
@@ -203,11 +196,7 @@ const SalaryPage = () => {
   };
 
   const fetchSalaryData = async (filtersToUse) => {
-    if (
-      !filtersToUse.department_id ||
-      !filtersToUse.start_date ||
-      !filtersToUse.end_date
-    ) {
+    if (!filtersToUse.department_id || !filtersToUse.month) {
       return;
     }
 
@@ -226,7 +215,8 @@ const SalaryPage = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Bunday ma'lumot topilmadi",
+        description:
+          error.response?.data?.message || "Bunday ma'lumot topilmadi",
         variant: "destructive",
       });
     } finally {
@@ -343,8 +333,7 @@ const SalaryPage = () => {
 
     const newFilters = {
       ...filters,
-      start_date: firstDay,
-      end_date: lastDay,
+      month: value,
     };
 
     updateFilters(newFilters);
