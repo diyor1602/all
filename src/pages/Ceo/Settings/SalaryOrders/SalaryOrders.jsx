@@ -270,6 +270,7 @@ const SalaryOrders = () => {
             .filter(
               (item) => !data.selected?.some((i) => i.order_id === item.id)
             )
+            .sort((a, b) => b.id - a.id)
             .map((item, index) => (
               <div key={index} className="rounded-xl bg-white shadow-xl">
                 <div
