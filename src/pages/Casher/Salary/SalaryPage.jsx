@@ -78,7 +78,8 @@ const SalaryPage = () => {
   const [filters, setFilters] = useState({
     department_id: "",
     group_id: "",
-    month: "",
+    start_date: "",
+    end_date: "",
     type: "aup",
   });
   const [searchText, setSearchText] = useState("");
@@ -103,7 +104,7 @@ const SalaryPage = () => {
         department_id:
           filters.department_id === "all" ? "" : filters.department_id,
         group_id: filters.group_id === "all" ? "" : filters.group_id,
-        month: filters.month,
+        month: filters.start_date.substring(0, 7),
         type: filters.type === "all" ? "" : filters.type,
       };
 
@@ -133,21 +134,26 @@ const SalaryPage = () => {
     const savedFilters = localStorage.getItem("salary2-filters");
     let parsedFilters = savedFilters ? JSON.parse(savedFilters) : {};
 
-    if (!parsedFilters.month) {
+    if (!parsedFilters.start_date || !parsedFilters.end_date) {
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const value = `${year}-${month}`;
 
+      const firstDay = `${value}-01`;
+      const lastDayDate = new Date(year, Number.parseInt(month), 0);
+      const lastDay = formatDateLocal(lastDayDate);
+
       parsedFilters = {
         department_id: parsedFilters.department_id || "",
         group_id: parsedFilters.group_id || "",
-        month: value,
+        start_date: firstDay,
+        end_date: lastDay,
       };
 
       setSelectedMonth(value);
     } else {
-      setSelectedMonth(parsedFilters.month);
+      setSelectedMonth(parsedFilters.start_date.substring(0, 7));
     }
 
     // if type is empty, set it to "aup"
@@ -196,27 +202,30 @@ const SalaryPage = () => {
   };
 
   const fetchSalaryData = async (filtersToUse) => {
-    if (!filtersToUse.department_id || !filtersToUse.month) {
+    if (
+      !filtersToUse.department_id ||
+      !filtersToUse.start_date ||
+      !filtersToUse.end_date
+    ) {
       return;
     }
 
     try {
       setLoading(true);
       const response = await api.post("/casher/groups2", {
-        ...filtersToUse,
         type: filtersToUse.type === "all" ? "" : filtersToUse.type,
         department_id:
           filtersToUse.department_id === "all"
             ? ""
             : filtersToUse.department_id,
         group_id: filtersToUse.group_id === "all" ? "" : filtersToUse.group_id,
+        month: filtersToUse.start_date.substring(0, 7),
       });
       setSalary(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
-        description:
-          error.response?.data?.message || "Bunday ma'lumot topilmadi",
+        description: "Bunday ma'lumot topilmadi",
         variant: "destructive",
       });
     } finally {
@@ -333,7 +342,8 @@ const SalaryPage = () => {
 
     const newFilters = {
       ...filters,
-      month: value,
+      start_date: firstDay,
+      end_date: lastDay,
     };
 
     updateFilters(newFilters);
