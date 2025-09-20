@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, ReferenceLine } from "recharts";
 
 import {
   Card,
@@ -14,12 +14,11 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-// ✅ Build data from userData
 function buildChartData(userData) {
   const logs = userData?.employee_tarification_logs || [];
 
   const grouped = logs.reduce((acc, log) => {
-    const date = log.date; // keep full YYYY-MM-DD
+    const date = log.date;
     const qty = parseInt(log.quantity || 0);
     const seconds =
       parseFloat(log.tarification?.second || 0) * (log.quantity || 0);
@@ -32,14 +31,13 @@ function buildChartData(userData) {
     return acc;
   }, {});
 
-  // convert to array, filter out 0s
   return Object.entries(grouped)
     .map(([date, vals]) => ({
       date,
       quantity: vals.quantity,
       percentage: vals.seconds > 0 ? (vals.seconds / 30000) * 100 : 0, // 500 min = 30000 sec
     }))
-    .filter((d) => d.quantity > 0 || d.percentage > 0) // remove empty days
+    .filter((d) => d.quantity > 0 || d.percentage > 0)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
@@ -49,7 +47,7 @@ const chartConfig = {
     color: "#000",
   },
   percentage: {
-    label: "Foiz (500 daq. nisbatan)",
+    label: "Foiz (500 daq. bo‘yicha)",
     color: "#000",
   },
 };
@@ -64,7 +62,7 @@ export default function Coefficient({ userData }) {
       percentage: Math.round(
         chartData.reduce((acc, curr) => acc + curr.percentage, 0) /
           (chartData.length || 1)
-      ), // avg % per day
+      ),
     }),
     [chartData]
   );
@@ -75,7 +73,7 @@ export default function Coefficient({ userData }) {
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 pb-3 sm:pb-0">
           <CardTitle>Ish Ko‘rsatkichlari</CardTitle>
           <CardDescription>
-            Kunlik ishlab chiqilgan miqdor va 500 daqiqaga nisbatan foiz
+            Kunlik bajarilgan miqdor va 500 daqiqaga nisbatan foiz
           </CardDescription>
         </div>
         <div className="flex">
@@ -122,7 +120,7 @@ export default function Coefficient({ userData }) {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
+                return date.toLocaleDateString("ru-RU", {
                   month: "short",
                   day: "numeric",
                 });
@@ -134,10 +132,9 @@ export default function Coefficient({ userData }) {
                   className="w-[150px]"
                   nameKey="value"
                   labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString("en-US", {
+                    new Date(value).toLocaleDateString("ru-RU", {
                       month: "short",
                       day: "numeric",
-                      year: "numeric",
                     })
                   }
                 />
@@ -150,6 +147,9 @@ export default function Coefficient({ userData }) {
               strokeWidth={2}
               dot={false}
             />
+            {activeChart === "percentage" && (
+              <ReferenceLine y={100} stroke="red" strokeDasharray="4 4" />
+            )}
           </LineChart>
         </ChartContainer>
       </CardContent>
