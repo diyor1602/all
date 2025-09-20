@@ -91,7 +91,8 @@ const Coefficient = () => {
         >
           <thead>
             <tr>
-              <th className="border border-gray-200 p-2">F.I.Sh</th>
+              <th className="border border-gray-200 p-2">Xodim</th>
+              <th className="border border-gray-200 p-2">F.I.K</th>
               {days.map((day, index) => (
                 <th key={index} className="border border-gray-200 p-2">
                   {day?.split("-")?.reverse()?.join(".")}
@@ -102,10 +103,22 @@ const Coefficient = () => {
           <tbody>
             {data
               ?.filter((item) => item.days.length > 0)
+              ?.sort((a, b) => b.days.length - a.days.length)
               .map((item, index) => (
                 <tr key={index}>
                   <td className="border border-gray-200 p-2">
                     {item.employee_name}
+                  </td>
+                  <td className="border border-gray-200 p-2">
+                    {parseFloat(
+                      item.days.reduce(
+                        (sum, day) => sum + day.efficiency_percent,
+                        0
+                      ) / item.days.length
+                    ).toLocaleString("ru-RU", {
+                      maximumFractionDigits: 2,
+                    })}
+                    %
                   </td>
                   {days.map((day, i) => {
                     const found = item.days.find((d) => d.date === day);
