@@ -13,12 +13,14 @@ import {
   Loader2,
   Trees,
   Settings as SettingsIcon,
+  DraftingCompass,
 } from "lucide-react";
 import Attendance from "./Attendance";
 import Salary from "./Salary";
 import Work from "./Work";
 import Kpi from "./Kpi";
 import Settings from "./Settings";
+import Coefficient from "./Coefficient";
 
 // ---------- Helpers ----------
 const formatDate = (date) => {
@@ -236,6 +238,16 @@ const Profile = () => {
         "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=80&w=1170&auto=format&fit=crop",
     },
     {
+      key: "koefitsient",
+      title: "Koefitsient",
+      value: formatNumber(userData.coefficient || 0),
+      color: "bg-gradient-to-r from-purple-500 to-pink-600",
+      Icon: DraftingCompass,
+      ringColor: "ring-gray-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1594616647927-2382fe456b07?q=80&w=1170&auto=format&fit=crop  ",
+    },
+    {
       key: "sozlamalar",
       title: "Sozlamalar",
       value: null, // no value
@@ -261,6 +273,7 @@ const Profile = () => {
     avans: <Salary userData={userData} type="advance" />,
     maosh: <Salary userData={userData} type="salary" />,
     kpi: <Kpi userData={userData} />,
+    koefitsient: <Coefficient userData={userData} />,
     sozlamalar: <Settings userData={userData} />,
   };
 
