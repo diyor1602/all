@@ -141,6 +141,42 @@ const Coefficient = () => {
                 </tr>
               ))}
           </tbody>
+
+          {/* Footer row for daily averages */}
+          <tfoot>
+            <tr className="font-bold bg-gray-100">
+              <td className="border border-gray-200 p-2 text-right" colSpan={2}>
+                O‘rtacha %
+              </td>
+              {days.map((day, i) => {
+                // Gather all percentages for this day across employees
+                const values = data
+                  .map(
+                    (item) =>
+                      item.days.find((d) => d.date === day)?.efficiency_percent
+                  )
+                  .filter((v) => v !== undefined);
+
+                const avg =
+                  values.length > 0
+                    ? values.reduce((a, b) => a + b, 0) / values.length
+                    : null;
+
+                return (
+                  <td
+                    key={i}
+                    className="border border-gray-200 p-2 text-center"
+                  >
+                    {avg !== null
+                      ? `${avg.toLocaleString("ru-RU", {
+                          maximumFractionDigits: 2,
+                        })}%`
+                      : "-"}
+                  </td>
+                );
+              })}
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>
