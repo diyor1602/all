@@ -1,15 +1,17 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { HeartCrack } from "lucide-react";
+import { HeartCrack, BadgePercent } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
+import Coefficient from "./Coefficient/Coefficient";
 
 const Settings = () => {
   return (
     <Routes>
       <Route path="*" element={<SettingsPage />} />
       <Route path="salary/orders" element={<SalaryOrders />} />
+      <Route path="coefficient" element={<Coefficient />} />
     </Routes>
   );
 };
@@ -21,6 +23,12 @@ const SettingsPage = () => {
       icon: HeartCrack,
       link: "/ceo/settings/salary/orders",
       color: "bg-orange-500",
+    },
+    {
+      name: "Koeffitsiyent",
+      icon: BadgePercent,
+      link: "/ceo/settings/coefficient",
+      color: "bg-blue-500",
     },
   ];
 
