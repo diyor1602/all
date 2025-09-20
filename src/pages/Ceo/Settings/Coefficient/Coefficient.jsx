@@ -176,7 +176,7 @@ const Coefficient = () => {
   return (
     <div className="flex flex-col gap-2">
       {/* Date filters + Search */}
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center flex-wrap md:flex-nowrap">
         {["start_date", "end_date"].map((key) => (
           <Input
             key={key}
