@@ -109,7 +109,7 @@ const Coefficient = () => {
       {/* Table */}
       <div className="w-full overflow-auto">
         <table
-          className={`w-full whitespace-nowrap border border-gray-200 border-collapse text-xs ${
+          className={`w-full whitespace-nowrap border border-gray-200 border-collapse text-xs bg-whiteG ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
