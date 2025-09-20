@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CoefLineChart from "./CoefLineChart";
 
 // === Helpers ===
 const getPercentageColor = (percentage) => {
@@ -67,7 +68,7 @@ const Coefficient = () => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [dialogActiveTab, setDialogActiveTab] = useState("image");
+  const [dialogActiveTab, setDialogActiveTab] = useState("day");
   const [departments, setDepartments] = useState([]);
   const [filters, setFilters] = useState({
     start_date:
@@ -363,7 +364,13 @@ const Coefficient = () => {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent
+          className={
+            dialogActiveTab === "day"
+              ? "md:max-w-[90vw] md:max-h-[90vh] max-w-full max-h-full overflow-auto"
+              : ""
+          }
+        >
           <DialogHeader>
             <DialogTitle>{selectedEmployee?.employee_name}</DialogTitle>
             <DialogDescription>
@@ -411,7 +418,9 @@ const Coefficient = () => {
               )}
             </div>
           )}
-          {dialogActiveTab == "day" && <div></div>}
+          {dialogActiveTab == "day" && (
+            <CoefLineChart data={selectedEmployee} />
+          )}
 
           {dialogActiveTab === "total" && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
