@@ -239,11 +239,11 @@ const Profile = () => {
     },
     {
       key: "koefitsient",
-      title: "Koefitsient",
-      value: formatNumber(userData.coefficient || 0),
-      color: "bg-gradient-to-r from-purple-500 to-pink-600",
+      title: "Koeffitsiyent",
+      value: null,
+      color: "bg-gradient-to-r from-sky-500 to-blue-600",
       Icon: DraftingCompass,
-      ringColor: "ring-gray-400",
+      ringColor: "ring-blue-400",
       bgImage:
         "https://images.unsplash.com/photo-1594616647927-2382fe456b07?q=80&w=1170&auto=format&fit=crop  ",
     },
