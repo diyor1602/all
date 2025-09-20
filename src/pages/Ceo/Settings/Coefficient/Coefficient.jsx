@@ -1,29 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 
+// === Helpers ===
 const getPercentageColor = (percentage) => {
   const value = Number(percentage);
   if (isNaN(value)) return "";
-
-  switch (true) {
-    case value < 80:
-      return "text-red-500";
-    case value >= 90:
-      return "";
-    case value >= 80:
-      return "text-green-500";
-    default:
-      return "";
-  }
+  if (value <= 0) return "";
+  if (value < 80) return "text-red-500";
+  if (value >= 90) return "";
+  return "text-green-500";
 };
 
+const formatPercent = (value) =>
+  value?.toLocaleString("ru-RU", { maximumFractionDigits: 2 }) ?? "-";
+
+const getDaysBetween = (start, end) => {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const days = [];
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    days.push(d.toISOString().split("T")[0]);
+  }
+  return days;
+};
+
+// === Component ===
 const Coefficient = () => {
   const { toast } = useToast();
-
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+
   const [filters, setFilters] = useState({
     start_date:
       localStorage.getItem("coef_start_date") ||
@@ -35,13 +43,18 @@ const Coefficient = () => {
     group_id: "",
   });
 
+  const days = useMemo(
+    () => getDaysBetween(filters.start_date, filters.end_date),
+    [filters.start_date, filters.end_date]
+  );
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/ceo/employeeEfficiency", {
+      const { data } = await api.get("/ceo/employeeEfficiency", {
         params: filters,
       });
-      setData(response.data);
+      setData(data || []);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -58,44 +71,39 @@ const Coefficient = () => {
     fetchData();
   }, [filters]);
 
-  // Generate days list between start_date and end_date
-  const days = Array.from(
-    {
-      length:
-        (new Date(filters.end_date) - new Date(filters.start_date)) /
-          (1000 * 60 * 60 * 24) +
-        1,
-    },
-    (_, i) =>
-      new Date(
-        new Date(filters.start_date).getTime() + i * (1000 * 60 * 60 * 24)
-      )
-        .toISOString()
-        .split("T")[0]
-  );
+  // === Precomputed Averages ===
+  const overallAverage = useMemo(() => {
+    const validEmployees = data.filter((emp) => emp.days.length > 0);
+
+    if (validEmployees.length === 0) return 0;
+
+    const total = validEmployees.reduce((sum, emp) => {
+      const empAvg =
+        emp.days.reduce((s, d) => s + d.efficiency_percent, 0) /
+        emp.days.length;
+      return sum + empAvg;
+    }, 0);
+
+    return total / validEmployees.length;
+  }, [data]);
 
   return (
     <div className="flex flex-col gap-2">
       {/* Date filters */}
       <div className="flex gap-2 items-center">
-        <Input
-          type="date"
-          value={filters.start_date}
-          className="w-fit bg-white"
-          onChange={(e) => {
-            setFilters({ ...filters, start_date: e.target.value });
-            localStorage.setItem("coef_start_date", e.target.value);
-          }}
-        />
-        <Input
-          type="date"
-          value={filters.end_date}
-          className="w-fit bg-white"
-          onChange={(e) => {
-            setFilters({ ...filters, end_date: e.target.value });
-            localStorage.setItem("coef_end_date", e.target.value);
-          }}
-        />
+        {["start_date", "end_date"].map((key) => (
+          <Input
+            key={key}
+            type="date"
+            value={filters[key]}
+            className="w-fit bg-white"
+            onChange={(e) => {
+              const value = e.target.value;
+              setFilters((prev) => ({ ...prev, [key]: value }));
+              localStorage.setItem(`coef_${key}`, value);
+            }}
+          />
+        ))}
       </div>
 
       {/* Table */}
@@ -109,86 +117,80 @@ const Coefficient = () => {
             <tr>
               <th className="border border-gray-200 p-2">Xodim</th>
               <th className="border border-gray-200 p-2">F.I.K</th>
-              {days.map((day, index) => (
-                <th key={index} className="border border-gray-200 p-2">
-                  {day?.split("-")?.reverse()?.join(".")}
+              {days.map((day) => (
+                <th key={day} className="border border-gray-200 p-2">
+                  {day.split("-").reverse().join(".")}
                 </th>
               ))}
             </tr>
           </thead>
+
           <tbody>
             {data
-              ?.filter((item) => item.days.length > 0)
-              ?.sort((a, b) => b.days.length - a.days.length)
-              .map((item, index) => (
-                <tr key={index}>
-                  <td className="border border-gray-200 p-2">
-                    {item.employee_name}
-                  </td>
-                  <td className="border border-gray-200 p-2">
-                    <div
-                      className={
-                        getPercentageColor(
-                          item.days.reduce(
-                            (sum, day) => sum + day.efficiency_percent,
-                            0
-                          ) / item.days.length
-                        ) + " font-medium"
-                      }
-                    >
-                      {parseFloat(
-                        item.days.reduce(
-                          (sum, day) => sum + day.efficiency_percent,
-                          0
-                        ) / item.days.length
-                      ).toLocaleString("ru-RU", {
-                        maximumFractionDigits: 2,
-                      })}
-                      %
-                    </div>
-                  </td>
-                  {days.map((day, i) => {
-                    const found = item.days.find((d) => d.date === day);
-                    return (
-                      <td
-                        key={i}
-                        className="border border-gray-200 p-2 text-center"
+              .filter((item) => item.days.length > 0)
+              .sort((a, b) => b.days.length - a.days.length)
+              .map((item) => {
+                const empAvg =
+                  item.days.reduce((s, d) => s + d.efficiency_percent, 0) /
+                  item.days.length;
+
+                return (
+                  <tr key={item.employee_id}>
+                    <td className="border border-gray-200 p-2">
+                      {item.employee_name}
+                    </td>
+                    <td className="border border-gray-200 p-2">
+                      <div
+                        className={`${getPercentageColor(
+                          empAvg
+                        )} font-medium text-center`}
                       >
-                        <div
-                          className={`font-medium ${getPercentageColor(
-                            found?.efficiency_percent
-                          )}`}
+                        {formatPercent(empAvg)}%
+                      </div>
+                    </td>
+                    {days.map((day) => {
+                      const found = item.days.find((d) => d.date === day);
+                      const val = found?.efficiency_percent ?? null;
+                      return (
+                        <td
+                          key={day}
+                          className="border border-gray-200 p-2 text-center"
                         >
-                          {found
-                            ? `${found.efficiency_percent.toLocaleString(
-                                "ru-RU",
-                                {
-                                  maximumFractionDigits: 2,
-                                }
-                              )}%`
-                            : "-"}
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+                          <div
+                            className={`font-medium ${getPercentageColor(val)}`}
+                          >
+                            {val !== null ? `${formatPercent(val)}%` : "-"}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
           </tbody>
 
           {/* Footer row for daily averages */}
           <tfoot>
             <tr className="font-bold bg-gray-100">
-              <td className="border border-gray-200 p-2 text-right" colSpan={2}>
+              <td className="border border-gray-200 p-2 text-right">
                 O‘rtacha %
               </td>
-              {days.map((day, i) => {
-                // Gather all percentages for this day across employees
+              <td className="border border-gray-200 p-2 text-right">
+                <div
+                  className={`${getPercentageColor(
+                    overallAverage
+                  )} text-center`}
+                >
+                  {formatPercent(overallAverage)}%
+                </div>
+              </td>
+              {days.map((day) => {
                 const values = data
                   .map(
                     (item) =>
                       item.days.find((d) => d.date === day)?.efficiency_percent
                   )
-                  .filter((v) => v !== undefined);
+                  .filter(Boolean);
 
                 const avg =
                   values.length > 0
@@ -197,15 +199,11 @@ const Coefficient = () => {
 
                 return (
                   <td
-                    key={i}
+                    key={day}
                     className="border border-gray-200 p-2 text-center"
                   >
                     <div className={getPercentageColor(avg)}>
-                      {avg !== null
-                        ? `${avg.toLocaleString("ru-RU", {
-                            maximumFractionDigits: 2,
-                          })}%`
-                        : "-"}
+                      {avg !== null ? `${formatPercent(avg)}%` : "-"}
                     </div>
                   </td>
                 );
