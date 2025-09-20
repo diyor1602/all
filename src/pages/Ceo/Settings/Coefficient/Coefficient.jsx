@@ -3,6 +3,22 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 
+const getPercentageColor = (percentage) => {
+  const value = Number(percentage);
+  if (isNaN(value)) return "";
+
+  switch (true) {
+    case value < 80:
+      return "text-red-500";
+    case value >= 90:
+      return "";
+    case value >= 80:
+      return "text-green-500";
+    default:
+      return "";
+  }
+};
+
 const Coefficient = () => {
   const { toast } = useToast();
 
@@ -110,15 +126,26 @@ const Coefficient = () => {
                     {item.employee_name}
                   </td>
                   <td className="border border-gray-200 p-2">
-                    {parseFloat(
-                      item.days.reduce(
-                        (sum, day) => sum + day.efficiency_percent,
-                        0
-                      ) / item.days.length
-                    ).toLocaleString("ru-RU", {
-                      maximumFractionDigits: 2,
-                    })}
-                    %
+                    <div
+                      className={
+                        getPercentageColor(
+                          item.days.reduce(
+                            (sum, day) => sum + day.efficiency_percent,
+                            0
+                          ) / item.days.length
+                        ) + " font-medium"
+                      }
+                    >
+                      {parseFloat(
+                        item.days.reduce(
+                          (sum, day) => sum + day.efficiency_percent,
+                          0
+                        ) / item.days.length
+                      ).toLocaleString("ru-RU", {
+                        maximumFractionDigits: 2,
+                      })}
+                      %
+                    </div>
                   </td>
                   {days.map((day, i) => {
                     const found = item.days.find((d) => d.date === day);
@@ -127,14 +154,20 @@ const Coefficient = () => {
                         key={i}
                         className="border border-gray-200 p-2 text-center"
                       >
-                        {found
-                          ? `${found.efficiency_percent.toLocaleString(
-                              "ru-RU",
-                              {
-                                maximumFractionDigits: 2,
-                              }
-                            )}%`
-                          : "-"}
+                        <div
+                          className={`font-medium ${getPercentageColor(
+                            found?.efficiency_percent
+                          )}`}
+                        >
+                          {found
+                            ? `${found.efficiency_percent.toLocaleString(
+                                "ru-RU",
+                                {
+                                  maximumFractionDigits: 2,
+                                }
+                              )}%`
+                            : "-"}
+                        </div>
                       </td>
                     );
                   })}
@@ -167,11 +200,13 @@ const Coefficient = () => {
                     key={i}
                     className="border border-gray-200 p-2 text-center"
                   >
-                    {avg !== null
-                      ? `${avg.toLocaleString("ru-RU", {
-                          maximumFractionDigits: 2,
-                        })}%`
-                      : "-"}
+                    <div className={getPercentageColor(avg)}>
+                      {avg !== null
+                        ? `${avg.toLocaleString("ru-RU", {
+                            maximumFractionDigits: 2,
+                          })}%`
+                        : "-"}
+                    </div>
                   </td>
                 );
               })}
