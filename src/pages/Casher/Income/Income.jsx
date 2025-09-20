@@ -223,7 +223,10 @@ const Income = () => {
                       {item?.date?.split("-").reverse().join(".")}
                     </td>
                     <td className="px-4 py-2 border">
-                      {item?.amount} {item?.currency?.name}
+                      {parseFloat(item?.amount).toLocaleString("ru-RU", {
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      {item?.currency?.name}
                     </td>
                     <td
                       className="px-4 py-2 border"
