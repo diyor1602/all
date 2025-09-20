@@ -88,7 +88,7 @@ const Coefficient = () => {
     const total = filteredData.reduce((sum, emp) => {
       const empAvg =
         emp.days.reduce((s, d) => s + d.efficiency_percent, 0) /
-        emp.days.length;
+        emp.attended_days;
       return sum + empAvg;
     }, 0);
 
@@ -142,11 +142,17 @@ const Coefficient = () => {
 
           <tbody>
             {filteredData
-              .sort((a, b) => b.days.length - a.days.length)
+              .sort(
+                (a, b) =>
+                  b.days.reduce((s, d) => s + d.efficiency_percent, 0) /
+                    b.attended_days -
+                  a.days.reduce((s, d) => s + d.efficiency_percent, 0) /
+                    a.attended_days
+              )
               .map((item) => {
                 const empAvg =
                   item.days.reduce((s, d) => s + d.efficiency_percent, 0) /
-                  item.days.length;
+                  item.attended_days;
 
                 return (
                   <tr key={item.employee_id}>
