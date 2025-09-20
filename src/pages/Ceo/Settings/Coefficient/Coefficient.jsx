@@ -115,6 +115,7 @@ const Coefficient = () => {
         <Input
           type="text"
           placeholder="Qidirish..."
+          className="bg-white"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
