@@ -44,11 +44,11 @@ function buildChartData(userData) {
 const chartConfig = {
   quantity: {
     label: "Miqdor (dona)",
-    color: "#000",
+    color: "#8B5DFF",
   },
   percentage: {
     label: "Foiz (500 daq. bo‘yicha)",
-    color: "#000",
+    color: "#16C47F",
   },
 };
 
@@ -62,7 +62,9 @@ export default function Coefficient({ userData }) {
       percentage: Math.round(
         chartData.reduce((acc, curr) => acc + curr.percentage, 0) /
           (chartData.length || 1)
-      ),
+      )?.toLocaleString("ru-RU", {
+        maximumFractionDigits: 0,
+      }),
     }),
     [chartData]
   );
@@ -90,7 +92,9 @@ export default function Coefficient({ userData }) {
                   {chartConfig[chart].label}
                 </span>
                 <span className="text-lg leading-none font-bold sm:text-3xl">
-                  {total[chart].toLocaleString()}
+                  {total[chart]?.toLocaleString("ru-RU", {
+                    maximumFractionDigits: 0,
+                  })}
                   {chart === "percentage" && "%"}
                 </span>
               </button>
