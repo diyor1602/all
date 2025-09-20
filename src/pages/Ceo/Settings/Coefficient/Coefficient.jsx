@@ -2,6 +2,21 @@ import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // === Helpers ===
 const getPercentageColor = (percentage) => {
@@ -26,13 +41,34 @@ const getDaysBetween = (start, end) => {
   return days;
 };
 
+const normalizeImageUrl = (url) => {
+  if (!url) return null;
+
+  const base = "https://api.vizzano-apparel.uz/storage/";
+
+  // Remove duplicate base if present
+  if (url.startsWith(base + base)) {
+    return url.replace(base + base, base);
+  }
+
+  // If already full URL, keep as is
+  if (url.startsWith("http")) {
+    return url;
+  }
+
+  // Otherwise, prepend base
+  return base + url;
+};
+
 // === Component ===
 const Coefficient = () => {
   const { toast } = useToast();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState("");
-
+  const [open, setOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [dialogActiveTab, setDialogActiveTab] = useState("image");
+  const [departments, setDepartments] = useState([]);
   const [filters, setFilters] = useState({
     start_date:
       localStorage.getItem("coef_start_date") ||
@@ -40,8 +76,11 @@ const Coefficient = () => {
     end_date:
       localStorage.getItem("coef_end_date") ||
       new Date().toISOString().split("T")[0],
-    department_id: "",
-    group_id: "",
+  });
+  const [frontFilters, setFrontFilters] = useState({
+    department_id: "all",
+    group_id: "all",
+    searchText: "",
   });
 
   const days = useMemo(
@@ -68,18 +107,56 @@ const Coefficient = () => {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get("/ceo/departments", {
+        params: filters,
+      });
+      setDepartments(data.flatMap((item) => item.departments) || []);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message || "Bo'limlar olishda xatolik",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, [filters]);
 
   // === Apply search filter ===
   const filteredData = useMemo(() => {
-    return data.filter(
-      (item) =>
+    return data.filter((item) => {
+      const matchesSearch = item.employee_name
+        .toLowerCase()
+        .includes(frontFilters.searchText.toLowerCase());
+
+      const matchesDepartment =
+        frontFilters.department_id === "all" ||
+        item.department_id == frontFilters.department_id;
+
+      const matchesGroup =
+        frontFilters.group_id === "all" ||
+        item.group_id == frontFilters.group_id;
+
+      return (
         item.days.length > 0 &&
-        item.employee_name.toLowerCase().includes(searchText.toLowerCase())
-    );
-  }, [data, searchText]);
+        matchesSearch &&
+        matchesDepartment &&
+        matchesGroup
+      );
+    });
+  }, [data, frontFilters]);
 
   // === Precomputed Averages (based on filtered data) ===
   const overallAverage = useMemo(() => {
@@ -116,9 +193,55 @@ const Coefficient = () => {
           type="text"
           placeholder="Qidirish..."
           className="bg-white"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          value={frontFilters.searchText}
+          onChange={(e) =>
+            setFrontFilters((prev) => ({ ...prev, searchText: e.target.value }))
+          }
         />
+        <Select
+          value={frontFilters.department_id}
+          onValueChange={(value) =>
+            setFrontFilters((prev) => ({
+              ...prev,
+              department_id: value,
+              group_id: "all", // reset group filter
+            }))
+          }
+        >
+          <SelectTrigger className="bg-white">
+            <SelectValue placeholder="Bo'limni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barchasi</SelectItem>
+            {departments.map((department) => (
+              <SelectItem key={department.id} value={department.id}>
+                {department.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={frontFilters.group_id}
+          onValueChange={(value) =>
+            setFrontFilters((prev) => ({ ...prev, group_id: value }))
+          }
+        >
+          <SelectTrigger className="bg-white">
+            <SelectValue placeholder="Guruhni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barchasi</SelectItem>
+            {departments
+              .find((d) => d.id == frontFilters.department_id)
+              ?.groups?.sort((a, b) => a.name.localeCompare(b.name))
+              ?.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Table */}
@@ -155,7 +278,13 @@ const Coefficient = () => {
                   item.attended_days;
 
                 return (
-                  <tr key={item.employee_id}>
+                  <tr
+                    key={item.employee_id}
+                    onClick={() => {
+                      setSelectedEmployee(item);
+                      setOpen(true);
+                    }}
+                  >
                     <td className="border border-gray-200 p-2">
                       {item.employee_name}
                     </td>
@@ -232,6 +361,114 @@ const Coefficient = () => {
           </tfoot>
         </table>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedEmployee?.employee_name}</DialogTitle>
+            <DialogDescription>
+              {
+                departments.find((d) => d.id == selectedEmployee?.department_id)
+                  ?.name
+              }{" "}
+              {
+                departments
+                  .find((d) => d.id == selectedEmployee?.department_id)
+                  ?.groups?.find((g) => g.id == selectedEmployee?.group_id)
+                  ?.name
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={dialogActiveTab === "image" ? "default" : "outline"}
+              onClick={() => setDialogActiveTab("image")}
+            >
+              Rasm
+            </Button>
+            <Button
+              variant={dialogActiveTab === "day" ? "default" : "outline"}
+              onClick={() => setDialogActiveTab("day")}
+            >
+              Grafik
+            </Button>
+            <Button
+              variant={dialogActiveTab === "total" ? "default" : "outline"}
+              onClick={() => setDialogActiveTab("total")}
+            >
+              Umumiy
+            </Button>
+          </div>
+          {dialogActiveTab === "image" && (
+            <div className="max-h-[70vh] overflow-auto w-full">
+              {selectedEmployee?.image ? (
+                <img
+                  src={normalizeImageUrl(selectedEmployee.image)}
+                  alt={selectedEmployee.employee_name}
+                />
+              ) : (
+                <div>Rasm mavjud emas</div>
+              )}
+            </div>
+          )}
+          {dialogActiveTab == "day" && <div></div>}
+
+          {dialogActiveTab === "total" && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
+              <div className="p-4 rounded-2xl border shadow-sm bg-white">
+                <div className="text-sm text-gray-500">Keldi</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {parseFloat(selectedEmployee?.attended_days).toLocaleString(
+                    "ru-RU",
+                    {
+                      maximumFractionDigits: 0,
+                    }
+                  )}{" "}
+                  kun
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl border shadow-sm bg-white">
+                <div className="text-sm text-gray-500">Kuniga o'rtacha</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {parseFloat(selectedEmployee?.avg_per_day).toLocaleString(
+                    "ru-RU",
+                    {
+                      maximumFractionDigits: 0,
+                    }
+                  )}{" "}
+                  so'm
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl border shadow-sm bg-white">
+                <div className="text-sm text-gray-500">
+                  Tarifikatsiyadan topdi
+                </div>
+                <div className="text-lg font-semibold text-emerald-600">
+                  {parseFloat(
+                    selectedEmployee?.tarification_earned
+                  ).toLocaleString("ru-RU", { maximumFractionDigits: 0 })}{" "}
+                  so'm
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl border shadow-sm bg-white">
+                <div className="text-sm text-gray-500">Jami topdi</div>
+                <div className="text-lg font-bold text-indigo-600">
+                  {parseFloat(selectedEmployee?.total_earned).toLocaleString(
+                    "ru-RU",
+                    {
+                      maximumFractionDigits: 0,
+                    }
+                  )}{" "}
+                  so'm
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
