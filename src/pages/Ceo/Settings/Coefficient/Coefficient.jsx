@@ -31,6 +31,7 @@ const Coefficient = () => {
   const { toast } = useToast();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const [filters, setFilters] = useState({
     start_date:
@@ -71,25 +72,32 @@ const Coefficient = () => {
     fetchData();
   }, [filters]);
 
-  // === Precomputed Averages ===
+  // === Apply search filter ===
+  const filteredData = useMemo(() => {
+    return data.filter(
+      (item) =>
+        item.days.length > 0 &&
+        item.employee_name.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [data, searchText]);
+
+  // === Precomputed Averages (based on filtered data) ===
   const overallAverage = useMemo(() => {
-    const validEmployees = data.filter((emp) => emp.days.length > 0);
+    if (filteredData.length === 0) return 0;
 
-    if (validEmployees.length === 0) return 0;
-
-    const total = validEmployees.reduce((sum, emp) => {
+    const total = filteredData.reduce((sum, emp) => {
       const empAvg =
         emp.days.reduce((s, d) => s + d.efficiency_percent, 0) /
         emp.days.length;
       return sum + empAvg;
     }, 0);
 
-    return total / validEmployees.length;
-  }, [data]);
+    return total / filteredData.length;
+  }, [filteredData]);
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Date filters */}
+      {/* Date filters + Search */}
       <div className="flex gap-2 items-center">
         {["start_date", "end_date"].map((key) => (
           <Input
@@ -104,12 +112,18 @@ const Coefficient = () => {
             }}
           />
         ))}
+        <Input
+          type="text"
+          placeholder="Qidirish..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
       </div>
 
       {/* Table */}
       <div className="w-full overflow-auto">
         <table
-          className={`w-full whitespace-nowrap border border-gray-200 border-collapse text-xs bg-whiteG ${
+          className={`w-full whitespace-nowrap border border-gray-200 border-collapse text-xs bg-white ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
@@ -126,8 +140,7 @@ const Coefficient = () => {
           </thead>
 
           <tbody>
-            {data
-              .filter((item) => item.days.length > 0)
+            {filteredData
               .sort((a, b) => b.days.length - a.days.length)
               .map((item) => {
                 const empAvg =
@@ -185,12 +198,12 @@ const Coefficient = () => {
                 </div>
               </td>
               {days.map((day) => {
-                const values = data
+                const values = filteredData
                   .map(
                     (item) =>
                       item.days.find((d) => d.date === day)?.efficiency_percent
                   )
-                  .filter(Boolean);
+                  .filter((v) => v !== undefined && v !== null);
 
                 const avg =
                   values.length > 0
