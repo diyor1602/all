@@ -310,9 +310,7 @@ const Add = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">
-                    Telefon raqami <span className="text-red-500">*</span>
-                  </Label>
+                  <Label htmlFor="phone">Telefon raqami *</Label>
                   <Input
                     id="phone"
                     name="phone"

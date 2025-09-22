@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useNavigate, Routes, Route } from "react-router-dom";
+import { useNavigate, Routes, Route, Link } from "react-router-dom";
 import Add from "./Add";
 import Edit from "./Edit";
 import Show from "./Show";
@@ -123,8 +123,10 @@ const MachineWrapper = () => {
         <h1 className="text-2xl font-bold">
           Transportlar ({filteredTransports.length})
         </h1>
-        <Button onClick={() => navigate("/transport/machines/new")}>
-          <PlusCircle /> Yangi Transport
+        <Button asChild>
+          <Link to="/transport/machines/new">
+            <PlusCircle /> Yangi Transport
+          </Link>
         </Button>
       </div>
 
