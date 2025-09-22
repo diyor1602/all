@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   Sprout,
   Truck,
+  Users,
 } from "lucide-react";
 
 const navigation = [
@@ -26,6 +27,12 @@ const navigation = [
     name: "Avtomobillar",
     href: "/transport/machines",
     icon: Car,
+    onMobile: true,
+  },
+  {
+    name: "Xodimlar",
+    href: "/transport/employees",
+    icon: Users,
     onMobile: true,
   },
   { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
