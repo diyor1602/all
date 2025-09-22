@@ -85,7 +85,7 @@ const Show = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div>
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10 shadow-lg">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-6 px-6">
@@ -120,9 +120,9 @@ const Show = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-10 space-y-10">
+      <div className="mx-auto py-6 space-y-2 bg-transparent">
         {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6">
           <StatCard
             icon={<Truck className="h-6 w-6 text-blue-600" />}
             label="Davlat raqami"
@@ -150,7 +150,7 @@ const Show = () => {
         </div>
 
         {/* Driver Profile + Finance */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           <div className="bg-white shadow-lg rounded-xl p-6">
             <h3 className="text-xl font-semibold mb-4">
               Haydovchi ma'lumotlari
@@ -203,6 +203,12 @@ const Show = () => {
               <InfoRow label="Masofa" value={`${transport.distance} km`} />
             </div>
           </div>
+
+          <div className="bg-white shadow-lg rounded-xl p-6">
+            <h3 className="text-xl font-semibold mb-4">
+              Biriktirilgan odamlar
+            </h3>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -220,7 +226,9 @@ const Show = () => {
             <TabsContent value="attendances" className="p-6">
               <TableWithMonthFilter
                 title="Davomat ro'yxati"
-                data={filteredAttendances}
+                data={filteredAttendances?.sort(
+                  (a, b) => new Date(a.date) - new Date(b.date)
+                )}
                 emptyText="Davomat ma'lumotlari mavjud emas"
                 selectedMonth={selectedMonth}
                 setSelectedMonth={setSelectedMonth}
