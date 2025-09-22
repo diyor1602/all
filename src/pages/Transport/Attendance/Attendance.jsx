@@ -316,7 +316,7 @@ const Attendance = () => {
                   2,
                   "0"
                 )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport.id === transportId
+              a.transport?.id === transportId
           );
 
           // Add to daily totals
@@ -337,7 +337,7 @@ const Attendance = () => {
                   2,
                   "0"
                 )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport.id === transportId
+              a.transport?.id === transportId
           );
           return (
             total +
@@ -356,7 +356,7 @@ const Attendance = () => {
                   2,
                   "0"
                 )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport.id === transportId
+              a.transport?.id === transportId
           );
           return (
             total +
@@ -375,7 +375,7 @@ const Attendance = () => {
                   2,
                   "0"
                 )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport.id === transportId
+              a.transport?.id === transportId
           );
           return (
             total +
@@ -1146,8 +1146,9 @@ const Attendance = () => {
                       "0"
                     )}`;
                     const attendance = attendances.find(
-                      (a) => a.date === date && a.transport.id === transport.id
+                      (a) => a.date === date && a.transport?.id === transport.id
                     );
+
                     return (
                       <td key={dayIndex} className="border-2 min-w-[40px]">
                         <ContextMenu>

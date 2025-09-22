@@ -108,7 +108,6 @@ const Outcome = () => {
   const getTotalsByPurpose = (purpose) => {
     const total = data.reduce((acc, item) => {
       if (item.purpose.toLowerCase() === purpose.toLowerCase()) {
-        console.log(parseFloat(item.amount));
         return acc + parseFloat(item.amount);
       }
       return acc;
