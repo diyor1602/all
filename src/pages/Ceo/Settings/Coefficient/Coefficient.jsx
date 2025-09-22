@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CoefLineChart from "./CoefLineChart";
+import { Link } from "react-router-dom";
 
 // === Helpers ===
 const getPercentageColor = (percentage) => {
@@ -40,25 +41,6 @@ const getDaysBetween = (start, end) => {
     days.push(d.toISOString().split("T")[0]);
   }
   return days;
-};
-
-const normalizeImageUrl = (url) => {
-  if (!url) return null;
-
-  const base = "https://api.vizzano-apparel.uz/storage/";
-
-  // Remove duplicate base if present
-  if (url.startsWith(base + base)) {
-    return url.replace(base + base, base);
-  }
-
-  // If already full URL, keep as is
-  if (url.startsWith("http")) {
-    return url;
-  }
-
-  // Otherwise, prepend base
-  return base + url;
 };
 
 // === Component ===
@@ -372,7 +354,14 @@ const Coefficient = () => {
           }
         >
           <DialogHeader>
-            <DialogTitle>{selectedEmployee?.employee_name}</DialogTitle>
+            <DialogTitle>
+              <Link
+                to={`/ceo/salary/${selectedEmployee?.employee_id}`}
+                target="_blank"
+              >
+                {selectedEmployee?.employee_name}
+              </Link>
+            </DialogTitle>
             <DialogDescription>
               {
                 departments.find((d) => d.id == selectedEmployee?.department_id)
@@ -410,7 +399,7 @@ const Coefficient = () => {
             <div className="max-h-[70vh] overflow-auto w-full">
               {selectedEmployee?.image ? (
                 <img
-                  src={normalizeImageUrl(selectedEmployee.image)}
+                  src={selectedEmployee.image}
                   alt={selectedEmployee.employee_name}
                 />
               ) : (
