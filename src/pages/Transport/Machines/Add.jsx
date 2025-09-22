@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { ArrowLeft, Check, Loader2 } from "lucide-react";
 
 const formatValue = (value) => {
   if (!value) return "";
@@ -26,11 +26,7 @@ const Add = () => {
   const navigate = useNavigate();
   const [regions, setRegions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [openRegionCombobox, setOpenRegionCombobox] = useState(false);
-  const [regionSearch, setRegionSearch] = useState("");
-  const [isNewRegion, setIsNewRegion] = useState(false);
   const dropdownRef = useRef(null);
-  const [filteredRegions, setFilteredRegions] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "", // required
@@ -43,17 +39,6 @@ const Add = () => {
     region_name: "", // for new region
     distance: 0, // optional
     is_active: true,
-    vin_number: "", // optional
-    tech_passport_number: "", // optional
-    engine_number: "", // optional
-    year: "", // optional
-    color: "", // optional
-    registration_date: "", // optional
-    insurance_expiry: "", // optional
-    inspection_expiry: "", // optional
-    driver_passport_number: "", // optional
-    driver_license_number: "", // optional
-    driver_experience_years: 0, // optional
     salary: 0, // required
     fuel_bonus: 0, // optional
   });
@@ -62,7 +47,6 @@ const Add = () => {
     try {
       const response = await api.get("/transport/regions");
       setRegions(response.data);
-      setFilteredRegions(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -76,45 +60,23 @@ const Add = () => {
     getRegions();
   }, []);
 
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpenRegionCombobox(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
-
-  // Format phone number for display
   const formatPhoneNumber = (value) => {
     if (!value) return "+998";
 
-    // Remove all non-digit characters
     let phoneNumber = value.replace(/\D/g, "");
 
-    // If the number doesn't start with 998, add it
     if (!phoneNumber.startsWith("998")) {
-      // Only add 998 if it's a completely new number or if we're not in the process of typing it
       if (phoneNumber.length <= 3) {
-        // We're still typing the prefix or it's empty
         phoneNumber = "998" + phoneNumber;
       } else {
-        // It's not a 998 prefix but some other number
         phoneNumber = "998" + phoneNumber;
       }
     }
 
-    // Trim the phone number to maximum 12 digits (including 998)
     if (phoneNumber.length > 12) {
       phoneNumber = phoneNumber.substring(0, 12);
     }
 
-    // Format the phone number: +998 XX XXX XX XX
     let formattedNumber = "+";
     for (let i = 0; i < phoneNumber.length; i++) {
       if (i === 3) formattedNumber += " ";
@@ -127,7 +89,6 @@ const Add = () => {
     return formattedNumber;
   };
 
-  // Handle phone input with formatting
   const handlePhoneChange = (e) => {
     const formattedNumber = formatPhoneNumber(e.target.value);
     setFormData((prev) => ({
@@ -136,7 +97,6 @@ const Add = () => {
     }));
   };
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -145,7 +105,6 @@ const Add = () => {
     });
   };
 
-  // Handle select changes
   const handleSelectChange = (name, value) => {
     setFormData({
       ...formData,
@@ -153,72 +112,34 @@ const Add = () => {
     });
   };
 
-  // Handle region selection
-  const handleRegionSelect = (id, name) => {
-    setFormData({
-      ...formData,
-      region_id: id,
-      region_name: name,
-    });
-    setIsNewRegion(false);
-    setOpenRegionCombobox(false);
-  };
-
-  // Handle new region input
-  const handleNewRegionInput = (value) => {
-    setRegionSearch(value);
-    setFormData({
-      ...formData,
-      region_name: value,
-      region_id: null,
-    });
-
-    // Check if the input doesn't match any existing region
-    const matchingRegion = regions.find(
-      (region) => region.name.toLowerCase() === value.toLowerCase()
-    );
-
-    setIsNewRegion(!matchingRegion && value.trim() !== "");
-  };
-
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Prepare the data for submission
-      const submissionData = { ...formData };
+      let submissionData = { ...formData };
 
-      // If it's not a new region, remove region_name from the submission
-      if (!isNewRegion) {
-        delete submissionData.region_name;
-      }
-
-      // Clean phone numbers - ensure they don't have spaces when sent to the API
-      if (submissionData.phone) {
-        // Remove all non-digit characters
+      // Format phones
+      if (submissionData.phone)
         submissionData.phone = submissionData.phone.replace(/\D/g, "");
-      }
-
-      if (submissionData.phone_2) {
-        // Remove all non-digit characters
+      if (submissionData.phone_2)
         submissionData.phone_2 = submissionData.phone_2.replace(/\D/g, "");
+
+      // Fix region fields
+      if (submissionData.region_id) {
+        delete submissionData.region_name; // only send id
+      } else {
+        delete submissionData.region_id; // only send name
       }
 
-      // Send the data to the API
       await api.post("/transport/transports", submissionData);
 
       toast({
         title: "Muvaffaqiyatli",
         description: "Transport ma'lumotlari qo'shildi",
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
+        style: { backgroundColor: "green", color: "white" },
       });
 
-      // Navigate back to the list
       navigate("/transport/machines");
     } catch (error) {
       toast({
@@ -244,19 +165,7 @@ const Add = () => {
           onClick={() => navigate(-1)}
           className="flex items-center gap-2"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m15 18-6-6 6-6" />
-          </svg>
+          <ArrowLeft />
           Orqaga
         </Button>
       </div>
@@ -314,7 +223,7 @@ const Add = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="distance">
-                    Masofasi ({formatValue(formData.distance)}){"km"}
+                    Masofasi ({formatValue(formData.distance)} km)
                   </Label>
                   <Input
                     id="distance"
@@ -325,92 +234,47 @@ const Add = () => {
                   />
                 </div>
 
+                {/* Region Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="region">Hudud *</Label>
                   <div className="relative" ref={dropdownRef}>
                     <Input
                       id="region"
+                      name="region"
+                      list="regions-list"
                       placeholder="Hududni tanlang yoki kiriting..."
-                      value={regionSearch}
-                      onChange={(e) => handleNewRegionInput(e.target.value)}
-                      className={`w-full ${
-                        openRegionCombobox ? "rounded-b-none border-b-0" : ""
-                      }`}
-                      onFocus={() => setOpenRegionCombobox(true)}
+                      value={formData.region_name}
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        // Find if this matches an existing region
+                        const selectedRegion = regions.find(
+                          (r) => r.name.toLowerCase() === value.toLowerCase()
+                        );
+
+                        if (selectedRegion) {
+                          // Existing region → store its id
+                          setFormData((prev) => ({
+                            ...prev,
+                            region_id: selectedRegion.id,
+                            region_name: selectedRegion.name,
+                          }));
+                        } else {
+                          // New region → keep name, reset id
+                          setFormData((prev) => ({
+                            ...prev,
+                            region_id: null,
+                            region_name: value,
+                          }));
+                        }
+                      }}
+                      required
                     />
-
-                    {openRegionCombobox && (
-                      <div className="absolute z-10 w-full rounded-b-md border bg-white shadow-md">
-                        <div className="max-h-60 overflow-y-auto p-1">
-                          {regionSearch.trim() !== "" &&
-                            !regions.some(
-                              (region) =>
-                                region.name.toLowerCase() ===
-                                regionSearch.toLowerCase()
-                            ) && (
-                              <div
-                                className="flex cursor-pointer items-center rounded-md px-2 py-1.5 text-sm hover:bg-slate-100"
-                                onClick={() => {
-                                  setFormData({
-                                    ...formData,
-                                    region_id: null,
-                                    region_name: regionSearch,
-                                  });
-                                  setIsNewRegion(true);
-                                  setOpenRegionCombobox(false);
-                                }}
-                              >
-                                <span>Yangi hudud sifatida qo'shish: </span>
-                                <span className="ml-1 font-medium">
-                                  {regionSearch}
-                                </span>
-                              </div>
-                            )}
-
-                          {filteredRegions.length === 0 &&
-                          regionSearch.trim() === "" ? (
-                            <div className="py-6 text-center text-sm text-gray-500">
-                              Hududlar topilmadi
-                            </div>
-                          ) : (
-                            filteredRegions.map((region) => (
-                              <div
-                                key={region.id}
-                                className={`flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-slate-100 ${
-                                  formData.region_id === region.id
-                                    ? "bg-slate-100"
-                                    : ""
-                                }`}
-                                onClick={() =>
-                                  handleRegionSelect(region.id, region.name)
-                                }
-                              >
-                                {region.name}
-                                {formData.region_id === region.id && (
-                                  <Check className="h-4 w-4 text-green-600" />
-                                )}
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Selected region display */}
-                    {(formData.region_id || isNewRegion) && (
-                      <div className="mt-1.5 flex items-center text-sm text-gray-500">
-                        <span>Tanlangan hudud: </span>
-                        <span className="ml-1 font-medium text-gray-700">
-                          {formData.region_id
-                            ? regions.find(
-                                (region) => region.id === formData.region_id
-                              )?.name
-                            : isNewRegion
-                            ? `${formData.region_name} (yangi)`
-                            : ""}
-                        </span>
-                      </div>
-                    )}
+                    <datalist id="regions-list">
+                      {regions.map((region) => (
+                        <option key={region.id} value={region.name} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
               </div>
@@ -471,43 +335,6 @@ const Add = () => {
                     maxLength={17}
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="driver_experience_years">
-                    Ish tajribasi (yil)
-                  </Label>
-                  <Input
-                    id="driver_experience_years"
-                    name="driver_experience_years"
-                    type="number"
-                    value={formData.driver_experience_years}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="driver_passport_number">
-                    Passport raqami
-                  </Label>
-                  <Input
-                    id="driver_passport_number"
-                    name="driver_passport_number"
-                    value={formData.driver_passport_number}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="driver_license_number">
-                    Haydovchilik guvohnomasi
-                  </Label>
-                  <Input
-                    id="driver_license_number"
-                    name="driver_license_number"
-                    value={formData.driver_license_number}
-                    onChange={handleChange}
-                  />
-                </div>
               </div>
             </div>
 
@@ -546,104 +373,6 @@ const Add = () => {
                 </div>
               </div>
             </div>
-
-            {/* Vehicle Technical Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium border-l-4 border-primary pl-3">
-                Transport texnik ma'lumotlari
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="vin_number">VIN raqami</Label>
-                  <Input
-                    id="vin_number"
-                    name="vin_number"
-                    value={formData.vin_number}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tech_passport_number">
-                    Texnik passport raqami
-                  </Label>
-                  <Input
-                    id="tech_passport_number"
-                    name="tech_passport_number"
-                    value={formData.tech_passport_number}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="engine_number">Dvigatel raqami</Label>
-                  <Input
-                    id="engine_number"
-                    name="engine_number"
-                    value={formData.engine_number}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="year">Ishlab chiqarilgan yil</Label>
-                  <Input
-                    id="year"
-                    name="year"
-                    value={formData.year}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="color">Rangi</Label>
-                  <Input
-                    id="color"
-                    name="color"
-                    value={formData.color}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="registration_date">
-                    Ro'yxatga olingan sana
-                  </Label>
-                  <Input
-                    id="registration_date"
-                    name="registration_date"
-                    type="date"
-                    value={formData.registration_date}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="insurance_expiry">Sug'urta muddati</Label>
-                  <Input
-                    id="insurance_expiry"
-                    name="insurance_expiry"
-                    type="date"
-                    value={formData.insurance_expiry}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="inspection_expiry">
-                    Texnik ko'rik muddati
-                  </Label>
-                  <Input
-                    id="inspection_expiry"
-                    name="inspection_expiry"
-                    type="date"
-                    value={formData.inspection_expiry}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-            </div>
           </CardContent>
 
           <CardFooter className="flex justify-between pt-6 border-t">
@@ -653,19 +382,7 @@ const Add = () => {
               onClick={() => navigate(-1)}
               className="flex items-center gap-2"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m15 18-6-6 6-6" />
-              </svg>
+              <ArrowLeft />
               Bekor qilish
             </Button>
             <Button
@@ -675,45 +392,12 @@ const Add = () => {
             >
               {loading ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <Loader2 className="animate-spin" />
                   Saqlanmoqda...
                 </>
               ) : (
                 <>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                    <polyline points="17 21 17 13 7 13 7 21" />
-                    <polyline points="7 3 7 8 15 8" />
-                  </svg>
+                  <Check />
                   Saqlash
                 </>
               )}
