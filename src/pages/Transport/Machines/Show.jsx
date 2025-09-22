@@ -1,18 +1,8 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
-import {
-  ArrowLeft,
-  Calendar,
-  FileText,
-  MapPin,
-  Phone,
-  Truck,
-  User,
-} from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Truck, User } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -138,36 +128,6 @@ const Show = () => {
               <span className="font-medium">{transport.capacity} o'rindiq</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">VIN raqami:</span>
-              <span className="font-medium">
-                {transport.vin_number || "Ko'rsatilmagan"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Texnik passport:</span>
-              <span className="font-medium">
-                {transport.tech_passport_number || "Ko'rsatilmagan"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Dvigatel raqami:</span>
-              <span className="font-medium">
-                {transport.engine_number || "Ko'rsatilmagan"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Ishlab chiqarilgan yil:</span>
-              <span className="font-medium">
-                {transport.year || "Ko'rsatilmagan"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Rangi:</span>
-              <span className="font-medium">
-                {transport.color || "Ko'rsatilmagan"}
-              </span>
-            </div>
-            <div className="flex justify-between">
               <span className="text-gray-500">Masofa:</span>
               <span className="font-medium">{transport.distance} km</span>
             </div>
@@ -196,26 +156,6 @@ const Show = () => {
                 <span>{transport.phone_2}</span>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <div className="h-5 w-5 flex items-center justify-center">
-                <FileText className="h-5 w-5 text-gray-500" />
-              </div>
-              <span>
-                Passport: {transport.driver_passport_number || "Ko'rsatilmagan"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-5 w-5 flex items-center justify-center">
-                <FileText className="h-5 w-5 text-gray-500" />
-              </div>
-              <span>
-                Guvohnoma: {transport.driver_license_number || "Ko'rsatilmagan"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-gray-500" />
-              <span>Tajriba: {transport.driver_experience_years} yil</span>
-            </div>
           </div>
         </div>
 
