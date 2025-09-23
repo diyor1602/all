@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
@@ -59,7 +57,6 @@ const MachineWrapper = () => {
   );
 
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   // Fetch transports
   const fetchTransports = async () => {
@@ -207,23 +204,15 @@ const MachineWrapper = () => {
                     <TableCell className="text-xs border-2">{t.name}</TableCell>
                     <TableCell className="text-xs border-2">
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() =>
-                            navigate(`/transport/machines/show/${t.id}`)
-                          }
-                        >
-                          <Eye className="h-4 w-4 text-blue-500" />
+                        <Button variant="ghost" className="h-8 w-8 p-0" asChild>
+                          <Link to={`/transport/machines/show/${t.id}`}>
+                            <Eye className="h-4 w-4 text-blue-500" />
+                          </Link>
                         </Button>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() =>
-                            navigate(`/transport/machines/edit/${t.id}`)
-                          }
-                        >
-                          <Pencil className="h-4 w-4 text-orange-500" />
+                        <Button variant="ghost" className="h-8 w-8 p-0" asChild>
+                          <Link to={`/transport/machines/edit/${t.id}`}>
+                            <Pencil className="h-4 w-4 text-orange-500" />
+                          </Link>
                         </Button>
                       </div>
                     </TableCell>
