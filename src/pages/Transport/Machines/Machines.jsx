@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useNavigate, Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import Add from "./Add";
 import Edit from "./Edit";
 import Show from "./Show";
@@ -64,7 +64,6 @@ const MachineWrapper = () => {
     try {
       const response = await api.get("/transport/transports");
       setTransports(response.data); // ✅ only set raw data
-      // ❌ remove setFilteredTransports here
     } catch (error) {
       toast({
         title: "Xatolik",
