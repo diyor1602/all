@@ -28,11 +28,12 @@ import Add from "./Add";
 import Edit from "./Edit";
 import Show from "./Show";
 
-const formatPhoneNumber = (phone) => {
-  return phone
-    .replace(/\D/g, "")
-    .replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
-};
+const formatPhoneNumber = (phone) =>
+  phone
+    ?.replace(/\D/g, "")
+    ?.replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
+
+const STORAGE_KEY = "machine_filters";
 
 const Machine = () => {
   return (
@@ -49,17 +50,24 @@ const MachineWrapper = () => {
   const [transports, setTransports] = useState([]);
   const [filteredTransports, setFilteredTransports] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("active");
+
+  // Load filters from localStorage
+  const savedFilters = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  const [searchTerm, setSearchTerm] = useState(savedFilters.searchTerm || "");
+  const [statusFilter, setStatusFilter] = useState(
+    savedFilters.statusFilter || "active"
+  );
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Fetch transports
   const fetchTransports = async () => {
     setLoading(true);
     try {
       const response = await api.get("/transport/transports");
-      setTransports(response.data);
-      setFilteredTransports(response.data);
+      setTransports(response.data); // ✅ only set raw data
+      // ❌ remove setFilteredTransports here
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -75,47 +83,54 @@ const MachineWrapper = () => {
     fetchTransports();
   }, []);
 
+  // Save filters to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ searchTerm, statusFilter })
+    );
+  }, [searchTerm, statusFilter]);
+
+  // Apply filters
   useEffect(() => {
     let filtered = [...transports];
 
-    // Apply status filter
     if (statusFilter !== "all") {
       const isActive = statusFilter === "active";
-      filtered = filtered.filter(
-        (transport) => transport.is_active === isActive
-      );
+      filtered = filtered.filter((t) => t.is_active === isActive);
     }
 
-    // Apply search filter
     if (searchTerm.trim() !== "") {
-      const lowercasedSearch = searchTerm.toLowerCase();
+      const lowerSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        (transport) =>
-          transport.name.toLowerCase().includes(lowercasedSearch) ||
-          transport.state_number.toLowerCase().includes(lowercasedSearch) ||
-          transport.driver_full_name.toLowerCase().includes(lowercasedSearch) ||
-          (transport.region_id?.name &&
-            transport.region_id.name.toLowerCase().includes(lowercasedSearch))
+        (t) =>
+          t.name.toLowerCase().includes(lowerSearch) ||
+          t.state_number.toLowerCase().includes(lowerSearch) ||
+          t.driver_full_name.toLowerCase().includes(lowerSearch) ||
+          (t.region_id?.name &&
+            t.region_id.name.toLowerCase().includes(lowerSearch))
       );
     }
 
     setFilteredTransports(filtered);
   }, [searchTerm, statusFilter, transports]);
 
-  // Calculate total capacity and active transports
+  // Totals
   const totalCapacity = filteredTransports.reduce(
-    (sum, transport) => sum + (transport.capacity || 0),
+    (sum, t) => sum + (t.capacity || 0),
     0
   );
-
   const totalSalary = filteredTransports.reduce(
-    (sum, transport) => sum + (parseFloat(transport.salary) || 0),
+    (sum, t) => sum + (parseFloat(t.salary) || 0),
     0
   );
-
   const totalActiveTransports = filteredTransports.filter(
-    (transport) => transport.is_active
+    (t) => t.is_active
   ).length;
+  const totalEmployees = filteredTransports.reduce(
+    (sum, t) => sum + (t.employees?.length || 0),
+    0
+  );
 
   return (
     <>
@@ -130,6 +145,7 @@ const MachineWrapper = () => {
         </Button>
       </div>
 
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -156,6 +172,7 @@ const MachineWrapper = () => {
         </div>
       </div>
 
+      {/* Table */}
       {loading ? (
         <div className="flex justify-center my-8">Yuklanmoqda...</div>
       ) : (
@@ -175,27 +192,26 @@ const MachineWrapper = () => {
                 <TableHead className="text-xs border-2">Maoshi</TableHead>
                 <TableHead className="text-xs border-2">Telefon</TableHead>
                 <TableHead className="text-xs border-2">Sig'imi</TableHead>
+                <TableHead className="text-xs border-2">Xodimlar</TableHead>
                 <TableHead className="text-xs border-2">Yo'nalish</TableHead>
                 <TableHead className="text-xs border-2">Holati</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTransports.length > 0 ? (
-                filteredTransports.map((transport, index) => (
-                  <TableRow key={index}>
+                filteredTransports.map((t, index) => (
+                  <TableRow key={t.id}>
                     <TableCell className="text-xs font-medium border-2 text-center">
                       {index + 1}
                     </TableCell>
-                    <TableCell className="text-xs border-2">
-                      {transport.name}
-                    </TableCell>
+                    <TableCell className="text-xs border-2">{t.name}</TableCell>
                     <TableCell className="text-xs border-2">
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
                           className="h-8 w-8 p-0"
                           onClick={() =>
-                            navigate(`/transport/machines/show/${transport.id}`)
+                            navigate(`/transport/machines/show/${t.id}`)
                           }
                         >
                           <Eye className="h-4 w-4 text-blue-500" />
@@ -204,7 +220,7 @@ const MachineWrapper = () => {
                           variant="ghost"
                           className="h-8 w-8 p-0"
                           onClick={() =>
-                            navigate(`/transport/machines/edit/${transport.id}`)
+                            navigate(`/transport/machines/edit/${t.id}`)
                           }
                         >
                           <Pencil className="h-4 w-4 text-orange-500" />
@@ -212,42 +228,39 @@ const MachineWrapper = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      {transport.state_number}
+                      {t.state_number}
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      {transport.driver_full_name}
+                      {t.driver_full_name}
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      {parseFloat(transport.salary).toLocaleString("ru-RU", {
+                      {parseFloat(t.salary).toLocaleString("ru-RU", {
                         maximumFractionDigits: 0,
                       })}
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      +{formatPhoneNumber(transport.phone)}{" "}
-                      {transport.phone_2
-                        ? ` | +${formatPhoneNumber(transport.phone_2)}`
-                        : ""}
+                      +{formatPhoneNumber(t.phone)}{" "}
+                      {t.phone_2 ? ` | +${formatPhoneNumber(t.phone_2)}` : ""}
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      {transport.capacity}
+                      {t.capacity}
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      {transport.region_id?.name}
+                      {t.employees?.length}
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      <Badge
-                        variant={
-                          transport.is_active ? "success" : "destructive"
-                        }
-                      >
-                        {transport.is_active ? "Faol" : "Faol emas"}
+                      {t.region_id?.name}
+                    </TableCell>
+                    <TableCell className="text-xs border-2">
+                      <Badge variant={t.is_active ? "success" : "destructive"}>
+                        {t.is_active ? "Faol" : "Faol emas"}
                       </Badge>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center">
+                  <TableCell colSpan={10} className="h-24 text-center">
                     Transport topilmadi
                   </TableCell>
                 </TableRow>
@@ -263,12 +276,17 @@ const MachineWrapper = () => {
                     maximumFractionDigits: 0,
                   })}
                 </TableCell>
-                <TableCell colSpan={1} className="text-xs font-bold border-2">
+                <TableCell className="text-xs font-bold border-2">
                   {totalCapacity?.toLocaleString("ru-RU", {
                     maximumFractionDigits: 0,
                   })}
                 </TableCell>
-                <TableCell colSpan={1} className="text-xs font-bold border-2">
+                <TableCell className="text-xs font-bold border-2">
+                  {totalEmployees?.toLocaleString("ru-RU", {
+                    maximumFractionDigits: 0,
+                  })}
+                </TableCell>
+                <TableCell className="text-xs font-bold border-2">
                   Faol transportlar:
                 </TableCell>
                 <TableCell className="text-xs font-bold border-2">
