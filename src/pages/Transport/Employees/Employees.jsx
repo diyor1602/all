@@ -5,6 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addDays, format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const formatValue = (value) => {
   if (value === 0) {
@@ -49,6 +57,9 @@ const Employees = () => {
 
   const [showOnlyWithAttendance, setShowOnlyWithAttendance] = useState(true);
   const [showOnlyActive, setShowOnlyActive] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedData, setSelectedData] = useState(null);
+  const [selectedTab, setSelectedTab] = useState("attendance");
 
   const updateUrlParams = (year, month) => {
     const params = new URLSearchParams(window.location.search);
@@ -340,6 +351,63 @@ const Employees = () => {
 
   return (
     <div>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedData?.transport?.name} |{" "}
+              {selectedData?.transport?.state_number}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedData?.date?.split("-").reverse().join(".")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={selectedTab === "attendance" ? "default" : "outline"}
+              onClick={() => setSelectedTab("attendance")}
+            >
+              Davomat
+            </Button>
+            <Button
+              variant={selectedTab === "transport" ? "default" : "outline"}
+              onClick={() => setSelectedTab("transport")}
+            >
+              Biriktirilganlar
+            </Button>
+          </div>
+          {selectedTab === "attendance" && (
+            <div className="flex flex-col gap-2 mt-2">
+              {selectedData?.attendance?.transport?.employees?.map(
+                (employee) => (
+                  <div key={employee.id} className="flex items-center gap-2">
+                    <span>{employee.name}</span>
+                    {employee.attendance_status === "present" ? (
+                      <span className="bg-green-500 px-2 py-1 rounded-full text-xs text-white ml-auto">
+                        Kelgan
+                      </span>
+                    ) : (
+                      <span className="bg-red-500 px-2 py-1 rounded-full text-xs text-white ml-auto">
+                        Kelmagan
+                      </span>
+                    )}
+                  </div>
+                )
+              )}
+            </div>
+          )}
+          {selectedTab === "transport" && (
+            <div className="flex flex-col gap-2 mt-2">
+              {selectedData?.transport?.employees?.map((employee) => (
+                <div key={employee.id} className="flex items-center gap-2">
+                  <span>{employee.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="flex items-center gap-4 flex-wrap">
         <Input
           type="month"
@@ -453,18 +521,30 @@ const Employees = () => {
                     return (
                       <td
                         key={dayIndex}
-                        className={`border-2 min-w-[40px] ${
-                          transport?.capacity /
-                            attendance?.transport?.employees?.reduce(
-                              (total, employee) =>
-                                total +
-                                (employee.attendance_status === "present"
-                                  ? 1
-                                  : 0),
-                              0
-                            ) ===
-                          1
+                        onClick={() => {
+                          setSelectedData({
+                            attendance,
+                            transport,
+                            date,
+                          });
+                          setDialogOpen(true);
+                        }}
+                        className={`border-2 min-w-[40px] cursor-pointer ${
+                          attendance?.attendance_type == 1 &&
+                          attendance?.transport?.employees &&
+                          transport?.capacity ===
+                            attendance?.transport?.employees?.filter(
+                              (employee) =>
+                                employee.attendance_status === "present"
+                            ).length
                             ? "bg-green-500"
+                            : attendance?.attendance_type == 0 &&
+                              attendance?.transport?.employees?.length > 0 &&
+                              attendance?.transport?.employees?.every(
+                                (employee) =>
+                                  employee.attendance_status === "present"
+                              )
+                            ? "bg-yellow-500"
                             : "bg-red-500"
                         }`}
                       >
