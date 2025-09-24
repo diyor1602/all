@@ -29,7 +29,6 @@ const SalaryOrders = () => {
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [groups, setGroups] = useState([]);
   const [filters, setFilters] = useState({
@@ -57,24 +56,6 @@ const SalaryOrders = () => {
     }
   };
 
-  const fetchOrders = async () => {
-    try {
-      const response = await api.get(`/ceo/orders`);
-      setOrders(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description:
-          error.response.data.message || "Ma'lumotlar olishda xatolik",
-        variant: "destructive",
-      });
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
   useEffect(() => {
     fetchData();
   }, [selectedMonth]);
@@ -100,7 +81,6 @@ const SalaryOrders = () => {
         },
       });
       fetchData();
-      fetchOrders();
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -131,7 +111,6 @@ const SalaryOrders = () => {
         },
       });
       fetchData();
-      fetchOrders();
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -202,61 +181,88 @@ const SalaryOrders = () => {
     });
   }, [data?.selected, filters]);
 
+  const filteredRecommendations = useMemo(() => {
+    return data?.recommendations?.filter((item) => {
+      const submodels = item?.order_model?.submodels;
+      if (!submodels) return false;
+
+      if (filters.department_id !== "all") {
+        const hasMatchingDept = submodels.some(
+          (submodel) =>
+            submodel?.group?.group?.department_id ===
+            Number(filters.department_id)
+        );
+        if (!hasMatchingDept) return false;
+      }
+
+      if (filters.group_id !== "all") {
+        const hasMatchingGroup = submodels.some(
+          (submodel) => submodel?.group?.group?.id === Number(filters.group_id)
+        );
+        if (!hasMatchingGroup) return false;
+      }
+
+      return true;
+    });
+  }, [data?.selected, filters]);
+
   return (
     <div className="flex flex-col gap-2 mx-4 md:mx-0">
-      <div className="flex items-center gap-2">
-        <Input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="w-fit bg-white"
-        />
+      <div className="sticky top-0 z-10 bg-white w-full p-4">
+        <div className="flex items-center gap-2 w-full">
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-fit bg-white"
+          />
 
-        <Select
-          value={filters.department_id}
-          onValueChange={(value) => {
-            setFilters({ ...filters, department_id: value, group_id: null });
-            localStorage.setItem("salaryOrderSelectedDepartment", value);
-          }}
-          className="w-full sm:w-[180px]"
-          disabled={loading}
-        >
-          <SelectTrigger className="bg-white w-fit">
-            <SelectValue placeholder="Bo'lim" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Barcha bo'limlar</SelectItem>
-            {departments.map((dept) => (
-              <SelectItem key={dept.id} value={dept.id.toString()}>
-                {dept.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={filters.group_id}
-          onValueChange={(value) => {
-            setFilters({ ...filters, group_id: value });
-            localStorage.setItem("salaryOrderSelectedGroup", value);
-          }}
-          className="w-full sm:w-[180px]"
-          disabled={filters.department_id === "all" || groups.length === 0}
-        >
-          <SelectTrigger className="bg-white w-fit">
-            <SelectValue placeholder="Guruh" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Barcha guruhlar</SelectItem>
-            {groups
-              ?.sort((a, b) => a.name.localeCompare(b.name))
-              ?.map((group) => (
-                <SelectItem key={group.id} value={group.id.toString()}>
-                  {group.name}
+          <Select
+            value={filters.department_id}
+            onValueChange={(value) => {
+              setFilters({ ...filters, department_id: value, group_id: null });
+              localStorage.setItem("salaryOrderSelectedDepartment", value);
+            }}
+            className="w-full sm:w-[180px]"
+            disabled={loading}
+          >
+            <SelectTrigger className="bg-white w-fit">
+              <SelectValue placeholder="Bo'lim" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha bo'limlar</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id.toString()}>
+                  {dept.name}
                 </SelectItem>
               ))}
-          </SelectContent>
-        </Select>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.group_id}
+            onValueChange={(value) => {
+              setFilters({ ...filters, group_id: value });
+              localStorage.setItem("salaryOrderSelectedGroup", value);
+            }}
+            className="w-full sm:w-[180px]"
+            disabled={filters.department_id === "all" || groups.length === 0}
+          >
+            <SelectTrigger className="bg-white w-fit">
+              <SelectValue placeholder="Guruh" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha guruhlar</SelectItem>
+              {groups
+                ?.sort((a, b) => a.name.localeCompare(b.name))
+                ?.map((group) => (
+                  <SelectItem key={group.id} value={group.id.toString()}>
+                    {group.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -314,16 +320,12 @@ const SalaryOrders = () => {
                   <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
                     <Box size={12} className="text-gray-800" />
                     <div className="font-semibold text-gray-800 text-xs">
-                      {
-                        orders?.find((order) => order.id === item.order_id)
-                          ?.order_model?.model?.name
-                      }
+                      {item?.order?.order_model?.model?.name}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
-                    {orders
-                      ?.find((order) => order.id === item.order_id)
-                      ?.order_model?.submodels?.map((submodel, idx) => (
+                    {item?.order?.order_model?.submodels?.map(
+                      (submodel, idx) => (
                         <div
                           key={idx}
                           className="font-semibold text-gray-800 text-xs flex items-center gap-1"
@@ -331,7 +333,8 @@ const SalaryOrders = () => {
                           <Shirt size={12} className="text-gray-800" />{" "}
                           {submodel.submodel?.name}
                         </div>
-                      ))}
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -399,87 +402,139 @@ const SalaryOrders = () => {
           ))}
         </div>
       </div>
-      <div className="mt-4 flex flex-col gap-2">
-        <div className="text-xl font-bold">Tanlanmagan buyurtmalar</div>
+      <div className="flex flex-col gap-2 mt-10 bg-red-100 md:p-5">
+        <div className="text-xl font-bold">
+          Tavsiyadagi buyurtmalar{" "}
+          {filteredRecommendations?.length > 0
+            ? `(${filteredRecommendations?.length} ta)`
+            : ""}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {orders
-            .filter(
-              (item) => !data.selected?.some((i) => i.order_id === item.id)
-            )
-            .sort((a, b) => b.id - a.id)
-            .map((item, index) => (
-              <div key={index} className="rounded-xl bg-white shadow-xl">
-                <div
-                  className={`h-2 ${
-                    statuses[item?.status]?.color
-                  } rounded-t-xl`}
-                />
-                <div className="p-2 pt-4 flex flex-col gap-4">
-                  <div className="flex items-center gap-2 justify-between flex-wrap">
-                    <div
-                      className={`${
-                        statuses[item?.status]?.secondaryBg
-                      } py-1 px-2 rounded-full w-fit text-xs font-semibold flex items-center gap-1 ${
-                        statuses[item?.status]?.textColor
-                      }`}
-                    >
-                      <Tag
-                        size={12}
-                        className={statuses[item?.status]?.textColor}
-                      />
-                      <div>#{item.id}</div>
-                    </div>
-                    <div
-                      className={`${
-                        statuses[item?.status]?.color
-                      } py-1 px-2 rounded-full w-fit text-xs text-white`}
-                    >
-                      {statuses[item?.status]?.text}
-                    </div>
+          {filteredRecommendations?.length === 0 && (
+            <div className="text-center">
+              Tavsiyadagi buyurtmalar mavjud emas
+            </div>
+          )}
+          {filteredRecommendations?.map((item, index) => (
+            <div key={index} className="rounded-xl bg-white shadow-xl">
+              <div
+                className={`h-2 ${statuses[item?.status]?.color} rounded-t-xl`}
+              />
+              <div className="p-2 pt-4 flex flex-col gap-4">
+                <div className="flex items-center gap-2 justify-between flex-wrap">
+                  <div
+                    className={`${
+                      statuses[item?.status]?.secondaryBg
+                    } py-1 px-2 rounded-full w-fit text-xs font-semibold flex items-center gap-1 ${
+                      statuses[item?.status]?.textColor
+                    }`}
+                  >
+                    <Tag
+                      size={12}
+                      className={statuses[item?.status]?.textColor}
+                    />
+                    <div>#{item?.id}</div>
                   </div>
                   <div
                     className={`${
-                      statuses[item?.status]?.border
-                    } bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
+                      statuses[item?.status]?.color
+                    } py-1 px-2 rounded-full w-fit text-xs text-white`}
                   >
-                    <h3 className="text-sm font-bold text-gray-800 truncate">
-                      {item?.name}
-                    </h3>
+                    {statuses[item?.status]?.text}
                   </div>
+                </div>
+                <div
+                  className={`${
+                    statuses[item?.status]?.border
+                  } bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
+                >
+                  <h3 className="text-sm font-bold text-gray-800 truncate">
+                    {item?.name}
+                  </h3>
+                </div>
 
-                  <div className="flex items-center gap-2 justify-between flex-wrap">
-                    <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
-                      <Box size={12} className="text-gray-800" />
-                      <div className="font-semibold text-gray-800 text-xs">
-                        {item?.order_model?.model?.name}
+                <div className="flex items-center gap-2 justify-between flex-wrap">
+                  <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
+                    <Box size={12} className="text-gray-800" />
+                    <div className="font-semibold text-gray-800 text-xs">
+                      {item?.order_model?.model?.name}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
+                    {item?.order_model?.submodels?.map((submodel, idx) => (
+                      <div
+                        key={idx}
+                        className="font-semibold text-gray-800 text-xs flex items-center gap-1"
+                      >
+                        <Shirt size={12} className="text-gray-800" />{" "}
+                        {submodel.submodel?.name}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
-                      {item?.order_model?.submodels?.map((submodel, idx) => (
-                        <div
-                          key={idx}
-                          className="font-semibold text-gray-800 text-xs flex items-center gap-1"
-                        >
-                          <Shirt size={12} className="text-gray-800" />{" "}
-                          {submodel.submodel?.name}
-                        </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
+                </div>
 
-                  <Button
-                    variant="outline"
-                    onClick={() => handleAdd(item)}
+                <div className="relative flex items-center gap-2 bg-gray-200 px-2 py-1 rounded-full text-xs overflow-hidden">
+                  {/* Progress fill */}
+                  <div
                     className={`${
                       statuses[item?.status]?.color
-                    } text-white hover:text-white hover:bg-green-400`}
+                    } absolute left-0 top-0 h-full rounded-full`}
+                    style={{
+                      width: `${
+                        (item?.order_model?.submodels?.reduce(
+                          (total, submodel) =>
+                            total +
+                            parseInt(submodel.sewing_outputs_sum_quantity || 0),
+                          0
+                        ) /
+                          item?.quantity) *
+                        100
+                      }%`,
+                    }}
+                  ></div>
+
+                  {/* Text content (on top) */}
+                  <div
+                    className={`relative z-10 flex items-center gap-1 ${
+                      item?.order_model?.submodels?.reduce(
+                        (total, submodel) =>
+                          total +
+                          parseInt(submodel.sewing_outputs_sum_quantity || 0),
+                        0
+                      ) > 0
+                        ? "text-white"
+                        : ""
+                    }`}
                   >
-                    <Plus />
-                    <div>Qo'shish</div>
-                  </Button>
+                    {item?.order_model?.submodels?.reduce(
+                      (total, submodel) =>
+                        total +
+                        parseInt(submodel.sewing_outputs_sum_quantity || 0),
+                      0
+                    )}
+                    /{item?.quantity}
+                  </div>
                 </div>
+
+                <div className="text-xs text-gray-800">
+                  {item?.order_model?.submodels
+                    ?.map((submodel) => submodel?.group?.group?.name)
+                    .join(", ")}
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => handleAdd(item)}
+                  className={`${
+                    statuses[item?.status]?.color
+                  } text-white hover:text-white hover:bg-red-400 transition-all duration-300`}
+                >
+                  <Plus />
+                  <div>Qo'shish</div>
+                </Button>
               </div>
-            ))}
+            </div>
+          ))}
         </div>
       </div>
     </div>
