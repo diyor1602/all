@@ -202,9 +202,6 @@ const SalaryOrders = () => {
     });
   }, [data?.selected, filters]);
 
-  console.log("filteredSelected", filteredSelected);
-  console.log("filters", filters);
-
   return (
     <div className="flex flex-col gap-2 mx-4 md:mx-0">
       <div className="flex items-center gap-2">
