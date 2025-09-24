@@ -144,10 +144,10 @@ const Employees = () => {
   const debouncedStatus = useDebounce(filters.status, 300);
   const debouncedType = useDebounce(filters.type, 300);
 
-   // Save filters to localStorage whenever they change
-    useEffect(() => {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
-    }, [filters]);
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
+  }, [filters]);
 
   // Fetch departments
   const fetchDepartments = async () => {
