@@ -56,6 +56,8 @@ import {
 } from "@/components/ui/dialog";
 import { Link, useNavigate } from "react-router-dom";
 
+const LOCAL_STORAGE_KEY = "emp_filters";
+
 const formatPhoneNumber = (phone) => {
   return phone
     .replace(/\D/g, "")
@@ -112,14 +114,18 @@ const Employees = () => {
     },
   });
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
+  // Load filters from localStorage or use defaults
+  const savedFilters = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {
     department_id: "",
     group_id: "",
     status: "working",
-    search: "",
-    page: pageNumber,
     type: "",
-  });
+    payment_type: "",
+    search: "",
+    page: 1,
+  };
+
+  const [filters, setFilters] = useState(savedFilters);
 
   // SelectItem qiymatlari uchun useState
   const [selectValues, setSelectValues] = useState({
@@ -137,6 +143,11 @@ const Employees = () => {
   const debouncedGroup = useDebounce(filters.group_id, 300);
   const debouncedStatus = useDebounce(filters.status, 300);
   const debouncedType = useDebounce(filters.type, 300);
+
+   // Save filters to localStorage whenever they change
+    useEffect(() => {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
+    }, [filters]);
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -234,6 +245,7 @@ const Employees = () => {
     });
     setGroups([]);
     fetchEmployees();
+    localStorage.removeItem(LOCAL_STORAGE_KEY); // clear storage
   };
 
   // Get status badge color
