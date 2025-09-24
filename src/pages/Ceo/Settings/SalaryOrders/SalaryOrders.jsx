@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Box, Loader2, Plus, Shirt, Tag, Trash2 } from "lucide-react";
+import { Box, Plus, Shirt, Tag, Trash2 } from "lucide-react";
 import { statuses } from "@/lib/status";
 import {
   Select,
