@@ -277,7 +277,7 @@ const Attendance = () => {
       // Apply attendance filter - show only transports that have attendance records
       const hasAttendance =
         !showOnlyWithAttendance ||
-        attendances.some((a) => a.transport.id === t.id);
+        attendances.some((a) => a?.transport?.id === t?.id);
 
       return matchesSearch && isActiveMatch && hasAttendance;
     });
@@ -521,7 +521,7 @@ const Attendance = () => {
             "0"
           )}-${String(dayIndex + 1).padStart(2, "0")}`;
           const attendance = attendances.find(
-            (a) => a.date === date && a.transport.id === transport.id
+            (a) => a?.date === date && a?.transport?.id === transport.id
           );
           row.push(attendance ? attendance.attendance_type : "");
         }
@@ -613,6 +613,7 @@ const Attendance = () => {
         style: { backgroundColor: "green", color: "white" },
       });
     } catch (error) {
+      console.log(error);
       toast({
         title: "Xatolik",
         description: "Excel faylni yuklashda xatolik yuz berdi",
