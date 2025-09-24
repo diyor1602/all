@@ -1,9 +1,7 @@
-"use client";
-
 import api from "@/utils/api";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -731,19 +729,15 @@ const Employees = () => {
                   {getStatusBadge(employee.status)}
                 </TableCell>
                 <TableCell className="border">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/ceo/salary/${employee.id}`)}
-                  >
-                    <Eye className="h-4 w-4 text-blue-500" />
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to={`/ceo/salary/${employee.id}`} target="_blank">
+                      <Eye className="h-4 w-4 text-blue-500" />
+                    </Link>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditClick(employee)}
-                  >
-                    <Pencil className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to={`/ceo/employees/${employee.id}`} target="_blank">
+                      <Pencil className="h-4 w-4" />
+                    </Link>
                   </Button>
                   {employee?.type === "aup" ? (
                     <Button

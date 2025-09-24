@@ -89,7 +89,7 @@ const Salary = () => {
   const savedFilters = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {
     department_id: "",
     group_id: "",
-    status: "working",
+    status: "",
     type: "",
     payment_type: "",
     search: "",
@@ -99,13 +99,13 @@ const Salary = () => {
   const [filters, setFilters] = useState(savedFilters);
 
   // SelectItem values
-  const [selectValues, setSelectValues] = useState({
+  const [selectValues, setSelectValues] = useState(() => ({
     department_id: savedFilters.department_id || "all",
     group_id: savedFilters.group_id || "all",
-    status: savedFilters.status || "working",
+    status: savedFilters.status || "all",
     type: savedFilters.type || "all",
     payment_type: savedFilters.payment_type || "all",
-  });
+  }));
 
   const [groups, setGroups] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -139,6 +139,17 @@ const Salary = () => {
       });
     }
   };
+
+  useEffect(() => {
+    if (departments.length > 0 && filters.department_id) {
+      const selectedDepartment = departments
+        .flatMap((main) => main.departments)
+        .find(
+          (dept) => dept.id.toString() === filters.department_id.toString()
+        );
+      setGroups(selectedDepartment?.groups || []);
+    }
+  }, [departments, filters.department_id]);
 
   // Fetch employees with pagination and filters
   const fetchEmployees = async () => {
