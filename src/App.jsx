@@ -35,6 +35,7 @@ import Casher from "./pages/Casher/Casher";
 import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
 import Tailor from "./pages/Tailor/Tailor";
+import UniversalTailor from "./pages/UniversalTailor/UniversalTailor";
 import Truck from "./pages/Truck";
 
 const ProtectedRoute = () => {
@@ -97,6 +98,7 @@ function App() {
           <Route path="/resultChecker/*" element={<ResultChecker />} />
           <Route path="/ceo/*" element={<Ceo />} />
           <Route path="/tailor/*" element={<Tailor />} />
+          <Route path="/universalTailor/*" element={<UniversalTailor />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
