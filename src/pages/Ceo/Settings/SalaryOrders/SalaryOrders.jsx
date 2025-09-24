@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Box, Plus, Shirt, Tag, Trash2 } from "lucide-react";
+import { Box, Loader2, Plus, Shirt, Tag, Trash2 } from "lucide-react";
 import { statuses } from "@/lib/status";
-import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const SalaryOrders = () => {
   const STORAGE_KEY = "salaryOrderSelectedMonth";
@@ -24,6 +30,13 @@ const SalaryOrders = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [filters, setFilters] = useState({
+    department_id:
+      localStorage.getItem("salaryOrderSelectedDepartment") || "all",
+    group_id: localStorage.getItem("salaryOrderSelectedGroup") || "all",
+  });
 
   const fetchData = async () => {
     try {
@@ -129,18 +142,138 @@ const SalaryOrders = () => {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const response = await api.get("ceo/departments");
+      setDepartments(response.data?.flatMap((item) => item?.departments) || []);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response.data.message || "Ma'lumotlar olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    if (filters.department_id === "all") {
+      setGroups([]);
+      setFilters({ ...filters, group_id: "all" });
+    } else {
+      const selectedDept = departments.find(
+        (dept) => dept.id === Number.parseInt(filters.department_id)
+      );
+      if (selectedDept && selectedDept.groups) {
+        setGroups(selectedDept.groups);
+      } else {
+        setGroups([]);
+      }
+      setFilters({ ...filters, group_id: "all" });
+    }
+  }, [filters.department_id, departments]);
+
+  const filteredSelected = useMemo(() => {
+    return data?.selected?.filter((item) => {
+      const submodels = item.order?.order_model?.submodels;
+      if (!submodels) return false;
+
+      if (filters.department_id !== "all") {
+        const hasMatchingDept = submodels.some(
+          (submodel) =>
+            submodel?.group?.group?.department_id ===
+            Number(filters.department_id)
+        );
+        if (!hasMatchingDept) return false;
+      }
+
+      if (filters.group_id !== "all") {
+        const hasMatchingGroup = submodels.some(
+          (submodel) => submodel?.group?.group?.id === Number(filters.group_id)
+        );
+        if (!hasMatchingGroup) return false;
+      }
+
+      return true;
+    });
+  }, [data?.selected, filters]);
+
+  console.log("filteredSelected", filteredSelected);
+  console.log("filters", filters);
+
   return (
     <div className="flex flex-col gap-2 mx-4 md:mx-0">
-      <Input
-        type="month"
-        value={selectedMonth}
-        onChange={(e) => setSelectedMonth(e.target.value)}
-        className="w-fit bg-white"
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="w-fit bg-white"
+        />
+
+        <Select
+          value={filters.department_id}
+          onValueChange={(value) => {
+            setFilters({ ...filters, department_id: value, group_id: null });
+            localStorage.setItem("salaryOrderSelectedDepartment", value);
+          }}
+          className="w-full sm:w-[180px]"
+          disabled={loading}
+        >
+          <SelectTrigger className="bg-white w-fit">
+            <SelectValue placeholder="Bo'lim" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barcha bo'limlar</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept.id} value={dept.id.toString()}>
+                {dept.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.group_id}
+          onValueChange={(value) => {
+            setFilters({ ...filters, group_id: value });
+            localStorage.setItem("salaryOrderSelectedGroup", value);
+          }}
+          className="w-full sm:w-[180px]"
+          disabled={filters.department_id === "all" || groups.length === 0}
+        >
+          <SelectTrigger className="bg-white w-fit">
+            <SelectValue placeholder="Guruh" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barcha guruhlar</SelectItem>
+            {groups
+              ?.sort((a, b) => a.name.localeCompare(b.name))
+              ?.map((group) => (
+                <SelectItem key={group.id} value={group.id.toString()}>
+                  {group.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="flex flex-col gap-2">
-        <div className="text-xl font-bold">Tanlangan buyurtmalar</div>
+        <div className="text-xl font-bold">
+          Tanlangan buyurtmalar{" "}
+          {filteredSelected?.length > 0
+            ? `(${filteredSelected?.length} ta)`
+            : ""}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {data.selected?.map((item, index) => (
+          {filteredSelected?.length === 0 && (
+            <div className="text-center">Tanlangan buyurtmalar mavjud emas</div>
+          )}
+          {filteredSelected?.map((item, index) => (
             <div key={index} className="rounded-xl bg-white shadow-xl">
               <div
                 className={`h-2 ${
@@ -246,6 +379,12 @@ const SalaryOrders = () => {
                     )}
                     /{item.order?.quantity}
                   </div>
+                </div>
+
+                <div className="text-xs text-gray-800">
+                  {item?.order?.order_model?.submodels
+                    ?.map((submodel) => submodel?.group?.group?.name)
+                    .join(", ")}
                 </div>
 
                 <Button
