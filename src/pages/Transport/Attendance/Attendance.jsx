@@ -613,7 +613,6 @@ const Attendance = () => {
         style: { backgroundColor: "green", color: "white" },
       });
     } catch (error) {
-      console.log(error);
       toast({
         title: "Xatolik",
         description: "Excel faylni yuklashda xatolik yuz berdi",
