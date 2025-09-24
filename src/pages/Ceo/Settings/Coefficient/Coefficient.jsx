@@ -358,6 +358,7 @@ const Coefficient = () => {
               <Link
                 to={`/ceo/salary/${selectedEmployee?.employee_id}`}
                 target="_blank"
+                className="text-blue-500 underline"
               >
                 {selectedEmployee?.employee_name}
               </Link>
