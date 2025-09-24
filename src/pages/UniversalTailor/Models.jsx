@@ -68,7 +68,7 @@ const Models = () => {
   const handleLoadYesterdayWorks = async () => {
     try {
       const date = getFormattedYesterday();
-      const response = await api.get(`/tailor/balance?date=${date}`);
+      const response = await api.get(`/universalTailor/balance?date=${date}`);
       const yesterdayBalance = response.data;
 
       if (yesterdayBalance.length === 0) {
@@ -111,7 +111,7 @@ const Models = () => {
 
   const getPackets = async () => {
     try {
-      const response = await api.get("/tailor/packets");
+      const response = await api.get("/universalTailor/packets");
       setPackets(response.data || []);
     } catch (error) {
       toast({
@@ -127,7 +127,7 @@ const Models = () => {
   const handleLoadMyWorks = async () => {
     setMyWorksDialogOpen(true);
     try {
-      const response = await api.get("/tailor/myWorks");
+      const response = await api.get("/universalTailor/myWorks");
       setMyWorks(response.data || []);
     } catch (error) {
       toast({
@@ -192,7 +192,7 @@ const Models = () => {
 
   const getBalance = async () => {
     try {
-      const response = await api.get("/tailor/balance");
+      const response = await api.get("/universalTailor/balance");
       const balanceData = response.data;
       setBalance(balanceData);
 
@@ -221,9 +221,9 @@ const Models = () => {
     const loadData = async () => {
       try {
         const [modelsRes, packetsRes, balanceRes] = await Promise.all([
-          api.get("/tailor/models"),
-          api.get("/tailor/packets"),
-          api.get("/tailor/balance"),
+          api.get("/universalTailor/models"),
+          api.get("/universalTailor/packets"),
+          api.get("/universalTailor/balance"),
         ]);
 
         const modelsData = modelsRes.data || [];
@@ -259,7 +259,7 @@ const Models = () => {
   const handleDone = async (id) => {
     setSendingID(id);
     try {
-      await api.post("/tailor/tarificationLog", {
+      await api.post("/universalTailor/tarificationLog", {
         tarification_id: id,
       });
       await getBalance();
@@ -281,7 +281,7 @@ const Models = () => {
   const handleAddPacket = async (id) => {
     setCreatingPacketId(id);
     try {
-      await api.post("/tailor/packets", {
+      await api.post("/universalTailor/packets", {
         items: [{ tarification_id: id }],
       });
       await getPackets();
@@ -303,7 +303,7 @@ const Models = () => {
   const handleAddPacketExisting = async (id) => {
     setDialogPacketId(id);
     try {
-      await api.patch(`/tailor/packets/${id}`, {
+      await api.patch(`/universalTailor/packets/${id}`, {
         items: [{ tarification_id: selectedTarifForPacket }],
       });
       await getPackets();
@@ -331,7 +331,7 @@ const Models = () => {
       }
 
       const requests = packet.tarification_packets_items.map((item) =>
-        api.post("/tailor/tarificationLog", {
+        api.post("/universalTailor/tarificationLog", {
           tarification_id: item.tarification_id,
         })
       );
@@ -358,14 +358,14 @@ const Models = () => {
     setDeletingTarifPacketId(id);
     try {
       // Delete the packet item
-      await api.delete(`/tailor/packets/item/${id}`);
+      await api.delete(`/universalTailor/packets/item/${id}`);
 
       // ✅ Fetch updated data
       const [updatedPacketsRes, updatedBalanceRes, updatedModelsRes] =
         await Promise.all([
-          api.get("/tailor/packets"),
-          api.get("/tailor/balance"),
-          api.get("/tailor/models"),
+          api.get("/universalTailor/packets"),
+          api.get("/universalTailor/balance"),
+          api.get("/universalTailor/models"),
         ]);
 
       const updatedPackets = updatedPacketsRes.data || [];
@@ -402,7 +402,7 @@ const Models = () => {
   const handleDeletingPacket = async (id) => {
     setDeletingPacketId(id);
     try {
-      await api.delete(`/tailor/packets/${id}`);
+      await api.delete(`/universalTailor/packets/${id}`);
       await getPackets();
     } catch (error) {
       toast({
@@ -510,9 +510,12 @@ const Models = () => {
                             // ✅ Send backend request
                             setSendingID(myWork.id);
                             try {
-                              await api.post("/tailor/tarificationLog", {
-                                tarification_id: myWork.id,
-                              });
+                              await api.post(
+                                "/universalTailor/tarificationLog",
+                                {
+                                  tarification_id: myWork.id,
+                                }
+                              );
                               const audio = new Audio("/coins.wav");
                               audio.play();
                               await getBalance(); // refresh balance

@@ -48,7 +48,7 @@ const TailorPage = () => {
 
   const fetchBalance = async () => {
     try {
-      const response = await api.get("/tailor/balance");
+      const response = await api.get("/universalTailor/balance");
       let newBalance = 0;
       let balanceData = [];
 
@@ -121,7 +121,7 @@ const TailorPage = () => {
     try {
       setLoadingStates((prev) => ({ ...prev, [`search-${index}`]: true }));
 
-      const response = await api.get("/tailor/tarifications/search", {
+      const response = await api.get("/universalTailor/tarifications/search", {
         params: { code },
       });
 
@@ -177,7 +177,7 @@ const TailorPage = () => {
   const handleSubmit = async (tarifId, index) => {
     setLoadingStates((prev) => ({ ...prev, [index]: true }));
     try {
-      const response = await api.post("/tailor/tarificationLog", {
+      const response = await api.post("/universalTailor/tarificationLog", {
         tarification_id: tarifId,
       });
       // Update the tarif with the new quantity from the response

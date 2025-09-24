@@ -1,5 +1,3 @@
-import React from "react";
-
 const Video = () => {
   return (
     <div className="w-full min-h-[90vh] flex items-center justify-center">
