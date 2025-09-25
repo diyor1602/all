@@ -4,6 +4,7 @@ import { useAuth } from "@/context/auth-context.js";
 import { Users, LogOut, Menu, X, MessageCircleMore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import api from "@/utils/api";
 
 export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -12,6 +13,16 @@ export default function BaseLayout({ children, navigation }) {
 
   const imageUrl = localStorage.getItem("imgUrl");
   const hasValidImage = imageUrl && imageUrl !== "null";
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/logout");
+      logout();
+    } catch (error) {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -123,7 +134,7 @@ export default function BaseLayout({ children, navigation }) {
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 text-gray-700 hover:bg-gray-200/60"
-              onClick={logout}
+              onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
               Chiqish
