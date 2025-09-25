@@ -236,6 +236,7 @@ const Coefficient = () => {
         >
           <thead>
             <tr>
+              <th className="border border-gray-200 p-2">№</th>
               <th className="border border-gray-200 p-2">Xodim</th>
               <th className="border border-gray-200 p-2">F.I.K</th>
               {days.map((day) => (
@@ -255,7 +256,7 @@ const Coefficient = () => {
                   a.days.reduce((s, d) => s + d.efficiency_percent, 0) /
                     a.attended_days
               )
-              .map((item) => {
+              .map((item, index) => {
                 const empAvg =
                   item.days.reduce((s, d) => s + d.efficiency_percent, 0) /
                   item.attended_days;
@@ -268,6 +269,9 @@ const Coefficient = () => {
                       setOpen(true);
                     }}
                   >
+                    <td className="border border-gray-200 p-2 text-center">
+                      {index + 1}
+                    </td>
                     <td className="border border-gray-200 p-2">
                       {item.employee_name}
                     </td>
@@ -304,6 +308,9 @@ const Coefficient = () => {
           {/* Footer row for daily averages */}
           <tfoot>
             <tr className="font-bold bg-gray-100">
+              <td className="border border-gray-200 p-2 text-center">
+                {filteredData.length}
+              </td>
               <td className="border border-gray-200 p-2 text-right">
                 O‘rtacha %
               </td>
