@@ -268,6 +268,9 @@ const Coefficient = () => {
                       setSelectedEmployee(item);
                       setOpen(true);
                     }}
+                    className={`hover:bg-gray-100 ${
+                      index % 2 === 0 ? "bg-gray-50" : ""
+                    }`}
                   >
                     <td className="border border-gray-200 p-2 text-center">
                       {index + 1}
