@@ -204,7 +204,7 @@ const Add = ({ onSuccess }) => {
               <SelectContent>
                 <SelectItem value="фурнитура">фурнитура</SelectItem>
                 <SelectItem value="озик овкат">озик овкат</SelectItem>
-                <SelectItem value="бошка чикимлар">бошка чикимлар</SelectItem>
+                <SelectItem value="бошка расходлар">бошка расходлар</SelectItem>
                 <SelectItem value="цех харачатлари">цех харачатлари</SelectItem>
               </SelectContent>
             </Select>
