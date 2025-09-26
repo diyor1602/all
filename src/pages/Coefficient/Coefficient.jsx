@@ -328,14 +328,16 @@ const Coefficient = () => {
               </div>
 
               <div className="p-4 rounded-2xl border shadow-sm bg-white">
-                <div className="text-sm text-gray-500">Kuniga o'rtacha</div>
+                <div className="text-sm text-gray-500">
+                  Kuniga o'rtacha (tarifikatsiya)
+                </div>
                 <div className="text-lg font-semibold text-gray-900">
-                  {parseFloat(selectedEmployee?.avg_per_day).toLocaleString(
-                    "ru-RU",
-                    {
-                      maximumFractionDigits: 0,
-                    }
-                  )}{" "}
+                  {parseFloat(
+                    selectedEmployee?.tarification_earned /
+                      selectedEmployee?.attended_days
+                  ).toLocaleString("ru-RU", {
+                    maximumFractionDigits: 0,
+                  })}{" "}
                   so'm
                 </div>
               </div>
