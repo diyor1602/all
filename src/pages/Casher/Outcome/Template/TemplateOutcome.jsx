@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Download, Loader2, PlusCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -27,6 +27,7 @@ const Outcome = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const [filters, setFilters] = useState({
     start_date: formatDateToYYYYMMDD(
@@ -80,6 +81,38 @@ const Outcome = () => {
     await fetchOutcomes();
     // Optionally close the add form
     // setShowAdd(false);
+  };
+
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      const response = await api.get("/casher/exportTransactions/excel", {
+        params: {
+          type: "expense",
+          ...debouncedFilters,
+        },
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${debouncedFilters.start_date}-${debouncedFilters.end_date}-chiqimlar.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Chiqimlarni yuklab olishda xatolik yuz berdi!",
+      });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const getTotalsByCurrency = () => {
@@ -190,6 +223,9 @@ const Outcome = () => {
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           />
         </div>
+        <Button disabled={downloading} onClick={handleDownload}>
+          {downloading ? <Loader2 className="animate-spin" /> : <Download />}
+        </Button>
       </div>
 
       <div className="overflow-x-auto max-h-[calc(100vh-350px)]">
