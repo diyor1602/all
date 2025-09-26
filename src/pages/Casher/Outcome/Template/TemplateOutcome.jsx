@@ -302,8 +302,8 @@ const Outcome = () => {
               <span>{getTotalsByPurpose("бошка расходлар")} So'm</span>
             </div>
             <div className="bg-gray-100 px-2 py-1 rounded flex items-center gap-2">
-              <span className="font-semibold text-black">цех расход</span>
-              <span>{getTotalsByPurpose("цех расход")} So'm</span>
+              <span className="font-semibold text-black">цех харажатлари</span>
+              <span>{getTotalsByPurpose("цех харажатлари")} So'm</span>
             </div>
           </div>
         </div>
