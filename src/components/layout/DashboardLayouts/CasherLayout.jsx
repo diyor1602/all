@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   Gem,
   Home,
+  Radical,
   Rotate3d,
   Sprout,
   SquareScissors,
@@ -80,6 +81,12 @@ const navigation = [
     name: "Jo'natmalar",
     href: "/truck",
     icon: Truck,
+    onMobile: false,
+  },
+  {
+    name: "Koeffitsiyent",
+    href: "/coefficient",
+    icon: Radical,
     onMobile: false,
   },
 ];

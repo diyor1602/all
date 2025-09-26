@@ -37,6 +37,7 @@ import Ceo from "./pages/Ceo/Ceo";
 import Tailor from "./pages/Tailor/Tailor";
 import UniversalTailor from "./pages/UniversalTailor/UniversalTailor";
 import Truck from "./pages/Truck";
+import Coefficient from "./pages/Coefficient/Coefficient";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -99,6 +100,7 @@ function App() {
           <Route path="/ceo/*" element={<Ceo />} />
           <Route path="/tailor/*" element={<Tailor />} />
           <Route path="/universalTailor/*" element={<UniversalTailor />} />
+          <Route path="/coefficient/*" element={<Coefficient />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

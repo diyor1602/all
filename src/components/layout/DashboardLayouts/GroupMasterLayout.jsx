@@ -57,7 +57,7 @@ const navigation = [
   },
   {
     name: "Koeffitsiyent",
-    href: "/groupMaster/coefficient",
+    href: "/coefficient",
     icon: Radical,
     onMobile: false,
   },

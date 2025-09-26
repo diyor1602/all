@@ -1,5 +1,12 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Home, PackageOpen, Sprout, Truck } from "lucide-react";
+import {
+  BadgePercent,
+  Home,
+  PackageOpen,
+  Radical,
+  Sprout,
+  Truck,
+} from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
@@ -20,6 +27,12 @@ const navigation = [
     name: "Jo'natmalar",
     href: "/truck",
     icon: Truck,
+    onMobile: false,
+  },
+  {
+    name: "Koeffitsiyent",
+    href: "/coefficient",
+    icon: Radical,
     onMobile: false,
   },
 ];

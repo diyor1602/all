@@ -4,6 +4,7 @@ import {
   Home,
   PackageOpen,
   Printer,
+  Radical,
   Scissors,
   Sprout,
   Truck,
@@ -46,6 +47,12 @@ const navigation = [
     name: "Jo'natmalar",
     href: "/truck",
     icon: Truck,
+    onMobile: false,
+  },
+  {
+    name: "Koeffitsiyent",
+    href: "/coefficient",
+    icon: Radical,
     onMobile: false,
   },
 ];

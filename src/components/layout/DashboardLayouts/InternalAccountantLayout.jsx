@@ -8,6 +8,7 @@ import {
   Truck,
   HandCoins,
   Box,
+  Radical,
 } from "lucide-react";
 
 const navigation = [
@@ -47,6 +48,12 @@ const navigation = [
     name: "Jo'natmalar",
     href: "/truck",
     icon: Truck,
+    onMobile: false,
+  },
+  {
+    name: "Koeffitsiyent",
+    href: "/coefficient",
+    icon: Radical,
     onMobile: false,
   },
 ];

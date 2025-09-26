@@ -7,7 +7,6 @@ import ConnectResult from "./ConnectResult";
 import ConnectWorkEdit from "./ConnectWorkEdit";
 import Tarifs from "./Tarifs";
 import TarifDetails from "./TarifDetails";
-import Coefficient from "./Coefficient/Coefficient";
 
 const GroupMaster = () => {
   return (
@@ -20,7 +19,6 @@ const GroupMaster = () => {
       <Route path="connectWorkEdit/:id" element={<ConnectWorkEdit />} />
       <Route path="tarifs" element={<Tarifs />} />
       <Route path="tarifs/:id" element={<TarifDetails />} />
-      <Route path="coefficient" element={<Coefficient />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

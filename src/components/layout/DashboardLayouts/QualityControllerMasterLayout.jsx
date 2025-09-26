@@ -4,6 +4,7 @@ import {
   Home,
   Box,
   CircleCheckBig,
+  Radical,
   Sprout,
   Truck,
 } from "lucide-react";
@@ -33,6 +34,12 @@ const navigation = [
     name: "Jo'natmalar",
     href: "/truck",
     icon: Truck,
+    onMobile: false,
+  },
+  {
+    name: "Koeffitsiyent",
+    href: "/coefficient",
+    icon: Radical,
     onMobile: false,
   },
 ];
