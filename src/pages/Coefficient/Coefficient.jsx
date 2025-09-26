@@ -329,7 +329,7 @@ const Coefficient = () => {
 
               <div className="p-4 rounded-2xl border shadow-sm bg-white">
                 <div className="text-sm text-gray-500">
-                  Kuniga o'rtacha (tarifikatsiya)
+                  Kuniga o'rtacha (tarifikatsiya){" "}
                 </div>
                 <div className="text-lg font-semibold text-gray-900">
                   {parseFloat(
@@ -357,15 +357,33 @@ const Coefficient = () => {
               <div className="p-4 rounded-2xl border shadow-sm bg-white">
                 <div className="text-sm text-gray-500">Jami topdi</div>
                 <div className="text-lg font-bold text-indigo-600">
-                  {parseFloat(selectedEmployee?.total_earned).toLocaleString(
-                    "ru-RU",
-                    {
-                      maximumFractionDigits: 0,
-                    }
-                  )}{" "}
+                  {parseFloat(
+                    selectedEmployee?.salary_visible
+                      ? selectedEmployee?.total_earned
+                      : selectedEmployee?.tarification_earned
+                  ).toLocaleString("ru-RU", {
+                    maximumFractionDigits: 0,
+                  })}{" "}
                   so'm
                 </div>
               </div>
+
+              {selectedEmployee?.salary_visible ? (
+                <div className="p-4 rounded-2xl border shadow-sm bg-white">
+                  <div className="text-sm text-gray-500">
+                    Kuniga o'rtacha (jami){" "}
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {parseFloat(selectedEmployee?.avg_per_day).toLocaleString(
+                      "ru-RU",
+                      {
+                        maximumFractionDigits: 0,
+                      }
+                    )}{" "}
+                    so'm
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
         </DialogContent>
