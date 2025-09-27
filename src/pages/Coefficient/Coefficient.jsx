@@ -146,6 +146,7 @@ const Coefficient = () => {
           <thead>
             <tr>
               <th className="border border-gray-200 p-2">№</th>
+              <th className="border border-gray-200 p-2">Rasmi</th>
               <th className="border border-gray-200 p-2">Xodim</th>
               <th className="border border-gray-200 p-2">F.I.K</th>
               {days.map((day) => (
@@ -183,6 +184,21 @@ const Coefficient = () => {
                   >
                     <td className="border border-gray-200 p-2 text-center">
                       {index + 1}
+                    </td>
+                    <td className="border border-gray-200 p-2">
+                      <div className="flex items-center justify-center">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.employee_name}
+                            className="w-10 h-10 object-cover rounded-full shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            {item.employee_name[0].toUpperCase()}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-gray-200 p-2">
                       {item.employee_name}
