@@ -148,15 +148,16 @@ const Models = () => {
     );
 
     balanceData.forEach((entry) => {
-      const modelId = entry.model?.id;
       const tarificationId = entry.tarification?.id;
 
       if (packetTarificationIds.includes(tarificationId)) return;
 
-      const fullModel = modelsData.find((m) => m.model?.id === modelId);
+      const fullModel = modelsData.find((m) => m.model?.id === entry.order_id);
       if (!fullModel) return;
 
-      let modelInSelected = selected.find((s) => s.model.model?.id === modelId);
+      let modelInSelected = selected.find(
+        (s) => s.model.model?.id === entry.order_id
+      );
 
       const category = fullModel.tarification_categories?.find((cat) =>
         cat.tarification?.some((t) => t.id === tarificationId)
