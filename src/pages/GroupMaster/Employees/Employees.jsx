@@ -28,7 +28,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Eye, RotateCcw, Search, Zap } from "lucide-react";
+import { Download, Eye, Loader2, RotateCcw, Search, Zap } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -94,6 +94,7 @@ const Employees = () => {
 
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [pageNumber, setPageNumber] = useState(savedFilters.page || 1);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Setup debounced values
   const debouncedSearch = useDebounce(filters.search, 500);
@@ -206,29 +207,50 @@ const Employees = () => {
     debouncedPaymentType,
   ]);
 
-  // Handle payment type change with validation rules
-  const handlePaymentTypeChange = (paymentType) => {
-    const updatedEmployee = {
-      ...selectedEmployee,
-      payment_type: paymentType,
-    };
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      // Create params without the page parameter
+      const params = new URLSearchParams();
 
-    // Apply validation rules based on payment type
-    if (paymentType === "piece_work") {
-      // piece_work: salary and bonus should be 0
-      updatedEmployee.salary = 0;
-      updatedEmployee.bonus = 0;
-    } else if (["hourly", "daily", "monthly"].includes(paymentType)) {
-      // hourly, daily, monthly: bonus should be 0, keep existing salary or set to 0
-      updatedEmployee.bonus = 0;
-      // Keep existing salary or set to 0 if not set
-      if (!updatedEmployee.salary) {
-        updatedEmployee.salary = 0;
-      }
+      // Add all non-empty filters to params except page
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== "" && key !== "page") {
+          params.append(key, value);
+        }
+      });
+
+      // Make the API call with the response type as blob to handle file download
+      const response = await api.get(
+        `/groupMaster/employees/export-excel?${params.toString()}`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Xodimlar ro'yxati yuklab olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
     }
-    // For fixed types, keep all values as user input
-
-    setSelectedEmployee(updatedEmployee);
   };
 
   return (
@@ -289,6 +311,18 @@ const Employees = () => {
             xodim
           </div>
         </div>
+        <Button
+          onClick={handleExport}
+          disabled={isExporting}
+          size="icon"
+          variant="ghost"
+        >
+          {isExporting ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <Download className="text-green-600" />
+          )}
+        </Button>
       </div>
 
       <Table className="bg-white border p-2 mb-2 whitespace-nowrap text-xs shadow-md">
