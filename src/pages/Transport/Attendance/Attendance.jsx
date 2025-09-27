@@ -1158,8 +1158,10 @@ const Attendance = () => {
                             selectedMonth,
                             dayIndex + 1
                           ).getDay() === 0
-                            ? "bg-red-200"
+                            ? "bg-orange-200"
                             : ""
+                        } ${
+                          attendance?.attendance_type == 0 ? "bg-red-200" : ""
                         }`}
                       >
                         <ContextMenu>
