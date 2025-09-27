@@ -7,6 +7,8 @@ import ConnectResult from "./ConnectResult";
 import ConnectWorkEdit from "./ConnectWorkEdit";
 import Tarifs from "./Tarifs";
 import TarifDetails from "./TarifDetails";
+import Employees from "./Employees/Employees";
+import ViewEmployees from "./Employees/ViewEmployees";
 
 const GroupMaster = () => {
   return (
@@ -19,6 +21,8 @@ const GroupMaster = () => {
       <Route path="connectWorkEdit/:id" element={<ConnectWorkEdit />} />
       <Route path="tarifs" element={<Tarifs />} />
       <Route path="tarifs/:id" element={<TarifDetails />} />
+      <Route path="employees" element={<Employees />} />
+      <Route path="employees/view/:id" element={<ViewEmployees />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

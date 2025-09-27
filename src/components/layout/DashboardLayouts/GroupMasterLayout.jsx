@@ -9,6 +9,7 @@ import {
   Shirt,
   Truck,
   Radical,
+  Users,
 } from "lucide-react";
 
 const navigation = [
@@ -35,6 +36,12 @@ const navigation = [
     name: "Natija",
     href: "/groupMaster/result",
     icon: FilePlus,
+    onMobile: true,
+  },
+  {
+    name: "Xodimlar",
+    href: "/groupMaster/employees",
+    icon: Users,
     onMobile: true,
   },
   {
