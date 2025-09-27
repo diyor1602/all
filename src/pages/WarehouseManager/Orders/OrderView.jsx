@@ -1,5 +1,3 @@
-"use client";
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useToast } from "@/components/ui/use-toast";

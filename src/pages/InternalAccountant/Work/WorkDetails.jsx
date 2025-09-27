@@ -1,5 +1,3 @@
-"use client";
-
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";

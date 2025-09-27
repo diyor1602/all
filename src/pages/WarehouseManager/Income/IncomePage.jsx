@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
