@@ -1150,7 +1150,18 @@ const Attendance = () => {
                     );
 
                     return (
-                      <td key={dayIndex} className="border-2 min-w-[40px]">
+                      <td
+                        key={dayIndex}
+                        className={`border-2 min-w-[40px] ${
+                          new Date(
+                            selectedYear,
+                            selectedMonth,
+                            dayIndex + 1
+                          ).getDay() === 0
+                            ? "bg-red-200"
+                            : ""
+                        }`}
+                      >
                         <ContextMenu>
                           <ContextMenuTrigger className="block w-full h-full cursor-context-menu">
                             <div
