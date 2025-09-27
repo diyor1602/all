@@ -42,6 +42,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
+import payment_types from "@/lib/paymentTypes";
 
 const formatPhoneNumber = (phone) => {
   return phone
@@ -389,7 +390,8 @@ const Employees = () => {
             <TableHead className="border">Ko'rish</TableHead>
             <TableHead className="border">Bo'lim</TableHead>
             <TableHead className="border">Lavozimi</TableHead>
-            <TableHead className="border">Telefon</TableHead>
+            <TableHead className="border">To'lov turi</TableHead>
+            <TableHead className="border">Maosh</TableHead>
             <TableHead className="border">Holati</TableHead>
           </TableRow>
         </TableHeader>
@@ -453,7 +455,9 @@ const Employees = () => {
                 </TableCell>
                 <TableCell className="border text-center">
                   <Button size="icon" variant="ghost" asChild>
-                    <Link to={`/internalAccountant/employees/${employee.id}`}>
+                    <Link
+                      to={`/internalAccountant/employees/view/${employee.id}`}
+                    >
                       <Eye className="text-blue-500" />
                     </Link>
                   </Button>
@@ -471,7 +475,14 @@ const Employees = () => {
                   </div>
                 </TableCell>
                 <TableCell className="border">
-                  +{formatPhoneNumber(employee.phone)}
+                  {payment_types[employee.payment_type]}
+                </TableCell>
+                <TableCell className="border">
+                  {employee.salary_visible
+                    ? Number.parseFloat(employee?.salary || 0)?.toLocaleString(
+                        "ru-RU"
+                      )
+                    : "-"}
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}

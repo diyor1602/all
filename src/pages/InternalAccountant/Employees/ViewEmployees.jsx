@@ -413,6 +413,7 @@ const SalaryDetails = () => {
                   <span>{formatDate(employee.hiring_date)}</span>
                 </div>
               )}
+
               {employee.salary_visible && (
                 <>
                   <div className="flex justify-between">
