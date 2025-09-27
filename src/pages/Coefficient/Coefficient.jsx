@@ -236,7 +236,10 @@ const Coefficient = () => {
           {/* Footer row for daily averages */}
           <tfoot>
             <tr className="font-bold bg-gray-100">
-              <td className="border border-gray-200 p-2 text-center">
+              <td
+                colSpan={2}
+                className="border border-gray-200 p-2 text-center"
+              >
                 {filteredData.length}
               </td>
               <td className="border border-gray-200 p-2 text-right">
