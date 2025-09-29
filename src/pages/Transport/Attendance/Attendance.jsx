@@ -305,6 +305,26 @@ const Attendance = () => {
     // Add daily attendance totals
     const dailyTotals = Array.from({ length: daysInMonth }).map(() => 0);
 
+    const dailyMoneyTotals = Array.from({ length: daysInMonth }).map(() => 0);
+
+    filteredTransports.forEach((transport) => {
+      const transportId = transport.id;
+      for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex++) {
+        const date = `${selectedYear}-${String(selectedMonth + 1).padStart(
+          2,
+          "0"
+        )}-${String(dayIndex + 1).padStart(2, "0")}`;
+        const attendance = attendances.find(
+          (a) => a.date === date && a.transport?.id === transportId
+        );
+        if (attendance) {
+          dailyMoneyTotals[dayIndex] +=
+            (attendance.salary || 0) * (attendance.attendance_type || 0) +
+            (attendance.fuel_bonus || 0) * (attendance.attendance_type || 0);
+        }
+      }
+    });
+
     filteredTransports.forEach((transport) => {
       const transportId = transport.id;
       const workDays = Array.from({ length: daysInMonth }).reduce(
@@ -429,6 +449,7 @@ const Attendance = () => {
       salary: 0,
       balance: 0,
       dailyTotals,
+      dailyMoneyTotals,
     };
 
     Object.values(calculations).forEach((calc) => {
@@ -1289,9 +1310,25 @@ const Attendance = () => {
               {/* Daily attendance totals */}
               {Array.from({ length: daysInMonth }).map((_, index) => (
                 <td key={index} className="border-2 min-w-[40px] bg-gray-100">
-                  {transportCalculations.totals.dailyTotals[index].toFixed(1)}
+                  <div className="flex flex-col items-center">
+                    {/* Workday total (current) */}
+                    <span>
+                      {transportCalculations.totals.dailyTotals[index].toFixed(
+                        1
+                      )}
+                    </span>
+
+                    {/* Money total (NEW) */}
+                    <span className="text-green-600 font-semibold text-[11px]">
+                      {formatValue(
+                        transportCalculations.totals.dailyMoneyTotals[index] ||
+                          0
+                      )}
+                    </span>
+                  </div>
                 </td>
               ))}
+
               <td className="border-2 p-1 min-w-[100px]">
                 {formatValue(
                   filteredTransports.reduce(
