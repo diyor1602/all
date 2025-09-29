@@ -734,10 +734,12 @@ const Employees = () => {
                       <Eye className="h-4 w-4 text-blue-500" />
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to={`/ceo/employees/${employee.id}`} target="_blank">
-                      <Pencil className="h-4 w-4" />
-                    </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEditClick(employee)}
+                  >
+                    <Pencil className="h-4 w-4" />
                   </Button>
                   {employee?.type === "aup" ? (
                     <Button
