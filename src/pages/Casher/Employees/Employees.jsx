@@ -297,6 +297,8 @@ const Employees = () => {
         department_id: employees.data.find(
           (emp) => emp.id === selectedEmployee.id
         ).department?.id,
+        status: employees.data.find((emp) => emp.id === selectedEmployee.id)
+          .status,
       };
 
       // Apply validation rules for API payload
@@ -380,6 +382,7 @@ const Employees = () => {
         type: "simple",
         group_id: employee.group?.id,
         department_id: employee.department?.id,
+        status: employees.data.find((emp) => emp.id === employee.id).status,
       });
     } else {
       if (
@@ -392,6 +395,7 @@ const Employees = () => {
         type: "aup",
         group_id: employee.group?.id,
         department_id: employee.department?.id,
+        status: employees.data.find((emp) => emp.id === employee.id).status,
       });
     }
     fetchEmployees();
