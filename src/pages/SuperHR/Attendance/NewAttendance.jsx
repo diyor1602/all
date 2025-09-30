@@ -359,7 +359,7 @@ const NewAttendance = () => {
 
       <div className="w-full overflow-auto">
         <table
-          className={`border-collapse border border-gray-300 mt-4 w-full text-sm whitespace-nowrap ${
+          className={`border-collapse border border-gray-300 mt-4 w-full bg-white text-sm whitespace-nowrap ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
