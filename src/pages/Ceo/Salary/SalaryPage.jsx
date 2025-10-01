@@ -34,6 +34,7 @@ import {
   Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Label } from "@/components/ui/label";
 
 const formatNumber = (num) => {
   return Number.parseFloat(num)?.toLocaleString("ru-RU", {
@@ -68,7 +69,6 @@ const SalaryPage = () => {
     open: false,
     employee: null,
     type: null,
-    maxAmount: 0,
   });
   const [paymentForm, setPaymentForm] = useState({
     amount: "",
@@ -83,6 +83,185 @@ const SalaryPage = () => {
     type: "aup",
   });
   const [searchText, setSearchText] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [monthlyDialogOpen, setMonthlyDialogOpen] = useState(false);
+  const [pieceworkDialogOpen, setPieceworkDialogOpen] = useState(false);
+  const [additionalAmount, setAdditionalAmount] = useState("");
+  const [additionalComment, setAdditionalComment] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleAdditionalDialog = (employee, type) => {
+    setSelectedEmployee(employee);
+    setAdditionalAmount(
+      type === "monthly"
+        ? String(employee.monthly_salary?.amount || "")
+        : String(employee.monthly_piecework?.amount || "")
+    );
+    setAdditionalComment(
+      type === "monthly"
+        ? String(employee.monthly_salary?.comment || "")
+        : String(employee.monthly_piecework?.comment || "")
+    );
+    type === "monthly"
+      ? setMonthlyDialogOpen(true)
+      : setPieceworkDialogOpen(true);
+  };
+
+  const handleSaveAdditionalMonthlySalary = async () => {
+    if (additionalAmount < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, ijobiy miqdor kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    setSending(true);
+    try {
+      await api.post("ceo/employeeMonthlySalary", {
+        amount: additionalAmount,
+        employee_id: selectedEmployee.id,
+        comment: additionalComment,
+        month: `${selectedMonth}-01`,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Oylik maosh muvaffaqiyatli yangilandi",
+        duration: 1500,
+      });
+      setMonthlyDialogOpen(false);
+      setAdditionalAmount(0);
+      fetchSalaryData(filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Maoshni yangilashda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleEditAdditionalMonthlySalary = async (id) => {
+    if (additionalAmount < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, ijobiy miqdor kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    setSending(true);
+    try {
+      await api.patch(`ceo/employeeMonthlySalary/${id}`, {
+        amount: additionalAmount,
+        employee_id: selectedEmployee.id,
+        comment: additionalComment,
+        month: `${selectedMonth}-01`,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Oylik maosh muvaffaqiyatli yangilandi",
+        duration: 1500,
+      });
+      setMonthlyDialogOpen(false);
+      setAdditionalAmount(0);
+      fetchSalaryData(filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Maoshni yangilashda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSaveAdditionalPieceWork = async () => {
+    if (additionalAmount < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, ijobiy miqdor kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    setSending(true);
+    try {
+      await api.post("ceo/employeeMonthlyPiecework", {
+        amount: additionalAmount,
+        employee_id: selectedEmployee.id,
+        comment: additionalComment,
+        month: `${selectedMonth}-01`,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Oylik maosh muvaffaqiyatli yangilandi",
+        duration: 1500,
+      });
+      setPieceworkDialogOpen(false);
+      setAdditionalAmount(0);
+      fetchSalaryData(filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Maoshni yangilashda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleEditAdditionalPieceWork = async (id) => {
+    if (additionalAmount < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, ijobiy miqdor kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    setSending(true);
+    try {
+      await api.patch(`ceo/employeeMonthlyPiecework/${id}`, {
+        amount: additionalAmount,
+        employee_id: selectedEmployee.id,
+        comment: additionalComment,
+        month: `${selectedMonth}-01`,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Oylik maosh muvaffaqiyatli yangilandi",
+        duration: 1500,
+      });
+      setPieceworkDialogOpen(false);
+      setAdditionalAmount(0);
+      fetchSalaryData(filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Maoshni yangilashda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
 
   // Filter employees based on search text
   const filteredEmployees = employees.filter((employee) =>
@@ -380,7 +559,6 @@ const SalaryPage = () => {
   };
 
   const openPaymentDialog = (employee, type) => {
-    const maxAmount = calculateMaxAmount(employee, type);
     const { advanceTotal, salaryTotal } = calculatePaymentTotals(
       employee?.paid_amounts
     );
@@ -399,7 +577,6 @@ const SalaryPage = () => {
       open: true,
       employee,
       type,
-      maxAmount,
     });
     setPaymentForm({
       amount: currentAmount.toString(),
@@ -412,7 +589,6 @@ const SalaryPage = () => {
       open: false,
       employee: null,
       type: null,
-      maxAmount: 0,
     });
     setPaymentForm({
       amount: "",
@@ -421,22 +597,13 @@ const SalaryPage = () => {
   };
 
   const handlePayment = async () => {
-    const { employee, type, maxAmount } = paymentDialog;
+    const { employee, type } = paymentDialog;
     const { amount, comment } = paymentForm;
 
     if (!amount || Number.parseFloat(amount) < 0) {
       toast({
         title: "Diqqat",
         description: "Miqdorni kiriting",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (Number.parseFloat(amount) > maxAmount) {
-      toast({
-        title: "Diqqat",
-        description: `Maksimal miqdor: ${formatNumber(maxAmount)}`,
         variant: "destructive",
       });
       return;
@@ -610,25 +777,74 @@ const SalaryPage = () => {
                       {index + 1}
                     </td>
                     <td className="border border-gray-200 p-1">
-                      <div className="text-gray-900">{employee?.name}</div>
+                      <Link
+                        to={`/ceo/salary/${employee.id}`}
+                        className="text-gray-900"
+                      >
+                        {employee?.name}
+                      </Link>
                     </td>
                     <td className="border border-gray-200 p-1 text-center">
                       {employee?.attendance_days}
                     </td>
-                    <td className="border border-gray-200 p-1 text-center">
-                      <Link to={`/ceo/salary/${employee.id}`} target="_blank">
-                        {formatNumber(employee?.attendance_salary)}
-                      </Link>
+                    <td
+                      className="border border-gray-200 p-1 text-center cursor-pointer"
+                      onClick={() =>
+                        handleAdditionalDialog(employee, "monthly")
+                      }
+                    >
+                      <div
+                        className={`cursor-pointer ${
+                          employee?.monthly_salary?.amount ==
+                          employee?.attendance_salary
+                            ? "bg-green-400"
+                            : employee?.monthly_salary?.amount >= 0
+                            ? "bg-orange-400"
+                            : ""
+                        }`}
+                      >
+                        {formatNumber(
+                          employee?.monthly_salary?.amount >= 0
+                            ? employee?.monthly_salary?.amount
+                            : employee?.attendance_salary
+                        )}
+                      </div>
                     </td>
-                    <td className="border border-gray-200 p-1 text-center">
-                      <Link to={`/ceo/salary/${employee.id}`} target="_blank">
-                        {formatNumber(employee?.tarification_salary)}
-                      </Link>
+                    <td
+                      className="border border-gray-200 p-1 text-center"
+                      onClick={() =>
+                        handleAdditionalDialog(employee, "piecework")
+                      }
+                    >
+                      <div
+                        className={`cursor-pointer ${
+                          employee?.monthly_piecework?.amount ==
+                          employee?.tarification_salary
+                            ? "bg-green-400"
+                            : employee?.monthly_piecework?.amount >= 0
+                            ? "bg-orange-400"
+                            : ""
+                        }`}
+                      >
+                        {formatNumber(
+                          employee?.monthly_piecework?.amount >= 0
+                            ? employee?.monthly_piecework?.amount
+                            : employee?.tarification_salary
+                        )}
+                      </div>
                     </td>
                     <td className="border border-gray-200 p-1 text-center">
                       {formatNumber(
-                        parseFloat(employee?.attendance_salary) +
-                          parseFloat(employee?.tarification_salary)
+                        parseFloat(
+                          employee?.monthly_salary?.amount >= 0
+                            ? employee?.monthly_salary?.amount
+                            : employee?.attendance_salary
+                        ) +
+                          parseFloat(
+                            employee?.monthly_piecework?.amount >= 0
+                              ? employee?.monthly_piecework?.amount
+                              : employee?.tarification_salary
+                          )
                       )}
                     </td>
                     <td className="border border-gray-200 p-1 text-center">
@@ -650,8 +866,16 @@ const SalaryPage = () => {
                     </td>
                     <td className="border border-gray-200 p-1 text-center">
                       {formatNumber(
-                        parseFloat(employee?.attendance_salary) +
-                          parseFloat(employee?.tarification_salary) -
+                        parseFloat(
+                          employee?.monthly_salary?.amount >= 0
+                            ? employee?.monthly_salary?.amount
+                            : employee?.attendance_salary
+                        ) +
+                          parseFloat(
+                            employee?.monthly_piecework?.amount >= 0
+                              ? employee?.monthly_piecework?.amount
+                              : employee?.tarification_salary
+                          ) -
                           parseFloat(employee?.total_paid)
                       )}
                     </td>
@@ -675,16 +899,13 @@ const SalaryPage = () => {
                 <td className="border border-gray-200 p-1 text-center">
                   {formatNumber(
                     filteredEmployees.reduce(
-                      (sum, emp) => sum + (Number(emp?.attendance_salary) || 0),
-                      0
-                    )
-                  )}
-                </td>
-                <td className="border border-gray-200 p-1 text-center">
-                  {formatNumber(
-                    filteredEmployees.reduce(
                       (sum, emp) =>
-                        sum + (Number(emp?.tarification_salary) || 0),
+                        sum +
+                        (Number(
+                          emp?.monthly_salary?.amount >= 0
+                            ? emp?.monthly_salary?.amount
+                            : emp?.attendance_salary
+                        ) || 0),
                       0
                     )
                   )}
@@ -694,8 +915,30 @@ const SalaryPage = () => {
                     filteredEmployees.reduce(
                       (sum, emp) =>
                         sum +
-                        (Number(emp?.attendance_salary || 0) +
-                          Number(emp?.tarification_salary || 0)),
+                        (Number(
+                          emp?.monthly_piecework?.amount >= 0
+                            ? emp?.monthly_piecework?.amount
+                            : emp?.tarification_salary
+                        ) || 0),
+                      0
+                    )
+                  )}
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {formatNumber(
+                    filteredEmployees.reduce(
+                      (sum, emp) =>
+                        sum +
+                        ((Number(
+                          emp?.monthly_salary?.amount >= 0
+                            ? emp?.monthly_salary?.amount
+                            : emp?.attendance_salary
+                        ) || 0) +
+                          (Number(
+                            emp?.monthly_piecework?.amount >= 0
+                              ? emp?.monthly_piecework?.amount
+                              : emp?.tarification_salary
+                          ) || 0)),
                       0
                     )
                   )}
@@ -713,7 +956,17 @@ const SalaryPage = () => {
                 <td className="border border-gray-200 p-1 text-center">
                   {formatNumber(
                     filteredEmployees.reduce((sum, emp) => {
-                      const totalEarned = Number(emp?.total_earned || 0);
+                      const totalEarned =
+                        (Number(
+                          emp?.monthly_salary?.amount >= 0
+                            ? emp?.monthly_salary?.amount
+                            : emp?.attendance_salary
+                        ) || 0) +
+                        (Number(
+                          emp?.monthly_piecework?.amount >= 0
+                            ? emp?.monthly_piecework?.amount
+                            : emp?.tarification_salary
+                        ) || 0);
                       const totalPaid = Number(emp?.total_paid || 0);
                       return sum + (totalEarned - totalPaid);
                     }, 0)
@@ -757,10 +1010,6 @@ const SalaryPage = () => {
               {paymentDialog.type === "advance" ? "avans" : "oylik"} miqdorini
               o'zgartirish
               <br />
-              <span className="text-sm text-gray-600">
-                Maksimal miqdor:{" "}
-                <strong>{formatNumber(paymentDialog.maxAmount)}</strong>
-              </span>
             </DialogDescription>
           </DialogHeader>
 
@@ -841,7 +1090,6 @@ const SalaryPage = () => {
                     }))
                   }
                   className="border-2 focus:border-blue-500"
-                  max={paymentDialog.maxAmount}
                 />
               </div>
 
@@ -902,6 +1150,317 @@ const SalaryPage = () => {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Additional Payment Dialog */}
+      <Dialog
+        open={monthlyDialogOpen}
+        onOpenChange={() => setMonthlyDialogOpen(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Ish haqi (oylik)
+            </DialogTitle>
+            <DialogDescription>
+              <strong>{selectedEmployee?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            {selectedEmployee?.monthly_salary ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-gray-600">
+                  Yangi miqdor:{" "}
+                  <span className="font-medium">
+                    {formatNumber(selectedEmployee.monthly_salary?.amount)} so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Asl miqdor:{" "}
+                  <span className="font-medium">
+                    {formatNumber(selectedEmployee.attendance_salary)} so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Farqi:{" "}
+                  <span
+                    className={`font-medium ${
+                      selectedEmployee.monthly_salary?.amount -
+                        selectedEmployee.attendance_salary >=
+                      0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {formatNumber(
+                      selectedEmployee.monthly_salary?.amount -
+                        selectedEmployee.attendance_salary
+                    )}{" "}
+                    so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Izoh:{" "}
+                  <span className="font-medium">
+                    {selectedEmployee.monthly_salary?.comment || "-"}
+                  </span>
+                </p>
+                <Label htmlFor="additional-amount">
+                  Yangi miqdorni kiriting: ({" "}
+                  {additionalAmount && formatNumber(additionalAmount)} so'm)
+                </Label>
+                <Input
+                  id="additional-amount"
+                  value={additionalAmount}
+                  onChange={(e) => setAdditionalAmount(e.target.value)}
+                />
+                <div>
+                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
+                  <Input
+                    id="additional-comment"
+                    type="text"
+                    value={additionalComment}
+                    onChange={(e) => setAdditionalComment(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setMonthlyDialogOpen(false);
+                      setAdditionalAmount("");
+                      setAdditionalComment("");
+                    }}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      handleEditAdditionalMonthlySalary(
+                        selectedEmployee?.monthly_salary?.id
+                      )
+                    }
+                    disabled={!additionalAmount || sending}
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        O'zgartirilmoqda
+                      </>
+                    ) : (
+                      "O'zgartirish"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div>
+                  <span className="text-gray-600 text-sm">Asl miqdor:</span>{" "}
+                  {formatNumber(selectedEmployee?.attendance_salary)} so'm
+                </div>
+                <Label htmlFor="additional-amount">
+                  Yangi miqdorni kiriting: ({" "}
+                  {additionalAmount && formatNumber(additionalAmount)} so'm)
+                </Label>
+                <Input
+                  id="additional-amount"
+                  value={additionalAmount}
+                  onChange={(e) => setAdditionalAmount(e.target.value)}
+                />
+                <div>
+                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
+                  <Input
+                    id="additional-comment"
+                    type="text"
+                    value={additionalComment}
+                    onChange={(e) => setAdditionalComment(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setMonthlyDialogOpen(false);
+                      setAdditionalAmount("");
+                      setAdditionalComment("");
+                    }}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button
+                    onClick={handleSaveAdditionalMonthlySalary}
+                    disabled={!additionalAmount || sending}
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        Saqlanmoqda{" "}
+                      </>
+                    ) : (
+                      "Saqlash"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={pieceworkDialogOpen}
+        onOpenChange={() => setPieceworkDialogOpen(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Ish haqi (ishbay)
+            </DialogTitle>
+            <DialogDescription>
+              <strong>{selectedEmployee?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            {selectedEmployee?.monthly_piecework ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-gray-600">
+                  Yangi miqdor:{" "}
+                  <span className="font-medium">
+                    {formatNumber(selectedEmployee.monthly_piecework?.amount)}{" "}
+                    so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Asl miqdor:{" "}
+                  <span className="font-medium">
+                    {formatNumber(selectedEmployee.tarification_salary)} so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Farqi:{" "}
+                  <span
+                    className={`font-medium ${
+                      selectedEmployee.monthly_piecework?.amount -
+                        selectedEmployee.tarification_salary >=
+                      0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {formatNumber(
+                      selectedEmployee.monthly_piecework?.amount -
+                        selectedEmployee.tarification_salary
+                    )}{" "}
+                    so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Izoh:{" "}
+                  <span className="font-medium">
+                    {selectedEmployee.monthly_piecework?.comment || "-"}
+                  </span>
+                </p>
+                <Label htmlFor="additional-amount">
+                  Yangi miqdorni kiriting: ({" "}
+                  {additionalAmount && formatNumber(additionalAmount)} so'm)
+                </Label>
+                <Input
+                  id="additional-amount"
+                  value={additionalAmount}
+                  onChange={(e) => setAdditionalAmount(e.target.value)}
+                />
+                <div>
+                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
+                  <Input
+                    id="additional-comment"
+                    type="text"
+                    value={additionalComment}
+                    onChange={(e) => setAdditionalComment(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setPieceworkDialogOpen(false);
+                      setAdditionalAmount("");
+                      setAdditionalComment("");
+                    }}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      handleEditAdditionalPieceWork(
+                        selectedEmployee?.monthly_piecework?.id
+                      )
+                    }
+                    disabled={!additionalAmount || sending}
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        Saqlanmoqda...
+                      </>
+                    ) : (
+                      "Saqlash"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div>
+                  <span className="text-gray-600 text-sm">Asl miqdor:</span>{" "}
+                  {formatNumber(selectedEmployee?.tarification_salary)} so'm
+                </div>
+                <Label htmlFor="additional-amount">
+                  Yangi miqdorni kiriting: ({" "}
+                  {additionalAmount && formatNumber(additionalAmount)} so'm)
+                </Label>
+                <Input
+                  id="additional-amount"
+                  value={additionalAmount}
+                  onChange={(e) => setAdditionalAmount(e.target.value)}
+                />
+                <div>
+                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
+                  <Input
+                    id="additional-comment"
+                    type="text"
+                    value={additionalComment}
+                    onChange={(e) => setAdditionalComment(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setPieceworkDialogOpen(false);
+                      setAdditionalAmount("");
+                      setAdditionalComment("");
+                    }}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button
+                    onClick={handleSaveAdditionalPieceWork}
+                    disabled={!additionalAmount || sending}
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        Saqlanmoqda...
+                      </>
+                    ) : (
+                      "Saqlash"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
