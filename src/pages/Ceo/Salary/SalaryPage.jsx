@@ -1401,10 +1401,10 @@ const SalaryPage = () => {
                     {sending ? (
                       <>
                         <Loader2 className="animate-spin" />
-                        Saqlanmoqda...
+                        O'zgartirilmoqda...
                       </>
                     ) : (
-                      "Saqlash"
+                      "O'zgartirish"
                     )}
                   </Button>
                 </div>
