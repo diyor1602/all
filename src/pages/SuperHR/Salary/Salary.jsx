@@ -724,9 +724,7 @@ const Salary = () => {
                   </div>
                 </TableCell>
                 <TableCell className="border">
-                  {employee.salary_visible
-                    ? payment_types[employee.payment_type]
-                    : "-"}
+                  {payment_types[employee?.payment_type] || "-"}
                 </TableCell>
                 <TableCell className="border">
                   {employee.salary_visible
