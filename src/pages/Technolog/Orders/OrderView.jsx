@@ -530,7 +530,7 @@ const OrderView = () => {
           <DialogHeader>
             <DialogTitle>Tarifikatsiya o'chirish</DialogTitle>
             <DialogDescription>
-              Tarifikatsiyani o'chirishni ishlatishni halosizmi?
+              Tarifikatsiyani o'chirishni tasdiqlaysizmi?
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-end gap-2">
