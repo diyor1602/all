@@ -43,6 +43,7 @@ const Card = ({
   color,
   Icon,
   isActive,
+  hasAdditional,
   onClick,
   ringColor,
   loading,
@@ -101,10 +102,15 @@ const Card = ({
           {/* Bottom row */}
           <div className="mt-6">
             <div className="text-sm uppercase">{title}</div>
-            <div className="text-2xl font-bold mt-1">
+            <div
+              className={`text-2xl font-bold mt-1 flex items-center gap-1 ${
+                hasAdditional ? "line-through" : ""
+              }`}
+            >
               {value ? (
                 <>
-                  {value} <span className="text-xl font-normal">so'm</span>
+                  {value}
+                  <span className="text-xl font-normal">so'm</span>
                 </>
               ) : (
                 "-"
@@ -176,6 +182,9 @@ const Profile = () => {
     {
       key: "davomat",
       title: "Davomat",
+      hasAdditional:
+        userData.monthlySalaries?.length > 0 &&
+        userData.monthlySalaries[0]?.amount >= 0,
       value: formatNumber(
         userData.attendance_salaries?.reduce(
           (sum, salary) => sum + Number.parseFloat(salary.amount || 0),
@@ -191,6 +200,9 @@ const Profile = () => {
     {
       key: "ish",
       title: "Ish",
+      hasAdditional:
+        userData.monthlyPieceworks?.length > 0 &&
+        userData.monthlyPieceworks[0]?.amount >= 0,
       value: formatNumber(
         userData.employee_tarification_logs?.reduce(
           (sum, salary) => sum + Number.parseFloat(salary.amount_earned || 0),
@@ -300,6 +312,7 @@ const Profile = () => {
             ringColor={c.ringColor}
             loading={loading}
             bgImage={c.bgImage}
+            hasAdditional={c.hasAdditional}
           />
         ))}
       </div>
@@ -324,6 +337,7 @@ const Profile = () => {
                 ringColor={c.ringColor}
                 loading={loading}
                 bgImage={c.bgImage}
+                hasAdditional={c.hasAdditional}
               />
             </SwiperSlide>
           ))}

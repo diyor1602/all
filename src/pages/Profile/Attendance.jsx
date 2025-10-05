@@ -116,6 +116,27 @@ const Attendance = ({ userData }) => {
 
   return (
     <>
+      {/* Additional Salary Information */}
+      {userData.monthlySalaries && userData.monthlySalaries.length > 0 && (
+        <div className="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded">
+          <p className="font-medium">
+            Siz belgilangan quyidagi summani olasiz!
+          </p>
+          <p className="text-sm">Iltimos, ma'lumotlarni tekshiring.</p>
+          <p className="font-medium">
+            {parseFloat(userData.monthlySalaries[0]?.amount)?.toLocaleString(
+              "ru-RU",
+              {
+                maximumFractionDigits: 0,
+              }
+            )}{" "}
+            so'm
+          </p>
+          <p className="text-sm">
+            Izoh: {userData.monthlySalaries[0]?.comment || "-"}
+          </p>
+        </div>
+      )}
       <div className="flex flex-col gap-6">
         {/* Summary */}
         <div className="grid grid-cols-2 gap-4">
