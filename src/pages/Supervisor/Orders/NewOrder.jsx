@@ -576,15 +576,8 @@ const NewOrder = () => {
                               model: {
                                 ...prev.model,
                                 submodels: exists
-                                  ? prev.model.submodels.filter(
-                                      (id) => id !== submodel.id
-                                    )
-                                  : [
-                                      ...new Set([
-                                        ...(prev.model.submodels || []),
-                                        submodel.id,
-                                      ]),
-                                    ],
+                                  ? [] // if clicked again, unselect
+                                  : [submodel.id], // ✅ allow only ONE
                               },
                             };
                           });

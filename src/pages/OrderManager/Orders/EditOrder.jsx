@@ -659,30 +659,7 @@ const EditOrder = () => {
                             : "outline"
                         }
                         type="button"
-                        onClick={() => {
-                          setPayload((prev) => {
-                            const exists = prev.model.submodels?.includes(
-                              submodel.id
-                            );
-
-                            return {
-                              ...prev,
-                              model: {
-                                ...prev.model,
-                                submodels: exists
-                                  ? prev.model.submodels.filter(
-                                      (id) => id !== submodel.id
-                                    )
-                                  : Array.from(
-                                      new Set([
-                                        ...(prev.model.submodels || []),
-                                        submodel.id,
-                                      ])
-                                    ),
-                              },
-                            };
-                          });
-                        }}
+                        disabled
                       >
                         {submodel.name}
                       </Button>

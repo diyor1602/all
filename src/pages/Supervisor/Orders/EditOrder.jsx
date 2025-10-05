@@ -625,26 +625,7 @@ const EditOrder = () => {
                             : "outline"
                         }
                         type="button"
-                        onClick={() => {
-                          setPayload({
-                            ...payload,
-                            model: {
-                              ...payload.model,
-                              submodels: payload.model.submodels?.includes(
-                                submodel.id
-                              )
-                                ? payload.model.submodels?.filter(
-                                    (id) => id !== submodel.id
-                                  )
-                                : [
-                                    ...(payload.model.submodels?.filter(
-                                      (id) => id
-                                    ) || []),
-                                    submodel.id,
-                                  ],
-                            },
-                          });
-                        }}
+                        disabled
                       >
                         {submodel.name}
                       </Button>
