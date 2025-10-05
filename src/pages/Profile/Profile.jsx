@@ -239,16 +239,16 @@ const Profile = () => {
       bgImage:
         "https://images.unsplash.com/photo-1618108345761-031721b1ca3c?q=80&w=1170&auto=format&fit=crop",
     },
-    {
-      key: "kpi",
-      title: "KPI",
-      value: formatNumber(userData.bonus || 0),
-      color: "bg-gradient-to-r from-purple-500 to-pink-600",
-      Icon: Trees,
-      ringColor: "ring-gray-400",
-      bgImage:
-        "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=80&w=1170&auto=format&fit=crop",
-    },
+    // {
+    //   key: "kpi",
+    //   title: "KPI",
+    //   value: formatNumber(userData.bonus || 0),
+    //   color: "bg-gradient-to-r from-purple-500 to-pink-600",
+    //   Icon: Trees,
+    //   ringColor: "ring-gray-400",
+    //   bgImage:
+    //     "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=80&w=1170&auto=format&fit=crop",
+    // },
     {
       key: "koefitsient",
       title: "Koeffitsiyent",
