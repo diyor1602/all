@@ -762,16 +762,46 @@ const SalaryPage = () => {
           </thead>
           <tbody className={cn("", loading && "cursor-not-allowed opacity-50")}>
             {filteredEmployees
-              ?.sort((a, b) => a.name.localeCompare(b.name))
+              ?.sort((a, b) => {
+                const selectedDepartmentName =
+                  departments
+                    .find((d) => d.id.toString() === filters.department_id)
+                    ?.name?.toLowerCase() || "";
+
+                const containsTikuv =
+                  selectedDepartmentName.includes("tikuv") ||
+                  selectedDepartmentName.includes("тикув");
+
+                const aHighlight = a.group === "N/A" && containsTikuv;
+                const bHighlight = b.group === "N/A" && containsTikuv;
+
+                if (aHighlight && !bHighlight) return -1;
+                if (!aHighlight && bHighlight) return 1;
+
+                return a.name.localeCompare(b.name);
+              })
               .map((employee, index) => {
                 const { advanceTotal, salaryTotal } = calculatePaymentTotals(
                   employee?.paid_amounts
                 );
 
+                const selectedDepartmentName =
+                  departments
+                    .find((d) => d.id.toString() === filters.department_id)
+                    ?.name?.toLowerCase() || "";
+
+                const containsTikuv =
+                  selectedDepartmentName.includes("tikuv") ||
+                  selectedDepartmentName.includes("тикув");
+
+                const highlight = employee.group === "N/A" && containsTikuv;
                 return (
                   <tr
                     key={employee.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className={cn(
+                      "hover:bg-gray-50 transition-colors",
+                      highlight && "bg-red-200 hover:bg-red-100"
+                    )}
                   >
                     <td className="border border-gray-200 p-1 text-center">
                       {index + 1}
