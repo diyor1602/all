@@ -234,6 +234,9 @@ const ResultView = () => {
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h3 className="font-medium text-gray-900">
+                              <span className="text-xs text-gray-500">
+                                {order?.orderId}
+                              </span>{" "}
                               {order.orderName} - {order.submodel?.name}
                             </h3>
                             <div className="flex items-center gap-2 mt-1">
