@@ -61,7 +61,8 @@ export default function Coefficient({ userData }) {
       quantity: chartData.reduce((acc, curr) => acc + curr.quantity, 0),
       percentage: Math.round(
         chartData.reduce((acc, curr) => acc + curr.percentage, 0) /
-          (chartData.length || 1)
+          (userData?.attendances?.filter((a) => a.status === "present")
+            ?.length || 1)
       )?.toLocaleString("ru-RU", {
         maximumFractionDigits: 0,
       }),
