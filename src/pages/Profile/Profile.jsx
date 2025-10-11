@@ -11,7 +11,6 @@ import {
   Wallet,
   Banknote,
   Loader2,
-  Trees,
   Settings as SettingsIcon,
   DraftingCompass,
 } from "lucide-react";
@@ -36,6 +35,30 @@ const formatNumber = (number) => {
   });
 };
 
+const calculateCoefficient = (userData) => {
+  const logs = userData?.employee_tarification_logs || [];
+
+  const grouped = logs.reduce((acc, log) => {
+    const seconds =
+      parseFloat(log.tarification?.second || 0) * (log.quantity || 0);
+
+    acc.seconds = (acc.seconds || 0) + seconds;
+    acc.days = (acc.days || 0) + 1;
+    return acc;
+  }, {});
+
+  if (!grouped.days) return 0;
+
+  // Average percentage per day
+  return Math.round(
+    (grouped.seconds /
+      30000 /
+      (userData?.attendances?.filter((a) => a.status === "present")?.length ||
+        1)) *
+      100
+  );
+};
+
 // ---------- Card ----------
 const Card = ({
   title,
@@ -48,6 +71,7 @@ const Card = ({
   ringColor,
   loading,
   bgImage,
+  prefix,
 }) => (
   <motion.div
     whileHover={{ scale: 1.04 }}
@@ -110,7 +134,9 @@ const Card = ({
               {value ? (
                 <>
                   {value}
-                  <span className="text-xl font-normal">so'm</span>
+                  <span className="text-xl font-normal">
+                    {prefix || "so'm"}
+                  </span>
                 </>
               ) : (
                 "-"
@@ -252,7 +278,8 @@ const Profile = () => {
     {
       key: "koefitsient",
       title: "Koeffitsiyent",
-      value: null,
+      value: calculateCoefficient(userData),
+      prefix: "%",
       color: "bg-gradient-to-r from-sky-500 to-blue-600",
       Icon: DraftingCompass,
       ringColor: "ring-blue-400",
@@ -313,6 +340,7 @@ const Profile = () => {
             loading={loading}
             bgImage={c.bgImage}
             hasAdditional={c.hasAdditional}
+            prefix={c.prefix}
           />
         ))}
       </div>
@@ -338,6 +366,7 @@ const Profile = () => {
                 loading={loading}
                 bgImage={c.bgImage}
                 hasAdditional={c.hasAdditional}
+                prefix={c.prefix}
               />
             </SwiperSlide>
           ))}
