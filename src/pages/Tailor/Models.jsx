@@ -630,7 +630,7 @@ const Models = () => {
                   }}
                 >
                   <div className="truncate font-medium">
-                    {model.model?.name} - {model.submodel?.name}
+                    {model.order?.name} - {model.submodel?.name}
                   </div>
                   <div
                     className={`truncate text-xs px-2 py-1 rounded-full text-white ${
@@ -1051,7 +1051,7 @@ const Models = () => {
                 }}
               >
                 <div className="truncate font-medium">
-                  {model?.model?.name} - {model?.submodel?.name}
+                  {model?.order?.name} - {model?.submodel?.name}
                 </div>
                 <div
                   className={`truncate text-xs text-white p-2 rounded-full ${
