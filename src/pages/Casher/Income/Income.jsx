@@ -207,7 +207,7 @@ const Income = () => {
               </tr>
             ) : (
               data
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map((item, index) => (
                   <tr
                     key={index}
