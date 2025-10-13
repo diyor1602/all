@@ -1,6 +1,7 @@
 const allowPaths = [
   "home",
   "profile",
+  "chat",
   "issue",
   "kpi",
   "tailorRating",

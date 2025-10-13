@@ -13,6 +13,7 @@ import Home from "./pages/Home";
 import Kpi from "./pages/Kpi";
 import Profile from "./pages/Profile/Profile";
 import CuttingKpi from "./pages/CuttingKpi";
+import Chat from "./pages/Chat/Chat";
 import Issue from "./pages/Issue";
 import TailorRating from "./pages/TailorRating";
 import SuperHr from "./pages/SuperHR/SuperHr";
@@ -68,6 +69,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/chat/*" element={<Chat />} />
           <Route path="/issue" element={<Issue />} />
           <Route path="/kpi" element={<Kpi />} />
           <Route path="/cuttingKpi" element={<CuttingKpi />} />

@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth-context.js";
-import { Users, LogOut, Menu, X, MessageCircleMore } from "lucide-react";
+import {
+  Users,
+  LogOut,
+  Menu,
+  X,
+  MessageCircleMore,
+  MessageSquareMore,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
@@ -10,6 +17,8 @@ export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { logout } = useAuth();
   const location = useLocation();
+
+  const isChatPage = location.pathname.startsWith("/chat");
 
   const imageUrl = localStorage.getItem("imgUrl");
   const hasValidImage = imageUrl && imageUrl !== "null";
@@ -25,20 +34,23 @@ export default function BaseLayout({ children, navigation }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="lg:hidden fixed top-4 right-4 z-40">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? (
-            <X className="h-4 w-4" />
-          ) : (
-            <Menu className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gray-50 pointer-events-auto">
+      {/* Sidebar trigger button for mobile */}
+      {!isChatPage && (
+        <div className="lg:hidden fixed top-4 right-4 z-40">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      )}
 
       {/* Sidebar backdrop for mobile */}
       <div
@@ -58,9 +70,13 @@ export default function BaseLayout({ children, navigation }) {
       >
         <div className="flex h-full flex-col">
           {/* Logo section */}
-          <div className="flex h-16 shrink-0 items-center justify-center border-b px-6">
+          <Link
+            to="/chat"
+            className="flex h-16 shrink-0 items-center justify-center border-b px-6 gap-2"
+          >
             <span className="text-xl font-semibold">Vizzano</span>
-          </div>
+            <MessageSquareMore size={20} />
+          </Link>
 
           {/* Navigation */}
           <div className="flex-1 overflow-y-auto">
@@ -127,7 +143,7 @@ export default function BaseLayout({ children, navigation }) {
             >
               <Link to="/issue">
                 <MessageCircleMore className="h-4 w-4" />
-                Muammo yozish
+                Muammo bildirish
               </Link>
             </Button>
             <hr className="my-2" />
@@ -144,14 +160,24 @@ export default function BaseLayout({ children, navigation }) {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64 pb-16 lg:pb-0">
-        <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+      <div className={cn("lg:pl-64 pb-16 lg:pb-0", isChatPage ? "pb-0" : "")}>
+        <main
+          className={cn(
+            "min-h-screen py-8 px-4 sm:px-6 lg:px-8",
+            isChatPage ? "p-0" : ""
+          )}
+        >
           {children}
         </main>
       </div>
 
       {/* Bottom navigation for mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden  z-20">
+      <nav
+        className={cn(
+          "fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden z-20",
+          isChatPage ? "hidden" : ""
+        )}
+      >
         <ul className="flex justify-around">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
