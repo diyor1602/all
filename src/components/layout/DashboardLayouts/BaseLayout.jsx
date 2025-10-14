@@ -73,6 +73,7 @@ export default function BaseLayout({ children, navigation }) {
           <Link
             to="/chat"
             className="flex h-16 shrink-0 items-center justify-center border-b px-6 gap-2"
+            onClick={() => setSidebarOpen(false)}
           >
             <span className="text-xl font-semibold">Vizzano</span>
             <MessageSquareMore size={20} />
