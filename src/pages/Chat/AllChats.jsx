@@ -6,6 +6,7 @@ import {
   Users2,
   MessagesSquare,
   Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +15,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { formatTime } from "./helpers";
+import { Button } from "@/components/ui/button";
 
 const chatVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -155,14 +157,19 @@ const AllChats = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="md:p-6 p-2">
       {/* Tabs */}
       <div className="flex items-center gap-2">
+        <Button asChild variant="ghost" size="icon">
+          <Link to="/home">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
         {tabs.map((tab) => (
           <button
             key={tab.key}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-xl",
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-xs",
               activeTab === tab.key
                 ? "bg-blue-500 text-white"
                 : "bg-white text-gray-500 hover:bg-gray-100"
