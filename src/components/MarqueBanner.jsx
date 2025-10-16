@@ -1,66 +1,48 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-const MarqueeBanner = ({ texts = [] }) => {
-  const containerRef = useRef(null);
-  const contentRef = useRef(null);
-  const [duration, setDuration] = useState(20);
+const MarqueeBanner = ({ texts = [], interval = 2000 }) => {
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (containerRef.current && contentRef.current) {
-      const containerWidth = containerRef.current.offsetWidth;
-      const contentWidth = contentRef.current.scrollWidth / 2; // only one set width
-
-      const distance = containerWidth + contentWidth;
-      const speed = 100; // px per second
-      setDuration(distance / speed);
-    }
-  }, [texts]);
-
-  const marqueeStyles = {
-    overflow: "hidden",
-    whiteSpace: "nowrap",
-  };
-
-  const marqueeContentStyles = {
-    display: "inline-block",
-    animation: `marquee ${duration}s linear infinite`,
-  };
-
-  const keyframesCSS = `
-    @keyframes marquee {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(-50%);
-      }
-    }
-  `;
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % texts.length);
+    }, interval); // change every 2s (like a clock)
+    return () => clearInterval(timer);
+  }, [texts, interval]);
 
   return (
-    <>
-      <style>{keyframesCSS}</style>
+    <div className="bg-red-500 fixed top-0 left-0 right-0 h-6 flex items-center justify-center overflow-hidden text-white uppercase font-medium z-10 text-xs">
       <div
-        ref={containerRef}
-        className="bg-red-500 fixed top-0 left-0 right-0 text-white text-center uppercase font-medium z-10"
-        style={marqueeStyles}
+        key={index} // re-trigger animation each time
+        className="animate-flip"
       >
-        <div ref={contentRef} style={marqueeContentStyles}>
-          {/* First set of texts */}
-          {texts.map((t, i) => (
-            <span key={`first-${i}`} style={{ marginRight: "3rem" }}>
-              {t}
-            </span>
-          ))}
-          {/* Duplicate set for seamless looping */}
-          {texts.map((t, i) => (
-            <span key={`second-${i}`} style={{ marginRight: "3rem" }}>
-              {t}
-            </span>
-          ))}
-        </div>
+        {texts[index]}
       </div>
-    </>
+
+      <style>
+        {`
+          @keyframes flip {
+            0% {
+              transform: rotateX(-90deg);
+              opacity: 0;
+            }
+            50% {
+              transform: rotateX(20deg);
+              opacity: 1;
+            }
+            100% {
+              transform: rotateX(0);
+              opacity: 1;
+            }
+          }
+          .animate-flip {
+            display: inline-block;
+            animation: flip 0.6s ease;
+            transform-origin: top center;
+          }
+        `}
+      </style>
+    </div>
   );
 };
 

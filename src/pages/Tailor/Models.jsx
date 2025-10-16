@@ -646,9 +646,11 @@ const Models = () => {
       </Dialog>
       <MarqueeBanner
         texts={[
-          "Diqqat! Ishga e'tiborli bo'ling va sifatli tiking!",
-          "Диққат! Ишга эътиборли бўлинг ва сифатли тикинг!",
+          "Siz tikkan mahsulotni kiyib, yuzi kulsin.",
+          "Qarg‘aydigan ish tikmang — baraka topmaysiz.",
+          "Mijozning mamnunligi — birinchi o‘rinda.",
         ]}
+        interval={5000}
       />
       <div className="flex flex-col items-center gap-1">
         <div>{localStorage.getItem("name")}</div>
