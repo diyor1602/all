@@ -19,6 +19,7 @@ import Salary from "./Salary";
 import Work from "./Work";
 import Kpi from "./Kpi";
 import Settings from "./Settings";
+import Duty from "./Duty";
 import Coefficient from "./Coefficient";
 
 // ---------- Helpers ----------
@@ -287,6 +288,16 @@ const Profile = () => {
         "https://images.unsplash.com/photo-1594616647927-2382fe456b07?q=80&w=1170&auto=format&fit=crop  ",
     },
     {
+      key: "duty",
+      title: "Sizning Vazifangiz!",
+      value: null, // no value
+      color: "bg-gray-900 text-gray-800", // neutral style
+      Icon: SettingsIcon,
+      ringColor: "ring-gray-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1531403009284-440f080d1e12?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop",
+    },
+    {
       key: "sozlamalar",
       title: "Sozlamalar",
       value: null, // no value
@@ -313,6 +324,7 @@ const Profile = () => {
     maosh: <Salary userData={userData} type="salary" />,
     kpi: <Kpi userData={userData} />,
     koefitsient: <Coefficient userData={userData} />,
+    duty: <Duty userData={userData} />,
     sozlamalar: <Settings userData={userData} />,
   };
 
