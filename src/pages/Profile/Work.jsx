@@ -86,8 +86,8 @@ const Work = ({ userData }) => {
                 const groupedByModel = {};
 
                 logs?.forEach((log) => {
-                  const modelId = log.model?.id || "unknown";
-                  const modelName = log.model?.name || "Noma'lum model";
+                  const modelId = log.order?.id || "unknown";
+                  const modelName = log.order?.name || "Noma'lum model";
                   if (!groupedByModel[modelId]) {
                     groupedByModel[modelId] = {
                       modelName,
@@ -344,7 +344,7 @@ const Work = ({ userData }) => {
                                                   "Noma'lum ish"}
                                               </div>
                                               <div className="text-xs text-gray-500 mt-1">
-                                                Model: {log.model?.name} |{" "}
+                                                Model: {log.order?.name} |{" "}
                                                 {log.submodel?.name}
                                               </div>
                                             </div>
