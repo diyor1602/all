@@ -784,7 +784,7 @@ const Monthly = () => {
                       </TableHead>
                       <TableHead className="border border-slate-200">
                         Narxi
-                      </TableHead>{" "}
+                      </TableHead>
                       <TableHead className="border border-slate-200">
                         Asl Narxi
                       </TableHead>
@@ -993,7 +993,7 @@ const Monthly = () => {
                           </TableCell>
                           <TableCell className="font-mono border border-slate-200">
                             {formatNumber(order?.profit_per_unit_uzs)} so'm
-                          </TableCell>{" "}
+                          </TableCell>
                           <TableCell className="font-mono border border-slate-200">
                             {formatNumber(order?.profitability_percent)} %
                           </TableCell>
