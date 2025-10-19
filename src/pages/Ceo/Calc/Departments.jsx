@@ -42,18 +42,6 @@ const formatNumber = (num) => {
   });
 };
 
-function getMonthBounds() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-
-  const first = `${y}-${pad2(m + 1)}-01`;
-  const lastDay = new Date(y, m + 1, 0).getDate();
-  const last = `${y}-${pad2(m + 1)}-${pad2(lastDay)}`;
-
-  return { first, last };
-}
-
 const Departments = () => {
   const { toast } = useToast();
 
@@ -69,19 +57,13 @@ const Departments = () => {
   const [dialogSubmodelData, setDialogSubmodelData] = useState([]);
   const [extraDaysDialogOpen, setExtraDaysDialogOpen] = useState(false);
 
-  const { first: defaultStart, last: defaultEnd } = getMonthBounds();
-
-  const [startDate, setStartDate] = useState(
-    localStorage.getItem("salaryStartDate") || defaultStart
-  );
-  const [endDate, setEndDate] = useState(
-    localStorage.getItem("salaryEndDate") || defaultEnd
+  const [selectedMonth, setSelectedMonth] = useState(
+    localStorage.getItem("salaryMonth") || new Date().toISOString().slice(0, 7)
   );
 
   useEffect(() => {
-    localStorage.setItem("salaryStartDate", startDate);
-    localStorage.setItem("salaryEndDate", endDate);
-  }, [startDate, endDate]);
+    localStorage.setItem("salaryMonth", selectedMonth);
+  }, [selectedMonth]);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -118,13 +100,20 @@ const Departments = () => {
 
   const fetchData = async () => {
     try {
+      const [year, month] = selectedMonth.split("-");
+      const yearNum = parseInt(year, 10);
+      const monthIndex = parseInt(month, 10) - 1;
+
+      const lastDay = new Date(yearNum, monthIndex + 1, 0).getDate();
+
       const response = await api.get("/ceo/groupsOrders", {
         params: {
           department_id: selectedDepartment,
-          start_date: startDate,
-          end_date: endDate,
+          start_date: `${selectedMonth}-01`,
+          end_date: `${selectedMonth}-${lastDay}`,
         },
       });
+
       setData(response.data);
     } catch (error) {
       toast({
@@ -179,7 +168,7 @@ const Departments = () => {
   useEffect(() => {
     if (!selectedDepartment) return;
     fetchData();
-  }, [selectedDepartment, startDate, endDate]);
+  }, [selectedDepartment, selectedMonth]);
 
   const calculateGroupTotals = (orders, orderDetails) => {
     let totalAllocated = 0;
@@ -264,17 +253,9 @@ const Departments = () => {
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-gray-500" />
                 <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-fit bg-white border-gray-200"
-                />
-                <span className="text-gray-400">—</span>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-fit bg-white border-gray-200"
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
                 />
               </div>
             </div>
