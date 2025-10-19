@@ -23,6 +23,8 @@ import {
   Loader2,
   X,
   Shirt,
+  Box,
+  MousePointerClick,
 } from "lucide-react";
 import {
   Dialog,
@@ -534,6 +536,33 @@ const Departments = () => {
                                         ?.join(".")}
                                     </span>
                                   </div>
+                                  <div className="flex items-center gap-2">
+                                    <Box className="h-3 w-3 text-orange-500" />
+                                    <span className="text-gray-600">
+                                      Jami miqdori:
+                                    </span>
+                                    <span className="font-medium">
+                                      {
+                                        data?.groups
+                                          ?.find(
+                                            (g) => g.group_id === item.group_id
+                                          )
+                                          ?.orders?.find(
+                                            (o) => o.order_id === order.order_id
+                                          )?.total_sewn
+                                      }{" "}
+                                      /{" "}
+                                      {
+                                        data?.groups
+                                          ?.find(
+                                            (g) => g.group_id === item.group_id
+                                          )
+                                          ?.orders?.find(
+                                            (o) => o.order_id === order.order_id
+                                          )?.order_quantity
+                                      }
+                                    </span>
+                                  </div>
                                 </div>
                                 <h4 className="font-semibold text-gray-700 flex items-center gap-2">
                                   <Shirt className="h-4 w-4" />
@@ -545,14 +574,14 @@ const Departments = () => {
                                       {order.submodels?.map((submodel, i) => (
                                         <div
                                           key={i}
-                                          className="bg-gray-100 px-3 py-1 rounded cursor-pointer hover:bg-gray-200 font-medium"
+                                          className="bg-gray-100 px-3 py-1 rounded cursor-pointer hover:bg-gray-200 font-medium flex items-center gap-2"
                                           onClick={() => {
                                             setDialogSubmodelData(submodel);
                                             setDialogSubmodel(true);
                                           }}
                                         >
-                                          {submodel.submodel_name} /{" "}
-                                          {submodel.total_sewn}
+                                          <MousePointerClick className="h-5 w-5" />
+                                          {submodel.submodel_name}
                                         </div>
                                       ))}
                                     </span>
@@ -895,21 +924,32 @@ const Departments = () => {
           <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
             <table className="w-full border-collapse border border-gray-300">
               <tbody>
-                {dialogSubmodelData?.outputs?.map((output, index) => (
-                  <tr key={index}>
-                    <td className="border border-gray-300 p-2">
-                      {output.created_at}
-                    </td>
-                    <td className="border border-gray-300 p-2 text-right">
-                      {Number.parseFloat(output.quantity)?.toLocaleString(
-                        "ru-RU",
-                        {
-                          maximumFractionDigits: 0,
-                        }
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {dialogSubmodelData?.outputs
+                  ?.sort((a, b) => {
+                    const dateA = new Date(a.created_at);
+                    const dateB = new Date(b.created_at);
+                    return dateA - dateB;
+                  })
+                  ?.map((output, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 p-2">
+                        {output.created_at
+                          ?.split("T")[0]
+                          ?.split("-")
+                          ?.reverse()
+                          ?.join(".")}{" "}
+                        {output.created_at?.split("T")[1]?.slice(0, 5)}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-right">
+                        {Number.parseFloat(output.quantity)?.toLocaleString(
+                          "ru-RU",
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
