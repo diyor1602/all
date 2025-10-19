@@ -877,7 +877,21 @@ const Monthly = () => {
                             </div>
                           </TableCell>
                           <TableCell className="border border-slate-200">
-                            -
+                            {formatNumber(
+                              (order?.rasxod_limit_uzs /
+                                order?.total_quantity /
+                                250) *
+                                0.07 *
+                                dollarRate
+                            )}{" "}
+                            so'm <br />
+                            {formatNumber(
+                              (order?.rasxod_limit_uzs /
+                                order?.total_quantity /
+                                250) *
+                                0.07
+                            )}{" "}
+                            $
                           </TableCell>
                           <TableCell className="font-mono border border-slate-200">
                             {formatNumber(order?.total_quantity)} ta
