@@ -837,8 +837,8 @@ const SalaryDetails = () => {
 
                         // Step 1: Group logs by model
                         employee.employee_tarification_logs?.forEach((log) => {
-                          const modelId = log.model?.id || "unknown";
-                          const modelName = log.model?.name || "Noma'lum model";
+                          const modelId = log.order?.id || "unknown";
+                          const modelName = log.order?.name || "Noma'lum model";
 
                           if (!groupedByModel[modelId]) {
                             groupedByModel[modelId] = {
