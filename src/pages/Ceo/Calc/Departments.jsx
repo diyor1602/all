@@ -938,7 +938,7 @@ const Departments = () => {
                           ?.split("-")
                           ?.reverse()
                           ?.join(".")}{" "}
-                        {output.created_at?.split("T")[1]?.slice(0, 5)}
+                        {output.time?.time?.slice(0, 5)}
                       </td>
                       <td className="border border-gray-300 p-2 text-right">
                         {Number.parseFloat(output.quantity)?.toLocaleString(
