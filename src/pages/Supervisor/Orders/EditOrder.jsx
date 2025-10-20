@@ -84,8 +84,9 @@ const EditOrder = () => {
     price: "",
     start_date: "",
     end_date: "",
-    rasxod: "",
     comment: "",
+    season_year: "",
+    season_type: "",
     model: {
       id: "",
       material_id: "",
@@ -123,8 +124,9 @@ const EditOrder = () => {
         price: orderData.price?.toString() || "",
         start_date: formatDate(orderData.start_date),
         end_date: formatDate(orderData.end_date),
-        rasxod: orderData.rasxod?.toString() || "",
         comment: orderData.comment || "",
+        season_year: orderData.season_year || "",
+        season_type: orderData.season_type || "",
         model: {
           id: orderData.order_model?.model?.id || "",
           name: orderData.order_model?.model?.name || "",
@@ -187,14 +189,24 @@ const EditOrder = () => {
     if (
       !payload.name ||
       !payload.model.id ||
-      !payload.price ||
       !payload.model.material_id ||
       !payload.model.submodels.length ||
-      !payload.model.sizes.length
+      !payload.model.sizes.length ||
+      !payload.season_year ||
+      !payload.season_type
     ) {
       toast({
         title: "Xatolik",
         description: "Barcha maydonlar to'ldirilishi shart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (payload.season_year < 2020) {
+      toast({
+        title: "Xatolik",
+        description: "Yil 2020 dan katta bo'lishi shart",
         variant: "destructive",
       });
       return;
@@ -240,7 +252,6 @@ const EditOrder = () => {
       price: payload.price,
       start_date: payload.start_date,
       end_date: payload.end_date,
-      rasxod: payload.rasxod,
       comment: payload.comment,
       model: {
         id: payload.model.id,
@@ -253,6 +264,8 @@ const EditOrder = () => {
             .filter(Boolean) || [],
         sizes: sizes,
       },
+      season_year: payload.season_year,
+      season_type: payload.season_type,
     };
 
     // Only include contragent_id OR contragent_name, not both
@@ -274,9 +287,9 @@ const EditOrder = () => {
         },
         duration: 1000,
       });
-      // setTimeout(() => {
-      //   window.location.reload();
-      // }, 1000);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -327,6 +340,47 @@ const EditOrder = () => {
       ) : (
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="season_year">Yil</Label>
+              <Select
+                value={String(payload.season_year)}
+                onValueChange={(value) =>
+                  setPayload({ ...payload, season_year: Number(value) })
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Yil tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 7 }, (_, i) => {
+                    const year = new Date().getFullYear() - 3 + i;
+                    return (
+                      <SelectItem key={year} value={String(year)}>
+                        {year}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="season_type">Mavsum</Label>
+              <Select
+                value={payload.season_type}
+                onValueChange={(value) =>
+                  setPayload({ ...payload, season_type: value })
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Mavsum tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="winter">Qish</SelectItem>
+                  <SelectItem value="summer">Bahor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Searchable Contragent Selection */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderContragent">Kontragent</Label>

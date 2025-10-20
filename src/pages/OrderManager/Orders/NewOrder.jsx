@@ -83,8 +83,9 @@ const NewOrder = () => {
     price: "",
     start_date: "",
     end_date: "",
-    rasxod: "",
     comment: "",
+    season_year: new Date().getFullYear(),
+    season_type: "",
     model: {
       id: "",
       material_id: "",
@@ -108,11 +109,22 @@ const NewOrder = () => {
       !payload.model.id ||
       !payload.price ||
       !payload.model.submodels.length ||
-      !payload.model.sizes.length
+      !payload.model.sizes.length ||
+      !payload.season_year ||
+      !payload.season_type
     ) {
       toast({
         title: "Xatolik",
         description: "Barcha maydonlar to'ldirilishi shart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (payload.season_year < 2020) {
+      toast({
+        title: "Xatolik",
+        description: "Yil 2020 dan katta bo'lishi shart",
         variant: "destructive",
       });
       return;
@@ -155,8 +167,9 @@ const NewOrder = () => {
       price: payload.price,
       start_date: payload.start_date,
       end_date: payload.end_date,
-      rasxod: payload.rasxod,
       comment: payload.comment,
+      season_year: payload.season_year,
+      season_type: payload.season_type,
       model: {
         id: payload.model.id,
         material_id: payload.model.material_id,
@@ -230,6 +243,46 @@ const NewOrder = () => {
       ) : (
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="season_year">Yil</Label>
+              <Select
+                value={String(payload.season_year)}
+                onValueChange={(value) =>
+                  setPayload({ ...payload, season_year: Number(value) })
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Yil tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 7 }, (_, i) => {
+                    const year = new Date().getFullYear() - 3 + i;
+                    return (
+                      <SelectItem key={year} value={String(year)}>
+                        {year}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="season_type">Mavsum</Label>
+              <Select
+                value={payload.season_type}
+                onValueChange={(value) =>
+                  setPayload({ ...payload, season_type: value })
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Mavsum tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="winter">Qish</SelectItem>
+                  <SelectItem value="summer">Bahor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {/* Searchable Contragent Selection */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="orderContragent">Kontragent</Label>
@@ -347,23 +400,6 @@ const NewOrder = () => {
                 required
                 onChange={(e) => {
                   setPayload({ ...payload, price: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderRasxod">Rasxod</Label>
-              <Input
-                type="number"
-                id="orderRasxod"
-                placeholder="Rasxod"
-                value={payload.rasxod}
-                min={0}
-                step={0.01}
-                className="bg-white"
-                required
-                onChange={(e) => {
-                  setPayload({ ...payload, rasxod: e.target.value });
                 }}
               />
             </div>

@@ -283,6 +283,19 @@ const OrderView = () => {
                     </span>
                   </div>
                 )}
+                {order?.season_year && (
+                  <div className="flex gap-2 items-center">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">
+                      Mavsum: {order?.season_year || "0"}{" "}
+                      {order?.season_type === "winter"
+                        ? "Qish"
+                        : order?.season_type === "summer"
+                        ? "Bahor"
+                        : "-"}
+                    </span>
+                  </div>
+                )}
                 {order?.quantity && (
                   <div className="flex gap-2 items-center">
                     <FileDigit className="h-4 w-4 text-gray-500" />

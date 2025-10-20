@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -60,14 +60,27 @@ const Orders = () => {
   const [statusFilter, setStatusFilter] = useState(
     localStorage.getItem("statusFilter") || "tailoring"
   );
-  const [sortBy, setSortBy] = useState(localStorage.getItem("sortBy") || "");
+  const [sortBy, setSortBy] = useState(
+    localStorage.getItem("sortBy") || "newest"
+  );
+  const [seasonYear, setSeasonYear] = useState(
+    localStorage.getItem("seasonYear") || String(new Date().getFullYear())
+  );
+  const [seasonType, setSeasonType] = useState(
+    localStorage.getItem("seasonType") || "all"
+  );
+
+  const [availableYears, setAvailableYears] = useState([]);
+
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const response = await api.get("/supervisor/orders");
+      const years = response.data.map((order) => order.season_year);
+      const uniqueYears = Array.from(new Set(years));
+      setAvailableYears(uniqueYears);
       setOrders(response.data);
     } catch (error) {
       toast({
@@ -87,7 +100,6 @@ const Orders = () => {
   // Filter and sort orders
   const filteredOrders = orders
     .filter((order) => {
-      // Search filter
       const matchesSearch =
         searchTerm === "" ||
         order?.id.toString().includes(searchTerm) ||
@@ -98,11 +110,18 @@ const Orders = () => {
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
 
-      // Status filter
       const matchesStatus =
         statusFilter === "all" || order.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
+      const matchesSeasonYear =
+        seasonYear === "all" || String(order.season_year) === seasonYear;
+
+      const matchesSeasonType =
+        seasonType === "all" || order.season_type === seasonType;
+
+      return (
+        matchesSearch && matchesStatus && matchesSeasonYear && matchesSeasonType
+      );
     })
     .sort((a, b) => {
       if (sortBy === "newest") return b.id - a.id;
@@ -111,58 +130,6 @@ const Orders = () => {
       if (sortBy === "quantity-low") return a.quantity - b.quantity;
       return 0;
     });
-
-  const handleStatusActive = async (id) => {
-    if (orders.find((order) => order.id === id).status === "inactive") {
-      if (!window.confirm("Buyurtmani aktiv qilishni tasdiqlaysizmi?")) {
-        return;
-      }
-      try {
-        await api.patch(`/supervisor/orders/change/${id}`, {
-          status: "active",
-        });
-        toast({
-          title: "Muvaffaqiyatli",
-          description: "Buyurtma aktiv qilindi!",
-          style: {
-            backgroundColor: "green",
-            color: "white",
-          },
-        });
-        fetchOrders();
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Holat o'zgartirishda xatolik",
-          variant: "destructive",
-        });
-      }
-    } else if (orders.find((order) => order.id === id).status === "active") {
-      if (!window.confirm("Buyurtmani aktiv emasga o'zgartirasizmi?")) {
-        return;
-      }
-      try {
-        await api.patch(`/supervisor/orders/change/${id}`, {
-          status: "inactive",
-        });
-        toast({
-          title: "Muvaffaqiyatli",
-          description: "Buyurtma statusi aktiv emasga o'zgartirildi!",
-          style: {
-            backgroundColor: "green",
-            color: "white",
-          },
-        });
-        fetchOrders();
-      } catch (error) {
-        toast({
-          title: "Xatolik",
-          description: "Holat o'zgartirishda xatolik",
-          variant: "destructive",
-        });
-      }
-    }
-  };
 
   if (loading) {
     return (
@@ -247,8 +214,45 @@ const Orders = () => {
                 <SelectItem value="quantity-low">Eng kam miqdorda</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={() => navigate("/supervisor/orders/new")}>
-              <CirclePlus /> Yangi buyurtma
+            <Select
+              value={seasonYear}
+              onValueChange={(value) => {
+                setSeasonYear(value);
+                localStorage.setItem("seasonYear", value);
+              }}
+            >
+              <SelectTrigger className="w-full md:w-40 bg-white">
+                <SelectValue placeholder="Yil" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barchasi</SelectItem>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={seasonType}
+              onValueChange={(value) => {
+                setSeasonType(value);
+                localStorage.setItem("seasonType", value);
+              }}
+            >
+              <SelectTrigger className="w-full md:w-40 bg-white">
+                <SelectValue placeholder="Mavsum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barchasi</SelectItem>
+                <SelectItem value="winter">Qish</SelectItem>
+                <SelectItem value="summer">Bahor</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button asChild>
+              <Link to="/supervisor/orders/new">
+                <CirclePlus /> Yangi buyurtma
+              </Link>
             </Button>
           </div>
         </div>
@@ -309,10 +313,6 @@ const Orders = () => {
                       className={`${getStatusColor(
                         order.status
                       )} px-3 py-1 font-medium rounded-full shadow-sm`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusActive(order.id);
-                      }}
                     >
                       {statuses[order.status]?.text || "Noma'lum"}
                     </Badge>
@@ -372,11 +372,15 @@ const Orders = () => {
                       <Calendar size={16} className="text-gray-500" />
                       <div className="flex justify-between w-full text-sm">
                         <span className="text-gray-700 font-medium">
-                          {formatDate(order.start_date)}
+                          {order.season_year}
                         </span>
                         <span className="text-gray-400">→</span>
                         <span className="text-gray-700 font-medium">
-                          {formatDate(order.end_date)}
+                          {order.season_type === "winter"
+                            ? "Qish"
+                            : order.season_type === "summer"
+                            ? "Bahor"
+                            : "-"}
                         </span>
                       </div>
                     </div>
@@ -399,10 +403,12 @@ const Orders = () => {
                     className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${getStatusColor(
                       order.status
                     )} hover:opacity-90 hover:${getStatusColor(order.status)}`}
-                    onClick={() => navigate(`/supervisor/orders/${order.id}`)}
+                    asChild
                   >
-                    Batafsil
-                    <ChevronRight size={18} />
+                    <Link to={`/supervisor/orders/${order.id}`}>
+                      Batafsil
+                      <ChevronRight size={18} />
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
