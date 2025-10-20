@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Download, Loader2, PlusCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -27,6 +27,7 @@ const Outcome = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const [filters, setFilters] = useState({
     start_date: formatDateToYYYYMMDD(
@@ -121,6 +122,36 @@ const Outcome = () => {
     fetchCurrencies();
   }, []);
 
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      const response = await api.get(`/casher/exportTransactions/excel`, {
+        params: {
+          type: "expense",
+          ...debouncedFilters,
+        },
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `Chiqimlar_${debouncedFilters.start_date}_${debouncedFilters.end_date}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Chiqimlarni yuklab olishda xatolik yuz berdi!",
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 bg-white rounded-xl shadow-md">
       <div className="flex justify-between items-center mb-6">
@@ -178,6 +209,18 @@ const Outcome = () => {
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           />
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDownload}
+          disabled={downloading}
+        >
+          {downloading ? (
+            <Loader2 className="animate-spin text-primary" />
+          ) : (
+            <Download className="text-primary" />
+          )}
+        </Button>
       </div>
 
       <div className="overflow-x-auto max-h-[calc(100vh-350px)]">
