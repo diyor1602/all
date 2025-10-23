@@ -159,7 +159,7 @@ const AllChats = () => {
   return (
     <div className="md:p-6 p-2">
       {/* Tabs */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full overflow-auto">
         <Button asChild variant="ghost" size="icon">
           <Link to="/home">
             <ArrowLeft className="h-4 w-4" />
