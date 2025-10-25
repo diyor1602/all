@@ -1,11 +1,17 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { HeartCrack, BadgePercent, BadgeDollarSign } from "lucide-react";
+import {
+  HeartCrack,
+  BadgePercent,
+  BadgeDollarSign,
+  CalendarClock,
+} from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
 import Coefficient from "./Coefficient/Coefficient";
 import SalaryHistory from "./History/SalaryHistory";
+import GroupHistory from "./History/GroupHistory";
 
 const Settings = () => {
   return (
@@ -14,6 +20,7 @@ const Settings = () => {
       <Route path="salary/orders" element={<SalaryOrders />} />
       <Route path="coefficient" element={<Coefficient />} />
       <Route path="salaryhistory" element={<SalaryHistory />} />
+      <Route path="grouphistory" element={<GroupHistory />} />
     </Routes>
   );
 };
@@ -40,7 +47,7 @@ const SettingsPage = () => {
     },
     {
       name: "Guruhlar tarixi",
-      icon: BadgeDollarSign,
+      icon: CalendarClock,
       link: "/ceo/settings/grouphistory",
       color: "bg-purple-500",
     },

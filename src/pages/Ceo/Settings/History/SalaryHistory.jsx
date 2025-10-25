@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import payment_types from "@/lib/paymentTypes";
 
 const formatNumber = (num) => {
