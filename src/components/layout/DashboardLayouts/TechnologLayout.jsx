@@ -9,6 +9,7 @@ import {
   Truck,
   Radical,
   Users,
+  CirclePlay,
 } from "lucide-react";
 
 const navigation = [
@@ -30,6 +31,12 @@ const navigation = [
     name: "Buyurtmalar",
     href: "/technologist/orders",
     icon: Box,
+    onMobile: true,
+  },
+  {
+    name: "Videolar",
+    href: "/technologist/videos",
+    icon: CirclePlay,
     onMobile: true,
   },
   {

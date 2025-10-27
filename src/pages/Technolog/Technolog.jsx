@@ -9,6 +9,7 @@ import Machines from "./Machines/Machines";
 import Nakladnoy from "./Nakladnoy";
 import Employees from "./Employees/Employees";
 import ViewEmployee from "./Employees/ViewEmployee";
+import Videos from "./Videos/Videos";
 
 const Technolog = () => {
   return (
@@ -24,6 +25,7 @@ const Technolog = () => {
       <Route path="nakladnoy" element={<Nakladnoy />} />
       <Route path="employees" element={<Employees />} />
       <Route path="employees/:id" element={<ViewEmployee />} />
+      <Route path="videos/*" element={<Videos />} />
     </Routes>
   );
 };
