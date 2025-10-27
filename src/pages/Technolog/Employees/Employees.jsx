@@ -28,14 +28,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Eye,
-  Pencil,
-  RotateCcw,
-  Search,
-  UserLock,
-  UserRoundCheck,
-} from "lucide-react";
+import { Eye, Pencil, RotateCcw, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -347,6 +340,7 @@ const Employees = () => {
   };
 
   const handleEditClick = (employee) => {
+    if (employee.type === "aup") return;
     setSelectedEmployee({
       ...employee,
       salary: employee.salary || 0,
@@ -422,21 +416,6 @@ const Employees = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Xodim turi</label>
-              <Select
-                value={selectedEmployee?.type}
-                onValueChange={handleEditTypeChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Xodim turi" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="simple">Oddiy</SelectItem>
-                  <SelectItem value="aup">AUP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">To'lov turi</label>
               <Select
@@ -689,14 +668,16 @@ const Employees = () => {
                   {payment_types[employee.payment_type]}
                 </TableCell>
                 <TableCell className="border">
-                  {Number.parseFloat(employee?.salary || 0)?.toLocaleString(
-                    "ru-RU"
-                  )}
+                  {employee?.type !== "aup" &&
+                    Number.parseFloat(employee?.salary || 0)?.toLocaleString(
+                      "ru-RU"
+                    )}
                 </TableCell>
                 <TableCell className="border">
-                  {Number.parseFloat(employee?.bonus || 0)?.toLocaleString(
-                    "ru-RU"
-                  )}
+                  {employee?.type !== "aup" &&
+                    Number.parseFloat(employee?.bonus || 0)?.toLocaleString(
+                      "ru-RU"
+                    )}
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}
@@ -713,27 +694,11 @@ const Employees = () => {
                   <Button
                     variant="ghost"
                     size="icon"
+                    disabled={employee?.type === "aup"}
                     onClick={() => handleEditClick(employee)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  {employee?.type === "aup" ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditType(employee)}
-                    >
-                      <UserRoundCheck className="h-4 w-4 text-orange-500" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditType(employee)}
-                    >
-                      <UserLock className="h-4 w-4 text-green-500" />
-                    </Button>
-                  )}
                 </TableCell>
               </TableRow>
             ))

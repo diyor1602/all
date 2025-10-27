@@ -344,40 +344,46 @@ const ViewEmployee = () => {
 
             <Separator />
 
-            <div className="space-y-3">
-              {employee.balance && (
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">
-                    Hisobdagi mablag'lar:
-                  </span>
-                  <span className="font-medium text-green-600">
-                    {Number.parseFloat(employee.balance).toLocaleString(
-                      "ru-RU"
-                    )}{" "}
-                    so'm
-                  </span>
-                </div>
-              )}
-              {employee.bonus && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Bonus:</span>
-                  <span className="font-medium">
-                    {Number.parseFloat(employee.bonus).toLocaleString("ru-RU")}{" "}
-                    so'm
-                  </span>
-                </div>
-              )}
-              {totalTarificationAmount > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">
-                    Jami ishlangan mablag'lar:
-                  </span>
-                  <span className="font-medium text-blue-600">
-                    {totalTarificationAmount.toLocaleString("ru-RU")} so'm
-                  </span>
-                </div>
-              )}
-            </div>
+            {employee?.type !== "aup" && (
+              <div className="space-y-3">
+                {employee.balance && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">
+                      Hisobdagi mablag'lar:
+                    </span>
+                    <span className="font-medium text-green-600">
+                      {Number.parseFloat(employee.balance).toLocaleString(
+                        "ru-RU"
+                      )}{" "}
+                      so'm
+                    </span>
+                  </div>
+                )}
+                {employee.bonus && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Bonus:
+                    </span>
+                    <span className="font-medium">
+                      {Number.parseFloat(employee.bonus).toLocaleString(
+                        "ru-RU"
+                      )}{" "}
+                      so'm
+                    </span>
+                  </div>
+                )}
+                {totalTarificationAmount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Jami ishlangan mablag'lar:
+                    </span>
+                    <span className="font-medium text-blue-600">
+                      {totalTarificationAmount.toLocaleString("ru-RU")} so'm
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col items-start pt-0">
             <div className="text-xs text-muted-foreground w-full space-y-1">
@@ -423,25 +429,30 @@ const ViewEmployee = () => {
                   <span>{formatDate(employee.hiring_date)}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>To'lov turi:</span>
-                <span className="capitalize">
-                  {payment_types[employee.payment_type]}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Maosh:</span>
-                <span className="capitalize">
-                  {parseFloat(employee.salary || 0).toLocaleString("ru-RU")}{" "}
-                  so'm
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>KPI:</span>
-                <span className="capitalize">
-                  {parseFloat(employee.kpi || 0).toLocaleString("ru-RU")} so'm
-                </span>
-              </div>
+              {employee?.type !== "aup" && (
+                <>
+                  <div className="flex justify-between">
+                    <span>To'lov turi:</span>
+                    <span className="capitalize">
+                      {payment_types[employee.payment_type]}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Maosh:</span>
+                    <span className="capitalize">
+                      {parseFloat(employee.salary || 0).toLocaleString("ru-RU")}{" "}
+                      so'm
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>KPI:</span>
+                    <span className="capitalize">
+                      {parseFloat(employee.kpi || 0).toLocaleString("ru-RU")}{" "}
+                      so'm
+                    </span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between">
                 <span>Xodim turi:</span>
                 <span>
@@ -492,16 +503,20 @@ const ViewEmployee = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    Davomat qaydnomasi (
-                    {employee.attendance_salaries
-                      ?.reduce(
-                        (sum, salary) =>
-                          sum + Number.parseFloat(salary.amount || 0),
-                        0
-                      )
-                      ?.toLocaleString("ru-RU")}{" "}
-                    so'm )
+                    {employee?.type !== "aup" && (
+                      <>
+                        <Calendar className="h-5 w-5 text-primary" />
+                        Davomat qaydnomasi (
+                        {employee.attendance_salaries
+                          ?.reduce(
+                            (sum, salary) =>
+                              sum + Number.parseFloat(salary.amount || 0),
+                            0
+                          )
+                          ?.toLocaleString("ru-RU")}{" "}
+                        so'm )
+                      </>
+                    )}
                   </CardTitle>
                   <CardDescription className="grid grid-cols-3 gap-4 pt-2">
                     {employee.attendances?.length > 0
@@ -566,17 +581,19 @@ const ViewEmployee = () => {
                                 </p>
                                 {employee?.attendance_salaries?.find(
                                   (a) => a.attendance_id === attendance.id
-                                ) && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Topgan puli:{" "}
-                                    {parseFloat(
-                                      employee.attendance_salaries.find(
-                                        (a) => a.attendance_id === attendance.id
-                                      )?.amount || 0
-                                    )?.toLocaleString("ru-RU")}{" "}
-                                    so'm
-                                  </p>
-                                )}
+                                ) &&
+                                  employee?.type !== "aup" && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Topgan puli:{" "}
+                                      {parseFloat(
+                                        employee.attendance_salaries.find(
+                                          (a) =>
+                                            a.attendance_id === attendance.id
+                                        )?.amount || 0
+                                      )?.toLocaleString("ru-RU")}{" "}
+                                      so'm
+                                    </p>
+                                  )}
                               </div>
                             </div>
                             <div className="text-sm space-y-1">
