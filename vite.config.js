@@ -49,10 +49,17 @@ export default defineConfig({
           charts: ["recharts"],
 
           // Animations
-          animation: ["framer-motion", "swiper"],
+          animation: ["framer-motion", "swiper", "js-confetti"],
 
           // File / PDF / Excel tools
-          docs: ["jspdf", "jspdf-autotable", "pdf-lib", "exceljs", "qrcode"],
+          docs: [
+            "jspdf",
+            "jspdf-autotable",
+            "pdf-lib",
+            "exceljs",
+            "qrcode",
+            "@yudiel/react-qr-scanner",
+          ],
 
           // Other utils
           utils: [
