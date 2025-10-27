@@ -34,6 +34,8 @@ const Settings = ({ userData }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
 
+  const [activeTab, setActiveTab] = useState("salary"); // salary, group
+
   // === IMAGE HANDLING ===
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -372,6 +374,163 @@ const Settings = ({ userData }) => {
         <div>Bo'lim: {userData.department || ""}</div>
         {userData.group && <div>Guruh: {userData.group}</div>}
       </div>
+
+      {/* Salary and Group history tab */}
+      <div className="flex space-x-2 bg-white rounded-2xl p-4 shadow justify-between items-center">
+        <div
+          className={
+            activeTab === "salary"
+              ? "text-green-500 font-semibold text-center w-full cursor-pointer"
+              : "w-full text-center cursor-pointer"
+          }
+          onClick={() => setActiveTab("salary")}
+        >
+          Oyliklar tarixi
+        </div>
+        <div
+          className={
+            activeTab === "group"
+              ? "text-green-500 font-semibold text-center w-full cursor-pointer"
+              : "w-full text-center cursor-pointer"
+          }
+          onClick={() => setActiveTab("group")}
+        >
+          Guruhlar tarixi
+        </div>
+      </div>
+
+      {activeTab === "salary" && (
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+          {userData?.salaryChanges?.length > 0 ? (
+            <div className="space-y-4">
+              {userData.salaryChanges
+                ?.sort(
+                  (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                )
+                ?.map((salary, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col sm:items-center gap-3 bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition"
+                  >
+                    <div className="flex items-center gap-3 text-gray-800">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">
+                          Eski miqdor
+                        </span>
+                        <span className="text-base font-semibold text-gray-800">
+                          {parseFloat(salary.old_salary)?.toLocaleString(
+                            "ru-RU"
+                          )}{" "}
+                          so’m{" "}
+                          <span className="text-xs text-gray-500">
+                            {payment_types[salary.old_type] || ""}
+                          </span>
+                        </span>
+                      </div>
+                      <span className="text-blue-500 font-bold text-lg">→</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">
+                          Yangi miqdor
+                        </span>
+                        <span className="text-base font-semibold text-green-600">
+                          {parseFloat(salary.new_salary)?.toLocaleString(
+                            "ru-RU"
+                          )}{" "}
+                          so’m{" "}
+                          <span className="text-xs text-gray-500">
+                            {payment_types[salary.new_type] || ""}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-500 sm:text-right">
+                      {salary.created_at
+                        ?.split("T")[0]
+                        ?.split("-")
+                        .reverse()
+                        .join(".")}{" "}
+                      {salary.created_at?.split("T")[1]?.slice(0, 5)}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="text-center text-gray-600 py-6">
+              <span className="text-sm">
+                💸 Bu oy davomida oyliklar o‘zgarmagan
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "group" && (
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+          {userData?.groupChanges?.length > 0 ? (
+            <div className="space-y-4">
+              {userData.groupChanges
+                ?.sort(
+                  (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                )
+                ?.map((change, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col gap-3 bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition"
+                  >
+                    {/* OLD DATA */}
+                    <div className="flex gap-3">
+                      <div className="flex items-center gap-3 text-gray-800">
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500">
+                            Eski bo'lim
+                          </span>
+                          <span className="text-base font-semibold text-gray-700">
+                            {change.old_department?.name || "—"}{" "}
+                            {change.old_group?.name || ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* NEW DATA */}
+                    <div className="flex  gap-3">
+                      <div className="flex items-center gap-3 text-gray-800">
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500">
+                            Yangi bo'lim
+                          </span>
+                          <span className="text-base font-semibold text-gray-700">
+                            {change.new_department?.name || "—"}{" "}
+                            {change.new_group?.name || ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* META INFO */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500">
+                      <div>
+                        {change.created_at
+                          ?.split("T")[0]
+                          ?.split("-")
+                          .reverse()
+                          .join(".")}{" "}
+                        {change.created_at?.split("T")[1]?.slice(0, 5)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="text-center text-gray-600 py-6">
+              <span className="text-sm">
+                👥 Bu oy davomida guruh o'zgartirilmagan
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

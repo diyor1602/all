@@ -9,7 +9,6 @@ import {
   CalendarDays,
   Briefcase,
   Wallet,
-  Banknote,
   Loader2,
   Settings as SettingsIcon,
   DraftingCompass,
@@ -254,18 +253,6 @@ const Profile = () => {
       bgImage:
         "https://images.unsplash.com/photo-1523199455310-87b16c0eed11?q=80&w=1170&auto=format&fit=crop",
     },
-    {
-      key: "maosh",
-      title: "Olingan Maosh",
-      value: formatNumber(
-        userData.salaryPayments?.find((p) => p.type === "salary")?.amount || 0
-      ),
-      color: "bg-gradient-to-r from-purple-500 to-pink-600",
-      Icon: Banknote,
-      ringColor: "ring-blue-400",
-      bgImage:
-        "https://images.unsplash.com/photo-1618108345761-031721b1ca3c?q=80&w=1170&auto=format&fit=crop",
-    },
     // {
     //   key: "kpi",
     //   title: "KPI",
@@ -295,7 +282,7 @@ const Profile = () => {
       Icon: SettingsIcon,
       ringColor: "ring-gray-400",
       bgImage:
-        "https://images.unsplash.com/photo-1531403009284-440f080d1e12?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=1170&auto=format&fit=crop",
     },
     {
       key: "sozlamalar",
@@ -320,8 +307,7 @@ const Profile = () => {
   const cardComponents = {
     davomat: <Attendance userData={userData} />,
     ish: <Work userData={userData} />,
-    avans: <Salary userData={userData} type="advance" />,
-    maosh: <Salary userData={userData} type="salary" />,
+    avans: <Salary userData={userData} />,
     kpi: <Kpi userData={userData} />,
     koefitsient: <Coefficient userData={userData} />,
     duty: <Duty userData={userData} />,
