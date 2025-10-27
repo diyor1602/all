@@ -7,6 +7,8 @@ import NewSpec from "./Orders/NewSpec";
 import NewTarif from "./Orders/NewTarif";
 import Machines from "./Machines/Machines";
 import Nakladnoy from "./Nakladnoy";
+import Employees from "./Employees/Employees";
+import ViewEmployee from "./Employees/ViewEmployee";
 
 const Technolog = () => {
   return (
@@ -20,6 +22,8 @@ const Technolog = () => {
       <Route path="new-tarif/:id" element={<NewTarif />} />
       <Route path="machines" element={<Machines />} />
       <Route path="nakladnoy" element={<Nakladnoy />} />
+      <Route path="employees" element={<Employees />} />
+      <Route path="employees/:id" element={<ViewEmployee />} />
     </Routes>
   );
 };

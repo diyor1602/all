@@ -8,6 +8,7 @@ import {
   Sprout,
   Truck,
   Radical,
+  Users,
 } from "lucide-react";
 
 const navigation = [
@@ -17,6 +18,13 @@ const navigation = [
     href: "/kpi",
     icon: BadgePercent,
     onMobile: false,
+  },
+  {
+    name: "Xodimlar",
+    href: "/technologist/employees",
+    icon: Users,
+    onMobile: false,
+    showUsers: [621],
   },
   {
     name: "Buyurtmalar",
