@@ -11,7 +11,14 @@ import {
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
-} from "@/components/ui/pagination"; // adjust path if needed
+} from "@/components/ui/pagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const All = () => {
   const { toast } = useToast();
@@ -20,6 +27,8 @@ const All = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
 
   const getVideos = async (page = 1) => {
     setLoading(true);
@@ -117,7 +126,7 @@ const All = () => {
               <div className="font-medium text-gray-800 text-sm">
                 {video.title}
               </div>
-              <div className="flex items-center gap-2 justify-between">
+              <div className="flex items-center gap-2 justify-between border-t pt-2 mt-2">
                 <div className="text-xs">ID: {video.id}</div>
                 <div className="text-xs text-gray-500 mt-1">
                   {new Date(video.created_at).toLocaleDateString("ru-RU", {
@@ -129,6 +138,19 @@ const All = () => {
                   })}
                 </div>
               </div>
+              {video.tarifications?.length > 0 && (
+                <Button
+                  onClick={() => {
+                    setSelectedVideo(video);
+                    setOpenDialog(true);
+                  }}
+                  className="w-full mt-2"
+                  variant="outline"
+                  size="sm"
+                >
+                  Tarifikatsiyalar
+                </Button>
+              )}
             </div>
           ))}
         </div>
@@ -137,6 +159,73 @@ const All = () => {
           Hozircha video mavjud emas.
         </div>
       )}
+
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>ID: {selectedVideo?.id}</DialogTitle>
+            <DialogDescription>{selectedVideo?.title}</DialogDescription>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[70vh]">
+            <table className="w-full border border-collapse whitespace-nowrap">
+              <thead>
+                <tr className="text-center">
+                  <th className="border border-gray-300 p-1">#</th>
+                  <th className="border border-gray-300 p-1">Kod</th>
+                  <th className="border border-gray-300 p-1">Nomi</th>
+                  <th className="border border-gray-300 p-1">Xodim</th>
+                  <th className="border border-gray-300 p-1">Video ID</th>
+                  <th className="border border-gray-300 p-1">Razryad</th>
+                  <th className="border border-gray-300 p-1">Sekund</th>
+                  <th className="border border-gray-300 p-1">Summa (so'm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedVideo?.tarifications
+                  ?.sort((a, b) =>
+                    a.code.localeCompare(b.code, undefined, {
+                      numeric: true,
+                      sensitivity: "base",
+                    })
+                  )
+                  ?.map((tarif, index) => (
+                    <tr key={tarif.id} className="text-center">
+                      <td className="border border-gray-300 p-1">
+                        {index + 1}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.code}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.name}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.employee?.name || "-"}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <Link
+                          to={`/technologist/videos/show/${tarif?.video_id}`}
+                          target="_blank"
+                        >
+                          {tarif?.video_id}
+                        </Link>
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {tarif?.razryad?.name}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {parseFloat(tarif?.second)?.toLocaleString()}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        {parseFloat(tarif?.summa)?.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Pagination */}
       {lastPage > 1 && (

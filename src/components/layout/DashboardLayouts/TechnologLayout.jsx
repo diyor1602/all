@@ -43,13 +43,13 @@ const navigation = [
     name: "Mashinalar",
     href: "/technologist/machines",
     icon: Bot,
-    onMobile: true,
+    onMobile: false,
   },
   {
     name: "Nakladnoy",
     href: "/technologist/nakladnoy",
     icon: Plane,
-    onMobile: true,
+    onMobile: false,
   },
   { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
   {
