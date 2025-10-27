@@ -76,6 +76,7 @@ const NewTarif = () => {
           typewriter: { id: null },
           second: 0,
           summa: 0,
+          video_id: "",
         },
       ],
     };
@@ -111,15 +112,13 @@ const NewTarif = () => {
     };
   }, [tarif]);
 
-  // Fetch ranks and machines on mount
+  // Fetch ranks on mount
   useEffect(() => {
     fetchRanks();
-    fetchMachines();
   }, [id]);
   const [saving, setSaving] = useState(false);
   const [workers, setWorkers] = useState([]);
   const [ranks, setRanks] = useState([]);
-  const [machines, setMachines] = useState([]);
   const [selectedTarifLang, setSelectedTarifLang] = useState(
     localStorage.getItem("tarifLang") || "uz"
   );
@@ -174,19 +173,6 @@ const NewTarif = () => {
       toast({
         title: "Xatolik",
         description: "Razryadlar olishda xatolik",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchMachines = async () => {
-    try {
-      const response = await api.get("/technologist/typewriter");
-      setMachines(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Mashinalar olishda xatolik",
         variant: "destructive",
       });
     }
@@ -276,19 +262,6 @@ const NewTarif = () => {
         tarification.summa = calculatedSumma;
       }
     }
-
-    setTarif({
-      ...tarif,
-      tarifications: updateTarifications,
-    });
-  };
-
-  const handleMachineSelect = (index, machineId) => {
-    const updateTarifications = [...tarif.tarifications];
-    updateTarifications[index] = {
-      ...updateTarifications[index],
-      typewriter: { id: machineId },
-    };
 
     setTarif({
       ...tarif,
@@ -457,6 +430,7 @@ const NewTarif = () => {
           // Use typewriter_id if available, otherwise use typewriter.id if available
           typewriter_id: item?.typewriter?.id,
           second: item.second || 0,
+          video_id: item.video_id || null,
         };
 
         // Include ID if it exists (for existing records)
@@ -544,8 +518,8 @@ const NewTarif = () => {
               <th className="px-4 py-2 border">#</th>
               <th className="px-4 py-2 border">Nomi</th>
               <th className="px-4 py-2 border">Xodim</th>
+              <th className="px-4 py-2 border">Video ID</th>
               <th className="px-4 py-2 border">Razryad</th>
-              <th className="px-4 py-2 border">Mashina</th>
               <th className="px-4 py-2 border">Sekund</th>
               <th className="px-4 py-2 border">Summa (so'm)</th>
               <th className="px-4 py-2 border">O'chirish</th>
@@ -567,18 +541,20 @@ const NewTarif = () => {
                         // Get the selected option from the datalist
                         const input = e.target;
                         const value = input.value;
-                        const options = document.getElementById('nomi-options').options;
+                        const options =
+                          document.getElementById("nomi-options").options;
                         let selectedName = value;
-                        
+
                         // Check if the selected value matches any option with seconds
                         for (let i = 0; i < options.length; i++) {
                           if (options[i].value === value) {
                             // Use the data-value attribute if it exists (contains just the name)
-                            selectedName = options[i].dataset.value || value.split(' (')[0];
+                            selectedName =
+                              options[i].dataset.value || value.split(" (")[0];
                             break;
                           }
                         }
-                        
+
                         handleInputChange(index, "name", selectedName);
                       }}
                       ref={
@@ -674,6 +650,16 @@ const NewTarif = () => {
                   </Popover>
                 </td>
                 <td className="px-4 py-2 border">
+                  <Input
+                    type="text"
+                    className="w-24"
+                    value={item?.video_id}
+                    onChange={(e) =>
+                      handleInputChange(index, "video_id", e.target.value)
+                    }
+                  />
+                </td>
+                <td className="px-4 py-2 border">
                   <Select
                     value={item?.razryad?.id?.toString()}
                     onValueChange={(value) =>
@@ -693,32 +679,6 @@ const NewTarif = () => {
                               value={rank.id.toString()}
                             >
                               {rank.name}
-                            </SelectItem>
-                          ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </td>
-                <td className="px-4 py-2 border">
-                  <Select
-                    value={item?.typewriter?.id?.toString()}
-                    onValueChange={(value) =>
-                      handleMachineSelect(index, parseInt(value))
-                    }
-                  >
-                    <SelectTrigger className="w-fit">
-                      <SelectValue placeholder="Mashinani tanlang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {machines
-                          .sort((a, b) => a.name.localeCompare(b.name))
-                          .map((machine) => (
-                            <SelectItem
-                              key={machine.id}
-                              value={machine.id.toString()}
-                            >
-                              {machine.name}
                             </SelectItem>
                           ))}
                       </SelectGroup>

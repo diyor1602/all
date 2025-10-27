@@ -47,7 +47,6 @@ const EditTarif = () => {
   const [saving, setSaving] = useState(false);
   const [workers, setWorkers] = useState([]);
   const [ranks, setRanks] = useState([]);
-  const [machines, setMachines] = useState([]);
   const [activePopoverIndex, setActivePopoverIndex] = useState(null);
   const newRowRef = useRef(null);
 
@@ -125,23 +124,9 @@ const EditTarif = () => {
     }
   };
 
-  const fetchMachines = async () => {
-    try {
-      const response = await api.get("/technologist/typewriter");
-      setMachines(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Mashinalar olishda xatolik",
-        variant: "destructive",
-      });
-    }
-  };
-
   useEffect(() => {
     fetchTarif();
     fetchRanks();
-    fetchMachines();
   }, [id]);
 
   useEffect(() => {
@@ -232,21 +217,6 @@ const EditTarif = () => {
         tarification.summa = calculatedSumma;
       }
     }
-
-    setTarif({
-      ...tarif,
-      tarifications: updateTarifications,
-    });
-  };
-
-  const handleMachineSelect = (index, machineId) => {
-    const updateTarifications = [...tarif.tarifications];
-    updateTarifications[index] = {
-      ...updateTarifications[index],
-      typewriter_id: machineId,
-      // Remove the typewriter object reference when directly setting typewriter_id
-      typewriter: null,
-    };
 
     setTarif({
       ...tarif,
@@ -419,6 +389,7 @@ const EditTarif = () => {
           typewriter_id:
             item.typewriter_id || (item.typewriter ? item.typewriter.id : null),
           second: item.second || 0,
+          video_id: item.video_id || null,
         };
 
         // Only include code if it exists
@@ -513,8 +484,8 @@ const EditTarif = () => {
               <th className="px-4 py-2 border">Kodi</th>
               <th className="px-4 py-2 border">Nomi</th>
               <th className="px-4 py-2 border">Xodim</th>
+              <th className="px-4 py-2 border">Video ID</th>
               <th className="px-4 py-2 border">Razryad</th>
-              <th className="px-4 py-2 border">Mashina</th>
               <th className="px-4 py-2 border">Sekund</th>
               <th className="px-4 py-2 border">Summa (so'm)</th>
             </tr>
@@ -652,6 +623,15 @@ const EditTarif = () => {
                     </Popover>
                   </td>
                   <td className="px-4 py-2 border">
+                    <Input
+                      type="text"
+                      value={item?.video_id}
+                      onChange={(e) =>
+                        handleInputChange(index, "video_id", e.target.value)
+                      }
+                    />
+                  </td>
+                  <td className="px-4 py-2 border">
                     <Select
                       value={(
                         item?.razryad_id || item?.razryad?.id
@@ -673,34 +653,6 @@ const EditTarif = () => {
                                 value={rank.id.toString()}
                               >
                                 {rank.name}
-                              </SelectItem>
-                            ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="px-4 py-2 border">
-                    <Select
-                      value={(
-                        item?.typewriter_id || item?.typewriter?.id
-                      )?.toString()}
-                      onValueChange={(value) =>
-                        handleMachineSelect(index, parseInt(value))
-                      }
-                    >
-                      <SelectTrigger className="w-fit">
-                        <SelectValue placeholder="Mashinani tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {machines
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((machine) => (
-                              <SelectItem
-                                key={machine.id}
-                                value={machine.id.toString()}
-                              >
-                                {machine.name}
                               </SelectItem>
                             ))}
                         </SelectGroup>
