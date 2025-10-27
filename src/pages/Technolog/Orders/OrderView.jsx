@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -1343,7 +1343,12 @@ const OrderView = () => {
                         {tarif?.employee?.name || "-"}
                       </td>
                       <td className="border border-gray-300 p-1">
-                        {tarif?.video_id}
+                        <Link
+                          to={`/technologist/videos/show/${tarif?.video_id}`}
+                          target="_blank"
+                        >
+                          {tarif?.video_id}
+                        </Link>
                       </td>
                       <td className="border border-gray-300 p-1">
                         {tarif?.razryad?.name}
