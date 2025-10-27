@@ -1314,8 +1314,8 @@ const OrderView = () => {
                   <th className="border border-gray-300 p-1">Kod</th>
                   <th className="border border-gray-300 p-1">Nomi</th>
                   <th className="border border-gray-300 p-1">Xodim</th>
+                  <th className="border border-gray-300 p-1">Video ID</th>
                   <th className="border border-gray-300 p-1">Razryad</th>
-                  <th className="border border-gray-300 p-1">Mashina</th>
                   <th className="border border-gray-300 p-1">Sekund</th>
                   <th className="border border-gray-300 p-1">Summa (so'm)</th>
                 </tr>
@@ -1343,10 +1343,10 @@ const OrderView = () => {
                         {tarif?.employee?.name || "-"}
                       </td>
                       <td className="border border-gray-300 p-1">
-                        {tarif?.razryad?.name}
+                        {tarif?.video_id}
                       </td>
                       <td className="border border-gray-300 p-1">
-                        {tarif?.typewriter?.name}
+                        {tarif?.razryad?.name}
                       </td>
                       <td className="border border-gray-300 p-1">
                         {parseFloat(tarif?.second)?.toLocaleString()}

@@ -149,6 +149,7 @@ const EditTarif = () => {
           razryad_id: matchingTarif.razryad?.id || null,
           razryad: matchingTarif.razryad,
           second: matchingTarif.second,
+          video_id: matchingTarif.video_id || null,
         };
 
         // Calculate summa if razryad has a salary
@@ -328,6 +329,7 @@ const EditTarif = () => {
       // Preserve these fields as read-only
       code: "",
       summa: 0,
+      video_id: "",
     };
 
     setTarif({

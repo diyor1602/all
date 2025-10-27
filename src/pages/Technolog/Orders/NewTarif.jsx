@@ -197,6 +197,7 @@ const NewTarif = () => {
           [field]: value,
           razryad: matchingTarif.razryad,
           second: matchingTarif.second,
+          video_id: matchingTarif.video_id,
         };
 
         // Calculate summa if razryad has a salary
