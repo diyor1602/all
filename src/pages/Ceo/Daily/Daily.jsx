@@ -1410,183 +1410,185 @@ const Daily = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {daily.orders?.map((order, i) => (
-                      <TableRow
-                        key={i}
-                        className={cn(
-                          order.net_profit_uzs > 0
-                            ? "bg-green-100 hover:bg-green-200"
-                            : "bg-red-100 hover:bg-red-200"
-                        )}
-                        onClick={() => handleExpenceDialog(order)}
-                      >
-                        <TableCell className="font-medium border border-slate-200 text-center">
-                          {order?.order?.id}
-                        </TableCell>
-                        <TableCell className="border border-slate-200">
-                          <TooltipProvider delayDuration={100}>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <p>{order?.order?.name}</p>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  {order?.responsibleUser
-                                    ?.map((user) => user.employee.name)
-                                    .join(", ")}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableCell>
-                        <TableCell className="border border-slate-200">
-                          <div>
-                            <div className="font-medium">
-                              {order?.model?.name}
-                            </div>
-                            {order?.submodels?.length > 0 && (
-                              <div className="text-sm text-slate-500">
-                                {order?.submodels
-                                  ?.map((submodel) => submodel.name)
-                                  .join(", ")}
+                    {daily.orders
+                      ?.sort((a, b) => a.order.name.localeCompare(b.order.name))
+                      .map((order, i) => (
+                        <TableRow
+                          key={i}
+                          className={cn(
+                            order.net_profit_uzs > 0
+                              ? "bg-green-100 hover:bg-green-200"
+                              : "bg-red-100 hover:bg-red-200"
+                          )}
+                          onClick={() => handleExpenceDialog(order)}
+                        >
+                          <TableCell className="font-medium border border-slate-200 text-center">
+                            {order?.order?.id}
+                          </TableCell>
+                          <TableCell className="border border-slate-200">
+                            <TooltipProvider delayDuration={100}>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <p>{order?.order?.name}</p>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    {order?.responsibleUser
+                                      ?.map((user) => user.employee.name)
+                                      .join(", ")}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+                          <TableCell className="border border-slate-200">
+                            <div>
+                              <div className="font-medium">
+                                {order?.model?.name}
                               </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="border border-slate-200">
-                          <div className="flex flex-col gap-1">
-                            <div className="font-mono">
-                              {formatNumber(order?.price_uzs)} so'm
-                            </div>
-                            <div className="font-mono">
-                              {parseFloat(order?.price_usd)?.toLocaleString(
-                                "ru-RU"
-                              )}{" "}
-                              $
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono border border-slate-200">
-                          {formatNumber(order?.total_quantity)} ta
-                        </TableCell>
-                        <TableCell className="font-mono border border-slate-200">
-                          {formatNumber(order?.total_output_cost_uzs)} so'm
-                        </TableCell>
-                        <TableCell className="border border-slate-200">
-                          <TooltipProvider delayDuration={100}>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <div className="font-mono">
-                                  {formatNumber(order?.total_fixed_cost_uzs)}{" "}
-                                  so'm
+                              {order?.submodels?.length > 0 && (
+                                <div className="text-sm text-slate-500">
+                                  {order?.submodels
+                                    ?.map((submodel) => submodel.name)
+                                    .join(", ")}
                                 </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="space-y-1">
-                                  <div className="w-full flex justify-between gap-2">
-                                    <div> AUP: </div>
-                                    <div>
-                                      {" "}
-                                      {formatNumber(
-                                        order?.costs_uzs?.allocatedAup
-                                      )}{" "}
-                                      so'm
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="border border-slate-200">
+                            <div className="flex flex-col gap-1">
+                              <div className="font-mono">
+                                {formatNumber(order?.price_uzs)} so'm
+                              </div>
+                              <div className="font-mono">
+                                {parseFloat(order?.price_usd)?.toLocaleString(
+                                  "ru-RU"
+                                )}{" "}
+                                $
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono border border-slate-200">
+                            {formatNumber(order?.total_quantity)} ta
+                          </TableCell>
+                          <TableCell className="font-mono border border-slate-200">
+                            {formatNumber(order?.total_output_cost_uzs)} so'm
+                          </TableCell>
+                          <TableCell className="border border-slate-200">
+                            <TooltipProvider delayDuration={100}>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <div className="font-mono">
+                                    {formatNumber(order?.total_fixed_cost_uzs)}{" "}
+                                    so'm
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="space-y-1">
+                                    <div className="w-full flex justify-between gap-2">
+                                      <div> AUP: </div>
+                                      <div>
+                                        {" "}
+                                        {formatNumber(
+                                          order?.costs_uzs?.allocatedAup
+                                        )}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                    <div className="w-full flex justify-between gap-2">
+                                      <div> KPI: </div>
+                                      <div>
+                                        {formatNumber(order?.costs_uzs?.bonus)}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                    <div className="w-full flex justify-between gap-2">
+                                      <div> O'zgarmas harajat: </div>
+                                      <div>
+                                        {formatNumber(
+                                          order?.costs_uzs
+                                            ?.allocatedMonthlyExpenseMonthly
+                                        )}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                    <div className="w-full flex justify-between gap-2">
+                                      <div> Transport: </div>
+                                      <div>
+                                        {formatNumber(
+                                          order?.costs_uzs?.allocatedTransport
+                                        )}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                    <div className="w-full flex justify-between gap-2">
+                                      <div> Amortizatsiya: </div>
+                                      <div>
+                                        {formatNumber(
+                                          order?.costs_uzs?.amortizationExpense
+                                        )}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                    <div className="w-full flex justify-between gap-2">
+                                      <div> Soliq: </div>
+                                      <div>
+                                        {formatNumber(
+                                          order?.costs_uzs
+                                            ?.incomePercentageExpense
+                                        )}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                    <div className="w-full flex justify-between gap-2">
+                                      <div> Tikuv uchun: </div>
+                                      <div>
+                                        {formatNumber(
+                                          order?.costs_uzs?.remainder
+                                        )}{" "}
+                                        so'm
+                                      </div>
+                                    </div>
+                                    <div className="w-full flex justify-between gap-2">
+                                      <div> Tikuvchilar: </div>
+                                      <div>
+                                        {formatNumber(
+                                          order?.costs_uzs?.tarification
+                                        )}{" "}
+                                        so'm
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className="w-full flex justify-between gap-2">
-                                    <div> KPI: </div>
-                                    <div>
-                                      {formatNumber(order?.costs_uzs?.bonus)}{" "}
-                                      so'm
-                                    </div>
-                                  </div>
-                                  <div className="w-full flex justify-between gap-2">
-                                    <div> O'zgarmas harajat: </div>
-                                    <div>
-                                      {formatNumber(
-                                        order?.costs_uzs
-                                          ?.allocatedMonthlyExpenseMonthly
-                                      )}{" "}
-                                      so'm
-                                    </div>
-                                  </div>
-                                  <div className="w-full flex justify-between gap-2">
-                                    <div> Transport: </div>
-                                    <div>
-                                      {formatNumber(
-                                        order?.costs_uzs?.allocatedTransport
-                                      )}{" "}
-                                      so'm
-                                    </div>
-                                  </div>
-                                  <div className="w-full flex justify-between gap-2">
-                                    <div> Amortizatsiya: </div>
-                                    <div>
-                                      {formatNumber(
-                                        order?.costs_uzs?.amortizationExpense
-                                      )}{" "}
-                                      so'm
-                                    </div>
-                                  </div>
-                                  <div className="w-full flex justify-between gap-2">
-                                    <div> Soliq: </div>
-                                    <div>
-                                      {formatNumber(
-                                        order?.costs_uzs
-                                          ?.incomePercentageExpense
-                                      )}{" "}
-                                      so'm
-                                    </div>
-                                  </div>
-                                  <div className="w-full flex justify-between gap-2">
-                                    <div> Tikuv uchun: </div>
-                                    <div>
-                                      {formatNumber(
-                                        order?.costs_uzs?.remainder
-                                      )}{" "}
-                                      so'm
-                                    </div>
-                                  </div>
-                                  <div className="w-full flex justify-between gap-2">
-                                    <div> Tikuvchilar: </div>
-                                    <div>
-                                      {formatNumber(
-                                        order?.costs_uzs?.tarification
-                                      )}{" "}
-                                      so'm
-                                    </div>
-                                  </div>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableCell>
-                        <TableCell className="font-mono border border-slate-200">
-                          {formatNumber(order?.cost_per_unit_uzs)} so'm
-                        </TableCell>
-                        <TableCell className="font-mono border border-slate-200">
-                          {formatNumber(order?.profit_per_unit_uzs)} so'm
-                        </TableCell>{" "}
-                        <TableCell className="font-mono border border-slate-200">
-                          {formatNumber(order?.profitability_percent)} %
-                        </TableCell>
-                        <TableCell className="font-mono border border-slate-200">
-                          {formatNumber(order?.rasxod_percent_of_price)} %
-                        </TableCell>
-                        <TableCell>
-                          <div
-                            className={cn(
-                              "font-bold font-mono",
-                              order.net_profit_uzs > 0
-                                ? "text-green-500"
-                                : "text-red-500"
-                            )}
-                          >
-                            {formatNumber(order.net_profit_uzs)} so'm
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+                          <TableCell className="font-mono border border-slate-200">
+                            {formatNumber(order?.cost_per_unit_uzs)} so'm
+                          </TableCell>
+                          <TableCell className="font-mono border border-slate-200">
+                            {formatNumber(order?.profit_per_unit_uzs)} so'm
+                          </TableCell>{" "}
+                          <TableCell className="font-mono border border-slate-200">
+                            {formatNumber(order?.profitability_percent)} %
+                          </TableCell>
+                          <TableCell className="font-mono border border-slate-200">
+                            {formatNumber(order?.rasxod_percent_of_price)} %
+                          </TableCell>
+                          <TableCell>
+                            <div
+                              className={cn(
+                                "font-bold font-mono",
+                                order.net_profit_uzs > 0
+                                  ? "text-green-500"
+                                  : "text-red-500"
+                              )}
+                            >
+                              {formatNumber(order.net_profit_uzs)} so'm
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </div>

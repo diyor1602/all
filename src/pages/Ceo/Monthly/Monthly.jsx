@@ -816,10 +816,7 @@ const Monthly = () => {
                   </TableHeader>
                   <TableBody>
                     {monthly.orders
-                      ?.sort(
-                        (a, b) =>
-                          b.rasxod_percent_of_price - a.rasxod_percent_of_price
-                      )
+                      ?.sort((a, b) => a.order.name.localeCompare(b.order.name))
                       ?.map((order, i) => (
                         <TableRow
                           key={i}
