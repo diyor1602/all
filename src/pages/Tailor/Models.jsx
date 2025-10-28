@@ -10,6 +10,7 @@ import {
   Send,
   Trash2,
   X,
+  Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +51,43 @@ const Models = () => {
   const [deletingPacketId, setDeletingPacketId] = useState(null);
   const [myWorksDialogOpen, setMyWorksDialogOpen] = useState(false);
   const [myWorks, setMyWorks] = useState([]);
+  const [showVideo, setShowVideo] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [loadingVideo, setLoadingVideo] = useState(false);
+
+  const getVideoLink = async (id) => {
+    try {
+      setLoadingVideo(true);
+      const response = await api.get(`/tailor/videos/${id}`);
+      return response.data;
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Video linkni olishda xatolik yuz berdi.",
+      });
+    } finally {
+      setLoadingVideo(false);
+    }
+  };
+
+  const handleVideoClick = async (id) => {
+    try {
+      const link = await getVideoLink(id);
+      setSelectedVideo(link);
+      setShowVideo(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Video linkni olishda xatolik yuz berdi.",
+      });
+    }
+  };
 
   const getFormattedYesterday = () => {
     const date = new Date();
@@ -420,6 +458,23 @@ const Models = () => {
 
   return (
     <>
+      <Dialog open={showVideo} onOpenChange={setShowVideo}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedVideo?.id}</DialogTitle>
+            <DialogDescription>{selectedVideo?.title}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
+            <iframe
+              src={selectedVideo?.link}
+              width="100%"
+              height="600"
+              allowFullScreen
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={myWorksDialogOpen} onOpenChange={setMyWorksDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -928,6 +983,8 @@ const Models = () => {
                                   selectedTarification?.summa || "";
                                 model.works[index].second =
                                   selectedTarification?.second || "";
+                                model.works[index].video_id =
+                                  selectedTarification?.video_id || "";
                                 setSelectedModels((prev) => [...prev]);
                               }}
                             >
@@ -983,6 +1040,26 @@ const Models = () => {
                               {parseFloat(work.second).toFixed(2)} sekund
                             </div>
                           </div>
+                        )}
+                        {work.video_id && (
+                          <Button
+                            onClick={() => {
+                              handleVideoClick(work.video_id);
+                            }}
+                            disabled={loadingVideo}
+                          >
+                            {loadingVideo ? (
+                              <>
+                                <Loader2 className="animate-spin" />
+                                Yuklanmoqda...
+                              </>
+                            ) : (
+                              <>
+                                <Play />
+                                Video
+                              </>
+                            )}
+                          </Button>
                         )}
                         {work.cat_id && (
                           <Button

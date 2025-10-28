@@ -3,10 +3,17 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Check, CirclePlus, Loader2, X } from "lucide-react";
+import { Check, CirclePlus, Loader2, Play, X } from "lucide-react";
 import { animate } from "framer-motion";
 import CoinsAudio from "/coins.wav";
 import MarqueeBanner from "@/components/MarqueBanner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 const coinsAudio = new Audio(CoinsAudio);
 
 const TailorPage = () => {
@@ -18,6 +25,44 @@ const TailorPage = () => {
   const [loadingStates, setLoadingStates] = useState({});
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const balanceRef = useRef(null);
+
+  const [showVideo, setShowVideo] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [loadingVideo, setLoadingVideo] = useState(false);
+
+  const getVideoLink = async (id) => {
+    try {
+      setLoadingVideo(true);
+      const response = await api.get(`/tailor/videos/${id}`);
+      return response.data;
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Video linkni olishda xatolik yuz berdi.",
+      });
+    } finally {
+      setLoadingVideo(false);
+    }
+  };
+
+  const handleVideoClick = async (id) => {
+    try {
+      const link = await getVideoLink(id);
+      setSelectedVideo(link);
+      setShowVideo(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Video linkni olishda xatolik yuz berdi.",
+      });
+    }
+  };
 
   const animateBalance = (fromValue, toValue, isInitial = false) => {
     // Ensure both values are numbers
@@ -232,11 +277,13 @@ const TailorPage = () => {
   };
 
   const handleInputChange = (index, value) => {
+    const upperCaseValue = value.toUpperCase();
+
     const updatedInputs = [...inputs];
-    updatedInputs[index].code = value;
+    updatedInputs[index].code = upperCaseValue;
 
     // Only clear tarif if the input is being cleared or changed
-    if (!value) {
+    if (!upperCaseValue) {
       updatedInputs[index].tarif = null;
       updatedInputs[index].searchResults = [];
       updatedInputs[index].selectedTarif = null;
@@ -245,8 +292,8 @@ const TailorPage = () => {
     setInputs(updatedInputs);
 
     // Auto-search when code is 2 or more characters
-    if (value && value.length >= 2) {
-      getTarif(value, index);
+    if (upperCaseValue && upperCaseValue.length >= 2) {
+      getTarif(upperCaseValue, index);
     }
   };
 
@@ -272,6 +319,23 @@ const TailorPage = () => {
 
   return (
     <div className="flex flex-col gap-4 relative overflow-hidden">
+      <Dialog open={showVideo} onOpenChange={setShowVideo}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedVideo?.id}</DialogTitle>
+            <DialogDescription>{selectedVideo?.title}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
+            <iframe
+              src={selectedVideo?.link}
+              width="100%"
+              height="600"
+              allowFullScreen
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <MarqueeBanner
         texts={[
           "Siz tikkan mahsulotni kiyib, yuzi kulsin.",
@@ -282,15 +346,6 @@ const TailorPage = () => {
       />
       <div className="flex items-center gap-2 flex-col">
         <div className="flex items-center gap-2">
-          {localStorage.getItem("imgUrl") &&
-            localStorage.getItem("imgUrl") !== "null" && (
-              <img
-                className="w-20 h-20 rounded-full object-cover"
-                src={localStorage.getItem("imgUrl")}
-                alt="User"
-              />
-            )}
-
           {localStorage.getItem("name")}
         </div>
         <div
@@ -359,8 +414,8 @@ const TailorPage = () => {
               </div>
             )}
             {input.tarif && (
-              <div className="border rounded-lg p-3 bg-gray-50 flex justify-between">
-                <div className="flex flex-col">
+              <div className="border rounded-lg p-3 bg-gray-50 flex flex-col gap-2 w-full">
+                <div className="flex flex-col w-full">
                   <div className="font-semibold">
                     {tarif.code} / {tarif.name}
                   </div>
@@ -369,10 +424,30 @@ const TailorPage = () => {
                   </div>
                   <div className="text-xs text-gray-500"></div>
                 </div>
-                <div className="flex items-center">
+                <div className="flex flex-col gap-1 w-full">
+                  {tarif.video_id && (
+                    <Button
+                      onClick={() => {
+                        handleVideoClick(tarif.video_id);
+                      }}
+                      disabled={loadingVideo}
+                    >
+                      {loadingVideo ? (
+                        <>
+                          <Loader2 className="animate-spin" />
+                          Yuklanmoqda...
+                        </>
+                      ) : (
+                        <>
+                          <Play />
+                          Video
+                        </>
+                      )}
+                    </Button>
+                  )}
                   <Button
                     id={`submit-btn-${index}`}
-                    className=" h-full flex items-center justify-center"
+                    className="w-full h-[60px] flex items-center justify-center"
                     onClick={() => handleSubmit(tarif.id, index)}
                     disabled={loadingStates[index]}
                   >
