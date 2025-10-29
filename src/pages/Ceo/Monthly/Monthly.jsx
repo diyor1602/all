@@ -157,8 +157,7 @@ const Monthly = () => {
       (parseFloat(expenseOrder?.costs_uzs?.allocatedTransport) || 0) +
       (parseFloat(expenseOrder?.costs_uzs?.amortizationExpense) || 0) +
       (parseFloat(expenseOrder?.costs_uzs?.incomePercentageExpense) || 0) +
-      (parseFloat(expenseOrder?.costs_uzs?.remainder) || 0) +
-      (parseFloat(expenseOrder?.costs_uzs?.tarification) || 0)
+      (parseFloat(expenseOrder?.costs_uzs?.remainder) || 0)
     );
   };
 
@@ -218,7 +217,6 @@ const Monthly = () => {
               Number.parseFloat(monthly.aup) +
                 Number.parseFloat(monthly.kpi) +
                 Number.parseFloat(monthly.daily_expenses) +
-                Number.parseFloat(monthly.tarification) +
                 Number.parseFloat(monthly.transport_attendance)
             )} so'm`
           : `${formatNumber(monthly.total_fixed_cost_uzs)} so'm`,
@@ -303,12 +301,6 @@ const Monthly = () => {
       label: "KPI",
       value: monthly.kpi,
       bg: "bg-yellow-300",
-      dollar: true,
-    },
-    {
-      label: "Tikuvchilar",
-      value: monthly.tarification,
-      bg: "bg-pink-300",
       dollar: true,
     },
     {
@@ -971,15 +963,6 @@ const Monthly = () => {
                                         so'm
                                       </div>
                                     </div>
-                                    <div className="w-full flex justify-between gap-2">
-                                      <div> Tikuvchilar: </div>
-                                      <div>
-                                        {formatNumber(
-                                          order?.costs_uzs?.tarification
-                                        )}{" "}
-                                        so'm
-                                      </div>
-                                    </div>
                                   </div>
                                 </TooltipContent>
                               </Tooltip>
@@ -1314,16 +1297,6 @@ const Monthly = () => {
                     icon: Scissors,
                     color: "pink",
                   },
-                  {
-                    label: "Tikuvchilar",
-                    value: expenseOrder?.costs_uzs?.tarification,
-                    percentage: calculatePercentage(
-                      expenseOrder?.costs_uzs?.tarification,
-                      calculateTotal(expenseOrder)
-                    ),
-                    icon: Users,
-                    color: "indigo",
-                  },
                 ].map(
                   ({ label, value, icon: Icon, percentage = 0, color }, i) => (
                     <div
@@ -1392,8 +1365,7 @@ const Monthly = () => {
                         (expenseOrder?.costs_uzs?.amortizationExpense || 0) +
                         (expenseOrder?.costs_uzs?.incomePercentageExpense ||
                           0) +
-                        (expenseOrder?.costs_uzs?.remainder || 0) +
-                        (expenseOrder?.costs_uzs?.tarification || 0)
+                        (expenseOrder?.costs_uzs?.remainder || 0)
                     )}{" "}
                     <span className="text-base text-slate-500">so'm</span>
                   </span>
