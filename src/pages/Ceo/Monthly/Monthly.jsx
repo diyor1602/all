@@ -689,7 +689,6 @@ const Monthly = () => {
                           </g>
                         </svg>
 
-                        {/* Legend */}
                         <div className="mt-4 w-full space-y-1">
                           {sortedMetrics.map(([key, { amount, percent }]) => {
                             const config = metricConfig[key] || {
