@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
+import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ import {
   Loader2,
   FileText,
   TriangleAlert,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import jsPDF from "jspdf";
@@ -89,6 +91,30 @@ const Monthly = () => {
     excel: false,
     pdf: false,
   });
+
+  const getDollarRate = async () => {
+    try {
+      const response = await axios.get(
+        "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
+      );
+      setDollarRate(response.data.find((item) => item.Ccy === "USD").Rate);
+      localStorage.setItem(
+        "dollarRate",
+        response.data.find((item) => item.Ccy === "USD").Rate
+      );
+      fetchMonthly();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Dollar kursini olishda xatolik",
+      });
+    }
+  };
+
+  useEffect(() => {
+    getDollarRate();
+  }, []);
 
   const handleDownload = async (fileType = "excel") => {
     try {
@@ -166,14 +192,14 @@ const Monthly = () => {
     setExpenseDialogOpen(true);
   };
 
-  const fetchMonthly = async (customDollarRate) => {
+  const fetchMonthly = async () => {
     setLoading(true);
     try {
       const response = await api.get("/ceo/monthlyReport", {
         params: {
           start_date: startDate,
           end_date: endDate,
-          dollar_rate: customDollarRate || dollarRate,
+          dollar_rate: dollarRate,
         },
       });
       setMonthly(response.data);
@@ -194,12 +220,11 @@ const Monthly = () => {
     localStorage.setItem("dollarRate", newDollarRate);
     setDollarRate(newDollarRate);
     setDollarDialogOpen(false);
-    fetchMonthly(newDollarRate);
   };
 
   useEffect(() => {
     fetchMonthly();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, dollarRate]);
 
   const metrics = [
     {
@@ -532,15 +557,25 @@ const Monthly = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div
-                  className="flex justify-between items-center p-3 bg-50 rounded-lg cursor-pointer bg-sky-300"
+                  className="flex items-center p-3 bg-50 rounded-lg cursor-pointer bg-sky-300"
                   onClick={() => setDollarDialogOpen(true)}
                 >
-                  <span className="text-sm font-medium text-slate-600">
+                  <span className="text-sm font-medium text-slate-600 mr-auto">
                     Dollar kursi:
                   </span>
                   <Badge variant="ghost" className="font-mono border-none">
                     {formatNumber(dollarRate)} so'm
                   </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      getDollarRate();
+                    }}
+                  >
+                    <Landmark className="h-4 w-4" />
+                  </Button>
                 </div>
                 {additionalMetrics.map((metric, index) => (
                   <div
