@@ -98,7 +98,7 @@ const Daily = () => {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [dollarRate, setDollarRate] = useState(
-    localStorage.getItem("dollarRate") || 12400
+    localStorage.getItem("dollarRate") || 12100
   );
   const [dollarDialogOpen, setDollarDialogOpen] = useState(false);
   const [newDollarRate, setNewDollarRate] = useState(dollarRate);
