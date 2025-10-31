@@ -166,21 +166,14 @@ const Monthly = () => {
     setExpenseDialogOpen(true);
   };
 
-  const updateDollarRate = async () => {
-    localStorage.setItem("dollarRate", newDollarRate);
-    setDollarRate(newDollarRate);
-    setDollarDialogOpen(false);
-    fetchMonthly();
-  };
-
-  const fetchMonthly = async () => {
+  const fetchMonthly = async (customDollarRate) => {
     setLoading(true);
     try {
       const response = await api.get("/ceo/monthlyReport", {
         params: {
           start_date: startDate,
           end_date: endDate,
-          dollar_rate: dollarRate,
+          dollar_rate: customDollarRate || dollarRate,
         },
       });
       setMonthly(response.data);
@@ -195,6 +188,13 @@ const Monthly = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateDollarRate = async () => {
+    localStorage.setItem("dollarRate", newDollarRate);
+    setDollarRate(newDollarRate);
+    setDollarDialogOpen(false);
+    fetchMonthly(newDollarRate);
   };
 
   useEffect(() => {

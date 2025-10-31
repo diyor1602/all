@@ -195,7 +195,7 @@ const Daily = () => {
     localStorage.setItem("dollarRate", newDollarRate);
     setDollarRate(newDollarRate);
     setDollarDialogOpen(false);
-    fetchDaily();
+    fetchDaily(newDollarRate);
   };
 
   const navigateDate = (direction) => {
@@ -208,11 +208,14 @@ const Daily = () => {
     );
   };
 
-  const fetchDaily = async () => {
+  const fetchDaily = async (customDollarRate) => {
     setLoading(true);
     try {
       const response = await api.get("/ceo/dailyReport", {
-        params: { date: selectedDate, dollar_rate: dollarRate },
+        params: {
+          date: selectedDate,
+          dollar_rate: customDollarRate || dollarRate,
+        },
       });
       setDaily(response.data);
     } catch (error) {
