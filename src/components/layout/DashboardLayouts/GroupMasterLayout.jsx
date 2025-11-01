@@ -10,6 +10,7 @@ import {
   Truck,
   Radical,
   Users,
+  Clock,
 } from "lucide-react";
 
 const navigation = [
@@ -42,6 +43,12 @@ const navigation = [
     name: "Xodimlar",
     href: "/groupMaster/employees",
     icon: Users,
+    onMobile: true,
+  },
+  {
+    name: "Davomat",
+    href: "/groupMaster/attendanceHistory",
+    icon: Clock,
     onMobile: true,
   },
   {
