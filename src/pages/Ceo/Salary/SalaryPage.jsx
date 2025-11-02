@@ -559,20 +559,6 @@ const SalaryPage = () => {
   };
 
   const openPaymentDialog = (employee, type) => {
-    const { advanceTotal, salaryTotal } = calculatePaymentTotals(
-      employee?.paid_amounts
-    );
-
-    // Get current amount for this payment type
-    const currentAmount = type === "advance" ? advanceTotal : salaryTotal;
-
-    // Get the most recent comment for this payment type (if any)
-    const paymentHistory = getPaymentHistory(employee, type);
-    const mostRecentComment =
-      paymentHistory.length > 0
-        ? paymentHistory[paymentHistory.length - 1].comment || ""
-        : "";
-
     setPaymentDialog({
       open: true,
       employee,
@@ -600,7 +586,7 @@ const SalaryPage = () => {
     const { employee, type } = paymentDialog;
     const { amount, comment } = paymentForm;
 
-    if (Number.parseFloat(amount) < 0 || !comment) {
+    if (Number.parseFloat(amount) < 0 && !comment) {
       toast({
         title: "Diqqat",
         description: "Izohni kiriting",
