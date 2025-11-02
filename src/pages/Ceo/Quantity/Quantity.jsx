@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import DepartmetDialog from "./DepartmetDialog";
 
 const formatNumber = (number) => {
   if (!number) return "0";
@@ -19,6 +20,10 @@ const Quantity = () => {
   const [expenses_costs, setExpensesCosts] = useState([]);
   const [departmentsWithBudgets, setDepartmentsWithBudgets] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [departmentDialogOpen, setDepartmentDialogOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -81,14 +86,20 @@ const Quantity = () => {
     fetchDepartmentsWithBudgets();
   }, []);
 
+  const handleDepartmentDialogOpen = (department, order) => {
+    setDepartmentDialogOpen(true);
+    setSelectedDepartment(department);
+    setSelectedOrder(order);
+  };
+
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Yuklanmoqda...</div>;
   }
 
   return (
     <div>
-      {/* API */}
-      <div className="mt-6">API</div>
+      {/* Orders */}
+      <div className="mt-6">Buyurtmalar</div>
       <div className="mt-2 w-full overflow-auto">
         <table className="w-full whitespace-nowrap border border-collapse border-gray-300 bg-white text-xs">
           <thead>
@@ -139,11 +150,18 @@ const Quantity = () => {
                     key={department.id}
                     className="py-1 px-2 border border-gray-300"
                   >
-                    {formatNumber(
-                      order?.department_costs?.find(
-                        (cost) => cost?.department_id === department?.id
-                      )?.cost
-                    )}
+                    <div
+                      className="cursor-pointer"
+                      onClick={() =>
+                        handleDepartmentDialogOpen(department, order)
+                      }
+                    >
+                      {formatNumber(
+                        order?.department_costs?.find(
+                          (cost) => cost?.department_id === department?.id
+                        )?.cost
+                      )}
+                    </div>
                   </td>
                 ))}
                 {expenses_costs?.map((expense) => (
@@ -207,23 +225,28 @@ const Quantity = () => {
                     {department?.budget?.type === "minute_based" ? "so'm" : "%"}
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
-                    {formatNumber(
-                      data
-                        ?.filter(
-                          (order) =>
-                            order?.department_costs?.find(
-                              (cost) => cost?.department_id === department?.id
-                            )?.cost > 0
-                        )
-                        ?.reduce(
-                          (total, order) =>
-                            total +
-                            order?.department_costs?.find(
-                              (cost) => cost?.department_id === department?.id
-                            )?.cost,
-                          0
-                        )
-                    )}
+                    <div
+                      onClick={() => handleDepartmentDialogOpen(department)}
+                      className="cursor-pointer"
+                    >
+                      {formatNumber(
+                        data
+                          ?.filter(
+                            (order) =>
+                              order?.department_costs?.find(
+                                (cost) => cost?.department_id === department?.id
+                              )?.cost > 0
+                          )
+                          ?.reduce(
+                            (total, order) =>
+                              total +
+                              order?.department_costs?.find(
+                                (cost) => cost?.department_id === department?.id
+                              )?.cost,
+                            0
+                          )
+                      )}
+                    </div>
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
                     {formatNumber(
@@ -252,6 +275,15 @@ const Quantity = () => {
           </tbody>
         </table>
       </div>
+
+      {departmentDialogOpen && (
+        <DepartmetDialog
+          department={selectedDepartment}
+          order={selectedOrder}
+          open={departmentDialogOpen}
+          setOpen={setDepartmentDialogOpen}
+        />
+      )}
     </div>
   );
 };
