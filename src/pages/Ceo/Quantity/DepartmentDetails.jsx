@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 
 const DepartmenDetails = () => {
   const { toast } = useToast();
@@ -32,7 +33,8 @@ const DepartmenDetails = () => {
       toast({
         title: "Xatolik",
         description:
-          error.response.data.message || "Ma'lumotlar olishda xatolik",
+          error.response?.data?.message ||
+          "Ma'lumotlarni olishda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
@@ -45,23 +47,21 @@ const DepartmenDetails = () => {
   }, []);
 
   const handleSubmit = async () => {
-    // calculate available percentage
     const availablePercentage =
       100 -
       data?.employees?.reduce(
-        (acc, employee) =>
+        (acc, emp) =>
           acc +
-          (selectedEmployee?.id === employee?.id
-            ? 0
-            : parseFloat(employee?.percentage)),
+          (selectedEmployee?.id === emp?.id ? 0 : parseFloat(emp?.percentage)),
         0
       );
 
     if (newPercentage > availablePercentage) {
       toast({
         title: "Diqqat",
-        description: `Jami foiz 100 dan o'tib ketmoqda!
-         ${availablePercentage?.toFixed(2)}% kirita olasiz!`,
+        description: `Jami foiz 100% dan oshib ketmoqda. Maksimum ${availablePercentage?.toFixed(
+          2
+        )}% kirita olasiz.`,
         variant: "destructive",
       });
       return;
@@ -74,8 +74,7 @@ const DepartmenDetails = () => {
       });
       toast({
         title: "Muvaffaqiyatli",
-        description: "Ulush o'zgartirildi",
-        variant: "default",
+        description: "Ulush muvaffaqiyatli o'zgartirildi",
       });
       fetchData();
       setPercentageOpen(false);
@@ -83,7 +82,8 @@ const DepartmenDetails = () => {
       toast({
         title: "Xatolik",
         description:
-          error.response.data.message || "Ulush o'zgartirishda xatolik",
+          error.response?.data?.message ||
+          "Ulushni o'zgartirishda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
@@ -92,132 +92,162 @@ const DepartmenDetails = () => {
   };
 
   return (
-    <div>
-      <h2>{data?.name}</h2>
-      <div className="w-full overflow-auto mt-4">
-        <table
-          className={
-            loading
-              ? "whitespace-nowrap border border-collapse border-gray-300 bg-white text-xs w-full opacity-50"
-              : "whitespace-nowrap border border-collapse border-gray-300 bg-white text-xs w-full"
-          }
-        >
-          <thead>
-            <tr className="text-center">
-              <th className="py-1 px-2 border border-gray-300">№</th>
-              <th className="py-1 px-2 border border-gray-300">Rasmi</th>
-              <th className="py-1 px-2 border border-gray-300">Xodim</th>
-              <th className="py-1 px-2 border border-gray-300">Lavozimi</th>
-              <th className="py-1 px-2 border border-gray-300">Ulushi %</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data?.employees
-              ?.sort((a, b) => b?.percentage - a?.percentage)
-              ?.map((employee, index) => (
-                <tr key={index}>
-                  <td className="py-1 px-2 border border-gray-300 text-center">
-                    {index + 1}
-                  </td>
-                  <td className="py-1 px-2 border border-gray-300">
-                    {employee?.img ? (
-                      <img
-                        src={employee?.img}
-                        alt={employee?.name}
-                        className="w-10 h-10 rounded-full object-cover m-auto"
-                        onClick={() => {
-                          setSelectedEmployee(employee);
-                          setImgOpen(true);
-                        }}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-300 m-auto flex items-center justify-center">
-                        {employee?.name?.slice(0, 1).toUpperCase()}
-                      </div>
-                    )}
-                  </td>
-                  <td className="py-1 px-2 border border-gray-300">
-                    <Link
-                      to={`/ceo/salary/${employee?.id}`}
-                      className="cursor-pointer"
-                    >
-                      {employee?.name}
-                    </Link>
-                  </td>
-                  <td className="py-1 px-2 border border-gray-300">
-                    {employee?.position}
-                  </td>
-                  <td className="py-1 px-2 border border-gray-300 text-center">
-                    <div
-                      className="cursor-pointer"
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            {data?.name || "Bo'lim ma'lumotlari"}
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchData}
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="animate-spin w-4 h-4" /> Yuklanmoqda
+              </span>
+            ) : (
+              "Yangilash"
+            )}
+          </Button>
+        </div>
+
+        <div className="overflow-auto rounded-lg border border-gray-200">
+          <table
+            className={`w-full text-sm text-gray-700 ${
+              loading ? "opacity-50" : ""
+            }`}
+          >
+            <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+              <tr>
+                <th className="py-3 px-4 text-left">№</th>
+                <th className="py-3 px-4 text-left">Rasm</th>
+                <th className="py-3 px-4 text-left">Xodim</th>
+                <th className="py-3 px-4 text-left">Lavozimi</th>
+                <th className="py-3 px-4 text-center">Ulushi (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.employees
+                ?.sort((a, b) => b?.percentage - a?.percentage)
+                ?.map((emp, index) => (
+                  <tr
+                    key={emp?.id || index}
+                    className="hover:bg-gray-50 transition-colors border-b last:border-none"
+                  >
+                    <td className="py-2 px-4 text-gray-600">{index + 1}</td>
+                    <td className="py-2 px-4">
+                      {emp?.img ? (
+                        <img
+                          src={emp?.img}
+                          alt={emp?.name}
+                          className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                          onClick={() => {
+                            setSelectedEmployee(emp);
+                            setImgOpen(true);
+                          }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-semibold text-gray-700">
+                          {emp?.name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-2 px-4">
+                      <Link
+                        to={`/ceo/salary/${emp?.id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {emp?.name}
+                      </Link>
+                    </td>
+                    <td className="py-2 px-4">{emp?.position}</td>
+                    <td
+                      className="py-2 px-4 text-center cursor-pointer font-medium"
                       onClick={() => {
-                        setNewPercentage(employee?.percentage);
-                        setSelectedEmployee(employee);
+                        setNewPercentage(emp?.percentage);
+                        setSelectedEmployee(emp);
                         setPercentageOpen(true);
                       }}
                     >
-                      {employee?.percentage}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td
-                className="py-1 px-2 border border-gray-300 text-right"
-                colSpan={4}
-              >
-                Jami
-              </td>
-              <td
-                className={`py-1 px-2 border border-gray-300 text-center ${
-                  data?.employees?.reduce(
-                    (acc, employee) => acc + parseFloat(employee?.percentage),
-                    0
-                  ) > 100
-                    ? "text-red-500"
-                    : ""
-                }`}
-              >
-                {data?.employees?.reduce(
-                  (acc, employee) => acc + parseFloat(employee?.percentage),
-                  0
-                )}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+                      <span className="inline-block px-2 py-1 bg-gray-100 rounded-md hover:bg-gray-200 transition">
+                        {emp?.percentage}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+            <tfoot>
+              <tr className="bg-gray-50 font-semibold">
+                <td className="py-2 px-4 text-right" colSpan={4}>
+                  Jami
+                </td>
+                <td
+                  className={`py-2 px-4 text-center ${
+                    data?.employees?.reduce(
+                      (acc, e) => acc + parseFloat(e?.percentage || 0),
+                      0
+                    ) > 100
+                      ? "text-red-600"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {data?.employees
+                    ?.reduce(
+                      (acc, e) => acc + parseFloat(e?.percentage || 0),
+                      0
+                    )
+                    ?.toFixed(2)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
+
+      {/* Employee Image Dialog */}
       <Dialog open={imgOpen} onOpenChange={setImgOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
-            <DialogTitle>{selectedEmployee?.name}</DialogTitle>
-            <DialogDescription>{selectedEmployee?.position}</DialogDescription>
+            <DialogTitle className="text-lg font-semibold text-gray-800">
+              {selectedEmployee?.name}
+            </DialogTitle>
+            <DialogDescription className="text-gray-500">
+              {selectedEmployee?.position}
+            </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 max-h-[60vh] overflow-auto">
-            <img src={selectedEmployee?.img} alt={selectedEmployee?.name} />
+          <div className="mt-4 flex justify-center">
+            <img
+              src={selectedEmployee?.img}
+              alt={selectedEmployee?.name}
+              className="max-h-[60vh] rounded-lg shadow-sm"
+            />
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Percentage Edit Dialog */}
       <Dialog open={percentageOpen} onOpenChange={setPercentageOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>{selectedEmployee?.name}</DialogTitle>
-            <DialogDescription>{selectedEmployee?.position}</DialogDescription>
+            <DialogTitle className="text-lg font-semibold text-gray-800">
+              {selectedEmployee?.name}
+            </DialogTitle>
+            <DialogDescription className="text-gray-500">
+              {selectedEmployee?.position}
+            </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 max-h-[60vh] flex flex-col gap-2">
+          <div className="mt-4 space-y-3">
             <Input
               value={newPercentage}
+              type="number"
               onChange={(e) => setNewPercentage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               className="w-full"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSubmit();
-                }
-              }}
             />
-            <div className="flex items-center gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => setPercentageOpen(false)}
@@ -225,7 +255,7 @@ const DepartmenDetails = () => {
                 Bekor qilish
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
-                {submitting ? "Yuklanmoqda..." : "Saqlash"}
+                {submitting ? "Saqlanmoqda..." : "Saqlash"}
               </Button>
             </div>
           </div>
