@@ -600,7 +600,7 @@ const SalaryPage = () => {
     const { employee, type } = paymentDialog;
     const { amount, comment } = paymentForm;
 
-    if (!amount || Number.parseFloat(amount) < 0) {
+    if (!amount) {
       toast({
         title: "Diqqat",
         description: "Miqdorni kiriting",
