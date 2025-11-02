@@ -6,6 +6,7 @@ import {
   BadgePercent,
   BadgeDollarSign,
   CalendarClock,
+  Flower,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -50,6 +51,12 @@ const SettingsPage = () => {
       icon: CalendarClock,
       link: "/ceo/settings/grouphistory",
       color: "bg-purple-500",
+    },
+    {
+      name: "Bahorgi modellar",
+      icon: Flower,
+      link: "/ceo/quantity",
+      color: "bg-green-500",
     },
   ];
 
