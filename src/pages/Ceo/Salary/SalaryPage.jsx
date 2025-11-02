@@ -579,8 +579,8 @@ const SalaryPage = () => {
       type,
     });
     setPaymentForm({
-      amount: currentAmount.toString(),
-      comment: mostRecentComment,
+      amount: "",
+      comment: "",
     });
   };
 
@@ -661,7 +661,16 @@ const SalaryPage = () => {
           type="month"
           value={selectedMonth}
           onChange={handleMonthChange}
-          className="bg-white w-fit"
+          className={`
+            ${
+              selectedMonth ==
+              new Date().toISOString().split("-")[0] +
+                "-" +
+                new Date().toISOString().split("-")[1]
+                ? "bg-purple-500"
+                : "bg-rose-500"
+            }
+            w-fit text-white`}
         />
 
         <Select
