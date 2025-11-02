@@ -25,7 +25,7 @@ const Ceo = () => {
       <Route path="daily" element={<Daily />} />
       <Route path="monthly" element={<Monthly />} />
       <Route path="calc/*" element={<Calc />} />
-      <Route path="quantity" element={<Quantity />} />
+      <Route path="quantity/*" element={<Quantity />} />
       <Route path="settings/*" element={<Settings />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
