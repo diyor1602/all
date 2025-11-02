@@ -1,8 +1,6 @@
 import api from "@/utils/api";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import DepartmetDialog from "./DepartmetDialog";
 
 const formatNumber = (number) => {
@@ -204,7 +202,25 @@ const Quantity = () => {
           </thead>
           <tbody>
             {departmentsWithBudgets
-              ?.sort((a, b) => b?.employee_count - a?.employee_count)
+              ?.map((department) => {
+                const totalEarned = data
+                  ?.filter((order) =>
+                    order?.department_costs?.find(
+                      (cost) => cost?.department_id === department?.id
+                    )
+                  )
+                  ?.reduce(
+                    (total, order) =>
+                      total +
+                      (order?.department_costs?.find(
+                        (cost) => cost?.department_id === department?.id
+                      )?.cost || 0),
+                    0
+                  );
+
+                return { ...department, totalEarned };
+              })
+              ?.sort((a, b) => b.totalEarned - a.totalEarned)
               .map((department, index) => (
                 <tr key={index} className="text-center">
                   <td className="py-1 px-2 border border-gray-300">
@@ -229,42 +245,12 @@ const Quantity = () => {
                       onClick={() => handleDepartmentDialogOpen(department)}
                       className="cursor-pointer"
                     >
-                      {formatNumber(
-                        data
-                          ?.filter(
-                            (order) =>
-                              order?.department_costs?.find(
-                                (cost) => cost?.department_id === department?.id
-                              )?.cost > 0
-                          )
-                          ?.reduce(
-                            (total, order) =>
-                              total +
-                              order?.department_costs?.find(
-                                (cost) => cost?.department_id === department?.id
-                              )?.cost,
-                            0
-                          )
-                      )}
+                      {formatNumber(department?.totalEarned)}
                     </div>
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
                     {formatNumber(
-                      data
-                        ?.filter(
-                          (order) =>
-                            order?.department_costs?.find(
-                              (cost) => cost?.department_id === department?.id
-                            )?.cost > 0
-                        )
-                        ?.reduce(
-                          (total, order) =>
-                            total +
-                            order?.department_costs?.find(
-                              (cost) => cost?.department_id === department?.id
-                            )?.cost,
-                          0
-                        ) /
+                      department?.totalEarned /
                         department?.employees?.filter(
                           (employee) => parseFloat(employee?.percentage) > 0
                         )?.length
