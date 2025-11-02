@@ -139,7 +139,8 @@ const DepartmetDialog = ({ department, order, open, setOpen }) => {
                   <td className="py-1 px-2 border border-gray-300 text-center">
                     {formatNumber(
                       data?.reduce(
-                        (total, item) => total + item?.calculated_amount,
+                        (total, item) =>
+                          total + parseFloat(item?.calculated_amount),
                         0
                       )
                     )}{" "}
