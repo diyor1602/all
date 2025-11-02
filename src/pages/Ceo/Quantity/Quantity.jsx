@@ -140,9 +140,25 @@ const Quantity = () => {
                 <td className="py-1 px-2 border border-gray-300">
                   {order?.model?.minute}
                 </td>
-                <td className="py-1 px-2 border border-gray-300">
-                  {order?.produced_quantity}
+                <td className="py-1 px-2 border border-gray-300 relative overflow-hidden">
+                  {/* Background fill based on percentage */}
+                  <div
+                    className="absolute top-0 left-0 h-full bg-green-200 transition-all duration-300"
+                    style={{
+                      width: `${
+                        ((order?.produced_quantity || 0) /
+                          (order?.order?.quantity || 1)) *
+                        100
+                      }%`,
+                    }}
+                  ></div>
+
+                  {/* Foreground content */}
+                  <div className="relative z-10 text-center">
+                    {order?.produced_quantity} / {order?.order?.quantity}
+                  </div>
                 </td>
+
                 {departments?.map((department) => (
                   <td
                     key={department.id}
