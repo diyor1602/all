@@ -332,7 +332,12 @@ const Dashboard = () => {
               })
               ?.sort((a, b) => b?.order?.name.localeCompare(a?.order?.name))
               ?.map((order, index) => (
-                <tr key={index} className="text-center">
+                <tr
+                  key={index}
+                  className={`text-center hover:bg-gray-200 ${
+                    index % 2 === 0 ? "bg-gray-100" : ""
+                  }`}
+                >
                   <td className="py-1 px-2 border border-gray-300">
                     {index + 1}
                   </td>
