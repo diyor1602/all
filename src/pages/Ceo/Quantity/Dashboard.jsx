@@ -23,6 +23,12 @@ const formatNumber = (number) => {
 const Dashboard = () => {
   const { toast } = useToast();
 
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    return (
+      localStorage.getItem("qSelectedMonth") ||
+      new Date().toISOString().slice(0, 7)
+    );
+  });
   const [data, setData] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [expensesCosts, setExpensesCosts] = useState([]);
@@ -132,7 +138,11 @@ const Dashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/ceo/dailyPayments");
+      const response = await api.get("/ceo/dailyPayments", {
+        params: {
+          month: selectedMonth,
+        },
+      });
       setData(response.data);
       // collect all expense_costs into one array
       const allExpenses = response.data.flatMap(
@@ -172,7 +182,7 @@ const Dashboard = () => {
   useEffect(() => {
     fetchData();
     fetchDepartmentsWithBudgets();
-  }, []);
+  }, [selectedMonth]);
 
   const handleDepartmentDialogOpen = (department, order) => {
     setDepartmentDialogOpen(true);
@@ -182,6 +192,16 @@ const Dashboard = () => {
 
   return (
     <div>
+      <Input
+        type="month"
+        value={selectedMonth}
+        onChange={(e) => {
+          setSelectedMonth(e.target.value);
+          localStorage.setItem("qSelectedMonth", e.target.value);
+        }}
+        className="w-fit bg-white"
+        disabled={loading}
+      />
       {/* Orders */}
       <div className="mt-6">Buyurtmalar</div>
       <div className="mt-2 w-full overflow-auto">
