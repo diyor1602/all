@@ -12,6 +12,39 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import axios from "axios";
+
+const calculateTotalPrice = (order, dollarRate, future) => {
+  const quantity = future ? order?.order?.quantity : order?.produced_quantity;
+  return order?.order?.price * dollarRate * quantity;
+};
+
+const calculateProfit = (order, dollarRate, future) => {
+  return (
+    calculateTotalPrice(order, dollarRate, future) -
+    calculateTotalExpenses(order, future)
+  );
+};
+
+const calculateTotalExpenses = (order, future) => {
+  return future
+    ? order?.planned_costs?.department?.details?.reduce(
+        (total, cost) => total + cost?.planned_cost,
+        0
+      ) +
+        order?.planned_costs?.expenses?.details?.reduce(
+          (total, cost) => total + cost?.planned_cost,
+          0
+        )
+    : order?.department_real_costs?.reduce(
+        (total, cost) => total + cost?.cost,
+        0
+      ) +
+        order?.expenses_real_costs?.reduce(
+          (total, cost) => total + cost?.real_cost,
+          0
+        );
+};
 
 const formatNumber = (number) => {
   if (!number) return "0";
@@ -50,6 +83,31 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState(
     localStorage.getItem("qSearchQuery") || ""
   );
+  const [dollarRate, setDollarRate] = useState(
+    localStorage.getItem("dollarRate") || 0
+  );
+
+  useEffect(() => {
+    const fetchDollarRate = async () => {
+      try {
+        const response = await axios.get(
+          "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
+        );
+        setDollarRate(response.data?.find((item) => item.Ccy === "USD")?.Rate);
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Dollar tashkil etishda xatolik",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchDollarRate();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("dollarRate", dollarRate);
+  }, [dollarRate]);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -248,8 +306,10 @@ const Dashboard = () => {
                   {cost.name}
                 </th>
               ))}
+              <th className="py-1 px-2 border border-gray-300">Jami topildi</th>
               <th className="py-1 px-2 border border-gray-300">Jami xarajat</th>
               <th className="py-1 px-2 border border-gray-300">Rentabillik</th>
+              <th className="py-1 px-2 border border-gray-300">Foizda</th>
             </tr>
           </thead>
           <tbody>
@@ -316,7 +376,6 @@ const Dashboard = () => {
                       {order?.produced_quantity} / {order?.order?.quantity}
                     </div>
                   </td>
-
                   {departments?.map((department) => {
                     const realCost =
                       order?.department_real_costs?.find(
@@ -375,7 +434,6 @@ const Dashboard = () => {
                       </td>
                     );
                   })}
-
                   {expensesCosts?.map((expense) => {
                     const realCost =
                       order?.expenses_real_costs?.find(
@@ -437,6 +495,126 @@ const Dashboard = () => {
                       </td>
                     );
                   })}
+                  <td className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2">
+                    {(() => {
+                      const produced = order?.produced_quantity || 0;
+                      const total = order?.order?.quantity || 1;
+                      const percent = Math.min((produced / total) * 100, 100);
+
+                      return (
+                        <>
+                          {/* Background fill */}
+                          <div
+                            className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                              percent < 50
+                                ? "bg-red-200"
+                                : percent < 80
+                                ? "bg-yellow-200"
+                                : "bg-green-200"
+                            }`}
+                            style={{ width: `${percent}%` }}
+                          ></div>
+
+                          {/* Foreground content */}
+                          <div className="relative z-10 space-y-1">
+                            <div className="font-semibold text-gray-900">
+                              {formatNumber(
+                                calculateTotalPrice(order, dollarRate, false)
+                              )}
+                            </div>
+                            <div className="text-gray-600">
+                              {formatNumber(
+                                calculateTotalPrice(order, dollarRate, true)
+                              )}
+                            </div>
+                            <div
+                              className={`font-medium ${
+                                percent < 50
+                                  ? "text-red-600"
+                                  : percent < 80
+                                  ? "text-yellow-700"
+                                  : "text-green-700"
+                              }`}
+                            >
+                              {percent.toFixed(1)}%
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </td>
+
+                  <td className="py-1 px-2 border border-gray-300">
+                    <div className="space-y-1">
+                      <div className="font-semibold">
+                        {formatNumber(calculateTotalExpenses(order, false))}
+                      </div>
+                      <div className="text-gray-600">
+                        {formatNumber(calculateTotalExpenses(order, true))}
+                      </div>
+                      <div>
+                        {formatNumber(
+                          (calculateTotalExpenses(order, false) /
+                            calculateTotalExpenses(order, true)) *
+                            100
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-1 px-2 border border-gray-300">
+                    <div className="space-y-1">
+                      <div
+                        className={
+                          calculateProfit(order, dollarRate, false) > 0
+                            ? "text-green-600 font-medium"
+                            : "text-red-600 font-medium"
+                        }
+                      >
+                        {formatNumber(
+                          calculateProfit(order, dollarRate, false)
+                        )}
+                      </div>
+                      <div
+                        className={
+                          calculateProfit(order, dollarRate, true) > 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {formatNumber(calculateProfit(order, dollarRate, true))}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-1 px-2 border border-gray-300">
+                    <div className="space-y-1">
+                      <div
+                        className={
+                          calculateProfit(order, dollarRate, false) > 0
+                            ? "text-green-600 font-medium"
+                            : "text-red-600 font-medium"
+                        }
+                      >
+                        {formatNumber(
+                          (calculateProfit(order, dollarRate, false) /
+                            calculateTotalPrice(order, dollarRate, false)) *
+                            100
+                        )}
+                      </div>
+                      <div
+                        className={
+                          calculateProfit(order, dollarRate, true) > 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {formatNumber(
+                          (calculateProfit(order, dollarRate, true) /
+                            calculateTotalPrice(order, dollarRate, true)) *
+                            100
+                        )}
+                      </div>
+                    </div>
+                  </td>
                 </tr>
               ))}
           </tbody>
