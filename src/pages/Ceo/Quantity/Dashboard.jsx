@@ -221,8 +221,21 @@ const Dashboard = () => {
                 <td className="py-1 px-2 border border-gray-300">
                   {index + 1}
                 </td>
-                <td className="py-1 px-2 border border-gray-300">
-                  {order?.order?.name}
+                <td className="py-1 px-2 border border-gray-300 text-left">
+                  {order?.order?.name} <br />
+                  {order?.order?.order_model?.submodels
+                    ?.map((submodel) => submodel?.submodel?.name)
+                    .join(", ")}{" "}
+                  <br />
+                  <div className="text-gray-500">
+                    {order?.order?.order_model?.submodels
+                      ?.map(
+                        (submodel) =>
+                          submodel?.group?.group?.responsible_user?.employee
+                            ?.name
+                      )
+                      .join(", ")}
+                  </div>
                 </td>
                 <td className="py-1 px-2 border border-gray-300">
                   {formatNumber(order?.order?.price)}$
