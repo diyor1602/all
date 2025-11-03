@@ -25,7 +25,7 @@ const Dashboard = () => {
 
   const [data, setData] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [expenses_costs, setExpensesCosts] = useState([]);
+  const [expensesCosts, setExpensesCosts] = useState([]);
   const [departmentsWithBudgets, setDepartmentsWithBudgets] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -136,12 +136,12 @@ const Dashboard = () => {
       setData(response.data);
       // collect all expense_costs into one array
       const allExpenses = response.data.flatMap(
-        (item) => item.expenses_costs || []
+        (item) => item.expenses_real_costs || []
       );
 
       // remove duplicates by expense_id
       const uniqueExpenses = Array.from(
-        new Map(allExpenses.map((exp) => [exp.expense_id, exp])).values()
+        new Map(allExpenses.map((exp) => [exp.id, exp])).values()
       );
       setExpensesCosts(uniqueExpenses);
     } catch (error) {
@@ -205,12 +205,12 @@ const Dashboard = () => {
                   {department.name}
                 </th>
               ))}
-              {expenses_costs?.map((cost) => (
+              {expensesCosts?.map((cost) => (
                 <th
-                  key={cost.expense_id}
+                  key={cost.id}
                   className="py-1 px-2 border border-gray-300 whitespace-normal"
                 >
-                  {cost.expense_name}
+                  {cost.name}
                 </th>
               ))}
             </tr>
@@ -261,22 +261,22 @@ const Dashboard = () => {
                       }
                     >
                       {formatNumber(
-                        order?.department_costs?.find(
-                          (cost) => cost?.department_id === department?.id
+                        order?.department_real_costs?.find(
+                          (cost) => cost?.id === department?.id
                         )?.cost
                       )}
                     </div>
                   </td>
                 ))}
-                {expenses_costs?.map((expense) => (
+                {expensesCosts?.map((expense) => (
                   <td
-                    key={expense.expense_id}
+                    key={expense.id}
                     className="py-1 px-2 border border-gray-300"
                   >
                     {formatNumber(
-                      order?.expenses_costs?.find(
-                        (cost) => cost.expense_id === expense.expense_id
-                      )?.cost
+                      order?.expenses_real_costs?.find(
+                        (cost) => cost.id === expense.id
+                      )?.real_cost
                     )}
                   </td>
                 ))}
@@ -315,15 +315,15 @@ const Dashboard = () => {
               ?.map((department) => {
                 const totalEarned = data
                   ?.filter((order) =>
-                    order?.department_costs?.find(
-                      (cost) => cost?.department_id === department?.id
+                    order?.department_real_costs?.find(
+                      (cost) => cost?.id === department?.id
                     )
                   )
                   ?.reduce(
                     (total, order) =>
                       total +
-                      (order?.department_costs?.find(
-                        (cost) => cost?.department_id === department?.id
+                      (order?.department_real_costs?.find(
+                        (cost) => cost?.id === department?.id
                       )?.cost || 0),
                     0
                   );
