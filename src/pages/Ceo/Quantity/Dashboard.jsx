@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 
 const calculateTotalPrice = (order, dollarRate, future) => {
   const quantity = future ? order?.order?.quantity : order?.produced_quantity;
@@ -86,6 +87,7 @@ const Dashboard = () => {
   const [dollarRate, setDollarRate] = useState(
     localStorage.getItem("dollarRate") || 0
   );
+  const [visiblePrice, setVisiblePrice] = useState(false);
 
   useEffect(() => {
     const fetchDollarRate = async () => {
@@ -253,16 +255,25 @@ const Dashboard = () => {
 
   return (
     <div>
-      <Input
-        type="month"
-        value={selectedMonth}
-        onChange={(e) => {
-          setSelectedMonth(e.target.value);
-          localStorage.setItem("qSelectedMonth", e.target.value);
-        }}
-        className="w-fit bg-white"
-        disabled={loading}
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => {
+            setSelectedMonth(e.target.value);
+            localStorage.setItem("qSelectedMonth", e.target.value);
+          }}
+          className="w-fit bg-white"
+          disabled={loading}
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setVisiblePrice(!visiblePrice)}
+        >
+          {visiblePrice ? <EyeOff /> : <Eye />}
+        </Button>
+      </div>
       {/* Orders */}
       <div className="mt-6 flex items-center gap-2">
         <Input
@@ -358,7 +369,9 @@ const Dashboard = () => {
                     </div>
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
-                    {formatNumber(order?.order?.price)}$
+                    {visiblePrice
+                      ? `${formatNumber(order?.order?.price)}$`
+                      : "-"}
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
                     {formatNumber(order?.model?.minute)}
@@ -501,124 +514,147 @@ const Dashboard = () => {
                     );
                   })}
                   <td className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2">
-                    {(() => {
-                      const produced = order?.produced_quantity || 0;
-                      const total = order?.order?.quantity || 1;
-                      const percent = Math.min((produced / total) * 100, 100);
+                    {visiblePrice
+                      ? (() => {
+                          const produced = order?.produced_quantity || 0;
+                          const total = order?.order?.quantity || 1;
+                          const percent = Math.min(
+                            (produced / total) * 100,
+                            100
+                          );
 
-                      return (
-                        <>
-                          {/* Background fill */}
-                          <div
-                            className={`absolute top-0 left-0 h-full transition-all duration-500 ${
-                              percent < 50
-                                ? "bg-red-200"
-                                : percent < 80
-                                ? "bg-yellow-200"
-                                : "bg-green-200"
-                            }`}
-                            style={{ width: `${percent}%` }}
-                          ></div>
+                          return (
+                            <>
+                              {/* Background fill */}
+                              <div
+                                className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                                  percent < 50
+                                    ? "bg-red-200"
+                                    : percent < 80
+                                    ? "bg-yellow-200"
+                                    : "bg-green-200"
+                                }`}
+                                style={{ width: `${percent}%` }}
+                              ></div>
 
-                          {/* Foreground content */}
-                          <div className="relative z-10 space-y-1">
-                            <div className="font-semibold text-gray-900">
-                              {formatNumber(
-                                calculateTotalPrice(order, dollarRate, false)
-                              )}
-                            </div>
-                            <div className="text-gray-600">
-                              {formatNumber(
-                                calculateTotalPrice(order, dollarRate, true)
-                              )}
-                            </div>
-                            <div
-                              className={`font-medium ${
-                                percent < 50
-                                  ? "text-red-600"
-                                  : percent < 80
-                                  ? "text-yellow-700"
-                                  : "text-green-700"
-                              }`}
-                            >
-                              {percent.toFixed(1)}%
-                            </div>
-                          </div>
-                        </>
-                      );
-                    })()}
+                              {/* Foreground content */}
+                              <div className="relative z-10 space-y-1">
+                                <div className="font-semibold text-gray-900">
+                                  {formatNumber(
+                                    calculateTotalPrice(
+                                      order,
+                                      dollarRate,
+                                      false
+                                    )
+                                  )}
+                                </div>
+                                <div className="text-gray-600">
+                                  {formatNumber(
+                                    calculateTotalPrice(order, dollarRate, true)
+                                  )}
+                                </div>
+                                <div
+                                  className={`font-medium ${
+                                    percent < 50
+                                      ? "text-red-600"
+                                      : percent < 80
+                                      ? "text-yellow-700"
+                                      : "text-green-700"
+                                  }`}
+                                >
+                                  {percent.toFixed(1)}%
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()
+                      : "-"}
                   </td>
 
                   <td className="py-1 px-2 border border-gray-300">
-                    <div className="space-y-1">
-                      <div className="font-semibold">
-                        {formatNumber(calculateTotalExpenses(order, false))}
+                    {visiblePrice ? (
+                      <div className="space-y-1">
+                        <div className="font-semibold">
+                          {formatNumber(calculateTotalExpenses(order, false))}
+                        </div>
+                        <div className="text-gray-600">
+                          {formatNumber(calculateTotalExpenses(order, true))}
+                        </div>
+                        <div>
+                          {formatNumber(
+                            (calculateTotalExpenses(order, false) /
+                              calculateTotalExpenses(order, true)) *
+                              100
+                          )}
+                        </div>
                       </div>
-                      <div className="text-gray-600">
-                        {formatNumber(calculateTotalExpenses(order, true))}
-                      </div>
-                      <div>
-                        {formatNumber(
-                          (calculateTotalExpenses(order, false) /
-                            calculateTotalExpenses(order, true)) *
-                            100
-                        )}
-                      </div>
-                    </div>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
-                    <div className="space-y-1">
-                      <div
-                        className={
-                          calculateProfit(order, dollarRate, false) > 0
-                            ? "text-green-600 font-medium"
-                            : "text-red-600 font-medium"
-                        }
-                      >
-                        {formatNumber(
-                          calculateProfit(order, dollarRate, false)
-                        )}
+                    {visiblePrice ? (
+                      <div className="space-y-1">
+                        <div
+                          className={
+                            calculateProfit(order, dollarRate, false) > 0
+                              ? "text-green-600 font-medium"
+                              : "text-red-600 font-medium"
+                          }
+                        >
+                          {formatNumber(
+                            calculateProfit(order, dollarRate, false)
+                          )}
+                        </div>
+                        <div
+                          className={
+                            calculateProfit(order, dollarRate, true) > 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {formatNumber(
+                            calculateProfit(order, dollarRate, true)
+                          )}
+                        </div>
                       </div>
-                      <div
-                        className={
-                          calculateProfit(order, dollarRate, true) > 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }
-                      >
-                        {formatNumber(calculateProfit(order, dollarRate, true))}
-                      </div>
-                    </div>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
-                    <div className="space-y-1">
-                      <div
-                        className={
-                          calculateProfit(order, dollarRate, false) > 0
-                            ? "text-green-600 font-medium"
-                            : "text-red-600 font-medium"
-                        }
-                      >
-                        {formatNumber(
-                          (calculateProfit(order, dollarRate, false) /
-                            calculateTotalPrice(order, dollarRate, false)) *
-                            100
-                        )}
+                    {visiblePrice ? (
+                      <div className="space-y-1">
+                        <div
+                          className={
+                            calculateProfit(order, dollarRate, false) > 0
+                              ? "text-green-600 font-medium"
+                              : "text-red-600 font-medium"
+                          }
+                        >
+                          {formatNumber(
+                            (calculateProfit(order, dollarRate, false) /
+                              calculateTotalPrice(order, dollarRate, false)) *
+                              100
+                          )}
+                        </div>
+                        <div
+                          className={
+                            calculateProfit(order, dollarRate, true) > 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {formatNumber(
+                            (calculateProfit(order, dollarRate, true) /
+                              calculateTotalPrice(order, dollarRate, true)) *
+                              100
+                          )}
+                        </div>
                       </div>
-                      <div
-                        className={
-                          calculateProfit(order, dollarRate, true) > 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }
-                      >
-                        {formatNumber(
-                          (calculateProfit(order, dollarRate, true) /
-                            calculateTotalPrice(order, dollarRate, true)) *
-                            100
-                        )}
-                      </div>
-                    </div>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                 </tr>
               ))}
