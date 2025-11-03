@@ -47,6 +47,9 @@ const Dashboard = () => {
   const [budgetQuantity, setBudgetQuantity] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(
+    localStorage.getItem("qSearchQuery") || ""
+  );
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -203,7 +206,19 @@ const Dashboard = () => {
         disabled={loading}
       />
       {/* Orders */}
-      <div className="mt-6">Buyurtmalar</div>
+      <div className="mt-6 flex items-center gap-2">
+        <Input
+          type="text"
+          placeholder="Qidirish"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            localStorage.setItem("qSearchQuery", e.target.value);
+          }}
+          className="w-full bg-white ml-auto"
+          disabled={loading}
+        />
+      </div>
       <div className="mt-2 w-full overflow-auto">
         <table
           className={`w-full whitespace-nowrap border border-collapse border-gray-300 bg-white text-xs ${
@@ -233,171 +248,197 @@ const Dashboard = () => {
                   {cost.name}
                 </th>
               ))}
+              <th className="py-1 px-2 border border-gray-300">Jami xarajat</th>
+              <th className="py-1 px-2 border border-gray-300">Rentabillik</th>
             </tr>
           </thead>
           <tbody>
-            {data?.map((order, index) => (
-              <tr key={index} className="text-center">
-                <td className="py-1 px-2 border border-gray-300">
-                  {index + 1}
-                </td>
-                <td className="py-1 px-2 border border-gray-300 text-left">
-                  {order?.order?.name} <br />
-                  {order?.order?.order_model?.submodels
+            {data
+              ?.filter((order) => {
+                return (
+                  order?.order?.name?.includes(searchQuery) ||
+                  order?.order?.order_model?.submodels
                     ?.map((submodel) => submodel?.submodel?.name)
-                    .join(", ")}{" "}
-                  <br />
-                  <div className="text-gray-500">
+                    .join(", ")
+                    .includes(searchQuery) ||
+                  order?.order?.order_model?.submodels
+                    ?.map(
+                      (submodel) =>
+                        submodel?.group?.group?.responsible_user?.employee?.name
+                    )
+                    .join(", ")
+                    .includes(searchQuery)
+                );
+              })
+              ?.sort((a, b) => b?.order?.name.localeCompare(a?.order?.name))
+              ?.map((order, index) => (
+                <tr key={index} className="text-center">
+                  <td className="py-1 px-2 border border-gray-300">
+                    {index + 1}
+                  </td>
+                  <td className="py-1 px-2 border border-gray-300 text-left">
+                    {order?.order?.name} <br />
                     {order?.order?.order_model?.submodels
-                      ?.map(
-                        (submodel) =>
-                          submodel?.group?.group?.responsible_user?.employee
-                            ?.name
-                      )
-                      .join(", ")}
-                  </div>
-                </td>
-                <td className="py-1 px-2 border border-gray-300">
-                  {formatNumber(order?.order?.price)}$
-                </td>
-                <td className="py-1 px-2 border border-gray-300">
-                  {order?.model?.minute}
-                </td>
-                <td className="py-1 px-2 border border-gray-300 relative overflow-hidden">
-                  {/* Background fill based on percentage */}
-                  <div
-                    className="absolute top-0 left-0 h-full bg-green-200 transition-all duration-300"
-                    style={{
-                      width: `${
-                        ((order?.produced_quantity || 0) /
-                          (order?.order?.quantity || 1)) *
-                        100
-                      }%`,
-                    }}
-                  ></div>
+                      ?.map((submodel) => submodel?.submodel?.name)
+                      .join(", ")}{" "}
+                    <br />
+                    <div className="text-gray-500">
+                      {order?.order?.order_model?.submodels
+                        ?.map(
+                          (submodel) =>
+                            submodel?.group?.group?.responsible_user?.employee
+                              ?.name
+                        )
+                        .join(", ")}
+                    </div>
+                  </td>
+                  <td className="py-1 px-2 border border-gray-300">
+                    {formatNumber(order?.order?.price)}$
+                  </td>
+                  <td className="py-1 px-2 border border-gray-300">
+                    {formatNumber(order?.model?.minute)}
+                  </td>
+                  <td className="py-1 px-2 border border-gray-300 relative overflow-hidden">
+                    {/* Background fill based on percentage */}
+                    <div
+                      className="absolute top-0 left-0 h-full bg-green-200 transition-all duration-300"
+                      style={{
+                        width: `${
+                          ((order?.produced_quantity || 0) /
+                            (order?.order?.quantity || 1)) *
+                          100
+                        }%`,
+                      }}
+                    ></div>
 
-                  {/* Foreground content */}
-                  <div className="relative z-10 text-center">
-                    {order?.produced_quantity} / {order?.order?.quantity}
-                  </div>
-                </td>
+                    {/* Foreground content */}
+                    <div className="relative z-10 text-center">
+                      {order?.produced_quantity} / {order?.order?.quantity}
+                    </div>
+                  </td>
 
-                {departments?.map((department) => {
-                  const realCost =
-                    order?.department_real_costs?.find(
-                      (cost) => cost?.id === department?.id
-                    )?.cost || 0;
+                  {departments?.map((department) => {
+                    const realCost =
+                      order?.department_real_costs?.find(
+                        (cost) => cost?.id === department?.id
+                      )?.cost || 0;
 
-                  const plannedCost =
-                    order?.planned_costs?.department?.details?.find(
-                      (cost) => cost?.id === department?.id
-                    )?.planned_cost || 1;
+                    const plannedCost =
+                      order?.planned_costs?.department?.details?.find(
+                        (cost) => cost?.id === department?.id
+                      )?.planned_cost || 1;
 
-                  const percent = Math.min((realCost / plannedCost) * 100, 100); // prevent overflow
+                    const percent = Math.min(
+                      (realCost / plannedCost) * 100,
+                      100
+                    ); // prevent overflow
 
-                  return (
-                    <td
-                      key={department.id}
-                      className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2"
-                    >
-                      {/* background fill */}
-                      <div
-                        className={`absolute top-0 left-0 h-full transition-all duration-500 ${
-                          percent < 50
-                            ? "bg-red-200"
-                            : percent < 80
-                            ? "bg-yellow-200"
-                            : "bg-green-200"
-                        }`}
-                        style={{ width: `${percent}%` }}
-                      ></div>
-
-                      {/* Foreground content */}
-                      <div className="relative z-10 space-y-1 cursor-pointer">
-                        {/* Real cost (clickable) */}
+                    return (
+                      <td
+                        key={department.id}
+                        className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2"
+                      >
+                        {/* background fill */}
                         <div
-                          onClick={() =>
-                            handleDepartmentDialogOpen(department, order)
-                          }
-                          className="font-semibold"
-                        >
-                          {formatNumber(realCost)}
-                        </div>
-
-                        {/* Planned cost */}
-                        <div className="text-gray-600">
-                          {formatNumber(plannedCost)}
-                        </div>
-
-                        {/* Percentage */}
-                        <div className="text-gray-700 font-medium">
-                          {percent.toFixed(1)}%
-                        </div>
-                      </div>
-                    </td>
-                  );
-                })}
-
-                {expensesCosts?.map((expense) => {
-                  const realCost =
-                    order?.expenses_real_costs?.find(
-                      (cost) => cost.id === expense.id
-                    )?.real_cost || 0;
-
-                  const plannedCost =
-                    order?.planned_costs?.expenses?.details?.find(
-                      (cost) => cost.id === expense.id
-                    )?.planned_cost || 1;
-
-                  const percent = Math.min((realCost / plannedCost) * 100, 100);
-
-                  return (
-                    <td
-                      key={expense.id}
-                      className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2"
-                    >
-                      {/* Background fill */}
-                      <div
-                        className={`absolute top-0 left-0 h-full transition-all duration-500 ${
-                          percent < 50
-                            ? "bg-red-200"
-                            : percent < 80
-                            ? "bg-yellow-200"
-                            : "bg-green-200"
-                        }`}
-                        style={{ width: `${percent}%` }}
-                      ></div>
-
-                      {/* Foreground content */}
-                      <div className="relative z-10 space-y-1 cursor-pointer">
-                        {/* Real cost */}
-                        <div className="font-semibold text-gray-900">
-                          {formatNumber(realCost)}
-                        </div>
-
-                        {/* Planned cost */}
-                        <div className="text-gray-600">
-                          {formatNumber(plannedCost)}
-                        </div>
-
-                        {/* Percentage */}
-                        <div
-                          className={`font-medium ${
+                          className={`absolute top-0 left-0 h-full transition-all duration-500 ${
                             percent < 50
-                              ? "text-red-600"
+                              ? "bg-red-200"
                               : percent < 80
-                              ? "text-yellow-700"
-                              : "text-green-700"
+                              ? "bg-yellow-200"
+                              : "bg-green-200"
                           }`}
-                        >
-                          {percent.toFixed(1)}%
+                          style={{ width: `${percent}%` }}
+                        ></div>
+
+                        {/* Foreground content */}
+                        <div className="relative z-10 space-y-1 cursor-pointer">
+                          {/* Real cost (clickable) */}
+                          <div
+                            onClick={() =>
+                              handleDepartmentDialogOpen(department, order)
+                            }
+                            className="font-semibold"
+                          >
+                            {formatNumber(realCost)}
+                          </div>
+
+                          {/* Planned cost */}
+                          <div className="text-gray-600">
+                            {formatNumber(plannedCost)}
+                          </div>
+
+                          {/* Percentage */}
+                          <div className="text-gray-700 font-medium">
+                            {percent.toFixed(1)}%
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+                      </td>
+                    );
+                  })}
+
+                  {expensesCosts?.map((expense) => {
+                    const realCost =
+                      order?.expenses_real_costs?.find(
+                        (cost) => cost.id === expense.id
+                      )?.real_cost || 0;
+
+                    const plannedCost =
+                      order?.planned_costs?.expenses?.details?.find(
+                        (cost) => cost.id === expense.id
+                      )?.planned_cost || 1;
+
+                    const percent = Math.min(
+                      (realCost / plannedCost) * 100,
+                      100
+                    );
+
+                    return (
+                      <td
+                        key={expense.id}
+                        className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2"
+                      >
+                        {/* Background fill */}
+                        <div
+                          className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                            percent < 50
+                              ? "bg-red-200"
+                              : percent < 80
+                              ? "bg-yellow-200"
+                              : "bg-green-200"
+                          }`}
+                          style={{ width: `${percent}%` }}
+                        ></div>
+
+                        {/* Foreground content */}
+                        <div className="relative z-10 space-y-1 cursor-pointer">
+                          {/* Real cost */}
+                          <div className="font-semibold text-gray-900">
+                            {formatNumber(realCost)}
+                          </div>
+
+                          {/* Planned cost */}
+                          <div className="text-gray-600">
+                            {formatNumber(plannedCost)}
+                          </div>
+
+                          {/* Percentage */}
+                          <div
+                            className={`font-medium ${
+                              percent < 50
+                                ? "text-red-600"
+                                : percent < 80
+                                ? "text-yellow-700"
+                                : "text-green-700"
+                            }`}
+                          >
+                            {percent.toFixed(1)}%
+                          </div>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
