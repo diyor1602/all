@@ -249,37 +249,120 @@ const Dashboard = () => {
                   </div>
                 </td>
 
-                {departments?.map((department) => (
-                  <td
-                    key={department.id}
-                    className="py-1 px-2 border border-gray-300"
-                  >
-                    <div
-                      className="cursor-pointer"
-                      onClick={() =>
-                        handleDepartmentDialogOpen(department, order)
-                      }
+                {departments?.map((department) => {
+                  const realCost =
+                    order?.department_real_costs?.find(
+                      (cost) => cost?.id === department?.id
+                    )?.cost || 0;
+
+                  const plannedCost =
+                    order?.planned_costs?.department?.details?.find(
+                      (cost) => cost?.id === department?.id
+                    )?.planned_cost || 1;
+
+                  const percent = Math.min((realCost / plannedCost) * 100, 100); // prevent overflow
+
+                  return (
+                    <td
+                      key={department.id}
+                      className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2"
                     >
-                      {formatNumber(
-                        order?.department_real_costs?.find(
-                          (cost) => cost?.id === department?.id
-                        )?.cost
-                      )}
-                    </div>
-                  </td>
-                ))}
-                {expensesCosts?.map((expense) => (
-                  <td
-                    key={expense.id}
-                    className="py-1 px-2 border border-gray-300"
-                  >
-                    {formatNumber(
-                      order?.expenses_real_costs?.find(
-                        (cost) => cost.id === expense.id
-                      )?.real_cost
-                    )}
-                  </td>
-                ))}
+                      {/* background fill */}
+                      <div
+                        className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                          percent < 50
+                            ? "bg-red-200"
+                            : percent < 80
+                            ? "bg-yellow-200"
+                            : "bg-green-200"
+                        }`}
+                        style={{ width: `${percent}%` }}
+                      ></div>
+
+                      {/* Foreground content */}
+                      <div className="relative z-10 space-y-1 cursor-pointer">
+                        {/* Real cost (clickable) */}
+                        <div
+                          onClick={() =>
+                            handleDepartmentDialogOpen(department, order)
+                          }
+                          className="font-semibold"
+                        >
+                          {formatNumber(realCost)}
+                        </div>
+
+                        {/* Planned cost */}
+                        <div className="text-gray-600">
+                          {formatNumber(plannedCost)}
+                        </div>
+
+                        {/* Percentage */}
+                        <div className="text-gray-700 font-medium">
+                          {percent.toFixed(1)}%
+                        </div>
+                      </div>
+                    </td>
+                  );
+                })}
+
+                {expensesCosts?.map((expense) => {
+                  const realCost =
+                    order?.expenses_real_costs?.find(
+                      (cost) => cost.id === expense.id
+                    )?.real_cost || 0;
+
+                  const plannedCost =
+                    order?.planned_costs?.expenses?.details?.find(
+                      (cost) => cost.id === expense.id
+                    )?.planned_cost || 1;
+
+                  const percent = Math.min((realCost / plannedCost) * 100, 100);
+
+                  return (
+                    <td
+                      key={expense.id}
+                      className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2"
+                    >
+                      {/* Background fill */}
+                      <div
+                        className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                          percent < 50
+                            ? "bg-red-200"
+                            : percent < 80
+                            ? "bg-yellow-200"
+                            : "bg-green-200"
+                        }`}
+                        style={{ width: `${percent}%` }}
+                      ></div>
+
+                      {/* Foreground content */}
+                      <div className="relative z-10 space-y-1 cursor-pointer">
+                        {/* Real cost */}
+                        <div className="font-semibold text-gray-900">
+                          {formatNumber(realCost)}
+                        </div>
+
+                        {/* Planned cost */}
+                        <div className="text-gray-600">
+                          {formatNumber(plannedCost)}
+                        </div>
+
+                        {/* Percentage */}
+                        <div
+                          className={`font-medium ${
+                            percent < 50
+                              ? "text-red-600"
+                              : percent < 80
+                              ? "text-yellow-700"
+                              : "text-green-700"
+                          }`}
+                        >
+                          {percent.toFixed(1)}%
+                        </div>
+                      </div>
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
