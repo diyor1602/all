@@ -333,7 +333,13 @@ const Dashboard = () => {
                   key={cost.id}
                   className="py-1 px-2 border border-gray-300 whitespace-normal"
                 >
-                  {cost.name}
+                  <div className="space-y-1">
+                    <div>{cost.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {cost.quantity}
+                      {cost.type === "percentage_based" ? "%" : ""}
+                    </div>
+                  </div>
                 </th>
               ))}
               <th className="py-1 px-2 border border-gray-300">Jami topildi</th>
