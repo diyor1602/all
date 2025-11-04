@@ -253,6 +253,25 @@ const Dashboard = () => {
     setSelectedOrder(order);
   };
 
+  const filteredData = data
+    ?.filter((order) => {
+      const query = searchQuery.toLowerCase();
+      return (
+        order?.order?.name?.toLowerCase().includes(query) ||
+        order?.order?.order_model?.submodels
+          ?.map((submodel) => submodel?.submodel?.name?.toLowerCase())
+          .join(", ")
+          .includes(query) ||
+        order?.order?.order_model?.submodels
+          ?.map((submodel) =>
+            submodel?.group?.group?.responsible_user?.employee?.name?.toLowerCase()
+          )
+          .join(", ")
+          .includes(query)
+      );
+    })
+    ?.sort((a, b) => b?.order?.name.localeCompare(a?.order?.name));
+
   return (
     <div>
       <div className="flex items-center gap-2">
@@ -324,23 +343,7 @@ const Dashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {data
-              ?.filter((order) => {
-                return (
-                  order?.order?.name?.includes(searchQuery) ||
-                  order?.order?.order_model?.submodels
-                    ?.map((submodel) => submodel?.submodel?.name)
-                    .join(", ")
-                    .includes(searchQuery) ||
-                  order?.order?.order_model?.submodels
-                    ?.map(
-                      (submodel) =>
-                        submodel?.group?.group?.responsible_user?.employee?.name
-                    )
-                    .join(", ")
-                    .includes(searchQuery)
-                );
-              })
+            {filteredData
               ?.sort((a, b) => b?.order?.name.localeCompare(a?.order?.name))
               ?.map((order, index) => (
                 <tr
@@ -659,6 +662,333 @@ const Dashboard = () => {
                 </tr>
               ))}
           </tbody>
+          <tfoot>
+            <tr className="bg-gray-50 font-semibold text-center">
+              {/* "Jami" label */}
+              <td className="py-1 px-2 border border-gray-300">Jami</td>
+
+              {/* Total count */}
+              <td className="py-1 px-2 border border-gray-300">
+                {filteredData?.length || 0}
+              </td>
+
+              {/* Total Price */}
+              <td className="py-1 px-2 border border-gray-300">
+                {visiblePrice ? (
+                  <>
+                    <div className="font-semibold">
+                      {formatNumber(
+                        filteredData?.reduce(
+                          (sum, o) => sum + (o?.order?.price || 0),
+                          0
+                        )
+                      )}{" "}
+                      $
+                    </div>
+                    <div className="text-gray-600">
+                      {formatNumber(
+                        filteredData?.reduce(
+                          (sum, o) => sum + (o?.order?.price || 0),
+                          0
+                        ) * dollarRate
+                      )}{" "}
+                      so'm
+                    </div>
+                  </>
+                ) : (
+                  "-"
+                )}
+              </td>
+
+              {/* Total minutes */}
+              <td className="py-1 px-2 border border-gray-300">
+                {formatNumber(
+                  filteredData?.reduce(
+                    (sum, o) => sum + Number(o?.model?.minute || 0),
+                    0
+                  )
+                )}
+              </td>
+
+              {/* Total Tikilgan */}
+              <td className="py-1 px-2 border border-gray-300">
+                {formatNumber(
+                  filteredData?.reduce(
+                    (sum, o) => sum + Number(o?.produced_quantity || 0),
+                    0
+                  )
+                )}{" "}
+                /{" "}
+                {formatNumber(
+                  filteredData?.reduce(
+                    (sum, o) => sum + Number(o?.order?.quantity || 0),
+                    0
+                  )
+                )}
+              </td>
+
+              {/* Department totals */}
+              {departments?.map((department) => {
+                const real = filteredData?.reduce((sum, o) => {
+                  const cost =
+                    o?.department_real_costs?.find(
+                      (c) => c.id === department.id
+                    )?.cost || 0;
+                  return sum + cost;
+                }, 0);
+
+                const planned = filteredData?.reduce((sum, o) => {
+                  const plan =
+                    o?.planned_costs?.department?.details?.find(
+                      (c) => c.id === department.id
+                    )?.planned_cost || 0;
+                  return sum + plan;
+                }, 0);
+
+                const percent = planned ? (real / planned) * 100 : 0;
+
+                return (
+                  <td
+                    key={department.id}
+                    className="py-1 px-2 border border-gray-300"
+                  >
+                    <div className="font-semibold text-gray-900">
+                      {formatNumber(real)}
+                    </div>
+                    <div className="text-gray-600">{formatNumber(planned)}</div>
+                    <div
+                      className={`font-medium ${
+                        percent < 50
+                          ? "text-red-600"
+                          : percent < 80
+                          ? "text-yellow-700"
+                          : "text-green-700"
+                      }`}
+                    >
+                      {percent.toFixed(1)}%
+                    </div>
+                  </td>
+                );
+              })}
+
+              {/* Expense totals */}
+              {expensesCosts?.map((expense) => {
+                const real = filteredData?.reduce((sum, o) => {
+                  const cost =
+                    o?.expenses_real_costs?.find((c) => c.id === expense.id)
+                      ?.real_cost || 0;
+                  return sum + cost;
+                }, 0);
+
+                const planned = filteredData?.reduce((sum, o) => {
+                  const plan =
+                    o?.planned_costs?.expenses?.details?.find(
+                      (c) => c.id === expense.id
+                    )?.planned_cost || 0;
+                  return sum + plan;
+                }, 0);
+
+                const percent = planned ? (real / planned) * 100 : 0;
+
+                return (
+                  <td
+                    key={expense.id}
+                    className="py-1 px-2 border border-gray-300"
+                  >
+                    <div className="font-semibold text-gray-900">
+                      {formatNumber(real)}
+                    </div>
+                    <div className="text-gray-600">{formatNumber(planned)}</div>
+                    <div
+                      className={`font-medium ${
+                        percent < 50
+                          ? "text-red-600"
+                          : percent < 80
+                          ? "text-yellow-700"
+                          : "text-green-700"
+                      }`}
+                    >
+                      {percent.toFixed(1)}%
+                    </div>
+                  </td>
+                );
+              })}
+
+              {/* Jami topildi */}
+              <td className="py-1 px-2 border border-gray-300">
+                {visiblePrice
+                  ? (() => {
+                      const real = filteredData?.reduce(
+                        (sum, o) =>
+                          sum + calculateTotalPrice(o, dollarRate, false),
+                        0
+                      );
+                      const planned = filteredData?.reduce(
+                        (sum, o) =>
+                          sum + calculateTotalPrice(o, dollarRate, true),
+                        0
+                      );
+                      const percent = planned ? (real / planned) * 100 : 0;
+                      return (
+                        <>
+                          <div className="font-semibold text-gray-900">
+                            {formatNumber(real)}
+                          </div>
+                          <div className="text-gray-600">
+                            {formatNumber(planned)}
+                          </div>
+                          <div
+                            className={`font-medium ${
+                              percent < 50
+                                ? "text-red-600"
+                                : percent < 80
+                                ? "text-yellow-700"
+                                : "text-green-700"
+                            }`}
+                          >
+                            {percent.toFixed(1)}%
+                          </div>
+                        </>
+                      );
+                    })()
+                  : "-"}
+              </td>
+
+              {/* Jami xarajat */}
+              <td className="py-1 px-2 border border-gray-300">
+                {visiblePrice
+                  ? (() => {
+                      const real = filteredData?.reduce(
+                        (sum, o) => sum + calculateTotalExpenses(o, false),
+                        0
+                      );
+                      const planned = filteredData?.reduce(
+                        (sum, o) => sum + calculateTotalExpenses(o, true),
+                        0
+                      );
+                      const percent = planned ? (real / planned) * 100 : 0;
+                      return (
+                        <>
+                          <div className="font-semibold text-gray-900">
+                            {formatNumber(real)}
+                          </div>
+                          <div className="text-gray-600">
+                            {formatNumber(planned)}
+                          </div>
+                          <div
+                            className={`font-medium ${
+                              percent < 50
+                                ? "text-red-600"
+                                : percent < 80
+                                ? "text-yellow-700"
+                                : "text-green-700"
+                            }`}
+                          >
+                            {percent.toFixed(1)}%
+                          </div>
+                        </>
+                      );
+                    })()
+                  : "-"}
+              </td>
+
+              {/* Rentabillik */}
+              <td className="py-1 px-2 border border-gray-300">
+                {visiblePrice
+                  ? (() => {
+                      const real = filteredData?.reduce(
+                        (sum, o) => sum + calculateProfit(o, dollarRate, false),
+                        0
+                      );
+                      const planned = filteredData?.reduce(
+                        (sum, o) => sum + calculateProfit(o, dollarRate, true),
+                        0
+                      );
+                      const percent =
+                        planned > 0
+                          ? (real / planned) * 100
+                          : real === 0
+                          ? 0
+                          : 100;
+                      return (
+                        <>
+                          <div
+                            className={`font-semibold ${
+                              real >= 0 ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {formatNumber(real)}
+                          </div>
+                          <div
+                            className={`text-gray-600 ${
+                              planned >= 0 ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {formatNumber(planned)}
+                          </div>
+                        </>
+                      );
+                    })()
+                  : "-"}
+              </td>
+
+              {/* Foizda (average %) */}
+              <td className="py-1 px-2 border border-gray-300">
+                {visiblePrice
+                  ? (() => {
+                      const totalProfit = filteredData?.reduce(
+                        (sum, o) => sum + calculateProfit(o, dollarRate, false),
+                        0
+                      );
+                      const totalRevenue = filteredData?.reduce(
+                        (sum, o) =>
+                          sum + calculateTotalPrice(o, dollarRate, false),
+                        0
+                      );
+                      const totalProfitPlan = filteredData?.reduce(
+                        (sum, o) => sum + calculateProfit(o, dollarRate, true),
+                        0
+                      );
+                      const totalRevenuePlan = filteredData?.reduce(
+                        (sum, o) =>
+                          sum + calculateTotalPrice(o, dollarRate, true),
+                        0
+                      );
+
+                      const realPercent = totalRevenue
+                        ? (totalProfit / totalRevenue) * 100
+                        : 0;
+                      const planPercent = totalRevenuePlan
+                        ? (totalProfitPlan / totalRevenuePlan) * 100
+                        : 0;
+
+                      return (
+                        <>
+                          <div
+                            className={`font-semibold ${
+                              realPercent >= 0
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {realPercent.toFixed(1)}%
+                          </div>
+                          <div
+                            className={`text-gray-600 ${
+                              planPercent >= 0
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {planPercent.toFixed(1)}%
+                          </div>
+                        </>
+                      );
+                    })()
+                  : "-"}
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
