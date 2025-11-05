@@ -306,7 +306,7 @@ const EditModel = () => {
 
   if (fetchingModel) {
     return (
-      <div className="md:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-10 w-10 text-blue-500 animate-spin mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700">
@@ -318,7 +318,7 @@ const EditModel = () => {
   }
 
   return (
-    <div className="md:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>

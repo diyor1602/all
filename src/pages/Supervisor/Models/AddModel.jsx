@@ -240,7 +240,7 @@ const AddModel = () => {
   };
 
   return (
-    <div className="md:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>

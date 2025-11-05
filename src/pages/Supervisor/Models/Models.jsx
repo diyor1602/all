@@ -42,11 +42,10 @@ import {
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import NoImage from "/noimage.png";
 
 const Models = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [models, setModels] = useState([]);
   const [filteredModels, setFilteredModels] = useState([]);
@@ -188,33 +187,16 @@ const Models = () => {
         <CardContent>
           <div className="text-gray-600">{model?.description || ""}</div>
           <div className="flex justify-start space-x-2 mt-2 mb-4 gap-2">
-            {/* <Button
-              variant="outline"
-              size="sm"
-              className="border-blue-200 hover:bg-blue-50 flex items-center gap-1"
-              disabled={isDownloading}
-              onClick={() => handleDownload(model.id)}
-            >
-              {isDownloading ? (
-                <>
-                  <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
-                  Yuklab olinmoqda...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 text-blue-600" />
-                  Yuklab olish
-                </>
-              )}
-            </Button> */}
             <Button
               variant="outline"
               size="sm"
               className="border-blue-200 hover:bg-blue-50 flex items-center gap-1"
-              onClick={() => navigate(`/supervisor/models/edit/${model.id}`)}
+              asChild
             >
-              <Edit className="h-4 w-4 text-blue-600" />
-              Tahrirlash
+              <Link to={`/supervisor/models/edit/${model.id}`}>
+                <Edit className="h-4 w-4 text-blue-600" />
+                Tahrirlash
+              </Link>
             </Button>
           </div>
 
@@ -380,7 +362,7 @@ const Models = () => {
   };
 
   return (
-    <div className="md:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
@@ -391,16 +373,17 @@ const Models = () => {
                 ({filteredModels.length}/{(models || []).length})
               </span>
             </h1>
-            <p className="text-gray-500 mt-1">Barcha modellar ro'yxati</p>
           </div>
 
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => navigate("/supervisor/models/add")}
+              asChild
               className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
             >
-              <PlusCircle className="h-4 w-4" />
-              Yangi model
+              <Link to="/supervisor/models/add">
+                <PlusCircle className="h-4 w-4" />
+                Yangi model
+              </Link>
             </Button>
             <Button
               onClick={fetchModels}
@@ -514,11 +497,13 @@ const Models = () => {
               )}
               {models.length === 0 && (
                 <Button
-                  onClick={() => navigate("/supervisor/models/add")}
+                  asChild
                   className="mt-4 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
                 >
-                  <PlusCircle className="h-4 w-4" />
-                  Yangi model qo'shish
+                  <Link to="/supervisor/models/add">
+                    <PlusCircle className="h-4 w-4" />
+                    Yangi model qo'shish
+                  </Link>
                 </Button>
               )}
             </div>
