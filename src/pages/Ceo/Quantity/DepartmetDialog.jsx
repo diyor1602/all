@@ -43,7 +43,7 @@ const DepartmetDialog = ({ department, order, open, setOpen }) => {
   }, []);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{department?.name}</DialogTitle>
           <DialogDescription>
@@ -86,7 +86,7 @@ const DepartmetDialog = ({ department, order, open, setOpen }) => {
             </table>
           </div>
         ) : (
-          <div className="mt-4 overflow-auto w-full">
+          <div className="mt-4 overflow-auto w-full max-h-[80vh]">
             <table className="w-full whitespace-nowrap border border-collapse border-gray-300 bg-white text-xs">
               <thead>
                 <tr>
