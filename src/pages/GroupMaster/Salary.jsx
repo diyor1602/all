@@ -5,6 +5,12 @@ import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
 
+const formatNumber = (num) => {
+  return parseFloat(num).toLocaleString("ru-RU", {
+    maximumFractionDigits: 0,
+  });
+};
+
 const CircularProgress = ({
   value = 0,
   size = 140,
@@ -124,12 +130,12 @@ const Salary = () => {
                 Hozirgacha topilgan:
               </div>
               <div className="text-3xl font-semibold text-blue-600">
-                {earned.toLocaleString()} so'm
+                {formatNumber(earned)} so'm
               </div>
               <div className="text-lg text-gray-600 mt-2">
                 Oyning oxirida taxminan:{" "}
                 <span className="font-semibold text-gray-800">
-                  {total.toLocaleString()} so'm
+                  {formatNumber(total)} so'm
                 </span>
               </div>
             </div>
@@ -140,6 +146,8 @@ const Salary = () => {
             {data?.map((item, index) => {
               const earnedItem = item.amount_from_sewing || 0;
               const totalItem = item.amount_from_order_quantity || 0;
+              const earnedItemPerItem =
+                item.amount_from_sewing / item.order?.quantity || 0;
               const percent = totalItem
                 ? Math.round((earnedItem / totalItem) * 100)
                 : 0;
@@ -163,15 +171,11 @@ const Salary = () => {
                       {item?.sewn_quantity} / {item.order?.quantity} dona
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
-                      {earnedItem.toLocaleString()} /{" "}
-                      {totalItem.toLocaleString()} so'm
+                      {formatNumber(earnedItem)} / {formatNumber(totalItem)}{" "}
+                      so'm
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
-                      Bir donasi:{" "}
-                      {(
-                        item?.amount_from_order_quantity / item.order?.quantity
-                      )?.toLocaleString()}{" "}
-                      so'm
+                      Bir donasi: {formatNumber(earnedItemPerItem)} so'm
                     </div>
                   </div>
 
