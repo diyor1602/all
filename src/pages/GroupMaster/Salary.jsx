@@ -163,14 +163,21 @@ const Salary = () => {
                       {item.order?.submodels?.join(", ")}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {item.order?.quantity} dona
+                      {item?.sewn_quantity} / {item.order?.quantity} dona
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
                       {earnedItem.toLocaleString()} /{" "}
                       {totalItem.toLocaleString()} so'm
                     </div>
                   </div>
-                  <CircularProgress value={percent} size={70} />
+
+                  {/* Circle with percentage */}
+                  <div className="relative flex items-center justify-center">
+                    <CircularProgress value={percent} size={70} />
+                    <div className="absolute text-sm font-semibold text-gray-700">
+                      {percent}%
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}
