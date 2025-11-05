@@ -10,6 +10,7 @@ import TarifDetails from "./TarifDetails";
 import Employees from "./Employees/Employees";
 import ViewEmployees from "./Employees/ViewEmployees";
 import AttendanceHistory from "./AttendanceHistory";
+import Salary from "./Salary";
 
 const GroupMaster = () => {
   return (
@@ -25,6 +26,7 @@ const GroupMaster = () => {
       <Route path="employees" element={<Employees />} />
       <Route path="employees/view/:id" element={<ViewEmployees />} />
       <Route path="attendanceHistory" element={<AttendanceHistory />} />
+      <Route path="salary" element={<Salary />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

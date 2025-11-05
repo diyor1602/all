@@ -11,10 +11,12 @@ import {
   Radical,
   Users,
   Clock,
+  Wallet,
 } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
+  { name: "Oylik", href: "/groupMaster/salary", icon: Wallet, onMobile: true },
   {
     name: "KPI",
     href: "/kpi",
