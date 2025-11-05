@@ -33,7 +33,7 @@ const navigation = [
     name: "Tikuv",
     href: "/groupMaster/tailoring",
     icon: Shirt,
-    onMobile: true,
+    onMobile: false,
   },
   {
     name: "Natija",
