@@ -81,12 +81,9 @@ const Salary = () => {
   const progress = total ? Math.min((earned / total) * 100, 100) : 0;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,_#f9fafc,_#eef1f6)] p-6 flex flex-col gap-8 text-gray-900">
+    <div className="min-h-screen flex flex-col gap-8 text-gray-900">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
-          💰 Oylik hisobot
-        </h1>
         <Input
           type="month"
           value={selectedMonth}
@@ -168,6 +165,13 @@ const Salary = () => {
                     <div className="text-sm text-gray-600 mt-1">
                       {earnedItem.toLocaleString()} /{" "}
                       {totalItem.toLocaleString()} so'm
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Bir donasi:{" "}
+                      {(
+                        item?.amount_from_order_quantity / item.order?.quantity
+                      )?.toLocaleString()}{" "}
+                      so'm
                     </div>
                   </div>
 
