@@ -141,6 +141,47 @@ const Salary = () => {
             </div>
           </div>
 
+          {/* New global stats block */}
+          <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-md border border-gray-200 text-center md:text-left">
+            {(() => {
+              const totalQuantity =
+                data?.reduce(
+                  (acc, item) => acc + (item.order?.quantity || 0),
+                  0
+                ) || 0;
+              const totalAmount =
+                data?.reduce(
+                  (acc, item) => acc + (item.amount_from_order_quantity || 0),
+                  0
+                ) || 0;
+              const perItem =
+                totalQuantity > 0 ? Math.round(totalAmount / totalQuantity) : 0;
+
+              return (
+                <div className="flex flex-col md:flex-row justify-around items-center gap-4 text-gray-700">
+                  <div>
+                    <div className="text-sm text-gray-500">Jami tikasiz:</div>
+                    <div className="text-xl font-semibold">
+                      {formatNumber(totalQuantity)} dona
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Jami topasiz:</div>
+                    <div className="text-xl font-semibold">
+                      {formatNumber(totalAmount)} so'm
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Bir donasi:</div>
+                    <div className="text-xl font-semibold text-blue-600">
+                      {formatNumber(perItem)} so'm
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
           {/* Orders list */}
           <div className="flex flex-col gap-4">
             {data?.map((item, index) => {
