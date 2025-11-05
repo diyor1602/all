@@ -147,7 +147,7 @@ const Salary = () => {
               const earnedItem = item.amount_from_sewing || 0;
               const totalItem = item.amount_from_order_quantity || 0;
               const earnedItemPerItem =
-                item.amount_from_sewing / item.order?.quantity || 0;
+                item.amount_from_order_quantity / item.order?.quantity || 0;
               const percent = totalItem
                 ? Math.round((earnedItem / totalItem) * 100)
                 : 0;
