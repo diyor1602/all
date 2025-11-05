@@ -27,7 +27,7 @@ const navigation = [
     name: "Tasdiqlash",
     href: "/groupMaster/pending",
     icon: ListChecks,
-    onMobile: true,
+    onMobile: false,
   },
   {
     name: "Tikuv",
@@ -45,7 +45,7 @@ const navigation = [
     name: "Xodimlar",
     href: "/groupMaster/employees",
     icon: Users,
-    onMobile: true,
+    onMobile: false,
   },
   {
     name: "Davomat",
