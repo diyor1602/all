@@ -23,11 +23,21 @@ const DepartmenDetails = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [newPercentage, setNewPercentage] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    return (
+      localStorage.getItem("qSelectedMonth") ||
+      new Date().toISOString().slice(0, 7)
+    );
+  });
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await api.get(`/ceo/departments/${id}`);
+      const response = await api.get(`/ceo/departments/${id}`, {
+        params: {
+          month: selectedMonth,
+        },
+      });
       setData(response.data);
     } catch (error) {
       toast({
@@ -44,7 +54,7 @@ const DepartmenDetails = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedMonth]);
 
   const handleSubmit = async () => {
     const availablePercentage =
@@ -92,8 +102,21 @@ const DepartmenDetails = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+    <div className="bg-gray-50 min-h-screen">
+      <div className="flex items-center gap-2">
+        <Input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => {
+            setSelectedMonth(e.target.value);
+            localStorage.setItem("qSelectedMonth", e.target.value);
+          }}
+          className="w-fit bg-white"
+          disabled={loading}
+        />
+      </div>
+
+      <div className="mt-4 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">
             {data?.name || "Bo'lim ma'lumotlari"}
