@@ -88,6 +88,44 @@ const Dashboard = () => {
     localStorage.getItem("dollarRate") || 0
   );
   const [visiblePrice, setVisiblePrice] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
+  const [limitValue, setLimitValue] = useState(0);
+
+  const handleLimitSend = async () => {
+    setIsEditing(true);
+    console.log(editingOrder);
+    try {
+      await api.get(`/ceo/confirmOrder`, {
+        params: {
+          order_id: editingOrder?.order?.id,
+          limit: limitValue,
+        },
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Limit o'zgartirildi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 2000,
+      });
+      setEditingOrder(null);
+      setIsEditing(false);
+      fetchData();
+      setLimitDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Limitni o'zgartirib bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEditing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDollarRate = async () => {
@@ -396,7 +434,16 @@ const Dashboard = () => {
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
                     <div className="space-y-1">
-                      <div>{formatNumber(order?.rasxod)}</div>
+                      <div
+                        className="cursor-pointer font-semibold"
+                        onClick={() => {
+                          setEditingOrder(order);
+                          setLimitValue(order?.rasxod);
+                          setLimitDialogOpen(true);
+                        }}
+                      >
+                        {formatNumber(order?.rasxod)}
+                      </div>
                       <div
                         className={
                           (order?.rasxod * 100) /
@@ -1253,6 +1300,29 @@ const Dashboard = () => {
             </Button>
             <Button onClick={handleEditDepartmentSubmit} disabled={submitting}>
               {submitting ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Limitni tasdiqlash</DialogTitle>
+            <DialogDescription>
+              Buyurtma limiti: {formatNumber(limitValue)} so'm
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center gap-2">
+            <Input
+              type="number"
+              placeholder="Limitni kiriting"
+              value={limitValue}
+              onKeyDown={(e) => e.key === "Enter" && handleLimitSend()}
+              onChange={(e) => setLimitValue(e.target.value)}
+            />
+            <Button onClick={handleLimitSend} disabled={isEditing}>
+              {isEditing ? "Saqlanmoqda..." : "Saqlash"}
             </Button>
           </div>
         </DialogContent>
