@@ -7,10 +7,8 @@ import {
   Check,
   ChevronsUpDown,
   Package,
-  Hash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -211,7 +209,14 @@ const PlanAdd = () => {
                                 value={order.name}
                                 onSelect={() => {
                                   setSelectedOrderId(order.id.toString());
-                                  setSelectedSubmodelId("");
+                                  // if it has 1 submodel, select it automatically
+                                  if (
+                                    order?.order_model?.submodels?.length === 1
+                                  ) {
+                                    setSelectedSubmodelId(
+                                      order?.order_model?.submodels[0]?.id
+                                    );
+                                  }
                                   setOrderComboOpen(false);
                                 }}
                                 className="flex flex-col items-start space-y-1 p-3"
