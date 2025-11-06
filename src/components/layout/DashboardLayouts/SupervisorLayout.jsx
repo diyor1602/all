@@ -49,6 +49,12 @@ const navigation = [
     icon: Radical,
     onMobile: false,
   },
+  {
+    name: "Oylik",
+    href: "/dailyPayments",
+    icon: Radical,
+    onMobile: false,
+  },
 ];
 
 export default function SupervisorLayout({ children }) {
