@@ -504,35 +504,6 @@ const EditOrder = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="orderStartDate">Boshlanish sanasi</Label>
-              <Input
-                type="date"
-                id="orderStartDate"
-                placeholder="Boshlanish sanasi"
-                value={payload.start_date}
-                className="bg-white"
-                onChange={(e) => {
-                  setPayload({ ...payload, start_date: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderEndDate">Tugash sanasi</Label>
-              <Input
-                type="date"
-                id="orderEndDate"
-                placeholder="Tugash sanasi"
-                value={payload.end_date}
-                min={payload.start_date}
-                className="bg-white"
-                onChange={(e) => {
-                  setPayload({ ...payload, end_date: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
               <Label htmlFor="orderModel">Modelni tanlang</Label>
               <Popover open={modelOpen} onOpenChange={setModelOpen}>
                 <PopoverTrigger asChild>
