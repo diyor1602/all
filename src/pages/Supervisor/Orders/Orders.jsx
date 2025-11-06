@@ -208,6 +208,12 @@ const Orders = () => {
             <Badge className="text-sm">
               <div className="flex items-center gap-1">
                 <span>{filteredOrders.length}</span> <span>ta</span>
+                <span>
+                  {filteredOrders?.reduce(
+                    (acc, order) => acc + order.quantity,
+                    0
+                  )}
+                </span>
               </div>
             </Badge>
           </div>
