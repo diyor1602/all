@@ -20,6 +20,7 @@ import Kpi from "./Kpi";
 import Settings from "./Settings";
 import Duty from "./Duty";
 import Coefficient from "./Coefficient";
+import DailyPayments from "./DailyPayments";
 
 // ---------- Helpers ----------
 const formatDate = (date) => {
@@ -72,6 +73,7 @@ const Card = ({
   loading,
   bgImage,
   prefix,
+  visible,
 }) => (
   <motion.div
     whileHover={{ scale: 1.04 }}
@@ -92,6 +94,7 @@ const Card = ({
       rounded-3xl p-6 text-white w-full
       flex flex-col justify-between transition-all
       ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor}` : ""}
+      ${visible ? "hidden" : ""}
     `}
   >
     {/* 🔹 Overlay only if bgImage exists */}
@@ -253,6 +256,19 @@ const Profile = () => {
       bgImage:
         "https://images.unsplash.com/photo-1523199455310-87b16c0eed11?q=80&w=1170&auto=format&fit=crop",
     },
+    {
+      key: "daily_payments",
+      title: "Dona oylik",
+      value: formatNumber(userData.percentage || 0),
+      prefix: "%",
+      color: "bg-gradient-to-r from-orange-500 to-red-500",
+      Icon: Wallet,
+      visible: parseFloat(userData.percentage || 0) > 0,
+      ringColor: "ring-orange-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1523199455310-87b16c0eed11?q=80&w=1170&auto=format&fit=crop",
+    },
+
     // {
     //   key: "kpi",
     //   title: "KPI",
@@ -312,6 +328,7 @@ const Profile = () => {
     koefitsient: <Coefficient userData={userData} />,
     duty: <Duty userData={userData} />,
     sozlamalar: <Settings userData={userData} />,
+    daily_payments: <DailyPayments selectedMonth={selectedMonth} />,
   };
 
   return (

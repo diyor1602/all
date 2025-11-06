@@ -8,7 +8,6 @@ const allowPaths = [
   "cuttingKpi",
   "truck",
   "coefficient",
-  "dailyPayments",
 ];
 
 const isTokenValid = (tok) => {

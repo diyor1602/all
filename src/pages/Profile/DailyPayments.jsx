@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
 
 const formatNumber = (num) => {
@@ -49,14 +48,10 @@ const CircularProgress = ({
   );
 };
 
-const DailyPayments = () => {
+const DailyPayments = ({ selectedMonth }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState(
-    localStorage.getItem("salarySelectedMonth") ||
-      new Date().toISOString().slice(0, 7)
-  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,20 +81,6 @@ const DailyPayments = () => {
 
   return (
     <div className="min-h-screen flex flex-col gap-8 text-gray-900">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <Input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => {
-            setSelectedMonth(e.target.value);
-            localStorage.setItem("salarySelectedMonth", e.target.value);
-          }}
-          className="w-fit bg-white/70 backdrop-blur-md border border-gray-200 rounded-xl px-4 py-2"
-          disabled={loading}
-        />
-      </div>
-
       {/* Loading state */}
       {loading ? (
         <div className="flex items-center justify-center h-[70vh]">
