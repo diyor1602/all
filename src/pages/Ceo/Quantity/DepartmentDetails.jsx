@@ -33,7 +33,6 @@ const DepartmenDetails = () => {
   const [editDepartmentDialogOpen, setEditDepartmentDialogOpen] =
     useState(false);
   const [budgetType, setBudgetType] = useState("minute_based"); // percentage_based
-  const [isNew, setIsNew] = useState(false);
   const [budgetQuantity, setBudgetQuantity] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     return (
@@ -140,19 +139,10 @@ const DepartmenDetails = () => {
     }
     setSubmitting(true);
     try {
-      if (isNew) {
-        await api.post(`/ceo/departmentBudgets`, {
-          type: budgetType,
-          quantity: budgetQuantity,
-          department_id: data?.id,
-        });
-      } else {
-        await api.patch(`/ceo/departmentBudgets/${data?.budget?.id}`, {
-          type: budgetType,
-          quantity: budgetQuantity,
-        });
-      }
-
+      await api.patch(`/ceo/departmentBudgets/${data?.budget?.id}`, {
+        type: budgetType,
+        quantity: budgetQuantity,
+      });
       toast({
         title: "Muvaffaqiyatli",
         description: "Bo'lim muvaffaqiyatli yangilandi",
