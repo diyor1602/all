@@ -36,7 +36,8 @@ const calculateTotalExpenses = (order, future) => {
         order?.planned_costs?.expenses?.details?.reduce(
           (total, cost) => total + cost?.planned_cost,
           0
-        )
+        ) +
+        parseFloat(order?.rasxod) * parseFloat(order?.order?.quantity)
     : order?.department_real_costs?.reduce(
         (total, cost) => total + cost?.cost,
         0
@@ -44,7 +45,8 @@ const calculateTotalExpenses = (order, future) => {
         order?.expenses_real_costs?.reduce(
           (total, cost) => total + cost?.real_cost,
           0
-        );
+        ) +
+        parseFloat(order?.rasxod) * parseFloat(order?.produced_quantity);
 };
 
 const formatNumber = (number) => {
