@@ -65,7 +65,7 @@ const Salary = () => {
         const response = await api.get("/groupMaster/myOrders", {
           params: { month: selectedMonth },
         });
-        setData(response.data);
+        setData(response.data?.orders);
       } catch (error) {
         toast({
           title: "Xatolik",
