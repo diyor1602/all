@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 
+const formatNumber = (number) => {
+  if (!number) return "0";
+  return parseFloat(number).toLocaleString("ru-RU", {
+    maximumFractionDigits: 0,
+  });
+};
+
 const DepartmenDetails = () => {
   const { toast } = useToast();
   const { id } = useParams();
@@ -119,8 +126,12 @@ const DepartmenDetails = () => {
       <div className="mt-4 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">
-            {data?.name || "Bo'lim ma'lumotlari"}
+            {data?.name || "-"}
           </h2>
+          <div className="text-xl font-semibold">
+            {data?.budget?.quantity}{" "}
+            {data?.budget?.type == "percentage_based" ? "%" : "so'm"}
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -150,6 +161,9 @@ const DepartmenDetails = () => {
                 <th className="py-3 px-4 text-left">Xodim</th>
                 <th className="py-3 px-4 text-left">Lavozimi</th>
                 <th className="py-3 px-4 text-center">Ulushi (%)</th>
+                <th className="py-3 px-4 text-center">Topdi</th>
+                <th className="py-3 px-4 text-center">Topa oladi</th>
+                <th className="py-3 px-4 text-center">Mavsumda</th>
               </tr>
             </thead>
             <tbody>
@@ -186,7 +200,7 @@ const DepartmenDetails = () => {
                         {emp?.name}
                       </Link>
                     </td>
-                    <td className="py-2 px-4">{emp?.position}</td>
+                    <td className="py-2 px-4">{emp?.position?.name}</td>
                     <td
                       className="py-2 px-4 text-center cursor-pointer font-medium"
                       onClick={() => {
@@ -198,6 +212,15 @@ const DepartmenDetails = () => {
                       <span className="inline-block px-2 py-1 bg-gray-100 rounded-md hover:bg-gray-200 transition">
                         {emp?.percentage}
                       </span>
+                    </td>
+                    <td className="py-2 px-4">
+                      {formatNumber(emp?.totals?.total_earned)}
+                    </td>
+                    <td className="py-2 px-4">
+                      {formatNumber(emp?.totals?.total_possible)}
+                    </td>
+                    <td className="py-2 px-4">
+                      {formatNumber(emp?.totals?.total_possible_season)}
                     </td>
                   </tr>
                 ))}
@@ -224,6 +247,33 @@ const DepartmenDetails = () => {
                     )
                     ?.toFixed(2)}
                 </td>
+                <td className="py-2 px-4">
+                  {formatNumber(
+                    data?.employees?.reduce(
+                      (acc, e) =>
+                        acc + parseFloat(e?.totals?.total_earned || 0),
+                      0
+                    )
+                  )}
+                </td>
+                <td className="py-2 px-4">
+                  {formatNumber(
+                    data?.employees?.reduce(
+                      (acc, e) =>
+                        acc + parseFloat(e?.totals?.total_possible || 0),
+                      0
+                    )
+                  )}
+                </td>
+                <td className="py-2 px-4">
+                  {formatNumber(
+                    data?.employees?.reduce(
+                      (acc, e) =>
+                        acc + parseFloat(e?.totals?.total_possible_season || 0),
+                      0
+                    )
+                  )}
+                </td>
               </tr>
             </tfoot>
           </table>
@@ -238,7 +288,7 @@ const DepartmenDetails = () => {
               {selectedEmployee?.name}
             </DialogTitle>
             <DialogDescription className="text-gray-500">
-              {selectedEmployee?.position}
+              {selectedEmployee?.position?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4 flex justify-center">
