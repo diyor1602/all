@@ -65,7 +65,7 @@ const Salary = () => {
         const response = await api.get("/groupMaster/myOrders", {
           params: { month: selectedMonth },
         });
-        setData(response.data?.orders);
+        setData(response.data);
       } catch (error) {
         toast({
           title: "Xatolik",
@@ -81,9 +81,12 @@ const Salary = () => {
   }, [selectedMonth]);
 
   const earned =
-    data?.reduce((acc, item) => acc + item.amount_from_sewing, 0) || 0;
+    data?.orders?.reduce((acc, item) => acc + item.amount_from_sewing, 0) || 0;
   const total =
-    data?.reduce((acc, item) => acc + item.amount_from_order_quantity, 0) || 0;
+    data?.orders?.reduce(
+      (acc, item) => acc + item.amount_from_order_quantity,
+      0
+    ) || 0;
   const progress = total ? Math.min((earned / total) * 100, 100) : 0;
 
   return (
@@ -121,7 +124,12 @@ const Salary = () => {
                 <span className="text-3xl font-bold text-gray-800">
                   {Math.round(progress)}%
                 </span>
-                <span className="text-sm text-gray-500">bajarildi</span>
+                <span className="text-sm text-gray-500 font-semibold mt-2">
+                  {data?.orders?.reduce(
+                    (acc, item) => acc + item.sewn_quantity,
+                    0
+                  )}
+                </span>
               </div>
             </div>
 
@@ -138,6 +146,12 @@ const Salary = () => {
                   {formatNumber(total)} so'm
                 </span>
               </div>
+              <div className="text-lg text-gray-600 mt-2">
+                Mavsum davomida:{" "}
+                <span className="font-semibold text-gray-800">
+                  {formatNumber(data?.season_total)} so'm
+                </span>
+              </div>
             </div>
           </div>
 
@@ -145,12 +159,12 @@ const Salary = () => {
           <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-md border border-gray-200 text-center md:text-left">
             {(() => {
               const totalQuantity =
-                data?.reduce(
+                data?.orders?.reduce(
                   (acc, item) => acc + (item.order?.quantity || 0),
                   0
                 ) || 0;
               const totalAmount =
-                data?.reduce(
+                data?.orders?.reduce(
                   (acc, item) => acc + (item.amount_from_order_quantity || 0),
                   0
                 ) || 0;
@@ -184,7 +198,7 @@ const Salary = () => {
 
           {/* Orders list */}
           <div className="flex flex-col gap-4">
-            {data?.map((item, index) => {
+            {data?.orders?.map((item, index) => {
               const earnedItem = item.amount_from_sewing || 0;
               const totalItem = item.amount_from_order_quantity || 0;
               const earnedItemPerItem =
