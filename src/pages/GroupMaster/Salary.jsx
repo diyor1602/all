@@ -15,7 +15,7 @@ const CircularProgress = ({
   value = 0,
   size = 140,
   stroke = 10,
-  color = "#007AFF",
+  color = "#8B5CFF", //purple
 }) => {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -108,7 +108,7 @@ const Salary = () => {
       {/* Loading state */}
       {loading ? (
         <div className="flex items-center justify-center h-[70vh]">
-          <Loader2 className="animate-spin text-blue-500 w-10 h-10" />
+          <Loader2 className="animate-spin text-purple-500 w-10 h-10" />
         </div>
       ) : (
         <motion.div
@@ -137,7 +137,7 @@ const Salary = () => {
               <div className="text-xl font-medium text-gray-700">
                 Hozirgacha topilgan:
               </div>
-              <div className="text-3xl font-semibold text-blue-600">
+              <div className="text-3xl font-semibold text-purple-600">
                 {formatNumber(earned)} so'm
               </div>
               <div className="text-lg text-gray-600 mt-2">
@@ -187,7 +187,7 @@ const Salary = () => {
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Bir donasi:</div>
-                    <div className="text-xl font-semibold text-blue-600">
+                    <div className="text-xl font-semibold text-purple-600">
                       {formatNumber(perItem)} so'm
                     </div>
                   </div>
@@ -198,52 +198,54 @@ const Salary = () => {
 
           {/* Orders list */}
           <div className="flex flex-col gap-4">
-            {data?.orders?.map((item, index) => {
-              const earnedItem = item.amount_from_sewing || 0;
-              const totalItem = item.amount_from_order_quantity || 0;
-              const earnedItemPerItem =
-                item.amount_from_order_quantity / item.order?.quantity || 0;
-              const percent = totalItem
-                ? Math.round((earnedItem / totalItem) * 100)
-                : 0;
+            {data?.orders
+              ?.sort((a, b) => b.sewn_quantity - a.sewn_quantity)
+              ?.map((item, index) => {
+                const earnedItem = item.amount_from_sewing || 0;
+                const totalItem = item.amount_from_order_quantity || 0;
+                const earnedItemPerItem =
+                  item.amount_from_order_quantity / item.order?.quantity || 0;
+                const percent = totalItem
+                  ? Math.round((earnedItem / totalItem) * 100)
+                  : 0;
 
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.04 }}
-                  className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
-                >
-                  <div>
-                    <div className="text-lg font-semibold">
-                      {item.order?.name}
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
+                  >
+                    <div>
+                      <div className="text-lg font-semibold">
+                        {item.order?.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {item.order?.submodels?.join(", ")}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {item?.sewn_quantity} / {item.order?.quantity} dona
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {formatNumber(earnedItem)} / {formatNumber(totalItem)}{" "}
+                        so'm
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        Bir donasi: {formatNumber(earnedItemPerItem)} so'm
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {item.order?.submodels?.join(", ")}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {item?.sewn_quantity} / {item.order?.quantity} dona
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {formatNumber(earnedItem)} / {formatNumber(totalItem)}{" "}
-                      so'm
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      Bir donasi: {formatNumber(earnedItemPerItem)} so'm
-                    </div>
-                  </div>
 
-                  {/* Circle with percentage */}
-                  <div className="relative flex items-center justify-center">
-                    <CircularProgress value={percent} size={70} />
-                    <div className="absolute text-sm font-semibold text-gray-700">
-                      {percent}%
+                    {/* Circle with percentage */}
+                    <div className="relative flex items-center justify-center">
+                      <CircularProgress value={percent} size={70} />
+                      <div className="absolute text-sm font-semibold text-gray-700">
+                        {percent}%
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
           </div>
         </motion.div>
       )}
