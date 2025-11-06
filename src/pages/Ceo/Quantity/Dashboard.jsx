@@ -100,7 +100,7 @@ const Dashboard = () => {
       await api.get(`/ceo/confirmOrder`, {
         params: {
           order_id: editingOrder?.order?.id,
-          limit: limitValue,
+          rasxod: limitValue,
         },
       });
       toast({
