@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const formatNumber = (number) => {
   if (!number) return "0";
@@ -32,7 +33,7 @@ const DepartmenDetails = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editDepartmentDialogOpen, setEditDepartmentDialogOpen] =
     useState(false);
-  const [budgetType, setBudgetType] = useState("minute_based"); // percentage_based
+  const [budgetType, setBudgetType] = useState("minute_based");
   const [budgetQuantity, setBudgetQuantity] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     return (
@@ -45,9 +46,7 @@ const DepartmenDetails = () => {
     setLoading(true);
     try {
       const response = await api.get(`/ceo/departments/${id}`, {
-        params: {
-          month: selectedMonth,
-        },
+        params: { month: selectedMonth },
       });
       setData(response.data);
     } catch (error) {
@@ -162,44 +161,29 @@ const DepartmenDetails = () => {
   };
 
   return (
-    <div className="bg-gray-50">
-      <div className="flex items-center gap-2">
-        <Input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => {
-            setSelectedMonth(e.target.value);
-            localStorage.setItem("qSelectedMonth", e.target.value);
-          }}
-          className="w-fit bg-white"
-          disabled={loading}
-        />
-      </div>
-
-      <div className="mt-4 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            {data?.name || "-"}
-          </h2>
-          <div
-            className="text-xl font-semibold cursor-pointer"
-            onClick={() => {
-              setEditDepartmentDialogOpen(true);
-              setBudgetType(data?.budget?.type);
-              setBudgetQuantity(data?.budget?.quantity);
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
+      {/* Header Section */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => {
+              setSelectedMonth(e.target.value);
+              localStorage.setItem("qSelectedMonth", e.target.value);
             }}
-          >
-            {data?.budget?.quantity}{" "}
-            {data?.budget?.type == "percentage_based" ? "%" : "so'm"}
-          </div>
+            className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-xl px-4 py-2 shadow-sm focus:ring-2 focus:ring-blue-200"
+            disabled={loading}
+          />
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={fetchData}
+            className="rounded-xl hover:bg-gray-100"
             disabled={loading}
           >
             {loading ? (
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 text-gray-500">
                 <Loader2 className="animate-spin w-4 h-4" /> Yuklanmoqda
               </span>
             ) : (
@@ -208,151 +192,171 @@ const DepartmenDetails = () => {
           </Button>
         </div>
 
-        <div className="overflow-auto rounded-lg border border-gray-200">
-          <table
-            className={`w-full text-sm text-gray-700 ${
-              loading ? "opacity-50" : ""
-            }`}
+        <motion.div
+          className="flex items-center gap-3 bg-white/60 backdrop-blur-md shadow-sm px-4 py-2 rounded-2xl border border-gray-100"
+          whileHover={{ scale: 1.02 }}
+        >
+          <h2 className="text-lg font-semibold text-gray-700">
+            {data?.name || "-"}
+          </h2>
+          <div
+            className="text-base font-medium text-blue-600 cursor-pointer hover:underline"
+            onClick={() => {
+              setEditDepartmentDialogOpen(true);
+              setBudgetType(data?.budget?.type);
+              setBudgetQuantity(data?.budget?.quantity);
+            }}
           >
-            <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-              <tr>
-                <th className="py-3 px-4 text-left">№</th>
-                <th className="py-3 px-4 text-left">Rasm</th>
-                <th className="py-3 px-4 text-left">Xodim</th>
-                <th className="py-3 px-4 text-left">Lavozimi</th>
-                <th className="py-3 px-4 text-left">Oyligi</th>
-                <th className="py-3 px-4 text-center">Ulushi (%)</th>
-                <th className="py-3 px-4 text-center">Topdi</th>
-                <th className="py-3 px-4 text-center">Topa oladi</th>
-                <th className="py-3 px-4 text-center">Mavsumda</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.employees
-                ?.sort((a, b) => b?.percentage - a?.percentage)
-                ?.map((emp, index) => (
-                  <tr
-                    key={emp?.id || index}
-                    className="hover:bg-gray-50 transition-colors border-b last:border-none"
-                  >
-                    <td className="py-2 px-4 text-gray-600">{index + 1}</td>
-                    <td className="py-2 px-4">
-                      {emp?.img ? (
-                        <img
-                          src={emp?.img}
-                          alt={emp?.name}
-                          className="w-10 h-10 rounded-full object-cover cursor-pointer"
-                          onClick={() => {
-                            setSelectedEmployee(emp);
-                            setImgOpen(true);
-                          }}
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-semibold text-gray-700">
-                          {emp?.name?.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-2 px-4">
-                      <Link
-                        to={`/ceo/salary/${emp?.id}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {emp?.name}
-                      </Link>
-                    </td>
-                    <td className="py-2 px-4">{emp?.position?.name}</td>
-                    <td className="py-2 px-4">{formatNumber(emp?.salary)}</td>
-                    <td
-                      className="py-2 px-4 text-center cursor-pointer font-medium"
-                      onClick={() => {
-                        setNewPercentage(emp?.percentage);
-                        setSelectedEmployee(emp);
-                        setPercentageOpen(true);
-                      }}
-                    >
-                      <span className="inline-block px-2 py-1 bg-gray-100 rounded-md hover:bg-gray-200 transition">
-                        {emp?.percentage}
-                      </span>
-                    </td>
-                    <td className="py-2 px-4">
-                      {formatNumber(emp?.totals?.total_earned)}
-                    </td>
-                    <td className="py-2 px-4">
-                      {formatNumber(emp?.totals?.total_possible)}
-                    </td>
-                    <td className="py-2 px-4">
-                      {formatNumber(emp?.totals?.total_possible_season)}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-            <tfoot>
-              <tr className="bg-gray-50 font-semibold">
-                <td className="py-2 px-4 text-right" colSpan={4}>
-                  Jami
-                </td>
-                <td className="py-2 px-4">
-                  {formatNumber(
-                    data?.employees?.reduce(
-                      (acc, e) => acc + parseFloat(e?.salary || 0),
-                      0
-                    )
-                  )}
-                </td>
-                <td
-                  className={`py-2 px-4 text-center ${
-                    data?.employees?.reduce(
-                      (acc, e) => acc + parseFloat(e?.percentage || 0),
-                      0
-                    ) > 100
-                      ? "text-red-600"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {data?.employees
-                    ?.reduce(
-                      (acc, e) => acc + parseFloat(e?.percentage || 0),
-                      0
-                    )
-                    ?.toFixed(2)}
-                </td>
-                <td className="py-2 px-4">
-                  {formatNumber(
-                    data?.employees?.reduce(
-                      (acc, e) =>
-                        acc + parseFloat(e?.totals?.total_earned || 0),
-                      0
-                    )
-                  )}
-                </td>
-                <td className="py-2 px-4">
-                  {formatNumber(
-                    data?.employees?.reduce(
-                      (acc, e) =>
-                        acc + parseFloat(e?.totals?.total_possible || 0),
-                      0
-                    )
-                  )}
-                </td>
-                <td className="py-2 px-4">
-                  {formatNumber(
-                    data?.employees?.reduce(
-                      (acc, e) =>
-                        acc + parseFloat(e?.totals?.total_possible_season || 0),
-                      0
-                    )
-                  )}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+            {data?.budget?.quantity}{" "}
+            {data?.budget?.type === "percentage_based" ? "%" : "so'm"}
+          </div>
+        </motion.div>
       </div>
 
-      {/* Employee Image Dialog */}
+      {/* Table Section */}
+      <div className="overflow-auto bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm transition-all">
+        <table
+          className={`w-full text-sm text-gray-700 ${
+            loading ? "opacity-50" : ""
+          }`}
+        >
+          <thead className="bg-gray-100/70 text-gray-600 uppercase text-xs">
+            <tr>
+              <th className="py-3 px-4 text-left">№</th>
+              <th className="py-3 px-4 text-left">Xodim</th>
+              <th className="py-3 px-4 text-left">Lavozimi</th>
+              <th className="py-3 px-4 text-right">Oyligi</th>
+              <th className="py-3 px-4 text-center">Ulushi (%)</th>
+              <th className="py-3 px-4 text-right">Topdi</th>
+              <th className="py-3 px-4 text-right">Topa oladi</th>
+              <th className="py-3 px-4 text-right">Mavsumda</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.employees
+              ?.sort((a, b) => b?.percentage - a?.percentage)
+              ?.map((emp, index) => (
+                <motion.tr
+                  key={emp?.id || index}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.02 }}
+                  className="hover:bg-gray-50 transition-colors border-b border-gray-100"
+                >
+                  <td className="py-3 px-4 text-gray-500">{index + 1}</td>
+                  <td className="py-3 px-4 flex items-center gap-3">
+                    {emp?.img ? (
+                      <img
+                        src={emp?.img}
+                        alt={emp?.name}
+                        className="w-10 h-10 rounded-full object-cover shadow-sm cursor-pointer hover:scale-105 transition shrink-0"
+                        onClick={() => {
+                          setSelectedEmployee(emp);
+                          setImgOpen(true);
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-gray-600">
+                        {emp?.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <Link
+                      to={`/ceo/salary/${emp?.id}`}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      {emp?.name}
+                    </Link>
+                  </td>
+                  <td className="py-3 px-4">{emp?.position?.name}</td>
+                  <td className="py-3 px-4 text-right">
+                    {formatNumber(emp?.salary)}
+                  </td>
+                  <td
+                    className="py-3 px-4 text-center cursor-pointer font-medium"
+                    onClick={() => {
+                      setNewPercentage(emp?.percentage);
+                      setSelectedEmployee(emp);
+                      setPercentageOpen(true);
+                    }}
+                  >
+                    <span className="inline-block px-2 py-1 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                      {emp?.percentage}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    {formatNumber(emp?.totals?.total_earned)}
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    {formatNumber(emp?.totals?.total_possible)}
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    {formatNumber(emp?.totals?.total_possible_season)}
+                  </td>
+                </motion.tr>
+              ))}
+          </tbody>
+
+          <tfoot className="bg-gray-50/80 text-gray-700 font-semibold">
+            <tr>
+              <td className="py-3 px-4 text-right" colSpan={3}>
+                Jami:
+              </td>
+              <td className="py-3 px-4 text-right">
+                {formatNumber(
+                  data?.employees?.reduce(
+                    (acc, e) => acc + parseFloat(e?.salary || 0),
+                    0
+                  )
+                )}
+              </td>
+              <td
+                className={`py-3 px-4 text-center ${
+                  data?.employees?.reduce(
+                    (acc, e) => acc + parseFloat(e?.percentage || 0),
+                    0
+                  ) > 100
+                    ? "text-red-600"
+                    : "text-gray-800"
+                }`}
+              >
+                {data?.employees
+                  ?.reduce((acc, e) => acc + parseFloat(e?.percentage || 0), 0)
+                  ?.toFixed(2)}
+              </td>
+              <td className="py-3 px-4 text-right">
+                {formatNumber(
+                  data?.employees?.reduce(
+                    (acc, e) => acc + parseFloat(e?.totals?.total_earned || 0),
+                    0
+                  )
+                )}
+              </td>
+              <td className="py-3 px-4 text-right">
+                {formatNumber(
+                  data?.employees?.reduce(
+                    (acc, e) =>
+                      acc + parseFloat(e?.totals?.total_possible || 0),
+                    0
+                  )
+                )}
+              </td>
+              <td className="py-3 px-4 text-right">
+                {formatNumber(
+                  data?.employees?.reduce(
+                    (acc, e) =>
+                      acc + parseFloat(e?.totals?.total_possible_season || 0),
+                    0
+                  )
+                )}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* Dialogs (unchanged except visuals are kept clean) */}
       <Dialog open={imgOpen} onOpenChange={setImgOpen}>
-        <DialogContent className="sm:max-w-[450px]">
+        <DialogContent className="sm:max-w-[450px] rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-800">
               {selectedEmployee?.name}
@@ -365,15 +369,14 @@ const DepartmenDetails = () => {
             <img
               src={selectedEmployee?.img}
               alt={selectedEmployee?.name}
-              className="max-h-[60vh] rounded-lg shadow-sm"
+              className="max-h-[60vh] rounded-xl shadow-md shrink-0"
             />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Percentage Edit Dialog */}
       <Dialog open={percentageOpen} onOpenChange={setPercentageOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[400px] rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-800">
               {selectedEmployee?.name}
@@ -382,15 +385,15 @@ const DepartmenDetails = () => {
               {selectedEmployee?.position?.name}
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 space-y-3">
+          <div className="mt-4">
             <Input
               value={newPercentage}
               type="number"
               onChange={(e) => setNewPercentage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              className="w-full"
+              className="rounded-xl border-gray-200"
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 mt-8">
               <Button
                 variant="outline"
                 onClick={() => setPercentageOpen(false)}
@@ -405,24 +408,24 @@ const DepartmenDetails = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Department Dialog */}
       <Dialog
         open={editDepartmentDialogOpen}
         onOpenChange={setEditDepartmentDialogOpen}
       >
-        <DialogContent>
+        <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>{data?.name}</DialogTitle>
+            <DialogTitle className="text-lg">{data?.name}</DialogTitle>
             <DialogDescription>
               Bo'limga berilgan ulushni tahrirlash
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Input
               type="number"
               placeholder="Ulush"
               value={budgetQuantity}
               onChange={(e) => setBudgetQuantity(e.target.value)}
+              className="rounded-xl"
             />
             <Button
               variant={
@@ -439,7 +442,7 @@ const DepartmenDetails = () => {
               so'm
             </Button>
           </div>
-          <div className="mt-2 flex items-center gap-2 justify-end">
+          <div className="mt-4 flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => setEditDepartmentDialogOpen(false)}
