@@ -81,11 +81,9 @@ const NewOrder = () => {
     name: "",
     quantity: "",
     price: "",
-    start_date: "",
-    end_date: "",
     comment: "",
-    season_year: new Date().getFullYear(),
-    season_type: "",
+    season_year: new Date().getFullYear() + 1,
+    season_type: "summer",
     model: {
       id: "",
       material_id: "",
@@ -165,8 +163,8 @@ const NewOrder = () => {
       name: payload.name,
       quantity: totalQuantity,
       price: payload.price,
-      start_date: payload.start_date,
-      end_date: payload.end_date,
+      start_date: new Date().toISOString()?.split("T")[0],
+      end_date: new Date().toISOString()?.split("T")[0],
       comment: payload.comment,
       season_year: payload.season_year,
       season_type: payload.season_type,
@@ -400,35 +398,6 @@ const NewOrder = () => {
                 required
                 onChange={(e) => {
                   setPayload({ ...payload, price: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderStartDate">Boshlanish sanasi</Label>
-              <Input
-                type="date"
-                id="orderStartDate"
-                placeholder="Boshlanish sanasi"
-                value={payload.start_date}
-                className="bg-white"
-                onChange={(e) => {
-                  setPayload({ ...payload, start_date: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderEndDate">Tugash sanasi</Label>
-              <Input
-                type="date"
-                id="orderEndDate"
-                placeholder="Tugash sanasi"
-                value={payload.end_date}
-                min={payload.start_date}
-                className="bg-white"
-                onChange={(e) => {
-                  setPayload({ ...payload, end_date: e.target.value });
                 }}
               />
             </div>
