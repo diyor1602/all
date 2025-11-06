@@ -309,7 +309,7 @@ const DepartmenDetails = () => {
               {selectedEmployee?.name}
             </DialogTitle>
             <DialogDescription className="text-gray-500">
-              {selectedEmployee?.position}
+              {selectedEmployee?.position?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4 space-y-3">
