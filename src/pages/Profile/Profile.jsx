@@ -90,11 +90,11 @@ const Card = ({
         : {}
     }
     className={`
-      ${color} relative overflow-hidden cursor-pointer
+      ${color} relative overflow-hidden cursor-
       rounded-3xl p-6 text-white w-full
       flex flex-col justify-between transition-all
       ${isActive ? `md:ring-2 md:ring-offset-2 ${ringColor}` : ""}
-      ${visible ? "hidden" : ""}
+      ${visible ? "" : "hidden"}
     `}
   >
     {/* 🔹 Overlay only if bgImage exists */}
@@ -223,6 +223,7 @@ const Profile = () => {
       color: "bg-gradient-to-r from-indigo-500 to-blue-600",
       Icon: CalendarDays,
       ringColor: "ring-blue-400",
+      visible: true,
       bgImage:
         "https://images.unsplash.com/photo-1528164344705-47542687000d?q=80&w=1192&auto=format&fit=crop",
     },
@@ -241,6 +242,7 @@ const Profile = () => {
       color: "bg-gradient-to-r from-emerald-500 to-green-600",
       Icon: Briefcase,
       ringColor: "ring-green-400",
+      visible: true,
       bgImage:
         "https://images.unsplash.com/photo-1569411378499-565391f5ffe0?q=80&w=1070&auto=format&fit=crop",
     },
@@ -253,22 +255,10 @@ const Profile = () => {
       color: "bg-gradient-to-r from-orange-500 to-red-500",
       Icon: Wallet,
       ringColor: "ring-orange-400",
+      visible: true,
       bgImage:
         "https://images.unsplash.com/photo-1523199455310-87b16c0eed11?q=80&w=1170&auto=format&fit=crop",
     },
-    {
-      key: "daily_payments",
-      title: "Dona oylik",
-      value: formatNumber(userData.percentage || 0),
-      prefix: "%",
-      color: "bg-gradient-to-r from-orange-500 to-red-500",
-      Icon: Wallet,
-      visible: parseFloat(userData.percentage || 0) > 0,
-      ringColor: "ring-orange-400",
-      bgImage:
-        "https://images.unsplash.com/photo-1523199455310-87b16c0eed11?q=80&w=1170&auto=format&fit=crop",
-    },
-
     // {
     //   key: "kpi",
     //   title: "KPI",
@@ -287,6 +277,7 @@ const Profile = () => {
       color: "bg-gradient-to-r from-sky-500 to-blue-600",
       Icon: DraftingCompass,
       ringColor: "ring-blue-400",
+      visible: true,
       bgImage:
         "https://images.unsplash.com/photo-1594616647927-2382fe456b07?q=80&w=1170&auto=format&fit=crop  ",
     },
@@ -297,8 +288,21 @@ const Profile = () => {
       color: "bg-gray-900 text-gray-800", // neutral style
       Icon: SettingsIcon,
       ringColor: "ring-gray-400",
+      visible: true,
       bgImage:
         "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=1170&auto=format&fit=crop",
+    },
+    {
+      key: "daily_payments",
+      title: "Dona oylik",
+      value: formatNumber(userData.percentage || 0),
+      prefix: "%",
+      color: "bg-gradient-to-r from-orange-500 to-red-500",
+      Icon: Wallet,
+      visible: userData.percentage > 0,
+      ringColor: "ring-orange-400",
+      bgImage:
+        "https://images.unsplash.com/photo-1577401239170-897942555fb3?q=80&w=1170&auto=format&fit=crop",
     },
     {
       key: "sozlamalar",
@@ -307,6 +311,7 @@ const Profile = () => {
       color: "bg-gray-900 text-gray-800", // neutral style
       Icon: SettingsIcon,
       ringColor: "ring-gray-400",
+      visible: true,
       bgImage:
         "https://images.unsplash.com/photo-1533073526757-2c8ca1df9f1c?q=80&w=1170&auto=format&fit=crop",
     },
@@ -356,6 +361,7 @@ const Profile = () => {
             bgImage={c.bgImage}
             hasAdditional={c.hasAdditional}
             prefix={c.prefix}
+            visible={c.visible}
           />
         ))}
       </div>
@@ -382,6 +388,7 @@ const Profile = () => {
                 bgImage={c.bgImage}
                 hasAdditional={c.hasAdditional}
                 prefix={c.prefix}
+                visible={c.visible}
               />
             </SwiperSlide>
           ))}
