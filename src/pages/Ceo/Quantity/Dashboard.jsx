@@ -319,15 +319,24 @@ const Dashboard = () => {
               <th className="py-1 px-2 border border-gray-300">Buyurtma</th>
               <th className="py-1 px-2 border border-gray-300">Narxi</th>
               <th className="py-1 px-2 border border-gray-300">Daqiqa</th>
+              <th className="py-1 px-2 border border-gray-300">Limit</th>
               <th className="py-1 px-2 border border-gray-300">Tikilgan</th>
-              {departments?.map((department) => (
-                <th
-                  key={department.id}
-                  className="py-1 px-2 border border-gray-300 whitespace-normal"
-                >
-                  {department.name}
-                </th>
-              ))}
+              {departments
+                ?.filter(
+                  (department) =>
+                    departmentsWithBudgets?.find(
+                      (budget) =>
+                        budget?.budget?.department_id === department?.id
+                    )?.budget?.quantity > 0
+                )
+                ?.map((department) => (
+                  <th
+                    key={department.id}
+                    className="py-1 px-2 border border-gray-300 whitespace-normal"
+                  >
+                    {department.name}
+                  </th>
+                ))}
               {expensesCosts?.map((cost) => (
                 <th
                   key={cost.id}
@@ -385,6 +394,29 @@ const Dashboard = () => {
                   <td className="py-1 px-2 border border-gray-300">
                     {formatNumber(order?.model?.minute)}
                   </td>
+                  <td className="py-1 px-2 border border-gray-300">
+                    <div className="space-y-1">
+                      <div>{formatNumber(order?.rasxod)}</div>
+                      <div
+                        className={
+                          (order?.rasxod * 100) /
+                            (order?.order?.price * dollarRate) >
+                          33
+                            ? "text-red-500"
+                            : "text-green-500"
+                        }
+                      >
+                        {formatNumber(
+                          (order?.rasxod * 100) /
+                            (order?.order?.price * dollarRate)
+                        )}
+                        %
+                      </div>
+                      <div>
+                        {formatNumber(order?.rasxod / order?.model?.minute)}
+                      </div>
+                    </div>
+                  </td>
                   <td className="py-1 px-2 border border-gray-300 relative overflow-hidden">
                     {/* Background fill based on percentage */}
                     <div
@@ -403,64 +435,72 @@ const Dashboard = () => {
                       {order?.produced_quantity} / {order?.order?.quantity}
                     </div>
                   </td>
-                  {departments?.map((department) => {
-                    const realCost =
-                      order?.department_real_costs?.find(
-                        (cost) => cost?.id === department?.id
-                      )?.cost || 0;
+                  {departments
+                    ?.filter(
+                      (department) =>
+                        departmentsWithBudgets?.find(
+                          (budget) =>
+                            budget?.budget?.department_id === department?.id
+                        )?.budget?.quantity > 0
+                    )
+                    ?.map((department) => {
+                      const realCost =
+                        order?.department_real_costs?.find(
+                          (cost) => cost?.id === department?.id
+                        )?.cost || 0;
 
-                    const plannedCost =
-                      order?.planned_costs?.department?.details?.find(
-                        (cost) => cost?.id === department?.id
-                      )?.planned_cost || 1;
+                      const plannedCost =
+                        order?.planned_costs?.department?.details?.find(
+                          (cost) => cost?.id === department?.id
+                        )?.planned_cost || 1;
 
-                    const percent = Math.min(
-                      (realCost / plannedCost) * 100,
-                      100
-                    ); // prevent overflow
+                      const percent = Math.min(
+                        (realCost / plannedCost) * 100,
+                        100
+                      ); // prevent overflow
 
-                    return (
-                      <td
-                        key={department.id}
-                        className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2"
-                      >
-                        {/* background fill */}
-                        <div
-                          className={`absolute top-0 left-0 h-full transition-all duration-500 ${
-                            percent < 50
-                              ? "bg-red-200"
-                              : percent < 80
-                              ? "bg-yellow-200"
-                              : "bg-green-200"
-                          }`}
-                          style={{ width: `${percent}%` }}
-                        ></div>
-
-                        {/* Foreground content */}
-                        <div className="relative z-10 space-y-1 cursor-pointer">
-                          {/* Real cost (clickable) */}
+                      return (
+                        <td
+                          key={department.id}
+                          className="relative overflow-hidden border border-gray-300 text-center text-xs py-1 px-2"
+                        >
+                          {/* background fill */}
                           <div
-                            onClick={() =>
-                              handleDepartmentDialogOpen(department, order)
-                            }
-                            className="font-semibold"
-                          >
-                            {formatNumber(realCost)}
-                          </div>
+                            className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                              percent < 50
+                                ? "bg-red-200"
+                                : percent < 80
+                                ? "bg-yellow-200"
+                                : "bg-green-200"
+                            }`}
+                            style={{ width: `${percent}%` }}
+                          ></div>
 
-                          {/* Planned cost */}
-                          <div className="text-gray-600">
-                            {formatNumber(plannedCost)}
-                          </div>
+                          {/* Foreground content */}
+                          <div className="relative z-10 space-y-1 cursor-pointer">
+                            {/* Real cost (clickable) */}
+                            <div
+                              onClick={() =>
+                                handleDepartmentDialogOpen(department, order)
+                              }
+                              className="font-semibold"
+                            >
+                              {formatNumber(realCost)}
+                            </div>
 
-                          {/* Percentage */}
-                          <div className="text-gray-700 font-medium">
-                            {percent.toFixed(1)}%
+                            {/* Planned cost */}
+                            <div className="text-gray-600">
+                              {formatNumber(plannedCost)}
+                            </div>
+
+                            {/* Percentage */}
+                            <div className="text-gray-700 font-medium">
+                              {percent.toFixed(1)}%
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                    );
-                  })}
+                        </td>
+                      );
+                    })}
                   {expensesCosts?.map((expense) => {
                     const realCost =
                       order?.expenses_real_costs?.find(
@@ -716,6 +756,63 @@ const Dashboard = () => {
                 )}
               </td>
 
+              {/* Total planned costs */}
+              <td className="py-1 px-2 border border-gray-300">
+                <div className="space-y-1">
+                  <div>
+                    {formatNumber(
+                      filteredData?.reduce(
+                        (sum, o) => sum + Number(o?.rasxod || 0),
+                        0
+                      )
+                    )}
+                  </div>
+                  <div
+                    className={
+                      (filteredData?.reduce(
+                        (sum, o) => sum + Number(o?.rasxod || 0),
+                        0
+                      ) *
+                        100) /
+                        (filteredData?.reduce(
+                          (sum, o) => sum + Number(o?.order?.price || 0),
+                          0
+                        ) *
+                          dollarRate) >
+                      33
+                        ? "text-red-500"
+                        : "text-green-500"
+                    }
+                  >
+                    {formatNumber(
+                      (filteredData?.reduce(
+                        (sum, o) => sum + Number(o?.rasxod || 0),
+                        0
+                      ) *
+                        100) /
+                        (filteredData?.reduce(
+                          (sum, o) => sum + Number(o?.order?.price || 0),
+                          0
+                        ) *
+                          dollarRate)
+                    )}
+                    %
+                  </div>
+                  <div>
+                    {formatNumber(
+                      filteredData?.reduce(
+                        (sum, o) => sum + Number(o?.rasxod || 0),
+                        0
+                      ) /
+                        filteredData?.reduce(
+                          (sum, o) => sum + Number(o?.model?.minute || 0),
+                          0
+                        )
+                    )}
+                  </div>
+                </div>
+              </td>
+
               {/* Total Tikilgan */}
               <td className="py-1 px-2 border border-gray-300">
                 {formatNumber(
@@ -734,48 +831,58 @@ const Dashboard = () => {
               </td>
 
               {/* Department totals */}
-              {departments?.map((department) => {
-                const real = filteredData?.reduce((sum, o) => {
-                  const cost =
-                    o?.department_real_costs?.find(
-                      (c) => c.id === department.id
-                    )?.cost || 0;
-                  return sum + cost;
-                }, 0);
+              {departments
+                ?.filter(
+                  (department) =>
+                    departmentsWithBudgets?.find(
+                      (budget) =>
+                        budget?.budget?.department_id === department?.id
+                    )?.budget?.quantity > 0
+                )
+                ?.map((department) => {
+                  const real = filteredData?.reduce((sum, o) => {
+                    const cost =
+                      o?.department_real_costs?.find(
+                        (c) => c.id === department.id
+                      )?.cost || 0;
+                    return sum + cost;
+                  }, 0);
 
-                const planned = filteredData?.reduce((sum, o) => {
-                  const plan =
-                    o?.planned_costs?.department?.details?.find(
-                      (c) => c.id === department.id
-                    )?.planned_cost || 0;
-                  return sum + plan;
-                }, 0);
+                  const planned = filteredData?.reduce((sum, o) => {
+                    const plan =
+                      o?.planned_costs?.department?.details?.find(
+                        (c) => c.id === department.id
+                      )?.planned_cost || 0;
+                    return sum + plan;
+                  }, 0);
 
-                const percent = planned ? (real / planned) * 100 : 0;
+                  const percent = planned ? (real / planned) * 100 : 0;
 
-                return (
-                  <td
-                    key={department.id}
-                    className="py-1 px-2 border border-gray-300"
-                  >
-                    <div className="font-semibold text-gray-900">
-                      {formatNumber(real)}
-                    </div>
-                    <div className="text-gray-600">{formatNumber(planned)}</div>
-                    <div
-                      className={`font-medium ${
-                        percent < 50
-                          ? "text-red-600"
-                          : percent < 80
-                          ? "text-yellow-700"
-                          : "text-green-700"
-                      }`}
+                  return (
+                    <td
+                      key={department.id}
+                      className="py-1 px-2 border border-gray-300"
                     >
-                      {percent.toFixed(1)}%
-                    </div>
-                  </td>
-                );
-              })}
+                      <div className="font-semibold text-gray-900">
+                        {formatNumber(real)}
+                      </div>
+                      <div className="text-gray-600">
+                        {formatNumber(planned)}
+                      </div>
+                      <div
+                        className={`font-medium ${
+                          percent < 50
+                            ? "text-red-600"
+                            : percent < 80
+                            ? "text-yellow-700"
+                            : "text-green-700"
+                        }`}
+                      >
+                        {percent.toFixed(1)}%
+                      </div>
+                    </td>
+                  );
+                })}
 
               {/* Expense totals */}
               {expensesCosts?.map((expense) => {
