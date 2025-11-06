@@ -228,7 +228,7 @@ const DepartmenDetails = () => {
               <th className="py-3 px-4 text-right">Oyligi</th>
               <th className="py-3 px-4 text-center">Ulushi (%)</th>
               <th className="py-3 px-4 text-right">Topdi</th>
-              <th className="py-3 px-4 text-right">Topa oladi</th>
+              {/* <th className="py-3 px-4 text-right">Topa oladi</th> */}
               <th className="py-3 px-4 text-right">Mavsumda</th>
             </tr>
           </thead>
@@ -286,9 +286,9 @@ const DepartmenDetails = () => {
                   <td className="py-3 px-4 text-right">
                     {formatNumber(emp?.totals?.total_earned)}
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  {/* <td className="py-3 px-4 text-right">
                     {formatNumber(emp?.totals?.total_possible)}
-                  </td>
+                  </td> */}
                   <td className="py-3 px-4 text-right">
                     {formatNumber(emp?.totals?.total_possible_season)}
                   </td>
@@ -331,7 +331,7 @@ const DepartmenDetails = () => {
                   )
                 )}
               </td>
-              <td className="py-3 px-4 text-right">
+              {/* <td className="py-3 px-4 text-right">
                 {formatNumber(
                   data?.employees?.reduce(
                     (acc, e) =>
@@ -339,7 +339,7 @@ const DepartmenDetails = () => {
                     0
                   )
                 )}
-              </td>
+              </td> */}
               <td className="py-3 px-4 text-right">
                 {formatNumber(
                   data?.employees?.reduce(
