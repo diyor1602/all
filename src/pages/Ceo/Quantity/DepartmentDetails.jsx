@@ -30,6 +30,11 @@ const DepartmenDetails = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [newPercentage, setNewPercentage] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [editDepartmentDialogOpen, setEditDepartmentDialogOpen] =
+    useState(false);
+  const [budgetType, setBudgetType] = useState("minute_based"); // percentage_based
+  const [isNew, setIsNew] = useState(false);
+  const [budgetQuantity, setBudgetQuantity] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     return (
       localStorage.getItem("qSelectedMonth") ||
@@ -108,8 +113,66 @@ const DepartmenDetails = () => {
     }
   };
 
+  const handleEditDepartmentSubmit = async () => {
+    if (budgetQuantity < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Budjet miqdori 0 dan kichik bo'lmaydi!",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!budgetType) {
+      toast({
+        title: "Diqqat",
+        description: "Budjet turi bo'lishi shart!",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (budgetType === "percentage_based" && budgetQuantity > 100) {
+      toast({
+        title: "Diqqat",
+        description: "Foiz 100 dan kichik bo'lishi shart",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (isNew) {
+        await api.post(`/ceo/departmentBudgets`, {
+          type: budgetType,
+          quantity: budgetQuantity,
+          department_id: data?.id,
+        });
+      } else {
+        await api.patch(`/ceo/departmentBudgets/${data?.budget?.id}`, {
+          type: budgetType,
+          quantity: budgetQuantity,
+        });
+      }
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Bo'lim muvaffaqiyatli yangilandi",
+      });
+      fetchData();
+      setEditDepartmentDialogOpen(false);
+      setSubmitting(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response.data.message || "Bo'lim yangilashda xatolik",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50">
       <div className="flex items-center gap-2">
         <Input
           type="month"
@@ -128,7 +191,14 @@ const DepartmenDetails = () => {
           <h2 className="text-2xl font-semibold text-gray-800">
             {data?.name || "-"}
           </h2>
-          <div className="text-xl font-semibold">
+          <div
+            className="text-xl font-semibold cursor-pointer"
+            onClick={() => {
+              setEditDepartmentDialogOpen(true);
+              setBudgetType(data?.budget?.type);
+              setBudgetQuantity(data?.budget?.quantity);
+            }}
+          >
             {data?.budget?.quantity}{" "}
             {data?.budget?.type == "percentage_based" ? "%" : "so'm"}
           </div>
@@ -160,6 +230,7 @@ const DepartmenDetails = () => {
                 <th className="py-3 px-4 text-left">Rasm</th>
                 <th className="py-3 px-4 text-left">Xodim</th>
                 <th className="py-3 px-4 text-left">Lavozimi</th>
+                <th className="py-3 px-4 text-left">Oyligi</th>
                 <th className="py-3 px-4 text-center">Ulushi (%)</th>
                 <th className="py-3 px-4 text-center">Topdi</th>
                 <th className="py-3 px-4 text-center">Topa oladi</th>
@@ -201,6 +272,7 @@ const DepartmenDetails = () => {
                       </Link>
                     </td>
                     <td className="py-2 px-4">{emp?.position?.name}</td>
+                    <td className="py-2 px-4">{formatNumber(emp?.salary)}</td>
                     <td
                       className="py-2 px-4 text-center cursor-pointer font-medium"
                       onClick={() => {
@@ -229,6 +301,14 @@ const DepartmenDetails = () => {
               <tr className="bg-gray-50 font-semibold">
                 <td className="py-2 px-4 text-right" colSpan={4}>
                   Jami
+                </td>
+                <td className="py-2 px-4">
+                  {formatNumber(
+                    data?.employees?.reduce(
+                      (acc, e) => acc + parseFloat(e?.salary || 0),
+                      0
+                    )
+                  )}
                 </td>
                 <td
                   className={`py-2 px-4 text-center ${
@@ -331,6 +411,54 @@ const DepartmenDetails = () => {
                 {submitting ? "Saqlanmoqda..." : "Saqlash"}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Department Dialog */}
+      <Dialog
+        open={editDepartmentDialogOpen}
+        onOpenChange={setEditDepartmentDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{data?.name}</DialogTitle>
+            <DialogDescription>
+              Bo'limga berilgan ulushni tahrirlash
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              placeholder="Ulush"
+              value={budgetQuantity}
+              onChange={(e) => setBudgetQuantity(e.target.value)}
+            />
+            <Button
+              variant={
+                budgetType === "percentage_based" ? "default" : "outline"
+              }
+              onClick={() => setBudgetType("percentage_based")}
+            >
+              %
+            </Button>
+            <Button
+              variant={budgetType === "minute_based" ? "default" : "outline"}
+              onClick={() => setBudgetType("minute_based")}
+            >
+              so'm
+            </Button>
+          </div>
+          <div className="mt-2 flex items-center gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setEditDepartmentDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button onClick={handleEditDepartmentSubmit} disabled={submitting}>
+              {submitting ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
