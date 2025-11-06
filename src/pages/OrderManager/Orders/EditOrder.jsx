@@ -494,7 +494,7 @@ const EditOrder = () => {
                 placeholder="Buyurtma narxi"
                 value={payload.price}
                 min={0}
-                step={0.01}
+                step={0.001}
                 className="bg-white"
                 required
                 onChange={(e) => {
