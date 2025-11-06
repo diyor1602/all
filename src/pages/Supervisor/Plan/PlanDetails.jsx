@@ -32,6 +32,10 @@ const PlanDetails = () => {
   const [newGroupId, setNewGroupId] = useState("");
   const [unassignedOrders, setUnassignedOrders] = useState([]);
   const [stats, setStats] = useState({});
+  const [selectedGroup, setSelectedGroup] = useState(() => {
+    const stored = localStorage.getItem("planSelectedGroup");
+    return stored === "all" ? "all" : stored ? Number(stored) : "all";
+  });
 
   const fetchData = async () => {
     try {
@@ -211,10 +215,42 @@ const PlanDetails = () => {
       }
     `}
           </style>
+          <div className="flex items-center flex-wrap gap-2">
+            <Button
+              variant={selectedGroup === "all" ? "default" : "outline"}
+              onClick={() => {
+                setSelectedGroup("all");
+                localStorage.setItem("planSelectedGroup", "all");
+              }}
+            >
+              Barchasi
+            </Button>
+            {data?.groups
+              ?.sort((a, b) => a.name.localeCompare(b.name))
+              ?.map((group) => (
+                <Button
+                  key={group?.id}
+                  variant={selectedGroup === group?.id ? "default" : "outline"}
+                  onClick={() => {
+                    setSelectedGroup(group.id);
+                    localStorage.setItem(
+                      "planSelectedGroup",
+                      group.id.toString()
+                    );
+                  }}
+                >
+                  {group?.name}
+                </Button>
+              ))}
+          </div>
           {data?.groups?.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 gap-4 text-xs">
+              <div className="grid grid-cols-1 gap-4 text-xs mt-4">
                 {data?.groups
+                  ?.filter(
+                    (group) =>
+                      selectedGroup === "all" || group?.id === selectedGroup
+                  )
                   ?.sort((a, b) => a.name.localeCompare(b.name))
                   .map((group) => (
                     <div
