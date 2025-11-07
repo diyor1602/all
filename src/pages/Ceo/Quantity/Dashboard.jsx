@@ -347,6 +347,94 @@ const Dashboard = () => {
           disabled={loading}
         />
       </div>
+
+      {/* Main stats */}
+      {visiblePrice && (
+        <div className="my-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Orders */}
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div className="text-gray-500 text-sm">Buyurtmalar soni</div>
+            <div className="text-2xl font-semibold mt-1">
+              {filteredData?.length || 0}
+            </div>
+            <div className="text-gray-400 text-sm">
+              {formatNumber(
+                filteredData?.reduce((sum, o) => sum + o?.order?.quantity, 0) ||
+                  0
+              )}{" "}
+              dona
+            </div>
+          </div>
+
+          {/* Total Revenue */}
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div className="text-gray-500 text-sm">Jami topildi</div>
+            <div className="text-2xl font-semibold mt-1">
+              {visiblePrice
+                ? `${formatNumber(
+                    filteredData?.reduce(
+                      (sum, o) =>
+                        sum + calculateTotalPrice(o, dollarRate, true),
+                      0
+                    )
+                  )} so'm`
+                : "—"}
+            </div>
+          </div>
+
+          {/* Total Expenses */}
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div className="text-gray-500 text-sm">Jami xarajat</div>
+            <div className="text-2xl font-semibold mt-1 text-red-600">
+              {visiblePrice
+                ? `${formatNumber(
+                    filteredData?.reduce(
+                      (sum, o) => sum + calculateTotalExpenses(o, true),
+                      0
+                    )
+                  )} so'm`
+                : "—"}
+            </div>
+          </div>
+
+          {/* Profitability */}
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div className="text-gray-500 text-sm">Rentabillik</div>
+            {visiblePrice ? (
+              (() => {
+                const totalProfit = filteredData?.reduce(
+                  (sum, o) => sum + calculateProfit(o, dollarRate, true),
+                  0
+                );
+                const totalRevenue = filteredData?.reduce(
+                  (sum, o) => sum + calculateTotalPrice(o, dollarRate, true),
+                  0
+                );
+                const percent =
+                  totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+                return (
+                  <>
+                    <div
+                      className={`text-2xl font-semibold mt-1 ${
+                        percent >= 0 ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {formatNumber(totalProfit)} so'm
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      {percent.toFixed(1)}%
+                    </div>
+                  </>
+                );
+              })()
+            ) : (
+              <div className="text-2xl font-semibold mt-1">—</div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="mt-2 w-full overflow-auto">
         <table
           className={`w-full whitespace-nowrap border border-collapse border-gray-300 bg-white text-xs ${
