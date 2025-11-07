@@ -160,6 +160,13 @@ const DepartmenDetails = () => {
     }
   };
 
+  const totalPercentage = data?.employees?.reduce(
+    (acc, emp) => acc + parseFloat(emp?.percentage),
+    0
+  );
+
+  const availablePercentage = 100 - totalPercentage;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header Section */}
@@ -191,30 +198,66 @@ const DepartmenDetails = () => {
             )}
           </Button>
         </div>
+      </div>
 
-        <motion.div
-          className="flex items-center gap-3 bg-white/60 backdrop-blur-md shadow-sm px-4 py-2 rounded-2xl border border-gray-100"
-          whileHover={{ scale: 1.02 }}
-        >
-          <h2 className="text-lg font-semibold text-gray-700">
-            {data?.name || "-"}
-          </h2>
-          <div
-            className="text-base font-medium text-blue-600 cursor-pointer hover:underline"
-            onClick={() => {
-              setEditDepartmentDialogOpen(true);
-              setBudgetType(data?.budget?.type);
-              setBudgetQuantity(data?.budget?.quantity);
-            }}
-          >
-            {data?.budget?.quantity}{" "}
-            {data?.budget?.type === "percentage_based" ? "%" : "so'm"}
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${
+          loading ? "opacity-50" : ""
+        }`}
+      >
+        {/* Card 1 */}
+        <div className="bg-white/70 backdrop-blur-lg border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-2xl p-5 transition-all hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex flex-col gap-2">
+          <p className="text-gray-500 text-sm mb-1">Jami ajratilgan summa</p>
+          <h3 className="text-xl font-semibold text-gray-800">
+            {formatNumber(
+              (data?.department_totals?.total_possible / totalPercentage) * 100
+            )}{" "}
+            <span className="text-gray-500 text-base">so'm</span>
+          </h3>
+          <div className="self-end">100%</div>
+        </div>
+
+        {/* Card 2 */}
+        <div className="bg-white/70 backdrop-blur-lg border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-2xl p-5 transition-all hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex flex-col gap-2">
+          <p className="text-gray-500 text-sm mb-1">Jami qolayotgan summa</p>
+          <h3 className="text-xl font-semibold text-gray-800">
+            {formatNumber(
+              (data?.department_totals?.total_possible / totalPercentage) *
+                100 -
+                data?.department_totals?.total_possible
+            )}{" "}
+            <span className="text-gray-500 text-base">so'm</span>
+          </h3>
+          <div className="self-end">{availablePercentage}%</div>
+        </div>
+
+        {/* Card 3 */}
+        <div className="bg-white/70 backdrop-blur-lg border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-2xl p-5 flex flex-col gap-3 transition-all hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">
+              {data?.name || "-"}
+            </h2>
+            <button
+              onClick={() => {
+                setEditDepartmentDialogOpen(true);
+                setBudgetType(data?.budget?.type);
+                setBudgetQuantity(data?.budget?.quantity);
+              }}
+              className="text-blue-600 font-medium hover:text-blue-700 transition-colors"
+            >
+              {data?.budget?.quantity}{" "}
+              {data?.budget?.type === "percentage_based" ? "%" : "so'm"}
+            </button>
           </div>
-        </motion.div>
+          <div className="h-[1px] bg-gradient-to-r from-gray-100 to-transparent"></div>
+          <p className="text-gray-500 text-sm">
+            Bo‘lim byudjeti tafsilotlarini tahrirlash uchun ustiga bosing.
+          </p>
+        </div>
       </div>
 
       {/* Table Section */}
-      <div className="overflow-auto bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm transition-all">
+      <div className="overflow-auto bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm transition-all mt-6">
         <table
           className={`w-full text-sm text-gray-700 ${
             loading ? "opacity-50" : ""
@@ -228,8 +271,8 @@ const DepartmenDetails = () => {
               <th className="py-3 px-4 text-right">Oyligi</th>
               <th className="py-3 px-4 text-center">Ulushi (%)</th>
               <th className="py-3 px-4 text-right">Topdi</th>
-              {/* <th className="py-3 px-4 text-right">Topa oladi</th> */}
-              <th className="py-3 px-4 text-right">Mavsumda</th>
+              <th className="py-3 px-4 text-right">Topa oladi</th>
+              {/* <th className="py-3 px-4 text-right">Mavsumda</th> */}
             </tr>
           </thead>
           <tbody>
@@ -256,7 +299,7 @@ const DepartmenDetails = () => {
                         }}
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-gray-600">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-gray-600 shrink-0">
                         {emp?.name?.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -286,12 +329,12 @@ const DepartmenDetails = () => {
                   <td className="py-3 px-4 text-right">
                     {formatNumber(emp?.totals?.total_earned)}
                   </td>
-                  {/* <td className="py-3 px-4 text-right">
-                    {formatNumber(emp?.totals?.total_possible)}
-                  </td> */}
                   <td className="py-3 px-4 text-right">
-                    {formatNumber(emp?.totals?.total_possible_season)}
+                    {formatNumber(emp?.totals?.total_possible)}
                   </td>
+                  {/* <td className="py-3 px-4 text-right">
+                    {formatNumber(emp?.totals?.total_possible_season)}
+                  </td> */}
                 </motion.tr>
               ))}
           </tbody>
@@ -331,7 +374,7 @@ const DepartmenDetails = () => {
                   )
                 )}
               </td>
-              {/* <td className="py-3 px-4 text-right">
+              <td className="py-3 px-4 text-right">
                 {formatNumber(
                   data?.employees?.reduce(
                     (acc, e) =>
@@ -339,8 +382,8 @@ const DepartmenDetails = () => {
                     0
                   )
                 )}
-              </td> */}
-              <td className="py-3 px-4 text-right">
+              </td>
+              {/* <td className="py-3 px-4 text-right">
                 {formatNumber(
                   data?.employees?.reduce(
                     (acc, e) =>
@@ -348,7 +391,7 @@ const DepartmenDetails = () => {
                     0
                   )
                 )}
-              </td>
+              </td> */}
             </tr>
           </tfoot>
         </table>
