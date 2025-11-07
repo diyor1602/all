@@ -119,7 +119,7 @@ const SalaryPage = () => {
     }
     setSending(true);
     try {
-      await api.post("cashier/employeeMonthlySalary", {
+      await api.post("casher/employeeMonthlySalary", {
         amount: additionalAmount,
         employee_id: selectedEmployee.id,
         comment: additionalComment,
