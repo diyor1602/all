@@ -552,7 +552,11 @@ const Dashboard = () => {
 
                             {/* Percentage */}
                             <div className="text-gray-700 font-medium">
-                              {percent.toFixed(1)}%
+                              {formatNumber(
+                                (plannedCost * 100) /
+                                  calculateTotalExpenses(order, true)
+                              )}
+                              %
                             </div>
                           </div>
                         </td>
@@ -613,7 +617,11 @@ const Dashboard = () => {
                                 : "text-green-700"
                             }`}
                           >
-                            {percent.toFixed(1)}%
+                            {formatNumber(
+                              (plannedCost * 100) /
+                                calculateTotalExpenses(order, true)
+                            )}
+                            %
                           </div>
                         </div>
                       </td>
