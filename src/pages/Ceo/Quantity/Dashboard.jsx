@@ -1183,6 +1183,48 @@ const Dashboard = () => {
                   : "-"}
               </td>
             </tr>
+            <tr>
+              <th className="py-1 px-2 border border-gray-300">№</th>
+              <th className="py-1 px-2 border border-gray-300">Buyurtma</th>
+              <th className="py-1 px-2 border border-gray-300">Narxi</th>
+              <th className="py-1 px-2 border border-gray-300">Daqiqa</th>
+              <th className="py-1 px-2 border border-gray-300">Limit</th>
+              <th className="py-1 px-2 border border-gray-300">Tikilgan</th>
+              {departments
+                ?.filter(
+                  (department) =>
+                    departmentsWithBudgets?.find(
+                      (budget) =>
+                        budget?.budget?.department_id === department?.id
+                    )?.budget?.quantity > 0
+                )
+                ?.map((department) => (
+                  <th
+                    key={department.id}
+                    className="py-1 px-2 border border-gray-300 whitespace-normal"
+                  >
+                    {department.name}
+                  </th>
+                ))}
+              {expensesCosts?.map((cost) => (
+                <th
+                  key={cost.id}
+                  className="py-1 px-2 border border-gray-300 whitespace-normal"
+                >
+                  <div className="space-y-1">
+                    <div>{cost.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {cost.quantity}
+                      {cost.type === "percentage_based" ? "%" : ""}
+                    </div>
+                  </div>
+                </th>
+              ))}
+              <th className="py-1 px-2 border border-gray-300">Jami topildi</th>
+              <th className="py-1 px-2 border border-gray-300">Jami xarajat</th>
+              <th className="py-1 px-2 border border-gray-300">Rentabillik</th>
+              <th className="py-1 px-2 border border-gray-300">Foizda</th>
+            </tr>
           </tfoot>
         </table>
       </div>
