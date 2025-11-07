@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, History } from "lucide-react";
 
 const calculateTotalPrice = (order, dollarRate, future) => {
   const quantity = future ? order?.order?.quantity : order?.produced_quantity;
@@ -1352,6 +1352,7 @@ const Dashboard = () => {
             <tr>
               <th className="py-1 px-2 border border-gray-300">№</th>
               <th className="py-1 px-2 border border-gray-300">Bo'lim</th>
+              <th className="py-1 px-2 border border-gray-300">Tarix</th>
               <th className="py-1 px-2 border border-gray-300">Odam soni</th>
               <th className="py-1 px-2 border border-gray-300 whitespace-normal">
                 Belgilangan ulush
@@ -1396,6 +1397,15 @@ const Dashboard = () => {
                     >
                       {department?.name}
                     </Link>
+                  </td>
+                  <td className="py-1 px-2 border border-gray-300 text-center">
+                    <Button asChild size="icon" variant="ghost">
+                      <Link
+                        to={`/ceo/quantity/department-history/${department?.id}`}
+                      >
+                        <History />
+                      </Link>
+                    </Button>
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
                     {formatNumber(
