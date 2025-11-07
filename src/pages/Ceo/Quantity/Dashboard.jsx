@@ -311,6 +311,23 @@ const Dashboard = () => {
     })
     ?.sort((a, b) => b?.order?.name.localeCompare(a?.order?.name));
 
+  const totalExpenses = filteredData?.reduce(
+    (sum, o) => sum + calculateTotalExpenses(o, true),
+    0
+  );
+
+  const totalQuantity = filteredData?.reduce(
+    (sum, o) => sum + o?.order?.quantity,
+    0
+  );
+
+  const totalRevenue = filteredData?.reduce(
+    (sum, o) => sum + calculateTotalPrice(o, dollarRate, true),
+    0
+  );
+
+  const totalProfit = totalRevenue - totalExpenses;
+
   return (
     <div>
       <div className="flex items-center gap-2">
@@ -347,89 +364,92 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Main stats */}
+      {/* Main Stats */}
       {visiblePrice && (
-        <div className="my-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          className={`my-6 grid grid-cols-1 sm:grid-cols-2 gap-4 transition-all ${
+            loading ? "opacity-50" : ""
+          }`}
+        >
           {/* Total Orders */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-gray-500 text-sm">Buyurtmalar soni</div>
-            <div className="text-2xl font-semibold mt-1">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="text-gray-500 text-sm font-medium">
+              Buyurtmalar soni
+            </div>
+            <div className="text-3xl font-semibold mt-2 text-gray-800">
               {filteredData?.length || 0}
             </div>
-            <div className="text-gray-400 text-sm">
-              {formatNumber(
-                filteredData?.reduce((sum, o) => sum + o?.order?.quantity, 0) ||
-                  0
-              )}{" "}
-              dona
+            <div className="text-gray-400 text-sm mt-1">
+              {formatNumber(totalQuantity)} dona
             </div>
           </div>
 
           {/* Total Revenue */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-gray-500 text-sm">Jami topildi</div>
-            <div className="text-2xl font-semibold mt-1">
-              {visiblePrice
-                ? `${formatNumber(
-                    filteredData?.reduce(
-                      (sum, o) =>
-                        sum + calculateTotalPrice(o, dollarRate, true),
-                      0
-                    )
-                  )} so'm`
-                : "—"}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="text-gray-500 text-sm font-medium">
+              Xizmat ko'rsatildi
+            </div>
+            <div className="text-3xl font-semibold mt-2 text-green-600">
+              {formatNumber(totalRevenue)} so'm
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              ≈ {formatNumber(totalRevenue / dollarRate)} $
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              {formatNumber(totalRevenue / totalQuantity || 0)} so'm /{" "}
+              {formatNumber(totalRevenue / totalQuantity / dollarRate || 0)} $
             </div>
           </div>
 
           {/* Total Expenses */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-gray-500 text-sm">Jami xarajat</div>
-            <div className="text-2xl font-semibold mt-1 text-red-600">
-              {visiblePrice
-                ? `${formatNumber(
-                    filteredData?.reduce(
-                      (sum, o) => sum + calculateTotalExpenses(o, true),
-                      0
-                    )
-                  )} so'm`
-                : "—"}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="text-gray-500 text-sm font-medium">
+              Jami xarajat
+            </div>
+            <div className="text-3xl font-semibold mt-2 text-red-600">
+              {formatNumber(totalExpenses)} so'm
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              ≈ {formatNumber(totalExpenses / dollarRate)} $
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              {formatNumber(totalExpenses / totalQuantity || 0)} so'm /{" "}
+              {formatNumber(totalExpenses / totalQuantity / dollarRate || 0)} $
             </div>
           </div>
 
           {/* Profitability */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-gray-500 text-sm">Rentabillik</div>
-            {visiblePrice ? (
-              (() => {
-                const totalProfit = filteredData?.reduce(
-                  (sum, o) => sum + calculateProfit(o, dollarRate, true),
-                  0
-                );
-                const totalRevenue = filteredData?.reduce(
-                  (sum, o) => sum + calculateTotalPrice(o, dollarRate, true),
-                  0
-                );
-                const percent =
-                  totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="text-gray-500 text-sm font-medium">Rentabillik</div>
+            {(() => {
+              const percent =
+                totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-                return (
-                  <>
-                    <div
-                      className={`text-2xl font-semibold mt-1 ${
-                        percent >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {formatNumber(totalProfit)} so'm
-                    </div>
-                    <div className="text-gray-400 text-sm">
-                      {percent.toFixed(1)}%
-                    </div>
-                  </>
-                );
-              })()
-            ) : (
-              <div className="text-2xl font-semibold mt-1">—</div>
-            )}
+              return (
+                <>
+                  <div
+                    className={`text-3xl font-semibold mt-2 ${
+                      percent >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {formatNumber(totalProfit)} so'm
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    ≈ {formatNumber(totalProfit / dollarRate)} $
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1 flex flex-wrap items-center gap-2">
+                    <span>{percent.toFixed(1)}%</span>•
+                    <span>
+                      {formatNumber(totalProfit / totalQuantity)} so'm
+                    </span>
+                    •
+                    <span>
+                      {formatNumber(totalProfit / totalQuantity / dollarRate)} $
+                    </span>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -478,7 +498,9 @@ const Dashboard = () => {
                   </div>
                 </th>
               ))}
-              <th className="py-1 px-2 border border-gray-300">Jami topildi</th>
+              <th className="py-1 px-2 border border-gray-300">
+                Xizmat ko'rsatildi
+              </th>
               <th className="py-1 px-2 border border-gray-300">Jami xarajat</th>
               <th className="py-1 px-2 border border-gray-300">Rentabillik</th>
               <th className="py-1 px-2 border border-gray-300">Foizda</th>
@@ -1096,7 +1118,7 @@ const Dashboard = () => {
                 );
               })}
 
-              {/* Jami topildi */}
+              {/* Jami xizmat ko'rsatildi */}
               <td className="py-1 px-2 border border-gray-300">
                 {visiblePrice
                   ? (() => {
@@ -1307,7 +1329,9 @@ const Dashboard = () => {
                   </div>
                 </th>
               ))}
-              <th className="py-1 px-2 border border-gray-300">Jami topildi</th>
+              <th className="py-1 px-2 border border-gray-300">
+                Xizmat ko'rsatildi
+              </th>
               <th className="py-1 px-2 border border-gray-300">Jami xarajat</th>
               <th className="py-1 px-2 border border-gray-300">Rentabillik</th>
               <th className="py-1 px-2 border border-gray-300">Foizda</th>
