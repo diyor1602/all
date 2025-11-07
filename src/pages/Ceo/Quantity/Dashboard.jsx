@@ -97,7 +97,6 @@ const Dashboard = () => {
 
   const handleLimitSend = async () => {
     setIsEditing(true);
-    console.log(editingOrder);
     try {
       await api.get(`/ceo/confirmOrder`, {
         params: {
