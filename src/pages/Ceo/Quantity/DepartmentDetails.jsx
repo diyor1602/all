@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
 
 const formatNumber = (number) => {
   if (!number) return "0";
@@ -228,7 +227,7 @@ const DepartmenDetails = () => {
             )}{" "}
             <span className="text-gray-500 text-base">so'm</span>
           </h3>
-          <div className="self-end">{availablePercentage}%</div>
+          <div className="self-end">{availablePercentage.toFixed(2)}%</div>
         </div>
 
         {/* Card 3 */}
@@ -257,94 +256,131 @@ const DepartmenDetails = () => {
       </div>
 
       {/* Table Section */}
-      <div className="overflow-auto bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm transition-all mt-6">
-        <table
-          className={`w-full text-sm text-gray-700 ${
-            loading ? "opacity-50" : ""
-          }`}
-        >
-          <thead className="bg-gray-100/70 text-gray-600 uppercase text-xs">
-            <tr>
-              <th className="py-3 px-4 text-left">№</th>
-              <th className="py-3 px-4 text-left">Xodim</th>
-              <th className="py-3 px-4 text-left">Lavozimi</th>
-              <th className="py-3 px-4 text-right">Oyligi</th>
-              <th className="py-3 px-4 text-center">Ulushi (%)</th>
-              <th className="py-3 px-4 text-right">Topdi</th>
-              <th className="py-3 px-4 text-right">Topa oladi</th>
-              {/* <th className="py-3 px-4 text-right">Mavsumda</th> */}
+      <div
+        className={`${
+          loading ? "opacity-50 cursor-not-allowed" : ""
+        } overflow-auto bg-white/70 backdrop-blur-xl shadow-md transition-all mt-6 border border-gray-200`}
+      >
+        <table className="w-full text-gray-700 text-[11.5px] border-collapse">
+          <thead className="bg-gray-50/90 text-gray-600 uppercase tracking-wide">
+            <tr className="border-b border-gray-300">
+              <th className="py-2.5 px-3 text-center border-r border-gray-200">
+                №
+              </th>
+              <th className="py-2.5 px-3 text-left border-r border-gray-200">
+                Xodim
+              </th>
+              <th className="py-2.5 px-3 text-left border-r border-gray-200">
+                Lavozimi
+              </th>
+              <th className="py-2.5 px-3 text-left border-r border-gray-200">
+                Davomat
+              </th>
+              <th className="py-2.5 px-3 text-right border-r border-gray-200">
+                Oyligi
+              </th>
+              <th className="py-2.5 px-3 text-center border-r border-gray-200">
+                Ulushi (%)
+              </th>
+              <th className="py-2.5 px-3 text-right border-r border-gray-200">
+                Topdi
+              </th>
+              <th className="py-2.5 px-3 text-right">Topa oladi</th>
             </tr>
           </thead>
           <tbody>
             {data?.employees
               ?.sort((a, b) => b?.percentage - a?.percentage)
               ?.map((emp, index) => (
-                <motion.tr
+                <tr
                   key={emp?.id || index}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.02 }}
-                  className="hover:bg-gray-50 transition-colors border-b border-gray-100"
+                  className={`hover:bg-gray-100/80 transition-colors border-b border-gray-200 ${
+                    index % 2 === 0 ? "bg-white" : "bg-gray-50/60"
+                  }`}
                 >
-                  <td className="py-3 px-4 text-gray-500">{index + 1}</td>
-                  <td className="py-3 px-4 flex items-center gap-3">
+                  <td className="py-2.5 px-3 text-center text-gray-500 border-r border-gray-100">
+                    {index + 1}
+                  </td>
+
+                  <td className="py-2.5 px-3 flex items-center gap-2 border-r border-gray-100">
                     {emp?.img ? (
                       <img
                         src={emp?.img}
                         alt={emp?.name}
-                        className="w-10 h-10 rounded-full object-cover shadow-sm cursor-pointer hover:scale-105 transition shrink-0"
+                        className="w-7 h-7 rounded-full object-cover cursor-pointer border border-gray-300"
                         onClick={() => {
                           setSelectedEmployee(emp);
                           setImgOpen(true);
                         }}
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-gray-600 shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center font-semibold text-gray-600 shrink-0 border border-gray-200">
                         {emp?.name?.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <Link
                       to={`/ceo/salary/${emp?.id}`}
-                      className="text-blue-600 hover:underline font-medium"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
                     >
                       {emp?.name}
                     </Link>
                   </td>
-                  <td className="py-3 px-4">{emp?.position?.name}</td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-2.5 px-3 border-r border-gray-100">
+                    {emp?.position?.name}
+                  </td>
+                  <td className="py-2.5 px-3 border-r border-gray-100">
+                    {emp?.attendance?.present_days} /{" "}
+                    {emp?.attendance?.total_working_days}
+                  </td>
+                  <td className="py-2.5 px-3 text-right border-r border-gray-100">
                     {formatNumber(emp?.salary)}
                   </td>
                   <td
-                    className="py-3 px-4 text-center cursor-pointer font-medium"
+                    className="py-2.5 px-3 text-center cursor-pointer font-medium border-r border-gray-100"
                     onClick={() => {
                       setNewPercentage(emp?.percentage);
                       setSelectedEmployee(emp);
                       setPercentageOpen(true);
                     }}
                   >
-                    <span className="inline-block px-2 py-1 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                    <span className="inline-block px-2 py-0.5 bg-gray-100 rounded-md hover:bg-gray-200 transition text-[11px]">
                       {emp?.percentage}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right">
-                    {formatNumber(emp?.totals?.total_earned)}
+                  <td className="py-2.5 px-3 text-right border-r border-gray-100">
+                    <div className="space-y-1">
+                      <div>{formatNumber(emp?.totals?.total_earned)}</div>
+                      <div>
+                        {formatNumber(
+                          emp?.totals?.total_earned /
+                            emp?.attendance?.present_days
+                        )}
+                      </div>
+                    </div>
                   </td>
-                  <td className="py-3 px-4 text-right">
-                    {formatNumber(emp?.totals?.total_possible)}
+                  <td className="py-2.5 px-3 text-right">
+                    <div className="space-y-1">
+                      <div>{formatNumber(emp?.totals?.total_possible)}</div>
+                      <div>
+                        {formatNumber(
+                          emp?.totals?.total_possible /
+                            emp?.attendance?.total_working_days
+                        )}
+                      </div>
+                    </div>
                   </td>
-                  {/* <td className="py-3 px-4 text-right">
-                    {formatNumber(emp?.totals?.total_possible_season)}
-                  </td> */}
-                </motion.tr>
+                </tr>
               ))}
           </tbody>
-
-          <tfoot className="bg-gray-50/80 text-gray-700 font-semibold">
+          <tfoot className="bg-gray-50/80 text-gray-700 font-semibold border-t border-gray-300">
             <tr>
-              <td className="py-3 px-4 text-right" colSpan={3}>
+              <td
+                className="py-2.5 px-3 text-right border-r border-gray-200"
+                colSpan={4}
+              >
                 Jami:
               </td>
-              <td className="py-3 px-4 text-right">
+              <td className="py-2.5 px-3 text-right border-r border-gray-200">
                 {formatNumber(
                   data?.employees?.reduce(
                     (acc, e) => acc + parseFloat(e?.salary || 0),
@@ -353,7 +389,7 @@ const DepartmenDetails = () => {
                 )}
               </td>
               <td
-                className={`py-3 px-4 text-center ${
+                className={`py-2.5 px-3 text-center border-r border-gray-200 ${
                   data?.employees?.reduce(
                     (acc, e) => acc + parseFloat(e?.percentage || 0),
                     0
@@ -366,7 +402,7 @@ const DepartmenDetails = () => {
                   ?.reduce((acc, e) => acc + parseFloat(e?.percentage || 0), 0)
                   ?.toFixed(2)}
               </td>
-              <td className="py-3 px-4 text-right">
+              <td className="py-2.5 px-3 text-right border-r border-gray-200">
                 {formatNumber(
                   data?.employees?.reduce(
                     (acc, e) => acc + parseFloat(e?.totals?.total_earned || 0),
@@ -374,7 +410,7 @@ const DepartmenDetails = () => {
                   )
                 )}
               </td>
-              <td className="py-3 px-4 text-right">
+              <td className="py-2.5 px-3 text-right">
                 {formatNumber(
                   data?.employees?.reduce(
                     (acc, e) =>
@@ -383,15 +419,6 @@ const DepartmenDetails = () => {
                   )
                 )}
               </td>
-              {/* <td className="py-3 px-4 text-right">
-                {formatNumber(
-                  data?.employees?.reduce(
-                    (acc, e) =>
-                      acc + parseFloat(e?.totals?.total_possible_season || 0),
-                    0
-                  )
-                )}
-              </td> */}
             </tr>
           </tfoot>
         </table>
