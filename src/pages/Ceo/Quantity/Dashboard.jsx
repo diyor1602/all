@@ -480,8 +480,16 @@ const Dashboard = () => {
                     ></div>
 
                     {/* Foreground content */}
-                    <div className="relative z-10 text-center">
-                      {order?.produced_quantity} / {order?.order?.quantity}
+                    <div className="relative z-10 text-center space-y-1">
+                      <div>
+                        {order?.produced_quantity} / {order?.order?.quantity}
+                      </div>
+                      <div>
+                        {formatNumber(
+                          parseFloat(order?.rasxod) *
+                            parseFloat(order?.order?.quantity)
+                        )}
+                      </div>
                     </div>
                   </td>
                   {departments
@@ -864,19 +872,36 @@ const Dashboard = () => {
 
               {/* Total Tikilgan */}
               <td className="py-1 px-2 border border-gray-300">
-                {formatNumber(
-                  filteredData?.reduce(
-                    (sum, o) => sum + Number(o?.produced_quantity || 0),
-                    0
-                  )
-                )}{" "}
-                /{" "}
-                {formatNumber(
-                  filteredData?.reduce(
-                    (sum, o) => sum + Number(o?.order?.quantity || 0),
-                    0
-                  )
-                )}
+                <div className="space-y-1">
+                  <div>
+                    {formatNumber(
+                      filteredData?.reduce(
+                        (sum, o) => sum + Number(o?.produced_quantity || 0),
+                        0
+                      )
+                    )}{" "}
+                    /{" "}
+                    {formatNumber(
+                      filteredData?.reduce(
+                        (sum, o) => sum + Number(o?.order?.quantity || 0),
+                        0
+                      )
+                    )}
+                  </div>
+                  <div>
+                    {formatNumber(
+                      filteredData?.reduce(
+                        (sum, o) =>
+                          sum +
+                          Number(
+                            parseFloat(o?.rasxod) *
+                              parseFloat(o?.order?.quantity)
+                          ),
+                        0
+                      )
+                    )}
+                  </div>
+                </div>
               </td>
 
               {/* Department totals */}
