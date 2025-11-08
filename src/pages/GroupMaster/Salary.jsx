@@ -30,7 +30,7 @@ const translateDate = (date) => {
     "dekabr",
   ];
 
-  const [year, month, day] = date.split("-");
+  const [year, month, day] = date?.split("-") || [];
   const monthName = months[parseInt(month, 10) - 1];
   return `${parseInt(day, 10)}-${monthName}, ${year}`;
 };
@@ -258,18 +258,13 @@ const Salary = () => {
                 {/* Estimated Completion */}
                 <div className="flex flex-col items-center md:items-start">
                   <span className="text-sm text-gray-500">
-                    Taxminiy tugash sanasi
+                    Kunlik chiqarishiz kerak
                   </span>
-                  <span
-                    className={`text-lg font-semibold ${
-                      data.seasonOrders.deadline.deadline_exceeded
-                        ? "text-red-600"
-                        : "text-green-600"
-                    }`}
-                  >
-                    {translateDate(
-                      data.seasonOrders.deadline.estimated_completion_date
-                    )}
+                  <span className="text-lg font-semibold text-green-600">
+                    {
+                      data.seasonOrders.deadline
+                        .required_daily_quantity_for_deadline
+                    }
                   </span>
                 </div>
 
