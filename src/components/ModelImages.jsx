@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const ModelImage = ({ modelCode }) => {
+const ModelImages = ({ modelCode }) => {
   const { images, loading, error } = useModelImages(modelCode);
   const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -167,4 +167,4 @@ const ModelImage = ({ modelCode }) => {
   );
 };
 
-export default ModelImage;
+export default ModelImages;

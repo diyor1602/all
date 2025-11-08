@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
-import ModelImage from "./ModelImage";
+import ModelImages from "@/components/ModelImages";
 
 const formatNumber = (num) => {
   return parseFloat(num).toLocaleString("ru-RU", {
@@ -361,7 +361,7 @@ const Salary = () => {
 
                     {/* Model images */}
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start order-2 md:order-1">
-                      <ModelImage modelCode={item.order?.model?.name} />
+                      <ModelImages modelCode={item.order?.model?.name} />
                     </div>
 
                     {/* Circle with percentage */}
