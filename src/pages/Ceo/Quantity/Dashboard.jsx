@@ -341,13 +341,13 @@ const Dashboard = () => {
           className="w-fit bg-white"
           disabled={loading}
         />
-        {/* <Button
+        <Button
           variant="ghost"
           size="icon"
           onClick={() => setVisiblePrice(!visiblePrice)}
         >
           {visiblePrice ? <EyeOff /> : <Eye />}
-        </Button> */}
+        </Button>
       </div>
       {/* Orders */}
       <div className="mt-6 flex items-center gap-2">
