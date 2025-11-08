@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { History, Loader2 } from "lucide-react";
 
 const formatNumber = (number) => {
   if (!number) return "0";
@@ -169,34 +169,37 @@ const DepartmenDetails = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header Section */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="flex items-center gap-3">
-          <Input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => {
-              setSelectedMonth(e.target.value);
-              localStorage.setItem("qSelectedMonth", e.target.value);
-            }}
-            className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-xl px-4 py-2 shadow-sm focus:ring-2 focus:ring-blue-200"
-            disabled={loading}
-          />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={fetchData}
-            className="rounded-xl hover:bg-gray-100"
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="flex items-center gap-2 text-gray-500">
-                <Loader2 className="animate-spin w-4 h-4" /> Yuklanmoqda
-              </span>
-            ) : (
-              "Yangilash"
-            )}
-          </Button>
-        </div>
+      <div className="flex items-center gap-3 w-full mb-6 flex-wrap">
+        <Input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => {
+            setSelectedMonth(e.target.value);
+            localStorage.setItem("qSelectedMonth", e.target.value);
+          }}
+          className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-xl px-4 py-2 shadow-sm focus:ring-2 focus:ring-blue-200 w-fit"
+          disabled={loading}
+        />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={fetchData}
+          className="rounded-xl hover:bg-gray-100"
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2 text-gray-500">
+              <Loader2 className="animate-spin w-4 h-4" /> Yuklanmoqda
+            </span>
+          ) : (
+            "Yangilash"
+          )}
+        </Button>
+        <Button asChild variant="ghost" className="ml-auto">
+          <Link to={`/ceo/quantity/department-history/${id}`}>
+            Tarix <History />
+          </Link>
+        </Button>
       </div>
 
       <div
@@ -331,7 +334,7 @@ const DepartmenDetails = () => {
                   <td className="py-2.5 px-3 border-r border-gray-100">
                     {emp?.position?.name}
                   </td>
-                  <td className="py-2.5 px-3 border-r border-gray-100">
+                  <td className="py-2.5 px-3 border-r border-gray-100 text-center">
                     {emp?.attendance?.present_days} /{" "}
                     {emp?.attendance?.total_working_days}
                   </td>
