@@ -142,8 +142,8 @@ const DepartmentHistory = () => {
               loading ? "opacity-50" : ""
             }`}
           >
-            <table className="w-full text-xs text-gray-700 border border-gray-200 border-collapse">
-              <thead className="bg-gray-100/70 text-gray-800">
+            <table className="w-full text-xs border border-gray-200 border-collapse">
+              <thead className="bg-gray-100/70">
                 <tr>
                   {[
                     "№",
