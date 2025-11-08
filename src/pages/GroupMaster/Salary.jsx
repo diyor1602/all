@@ -10,7 +10,6 @@ const formatNumber = (num) => {
     maximumFractionDigits: 0,
   });
 };
-
 const CircularProgress = ({
   value = 0,
   size = 140,
@@ -146,12 +145,6 @@ const Salary = () => {
                   {formatNumber(total)} so'm
                 </span>
               </div>
-              <div className="text-lg text-gray-600 mt-2">
-                Mavsum davomida:{" "}
-                <span className="font-semibold text-gray-800">
-                  {formatNumber(data?.season_total)} so'm
-                </span>
-              </div>
             </div>
           </div>
 
@@ -186,9 +179,30 @@ const Salary = () => {
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Bir donasi:</div>
-                    <div className="text-xl font-semibold text-purple-600">
-                      {formatNumber(perItem)} so'm
+                    <div className="text-sm text-gray-500">Tugata olasiz:</div>
+                    <div className="text-xl font-semibold">
+                      {formatNumber(data?.monthlyOrders?.daysToFinish)} kunda
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Sana:</div>
+                    <div className="text-xl font-semibold">
+                      {data?.monthlyOrders?.deadline?.estimated_completion_date
+                        ?.split("-")
+                        ?.reverse()
+                        ?.join(".")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Ishchi:</div>
+                    <div className="text-xl font-semibold">
+                      {data?.avgWorkersLast30Days?.toFixed(0)}
+                      {data?.monthlyOrders?.deadline
+                        ?.required_workers_for_deadline > 0
+                        ? " / " +
+                          data?.monthlyOrders?.deadline
+                            ?.required_workers_for_deadline
+                        : ""}
                     </div>
                   </div>
                 </div>
@@ -203,8 +217,6 @@ const Salary = () => {
               ?.map((item, index) => {
                 const earnedItem = item.amount_from_sewing || 0;
                 const totalItem = item.amount_from_order_quantity || 0;
-                const earnedItemPerItem =
-                  item.amount_from_order_quantity / item.order?.quantity || 0;
                 const percent = totalItem
                   ? Math.round((earnedItem / totalItem) * 100)
                   : 0;
@@ -230,9 +242,6 @@ const Salary = () => {
                       <div className="text-sm text-gray-600 mt-1">
                         {formatNumber(earnedItem)} / {formatNumber(totalItem)}{" "}
                         so'm
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        Bir donasi: {formatNumber(earnedItemPerItem)} so'm
                       </div>
                     </div>
 
