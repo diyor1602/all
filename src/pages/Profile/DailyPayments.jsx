@@ -185,7 +185,9 @@ const DailyPayments = ({ selectedMonth }) => {
                         {item.order?.name}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {item.order?.submodels?.join(", ")}
+                        {item?.submodels
+                          ?.map((submodel) => submodel?.name)
+                          .join(", ")}
                       </div>
                       <div className="text-sm text-gray-500">
                         {item?.produced_quantity} / {item.planned_quantity} dona
