@@ -280,6 +280,7 @@ const DepartmentHistory = () => {
                   {[
                     "№",
                     "Buyurtma",
+                    "Submodel",
                     "Foiz",
                     "Topilgan summa",
                     "Tegishli son",
@@ -307,6 +308,7 @@ const DepartmentHistory = () => {
                     const cells = [
                       index + 1,
                       item?.order?.name,
+                      item?.submodel?.name,
                       item?.employee_percentage?.toFixed(2),
                       formatNumber(item?.calculated_amount),
                       formatNumber(item?.daily_quantity),
@@ -321,7 +323,7 @@ const DepartmentHistory = () => {
                           <td
                             key={i}
                             className={`border border-gray-300 p-2 ${
-                              i === 1 ? "text-left" : "text-center"
+                              i === 1 || i === 2 ? "text-left" : "text-center"
                             }`}
                           >
                             {cell}
@@ -335,7 +337,7 @@ const DepartmentHistory = () => {
               <tfoot className="bg-gray-50 font-medium">
                 <tr>
                   <td
-                    colSpan={3}
+                    colSpan={4}
                     className="border border-gray-300 p-2 text-center"
                   >
                     Jami
