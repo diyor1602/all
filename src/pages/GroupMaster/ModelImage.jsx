@@ -49,12 +49,8 @@ const ModelImage = ({ modelCode }) => {
         case "Escape": // Escape = close dialog
           setOpen(false);
           break;
-        case "Enter": // Optional: Enter triggers a "click" effect
-          console.log("Enter pressed");
-          break;
         case "ContextMenu": // Some keyboards support this for right click
           e.preventDefault(); // Prevent native context menu
-          console.log("Right click triggered via keyboard");
           break;
       }
     };
