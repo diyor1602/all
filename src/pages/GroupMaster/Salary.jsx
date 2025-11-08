@@ -10,6 +10,30 @@ const formatNumber = (num) => {
     maximumFractionDigits: 0,
   });
 };
+
+const translateDate = (date) => {
+  if (!date) return "";
+
+  const months = [
+    "yanvar",
+    "fevral",
+    "mart",
+    "aprel",
+    "may",
+    "iyun",
+    "iyul",
+    "avgust",
+    "sentyabr",
+    "oktyabr",
+    "noyabr",
+    "dekabr",
+  ];
+
+  const [year, month, day] = date.split("-");
+  const monthName = months[parseInt(month, 10) - 1];
+  return `${parseInt(day, 10)}-${monthName}, ${year}`;
+};
+
 const CircularProgress = ({
   value = 0,
   size = 140,
@@ -187,10 +211,9 @@ const Salary = () => {
                   <div>
                     <div className="text-sm text-gray-500">Sana:</div>
                     <div className="text-xl font-semibold">
-                      {data?.monthlyOrders?.deadline?.estimated_completion_date
-                        ?.split("-")
-                        ?.reverse()
-                        ?.join(".")}
+                      {translateDate(
+                        data?.monthlyOrders?.deadline?.estimated_completion_date
+                      )}
                     </div>
                   </div>
                   <div>
@@ -209,6 +232,96 @@ const Salary = () => {
               );
             })()}
           </div>
+
+          {/* Deadline Details Section */}
+          {data?.seasonOrders?.deadline && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-purple-50 to-white border border-purple-200/60 rounded-3xl shadow-md p-6 md:p-8 flex flex-col gap-4 text-gray-700"
+            >
+              <h2 className="text-xl font-semibold text-purple-700 mb-2 text-center md:text-left">
+                📅 Deadline Tafsilotlari
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Target Deadline */}
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-sm text-gray-500">Deadline</span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    {translateDate(data.seasonOrders.deadline.target_date)}
+                  </span>
+                </div>
+
+                {/* Estimated Completion */}
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-sm text-gray-500">
+                    Taxminiy tugash sanasi
+                  </span>
+                  <span
+                    className={`text-lg font-semibold ${
+                      data.seasonOrders.deadline.deadline_exceeded
+                        ? "text-red-600"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {translateDate(
+                      data.seasonOrders.deadline.estimated_completion_date
+                    )}
+                  </span>
+                </div>
+
+                {/* Days Remaining */}
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-sm text-gray-500">
+                    Qolgan ish kunlari
+                  </span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    {data.seasonOrders.deadline.working_days_until_deadline} kun
+                  </span>
+                </div>
+
+                {/* Required Workers */}
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-sm text-gray-500">
+                    Zarur ishchilar soni
+                  </span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    {data.seasonOrders.deadline.required_workers_for_deadline
+                      ? data.seasonOrders.deadline.required_workers_for_deadline
+                      : "—"}
+                  </span>
+                </div>
+
+                {/* Current Average Workers */}
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-sm text-gray-500">
+                    O‘rtacha ishchilar
+                  </span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    {data.avgWorkersLast30Days?.toFixed(0)} ta
+                  </span>
+                </div>
+
+                {/* Status */}
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-sm text-gray-500">Status</span>
+                  <span
+                    className={`text-lg font-semibold ${
+                      data.seasonOrders.deadline.deadline_exceeded
+                        ? "text-red-600"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {data.seasonOrders.deadline.deadline_exceeded
+                      ? "Xarakat qilish kerak"
+                      : "Reja bo'yicha ketyabsiz"}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Orders list */}
           <div className="flex flex-col gap-4">
