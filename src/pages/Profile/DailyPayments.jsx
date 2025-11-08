@@ -130,8 +130,6 @@ const DailyPayments = ({ selectedMonth }) => {
                 ) || 0;
               const totalAmount =
                 data?.total_remaining + data?.total_earned || 0;
-              const perItem =
-                totalQuantity > 0 ? Math.round(totalAmount / totalQuantity) : 0;
 
               return (
                 <div className="flex flex-col md:flex-row justify-around items-center gap-4 text-gray-700">
@@ -147,12 +145,6 @@ const DailyPayments = ({ selectedMonth }) => {
                       {formatNumber(totalAmount)} so'm
                     </div>
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Bir donasi:</div>
-                    <div className="text-xl font-semibold text-blue-600">
-                      {formatNumber(perItem)} so'm
-                    </div>
-                  </div>
                 </div>
               );
             })()}
@@ -160,51 +152,53 @@ const DailyPayments = ({ selectedMonth }) => {
 
           {/* Orders list */}
           <div className="flex flex-col gap-4">
-            {data?.orders?.map((item, index) => {
-              const earnedItem = item.earned_amount || 0;
-              const totalItem = item.possible_full_earn_amount || 0;
-              const earnedItemPerItem = item.per_piece_earn || 0;
-              const percent = totalItem
-                ? Math.round((earnedItem / totalItem) * 100)
-                : 0;
+            {data?.orders
+              ?.sort(
+                (a, b) =>
+                  b.earned_amount / b.possible_full_earn_amount -
+                  a.earned_amount / a.possible_full_earn_amount
+              )
+              ?.map((item, index) => {
+                const earnedItem = item.earned_amount || 0;
+                const totalItem = item.possible_full_earn_amount || 0;
+                const percent = totalItem
+                  ? Math.round((earnedItem / totalItem) * 100)
+                  : 0;
 
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.04 }}
-                  className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
-                >
-                  <div>
-                    <div className="text-lg font-semibold">
-                      {item.order?.name}
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
+                  >
+                    <div>
+                      <div className="text-lg font-semibold">
+                        {item.order?.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {item.order?.submodels?.join(", ")}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {item?.produced_quantity} / {item.planned_quantity} dona
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {formatNumber(earnedItem)} / {formatNumber(totalItem)}{" "}
+                        so'm
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {item.order?.submodels?.join(", ")}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {item?.produced_quantity} / {item.planned_quantity} dona
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {formatNumber(earnedItem)} / {formatNumber(totalItem)}{" "}
-                      so'm
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      Bir donasi: {formatNumber(earnedItemPerItem)} so'm
-                    </div>
-                  </div>
 
-                  {/* Circle with percentage */}
-                  <div className="relative flex items-center justify-center">
-                    <CircularProgress value={percent} size={70} />
-                    <div className="absolute text-sm font-semibold text-gray-700">
-                      {percent}%
+                    {/* Circle with percentage */}
+                    <div className="relative flex items-center justify-center">
+                      <CircularProgress value={percent} size={70} />
+                      <div className="absolute text-sm font-semibold text-gray-700">
+                        {percent}%
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
           </div>
         </motion.div>
       )}

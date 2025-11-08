@@ -295,7 +295,7 @@ const Profile = () => {
     {
       key: "daily_payments",
       title: "Dona oylik",
-      value: formatNumber(userData.percentage || 0),
+      value: parseFloat(userData.percentage).toFixed(2) || 0,
       prefix: "%",
       color: "bg-gradient-to-r from-orange-500 to-red-500",
       Icon: Wallet,
