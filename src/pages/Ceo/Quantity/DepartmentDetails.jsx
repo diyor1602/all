@@ -302,29 +302,32 @@ const DepartmenDetails = () => {
                     {index + 1}
                   </td>
 
-                  <td className="py-2.5 px-3 flex items-center gap-2 border-r border-gray-100">
-                    {emp?.img ? (
-                      <img
-                        src={emp?.img}
-                        alt={emp?.name}
-                        className="w-7 h-7 rounded-full object-cover cursor-pointer border border-gray-300"
-                        onClick={() => {
-                          setSelectedEmployee(emp);
-                          setImgOpen(true);
-                        }}
-                      />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center font-semibold text-gray-600 shrink-0 border border-gray-200">
-                        {emp?.name?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <Link
-                      to={`/ceo/salary/${emp?.id}`}
-                      className="text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      {emp?.name}
-                    </Link>
+                  <td className="py-2.5 px-3 border-r border-gray-100">
+                    <div className="flex items-center gap-2 min-h-[40px]">
+                      {emp?.img ? (
+                        <img
+                          src={emp?.img}
+                          alt={emp?.name}
+                          className="w-7 h-7 rounded-full object-cover cursor-pointer"
+                          onClick={() => {
+                            setSelectedEmployee(emp);
+                            setImgOpen(true);
+                          }}
+                        />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center font-semibold text-gray-600 shrink-0">
+                          {emp?.name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <Link
+                        to={`/ceo/salary/${emp?.id}`}
+                        className="text-blue-600 hover:text-blue-700 font-medium leading-none"
+                      >
+                        {emp?.name}
+                      </Link>
+                    </div>
                   </td>
+
                   <td className="py-2.5 px-3 border-r border-gray-100">
                     {emp?.position?.name}
                   </td>
