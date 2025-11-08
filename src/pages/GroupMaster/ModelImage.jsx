@@ -1,35 +1,88 @@
-// ModelImage.jsx
+import { useEffect, useState } from "react";
 import useModelImages from "@/hooks/useModelImages";
-import { Loader2, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import {
+  Loader2,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 
 const ModelImage = ({ modelCode }) => {
   const { images, loading, error } = useModelImages(modelCode);
-
   const [open, setOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const handleNext = () => {
+    if (images.length === 0) return;
+    setSelectedIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const handlePrev = () => {
+    if (images.length === 0) return;
+    setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const openDialogAtIndex = (index) => {
+    setSelectedIndex(index);
+    setOpen(true);
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!open) return; // Only listen when dialog is open
+
+    const handleKeyDown = (e) => {
+      switch (e.key) {
+        case "ArrowRight": // Right arrow = next image
+          handleNext();
+          break;
+        case "ArrowLeft": // Left arrow = previous image
+          handlePrev();
+          break;
+        case "Escape": // Escape = close dialog
+          setOpen(false);
+          break;
+        case "Enter": // Optional: Enter triggers a "click" effect
+          console.log("Enter pressed");
+          break;
+        case "ContextMenu": // Some keyboards support this for right click
+          e.preventDefault(); // Prevent native context menu
+          console.log("Right click triggered via keyboard");
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, images]);
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center">
-      {/* Loading State */}
+    <div className="flex flex-wrap gap-3 justify-center">
+      {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center w-full h-24 bg-gray-100 rounded-xl animate-pulse border border-gray-200 p-5">
-          <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
+        <div className="flex items-center justify-center w-full h-32 bg-purple-50 rounded-2xl border border-purple-200 p-5 animate-pulse">
+          <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+          <span className="ml-2 text-purple-600 font-medium">
+            Rasmlar yuklanmoqda...
+          </span>
         </div>
       )}
 
-      {/* Error State */}
+      {/* Error */}
       {error && (
-        <div className="flex items-center justify-center w-full h-24 bg-red-50 rounded-xl border border-red-200 text-red-600 text-sm gap-2 p-5">
-          <AlertTriangle className="w-4 h-4" />
-          <span>Rasmlari olishda xatolik</span>
+        <div className="flex items-center justify-center w-full h-32 bg-red-50 rounded-2xl border border-red-200 text-red-600 text-sm gap-3 p-5">
+          <AlertTriangle className="w-5 h-5" />
+          <span>Rasmlarni olishda xatolik yuz berdi</span>
         </div>
       )}
 
@@ -40,42 +93,78 @@ const ModelImage = ({ modelCode }) => {
         images.map((image, index) => (
           <div
             key={index}
-            className="w-20 h-20 rounded-xl overflow-hidden shadow-md border border-gray-200 hover:scale-105 transition-transform"
+            className="w-24 h-24 rounded-xl overflow-hidden shadow-md border border-gray-200 hover:scale-105 transition-transform cursor-pointer"
+            onClick={() => openDialogAtIndex(index)}
           >
             <img
               src={image}
               alt={`model-${index}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
               loading="lazy"
-              onClick={() => {
-                setSelectedModel(image);
-                setOpen(true);
-              }}
             />
           </div>
         ))}
 
       {/* No Images */}
       {!loading && !error && images.length === 0 && (
-        <div className="flex items-center justify-center w-full h-24  p-5 bg-gray-50 rounded-xl border border-gray-200 text-gray-400 text-sm">
+        <div className="flex items-center justify-center w-full h-32 bg-gray-50 rounded-2xl border border-gray-200 text-gray-400 text-sm p-5">
           Rasm topilmadi
         </div>
       )}
 
+      {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{modelCode}</DialogTitle>
-            <DialogDescription></DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center justify-center">
-            <img
-              src={selectedModel}
-              alt="model"
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
+        <DialogContent className="max-w-3xl w-full p-0 bg-white rounded-2xl overflow-hidden flex flex-col items-center justify-center pb-6">
+          {images[selectedIndex] && (
+            <>
+              {/* Close Button */}
+              <button
+                className="absolute top-3 right-3 z-10 p-1 rounded-full bg-gray-100 hover:bg-gray-200"
+                onClick={() => setOpen(false)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Title */}
+              <DialogHeader className="p-4 border-b border-gray-200 w-full">
+                <DialogTitle className="text-lg font-semibold text-center">
+                  {modelCode}
+                </DialogTitle>
+              </DialogHeader>
+
+              {/* Image container */}
+              <div className="relative flex items-center justify-center bg-gray-50 w-full h-[500px]">
+                {/* Previous Button */}
+                <button
+                  onClick={handlePrev}
+                  className="absolute left-2 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-md"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+
+                {/* Image */}
+                <img
+                  src={images[selectedIndex]}
+                  alt={`model-${selectedIndex}`}
+                  className="max-h-full max-w-full object-contain rounded-md shadow-md"
+                  loading="lazy"
+                />
+
+                {/* Next Button */}
+                <button
+                  onClick={handleNext}
+                  className="absolute right-2 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-md"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+
+                {/* Index / Total */}
+                <div className="absolute bottom-3 bg-black/40 text-white text-sm px-3 py-1 rounded-full">
+                  {selectedIndex + 1} / {images.length}
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
