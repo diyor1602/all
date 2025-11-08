@@ -100,7 +100,14 @@ const DailyPayments = ({ selectedMonth }) => {
                 <span className="text-3xl font-bold text-gray-800">
                   {Math.round(progress)}%
                 </span>
-                <span className="text-sm text-gray-500">bajarildi</span>
+                <span className="text-sm text-gray-500">
+                  {formatNumber(
+                    data?.orders?.reduce(
+                      (acc, order) => acc + order?.produced_quantity || 0,
+                      0
+                    )
+                  )}
+                </span>
               </div>
             </div>
 
