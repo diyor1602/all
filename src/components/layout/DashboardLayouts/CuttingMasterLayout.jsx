@@ -8,10 +8,17 @@ import {
   Scissors,
   Sprout,
   Truck,
+  Wallet,
 } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
+  {
+    name: "Oylik",
+    href: "/cuttingMaster/department-details",
+    icon: Wallet,
+    onMobile: true,
+  },
   {
     name: "Tikuv KPI",
     href: "/kpi",
