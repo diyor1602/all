@@ -2,10 +2,11 @@ import BaseLayout from "./BaseLayout";
 import {
   BadgePercent,
   Home,
+  LayoutDashboard,
+  Radical,
   Settings,
   Sprout,
   Truck,
-  Users,
 } from "lucide-react";
 
 const navigation = [
@@ -13,7 +14,7 @@ const navigation = [
   {
     name: "Guruhlar",
     href: "/manufacturer/groups",
-    icon: Users,
+    icon: LayoutDashboard,
     onMobile: false,
   },
   {
@@ -35,13 +36,19 @@ const navigation = [
     onMobile: false,
   },
   {
-    name: "Qo'chimcha",
+    name: "Koeffitsiyent",
+    href: "/coefficient",
+    icon: Radical,
+    onMobile: false,
+  },
+  {
+    name: "Qo'shimcha",
     href: "/manufacturer/settings",
     icon: Settings,
     onMobile: false,
   },
 ];
 
-export default function CeoLayout({ children }) {
+export default function ManufacturerLayout({ children }) {
   return <BaseLayout navigation={navigation}>{children}</BaseLayout>;
 }
