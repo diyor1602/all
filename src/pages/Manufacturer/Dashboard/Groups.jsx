@@ -188,6 +188,96 @@ const Groups = () => {
                   </div>
                 </div>
               )}
+              {/* Attendance Section */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex flex-col items-center sm:items-start">
+                    <h3 className="font-semibold text-indigo-800 flex items-center gap-2 text-base">
+                      <Users size={18} className="text-indigo-600" />
+                      Bugungi Davomat
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Umumiy ishchilar:{" "}
+                      <span className="font-semibold text-gray-900">
+                        {formatNumber(
+                          group.todayPresentCount + group.todayAbsentCount,
+                          0
+                        )}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center gap-1 text-green-600">
+                        <CheckCircle size={16} />
+                        <span className="text-sm font-medium">Kelganlar</span>
+                      </div>
+                      <span className="text-xl font-bold text-gray-900">
+                        {formatNumber(group.todayPresentCount, 0)}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center gap-1 text-red-600">
+                        <AlertTriangle size={16} />
+                        <span className="text-sm font-medium">Kelmaganlar</span>
+                      </div>
+                      <span className="text-xl font-bold text-gray-900">
+                        {formatNumber(group.todayAbsentCount, 0)}
+                      </span>
+                    </div>
+
+                    {/* Attendance Progress */}
+                    {group.todayPresentCount + group.todayAbsentCount > 0 && (
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-20 relative">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle
+                              cx="40"
+                              cy="40"
+                              r="30"
+                              stroke="#E5E7EB"
+                              strokeWidth="6"
+                              fill="none"
+                            />
+                            <circle
+                              cx="40"
+                              cy="40"
+                              r="30"
+                              stroke="#4F46E5"
+                              strokeWidth="6"
+                              fill="none"
+                              strokeDasharray="188"
+                              strokeDashoffset={
+                                188 -
+                                (188 * group.todayPresentCount) /
+                                  (group.todayPresentCount +
+                                    group.todayAbsentCount)
+                              }
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-sm font-semibold text-indigo-700">
+                              {Math.round(
+                                (group.todayPresentCount /
+                                  (group.todayPresentCount +
+                                    group.todayAbsentCount)) *
+                                  100
+                              )}
+                              %
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Davomat foizi
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Outputs Table */}
               <div className="overflow-hidden rounded-xl border border-gray-100">
