@@ -28,9 +28,11 @@ const Home = () => {
   const [employeeCount, setEmployeeCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [aupCount, setAupCount] = useState(0);
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const date = new Date();
+    date.setHours(date.getHours() + 5);
+    return date.toISOString()?.split("T")[0];
+  });
 
   const { toast } = useToast();
   const navigate = useNavigate();

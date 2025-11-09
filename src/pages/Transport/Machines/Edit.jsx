@@ -66,13 +66,6 @@ const Edit = () => {
       const response = await api.get(`/transport/transports/${id}`);
       const transportData = response.data.data;
 
-      // Format the dates for input fields
-      const formatDate = (dateString) => {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        return date.toISOString().split("T")[0];
-      };
-
       // Set the form data with the response data
       setFormData({
         id: transportData.id,
