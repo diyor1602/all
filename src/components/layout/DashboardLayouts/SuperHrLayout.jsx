@@ -11,10 +11,17 @@ import {
   Truck,
   CircleDollarSign,
   Radical,
+  PartyPopper,
 } from "lucide-react";
 
 const navigation = [
   { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
+  {
+    name: "Yangi mavsum",
+    href: "/dailyPayments",
+    icon: PartyPopper,
+    onMobile: true,
+  },
   {
     name: "KPI",
     href: "/kpi",

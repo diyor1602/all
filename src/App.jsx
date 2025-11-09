@@ -40,6 +40,7 @@ import UniversalTailor from "./pages/UniversalTailor/UniversalTailor";
 import Manufacturer from "./pages/Manufacturer/Manufacturer";
 import Truck from "./pages/Truck";
 import Coefficient from "./pages/Coefficient/Coefficient";
+import DailyPayments from "./pages/DailyPayments";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -105,6 +106,7 @@ function App() {
           <Route path="/tailor/*" element={<Tailor />} />
           <Route path="/universalTailor/*" element={<UniversalTailor />} />
           <Route path="/coefficient/*" element={<Coefficient />} />
+          <Route path="/dailyPayments" element={<DailyPayments />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

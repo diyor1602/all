@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import api from "@/utils/api";
 import ModelImages from "@/components/ModelImages";
+import { Input } from "@/components/ui/input";
 
 const formatNumber = (num) => {
   return parseFloat(num).toLocaleString("ru-RU", {
@@ -49,10 +50,14 @@ const CircularProgress = ({
   );
 };
 
-const DailyPayments = ({ selectedMonth }) => {
+const DailyPayments = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(
+    localStorage.getItem("dailyPaymentsSelectedMonth") ||
+      new Date().toISOString().slice(0, 7)
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,6 +87,16 @@ const DailyPayments = ({ selectedMonth }) => {
 
   return (
     <div className="min-h-screen flex flex-col gap-8 text-gray-900">
+      <Input
+        type="month"
+        value={selectedMonth}
+        onChange={(e) => {
+          setSelectedMonth(e.target.value);
+          localStorage.setItem("dailyPaymentsSelectedMonth", e.target.value);
+        }}
+        className="w-fit bg-white"
+      />
+
       {/* Loading state */}
       {loading ? (
         <div className="flex items-center justify-center h-[70vh]">
@@ -125,6 +140,14 @@ const DailyPayments = ({ selectedMonth }) => {
                   {formatNumber(total)} so'm
                 </span>
               </div>
+              {data?.total_possible - total > 0 && (
+                <div className="text-lg text-gray-600 mt-2">
+                  Jarima:{" "}
+                  <span className="font-semibold text-red-600">
+                    {formatNumber(data?.total_possible - total)} so'm
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -183,7 +206,7 @@ const DailyPayments = ({ selectedMonth }) => {
                   >
                     <div>
                       <div className="text-lg font-semibold">
-                        {item.order?.name}
+                        {index + 1}. {item.order?.name}
                       </div>
                       <div className="text-sm text-gray-500">
                         {item?.submodels

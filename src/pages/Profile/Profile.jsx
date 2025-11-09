@@ -16,11 +16,9 @@ import {
 import Attendance from "./Attendance";
 import Salary from "./Salary";
 import Work from "./Work";
-import Kpi from "./Kpi";
 import Settings from "./Settings";
 import Duty from "./Duty";
 import Coefficient from "./Coefficient";
-import DailyPayments from "./DailyPayments";
 
 // ---------- Helpers ----------
 const formatDate = (date) => {
@@ -259,16 +257,6 @@ const Profile = () => {
       bgImage:
         "https://images.unsplash.com/photo-1523199455310-87b16c0eed11?q=80&w=1170&auto=format&fit=crop",
     },
-    // {
-    //   key: "kpi",
-    //   title: "KPI",
-    //   value: formatNumber(userData.bonus || 0),
-    //   color: "bg-gradient-to-r from-purple-500 to-pink-600",
-    //   Icon: Trees,
-    //   ringColor: "ring-gray-400",
-    //   bgImage:
-    //     "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=80&w=1170&auto=format&fit=crop",
-    // },
     {
       key: "koefitsient",
       title: "Koeffitsiyent",
@@ -291,18 +279,6 @@ const Profile = () => {
       visible: true,
       bgImage:
         "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=1170&auto=format&fit=crop",
-    },
-    {
-      key: "daily_payments",
-      title: "Dona oylik",
-      value: parseFloat(userData.percentage).toFixed(2) || 0,
-      prefix: "%",
-      color: "bg-gradient-to-r from-orange-500 to-red-500",
-      Icon: Wallet,
-      visible: userData.percentage > 0,
-      ringColor: "ring-orange-400",
-      bgImage:
-        "https://images.unsplash.com/photo-1577401239170-897942555fb3?q=80&w=1170&auto=format&fit=crop",
     },
     {
       key: "sozlamalar",
@@ -329,11 +305,9 @@ const Profile = () => {
     davomat: <Attendance userData={userData} />,
     ish: <Work userData={userData} />,
     avans: <Salary userData={userData} />,
-    kpi: <Kpi userData={userData} />,
     koefitsient: <Coefficient userData={userData} />,
     duty: <Duty userData={userData} />,
     sozlamalar: <Settings userData={userData} />,
-    daily_payments: <DailyPayments selectedMonth={selectedMonth} />,
   };
 
   return (
