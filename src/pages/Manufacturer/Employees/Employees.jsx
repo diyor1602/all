@@ -1,7 +1,7 @@
 import api from "@/utils/api";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -58,7 +58,6 @@ const useDebounce = (value, delay) => {
 
 const Employees = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   // States
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
