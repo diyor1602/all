@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import api from "@/utils/api";
+import ModelImages from "@/components/ModelImages";
 
 const formatNumber = (num) => {
   return parseFloat(num).toLocaleString("ru-RU", {
@@ -178,7 +179,7 @@ const DailyPayments = ({ selectedMonth }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.04 }}
-                    className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
+                    className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl p-5 flex gap-4 md:flex-row flex-col justify-between items-center md:items-center shadow-sm hover:shadow-md transition-all"
                   >
                     <div>
                       <div className="text-lg font-semibold">
@@ -198,8 +199,13 @@ const DailyPayments = ({ selectedMonth }) => {
                       </div>
                     </div>
 
+                    {/* Model images */}
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start order-2 md:order-1">
+                      <ModelImages modelCode={item?.model?.name} />
+                    </div>
+
                     {/* Circle with percentage */}
-                    <div className="relative flex items-center justify-center">
+                    <div className="relative flex items-center justify-center order-1 md:order-2">
                       <CircularProgress value={percent} size={70} />
                       <div className="absolute text-sm font-semibold text-gray-700">
                         {percent}%
