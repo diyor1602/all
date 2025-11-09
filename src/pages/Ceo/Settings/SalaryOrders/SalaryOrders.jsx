@@ -209,7 +209,7 @@ const SalaryOrders = () => {
   return (
     <div className="flex flex-col gap-2 mx-4 md:mx-0">
       <div className="sticky top-0 z-10 bg-white w-full p-4">
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex items-center gap-2 w-full flex-wrap">
           <Input
             type="month"
             value={selectedMonth}
@@ -269,7 +269,10 @@ const SalaryOrders = () => {
         <div className="text-xl font-bold">
           Tanlangan buyurtmalar{" "}
           {filteredSelected?.length > 0
-            ? `(${filteredSelected?.length} ta)`
+            ? `(${filteredSelected?.length} ta) ${filteredSelected?.reduce(
+                (total, item) => total + item.order?.quantity,
+                0
+              )}`
             : ""}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -410,7 +413,12 @@ const SalaryOrders = () => {
         <div className="text-xl font-bold">
           Tavsiyadagi buyurtmalar{" "}
           {filteredRecommendations?.length > 0
-            ? `(${filteredRecommendations?.length} ta)`
+            ? `(${
+                filteredRecommendations?.length
+              } ta) ${filteredRecommendations?.reduce(
+                (total, item) => total + item?.quantity,
+                0
+              )}`
             : ""}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
