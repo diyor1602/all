@@ -107,7 +107,7 @@ const ChatList = ({ chats }) => (
 const tabs = [
   { key: "all", label: "Barchasi", icon: MessagesSquare },
   { key: "personal", label: "Shaxsiy", icon: MessageCircle },
-  { key: "group", label: "Guruxlar", icon: Users2 },
+  { key: "group", label: "Guruhlar", icon: Users2 },
 ];
 
 // --- Main Component ---

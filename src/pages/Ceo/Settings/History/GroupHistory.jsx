@@ -75,7 +75,7 @@ const GroupHistory = () => {
   return (
     <div>
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className="text-2xl font-bold">Guruxlar o'zgarishi tarixi</h2>
+        <h2 className="text-2xl font-bold">Guruhlar o'zgarishi tarixi</h2>
       </div>
 
       <form onSubmit={handleSearch} className="space-y-4 mt-4">

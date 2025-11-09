@@ -20,6 +20,7 @@ import ResultCheckerLayout from "./DashboardLayouts/ResultCheckerLayout";
 import CeoLayout from "./DashboardLayouts/CeoLayout";
 import TailorLayout from "./DashboardLayouts/TailorLayout";
 import UniversalTailorLayout from "./DashboardLayouts/UniversalTailorLayout";
+import ManufacturerLayout from "./DashboardLayouts/ManufacturerLayout";
 import { Outlet } from "react-router-dom";
 
 const layouts = {
@@ -44,6 +45,7 @@ const layouts = {
   ceo: CeoLayout,
   tailor: TailorLayout,
   universalTailor: UniversalTailorLayout,
+  manufacturer: ManufacturerLayout,
   nolayout: NoLayout,
 };
 
