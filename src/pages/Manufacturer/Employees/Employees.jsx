@@ -28,12 +28,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Eye, Pencil, RotateCcw, Search } from "lucide-react";
+import { Eye, RotateCcw, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -92,9 +91,6 @@ const Employees = () => {
   });
 
   const [groups, setGroups] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [loadingEdit, setLoadingEdit] = useState(false);
 
   // Setup debounced values
   const debouncedSearch = useDebounce(filters.search, 500);
@@ -251,251 +247,8 @@ const Employees = () => {
     fetchDepartments();
   }, []);
 
-  // Handle payment type change with validation rules
-  const handlePaymentTypeChange = (paymentType) => {
-    const updatedEmployee = {
-      ...selectedEmployee,
-      payment_type: paymentType,
-    };
-
-    // Apply validation rules based on payment type
-    if (paymentType === "piece_work") {
-      // piece_work: salary and bonus should be 0
-      updatedEmployee.salary = 0;
-      updatedEmployee.bonus = 0;
-    } else if (["hourly", "daily", "monthly"].includes(paymentType)) {
-      // hourly, daily, monthly: bonus should be 0, keep existing salary or set to 0
-      updatedEmployee.bonus = 0;
-      // Keep existing salary or set to 0 if not set
-      if (!updatedEmployee.salary) {
-        updatedEmployee.salary = 0;
-      }
-    }
-    // For fixed types, keep all values as user input
-
-    setSelectedEmployee(updatedEmployee);
-  };
-
-  // Handle edit submit with proper validation
-  const handleEditSubmit = async () => {
-    if (!selectedEmployee) return;
-
-    setLoadingEdit(true);
-    try {
-      const payload = {
-        payment_type: selectedEmployee.payment_type,
-        type: selectedEmployee.type,
-        group_id: employees.data.find((emp) => emp.id === selectedEmployee.id)
-          .group?.id,
-        department_id: employees.data.find(
-          (emp) => emp.id === selectedEmployee.id
-        ).department?.id,
-        status: employees.data.find((emp) => emp.id === selectedEmployee.id)
-          .status,
-      };
-
-      // Apply validation rules for API payload
-      if (selectedEmployee.payment_type === "piece_work") {
-        payload.salary = 0;
-        payload.bonus = 0;
-      } else if (
-        ["hourly", "daily", "monthly"].includes(selectedEmployee.payment_type)
-      ) {
-        payload.salary = Number.parseFloat(selectedEmployee.salary) || 0;
-        payload.bonus = 0;
-      } else {
-        // Fixed types - send all values
-        payload.salary = Number.parseFloat(selectedEmployee.salary) || 0;
-        payload.bonus = Number.parseFloat(selectedEmployee.bonus) || 0;
-      }
-
-      await api.patch(
-        `/manufacturer/employees/${selectedEmployee.id}`,
-        payload
-      );
-
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Xodim ma'lumotlari o'zgartirildi",
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
-        duration: 1500,
-      });
-
-      fetchEmployees();
-      handleEditClose();
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description:
-          error.response?.data?.message ||
-          "Xodim ma'lumotlari o'zgartirishda xatolik",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingEdit(false);
-    }
-  };
-
-  const handleEditClick = (employee) => {
-    if (employee.type === "aup") return;
-    setSelectedEmployee({
-      ...employee,
-      salary: employee.salary || 0,
-      bonus: employee.bonus || 0,
-    });
-    setEditDialogOpen(true);
-  };
-
-  const handleEditClose = () => {
-    setSelectedEmployee(null);
-    setEditDialogOpen(false);
-  };
-
-  // Check if salary input should be disabled
-  const isSalaryDisabled = () => {
-    return selectedEmployee?.payment_type === "piece_work";
-  };
-
-  // Check if bonus input should be disabled
-  const isBonusDisabled = () => {
-    return (
-      selectedEmployee?.payment_type === "piece_work" ||
-      ["hourly", "daily", "monthly"].includes(selectedEmployee?.payment_type)
-    );
-  };
-
-  const handleEditType = async (employee) => {
-    if (employee.type === "aup") {
-      if (
-        !window.confirm(
-          "Xodim turini AUP dan Oddiyga o'zgartirishni tasdiqlaysizmi?"
-        )
-      )
-        return;
-      await api.patch(`/manufacturer/employees/${employee.id}`, {
-        type: "simple",
-        group_id: employee.group?.id,
-        department_id: employee.department?.id,
-        status: employees.data.find((emp) => emp.id === employee.id).status,
-      });
-    } else {
-      if (
-        !window.confirm(
-          "Xodim turini Oddiydan AUPga o'zgartirishni tasdiqlaysizmi?"
-        )
-      )
-        return;
-      await api.patch(`/manufacturer/employees/${employee.id}`, {
-        type: "aup",
-        group_id: employee.group?.id,
-        department_id: employee.department?.id,
-        status: employees.data.find((emp) => emp.id === employee.id).status,
-      });
-    }
-    fetchEmployees();
-  };
-
-  const handleEditTypeChange = (type) => {
-    setSelectedEmployee({
-      ...selectedEmployee,
-      type,
-    });
-  };
-
   return (
     <div className="space-y-2">
-      <Dialog open={editDialogOpen} onOpenChange={handleEditClose}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>To'lov turi o'zgartirish</DialogTitle>
-            <DialogDescription>
-              To'lov turi o'zgartirish uchun ma'lumotlarni kiriting
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">To'lov turi</label>
-              <Select
-                value={selectedEmployee?.payment_type}
-                onValueChange={handlePaymentTypeChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="To'lov turi" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(payment_types).map(([key, value]) => (
-                    <SelectItem key={key} value={key}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                To'lov miqdori (
-                {parseFloat(selectedEmployee?.salary)?.toLocaleString("ru-RU")})
-                {isSalaryDisabled() && (
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Ishbay uchun avtomatik 0)
-                  </span>
-                )}
-              </label>
-              <Input
-                type="number"
-                placeholder="To'lov miqdori"
-                value={selectedEmployee?.salary || ""}
-                onChange={(e) =>
-                  setSelectedEmployee({
-                    ...selectedEmployee,
-                    salary: e.target.value,
-                  })
-                }
-                disabled={isSalaryDisabled()}
-                className={isSalaryDisabled() ? "bg-gray-100" : ""}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                KPI (
-                {parseFloat(selectedEmployee?.bonus)?.toLocaleString("ru-RU")})
-                {isBonusDisabled() && (
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Ushbu tur uchun avtomatik 0)
-                  </span>
-                )}
-              </label>
-              <Input
-                type="number"
-                placeholder="KPI"
-                value={selectedEmployee?.bonus || ""}
-                onChange={(e) =>
-                  setSelectedEmployee({
-                    ...selectedEmployee,
-                    bonus: e.target.value,
-                  })
-                }
-                disabled={isBonusDisabled()}
-                className={isBonusDisabled() ? "bg-gray-100" : ""}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleEditClose}>
-              Yopish
-            </Button>
-            <Button onClick={handleEditSubmit} disabled={loadingEdit}>
-              {loadingEdit ? "Saqlanmoqda..." : "Saqlash"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Filters */}
       <div className="flex items-center gap-2 w-full flex-wrap md:flex-nowrap">
         <Select
@@ -596,13 +349,13 @@ const Employees = () => {
           <TableRow>
             <TableHead className="border text-center">#</TableHead>
             <TableHead className="border">F.I.O</TableHead>
+            <TableHead className="border">Ko'rish</TableHead>
             <TableHead className="border">Bo'lim</TableHead>
             <TableHead className="border">Lavozimi</TableHead>
             <TableHead className="border">To'lov turi</TableHead>
             <TableHead className="border">Maosh</TableHead>
             <TableHead className="border">KPI</TableHead>
             <TableHead className="border">Holati</TableHead>
-            <TableHead className="border">Amallar</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -652,6 +405,16 @@ const Employees = () => {
                     </div>
                   </div>
                 </TableCell>
+                <TableCell className="border text-center">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link
+                      to={`/manufacturer/employees/${employee.id}`}
+                      target="_blank"
+                    >
+                      <Eye className="h-4 w-4 text-blue-500" />
+                    </Link>
+                  </Button>
+                </TableCell>
                 <TableCell className="border">
                   <div className="flex flex-col text-xs">
                     <div>{employee.department?.name || "-"}</div>
@@ -681,24 +444,6 @@ const Employees = () => {
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}
-                </TableCell>
-                <TableCell className="border">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link
-                      to={`/manufacturer/employees/${employee.id}`}
-                      target="_blank"
-                    >
-                      <Eye className="h-4 w-4 text-blue-500" />
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    disabled={employee?.type === "aup"}
-                    onClick={() => handleEditClick(employee)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
                 </TableCell>
               </TableRow>
             ))
