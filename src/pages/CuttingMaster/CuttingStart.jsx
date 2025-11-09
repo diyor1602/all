@@ -118,6 +118,7 @@ const CuttingStart = () => {
         duration: 1500,
       });
       getOrder();
+      getCuts();
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -403,41 +404,43 @@ const CuttingStart = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {cuts.map((cut) => (
-                <div
-                  key={cut.id}
-                  className="flex items-center justify-between border rounded-xl p-3 bg-card/50 shadow-sm hover:shadow-md hover:bg-accent/10 transition-all duration-200"
-                >
-                  {/* Left side: Quantity + User */}
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 text-primary p-2 rounded-full">
-                      <Scissors className="h-4 w-4" />
+              {cuts
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .map((cut) => (
+                  <div
+                    key={cut.id}
+                    className="flex items-center justify-between border rounded-xl p-3 bg-card/50 shadow-sm hover:shadow-md hover:bg-accent/10 transition-all duration-200"
+                  >
+                    {/* Left side: Quantity + User */}
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 text-primary p-2 rounded-full">
+                        <Scissors className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">
+                          {formatNumber(cut.quantity, 0)} ta kesildi
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {cut.user?.employee?.name || "Noma’lum foydalanuvchi"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {formatNumber(cut.quantity, 0)} ta kesildi
+
+                    {/* Right side: Date + Time */}
+                    <div className="text-right">
+                      <p className="text-sm font-medium">
+                        {cut.cut_at
+                          ?.split(" ")[0]
+                          ?.split("-")
+                          ?.reverse()
+                          ?.join(".")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {cut.user?.employee?.name || "Noma’lum foydalanuvchi"}
+                        {cut.cut_at?.split(" ")[1]?.slice(0, 5)}
                       </p>
                     </div>
                   </div>
-
-                  {/* Right side: Date + Time */}
-                  <div className="text-right">
-                    <p className="text-sm font-medium">
-                      {cut.cut_at
-                        ?.split(" ")[0]
-                        ?.split("-")
-                        ?.reverse()
-                        ?.join(".")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {cut.cut_at?.split(" ")[1]?.slice(0, 5)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </CardContent>
