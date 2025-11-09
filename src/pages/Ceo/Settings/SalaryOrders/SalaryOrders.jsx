@@ -94,7 +94,7 @@ const SalaryOrders = () => {
   const handleMinus = async (order) => {
     if (
       !window.confirm(
-        `${order.order?.name} buyurtmani olib tashlayni tasdiqlaysizmi?`
+        `${order.order?.name} buyurtmani olib tashlashni tasdiqlaysizmi?`
       )
     ) {
       return;
@@ -280,7 +280,23 @@ const SalaryOrders = () => {
             <div className="text-center">Tanlangan buyurtmalar mavjud emas</div>
           )}
           {filteredSelected
-            ?.sort((a, b) => b.order?.id - a.order?.id)
+            ?.sort((a, b) => {
+              if (
+                !a.order?.order_model?.submodels?.some(
+                  (submodel) => submodel?.group?.group?.name
+                )
+              ) {
+                return -1;
+              }
+              if (
+                !b.order?.order_model?.submodels?.some(
+                  (submodel) => submodel?.group?.group?.name
+                )
+              ) {
+                return 1;
+              }
+              return b.order?.id - a.order?.id;
+            })
             ?.map((item, index) => (
               <div key={index} className="rounded-xl bg-white shadow-xl">
                 <div
@@ -389,9 +405,17 @@ const SalaryOrders = () => {
                   </div>
 
                   <div className="text-xs text-gray-800">
-                    {item?.order?.order_model?.submodels
-                      ?.map((submodel) => submodel?.group?.group?.name)
-                      .join(", ")}
+                    {item?.order?.order_model?.submodels?.some(
+                      (submodel) => submodel?.group?.group?.name
+                    ) ? (
+                      item?.order?.order_model?.submodels
+                        ?.map((submodel) => submodel?.group?.group?.name)
+                        .join(", ")
+                    ) : (
+                      <div className="text-red-500 uppercase font-medium">
+                        Guruhga biriktirilmagan
+                      </div>
+                    )}
                   </div>
 
                   <Button
