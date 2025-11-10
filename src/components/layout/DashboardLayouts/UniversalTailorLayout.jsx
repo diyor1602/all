@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 const navigation = [
-  { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
     name: "Ish",
     href: "/universalTailor",
@@ -27,18 +26,6 @@ const navigation = [
     href: "/universalTailor/video",
     icon: Clapperboard,
     onMobile: true,
-  },
-  {
-    name: "Jo'natmalar",
-    href: "/truck",
-    icon: Truck,
-    onMobile: false,
-  },
-  {
-    name: "Koeffitsiyent",
-    href: "/coefficient",
-    icon: Radical,
-    onMobile: false,
   },
 ];
 

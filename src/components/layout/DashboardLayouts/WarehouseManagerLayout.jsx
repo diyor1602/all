@@ -1,23 +1,7 @@
 import BaseLayout from "./BaseLayout";
-import {
-  BadgePercent,
-  BadgeMinus,
-  BadgePlus,
-  Home,
-  Settings,
-  Sprout,
-  Truck,
-  Radical,
-} from "lucide-react";
+import { BadgePercent, BadgeMinus, BadgePlus, Settings } from "lucide-react";
 
 const navigation = [
-  { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
-  {
-    name: "KPI",
-    href: "/kpi",
-    icon: BadgePercent,
-    onMobile: false,
-  },
   {
     name: "Kirimlar",
     href: "/warehouseManager/income",
@@ -35,19 +19,6 @@ const navigation = [
     href: "/warehouseManager/settings",
     icon: Settings,
     onMobile: true,
-  },
-  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
-  {
-    name: "Jo'natmalar",
-    href: "/truck",
-    icon: Truck,
-    onMobile: false,
-  },
-  {
-    name: "Koeffitsiyent",
-    href: "/coefficient",
-    icon: Radical,
-    onMobile: false,
   },
 ];
 

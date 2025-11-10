@@ -1,23 +1,7 @@
 import BaseLayout from "./BaseLayout";
-import {
-  BadgePercent,
-  Home,
-  Box,
-  Puzzle,
-  NotebookPen,
-  Sprout,
-  Truck,
-  Radical,
-} from "lucide-react";
+import { Puzzle, Box, NotebookPen } from "lucide-react";
 
 const navigation = [
-  { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
-  {
-    name: "KPI",
-    href: "/kpi",
-    icon: BadgePercent,
-    onMobile: false,
-  },
   {
     name: "Buyurtmalar",
     href: "/supervisor/orders",
@@ -35,19 +19,6 @@ const navigation = [
     href: "/supervisor/plan",
     icon: NotebookPen,
     onMobile: true,
-  },
-  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
-  {
-    name: "Jo'natmalar",
-    href: "/truck",
-    icon: Truck,
-    onMobile: false,
-  },
-  {
-    name: "Koeffitsiyent",
-    href: "/coefficient",
-    icon: Radical,
-    onMobile: false,
   },
 ];
 

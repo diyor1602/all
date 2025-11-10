@@ -1,33 +1,14 @@
 import BaseLayout from "./BaseLayout";
 import {
-  Home,
   Users,
   Settings,
   Calendar1,
   ChartColumnDecreasing,
   Swords,
-  BadgePercent,
-  Sprout,
-  Truck,
   CircleDollarSign,
-  Radical,
-  PartyPopper,
 } from "lucide-react";
 
 const navigation = [
-  { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
-  {
-    name: "Yangi mavsum",
-    href: "/dailyPayments",
-    icon: PartyPopper,
-    onMobile: true,
-  },
-  {
-    name: "KPI",
-    href: "/kpi",
-    icon: BadgePercent,
-    onMobile: false,
-  },
   {
     name: "Davomat",
     href: "/superhr/attendance",
@@ -57,19 +38,6 @@ const navigation = [
     name: "Oylik",
     href: "/superhr/salary",
     icon: CircleDollarSign,
-    onMobile: false,
-  },
-  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
-  {
-    name: "Jo'natmalar",
-    href: "/truck",
-    icon: Truck,
-    onMobile: false,
-  },
-  {
-    name: "Koeffitsiyent",
-    href: "/coefficient",
-    icon: Radical,
     onMobile: false,
   },
 ];

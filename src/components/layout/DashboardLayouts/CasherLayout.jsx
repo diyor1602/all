@@ -1,22 +1,16 @@
 import BaseLayout from "./BaseLayout";
 import {
-  BadgePercent,
   BanknoteArrowDown,
   BanknoteArrowUp,
   CircleDollarSign,
   ClipboardCheck,
   Gem,
-  Home,
-  Radical,
   Rotate3d,
-  Sprout,
   SquareScissors,
-  Truck,
   Users,
 } from "lucide-react";
 
 const navigation = [
-  { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
     name: "Kirimlar",
     href: "/casher/income",
@@ -60,33 +54,9 @@ const navigation = [
     onMobile: false,
   },
   {
-    name: "Tikuv KPI",
-    href: "/kpi",
-    icon: BadgePercent,
-    onMobile: false,
-  },
-  {
     name: "Bichuv KPI",
     href: "/cuttingKpi",
     icon: SquareScissors,
-    onMobile: false,
-  },
-  {
-    name: "Tikuvchilar",
-    href: "/tailorRating",
-    icon: Sprout,
-    onMobile: false,
-  },
-  {
-    name: "Jo'natmalar",
-    href: "/truck",
-    icon: Truck,
-    onMobile: false,
-  },
-  {
-    name: "Koeffitsiyent",
-    href: "/coefficient",
-    icon: Radical,
     onMobile: false,
   },
 ];

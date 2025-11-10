@@ -1,6 +1,5 @@
 import BaseLayout from "./BaseLayout";
 import {
-  BadgePercent,
   BanknoteArrowDown,
   BanknoteArrowUp,
   Calculator,
@@ -8,18 +7,13 @@ import {
   ClipboardCheck,
   CloudSun,
   Gem,
-  Home,
   Rotate3d,
-  Settings,
-  Sprout,
   SquareScissors,
   TentTree,
-  Truck,
   Users,
 } from "lucide-react";
 
 const navigation = [
-  { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   {
     name: "Kirimlar",
     href: "/ceo/income",
@@ -69,12 +63,6 @@ const navigation = [
     onMobile: false,
   },
   {
-    name: "Tikuv KPI",
-    href: "/kpi",
-    icon: BadgePercent,
-    onMobile: false,
-  },
-  {
     name: "Bichuv KPI",
     href: "/cuttingKpi",
     icon: SquareScissors,
@@ -90,24 +78,6 @@ const navigation = [
     name: "Oylik balans",
     href: "/ceo/monthly",
     icon: CloudSun,
-    onMobile: false,
-  },
-  {
-    name: "Tikuvchilar",
-    href: "/tailorRating",
-    icon: Sprout,
-    onMobile: false,
-  },
-  {
-    name: "Jo'natmalar",
-    href: "/truck",
-    icon: Truck,
-    onMobile: false,
-  },
-  {
-    name: "Qo'chimcha",
-    href: "/ceo/settings",
-    icon: Settings,
     onMobile: false,
   },
 ];

@@ -1,28 +1,16 @@
 import BaseLayout from "./BaseLayout";
 import {
-  BadgePercent,
   Bot,
   FilePlus,
-  Home,
   ListChecks,
-  Medal,
   Shirt,
-  Truck,
-  Radical,
   Users,
   Clock,
   Wallet,
 } from "lucide-react";
 
 const navigation = [
-  { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
   { name: "Oylik", href: "/groupMaster/salary", icon: Wallet, onMobile: true },
-  {
-    name: "KPI",
-    href: "/kpi",
-    icon: BadgePercent,
-    onMobile: false,
-  },
   {
     name: "Tasdiqlash",
     href: "/groupMaster/pending",
@@ -57,24 +45,6 @@ const navigation = [
     name: "Tarif",
     href: "/groupMaster/tarifs",
     icon: Bot,
-    onMobile: false,
-  },
-  {
-    name: "Reyting",
-    href: "/tailorRating",
-    icon: Medal,
-    onMobile: true,
-  },
-  {
-    name: "Jo'natmalar",
-    href: "/truck",
-    icon: Truck,
-    onMobile: false,
-  },
-  {
-    name: "Koeffitsiyent",
-    href: "/coefficient",
-    icon: Radical,
     onMobile: false,
   },
 ];

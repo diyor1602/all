@@ -1,24 +1,7 @@
 import BaseLayout from "./BaseLayout";
-import {
-  BadgePercent,
-  Home,
-  Users,
-  Settings,
-  Sprout,
-  Truck,
-  HandCoins,
-  Box,
-  Radical,
-} from "lucide-react";
+import { Users, Settings, HandCoins, Box } from "lucide-react";
 
 const navigation = [
-  { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
-  {
-    name: "KPI",
-    href: "/kpi",
-    icon: BadgePercent,
-    onMobile: false,
-  },
   {
     name: "Xodimlar",
     href: "/internalAccountant/employees",
@@ -41,19 +24,6 @@ const navigation = [
     name: "Buyurtmalar",
     href: "/internalAccountant/work",
     icon: Box,
-    onMobile: false,
-  },
-  { name: "Tikuvchilar", href: "/tailorRating", icon: Sprout, onMobile: false },
-  {
-    name: "Jo'natmalar",
-    href: "/truck",
-    icon: Truck,
-    onMobile: false,
-  },
-  {
-    name: "Koeffitsiyent",
-    href: "/coefficient",
-    icon: Radical,
     onMobile: false,
   },
 ];

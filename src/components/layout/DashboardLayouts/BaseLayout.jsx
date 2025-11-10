@@ -12,6 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
+import {
+  Home,
+  PartyPopper,
+  Truck,
+  Radical,
+  Sprout,
+  BadgePercent,
+} from "lucide-react";
 
 export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,6 +40,41 @@ export default function BaseLayout({ children, navigation }) {
       window.location.href = "/";
     }
   };
+
+  const forAllUsers = [
+    { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
+    {
+      name: "Yangi mavsum",
+      href: "/dailyPayments",
+      icon: PartyPopper,
+      onMobile: true,
+    },
+    {
+      name: "Tikuv KPI",
+      href: "/kpi",
+      icon: BadgePercent,
+      onMobile: false,
+    },
+    ...navigation,
+    {
+      name: "Tikuvchilar",
+      href: "/tailorRating",
+      icon: Sprout,
+      onMobile: false,
+    },
+    {
+      name: "Jo'natmalar",
+      href: "/truck",
+      icon: Truck,
+      onMobile: false,
+    },
+    {
+      name: "Koeffitsiyent",
+      href: "/coefficient",
+      icon: Radical,
+      onMobile: false,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 pointer-events-auto">
@@ -82,7 +125,7 @@ export default function BaseLayout({ children, navigation }) {
           {/* Navigation */}
           <div className="flex-1 overflow-y-auto">
             <nav className="space-y-1 px-3 py-4">
-              {navigation.map((item) => {
+              {forAllUsers.map((item, index) => {
                 const userId = Number(localStorage.getItem("user_id"));
                 const isActive = location.pathname === item.href;
                 const canShow =
@@ -94,7 +137,7 @@ export default function BaseLayout({ children, navigation }) {
 
                 return (
                   <Link
-                    key={item.name}
+                    key={index}
                     to={item.href}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
