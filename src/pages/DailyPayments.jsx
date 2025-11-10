@@ -141,7 +141,7 @@ const DailyPayments = () => {
                 </span>
               </div>
               {data?.total_possible - total > 0 && (
-                <div className="text-lg text-gray-600 mt-2">
+                <div className="text-lg text-gray-600">
                   Jarima:{" "}
                   <span className="font-semibold text-red-600">
                     {formatNumber(data?.total_possible - total)} so'm
