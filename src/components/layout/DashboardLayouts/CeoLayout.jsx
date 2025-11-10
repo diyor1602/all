@@ -11,6 +11,7 @@ import {
   SquareScissors,
   TentTree,
   Users,
+  Settings,
 } from "lucide-react";
 
 const navigation = [
@@ -78,6 +79,12 @@ const navigation = [
     name: "Oylik balans",
     href: "/ceo/monthly",
     icon: CloudSun,
+    onMobile: false,
+  },
+  {
+    name: "Qo'shimcha",
+    href: "/ceo/settings",
+    icon: Settings,
     onMobile: false,
   },
 ];
