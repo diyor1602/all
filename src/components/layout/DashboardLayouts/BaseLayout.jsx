@@ -40,7 +40,8 @@ export default function BaseLayout({ children, navigation }) {
       name: "Yangi mavsum",
       href: "/dailyPayments",
       icon: PartyPopper,
-      onMobile: true,
+      onMobile: false,
+      dontShow: parseFloat(localStorage.getItem("percentage")) <= 0,
     },
     {
       name: "Tikuv KPI",
@@ -127,6 +128,7 @@ export default function BaseLayout({ children, navigation }) {
                   item.showUsers.includes(userId);
 
                 if (!canShow) return null;
+                if (item.dontShow) return null;
 
                 return (
                   <Link
@@ -224,10 +226,11 @@ export default function BaseLayout({ children, navigation }) {
         )}
       >
         <ul className="flex justify-around">
-          {navigation.map((item) => {
+          {forAllUsers.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              item.onMobile && (
+              item.onMobile &&
+              !item.dontShow && (
                 <li key={item.name}>
                   <Link
                     to={item.href}

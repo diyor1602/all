@@ -12,7 +12,7 @@ const navigation = [
     name: "Xodimlar",
     href: "/cuttingMaster/department-details",
     icon: Users,
-    onMobile: true,
+    onMobile: false,
   },
   {
     name: "Kesish KPI",

@@ -86,7 +86,7 @@ const DailyPayments = () => {
   const progress = total ? Math.min((earned / total) * 100, 100) : 0;
 
   return (
-    <div className="min-h-screen flex flex-col gap-8 text-gray-900">
+    <div className="flex flex-col gap-8 text-gray-900">
       <Input
         type="month"
         value={selectedMonth}
@@ -102,7 +102,7 @@ const DailyPayments = () => {
         <div className="flex items-center justify-center h-[70vh]">
           <Loader2 className="animate-spin text-blue-500 w-10 h-10" />
         </div>
-      ) : (
+      ) : data?.employee?.percentage > 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -239,6 +239,10 @@ const DailyPayments = () => {
               })}
           </div>
         </motion.div>
+      ) : (
+        <div className="w-full h-[70vh] flex items-center justify-center text-4xl">
+          Siz eski tizimdasiz 😀
+        </div>
       )}
     </div>
   );
