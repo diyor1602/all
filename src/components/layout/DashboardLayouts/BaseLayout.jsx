@@ -12,14 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
-import {
-  Home,
-  PartyPopper,
-  Truck,
-  Radical,
-  Sprout,
-  BadgePercent,
-} from "lucide-react";
+import { Home, PartyPopper, Radical, Sprout, BadgePercent } from "lucide-react";
 
 export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -62,12 +55,12 @@ export default function BaseLayout({ children, navigation }) {
       icon: Sprout,
       onMobile: false,
     },
-    {
-      name: "Jo'natmalar",
-      href: "/truck",
-      icon: Truck,
-      onMobile: false,
-    },
+    // {
+    //   name: "Jo'natmalar",
+    //   href: "/truck",
+    //   icon: Truck,
+    //   onMobile: false,
+    // },
     {
       name: "Koeffitsiyent",
       href: "/coefficient",
