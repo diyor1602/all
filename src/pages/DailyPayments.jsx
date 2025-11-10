@@ -67,6 +67,7 @@ const DailyPayments = () => {
           params: { month: selectedMonth },
         });
         setData(response.data);
+        localStorage.setItem("percentage", response.data?.employee?.percentage);
       } catch (error) {
         toast({
           title: "Xatolik",
@@ -84,6 +85,11 @@ const DailyPayments = () => {
   const earned = data?.total_earned || 0;
   const total = data?.total_remaining + data?.total_earned || 0;
   const progress = total ? Math.min((earned / total) * 100, 100) : 0;
+
+  const role = localStorage.getItem("role");
+  const quantityKey =
+    role === "cuttingMaster" ? "total_cut_quantity" : "total_cut_quantity";
+  const textKey = role === "cuttingMaster" ? "kesasiz" : "tikasiz";
 
   return (
     <div className="flex flex-col gap-8 text-gray-900">
@@ -119,7 +125,7 @@ const DailyPayments = () => {
                 <span className="text-sm text-gray-500">
                   {formatNumber(
                     data?.orders?.reduce(
-                      (acc, order) => acc + order?.produced_quantity || 0,
+                      (acc, order) => acc + order?.[quantityKey] || 0,
                       0
                     )
                   )}
@@ -165,7 +171,7 @@ const DailyPayments = () => {
               return (
                 <div className="flex flex-col md:flex-row justify-around items-center gap-4 text-gray-700">
                   <div>
-                    <div className="text-sm text-gray-500">Jami tikasiz:</div>
+                    <div className="text-sm text-gray-500">Jami {textKey}:</div>
                     <div className="text-xl font-semibold">
                       {formatNumber(totalQuantity)} dona
                     </div>
@@ -186,12 +192,12 @@ const DailyPayments = () => {
             {data?.orders
               ?.sort(
                 (a, b) =>
-                  b.earned_amount / b.possible_full_earn_amount -
-                  a.earned_amount / a.possible_full_earn_amount
+                  b[quantityKey] / b.planned_quantity -
+                  a[quantityKey] / a.planned_quantity
               )
               ?.map((item, index) => {
-                const earnedItem = item.earned_amount || 0;
-                const totalItem = item.possible_full_earn_amount || 0;
+                const earnedItem = item[quantityKey] || 0;
+                const totalItem = item.planned_quantity || 0;
                 const percent = totalItem
                   ? Math.round((earnedItem / totalItem) * 100)
                   : 0;
@@ -214,7 +220,7 @@ const DailyPayments = () => {
                           .join(", ")}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {item?.produced_quantity} / {item.planned_quantity} dona
+                        {item?.[quantityKey]} / {item.planned_quantity} dona
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
                         {formatNumber(earnedItem)} / {formatNumber(totalItem)}{" "}
