@@ -42,6 +42,7 @@ export default function BaseLayout({ children, navigation }) {
       icon: PartyPopper,
       onMobile: false,
       dontShow: parseFloat(localStorage.getItem("percentage")) <= 0,
+      customColor: "text-green-500 hover:bg-green-50",
     },
     {
       name: "Tikuv KPI",
@@ -138,14 +139,16 @@ export default function BaseLayout({ children, navigation }) {
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
                         ? "bg-primary/10 text-primary"
-                        : "text-gray-700 hover:bg-gray-100"
+                        : item.customColor || "text-gray-700 hover:bg-gray-100"
                     )}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <item.icon
                       className={cn(
                         "h-5 w-5",
-                        isActive ? "text-primary" : "text-gray-500"
+                        isActive
+                          ? "text-primary"
+                          : "text-gray-500" + item.customColor
                       )}
                     />
                     {item.name}
@@ -236,10 +239,12 @@ export default function BaseLayout({ children, navigation }) {
                     to={item.href}
                     className={cn(
                       "flex flex-col items-center py-2 px-3",
-                      isActive ? "text-primary" : "text-gray-500"
+                      isActive
+                        ? "text-primary"
+                        : item.customColor || "text-gray-500"
                     )}
                   >
-                    <item.icon className="h-6 w-6" />
+                    <item.icon className={"h-6 w-6 " + item.customColor} />
                     <span className="text-xs mt-1">{item.name}</span>
                   </Link>
                 </li>
