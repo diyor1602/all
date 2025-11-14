@@ -6,9 +6,9 @@ import api from "@/utils/api";
 import ModelImages from "@/components/ModelImages";
 import { Input } from "@/components/ui/input";
 
-const formatNumber = (num) => {
+const formatNumber = (num, fractionDigits = 0) => {
   return parseFloat(num).toLocaleString("ru-RU", {
-    maximumFractionDigits: 0,
+    maximumFractionDigits: fractionDigits,
   });
 };
 
@@ -196,10 +196,12 @@ const DailyPayments = () => {
                   a[quantityKey] / a.planned_quantity
               )
               ?.map((item, index) => {
-                const earnedItem = item[quantityKey] || 0;
                 const totalItem = item.planned_quantity || 0;
                 const percent = totalItem
-                  ? Math.round((earnedItem / totalItem) * 100)
+                  ? Math.round(
+                      (item?.earned_amount / item?.possible_full_earn_amount) *
+                        100
+                    )
                   : 0;
 
                 return (
@@ -224,6 +226,19 @@ const DailyPayments = () => {
                         {formatNumber(item?.earned_amount)} /{" "}
                         {formatNumber(item?.possible_full_earn_amount)} so'm
                       </div>
+                      {item?.[quantityKey] == item?.planned_quantity &&
+                        item?.possible_full_earn_amount - item?.earned_amount >
+                          0 && (
+                          <div className="text-sm text-red-600 mt-1">
+                            Jarima:{" "}
+                            {formatNumber(
+                              item?.possible_full_earn_amount -
+                                item?.earned_amount,
+                              2
+                            )}{" "}
+                            so'm
+                          </div>
+                        )}
                     </div>
 
                     {/* Model images */}
