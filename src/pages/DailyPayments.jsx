@@ -223,8 +223,8 @@ const DailyPayments = () => {
                         {item?.[quantityKey]} / {item.planned_quantity} dona
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
-                        {formatNumber(earnedItem)} / {formatNumber(totalItem)}{" "}
-                        so'm
+                        {formatNumber(item?.earned_amount)} /{" "}
+                        {formatNumber(item?.possible_full_earn_amount)} so'm
                       </div>
                     </div>
 
