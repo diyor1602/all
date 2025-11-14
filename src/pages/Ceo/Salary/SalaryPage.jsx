@@ -360,7 +360,8 @@ const SalaryPage = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Bunday ma'lumot topilmadi",
+        description:
+          error?.response?.data?.message || "Bunday ma'lumot topilmadi",
         variant: "destructive",
       });
       return { rawData: [], flatDepartments: [] };
@@ -404,7 +405,8 @@ const SalaryPage = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Bunday ma'lumot topilmadi",
+        description:
+          error?.response?.data?.message || "Bunday ma'lumot topilmadi",
         variant: "destructive",
       });
     } finally {
