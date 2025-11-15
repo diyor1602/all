@@ -88,7 +88,9 @@ const DailyPayments = () => {
 
   const role = localStorage.getItem("role");
   const quantityKey =
-    role === "cuttingMaster" ? "total_cut_quantity" : "produced_quantity";
+    role === "cuttingMaster"
+      ? "total_cut_quantity"
+      : "total_sewing_output_quantity";
   const textKey = role === "cuttingMaster" ? "kesasiz" : "tikasiz";
 
   return (

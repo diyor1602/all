@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Undo2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ const formatNumber = (number) => {
 };
 
 const formatAttendanceTime = (time) => {
-  if (!time) return "00:00";
+  if (!time) return "-";
   const hours = time.split(" ")[1]?.slice(0, 5);
   return hours;
 };
@@ -41,6 +41,9 @@ const DepartmentHistory = () => {
   const [departmenDetails, setDepartmenDetails] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employeeDialogOpen, setEmployeeDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [editBonusDialogOpen, setEditBonusDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchDepartmenDetails();
@@ -83,6 +86,43 @@ const DepartmentHistory = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUndo = (payment) => {
+    setSelectedPayment(payment);
+    setEditBonusDialogOpen(true);
+  };
+
+  const handleUndoSubmit = async () => {
+    try {
+      setSubmitting(true);
+
+      const requests = selectedPayment?.details?.map((detail) => {
+        return api.patch(`/ceo/dailyPayments/${detail.payment_id}`, {
+          bonus: detail?.potential_earn - detail?.calculated_amount,
+        });
+      });
+
+      await Promise.all(requests);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Qoldiq qayta qo'shildi",
+        variant: "default",
+      });
+
+      fetchData();
+      setEditBonusDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Qoldiq qayta qo'shishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -145,22 +185,28 @@ const DepartmentHistory = () => {
             <table className="w-full text-xs border border-gray-200 border-collapse">
               <thead className="bg-gray-100/70">
                 <tr>
-                  {[
-                    "№",
-                    "Xodim",
-                    "Kelgan",
-                    "Ketgan",
-                    "Topgan",
-                    "100%",
-                    "Qoldiq",
-                  ].map((header, i) => (
-                    <th
-                      key={i}
-                      className="border border-gray-200 p-2 font-medium"
-                    >
-                      {header}
-                    </th>
-                  ))}
+                  <th className="border border-gray-200 p-2 font-medium">№</th>
+                  <th className="border border-gray-200 p-2 font-medium">
+                    Xodim
+                  </th>
+                  <th className="border border-gray-200 p-2 font-medium">
+                    Kelgan
+                  </th>
+                  <th className="border border-gray-200 p-2 font-medium">
+                    Ketgan
+                  </th>
+                  <th className="border border-gray-200 p-2 font-medium">
+                    Topgan
+                  </th>
+                  <th className="border border-gray-200 p-2 font-medium">
+                    100%
+                  </th>
+                  <th className="border border-gray-200 p-2 font-medium">
+                    Qoldiq
+                  </th>
+                  <th className="border border-gray-200 p-2 font-medium">
+                    Bonus
+                  </th>
                 </tr>
               </thead>
 
@@ -171,56 +217,77 @@ const DepartmentHistory = () => {
                       b.total_calculated_amount - a.total_calculated_amount
                   )
                   .map((payment, index) => {
-                    const remaining =
-                      payment.total_potential_earn -
-                      payment.total_calculated_amount;
-                    const cells = [
-                      index + 1,
-                      payment.employee_name,
-                      formatAttendanceTime(
-                        data?.attendances?.find(
-                          (attendance) =>
-                            attendance?.employee_id == payment?.employee_id
-                        )?.check_in
-                      ),
-                      formatAttendanceTime(
-                        data?.attendances?.find(
-                          (attendance) =>
-                            attendance?.employee_id == payment?.employee_id
-                        )?.check_out
-                      ),
-                      formatNumber(payment.total_calculated_amount),
-                      formatNumber(payment.total_potential_earn),
-                      formatNumber(remaining),
-                    ];
+                    const attendance = data?.attendances?.find(
+                      (a) => a?.employee_id == payment?.employee_id
+                    );
+
+                    const checkIn = formatAttendanceTime(attendance?.check_in);
+                    const checkOut = formatAttendanceTime(
+                      attendance?.check_out
+                    );
+
+                    const total = payment.total_calculated_amount;
+                    const potential = payment.total_potential_earn;
+                    const remaining = potential - total;
+                    const bonus = payment.details?.reduce(
+                      (sum, detail) => sum + (detail?.bonus || 0),
+                      0
+                    );
 
                     return (
                       <tr
                         key={index}
                         className="hover:bg-gray-50 transition-colors cursor-default"
                       >
-                        {cells.map((cell, i) => (
-                          <td
-                            key={i}
-                            className={`border border-gray-200 p-2 ${
-                              i === 1 ? "text-left" : "text-center"
-                            }`}
+                        <td className="border border-gray-200 p-2 text-center">
+                          {index + 1}
+                        </td>
+
+                        <td className="border border-gray-200 p-2 text-left">
+                          {payment.employee_name}
+                        </td>
+
+                        <td className="border border-gray-200 p-2 text-center">
+                          {checkIn}
+                        </td>
+
+                        <td className="border border-gray-200 p-2 text-center">
+                          {checkOut}
+                        </td>
+
+                        <td className="border border-gray-200 p-2 text-center">
+                          <div
+                            className="text-blue-600 hover:text-blue-800 cursor-pointer font-medium"
+                            onClick={() => {
+                              setSelectedEmployee(payment);
+                              setEmployeeDialogOpen(true);
+                            }}
                           >
-                            {i === 4 ? (
-                              <div
-                                className="text-blue-600 hover:text-blue-800 cursor-pointer font-medium"
-                                onClick={() => {
-                                  setSelectedEmployee(payment);
-                                  setEmployeeDialogOpen(true);
-                                }}
-                              >
-                                {cell}
-                              </div>
-                            ) : (
-                              cell
-                            )}
-                          </td>
-                        ))}
+                            {formatNumber(total)}
+                          </div>
+                        </td>
+
+                        <td className="border border-gray-200 p-2 text-center">
+                          {formatNumber(potential)}
+                        </td>
+
+                        <td className="border border-gray-200 p-2 text-center">
+                          <div className="flex items-center gap-2 justify-center">
+                            {formatNumber(remaining)}
+                            <Button
+                              onClick={() => {
+                                handleUndo(payment);
+                              }}
+                              variant="ghost"
+                              size="icon"
+                            >
+                              <Undo2 className="text-orange-500" />
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="border border-gray-200 p-2 text-center">
+                          {formatNumber(bonus)}
+                        </td>
                       </tr>
                     );
                   })}
@@ -245,16 +312,29 @@ const DepartmentHistory = () => {
                       0
                     );
                     const totalRemaining = totalPotential - totalEarned;
+                    const totalBonus = data?.payments?.reduce(
+                      (sum, p) =>
+                        sum +
+                        (p?.details?.reduce((s, d) => s + (d?.bonus || 0), 0) ||
+                          0),
+                      0
+                    );
 
-                    return [totalEarned, totalPotential, totalRemaining].map(
-                      (val, i) => (
-                        <td
-                          key={i}
-                          className="border border-gray-200 p-2 text-center text-gray-700"
-                        >
-                          {formatNumber(val)}
+                    return (
+                      <>
+                        <td className="border border-gray-200 p-2 text-center text-gray-700">
+                          {formatNumber(totalEarned)}
                         </td>
-                      )
+                        <td className="border border-gray-200 p-2 text-center text-gray-700">
+                          {formatNumber(totalPotential)}
+                        </td>
+                        <td className="border border-gray-200 p-2 text-center text-gray-700">
+                          {formatNumber(totalRemaining)}
+                        </td>
+                        <td className="border border-gray-200 p-2 text-center text-gray-700">
+                          {formatNumber(totalBonus)}
+                        </td>
+                      </>
                     );
                   })()}
                 </tr>
@@ -263,7 +343,45 @@ const DepartmentHistory = () => {
           </div>
         </div>
       </div>
-      {/* Dialog */}
+
+      {/* Absent employees */}
+
+      <div className="w-full overflow-auto mt-5">
+        <div className="text-lg font-medium mb-2">Hisoblanmagan xodimlar</div>
+        <table className="border border-collapse text-xs w-full bg-white">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border border-gray-200 p-2">№</th>
+              <th className="border border-gray-200 p-2">Ism</th>
+              <th className="border border-gray-200 p-2">Lavozim</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.working_employees
+              ?.filter(
+                (employee) =>
+                  !data?.payments?.some(
+                    (payment) => payment?.employee_id === employee?.id
+                  )
+              )
+              ?.map((employee, index) => (
+                <tr key={index}>
+                  <td className="border border-gray-200 p-2 text-center">
+                    {index + 1}
+                  </td>
+                  <td className="border border-gray-200 p-2">
+                    {employee.name}
+                  </td>
+                  <td className="border border-gray-200 p-2">
+                    {employee.position?.name}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Employee dialog */}
       <Dialog open={employeeDialogOpen} onOpenChange={setEmployeeDialogOpen}>
         <DialogContent className="w-full md:max-w-[90vw]">
           <DialogHeader>
@@ -286,7 +404,8 @@ const DepartmentHistory = () => {
                     "Tegishli son",
                     "Chiqarilgan son",
                     "Farq dona",
-                    "Farq summa",
+                    "Qoldiq",
+                    "Bonus",
                   ].map((header, i) => (
                     <th key={i} className="border border-gray-300 p-2">
                       {header}
@@ -315,6 +434,7 @@ const DepartmentHistory = () => {
                       formatNumber(item?.day_output_quantity),
                       formatNumber(difference),
                       formatNumber(diffAmount),
+                      formatNumber(item?.bonus),
                     ];
 
                     return (
@@ -369,10 +489,16 @@ const DepartmentHistory = () => {
                       0
                     );
 
+                    const totalBonus = selectedEmployee?.details?.reduce(
+                      (sum, item) => sum + (item?.bonus || 0),
+                      0
+                    );
+
                     const totalCells = [
                       ...totals.map(formatNumber),
                       formatNumber(totalDiff),
                       formatNumber(totalDiffAmount),
+                      formatNumber(totalBonus),
                     ];
 
                     return totalCells.map((val, i) => (
@@ -387,6 +513,39 @@ const DepartmentHistory = () => {
                 </tr>
               </tfoot>
             </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Bonus dialog */}
+      <Dialog open={editBonusDialogOpen} onOpenChange={setEditBonusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedPayment?.employee_name}</DialogTitle>
+            <DialogDescription>
+              <span className="font-bold">
+                {formatNumber(
+                  selectedPayment?.total_potential_earn -
+                    selectedPayment?.total_calculated_amount
+                )}
+              </span>{" "}
+              jarimala pullarini qaytarishni xohlaysizmi?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-end flex-wrap gap-2">
+            <Button variant="outline">Bekor qilish</Button>
+            <Button
+              onClick={handleUndoSubmit}
+              disabled={submitting}
+              className="w-fit"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="animate-spin" /> Tasdiqlanmoqda
+                </>
+              ) : (
+                "Tasdiqlash"
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
