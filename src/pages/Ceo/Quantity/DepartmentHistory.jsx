@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, Loader2, Undo2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Plus, Undo2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,9 @@ const DepartmentHistory = () => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [editBonusDialogOpen, setEditBonusDialogOpen] = useState(false);
+  const [addEmployeeDialogOpen, setAddEmployeeDialogOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [addingEmployee, setAddingEmployee] = useState(null);
 
   useEffect(() => {
     fetchDepartmenDetails();
@@ -123,6 +126,34 @@ const DepartmentHistory = () => {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddEmployee = async () => {
+    try {
+      setIsAdding(true);
+
+      await api.post(`/ceo/dailyPayments`, {
+        payment_date: selectedDay,
+        employee_id: addingEmployee?.id,
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Xodim qo'shildi",
+        variant: "default",
+      });
+
+      fetchData();
+      setAddEmployeeDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error.response?.data?.message || "Qo'shilmoqda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -359,6 +390,7 @@ const DepartmentHistory = () => {
               <th className="border border-gray-200 p-2">№</th>
               <th className="border border-gray-200 p-2">Ism</th>
               <th className="border border-gray-200 p-2">Lavozim</th>
+              <th className="border border-gray-200 p-2">Qo'shish</th>
             </tr>
           </thead>
           <tbody>
@@ -379,6 +411,18 @@ const DepartmentHistory = () => {
                   </td>
                   <td className="border border-gray-200 p-2">
                     {employee.position?.name}
+                  </td>
+                  <td className="border border-gray-200 p-2 text-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setAddingEmployee(employee);
+                        setAddEmployeeDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="text-green-500" />
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -537,7 +581,12 @@ const DepartmentHistory = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-end flex-wrap gap-2">
-            <Button variant="outline">Bekor qilish</Button>
+            <Button
+              variant="outline"
+              onClick={() => setEditBonusDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
             <Button
               onClick={handleUndoSubmit}
               disabled={submitting}
@@ -549,6 +598,46 @@ const DepartmentHistory = () => {
                 </>
               ) : (
                 "Tasdiqlash"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Add employee dialog */}
+      <Dialog
+        open={addEmployeeDialogOpen}
+        onOpenChange={setAddEmployeeDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{addingEmployee?.name}</DialogTitle>
+            <DialogDescription>
+              {addingEmployee?.position?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            {addingEmployee?.name} ni{" "}
+            {selectedDay?.split("-")?.reverse()?.join(".")} kuniga qo'shishni
+            xohlaysizmi?
+          </div>
+          <div className="flex items-center justify-end flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setAddEmployeeDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={handleAddEmployee}
+              disabled={isAdding}
+              className="w-fit"
+            >
+              {isAdding ? (
+                <>
+                  <Loader2 className="animate-spin" /> Qo'shilmoqda
+                </>
+              ) : (
+                "Qo'shish"
               )}
             </Button>
           </div>

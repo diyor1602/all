@@ -83,7 +83,8 @@ const DailyPayments = () => {
   }, [selectedMonth]);
 
   const earned = data?.total_earned || 0;
-  const total = data?.total_remaining + data?.total_earned || 0;
+  const total =
+    data?.total_remaining + data?.total_earned + data?.total_bonus || 0;
   const progress = total ? Math.min((earned / total) * 100, 100) : 0;
 
   const role = localStorage.getItem("role");
@@ -229,13 +230,16 @@ const DailyPayments = () => {
                         {formatNumber(item?.possible_full_earn_amount)} so'm
                       </div>
                       {item?.[quantityKey] == item?.planned_quantity &&
-                        item?.possible_full_earn_amount - item?.earned_amount >
+                        item?.possible_full_earn_amount -
+                          item?.earned_amount -
+                          item?.bonus >
                           0 && (
                           <div className="text-sm text-red-600 mt-1">
                             Jarima:{" "}
                             {formatNumber(
                               item?.possible_full_earn_amount -
-                                item?.earned_amount,
+                                item?.earned_amount -
+                                item?.bonus,
                               2
                             )}{" "}
                             so'm
