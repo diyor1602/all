@@ -205,15 +205,6 @@ const EditModel = () => {
       return false;
     }
 
-    if (!model.rasxod || isNaN(parseFloat(model.rasxod))) {
-      toast({
-        title: "Xato",
-        description: "Rasxod kiritilishi shart va raqam bo'lishi kerak",
-        variant: "destructive",
-      });
-      return false;
-    }
-
     if (!model.minute || isNaN(parseFloat(model.minute))) {
       toast({
         title: "Xato",
@@ -265,7 +256,7 @@ const EditModel = () => {
         "data",
         JSON.stringify({
           name: model.name,
-          rasxod: parseFloat(model.rasxod),
+          rasxod: parseFloat(model.minute * 250),
           minute: parseFloat(model.minute),
           description: model.description,
           sizes: model.sizes.map((size) => ({
@@ -363,22 +354,6 @@ const EditModel = () => {
                     value={model.name}
                     onChange={handleInputChange}
                     placeholder="Model nomini kiriting"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="rasxod">
-                    Patok uchun summa (so'm){" "}
-                    <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="rasxod"
-                    name="rasxod"
-                    type="number"
-                    step="0.01"
-                    value={model.rasxod}
-                    onChange={handleInputChange}
-                    placeholder="0"
                     required
                   />
                 </div>
