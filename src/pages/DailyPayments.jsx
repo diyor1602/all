@@ -84,7 +84,7 @@ const DailyPayments = () => {
 
   const earned = data?.total_earned || 0;
   const total =
-    data?.total_remaining + data?.total_earned + data?.total_bonus || 0;
+    data?.total_bonus + data?.total_earned + data?.total_remaining || 0;
   const progress = total ? Math.min((earned / total) * 100, 100) : 0;
 
   const role = localStorage.getItem("role");
@@ -141,21 +141,29 @@ const DailyPayments = () => {
                 Hozirgacha topilgan:
               </div>
               <div className="text-3xl font-semibold text-blue-600">
-                {formatNumber(earned)} so'm
+                {formatNumber(earned + data?.total_bonus)} so'm
               </div>
               <div className="text-lg text-gray-600 mt-2">
-                Oyning oxirida taxminan:{" "}
+                Oyning oxirida:{" "}
                 <span className="font-semibold text-gray-800">
-                  {formatNumber(total)} so'm
+                  {formatNumber(data?.total_possible)} so'm
                 </span>
               </div>
               {data?.total_possible - total > 0 && (
-                <div className="text-lg text-gray-600">
-                  Jarima:{" "}
-                  <span className="font-semibold text-red-600">
-                    {formatNumber(data?.total_possible - total)} so'm
-                  </span>
-                </div>
+                <>
+                  <div className="text-lg text-gray-600">
+                    Jarima:{" "}
+                    <span className="font-semibold text-red-600">
+                      {formatNumber(data?.total_possible - total)} so'm
+                    </span>
+                  </div>
+                  <div className="text-lg text-gray-600">
+                    Qolgan summa:{" "}
+                    <span className="font-semibold text-blue-600">
+                      {formatNumber(total)} so'm
+                    </span>
+                  </div>
+                </>
               )}
             </div>
           </div>
