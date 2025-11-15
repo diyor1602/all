@@ -4,7 +4,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, Loader2, Plus, Undo2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Image,
+  Loader2,
+  Plus,
+  Undo2,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +54,8 @@ const DepartmentHistory = () => {
   const [addEmployeeDialogOpen, setAddEmployeeDialogOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [addingEmployee, setAddingEmployee] = useState(null);
+  const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchDepartmenDetails();
@@ -279,11 +288,39 @@ const DepartmentHistory = () => {
                         </td>
 
                         <td className="border border-gray-200 p-2 text-center">
-                          {checkIn}
+                          <div className="flex items-center justify-center gap-2">
+                            <div>{checkIn}</div>
+                            {attendance?.check_in_image && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedAttendance(attendance);
+                                  setAttendanceDialogOpen(true);
+                                }}
+                              >
+                                <Image />
+                              </Button>
+                            )}
+                          </div>
                         </td>
 
                         <td className="border border-gray-200 p-2 text-center">
-                          {checkOut}
+                          <div className="flex items-center justify-center gap-2">
+                            <div>{checkOut}</div>
+                            {attendance?.check_out_image && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedAttendance(attendance);
+                                  setAttendanceDialogOpen(true);
+                                }}
+                              >
+                                <Image />
+                              </Button>
+                            )}
+                          </div>
                         </td>
 
                         <td className="border border-gray-200 p-2 text-center">
@@ -640,6 +677,25 @@ const DepartmentHistory = () => {
                 "Qo'shish"
               )}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Attendance dialog */}
+      <Dialog
+        open={attendanceDialogOpen}
+        onOpenChange={setAttendanceDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle></DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[80vh] overflow-auto">
+            <img
+              src={selectedAttendance?.check_in_image}
+              alt={selectedAttendance?.employee_name}
+              className="w-full"
+            />
           </div>
         </DialogContent>
       </Dialog>
