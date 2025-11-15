@@ -56,6 +56,8 @@ const DepartmentHistory = () => {
   const [addingEmployee, setAddingEmployee] = useState(null);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchDepartmenDetails();
@@ -227,6 +229,9 @@ const DepartmentHistory = () => {
                 <tr>
                   <th className="border border-gray-200 p-2 font-medium">№</th>
                   <th className="border border-gray-200 p-2 font-medium">
+                    Rasm
+                  </th>
+                  <th className="border border-gray-200 p-2 font-medium">
                     Xodim
                   </th>
                   <th className="border border-gray-200 p-2 font-medium">
@@ -281,6 +286,24 @@ const DepartmentHistory = () => {
                       >
                         <td className="border border-gray-200 p-2 text-center">
                           {index + 1}
+                        </td>
+
+                        <td className="border border-gray-200 p-2">
+                          {payment.img ? (
+                            <img
+                              src={payment.img}
+                              alt={payment.employee_name}
+                              className="w-10 h-10 rounded-full m-auto cursor-pointer object-cover shrink-0"
+                              onClick={() => {
+                                setSelectedAvatar(payment.img);
+                                setAvatarDialogOpen(true);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full m-auto bg-gray-200 flex items-center justify-center">
+                              {payment.employee_name[0]}
+                            </div>
+                          )}
                         </td>
 
                         <td className="border border-gray-200 p-2 text-left">
@@ -421,10 +444,15 @@ const DepartmentHistory = () => {
 
       <div className="w-full overflow-auto mt-5">
         <div className="text-lg font-medium mb-2">Hisoblanmagan xodimlar</div>
-        <table className="border border-collapse text-xs w-full bg-white">
+        <table
+          className={`border border-collapse text-xs w-full bg-white ${
+            loading ? "opacity-50" : ""
+          }`}
+        >
           <thead className="bg-gray-100">
             <tr>
               <th className="border border-gray-200 p-2">№</th>
+              <th className="border border-gray-200 p-2">Rasm</th>
               <th className="border border-gray-200 p-2">Ism</th>
               <th className="border border-gray-200 p-2">Lavozim</th>
               <th className="border border-gray-200 p-2">Qo'shish</th>
@@ -442,6 +470,23 @@ const DepartmentHistory = () => {
                 <tr key={index}>
                   <td className="border border-gray-200 p-2 text-center">
                     {index + 1}
+                  </td>
+                  <td className="border border-gray-200 p-2">
+                    {employee?.img ? (
+                      <img
+                        src={employee.img}
+                        alt={employee.name}
+                        className="w-10 h-10 rounded-full m-auto cursor-pointer object-cover shrink-0"
+                        onClick={() => {
+                          setSelectedAvatar(employee.img);
+                          setAvatarDialogOpen(true);
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full m-auto bg-gray-200 flex items-center justify-center">
+                        {employee.name[0]}
+                      </div>
+                    )}
                   </td>
                   <td className="border border-gray-200 p-2">
                     {employee.name}
@@ -696,6 +741,18 @@ const DepartmentHistory = () => {
               alt={selectedAttendance?.employee_name}
               className="w-full"
             />
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Avatar dialog */}
+      <Dialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle></DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[80vh] overflow-auto">
+            <img src={selectedAvatar} alt="Xodim" className="w-full" />
           </div>
         </DialogContent>
       </Dialog>
