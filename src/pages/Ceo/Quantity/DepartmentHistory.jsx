@@ -279,6 +279,11 @@ const DepartmentHistory = () => {
                                 handleUndo(payment);
                               }}
                               variant="ghost"
+                              disabled={
+                                payment?.total_potential_earn -
+                                  payment?.total_calculated_amount <=
+                                0
+                              }
                               size="icon"
                             >
                               <Undo2 className="text-orange-500" />
