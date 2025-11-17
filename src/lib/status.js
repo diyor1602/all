@@ -1,4 +1,11 @@
 const statuses = {
+  inactive: {
+    color: "bg-red-500",
+    border: "border-red-500",
+    secondaryBg: "bg-red-50",
+    textColor: "text-red-700",
+    text: "Aktiv emas",
+  },
   active: {
     color: "bg-green-600",
     border: "border-green-600",
@@ -6,12 +13,12 @@ const statuses = {
     textColor: "text-green-700",
     text: "Aktiv",
   },
-  inactive: {
-    color: "bg-red-500",
-    border: "border-red-500",
-    secondaryBg: "bg-red-50",
-    textColor: "text-red-700",
-    text: "Aktiv emas",
+  warehouse: {
+    color: "bg-fuchsia-500",
+    border: "border-fuchsia-500",
+    secondaryBg: "bg-fuchsia-50",
+    textColor: "text-fuchsia-700",
+    text: "Ombordan chiqqan",
   },
   cutting: {
     color: "bg-slate-500",
