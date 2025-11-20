@@ -104,7 +104,8 @@ const MachineWrapper = () => {
           t.state_number.toLowerCase().includes(lowerSearch) ||
           t.driver_full_name.toLowerCase().includes(lowerSearch) ||
           (t.region_id?.name &&
-            t.region_id.name.toLowerCase().includes(lowerSearch))
+            t.region_id.name.toLowerCase().includes(lowerSearch)) ||
+          t.id.toString().includes(lowerSearch)
       );
     }
 
@@ -177,6 +178,9 @@ const MachineWrapper = () => {
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
                 <TableHead className="text-xs w-[50px] border-2 text-center">
+                  N
+                </TableHead>
+                <TableHead className="text-xs w-[50px] border-2 text-center">
                   ID
                 </TableHead>
                 <TableHead className="text-xs border-2">Nomi</TableHead>
@@ -200,6 +204,7 @@ const MachineWrapper = () => {
                     <TableCell className="text-xs font-medium border-2 text-center">
                       {index + 1}
                     </TableCell>
+                    <TableCell className="text-xs border-2">{t.id}</TableCell>
                     <TableCell className="text-xs border-2">{t.name}</TableCell>
                     <TableCell className="text-xs border-2">
                       <div className="flex items-center gap-2">
@@ -248,7 +253,7 @@ const MachineWrapper = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={10} className="h-24 text-center">
+                  <TableCell colSpan={12} className="h-24 text-center">
                     Transport topilmadi
                   </TableCell>
                 </TableRow>
@@ -256,7 +261,7 @@ const MachineWrapper = () => {
             </TableBody>
             <TableFooter className="bg-gray-100">
               <TableRow>
-                <TableCell colSpan={5} className="text-xs font-bold border-2">
+                <TableCell colSpan={6} className="text-xs font-bold border-2">
                   Jami:
                 </TableCell>
                 <TableCell colSpan={2} className="text-xs font-bold border-2">
