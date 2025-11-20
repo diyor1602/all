@@ -159,7 +159,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toISOString().slice(0, 7)
+    localStorage.getItem("profileMonth") || new Date().toISOString().slice(0, 7)
   );
 
   // ✅ Load activeIndex from localStorage
@@ -248,7 +248,10 @@ const Profile = () => {
       key: "avans",
       title: "Olingan Avans",
       value: formatNumber(
-        userData.salaryPayments?.find((p) => p.type === "advance")?.amount || 0
+        userData.salaryPayments?.reduce(
+          (sum, salary) => sum + Number.parseFloat(salary.amount || 0),
+          0
+        )
       ),
       color: "bg-gradient-to-r from-orange-500 to-red-500",
       Icon: Wallet,
@@ -315,7 +318,10 @@ const Profile = () => {
       <Input
         type="month"
         value={selectedMonth}
-        onChange={(e) => setSelectedMonth(e.target.value)}
+        onChange={(e) => {
+          setSelectedMonth(e.target.value);
+          localStorage.setItem("profileMonth", e.target.value);
+        }}
         className="w-fit bg-white"
       />
 
