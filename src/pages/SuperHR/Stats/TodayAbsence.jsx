@@ -15,6 +15,13 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { BadgeCheck, Image, OctagonX } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const TodayAbsence = () => {
   const { toast } = useToast();
@@ -30,11 +37,27 @@ const TodayAbsence = () => {
   const fileInputRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
 
   const fetchData = async () => {
     try {
       const response = await api.get("/superhr/todayAbsent");
       setData(response.data);
+
+      // Extract unique departments and groups from the data
+      const uniqueDepartments = [
+        ...new Set(
+          response.data.map((item) => item.department).filter(Boolean)
+        ),
+      ];
+      const uniqueGroups = [
+        ...new Set(response.data.map((item) => item.group).filter(Boolean)),
+      ];
+      setDepartments(uniqueDepartments);
+      setGroups(uniqueGroups);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -147,10 +170,81 @@ const TodayAbsence = () => {
     }
   };
 
+  const handleDepartmentChange = (value) => {
+    setSelectedDepartment(value === "all" ? "" : value);
+    setSelectedGroup(""); // Reset group when department changes
+
+    // Filter groups based on selected department
+    if (value && value !== "all") {
+      const departmentGroups = [
+        ...new Set(
+          data
+            .filter((item) => item.department === value)
+            .map((item) => item.group)
+            .filter(Boolean)
+        ),
+      ];
+      setGroups(departmentGroups);
+    } else {
+      // Reset to all groups when no department is selected
+      const allGroups = [
+        ...new Set(data.map((item) => item.group).filter(Boolean)),
+      ];
+      setGroups(allGroups);
+    }
+  };
+
+  const filteredData = data.filter((item) => {
+    const matchesDepartment =
+      !selectedDepartment || item.department === selectedDepartment;
+    const matchesGroup = !selectedGroup || item.group === selectedGroup;
+    return matchesDepartment && matchesGroup;
+  });
+
   return (
     <>
       <div className="text-2xl font-bold mb-2">
-        Bugun kelmaganlar. Jami: {data?.length} ta
+        Bugun kelmaganlar. Jami: {filteredData?.length} ta
+      </div>
+
+      <div className="flex gap-4 mb-4 flex-wrap">
+        <Select
+          value={selectedDepartment || "all"}
+          onValueChange={handleDepartmentChange}
+        >
+          <SelectTrigger className="bg-white w-fit">
+            <SelectValue placeholder="Bo'limni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barchasi</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept} value={dept}>
+                {dept}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={selectedGroup || "all"}
+          onValueChange={(value) =>
+            setSelectedGroup(value === "all" ? "" : value)
+          }
+        >
+          <SelectTrigger className="bg-white w-fit">
+            <SelectValue placeholder="Guruhni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barchasi</SelectItem>
+            {groups
+              .sort((a, b) => a.localeCompare(b))
+              .map((group) => (
+                <SelectItem key={group} value={group}>
+                  {group}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
@@ -267,7 +361,7 @@ const TodayAbsence = () => {
             </tr>
           </thead>
           <tbody>
-            {data?.sort((a, b) => {
+            {filteredData?.sort((a, b) => {
               if (!a.was_on_holiday && a.was_on_holiday !== b.was_on_holiday)
                 return -1;
               if (a.was_on_holiday && !b.was_on_holiday) return 1;
@@ -276,7 +370,7 @@ const TodayAbsence = () => {
               if (a.was_on_absence && !b.was_on_absence) return 1;
               return a.name.localeCompare(b.name);
             }) &&
-              data?.map((item, index) => (
+              filteredData?.map((item, index) => (
                 <tr
                   key={index}
                   className={cn(index % 2 === 0 ? "bg-gray-100" : "")}
