@@ -1,11 +1,17 @@
 import BaseLayout from "./BaseLayout";
-import { BadgeMinus, BadgePlus, Settings, Box } from "lucide-react";
+import { BadgeMinus, BadgePlus, Settings, Box, Users } from "lucide-react";
 
 const navigation = [
   {
     name: "Buyurtmalar",
     href: "/warehouseManager/completeOrders",
     icon: Box,
+    onMobile: true,
+  },
+  {
+    name: "Xodimlar",
+    href: "/warehouseManager/completeOrders/employees",
+    icon: Users,
     onMobile: true,
   },
   // {
