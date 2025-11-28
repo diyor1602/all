@@ -156,36 +156,79 @@ const CompleteOrders = () => {
                 <div
                   key={item.id}
                   className={cn(
-                    "p-2",
-                    complete ? "bg-green-100" : "bg-red-100"
+                    "border rounded-lg p-4 transition-all duration-200 hover:shadow-sm",
+                    complete
+                      ? "bg-green-50 border-green-200"
+                      : "bg-red-50 border-red-200"
                   )}
                 >
-                  <div>{item.id}</div>
-                  <div>{item.name}</div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setSelectedItem(item);
-                      setIsDialogOpen(true);
-                    }}
-                  >
-                    {complete ? <X /> : <Check />}
-                  </Button>
-                  <div>
-                    {item.order_model?.submodels
-                      ?.map((submodel) => submodel?.submodel?.name)
-                      .join(", ")}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="space-y-1">
+                      <div className="font-semibold text-lg">#{item.id}</div>
+                      <div className="text-gray-900 font-medium">
+                        {item.name}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setIsDialogOpen(true);
+                      }}
+                      className={cn(
+                        "transition-colors",
+                        complete
+                          ? "hover:bg-red-100 hover:border-red-300"
+                          : "hover:bg-green-100 hover:border-green-300"
+                      )}
+                    >
+                      {complete ? <X size={16} /> : <Check size={16} />}
+                    </Button>
                   </div>
-                  <div>{item.quantity}</div>
-                  <div>
-                    {item.season_year}{" "}
-                    {item.season_type === "winter" ? "Qish" : "Bahor"}
-                  </div>
-                  <div>{complete ? "Bajarildi" : "Bajarilmadi"}</div>
-                  <div>
-                    {complete &&
-                      formatTime(item?.warehouse_complete_order?.created_at)}
+
+                  <div className="space-y-2 text-sm">
+                    <div className="text-gray-600">
+                      <span className="font-medium">Modellar:</span>{" "}
+                      {item.order_model?.submodels
+                        ?.map((submodel) => submodel?.submodel?.name)
+                        .join(", ")}
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Miqdor:</span>
+                      <span className="font-medium">{item.quantity}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Mavsum:</span>
+                      <span className="font-medium">
+                        {item.season_year}{" "}
+                        {item.season_type === "winter" ? "Qish" : "Bahor"}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span
+                        className={cn(
+                          "font-medium",
+                          complete ? "text-green-700" : "text-red-700"
+                        )}
+                      >
+                        {complete ? "Bajarildi" : "Bajarilmadi"}
+                      </span>
+                    </div>
+
+                    {complete && (
+                      <div className="pt-2 border-t border-gray-200">
+                        <div className="text-xs text-gray-500">
+                          {formatTime(
+                            item?.warehouse_complete_order?.created_at
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
