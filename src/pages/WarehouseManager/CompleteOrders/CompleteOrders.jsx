@@ -20,6 +20,17 @@ import { cn } from "@/lib/utils";
 import { Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const formatTime = (time) => {
+  const date = new Date(time);
+  return date.toLocaleString("ru-RU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const CompleteOrders = () => {
   const { toast } = useToast();
 
@@ -172,6 +183,10 @@ const CompleteOrders = () => {
                     {item.season_type === "winter" ? "Qish" : "Bahor"}
                   </div>
                   <div>{complete ? "Bajarildi" : "Bajarilmadi"}</div>
+                  <div>
+                    {complete &&
+                      formatTime(item?.warehouse_complete_order?.created_at)}
+                  </div>
                 </div>
               );
             })}
