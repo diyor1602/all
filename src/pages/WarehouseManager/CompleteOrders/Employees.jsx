@@ -86,6 +86,19 @@ const Employees = () => {
               </div>
 
               <div className="flex items-center text-sm text-gray-600">
+                <div className="w-2 h-2 bg-sky-500 rounded-full mr-3"></div>
+                <span>
+                  {formatNumber(
+                    data?.orders?.reduce(
+                      (acc, item) => acc + item?.produced_quantity,
+                      0
+                    )
+                  )}{" "}
+                  dona
+                </span>
+              </div>
+
+              <div className="flex items-center text-sm text-gray-600">
                 <div className="w-2 h-2 bg-fuchsia-500 rounded-full mr-3"></div>
                 <span>{formatNumber(data?.totals?.earned)} so'm</span>
               </div>

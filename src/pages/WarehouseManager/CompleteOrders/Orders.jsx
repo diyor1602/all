@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import formatNumber from "@/utils/formatNumber";
 
 const formatTime = (time) => {
   const date = new Date(time);
@@ -126,7 +127,13 @@ const Orders = () => {
 
   return (
     <>
-      <div className="font-bold mb-2">Buyurtmalar ({filteredData?.length})</div>
+      <div className="font-bold mb-2">
+        Buyurtmalar ({filteredData?.length}) (
+        {formatNumber(
+          filteredData?.reduce((acc, item) => acc + item?.quantity, 0)
+        )}{" "}
+        ta)
+      </div>
       <div className="flex gap-2 flex-col">
         <Input
           placeholder="Qidirish..."
