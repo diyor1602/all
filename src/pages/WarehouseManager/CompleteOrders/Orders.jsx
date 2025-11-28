@@ -35,8 +35,12 @@ const Orders = () => {
   const { toast } = useToast();
 
   const [data, setData] = useState([]);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [search, setSearch] = useState(
+    () => localStorage.getItem("orders-search") || ""
+  );
+  const [status, setStatus] = useState(
+    () => localStorage.getItem("orders-status") || "all"
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -128,10 +132,19 @@ const Orders = () => {
           placeholder="Qidirish..."
           value={search}
           className="bg-white"
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            localStorage.setItem("orders-search", e.target.value);
+          }}
         />
 
-        <Select value={status} onValueChange={setStatus}>
+        <Select
+          value={status}
+          onValueChange={(value) => {
+            setStatus(value);
+            localStorage.setItem("orders-status", value);
+          }}
+        >
           <SelectTrigger className="bg-white">
             <SelectValue placeholder="Statusni tanlang" />
           </SelectTrigger>
