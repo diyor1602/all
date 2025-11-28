@@ -116,11 +116,12 @@ const CompleteOrders = () => {
         <Input
           placeholder="Qidirish..."
           value={search}
+          className="bg-white"
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-white">
             <SelectValue placeholder="Statusni tanlang" />
           </SelectTrigger>
           <SelectContent>
