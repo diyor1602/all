@@ -138,6 +138,7 @@ const ItemView = () => {
     setPage(1);
     setItems([]);
     setHasMore(true);
+    fetchItems(1, false);
   };
 
   const handleDownload = async () => {
