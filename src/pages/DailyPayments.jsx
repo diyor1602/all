@@ -210,7 +210,8 @@ const DailyPayments = () => {
                 const totalItem = item.planned_quantity || 0;
                 const percent = totalItem
                   ? Math.round(
-                      (item?.earned_amount / item?.possible_full_earn_amount) *
+                      (item?.total_sewing_output_quantity /
+                        item?.planned_quantity) *
                         100
                     )
                   : 0;
@@ -223,10 +224,12 @@ const DailyPayments = () => {
                     transition={{ delay: index * 0.04 }}
                     className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl p-5 flex gap-4 md:flex-row flex-col justify-between items-center md:items-center shadow-sm hover:shadow-md transition-all"
                   >
-                    <div>
+                    <div className="w-fit">
                       <div className="text-lg font-semibold">
                         {index + 1}. {item.order?.name}
                       </div>
+                      <div>{item?.groups?.[0]?.name}</div>
+                      <div>{item?.groups?.[0]?.responsible_user_name}</div>
                       <div className="text-sm text-gray-500">
                         {item?.submodel?.name}
                       </div>
