@@ -235,7 +235,7 @@ const Add = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium">
               Nomi
@@ -430,7 +430,7 @@ const Add = () => {
             />
           </div>
 
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2 md:col-span-3">
             <Label htmlFor="image" className="text-sm font-medium">
               Rasmi
             </Label>

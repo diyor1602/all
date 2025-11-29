@@ -14,24 +14,24 @@ const navigation = [
     icon: Users,
     onMobile: true,
   },
-  // {
-  //   name: "Kirimlar",
-  //   href: "/warehouseManager/income",
-  //   icon: BadgePlus,
-  //   onMobile: true,
-  // },
-  // {
-  //   name: "Chiqimlar",
-  //   href: "/warehouseManager/outcome",
-  //   icon: BadgeMinus,
-  //   onMobile: true,
-  // },
-  // {
-  //   name: "Qo'chimcha",
-  //   href: "/warehouseManager/settings",
-  //   icon: Settings,
-  //   onMobile: true,
-  // },
+  {
+    name: "Kirimlar",
+    href: "/warehouseManager/income",
+    icon: BadgePlus,
+    onMobile: false,
+  },
+  {
+    name: "Chiqimlar",
+    href: "/warehouseManager/outcome",
+    icon: BadgeMinus,
+    onMobile: false,
+  },
+  {
+    name: "Qo'chimcha",
+    href: "/warehouseManager/settings",
+    icon: Settings,
+    onMobile: false,
+  },
 ];
 
 export default function WarehouseManagerLayout({ children }) {

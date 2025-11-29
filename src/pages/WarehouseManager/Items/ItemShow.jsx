@@ -150,7 +150,7 @@ const ItemShow = () => {
                 <Package className="mr-2 h-6 w-6 text-primary" />
                 Mahsulot
               </CardTitle>
-              <Badge variant="outline">{itemData.type.name}</Badge>
+              <Badge variant="outline">{itemData.type?.name}</Badge>
             </div>
             <CardDescription>ID: {itemData.id}</CardDescription>
           </CardHeader>
@@ -187,7 +187,7 @@ const ItemShow = () => {
                 <span className="text-muted-foreground">Narxi:</span>
                 <span className="font-medium flex items-center">
                   <DollarSign className="mr-2 h-4 w-4 text-green-600" />
-                  {itemData.price} {itemData.currency.name}
+                  {itemData.price} {itemData.currency?.name}
                 </span>
               </div>
 
@@ -195,7 +195,7 @@ const ItemShow = () => {
 
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">O'lchov birligi:</span>
-                <Badge variant="secondary">{itemData.unit.name}</Badge>
+                <Badge variant="secondary">{itemData.unit?.name}</Badge>
               </div>
 
               <Separator />
@@ -233,7 +233,7 @@ const ItemShow = () => {
               <span className="text-muted-foreground">Jami zaxira:</span>
               <Badge className="text-lg px-3 py-1">
                 <Boxes className="mr-2 h-4 w-4" />
-                {totalStock} {itemData.unit.name}
+                {totalStock} {itemData.unit?.name}
               </Badge>
             </div>
           </CardFooter>

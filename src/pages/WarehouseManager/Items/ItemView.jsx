@@ -238,38 +238,69 @@ const ItemView = () => {
         </Button>
       </div>
 
-      <div className="mt-4">
-        <div className="overflow-auto">
-          <table className="border-2 border-collapse whitespace-nowrap w-full bg-white shadow-md">
+      <div className="mt-6">
+        <div className="overflow-x-auto rounded-lg shadow-lg border border-gray-200">
+          <table className="w-full bg-white border-collapse">
             <thead>
-              <tr>
-                <th className="border-2 p-1">Nº</th>
-                <th className="border-2 p-1">Nomi</th>
-                <th className="border-2 p-1">Amallar</th>
-                <th className="border-2 p-1">Rasmi</th>
-                <th className="border-2 p-1">Kodi</th>
-                <th className="border-2 p-1">Birligi</th>
-                <th className="border-2 p-1">Rangi</th>
-                <th className="border-2 p-1">Lot</th>
-                <th className="border-2 p-1">Turi</th>
-                <th className="border-2 p-1">Narxi</th>
-                <th className="border-2 p-1">Valyuta</th>
-                <th className="border-2 p-1">Min. miqdor</th>
+              <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Nº
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200 max-w-xs">
+                  Nomi
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Amallar
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Rasmi
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Kodi
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Birligi
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Rangi
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Lot
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Turi
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Narxi
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Valyuta
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Min. miqdor
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {items.length > 0 ? (
                 items.map((item, index) => (
                   <tr
                     key={item.id}
                     ref={index === items.length - 1 ? lastItemRef : null}
+                    className="hover:bg-gray-50 transition-colors duration-150"
                   >
-                    <td className="border-2 p-1 text-center">{index + 1}</td>
-                    <td className="border-2 p-1">{item?.name}</td>
-                    <td className="border-2 p-1">
-                      <div className="flex gap-3 items-center w-full justify-center">
+                    <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs break-words">
+                      <div className="font-medium text-gray-900">
+                        {item?.name}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-100">
+                      <div className="flex gap-2 items-center w-full justify-center">
                         <Eye
-                          className="w-4 h-4 text-blue-500 cursor-pointer"
+                          className="w-4 h-4 text-blue-600 hover:text-blue-800 cursor-pointer transition-colors duration-150"
                           onClick={() =>
                             navigate(
                               `/warehouseManager/settings/items/show/${item?.id}`
@@ -277,7 +308,7 @@ const ItemView = () => {
                           }
                         />
                         <Edit
-                          className="w-4 h-4 text-orange-500 cursor-pointer"
+                          className="w-4 h-4 text-orange-600 hover:text-orange-800 cursor-pointer transition-colors duration-150"
                           onClick={() =>
                             navigate(
                               `/warehouseManager/settings/items/edit/${item?.id}`
@@ -286,41 +317,63 @@ const ItemView = () => {
                         />
                       </div>
                     </td>
-                    <td className="border-2 p-1">
+                    <td className="px-4 py-3 text-center border-r border-gray-100">
                       {item?.image ? (
                         <img
                           src={item?.image}
                           alt={item?.name}
-                          className="w-10 h-10 object-cover cursor-pointer"
+                          className="w-12 h-12 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform duration-150 shadow-sm"
                           onClick={() => {
                             setImageDialogOpen(true);
                             setImage(item?.image);
                           }}
                         />
                       ) : (
-                        "-"
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">
+                          -
+                        </div>
                       )}
                     </td>
-                    <td className="border-2 p-1">{item?.code}</td>
-                    <td className="border-2 p-1">{item?.unit?.name}</td>
-                    <td className="border-2 p-1">{item?.color?.name}</td>
-                    <td className="border-2 p-1 text-center">
+                    <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 font-mono">
+                      {item?.code}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100">
+                      {item?.unit?.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100">
+                      {item?.color?.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-gray-900 border-r border-gray-100 font-mono">
                       {item?.lot || "-"}
                     </td>
-                    <td className="border-2 p-1">{item?.type?.name}</td>
-                    <td className="border-2 p-1 text-center">{item?.price}</td>
-                    <td className="border-2 p-1 text-center">
+                    <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100">
+                      {item?.type?.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-gray-900 border-r border-gray-100 font-medium">
+                      {item?.price}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-gray-900 border-r border-gray-100">
                       {item?.currency?.name}
                     </td>
-                    <td className="border-2 p-1 text-center">
+                    <td className="px-4 py-3 text-sm text-right text-gray-900 font-medium">
                       {item?.min_quantity}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="11" className="border-2 p-4 text-center">
-                    Mahsulotlar topilmadi
+                  <td
+                    colSpan="12"
+                    className="px-4 py-8 text-center text-gray-500 bg-gray-50"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="text-lg font-medium mb-2">
+                        Mahsulotlar topilmadi
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        Hech qanday mahsulot mavjud emas
+                      </div>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -330,14 +383,17 @@ const ItemView = () => {
 
         {/* Loading indicator */}
         {loading && (
-          <div className="flex justify-center items-center py-4">
-            <Loader2 size={30} className="animate-spin text-primary" />
+          <div className="flex justify-center items-center py-6 bg-white rounded-lg shadow-sm border border-gray-200 mt-4">
+            <Loader2 size={32} className="animate-spin text-blue-600" />
           </div>
         )}
 
         {/* Items count info */}
-        <div className="mt-2 text-center text-sm text-muted-foreground">
-          Jami: {totalItems} ta mahsulot
+        <div className="mt-4 text-center">
+          <div className="inline-flex items-center px-4 py-2 bg-blue-50 rounded-full text-sm font-medium text-blue-700">
+            Jami: <span className="ml-1 font-bold">{totalItems}</span> ta
+            mahsulot
+          </div>
         </div>
       </div>
 
