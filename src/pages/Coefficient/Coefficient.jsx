@@ -10,6 +10,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CoefLineChart from "./CoefLineChart";
 
 // === Helpers ===
@@ -43,6 +50,8 @@ const Coefficient = () => {
   const [open, setOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [dialogActiveTab, setDialogActiveTab] = useState("day");
+  const [department, setDepartment] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("all");
   const [filters, setFilters] = useState({
     start_date:
       localStorage.getItem("coef_start_date") ||
@@ -83,16 +92,43 @@ const Coefficient = () => {
     fetchData();
   }, [filters]);
 
+  const getDepartments = async () => {
+    try {
+      const { data } = await api.get("/departments");
+
+      // Find Tikuv department
+      const tikuvDepartment =
+        data
+          ?.flatMap((item) => item.departments || [])
+          .find((d) => d.name?.includes("Tikuv")) || null;
+
+      setDepartment(tikuvDepartment);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message || "Departamentlar olishda xatolik",
+      });
+    }
+  };
+
+  useEffect(() => {
+    getDepartments();
+  }, []);
+
   // === Apply search filter ===
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      const matchesSearch = item.employee_name
-        .toLowerCase()
-        .includes(frontFilters.searchText.toLowerCase());
+      const matchesSearch =
+        item.employee_name
+          .toLowerCase()
+          .includes(frontFilters.searchText.toLowerCase()) &&
+        (item.group_id === selectedGroup || selectedGroup === "all");
 
       return item.days.length > 0 && matchesSearch;
     });
-  }, [data, frontFilters]);
+  }, [data, frontFilters, selectedGroup]);
 
   // === Precomputed Averages (based on filtered data) ===
   const overallAverage = useMemo(() => {
@@ -134,6 +170,28 @@ const Coefficient = () => {
             setFrontFilters((prev) => ({ ...prev, searchText: e.target.value }))
           }
         />
+      </div>
+
+      {/* Department Filter */}
+      <div className="flex gap-2 items-center flex-wrap md:flex-nowrap">
+        <Select
+          value={selectedGroup}
+          onValueChange={(value) => setSelectedGroup(value)}
+        >
+          <SelectTrigger className="w-fit bg-white">
+            <SelectValue placeholder="Departamentni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Barchasi</SelectItem>
+            {department?.groups
+              ?.sort((a, b) => a.name.localeCompare(b.name))
+              ?.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Table */}
