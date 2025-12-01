@@ -63,6 +63,7 @@ const Coefficient = () => {
   const [frontFilters, setFrontFilters] = useState({
     searchText: "",
   });
+  const [sortBy, setSortBy] = useState("coefficient");
 
   const days = useMemo(
     () => getDaysBetween(filters.start_date, filters.end_date),
@@ -192,6 +193,17 @@ const Coefficient = () => {
               ))}
           </SelectContent>
         </Select>
+
+        <Select value={sortBy} onValueChange={(value) => setSortBy(value)}>
+          <SelectTrigger className="w-fit bg-white">
+            <SelectValue placeholder="Saralash turi" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="coefficient">Koeffitsiyent bo'yicha</SelectItem>
+            <SelectItem value="attendance">Davomat bo'yicha</SelectItem>
+            <SelectItem value="both">Ikkalasi bo'yicha</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Table */}
@@ -220,13 +232,28 @@ const Coefficient = () => {
 
           <tbody>
             {filteredData
-              .sort(
-                (a, b) =>
-                  b.days.reduce((s, d) => s + d.efficiency_percent, 0) /
-                    b.attended_days -
+              .sort((a, b) => {
+                const aAvg =
                   a.days.reduce((s, d) => s + d.efficiency_percent, 0) /
-                    a.attended_days
-              )
+                  a.attended_days;
+                const bAvg =
+                  b.days.reduce((s, d) => s + d.efficiency_percent, 0) /
+                  b.attended_days;
+
+                if (sortBy === "coefficient") {
+                  return bAvg - aAvg;
+                } else if (sortBy === "attendance") {
+                  return b.attended_days - a.attended_days;
+                } else if (sortBy === "both") {
+                  // Combined score: 70% coefficient + 30% attendance
+                  const aScore =
+                    aAvg * 0.7 + (a.attended_days / days.length) * 100 * 0.3;
+                  const bScore =
+                    bAvg * 0.7 + (b.attended_days / days.length) * 100 * 0.3;
+                  return bScore - aScore;
+                }
+                return 0;
+              })
               .map((item, index) => {
                 const empAvg =
                   item.days.reduce((s, d) => s + d.efficiency_percent, 0) /
