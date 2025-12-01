@@ -59,6 +59,8 @@ import {
   Download,
   FileText,
   Landmark,
+  Snowflake,
+  Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -1468,6 +1470,17 @@ const Daily = () => {
                               <Tooltip>
                                 <TooltipTrigger>
                                   <p>{order?.order?.name}</p>
+                                  {order?.order?.season_type == "winter" ? (
+                                    <Snowflake
+                                      size={20}
+                                      className="text-blue-500"
+                                    />
+                                  ) : (
+                                    <Sun
+                                      size={20}
+                                      className="text-yellow-500"
+                                    />
+                                  )}
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   <p>
