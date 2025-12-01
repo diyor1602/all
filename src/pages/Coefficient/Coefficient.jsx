@@ -245,12 +245,21 @@ const Coefficient = () => {
                 } else if (sortBy === "attendance") {
                   return b.attended_days - a.attended_days;
                 } else if (sortBy === "both") {
-                  // Combined score: 70% coefficient + 30% attendance
-                  const aScore =
-                    aAvg * 0.7 + (a.attended_days / days.length) * 100 * 0.3;
-                  const bScore =
-                    bAvg * 0.7 + (b.attended_days / days.length) * 100 * 0.3;
-                  return bScore - aScore;
+                  // Sort by attendance days, but only include employees with coefficient >= 100
+                  const aHasValidCoef = aAvg >= 100;
+                  const bHasValidCoef = bAvg >= 100;
+
+                  // If one has valid coefficient and the other doesn't, prioritize the valid one
+                  if (aHasValidCoef && !bHasValidCoef) return -1;
+                  if (!aHasValidCoef && bHasValidCoef) return 1;
+
+                  // If both have valid coefficient, sort by attendance days (most first)
+                  if (aHasValidCoef && bHasValidCoef) {
+                    return b.attended_days - a.attended_days;
+                  }
+
+                  // If neither has valid coefficient, sort by coefficient descending
+                  return bAvg - aAvg;
                 }
                 return 0;
               })
