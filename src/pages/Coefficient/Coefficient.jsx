@@ -148,6 +148,9 @@ const Coefficient = () => {
               <th className="border border-gray-200 p-2">№</th>
               <th className="border border-gray-200 p-2">Rasmi</th>
               <th className="border border-gray-200 p-2">Xodim</th>
+              <th className="border border-gray-200 p-2">
+                Kelgan <br /> kunlari
+              </th>
               <th className="border border-gray-200 p-2">F.I.K</th>
               {days.map((day) => (
                 <th key={day} className="border border-gray-200 p-2">
@@ -203,6 +206,9 @@ const Coefficient = () => {
                     <td className="border border-gray-200 p-2">
                       {item.employee_name}
                     </td>
+                    <td className="border border-gray-200 p-2 text-center">
+                      {item.attended_days}
+                    </td>
                     <td className="border border-gray-200 p-2">
                       <div
                         className={`${getPercentageColor(
@@ -244,6 +250,9 @@ const Coefficient = () => {
               </td>
               <td className="border border-gray-200 p-2 text-right">
                 O‘rtacha %
+              </td>
+              <td className="border border-gray-200 p-2 text-right">
+                {filteredData.reduce((s, d) => s + d.attended_days, 0)}
               </td>
               <td className="border border-gray-200 p-2 text-right">
                 <div
