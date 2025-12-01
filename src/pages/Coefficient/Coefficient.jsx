@@ -221,7 +221,16 @@ const Coefficient = () => {
               <th className="border border-gray-200 p-2">
                 Kelgan <br /> kunlari
               </th>
-              <th className="border border-gray-200 p-2">F.I.K</th>
+              <th className="border border-gray-200 p-2">
+                F.I.K <br />
+                <div
+                  className={`${getPercentageColor(
+                    overallAverage
+                  )} text-center`}
+                >
+                  {formatPercent(overallAverage)}%
+                </div>
+              </th>
               {days.map((day) => (
                 <th key={day} className="border border-gray-200 p-2">
                   {day.split("-").reverse().join(".")}
