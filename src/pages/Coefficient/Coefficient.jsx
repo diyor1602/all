@@ -25,7 +25,7 @@ const getPercentageColor = (percentage) => {
   if (isNaN(value)) return "";
   if (value <= 0) return "";
   if (value < 80) return "text-red-500";
-  if (value >= 90) return "";
+  if (value < 90) return "text-yellow-500";
   return "text-green-500";
 };
 
@@ -204,6 +204,26 @@ const Coefficient = () => {
             <SelectItem value="both">Ikkalasi bo'yicha</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Overall Percentage Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 shadow-sm">
+        <div className="text-center">
+          <div className="text-sm text-gray-600 mb-1">
+            {selectedGroup === "all"
+              ? "Barcha guruhlar"
+              : department?.groups?.find((g) => g.id === selectedGroup)?.name ||
+                "Guruh"}{" "}
+            ning koeffitsiyenti:
+          </div>
+          <div
+            className={`text-3xl font-bold ${getPercentageColor(
+              overallAverage
+            )}`}
+          >
+            {formatPercent(overallAverage)}%
+          </div>
+        </div>
       </div>
 
       {/* Table */}
