@@ -100,8 +100,11 @@ const Coefficient = () => {
       // Find Tikuv department
       const tikuvDepartment =
         data
-          ?.flatMap((item) => item.departments || [])
-          .find((d) => d.name?.includes("Tikuv")) || null;
+          ?.flatMap((item) => item.departments ?? [])
+          .find((d) => {
+            const name = d.name?.toLowerCase() || "";
+            return name.includes("tikuv") || name.includes("тикув");
+          }) || null;
 
       setDepartment(tikuvDepartment);
     } catch (error) {
