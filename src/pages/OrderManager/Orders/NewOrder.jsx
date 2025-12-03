@@ -86,7 +86,7 @@ const NewOrder = () => {
     season_type: "summer",
     model: {
       id: "",
-      material_id: "",
+      material_id: null,
       submodels: [],
       sizes: [],
     },

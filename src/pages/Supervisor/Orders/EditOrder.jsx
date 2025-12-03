@@ -89,7 +89,7 @@ const EditOrder = () => {
     season_type: "",
     model: {
       id: "",
-      material_id: "",
+      material_id: null,
       submodels: [],
       sizes: [],
       sizesList: [],
@@ -130,7 +130,7 @@ const EditOrder = () => {
         model: {
           id: orderData.order_model?.model?.id || "",
           name: orderData.order_model?.model?.name || "",
-          material_id: orderData.order_model?.material?.id || "",
+          material_id: orderData.order_model?.material?.id || null,
           submodels:
             orderData.order_model?.submodels?.map((sm) => sm.submodel.id) || [],
           sizes:
