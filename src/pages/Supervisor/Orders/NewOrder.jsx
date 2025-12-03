@@ -105,7 +105,6 @@ const NewOrder = () => {
 
     if (
       !payload.name ||
-      !payload.model.id ||
       !payload.model.submodels.length ||
       !payload.model.sizes.length ||
       !payload.season_year ||

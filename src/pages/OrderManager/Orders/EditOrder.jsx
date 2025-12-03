@@ -190,7 +190,6 @@ const EditOrder = () => {
       !payload.name ||
       !payload.model.id ||
       !payload.price ||
-      !payload.model.material_id ||
       !payload.model.submodels.length ||
       !payload.model.sizes.length ||
       !payload.season_year ||
