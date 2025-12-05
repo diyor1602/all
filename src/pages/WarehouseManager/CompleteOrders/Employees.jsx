@@ -25,7 +25,6 @@ const Employees = () => {
   const [activeTab, setActiveTab] = useState(
     localStorage.getItem("activeTab") || "orders"
   ); // orders, employees
-  const [availablePercentage, setAvailablePercentage] = useState(0);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [newPercentage, setNewPercentage] = useState(0);
   const [submitting, setSubmitting] = useState(false);
