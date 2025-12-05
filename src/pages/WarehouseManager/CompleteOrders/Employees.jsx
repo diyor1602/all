@@ -5,6 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Employees = () => {
   const { toast } = useToast();
@@ -18,6 +25,11 @@ const Employees = () => {
   const [activeTab, setActiveTab] = useState(
     localStorage.getItem("activeTab") || "orders"
   ); // orders, employees
+  const [availablePercentage, setAvailablePercentage] = useState(0);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [newPercentage, setNewPercentage] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [percentageOpen, setPercentageOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -44,6 +56,54 @@ const Employees = () => {
   useEffect(() => {
     fetchData();
   }, [selectedMonth]);
+
+  const handleSubmit = async () => {
+    const availablePercentage =
+      100 -
+      data?.employees?.reduce(
+        (acc, emp) =>
+          acc +
+          (selectedEmployee?.id === emp?.id ? 0 : parseFloat(emp?.percentage)),
+        0
+      );
+
+    if (newPercentage > availablePercentage) {
+      toast({
+        title: "Diqqat",
+        description: `Jami foiz 100% dan oshib ketmoqda. Maksimum ${availablePercentage?.toFixed(
+          2
+        )}% kirita olasiz.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api.patch(
+        `/warehouseManager/employeePercentage/${selectedEmployee?.id}`,
+        {
+          percentage: newPercentage,
+        }
+      );
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Ulush muvaffaqiyatli o'zgartirildi",
+      });
+      fetchData();
+      setPercentageOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message ||
+          "Ulushni o'zgartirishda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div>
@@ -129,8 +189,46 @@ const Employees = () => {
           {activeTab === "orders" ? (
             <OrdersTab data={data?.orders} />
           ) : (
-            <EmployeesTab data={data?.employees} />
+            <EmployeesTab
+              data={data?.employees}
+              setPercentageOpen={setPercentageOpen}
+              setSelectedEmployee={setSelectedEmployee}
+              setNewPercentage={setNewPercentage}
+            />
           )}
+
+          <Dialog open={percentageOpen} onOpenChange={setPercentageOpen}>
+            <DialogContent className="sm:max-w-[400px] rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-semibold text-gray-800">
+                  {selectedEmployee?.name}
+                </DialogTitle>
+                <DialogDescription className="text-gray-500">
+                  {selectedEmployee?.position?.name}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="mt-4">
+                <Input
+                  value={newPercentage}
+                  type="number"
+                  onChange={(e) => setNewPercentage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                  className="rounded-xl border-gray-200"
+                />
+                <div className="flex justify-end gap-2 mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPercentageOpen(false)}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button onClick={handleSubmit} disabled={submitting}>
+                    {submitting ? "Saqlanmoqda..." : "Saqlash"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>
@@ -177,7 +275,12 @@ const OrdersTab = ({ data }) => {
   );
 };
 
-const EmployeesTab = ({ data }) => {
+const EmployeesTab = ({
+  data,
+  setPercentageOpen,
+  setSelectedEmployee,
+  setNewPercentage,
+}) => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -203,7 +306,14 @@ const EmployeesTab = ({ data }) => {
                   <td className="px-3 py-2 max-w-[120px] font-medium text-gray-900 border-r border-gray-100">
                     <div className="break-words">{employee.name}</div>
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-gray-600 border-r border-gray-100">
+                  <td
+                    className="px-3 py-2 whitespace-nowrap text-gray-600 border-r border-gray-100"
+                    onClick={() => {
+                      setNewPercentage(employee?.percentage);
+                      setSelectedEmployee(employee);
+                      setPercentageOpen(true);
+                    }}
+                  >
                     {employee.percentage}%
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-gray-900 font-semibold border-r border-gray-100">
@@ -212,6 +322,25 @@ const EmployeesTab = ({ data }) => {
                 </tr>
               ))}
           </tbody>
+          <tfoot className="bg-gray-50 border-t border-gray-200">
+            <tr>
+              <td className="px-3 py-2 max-w-[120px] font-medium text-gray-900 border-r border-gray-100">
+                Jami
+              </td>
+              <td className="px-3 py-2 whitespace-nowrap text-gray-600 border-r border-gray-100">
+                {data
+                  ?.reduce((acc, emp) => acc + parseFloat(emp?.percentage), 0)
+                  ?.toFixed(2)}
+                %
+              </td>
+              <td className="px-3 py-2 whitespace-nowrap text-gray-900 font-semibold border-r border-gray-100">
+                {formatNumber(
+                  data?.reduce((acc, emp) => acc + emp?.total_earned_share, 0)
+                )}{" "}
+                so'm
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>
