@@ -319,13 +319,13 @@ const Monthly = () => {
       dollar: true,
     },
     {
-      label: "Warehouse",
+      label: "Ombor",
       value: monthly.warehouse_salary,
       bg: "bg-emerald-300",
       dollar: true,
     },
     {
-      label: "Daily Payments",
+      label: "Yangi mavsum",
       value: monthly.daily_payments,
       bg: "bg-emerald-300",
       dollar: true,
@@ -367,7 +367,7 @@ const Monthly = () => {
       dollar: true,
     },
     {
-      label: "Montly Salary",
+      label: "Monthly Salary",
       value: monthly.monthly_salary,
       bg: "bg-gray-300",
       dollar: true,
