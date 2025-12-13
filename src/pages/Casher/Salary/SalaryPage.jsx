@@ -52,6 +52,15 @@ const formatDate = (dateString) => {
   });
 };
 
+const calculateNewSeasonSalary = (emp) => {
+  return (
+    emp?.daily_payment_salary ||
+    0 + emp?.warehouse_salary ||
+    0 + emp?.master_salary ||
+    0
+  );
+};
+
 const SalaryPage = () => {
   const { toast } = useToast();
 
@@ -86,6 +95,7 @@ const SalaryPage = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [monthlyDialogOpen, setMonthlyDialogOpen] = useState(false);
   const [pieceworkDialogOpen, setPieceworkDialogOpen] = useState(false);
+  const [newSeasonDialogOpen, setNewSeasonDialogOpen] = useState(false);
   const [additionalAmount, setAdditionalAmount] = useState("");
   const [additionalComment, setAdditionalComment] = useState("");
   const [sending, setSending] = useState(false);
@@ -95,15 +105,21 @@ const SalaryPage = () => {
     setAdditionalAmount(
       type === "monthly"
         ? String(employee.monthly_salary?.amount || "")
+        : type === "newSeason"
+        ? String(employee.monthly_daily_payment?.amount || "")
         : String(employee.monthly_piecework?.amount || "")
     );
     setAdditionalComment(
       type === "monthly"
         ? String(employee.monthly_salary?.comment || "")
+        : type === "newSeason"
+        ? String(employee.monthly_daily_payment?.comment || "")
         : String(employee.monthly_piecework?.comment || "")
     );
     type === "monthly"
       ? setMonthlyDialogOpen(true)
+      : type === "newSeason"
+      ? setNewSeasonDialogOpen(true)
       : setPieceworkDialogOpen(true);
   };
 
@@ -248,6 +264,84 @@ const SalaryPage = () => {
         duration: 1500,
       });
       setPieceworkDialogOpen(false);
+      setAdditionalAmount(0);
+      fetchSalaryData(filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Maoshni yangilashda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSaveAdditionalDailyPayment = async () => {
+    if (additionalAmount < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, ijobiy miqdor kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    setSending(true);
+    try {
+      await api.post("casher/employeeMonthlyDailyPayment", {
+        amount: additionalAmount,
+        employee_id: selectedEmployee.id,
+        comment: additionalComment,
+        month: `${selectedMonth}-01`,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Oylik maosh muvaffaqiyatli yangilandi",
+        duration: 1500,
+      });
+      setNewSeasonDialogOpen(false);
+      setAdditionalAmount(0);
+      fetchSalaryData(filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Maoshni yangilashda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleEditAdditionalDailyPayment = async (id) => {
+    if (additionalAmount < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, ijobiy miqdor kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    setSending(true);
+    try {
+      await api.patch(`casher/employeeMonthlyDailyPayment/${id}`, {
+        amount: additionalAmount,
+        employee_id: selectedEmployee.id,
+        comment: additionalComment,
+        month: `${selectedMonth}-01`,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Oylik maosh muvaffaqiyatli yangilandi",
+        duration: 1500,
+      });
+      setNewSeasonDialogOpen(false);
       setAdditionalAmount(0);
       fetchSalaryData(filters);
     } catch (error) {
@@ -794,6 +888,8 @@ const SalaryPage = () => {
                   selectedDepartmentName.includes("tikuv") ||
                   selectedDepartmentName.includes("тикув");
 
+                const newSeason = calculateNewSeasonSalary(employee);
+
                 const highlight = employee.group === "N/A" && containsTikuv;
                 return (
                   <tr
@@ -817,13 +913,27 @@ const SalaryPage = () => {
                     <td className="border border-gray-200 p-1 text-center">
                       {employee?.attendance_days}
                     </td>
-                    <td className="border border-gray-200 p-1 text-center">
-                      {formatNumber(
-                        employee?.daily_payment_salary ||
-                          0 + employee?.warehouse_salary ||
-                          0 + employee?.master_salary ||
-                          0
-                      )}
+                    <td
+                      className="border border-gray-200 p-1 text-center cursor-pointer"
+                      onClick={() =>
+                        handleAdditionalDialog(employee, "newSeason")
+                      }
+                    >
+                      <div
+                        className={`cursor-pointer ${
+                          employee?.monthly_daily_payment?.amount == newSeason
+                            ? "bg-green-400"
+                            : employee?.monthly_daily_payment?.amount >= 0
+                            ? "bg-orange-400"
+                            : ""
+                        }`}
+                      >
+                        {formatNumber(
+                          employee?.monthly_daily_payment?.amount >= 0
+                            ? employee?.monthly_daily_payment?.amount
+                            : newSeason
+                        )}
+                      </div>
                     </td>
                     <td
                       className="border border-gray-200 p-1 text-center cursor-pointer"
@@ -884,10 +994,9 @@ const SalaryPage = () => {
                               : employee?.tarification_salary
                           ) +
                           parseFloat(
-                            employee?.master_salary ||
-                              0 + employee?.warehouse_salary ||
-                              0 + employee?.daily_payment_salary ||
-                              0
+                            employee?.monthly_daily_payment?.amount >= 0
+                              ? employee?.monthly_daily_payment?.amount
+                              : calculateNewSeasonSalary(employee)
                           )
                       )}
                     </td>
@@ -920,9 +1029,11 @@ const SalaryPage = () => {
                               ? employee?.monthly_piecework?.amount
                               : employee?.tarification_salary
                           ) +
-                          parseFloat(employee?.master_salary || 0) +
-                          parseFloat(employee?.warehouse_salary || 0) +
-                          parseFloat(employee?.daily_payment_salary || 0) -
+                          parseFloat(
+                            employee?.monthly_daily_payment?.amount >= 0
+                              ? employee?.monthly_daily_payment?.amount
+                              : calculateNewSeasonSalary(employee)
+                          ) -
                           parseFloat(employee?.total_paid)
                       )}
                     </td>
@@ -948,12 +1059,9 @@ const SalaryPage = () => {
                     filteredEmployees.reduce(
                       (sum, emp) =>
                         sum +
-                        (Number(
-                          emp?.daily_payment_salary ||
-                            0 + emp?.warehouse_salary ||
-                            0 + emp?.master_salary ||
-                            0
-                        ) || 0),
+                        (emp?.monthly_daily_payment?.amount >= 0
+                          ? emp?.monthly_daily_payment?.amount
+                          : Number(calculateNewSeasonSalary(emp)) || 0),
                       0
                     )
                   )}
@@ -1001,9 +1109,11 @@ const SalaryPage = () => {
                               ? emp?.monthly_piecework?.amount
                               : emp?.tarification_salary
                           ) || 0) +
-                          parseFloat(emp?.master_salary || 0) +
-                          parseFloat(emp?.warehouse_salary || 0) +
-                          parseFloat(emp?.daily_payment_salary || 0)),
+                          (Number(
+                            emp?.monthly_daily_payment?.amount >= 0
+                              ? emp?.monthly_daily_payment?.amount
+                              : calculateNewSeasonSalary(emp)
+                          ) || 0)),
                       0
                     )
                   )}
@@ -1032,9 +1142,11 @@ const SalaryPage = () => {
                             ? emp?.monthly_piecework?.amount
                             : emp?.tarification_salary
                         ) || 0) +
-                        parseFloat(emp?.master_salary || 0) +
-                        parseFloat(emp?.warehouse_salary || 0) +
-                        parseFloat(emp?.daily_payment_salary || 0);
+                        (Number(
+                          emp?.monthly_daily_payment?.amount >= 0
+                            ? emp?.monthly_daily_payment?.amount
+                            : calculateNewSeasonSalary(emp)
+                        ) || 0);
                       const totalPaid = Number(emp?.total_paid || 0);
                       return sum + (totalEarned - totalPaid);
                     }, 0)
@@ -1514,6 +1626,165 @@ const SalaryPage = () => {
                   </Button>
                   <Button
                     onClick={handleSaveAdditionalPieceWork}
+                    disabled={!additionalAmount || sending}
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        Saqlanmoqda...
+                      </>
+                    ) : (
+                      "Saqlash"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={newSeasonDialogOpen}
+        onOpenChange={() => setNewSeasonDialogOpen(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Ish haqi (ishbay)
+            </DialogTitle>
+            <DialogDescription>
+              <strong>{selectedEmployee?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            {selectedEmployee?.monthly_daily_payment ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-gray-600">
+                  Yangi miqdor:{" "}
+                  <span className="font-medium">
+                    {formatNumber(
+                      selectedEmployee.monthly_daily_payment?.amount
+                    )}{" "}
+                    so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Asl miqdor:{" "}
+                  <span className="font-medium">
+                    {formatNumber(calculateNewSeasonSalary(selectedEmployee))}{" "}
+                    so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Farqi:{" "}
+                  <span
+                    className={`font-medium ${
+                      selectedEmployee.monthly_daily_payment?.amount -
+                        calculateNewSeasonSalary(selectedEmployee) >=
+                      0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {formatNumber(
+                      selectedEmployee.monthly_daily_payment?.amount -
+                        calculateNewSeasonSalary(selectedEmployee)
+                    )}{" "}
+                    so'm
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Izoh:{" "}
+                  <span className="font-medium">
+                    {selectedEmployee.monthly_daily_payment?.comment || "-"}
+                  </span>
+                </p>
+                <Label htmlFor="additional-amount">
+                  Yangi miqdorni kiriting: ({" "}
+                  {additionalAmount && formatNumber(additionalAmount)} so'm)
+                </Label>
+                <Input
+                  id="additional-amount"
+                  value={additionalAmount}
+                  onChange={(e) => setAdditionalAmount(e.target.value)}
+                />
+                <div>
+                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
+                  <Input
+                    id="additional-comment"
+                    type="text"
+                    value={additionalComment}
+                    onChange={(e) => setAdditionalComment(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setNewSeasonDialogOpen(false);
+                      setAdditionalAmount("");
+                      setAdditionalComment("");
+                    }}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      handleEditAdditionalDailyPayment(
+                        selectedEmployee?.monthly_daily_payment?.id
+                      )
+                    }
+                    disabled={!additionalAmount || sending}
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        O'zgartirilmoqda...
+                      </>
+                    ) : (
+                      "O'zgartirish"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div>
+                  <span className="text-gray-600 text-sm">Asl miqdor:</span>{" "}
+                  {formatNumber(calculateNewSeasonSalary(selectedEmployee))}{" "}
+                  so'm
+                </div>
+                <Label htmlFor="additional-amount">
+                  Yangi miqdorni kiriting: ({" "}
+                  {additionalAmount && formatNumber(additionalAmount)} so'm)
+                </Label>
+                <Input
+                  id="additional-amount"
+                  value={additionalAmount}
+                  onChange={(e) => setAdditionalAmount(e.target.value)}
+                />
+                <div>
+                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
+                  <Input
+                    id="additional-comment"
+                    type="text"
+                    value={additionalComment}
+                    onChange={(e) => setAdditionalComment(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setNewSeasonDialogOpen(false);
+                      setAdditionalAmount("");
+                      setAdditionalComment("");
+                    }}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button
+                    onClick={handleSaveAdditionalDailyPayment}
                     disabled={!additionalAmount || sending}
                   >
                     {sending ? (
