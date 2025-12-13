@@ -313,6 +313,30 @@ const Monthly = () => {
       dollar: true,
     },
     {
+      label: "Master",
+      value: monthly.master_salary,
+      bg: "bg-emerald-300",
+      dollar: true,
+    },
+    {
+      label: "Warehouse",
+      value: monthly.warehouse_salary,
+      bg: "bg-emerald-300",
+      dollar: true,
+    },
+    {
+      label: "Daily Payments",
+      value: monthly.daily_payments,
+      bg: "bg-emerald-300",
+      dollar: true,
+    },
+    {
+      label: "AUP emas",
+      value: monthly.is_not_aup,
+      bg: "bg-emerald-300",
+      dollar: true,
+    },
+    {
       label: "AUP",
       value: monthly.aup,
       bg: "bg-emerald-300",
@@ -333,6 +357,24 @@ const Monthly = () => {
     {
       label: "Transport uchun",
       value: monthly.transport_attendance,
+      bg: "bg-gray-300",
+      dollar: true,
+    },
+    {
+      label: "Tikuvchilar",
+      value: monthly.tarification,
+      bg: "bg-gray-300",
+      dollar: true,
+    },
+    {
+      label: "Montly Salary",
+      value: monthly.monthly_salary,
+      bg: "bg-gray-300",
+      dollar: true,
+    },
+    {
+      label: "Monthly Piecework",
+      value: monthly.monthly_piecework,
       bg: "bg-gray-300",
       dollar: true,
     },
