@@ -597,15 +597,6 @@ const SalaryPage = () => {
       return;
     }
 
-    if (!amount) {
-      toast({
-        title: "Diqqat",
-        description: "Miqdorni kiriting",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const loadingKey = `${employee.id}_${type}`;
 
     try {
@@ -748,6 +739,9 @@ const SalaryPage = () => {
               <th className="border border-gray-200 p-1 text-center font-semibold">
                 Ish kunlari
               </th>
+              <th className="border border-gray-200 p-1 text-center font-semibold">
+                Yangi <br /> mavsum
+              </th>
               <th className="border border-gray-200 p-1 text-center font-semibold whitespace-normal">
                 Ish haqi <br /> (oylik)
               </th>
@@ -823,6 +817,14 @@ const SalaryPage = () => {
                     <td className="border border-gray-200 p-1 text-center">
                       {employee?.attendance_days}
                     </td>
+                    <td className="border border-gray-200 p-1 text-center">
+                      {formatNumber(
+                        employee?.daily_payment_salary ||
+                          0 + employee?.warehouse_salary ||
+                          0 + employee?.master_salary ||
+                          0
+                      )}
+                    </td>
                     <td
                       className="border border-gray-200 p-1 text-center cursor-pointer"
                       onClick={() =>
@@ -880,6 +882,12 @@ const SalaryPage = () => {
                             employee?.monthly_piecework?.amount >= 0
                               ? employee?.monthly_piecework?.amount
                               : employee?.tarification_salary
+                          ) +
+                          parseFloat(
+                            employee?.master_salary ||
+                              0 + employee?.warehouse_salary ||
+                              0 + employee?.daily_payment_salary ||
+                              0
                           )
                       )}
                     </td>
@@ -911,7 +919,10 @@ const SalaryPage = () => {
                             employee?.monthly_piecework?.amount >= 0
                               ? employee?.monthly_piecework?.amount
                               : employee?.tarification_salary
-                          ) -
+                          ) +
+                          parseFloat(employee?.master_salary || 0) +
+                          parseFloat(employee?.warehouse_salary || 0) +
+                          parseFloat(employee?.daily_payment_salary || 0) -
                           parseFloat(employee?.total_paid)
                       )}
                     </td>
@@ -930,6 +941,21 @@ const SalaryPage = () => {
                   {filteredEmployees.reduce(
                     (sum, emp) => sum + (Number(emp?.attendance_days) || 0),
                     0
+                  )}
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {formatNumber(
+                    filteredEmployees.reduce(
+                      (sum, emp) =>
+                        sum +
+                        (Number(
+                          emp?.daily_payment_salary ||
+                            0 + emp?.warehouse_salary ||
+                            0 + emp?.master_salary ||
+                            0
+                        ) || 0),
+                      0
+                    )
                   )}
                 </td>
                 <td className="border border-gray-200 p-1 text-center">
@@ -974,7 +1000,10 @@ const SalaryPage = () => {
                             emp?.monthly_piecework?.amount >= 0
                               ? emp?.monthly_piecework?.amount
                               : emp?.tarification_salary
-                          ) || 0)),
+                          ) || 0) +
+                          parseFloat(emp?.master_salary || 0) +
+                          parseFloat(emp?.warehouse_salary || 0) +
+                          parseFloat(emp?.daily_payment_salary || 0)),
                       0
                     )
                   )}
@@ -1002,7 +1031,10 @@ const SalaryPage = () => {
                           emp?.monthly_piecework?.amount >= 0
                             ? emp?.monthly_piecework?.amount
                             : emp?.tarification_salary
-                        ) || 0);
+                        ) || 0) +
+                        parseFloat(emp?.master_salary || 0) +
+                        parseFloat(emp?.warehouse_salary || 0) +
+                        parseFloat(emp?.daily_payment_salary || 0);
                       const totalPaid = Number(emp?.total_paid || 0);
                       return sum + (totalEarned - totalPaid);
                     }, 0)
