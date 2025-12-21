@@ -392,7 +392,7 @@ const DepartmentHistory = () => {
               <tfoot className="bg-gray-50 font-medium">
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="border border-gray-200 p-2 text-center text-gray-700"
                   >
                     Jami
