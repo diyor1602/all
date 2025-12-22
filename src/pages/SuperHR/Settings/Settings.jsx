@@ -3,16 +3,8 @@ import Positions from "./Positions/Positions";
 import Deparments from "./Departments/Departments";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Blocks,
-  HeartCrack,
-  History,
-  TreePalm,
-  UserCog,
-  UserPlus,
-} from "lucide-react";
+import { Blocks, HeartCrack, History, TreePalm, UserCog } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
-import AddFastUser from "./AddFastUser/AddFastUser";
 import AddGroup from "./Departments/AddGroup";
 import EditGroup from "./Departments/EditGroup";
 import TodayAbsence from "../Stats/TodayAbsence";
@@ -24,7 +16,6 @@ const Settings = () => {
       <Route path="positions" element={<Positions />} />
       <Route path="departments" element={<Deparments />} />
       <Route path="attendance-history" element={<AttendanceHistory />} />
-      <Route path="add-fast-user" element={<AddFastUser />} />
       <Route path="add-group" element={<AddGroup />} />
       <Route path="edit-group/:id" element={<EditGroup />} />
       <Route path="today-absence" element={<TodayAbsence />} />
@@ -57,12 +48,6 @@ const SettingsPage = () => {
       icon: History,
       link: "/superhr/settings/attendance-history",
       color: "bg-green-500",
-    },
-    {
-      name: "Tezkor xodim qo'shish",
-      icon: UserPlus,
-      link: "/superhr/settings/add-fast-user",
-      color: "bg-yellow-500",
     },
     {
       name: "Ta'til",
