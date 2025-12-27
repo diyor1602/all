@@ -367,17 +367,15 @@ const Monthly = () => {
       dollar: true,
     },
     {
-      label: "Monthly Salary",
-      value: monthly.monthly_salary,
+      label: "Ustidan yozilgan summa",
+      value:
+        monthly.monthly_salary +
+        monthly.monthly_piecework +
+        monthly.monthly_daily_payment,
       bg: "bg-gray-300",
       dollar: true,
     },
-    {
-      label: "Monthly Piecework",
-      value: monthly.monthly_piecework,
-      bg: "bg-gray-300",
-      dollar: true,
-    },
+
     {
       label: "Tikuv uchun",
       value: monthly.orders?.reduce(
