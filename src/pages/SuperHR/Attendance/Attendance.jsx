@@ -85,7 +85,8 @@ const Attendance = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    localStorage.getItem("attendanceDate") ||
+      new Date().toISOString().split("T")[0]
   );
   const [employees, setEmployees] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
@@ -123,7 +124,9 @@ const Attendance = () => {
   const changeDateBy = (days) => {
     const date = new Date(selectedDate);
     date.setDate(date.getDate() + days);
-    setSelectedDate(formatDate(date));
+    const newDate = formatDate(date);
+    setSelectedDate(newDate);
+    localStorage.setItem("attendanceDate", newDate);
   };
 
   const handleSearch = (query) => {
@@ -186,6 +189,7 @@ const Attendance = () => {
         employee_id: selectedEmployeeId,
         check_in: isoWithTimezone,
         date: selectedDate,
+        status: "present",
       });
 
       fetchAttendance();
@@ -307,6 +311,7 @@ const Attendance = () => {
             employee_id: employeeId,
             check_in: isoWithTimezone,
             date: selectedDate,
+            status: "present",
           });
 
           setProcessingStatus((prev) => ({
@@ -449,6 +454,7 @@ const Attendance = () => {
         employee_id: employeeId,
         date: selectedDate,
         check_in: isoWithTimezone,
+        status: "present",
       });
       toast({
         title: "Muvaffaqiyatli",
@@ -780,7 +786,10 @@ const Attendance = () => {
           <Input
             type="date"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => {
+              setSelectedDate(e.target.value);
+              localStorage.setItem("attendanceDate", e.target.value);
+            }}
             className="rounded-none border-x-0 w-full bg-white"
           />
           <Button
@@ -1080,7 +1089,11 @@ const Attendance = () => {
                         <Button
                           size="icon"
                           variant="ghost"
-                          disabled={loading}
+                          disabled={
+                            !attendance?.find(
+                              (a) => a.employee_id === employee.id
+                            )?.check_in
+                          }
                           onClick={() => {
                             handleCheckOutAttendanceFast2(employee.id);
                           }}

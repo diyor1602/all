@@ -219,6 +219,7 @@ const NewAttendance = () => {
         employee_id: id,
         date,
         check_in: isoWithTimezone,
+        status: "present",
       });
       toast({
         title: "Muvaffaqiyatli",
