@@ -872,11 +872,11 @@ const Attendance = () => {
         <table
           className={`${
             pageLoading ? "opacity-50 cursor-not-allowed" : ""
-          } w-full border-2 border-collapse whitespace-nowrap bg-white text-sm`}
+          } w-full border border-collapse whitespace-nowrap bg-white text-xs`}
         >
           <thead>
             <tr>
-              <th className="p-1 border-2 w-10">
+              <th className="p-1 border w-10">
                 <input
                   type="checkbox"
                   className="h-4 w-4"
@@ -895,13 +895,13 @@ const Attendance = () => {
                   }}
                 />
               </th>
-              <th className="p-1 border-2">ID</th>
-              <th className="p-1 border-2">
+              <th className="p-1 border">ID</th>
+              <th className="p-1 border">
                 Xodimlar ({filteredEmployees?.length})
               </th>
-              <th className="p-1 border-2">Status</th>
-              <th className="p-1 border-2">Kelgan vaqti</th>
-              <th className="p-1 border-2">Ketgan vaqti</th>
+              <th className="p-1 border">Status</th>
+              <th className="p-1 border">Kelgan vaqti</th>
+              <th className="p-1 border">Ketgan vaqti</th>
             </tr>
           </thead>
           <tbody>
@@ -913,7 +913,7 @@ const Attendance = () => {
                 );
                 return (
                   <tr key={employee.id}>
-                    <td className="p-1 border-2 text-center">
+                    <td className="p-1 border text-center">
                       <input
                         type="checkbox"
                         className="h-4 w-4"
@@ -921,9 +921,9 @@ const Attendance = () => {
                         onChange={() => handleCheckboxChange(employee.id)}
                       />
                     </td>
-                    <td className="p-1 border-2 text-center">{employee?.id}</td>
-                    <td className="p-1 border-2">{employee?.name}</td>
-                    <td className="p-1 border-2 text-center">
+                    <td className="p-1 border text-center">{employee?.id}</td>
+                    <td className="p-1 border">{employee?.name}</td>
+                    <td className="p-1 border text-center">
                       <div className="flex items-center justify-center gap-2">
                         {attendanceRecord && (
                           <div className="flex items-center justify-center gap-2">
@@ -945,7 +945,7 @@ const Attendance = () => {
                         </Button>
                       </div>
                     </td>
-                    <td className="p-1 border-2 text-center">
+                    <td className="p-1 border text-center">
                       <div className="flex items-center justify-center gap-2">
                         {attendanceRecord?.check_in ? (
                           <>
@@ -1022,7 +1022,7 @@ const Attendance = () => {
                         </Button>
                       </div>
                     </td>
-                    <td className="p-1 border-2 text-center">
+                    <td className="p-1 border text-center">
                       <div className="flex items-center justify-center gap-2">
                         {attendanceRecord?.check_out && (
                           <>
