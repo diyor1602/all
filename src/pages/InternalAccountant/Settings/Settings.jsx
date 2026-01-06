@@ -82,7 +82,7 @@ const SettingsPage = () => {
       color: "bg-red-500",
     },
     {
-      name: "Bloklash",
+      name: "Oylik modellar",
       icon: Lock,
       link: "/internalAccountant/settings/salaryOrders",
       color: "bg-black",
