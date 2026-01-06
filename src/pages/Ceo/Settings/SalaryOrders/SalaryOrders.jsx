@@ -3,7 +3,16 @@ import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Box, Plus, Shirt, Tag, Trash2 } from "lucide-react";
+import {
+  Box,
+  KeyRound,
+  Loader2,
+  LockKeyhole,
+  Plus,
+  Shirt,
+  Tag,
+  Trash2,
+} from "lucide-react";
 import { statuses } from "@/lib/status";
 import {
   Select,
@@ -36,6 +45,7 @@ const SalaryOrders = () => {
       localStorage.getItem("salaryOrderSelectedDepartment") || "all",
     group_id: localStorage.getItem("salaryOrderSelectedGroup") || "all",
   });
+  const [locking, setLocking] = useState({ id: null, status: null });
 
   const fetchData = async () => {
     try {
@@ -138,6 +148,31 @@ const SalaryOrders = () => {
   useEffect(() => {
     fetchDepartments();
   }, []);
+
+  const lockOrder = async (id, status) => {
+    setLocking({ id, status });
+    try {
+      await api.post("ceo/blockedOrders", {
+        order_id: id,
+        status: status ? "blocked" : "unblocked",
+      });
+      toast({
+        variant: "default",
+        title: "Muvaffaqiyatli",
+        description: `Buyurtma ${status ? "bloklanadi" : "blokdan yechildi"}`,
+        duration: 1000,
+      });
+      await fetchData();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: error.response?.data?.message || "Xatolik yuz berdi",
+      });
+    } finally {
+      setLocking({ id: null, status: null });
+    }
+  };
 
   useEffect(() => {
     if (filters.department_id === "all") {
@@ -297,140 +332,176 @@ const SalaryOrders = () => {
               }
               return b.order?.id - a.order?.id;
             })
-            ?.map((item, index) => (
-              <div key={index} className="rounded-xl bg-white shadow-xl">
-                <div
-                  className={`h-2 ${
-                    statuses[item.order?.status]?.color
-                  } rounded-t-xl`}
-                />
-                <div className="p-2 pt-4 flex flex-col gap-4">
-                  <div className="flex items-center gap-2 justify-between flex-wrap">
-                    <div
-                      className={`${
-                        statuses[item.order?.status]?.secondaryBg
-                      } py-1 px-2 rounded-full w-fit text-xs font-semibold flex items-center gap-1 ${
-                        statuses[item.order?.status]?.textColor
-                      }`}
-                    >
-                      <Tag
-                        size={12}
-                        className={statuses[item.order?.status]?.textColor}
-                      />
-                      <div>#{item.order?.id}</div>
-                    </div>
-                    <div
-                      className={`${
-                        statuses[item.order?.status]?.color
-                      } py-1 px-2 rounded-full w-fit text-xs text-white`}
-                    >
-                      {statuses[item.order?.status]?.text}
-                    </div>
-                  </div>
-                  <div
-                    className={`${
-                      statuses[item.order?.status]?.border
-                    } bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
-                  >
-                    <h3 className="text-sm font-bold text-gray-800 truncate">
-                      {item.order?.name}
-                    </h3>
-                  </div>
+            ?.map((item, index) => {
+              const isLockingThisOrder = locking?.id === item.order?.id;
 
-                  <div className="flex items-center gap-2 justify-between flex-wrap">
-                    <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
-                      <Box size={12} className="text-gray-800" />
-                      <div className="font-semibold text-gray-800 text-xs">
-                        {item?.order?.order_model?.model?.name}
+              return (
+                <div key={index} className="rounded-xl bg-white shadow-xl">
+                  <div
+                    className={`h-2 ${
+                      statuses[item.order?.status]?.color
+                    } rounded-t-xl`}
+                  />
+                  <div className="p-2 pt-4 flex flex-col gap-4">
+                    <div className="flex items-center gap-2 justify-between flex-wrap">
+                      <div
+                        className={`${
+                          statuses[item.order?.status]?.secondaryBg
+                        } py-1 px-2 rounded-full w-fit text-xs font-semibold flex items-center gap-1 ${
+                          statuses[item.order?.status]?.textColor
+                        }`}
+                      >
+                        <div>#{item.order?.id}</div>
+                      </div>
+                      <div>
+                        {isLockingThisOrder ? (
+                          <Loader2
+                            size={20}
+                            className="text-gray-500 animate-spin"
+                          />
+                        ) : item.order?.blocked_order?.status === "blocked" ? (
+                          <LockKeyhole
+                            size={20}
+                            className={`text-green-500 ${
+                              isLockingThisOrder
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (isLockingThisOrder) return;
+                              lockOrder(item.order?.id, false);
+                            }}
+                          />
+                        ) : (
+                          <KeyRound
+                            size={20}
+                            className={`text-red-500 ${
+                              isLockingThisOrder
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (isLockingThisOrder) return;
+                              lockOrder(item.order?.id, true);
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div
+                        className={`${
+                          statuses[item.order?.status]?.color
+                        } py-1 px-2 rounded-full w-fit text-xs text-white`}
+                      >
+                        {statuses[item.order?.status]?.text}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
-                      {item?.order?.order_model?.submodels?.map(
-                        (submodel, idx) => (
-                          <div
-                            key={idx}
-                            className="font-semibold text-gray-800 text-xs flex items-center gap-1"
-                          >
-                            <Shirt size={12} className="text-gray-800" />{" "}
-                            {submodel.submodel?.name}
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="relative flex items-center gap-2 bg-gray-200 px-2 py-1 rounded-full text-xs overflow-hidden">
-                    {/* Progress fill */}
                     <div
                       className={`${
-                        statuses[item.order?.status]?.color
-                      } absolute left-0 top-0 h-full rounded-full`}
-                      style={{
-                        width: `${
-                          (item?.order?.order_model?.submodels?.reduce(
+                        statuses[item.order?.status]?.border
+                      } bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
+                    >
+                      <h3 className="text-sm font-bold text-gray-800 truncate">
+                        {item.order?.name}
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center gap-2 justify-between flex-wrap">
+                      <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
+                        <Box size={12} className="text-gray-800" />
+                        <div className="font-semibold text-gray-800 text-xs">
+                          {item?.order?.order_model?.model?.name}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
+                        {item?.order?.order_model?.submodels?.map(
+                          (submodel, idx) => (
+                            <div
+                              key={idx}
+                              className="font-semibold text-gray-800 text-xs flex items-center gap-1"
+                            >
+                              <Shirt size={12} className="text-gray-800" />{" "}
+                              {submodel.submodel?.name}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="relative flex items-center gap-2 bg-gray-200 px-2 py-1 rounded-full text-xs overflow-hidden">
+                      {/* Progress fill */}
+                      <div
+                        className={`${
+                          statuses[item.order?.status]?.color
+                        } absolute left-0 top-0 h-full rounded-full`}
+                        style={{
+                          width: `${
+                            (item?.order?.order_model?.submodels?.reduce(
+                              (total, submodel) =>
+                                total +
+                                parseInt(
+                                  submodel.sewing_outputs_sum_quantity || 0
+                                ),
+                              0
+                            ) /
+                              item.order?.quantity) *
+                            100
+                          }%`,
+                        }}
+                      ></div>
+
+                      {/* Text content (on top) */}
+                      <div
+                        className={`relative z-10 flex items-center gap-1 ${
+                          item?.order?.order_model?.submodels?.reduce(
                             (total, submodel) =>
                               total +
                               parseInt(
                                 submodel.sewing_outputs_sum_quantity || 0
                               ),
                             0
-                          ) /
-                            item.order?.quantity) *
-                          100
-                        }%`,
-                      }}
-                    ></div>
-
-                    {/* Text content (on top) */}
-                    <div
-                      className={`relative z-10 flex items-center gap-1 ${
-                        item?.order?.order_model?.submodels?.reduce(
+                          ) > 0
+                            ? "text-white"
+                            : ""
+                        }`}
+                      >
+                        {item?.order?.order_model?.submodels?.reduce(
                           (total, submodel) =>
                             total +
                             parseInt(submodel.sewing_outputs_sum_quantity || 0),
                           0
-                        ) > 0
-                          ? "text-white"
-                          : ""
-                      }`}
-                    >
-                      {item?.order?.order_model?.submodels?.reduce(
-                        (total, submodel) =>
-                          total +
-                          parseInt(submodel.sewing_outputs_sum_quantity || 0),
-                        0
-                      )}
-                      /{item.order?.quantity}
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-gray-800">
-                    {item?.order?.order_model?.submodels?.some(
-                      (submodel) => submodel?.group?.group?.name
-                    ) ? (
-                      item?.order?.order_model?.submodels
-                        ?.map((submodel) => submodel?.group?.group?.name)
-                        .join(", ")
-                    ) : (
-                      <div className="text-red-500 uppercase font-medium">
-                        Guruhga biriktirilmagan
+                        )}
+                        /{item.order?.quantity}
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <Button
-                    variant="outline"
-                    onClick={() => handleMinus(item)}
-                    className={`${
-                      statuses[item.order?.status]?.color
-                    } text-white hover:text-white hover:bg-red-400 transition-all duration-300`}
-                  >
-                    <Trash2 />
-                    <div>Olib tashlash</div>
-                  </Button>
+                    <div className="text-xs text-gray-800">
+                      {item?.order?.order_model?.submodels?.some(
+                        (submodel) => submodel?.group?.group?.name
+                      ) ? (
+                        item?.order?.order_model?.submodels
+                          ?.map((submodel) => submodel?.group?.group?.name)
+                          .join(", ")
+                      ) : (
+                        <div className="text-red-500 uppercase font-medium">
+                          Guruhga biriktirilmagan
+                        </div>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => handleMinus(item)}
+                      className={`${
+                        statuses[item.order?.status]?.color
+                      } text-white hover:text-white hover:bg-red-400 transition-all duration-300`}
+                    >
+                      <Trash2 />
+                      <div>Olib tashlash</div>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       </div>
       <div className="flex flex-col gap-2 mt-10 bg-red-100 md:p-5">
