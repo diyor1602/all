@@ -10,10 +10,12 @@ import {
   QrCode,
   Siren,
   TreePalm,
+  Lock,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 import Nakladnoy from "./Nakladnoy";
 import NakladnoySkaner from "./NakladnoySkaner";
+import SalaryOrders from "./SalaryOrders";
 import TarifSearch from "./TarifSearch";
 
 const Settings = () => {
@@ -24,6 +26,7 @@ const Settings = () => {
       <Route path="nakladnoy" element={<Nakladnoy />} />
       <Route path="nakladnoy-skaner" element={<NakladnoySkaner />} />
       <Route path="tarif-search" element={<TarifSearch />} />
+      <Route path="salaryOrders" element={<SalaryOrders />} />
     </Routes>
   );
 };
@@ -77,6 +80,12 @@ const SettingsPage = () => {
       icon: Siren,
       link: "/internalAccountant/settings/tarif-search",
       color: "bg-red-500",
+    },
+    {
+      name: "Bloklash",
+      icon: Lock,
+      link: "/internalAccountant/settings/salaryOrders",
+      color: "bg-black",
     },
   ];
 
