@@ -367,10 +367,6 @@ const SalaryOrders = () => {
                                 ? "opacity-50 cursor-not-allowed"
                                 : "cursor-pointer"
                             }`}
-                            onClick={() => {
-                              if (isLockingThisOrder) return;
-                              lockOrder(item.order?.id, false);
-                            }}
                           />
                         ) : (
                           <KeyRound
