@@ -89,7 +89,7 @@ const SalaryPage = () => {
     group_id: "",
     start_date: "",
     end_date: "",
-    type: "aup",
+    type: "",
   });
   const [searchText, setSearchText] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -429,9 +429,9 @@ const SalaryPage = () => {
       setSelectedMonth(parsedFilters.start_date.substring(0, 7));
     }
 
-    // if type is empty, set it to "aup"
+    // if type is empty, set it to "all"
     if (!parsedFilters.type) {
-      parsedFilters.type = "aup";
+      parsedFilters.type = "all";
     }
 
     setFilters(parsedFilters);
