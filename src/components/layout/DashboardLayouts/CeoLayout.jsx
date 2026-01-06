@@ -53,7 +53,7 @@ const navigation = [
   },
   {
     name: "Hisob",
-    href: "/ceo/calc",
+    href: "/ceo/overcalc",
     icon: Calculator,
     onMobile: false,
   },

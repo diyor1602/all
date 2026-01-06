@@ -7,6 +7,7 @@ import {
   BadgeDollarSign,
   CalendarClock,
   Flower,
+  Calculator,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -53,10 +54,16 @@ const SettingsPage = () => {
       color: "bg-purple-500",
     },
     {
-      name: "Bahorgi modellar",
+      name: "Yangi mavsum",
       icon: Flower,
       link: "/ceo/quantity",
       color: "bg-green-500",
+    },
+    {
+      name: "Hisob",
+      icon: Calculator,
+      link: "/ceo/calc",
+      color: "bg-gray-500",
     },
   ];
 

@@ -36,8 +36,6 @@ import {
 
 const keywords = ["tikuv", "тикув"];
 
-const pad2 = (n) => String(n).padStart(2, "0");
-
 const formatNumber = (num) => {
   return Number.parseFloat(num).toLocaleString("ru-RU", {
     maximumFractionDigits: 0,
