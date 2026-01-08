@@ -51,6 +51,12 @@ const getMonthRange = (year, month) => {
   };
 };
 
+const formatPhoneNumber = (phone) => {
+  return phone
+    .replace(/\D/g, "")
+    .replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
+};
+
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
     year: "numeric",
@@ -319,7 +325,7 @@ const SalaryDetails = () => {
                   className="flex items-center gap-3"
                 >
                   <Phone className="h-4 w-4 text-primary" />
-                  <span>{employee.phone}</span>
+                  <span>+{formatPhoneNumber(employee.phone)}</span>
                 </a>
               )}
               {employee.position && (
