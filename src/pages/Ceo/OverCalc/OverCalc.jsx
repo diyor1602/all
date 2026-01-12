@@ -17,10 +17,20 @@ import {
   TrendingDown,
   Wallet,
   Target,
+  ExternalLink,
   Users,
   Calculator,
   Loader2,
+  MousePointerClick,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+} from "@/components/ui/dialog";
+import EmployeeTable from "./EmployeeTable";
 
 const keywords = ["tikuv", "тикув"];
 
@@ -86,6 +96,8 @@ const OverCalc = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [departmentsLoading, setDepartmentsLoading] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const [selectedMonth, setSelectedMonth] = useState(
     localStorage.getItem("salaryMonth") || new Date().toISOString().slice(0, 7)
@@ -356,8 +368,14 @@ const OverCalc = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Target className="h-5 w-5 text-blue-600" />
+                        <div
+                          className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"
+                          onClick={() => {
+                            setSelectedGroup(item);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          <ExternalLink className="h-5 w-5 text-blue-600" />
                         </div>
                         {item.group_name}
                       </h2>
@@ -426,7 +444,7 @@ const OverCalc = () => {
 
                       <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
                         <div className="flex items-center gap-3 mb-2">
-                          <Target className="h-5 w-5 text-purple-600" />
+                          <MousePointerClick className="h-5 w-5 text-purple-600" />
                           <span className="text-sm font-medium text-purple-900">
                             Tarifikatsiya
                           </span>
@@ -494,6 +512,16 @@ const OverCalc = () => {
             })}
         </div>
       )}
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-[90vw] w-full max-h-[95vh] h-full">
+          <DialogHeader>
+            <DialogTitle>{selectedGroup?.group_name}</DialogTitle>
+            <DialogDescription> Xodimlar ro'yxati</DialogDescription>
+          </DialogHeader>
+          <EmployeeTable data={selectedGroup} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
