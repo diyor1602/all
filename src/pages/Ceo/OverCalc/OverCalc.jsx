@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -98,6 +98,7 @@ const OverCalc = () => {
   const [departmentsLoading, setDepartmentsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const employeeTableRef = useRef(null);
 
   const [selectedMonth, setSelectedMonth] = useState(
     localStorage.getItem("salaryMonth") || new Date().toISOString().slice(0, 7)
@@ -133,6 +134,10 @@ const OverCalc = () => {
       start_date: `${month}-01`,
       end_date: `${month}-${lastDay}`,
     };
+  };
+
+  const handleExportEmployees = () => {
+    employeeTableRef.current?.exportToExcel();
   };
 
   const handleError = (error, defaultMessage) => {
@@ -517,9 +522,18 @@ const OverCalc = () => {
         <DialogContent className="max-w-[90vw] w-full max-h-[95vh] h-full">
           <DialogHeader>
             <DialogTitle>{selectedGroup?.group_name}</DialogTitle>
-            <DialogDescription> Xodimlar ro'yxati</DialogDescription>
+            <div className="flex items-center justify-between gap-4">
+              <DialogDescription> Xodimlar ro'yxati</DialogDescription>
+              <button
+                type="button"
+                onClick={handleExportEmployees}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Excelga yuklash
+              </button>
+            </div>
           </DialogHeader>
-          <EmployeeTable data={selectedGroup} />
+          <EmployeeTable ref={employeeTableRef} data={selectedGroup} />
         </DialogContent>
       </Dialog>
     </div>
