@@ -41,6 +41,7 @@ import {
   AlarmClockCheck,
   CloudDownload,
   Flag,
+  Trash2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -233,6 +234,26 @@ const Employees = () => {
       });
     } finally {
       setExpUploading(false);
+    }
+  };
+
+  const handleDeleteExp = async (id) => {
+    try {
+      const res = await api.patch(`/superhr/explanationLetters/${id}`, {
+        status: false,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Tushuntirish xati o'chirildi!",
+        duration: 2000,
+      });
+      handleClickExp({ id: expForm?.id });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "O'chirishda xatolik yuz berdi",
+        variant: "destructive",
+      });
     }
   };
 
@@ -1210,18 +1231,34 @@ const Employees = () => {
                                     </p>
                                   )}
                                 </div>
-                                {item?.file && (
-                                  <button
+                                <div className="flex items-center gap-2">
+                                  {item?.file && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setSelectedImage(item?.file);
+                                        setImageDialogOpen(true);
+                                      }}
+                                      className="text-blue-600"
+                                      title="Rasmni ko'rish"
+                                    >
+                                      <Eye size={16} />
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => {
-                                      setSelectedImage(item?.file);
-                                      setImageDialogOpen(true);
+                                      handleDeleteExp(item?.id);
                                     }}
-                                    className="flex-shrink-0 p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                                    title="Rasmni ko'rish"
                                   >
-                                    <Eye size={16} />
-                                  </button>
-                                )}
+                                    <Trash2
+                                      size={16}
+                                      className="text-red-500"
+                                    />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
