@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
+import ExcelJS from "exceljs";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -28,6 +29,7 @@ import {
   FileText,
   Image,
   Trash2,
+  DownloadCloud,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -224,6 +226,64 @@ const OrderView = () => {
       toast,
     ]
   );
+
+  const handleDownloadSingleTarif = async (tarif) => {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Tarifikatsiya");
+
+      // Set column headers
+      worksheet.columns = [
+        { header: "Kod", key: "code", width: 15 },
+        { header: "Nomi", key: "name", width: 30 },
+        { header: "Razryad", key: "razryad", width: 15 },
+        { header: "Sekund", key: "second", width: 15 },
+        { header: "Summa", key: "summa", width: 15 },
+      ];
+
+      // Style header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFE6B8" },
+      };
+
+      // Add data row
+      worksheet.addRow({
+        code: tarif.code,
+        name: tarif.name,
+        razryad: tarif.razryad?.name || "",
+        second: tarif.second,
+        summa: tarif.summa,
+      });
+
+      // Generate buffer
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      // Create blob and download
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${tarif.code || "tarif"}_${
+        tarif.name || "tarifikatsiya"
+      }.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Tarifikatsiyani yuklab bo'lmadi",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleDownloadSpec = async (id) => {
     setSpecDownloading(true);
@@ -1318,6 +1378,7 @@ const OrderView = () => {
                   <th className="border border-gray-300 p-1">Razryad</th>
                   <th className="border border-gray-300 p-1">Sekund</th>
                   <th className="border border-gray-300 p-1">Summa (so'm)</th>
+                  <th className="border border-gray-300 p-1"></th>
                 </tr>
               </thead>
               <tbody>
@@ -1358,6 +1419,17 @@ const OrderView = () => {
                       </td>
                       <td className="border border-gray-300 p-1">
                         {parseFloat(tarif?.summa)?.toLocaleString()}
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <Button
+                          variant="ghost"
+                          siez="icon"
+                          onClick={() => {
+                            handleDownloadSingleTarif(tarif);
+                          }}
+                        >
+                          <DownloadCloud />
+                        </Button>
                       </td>
                     </tr>
                   ))}
