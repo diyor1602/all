@@ -72,6 +72,9 @@ const EmployeeTable = ({ data }, ref) => {
       <table className="w-full border-collapse text-sm">
         <thead className="bg-gray-100">
           <tr>
+            <th className="border border-gray-300 px-3 py-2 text-center font-semibold">
+              №
+            </th>
             <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
               Ism
             </th>
@@ -91,6 +94,9 @@ const EmployeeTable = ({ data }, ref) => {
                 key={index}
                 className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors"
               >
+                <td className="border border-gray-200 px-3 py-2 text-center">
+                  {index + 1}
+                </td>
                 <td className="border border-gray-200 px-3 py-2">
                   {employee.employee_name}
                 </td>
@@ -108,7 +114,7 @@ const EmployeeTable = ({ data }, ref) => {
           <tr className="bg-gray-100 font-semibold">
             <td
               className="border border-gray-300 px-3 py-2 text-right"
-              colSpan={2}
+              colSpan={3}
             >
               Jami:
             </td>
