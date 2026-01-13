@@ -1428,7 +1428,7 @@ const OrderView = () => {
                             handleDownloadSingleTarif(tarif);
                           }}
                         >
-                          <DownloadCloud />
+                          <DownloadCloud className="text-green-500" />
                         </Button>
                       </td>
                     </tr>
