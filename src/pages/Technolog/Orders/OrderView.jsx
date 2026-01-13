@@ -1314,7 +1314,7 @@ const OrderView = () => {
                   <th className="border border-gray-300 p-1">Kod</th>
                   <th className="border border-gray-300 p-1">Nomi</th>
                   <th className="border border-gray-300 p-1">Xodim</th>
-                  <th className="border border-gray-300 p-1">Video ID</th>
+                  {/* <th className="border border-gray-300 p-1">Video ID</th> */}
                   <th className="border border-gray-300 p-1">Razryad</th>
                   <th className="border border-gray-300 p-1">Sekund</th>
                   <th className="border border-gray-300 p-1">Summa (so'm)</th>
@@ -1342,14 +1342,14 @@ const OrderView = () => {
                       <td className="border border-gray-300 p-1">
                         {tarif?.employee?.name || "-"}
                       </td>
-                      <td className="border border-gray-300 p-1">
+                      {/* <td className="border border-gray-300 p-1">
                         <Link
                           to={`/technologist/videos/show/${tarif?.video_id}`}
                           target="_blank"
                         >
                           {tarif?.video_id}
                         </Link>
-                      </td>
+                      </td> */}
                       <td className="border border-gray-300 p-1">
                         {tarif?.razryad?.name}
                       </td>

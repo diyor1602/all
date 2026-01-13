@@ -519,7 +519,7 @@ const NewTarif = () => {
               <th className="px-4 py-2 border">#</th>
               <th className="px-4 py-2 border">Nomi</th>
               <th className="px-4 py-2 border">Xodim</th>
-              <th className="px-4 py-2 border">Video ID</th>
+              {/* <th className="px-4 py-2 border">Video ID</th> */}
               <th className="px-4 py-2 border">Razryad</th>
               <th className="px-4 py-2 border">Sekund</th>
               <th className="px-4 py-2 border">Summa (so'm)</th>
@@ -650,7 +650,7 @@ const NewTarif = () => {
                     </PopoverContent>
                   </Popover>
                 </td>
-                <td className="px-4 py-2 border">
+                {/* <td className="px-4 py-2 border">
                   <Input
                     type="text"
                     className="w-24"
@@ -659,7 +659,7 @@ const NewTarif = () => {
                       handleInputChange(index, "video_id", e.target.value)
                     }
                   />
-                </td>
+                </td> */}
                 <td className="px-4 py-2 border">
                   <Select
                     value={item?.razryad?.id?.toString()}

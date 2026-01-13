@@ -57,7 +57,7 @@ const Orders = () => {
     localStorage.getItem("searchTerm") || ""
   );
   const [statusFilter, setStatusFilter] = useState(
-    localStorage.getItem("statusFilter") || "tailoring"
+    localStorage.getItem("statusFilter") || "all"
   );
   const [tarifFilter, setTarifFilter] = useState(
     localStorage.getItem("tarifFilter") || "all"

@@ -57,7 +57,7 @@ const WorkPage = () => {
     localStorage.getItem("searchTerm") || ""
   );
   const [statusFilter, setStatusFilter] = useState(
-    localStorage.getItem("statusFilter") || "tailoring"
+    localStorage.getItem("statusFilter") || "all"
   );
   const [sortBy, setSortBy] = useState(localStorage.getItem("sortBy") || "");
   const { toast } = useToast();
