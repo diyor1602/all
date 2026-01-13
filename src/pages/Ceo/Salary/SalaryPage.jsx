@@ -890,13 +890,34 @@ const SalaryPage = () => {
 
                 const newSeason = calculateNewSeasonSalary(employee);
 
+                const totalEarned =
+                  parseFloat(
+                    employee?.monthly_salary?.amount >= 0
+                      ? employee?.monthly_salary?.amount
+                      : employee?.attendance_salary
+                  ) +
+                  parseFloat(
+                    employee?.monthly_piecework?.amount >= 0
+                      ? employee?.monthly_piecework?.amount
+                      : employee?.tarification_salary
+                  ) +
+                  parseFloat(
+                    employee?.monthly_daily_payment?.amount >= 0
+                      ? employee?.monthly_daily_payment?.amount
+                      : newSeason
+                  );
+
+                const isEarningWell =
+                  totalEarned / employee?.attendance_days <= 100000;
+
                 const highlight = employee.group === "N/A" && containsTikuv;
                 return (
                   <tr
                     key={employee.id}
                     className={cn(
                       "hover:bg-gray-50 transition-colors",
-                      highlight && "bg-red-200 hover:bg-red-100"
+                      highlight && "bg-red-200 hover:bg-red-100",
+                      isEarningWell && "bg-yellow-200 hover:bg-yellow-100"
                     )}
                   >
                     <td className="border border-gray-200 p-1 text-center">
