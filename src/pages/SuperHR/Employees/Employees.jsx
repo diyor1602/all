@@ -40,6 +40,7 @@ import {
   AlarmClock,
   AlarmClockCheck,
   CloudDownload,
+  Flag,
 } from "lucide-react";
 import {
   Tooltip,
@@ -102,6 +103,16 @@ const Employees = () => {
       end_date: today.toISOString().split("T")[0],
     };
   });
+  const [expDialogOpen, setExpDialogOpen] = useState(false);
+  const [expLoading, setExpLoading] = useState(false);
+  const [expUploading, setExpUploading] = useState(false);
+  const [expActiveTab, setExpActiveTab] = useState("add"); // add, history
+  const [expForm, setExpForm] = useState({
+    id: "",
+    description: "",
+    file: null,
+  });
+  const [expData, setExpData] = useState(null);
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [departments, setDepartments] = useState([]);
@@ -137,6 +148,21 @@ const Employees = () => {
 
   const [groups, setGroups] = useState([]);
 
+  const [preview, setPreview] = useState(null);
+
+  // create & cleanup preview URL
+  useEffect(() => {
+    if (!expForm.file) {
+      setPreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(expForm.file);
+    setPreview(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [expForm.file]);
+
   // Setup debounced values
   const debouncedSearch = useDebounce(filters.search, 500);
   const debouncedDepartment = useDebounce(filters.department_id, 300);
@@ -148,6 +174,67 @@ const Employees = () => {
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
   }, [filters]);
+
+  const handleClickExp = async (employee) => {
+    setExpForm((prev) => {
+      return {
+        ...prev,
+        id: employee?.id,
+      };
+    });
+    setExpLoading(true);
+    try {
+      const res = await api.get(`/superhr/employees/casher/${employee?.id}`);
+      setExpData(res.data);
+      setExpDialogOpen(true);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Departamentlar ro'yxatini olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setExpLoading(false);
+    }
+  };
+
+  const handleUploadExp = async () => {
+    setExpUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("employee_id", expForm?.id);
+      formData.append("description", expForm?.description);
+      formData.append("file", expForm?.file);
+
+      const res = await api.post("/superhr/explanationLetters", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Tushuntirish xati yuklandi!",
+        duration: 2000,
+      });
+      setExpForm(() => {
+        return {
+          id: expForm?.id,
+          description: "",
+          file: null,
+        };
+      });
+      handleClickExp({ id: expForm?.id });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Xabar yuborishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setExpUploading(false);
+    }
+  };
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -782,6 +869,13 @@ const Employees = () => {
                         className="text-red-500 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer"
                       />
                     )}
+                    <Flag
+                      size={16}
+                      className="text-indigo-500 hover:text-indigo-600 hover:scale-110 transition-all duration-200 cursor-pointer"
+                      onClick={() => {
+                        handleClickExp(employee);
+                      }}
+                    />
                   </div>
                 </TableCell>
                 <TableCell className="border">
@@ -973,6 +1067,180 @@ const Employees = () => {
               <Download />
             )}
           </Button>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={expDialogOpen} onOpenChange={setExpDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{expData?.employee?.name}</DialogTitle>
+            <DialogDescription>
+              {expData?.employee?.department?.name}{" "}
+              {expData?.employee?.group?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {expLoading ? (
+            <div>Yuklanmoqda...</div>
+          ) : (
+            <>
+              <div className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full ${
+                      expData?.employee?.explanationLetters?.length > i
+                        ? "bg-red-500"
+                        : "bg-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant={expActiveTab === "add" ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => setExpActiveTab("add")}
+                >
+                  Qo'shish
+                </Button>
+                <Button
+                  variant={expActiveTab === "history" ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => setExpActiveTab("history")}
+                >
+                  Tarix
+                </Button>
+              </div>
+              {expActiveTab === "add" && (
+                <div className="flex flex-col gap-3">
+                  <Input
+                    type="text"
+                    placeholder="Sabab..."
+                    value={expForm.description}
+                    onChange={(e) =>
+                      setExpForm({ ...expForm, description: e.target.value })
+                    }
+                  />
+
+                  {/* Image upload */}
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setExpForm({
+                        ...expForm,
+                        file: e.target.files?.[0] || null,
+                      })
+                    }
+                  />
+
+                  {/* Image preview */}
+                  {preview && (
+                    <div className="w-full max-w-[320px] mx-auto">
+                      <img
+                        src={preview}
+                        alt="Preview"
+                        className="w-full h-auto rounded-lg border object-contain"
+                      />
+                    </div>
+                  )}
+
+                  {/* Send button */}
+                  <Button
+                    disabled={!expForm.file || expUploading}
+                    onClick={() => {
+                      handleUploadExp(expData?.employee?.id);
+                    }}
+                  >
+                    {expUploading ? "Yuborilmoqda..." : "Yuborish"}
+                  </Button>
+                </div>
+              )}
+
+              {expActiveTab === "history" && (
+                <div className="space-y-3 max-h-[60vh] overflow-auto">
+                  {expData?.employee?.explanationLetters?.length > 0 ? (
+                    expData?.employee?.explanationLetters
+                      ?.sort((a, b) => b.id - a.id)
+                      ?.map((item, index) => (
+                        <div
+                          key={index}
+                          className="border rounded-lg p-4 bg-white hover:shadow-md transition-shadow duration-200"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              {item?.file ? (
+                                <div
+                                  className="w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-200 cursor-pointer hover:border-blue-400 transition-colors"
+                                  onClick={() => {
+                                    setSelectedImage(item?.file);
+                                    setImageDialogOpen(true);
+                                  }}
+                                >
+                                  <img
+                                    src={item?.file}
+                                    alt="Tushuntirish xati"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-16 h-16 rounded-lg bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                                  <span className="text-gray-400 text-xs">
+                                    Rasm yo'q
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1">
+                                  <p className="text-sm text-gray-900 font-medium leading-tight">
+                                    {item?.description || "Izoh yo'q"}
+                                  </p>
+                                  {item?.created_at && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {new Date(
+                                        item.created_at
+                                      ).toLocaleDateString("ru-RU", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </p>
+                                  )}
+                                </div>
+                                {item?.file && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedImage(item?.file);
+                                      setImageDialogOpen(true);
+                                    }}
+                                    className="flex-shrink-0 p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                                    title="Rasmni ko'rish"
+                                  >
+                                    <Eye size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <span className="text-gray-400 text-2xl">📄</span>
+                      </div>
+                      <p className="text-gray-500 text-sm">
+                        Hozircha tushuntirish xatlari yo'q
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
