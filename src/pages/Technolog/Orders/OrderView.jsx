@@ -285,6 +285,79 @@ const OrderView = () => {
     }
   };
 
+  const handleDownloadCategory = async (category) => {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Tarifikatsiya to'plami");
+
+      // Set column headers
+      worksheet.columns = [
+        { header: "Kod", key: "code", width: 15 },
+        { header: "Nomi", key: "name", width: 30 },
+        { header: "Xodim", key: "employee", width: 20 },
+        { header: "Razryad", key: "razryad", width: 15 },
+        { header: "Sekund", key: "second", width: 15 },
+        { header: "Summa (so'm)", key: "summa", width: 15 },
+      ];
+
+      // Style header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFE6B8" },
+      };
+
+      // Add data rows for all tarifications in the category
+      category?.tarifications
+        ?.sort((a, b) =>
+          a.code.localeCompare(b.code, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          })
+        )
+        ?.forEach((tarif) => {
+          worksheet.addRow({
+            code: tarif.code,
+            name: tarif.name,
+            employee: tarif?.employee?.name || "",
+            razryad: tarif.razryad?.name || "",
+            second: tarif.second,
+            summa: tarif.summa,
+          });
+        });
+
+      // Generate buffer
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      // Create blob and download
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${category?.name || "tarifikatsiya_to'plami"}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Tarifikatsiya to'plami yuklandi",
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Tarifikatsiya to'plamini yuklab bo'lmadi",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDownloadSpec = async (id) => {
     setSpecDownloading(true);
     try {
@@ -1378,7 +1451,17 @@ const OrderView = () => {
                   <th className="border border-gray-300 p-1">Razryad</th>
                   <th className="border border-gray-300 p-1">Sekund</th>
                   <th className="border border-gray-300 p-1">Summa (so'm)</th>
-                  <th className="border border-gray-300 p-1"></th>
+                  <th className="border border-gray-300 p-1">
+                    <Button
+                      variant="ghost"
+                      siez="icon"
+                      onClick={() => {
+                        handleDownloadCategory(selectedTarification);
+                      }}
+                    >
+                      <DownloadCloud className="text-blue-500" />
+                    </Button>
+                  </th>
                 </tr>
               </thead>
               <tbody>
