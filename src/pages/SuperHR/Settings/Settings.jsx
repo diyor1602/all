@@ -3,11 +3,19 @@ import Positions from "./Positions/Positions";
 import Deparments from "./Departments/Departments";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Blocks, HeartCrack, History, TreePalm, UserCog } from "lucide-react";
+import {
+  Blocks,
+  HeartCrack,
+  History,
+  Mailbox,
+  TreePalm,
+  UserCog,
+} from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddGroup from "./Departments/AddGroup";
 import EditGroup from "./Departments/EditGroup";
 import TodayAbsence from "../Stats/TodayAbsence";
+import ExplanationLetters from "./ExplanationLetters/ExplanationLetters";
 
 const Settings = () => {
   return (
@@ -19,6 +27,7 @@ const Settings = () => {
       <Route path="add-group" element={<AddGroup />} />
       <Route path="edit-group/:id" element={<EditGroup />} />
       <Route path="today-absence" element={<TodayAbsence />} />
+      <Route path="explanation-letters" element={<ExplanationLetters />} />
     </Routes>
   );
 };
@@ -54,6 +63,12 @@ const SettingsPage = () => {
       icon: TreePalm,
       link: "/superhr/holiday",
       color: "bg-red-500",
+    },
+    {
+      name: "Tushuntirish xatlari",
+      icon: Mailbox,
+      link: "/superhr/settings/explanation-letters",
+      color: "bg-purple-500",
     },
   ];
 
