@@ -9,11 +9,18 @@ const EmployeeTable = ({ data }, ref) => {
     (acc, employee) => {
       acc.attendance_amount += Number(employee.work_days) || 0;
       acc.total_amount += Number(employee.total_amount) || 0;
+      acc.tarification_amount += Number(employee.tarification_amount) || 0;
+      acc.monthly_salary_override +=
+        Number(employee.monthly_salary_override) || 0;
+      acc.piecework_override += Number(employee.piecework_override) || 0;
       return acc;
     },
     {
       attendance_amount: 0,
       total_amount: 0,
+      tarification_amount: 0,
+      monthly_salary_override: 0,
+      piecework_override: 0,
     }
   );
 
@@ -82,6 +89,20 @@ const EmployeeTable = ({ data }, ref) => {
               Kelgan kuni
             </th>
             <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
+              Davomat
+            </th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
+              Tarifikatsiya
+            </th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
+              Oylik
+              <br /> ustidan yozilgan
+            </th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
+              Ishbay
+              <br /> ustidan yozilgan
+            </th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
               Jami
             </th>
           </tr>
@@ -103,7 +124,18 @@ const EmployeeTable = ({ data }, ref) => {
                 <td className="border border-gray-200 px-3 py-2">
                   {employee.work_days}
                 </td>
-
+                <td className="border border-gray-200 px-3 py-2">
+                  {formatNumber(employee.attendance_amount, 0)}
+                </td>
+                <td className="border border-gray-200 px-3 py-2">
+                  {formatNumber(employee.tarification_amount, 0)}
+                </td>
+                <td className="border border-gray-200 px-3 py-2">
+                  {formatNumber(employee.monthly_salary_override, 0)}
+                </td>
+                <td className="border border-gray-200 px-3 py-2">
+                  {formatNumber(employee.piecework_override, 0)}
+                </td>
                 <td className="border border-gray-200 px-3 py-2">
                   {formatNumber(employee.total_amount, 0)}
                 </td>
@@ -117,6 +149,18 @@ const EmployeeTable = ({ data }, ref) => {
               colSpan={3}
             >
               Jami:
+            </td>
+            <td className="border border-gray-300 px-3 py-2">
+              {formatNumber(totals?.attendance_amount, 0)}
+            </td>
+            <td className="border border-gray-300 px-3 py-2">
+              {formatNumber(totals?.tarification_amount, 0)}
+            </td>
+            <td className="border border-gray-300 px-3 py-2">
+              {formatNumber(totals?.monthly_salary_override, 0)}
+            </td>
+            <td className="border border-gray-300 px-3 py-2">
+              {formatNumber(totals?.piecework_override, 0)}
             </td>
             <td className="border border-gray-300 px-3 py-2">
               {formatNumber(totals?.total_amount, 0)}
