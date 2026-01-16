@@ -238,6 +238,9 @@ const Employees = () => {
   };
 
   const handleDeleteExp = async (id) => {
+    if (!window.confirm("O'chirishni tasdiqlaysizmi?")) {
+      return;
+    }
     try {
       const res = await api.patch(`/superhr/explanationLetters/${id}`, {
         status: false,
