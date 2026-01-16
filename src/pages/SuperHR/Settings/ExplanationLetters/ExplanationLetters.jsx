@@ -149,7 +149,7 @@ const ExplanationLetters = () => {
               >
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-gray-900">
-                    Tushuntirish xati {index + 1}
+                    {letter?.created_at?.split("T")[0]}
                   </h3>
                 </div>
                 <p className="mb-3 text-sm leading-relaxed text-gray-700">
