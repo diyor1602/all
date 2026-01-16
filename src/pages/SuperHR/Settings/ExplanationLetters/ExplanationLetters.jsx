@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const ExplanationLetters = () => {
   const { toast } = useToast();
@@ -18,7 +19,6 @@ const ExplanationLetters = () => {
   const [explanationLetters, setExplanationLetters] = useState([]);
   const [filteredLetters, setFilteredLetters] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [openExplanationLetter, setOpenExplanationLetter] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,71 +66,78 @@ const ExplanationLetters = () => {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-4 py-3">
-          <h2 className="text-base font-semibold text-gray-900">
-            Tushuntirish xatlari
-          </h2>
-          <p className="text-xs text-gray-500 mt-1">
-            Hodimlar bo'yicha tushuntirish xatlari ro'yxati.
-          </p>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Nomi
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Xatlar soni
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Ko'rish
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredLetters
-                ?.sort?.(
-                  (a, b) =>
-                    b.explanation_letters.length - a.explanation_letters.length
-                )
-                ?.map((explanationLetter, index) => (
-                  <tr
-                    key={index}
-                    className="odd:bg-white even:bg-gray-50/60 hover:bg-blue-50/60 transition-colors"
-                  >
-                    <td className="px-4 py-2 text-sm font-medium text-gray-900">
-                      <Link
-                        to={`/superhr/employees/view/${explanationLetter.id}`}
-                        className="hover:text-blue-600 hover:underline"
-                      >
-                        {explanationLetter.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {explanationLetter.explanation_letters.length}
-                    </td>
-                    <td className="px-4 py-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedEmployee(explanationLetter);
-                          setOpenExplanationLetter(true);
-                        }}
-                        className="hover:bg-blue-50"
-                      >
-                        <Eye className="h-4 w-4 text-blue-500" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-100 px-4 py-3">
+            <h2 className="text-base font-semibold text-gray-900">
+              Tushuntirish xatlari
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Hodimlar bo'yicha tushuntirish xatlari ro'yxati.
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Nomi
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Xatlar soni
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Ko'rish
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredLetters
+                  ?.sort?.(
+                    (a, b) =>
+                      b.explanation_letters.length -
+                      a.explanation_letters.length
+                  )
+                  ?.map((explanationLetter, index) => (
+                    <tr
+                      key={index}
+                      className="odd:bg-white even:bg-gray-50/60 hover:bg-blue-50/60 transition-colors"
+                    >
+                      <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                        <Link
+                          to={`/superhr/employees/view/${explanationLetter.id}`}
+                          className="hover:text-blue-600 hover:underline"
+                        >
+                          {explanationLetter.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-700">
+                        {explanationLetter.explanation_letters.length}
+                      </td>
+                      <td className="px-4 py-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedEmployee(explanationLetter);
+                            setOpenExplanationLetter(true);
+                          }}
+                          className="hover:bg-blue-50"
+                        >
+                          <Eye className="h-4 w-4 text-blue-500" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
       <Dialog
         open={openExplanationLetter}
         onOpenChange={setOpenExplanationLetter}
