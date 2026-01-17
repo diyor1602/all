@@ -6,6 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Package, CheckCircle, TrendingUp, Play } from "lucide-react";
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("ru-RU", {
@@ -57,14 +61,19 @@ const Orders = () => {
   });
 
   const OrderSkeleton = () => (
-    <div className="flex flex-col gap-2 bg-white p-4 rounded-lg border shadow-sm animate-pulse">
-      {[...Array(8)].map((_, i) => (
-        <Skeleton key={i} className="h-4 w-full" />
-      ))}
-      <div className="flex flex-wrap gap-2">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-8 w-20" />
+    <div className="flex flex-col gap-3 bg-white p-5 rounded-xl border shadow-sm animate-pulse">
+      <div className="flex justify-between items-start">
+        <Skeleton className="h-5 w-16" />
+        <Skeleton className="h-6 w-20 rounded-full" />
+      </div>
+      <div className="border-b pb-3">
+        <Skeleton className="h-6 w-3/4" />
+      </div>
+      <div className="space-y-3">
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} className="h-4 w-full" />
         ))}
+        <Skeleton className="h-2 w-full" />
       </div>
     </div>
   );
@@ -97,46 +106,98 @@ const Orders = () => {
           <p className="text-muted-foreground">Buyurtmalar topilmadi</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredOrders.map((order, i) => (
-            <Link
-              to={`/qualityController/orders/${order.id}`}
-              key={i}
-              className="flex flex-col gap-3 bg-white p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start">
-                <div className="text-sm text-muted-foreground">
-                  ID: {order.id}
-                </div>
-                <div className="px-2.5 py-0.5 rounded-full text-sm bg-primary/10 text-primary">
-                  {statuses[order.status]?.text}
-                </div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredOrders.map((order, i) => {
+            const progressPercentage =
+              order.quantity > 0
+                ? (order.good_count / order.quantity) * 100
+                : 0;
+            const isCompleted = progressPercentage >= 100;
 
-              <div className="border-b pb-3">
-                <div className="text-lg font-semibold text-primary">
-                  {order.order_model?.sub_models[0]?.submodel?.name ||
-                    "No Submodel"}
+            return (
+              <div
+                key={i}
+                className="flex flex-col gap-4 bg-white p-6 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-200"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-mono text-muted-foreground">
+                      #{order.id}
+                    </span>
+                  </div>
+                  <Badge
+                    variant={isCompleted ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {statuses[order.status]?.text}
+                  </Badge>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <div className="font-medium">Nomi: {order.name}</div>
-                <div className="font-medium">
-                  Miqdori: {order.quantity} dona
+                <div className="border-b pb-3">
+                  <h3 className="text-lg font-semibold text-primary">
+                    {order.order_model?.sub_models[0]?.submodel?.name ||
+                      "No Submodel"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {order.order_model?.model?.name}
+                  </p>
                 </div>
-                <div className="font-medium">
-                  Model: {order.order_model?.model?.name}
-                </div>{" "}
-                <div className="font-medium">
-                  O'tgan: {order.good_count} dona
-                </div>{" "}
-                <div className="font-medium">
-                  Miqdori: {order.quantity} dona
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Nomi:
+                    </span>
+                    <span className="text-sm font-medium">{order.name}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Jami miqdor:
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {order.quantity} dona
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      O'tgan:
+                    </span>
+                    <span className="text-sm font-semibold text-green-600">
+                      {order.good_count} dona
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3" />
+                        Progress
+                      </span>
+                      <span className="font-medium">
+                        {progressPercentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <Progress value={progressPercentage} className="h-2" />
+                    <div className="text-xs text-muted-foreground text-center">
+                      {order.good_count} / {order.quantity} dona
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Link to={`/qualityController/orders/${order.id}`}>
+                    <Button className="w-full" size="sm">
+                      BOSHLASH
+                    </Button>
+                  </Link>
                 </div>
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
