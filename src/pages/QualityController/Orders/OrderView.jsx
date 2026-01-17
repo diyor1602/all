@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,8 +13,17 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { CheckCircle, XCircle, Loader2, ChevronDown } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+  ChevronDown,
+  Camera,
+  Upload,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 const OrderView = () => {
   const { toast } = useToast();
@@ -28,6 +37,10 @@ const OrderView = () => {
   const [minusDialogOpen, setMinusDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [description, setDescription] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
+  const [cameraStream, setCameraStream] = useState(null);
+  const [useCamera, setUseCamera] = useState(false);
+  const videoRef = useRef(null);
 
   const fetchOrder = async () => {
     try {
@@ -74,6 +87,92 @@ const OrderView = () => {
       });
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleMinus = async () => {
+    setSending(true);
+    const formData = new FormData();
+    formData.append("order_id", id);
+    formData.append("type", "fail");
+    formData.append("image", selectedImage);
+    formData.append("description", description);
+
+    try {
+      await api.post("/qualityController/qualityControl", formData);
+      setMinusDialogOpen(false);
+      toast({
+        title: "Tekshirildi",
+        duration: 1000,
+      });
+      fetchOrder();
+      // Reset form
+      setSelectedImage(null);
+      setImagePreview(null);
+      setDescription("");
+      setUseCamera(false);
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+        setCameraStream(null);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Yuborishda xatolik yuz berdi",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setCameraStream(stream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Kameraga ulanib bo'lmadi",
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(videoRef.current, 0, 0);
+      canvas.toBlob((blob) => {
+        const file = new File([blob], "camera-photo.jpg", {
+          type: "image/jpeg",
+        });
+        setSelectedImage(file);
+        setImagePreview(URL.createObjectURL(file));
+        setUseCamera(false);
+        stopCamera();
+      });
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -176,10 +275,15 @@ const OrderView = () => {
             whileTap={{ scale: 0.98 }}
             className="relative"
           >
-            <button className="w-full h-32 sm:h-40 bg-red-50 hover:bg-red-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group">
+            <button
+              onClick={() => {
+                setMinusDialogOpen(true);
+              }}
+              className="w-full h-32 sm:h-40 bg-red-50 hover:bg-red-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
+            >
               <XCircle className="w-8 h-8 text-red-500 group-hover:scale-110 transition-transform" />
               <span className="text-4xl sm:text-5xl font-bold text-red-500">
-                0
+                {order?.pending_fail_count || 0}
               </span>
               <span className="text-sm text-red-600">Yaroqsiz</span>
             </button>
@@ -212,6 +316,172 @@ const OrderView = () => {
               )}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={minusDialogOpen}
+        onOpenChange={(open) => {
+          setMinusDialogOpen(open);
+          if (!open) {
+            // Reset when dialog closes
+            setSelectedImage(null);
+            setImagePreview(null);
+            setDescription("");
+            setUseCamera(false);
+            if (cameraStream) {
+              cameraStream.getTracks().forEach((track) => track.stop());
+              setCameraStream(null);
+            }
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Mahsulot yaroqsiz ekanligini tasdiqlaysizmi?
+            </DialogTitle>
+            <DialogDescription>
+              Iltimos, yaroqsiz mahsulotning rasmini va izohini qo'shing
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            {/* Image Upload/Camera Section */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Rasm</label>
+
+              {!imagePreview && !useCamera && (
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setUseCamera(true);
+                      startCamera();
+                    }}
+                    className="flex-1"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Kameradan olish
+                  </Button>
+
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        document.getElementById("file-upload").click()
+                      }
+                      className="w-full"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Faylni tanlash
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {useCamera && (
+                <div className="space-y-2">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full rounded-lg border"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="flex-1"
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Rasmga olish
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setUseCamera(false);
+                        stopCamera();
+                      }}
+                    >
+                      Bekor qilish
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {imagePreview && (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full max-h-64 object-contain rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setSelectedImage(null);
+                      }}
+                      className="absolute top-2 right-2"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Description Section */}
+            <div className="space-y-2">
+              <label htmlFor="description" className="text-sm font-medium">
+                Izoh
+              </label>
+              <Textarea
+                id="description"
+                placeholder="Yaroqsizlik sababini tavsiflang..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMinusDialogOpen(false);
+              }}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              className="py-7"
+              disabled={sending || !selectedImage || !description.trim()}
+              onClick={handleMinus}
+            >
+              {sending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <XCircle className="mr-2" /> Yaroqsiz deb belgilash
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
