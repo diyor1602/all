@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, CheckCircle, TrendingUp, Play } from "lucide-react";
+import { Package, CheckCircle, TrendingUp } from "lucide-react";
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("ru-RU", {
@@ -45,20 +45,41 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  const filteredOrders = orders.filter((order) => {
-    const searchStr = searchQuery.toLowerCase();
-    return (
-      order.id.toString().includes(searchStr) ||
-      order.name.toLowerCase().includes(searchStr) ||
-      order.order_model?.model?.name.toLowerCase().includes(searchStr) ||
-      (order.order_model?.material?.name || "")
-        .toLowerCase()
-        .includes(searchStr) ||
-      order.order_model?.sub_models[0]?.submodel?.name
-        .toLowerCase()
-        .includes(searchStr)
-    );
-  });
+  const filteredOrders = orders
+    .filter((order) => {
+      const searchStr = searchQuery.toLowerCase();
+      return (
+        order.id.toString().includes(searchStr) ||
+        order.name.toLowerCase().includes(searchStr) ||
+        order.order_model?.model?.name.toLowerCase().includes(searchStr) ||
+        (order.order_model?.material?.name || "")
+          .toLowerCase()
+          .includes(searchStr) ||
+        order.order_model?.sub_models[0]?.submodel?.name
+          .toLowerCase()
+          .includes(searchStr)
+      );
+    })
+    .sort((a, b) => {
+      const getProgress = (order) => {
+        return order.quantity > 0
+          ? (order.good_count / order.quantity) * 100
+          : 0;
+      };
+
+      const progressA = getProgress(a);
+      const progressB = getProgress(b);
+
+      // Orders with progress > 0 and < 100 come first
+      const aInProgress = progressA > 0 && progressA < 100;
+      const bInProgress = progressB > 0 && progressB < 100;
+
+      if (aInProgress && !bInProgress) return -1;
+      if (!aInProgress && bInProgress) return 1;
+
+      // Within the same group, sort by progress (descending)
+      return progressB - progressA;
+    });
 
   const OrderSkeleton = () => (
     <div className="flex flex-col gap-3 bg-white p-5 rounded-xl border shadow-sm animate-pulse">
