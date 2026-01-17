@@ -50,7 +50,7 @@ const Orders = () => {
       (order.order_model?.material?.name || "")
         .toLowerCase()
         .includes(searchStr) ||
-      order.order_model?.submodels[0]?.submodel?.name
+      order.order_model?.sub_models[0]?.submodel?.name
         .toLowerCase()
         .includes(searchStr)
     );
@@ -115,56 +115,25 @@ const Orders = () => {
 
               <div className="border-b pb-3">
                 <div className="text-lg font-semibold text-primary">
-                  {order.order_model?.submodels[0]?.submodel?.name ||
+                  {order.order_model?.sub_models[0]?.submodel?.name ||
                     "No Submodel"}
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  Tikkan guruh: {order.order_model?.submodels[0]?.group?.name}
-                </div>
               </div>
 
               <div className="space-y-2">
-                <div className="font-medium">{order.name}</div>
-                <div className="inline-flex items-center gap-1 bg-secondary/20 px-2.5 py-1 rounded-md text-sm">
-                  <span className="text-muted-foreground">Miqdori:</span>
-                  <span className="font-medium">{order.quantity} ta</span>
+                <div className="font-medium">Nomi: {order.name}</div>
+                <div className="font-medium">
+                  Miqdori: {order.quantity} dona
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <div className="text-muted-foreground">Boshlanish</div>
-                  <div>{formatDate(order.start_date)}</div>
+                <div className="font-medium">
+                  Model: {order.order_model?.model?.name}
+                </div>{" "}
+                <div className="font-medium">
+                  O'tgan: {order.good_count} dona
+                </div>{" "}
+                <div className="font-medium">
+                  Miqdori: {order.quantity} dona
                 </div>
-                <div>
-                  <div className="text-muted-foreground">Tugash</div>
-                  <div>{formatDate(order.end_date)}</div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div>
-                  <span className="text-muted-foreground">Model:</span>{" "}
-                  {order.order_model?.model?.name}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Material:</span>{" "}
-                  {order.order_model?.material?.name || "-"}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {order.order_model?.sizes?.map((size, i) => (
-                  <div
-                    key={i}
-                    className="bg-secondary/20 px-2.5 py-1 rounded-md text-sm"
-                  >
-                    {size.size.name}{" "}
-                    <span className="text-muted-foreground">
-                      {size.quantity} ta
-                    </span>
-                  </div>
-                ))}
               </div>
             </Link>
           ))}
