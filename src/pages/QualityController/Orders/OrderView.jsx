@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   CheckCircle,
@@ -18,7 +17,6 @@ import {
   Loader2,
   ChevronDown,
   Camera,
-  Upload,
   Edit3,
   Download,
   Palette,
@@ -26,7 +24,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 
 const OrderView = () => {
   const { toast } = useToast();
@@ -43,6 +40,8 @@ const OrderView = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [cameraStream, setCameraStream] = useState(null);
   const [useCamera, setUseCamera] = useState(false);
+  const [facingMode, setFacingMode] = useState("environment");
+  const [availableCameras, setAvailableCameras] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawColor, setDrawColor] = useState("#ff0000");
@@ -73,6 +72,13 @@ const OrderView = () => {
   useEffect(() => {
     fetchOrder();
   }, []);
+
+  useEffect(() => {
+    if (minusDialogOpen) {
+      setUseCamera(true);
+      startCamera();
+    }
+  }, [minusDialogOpen]);
 
   const handlePlus = async () => {
     setSending(true);
@@ -134,9 +140,29 @@ const OrderView = () => {
     }
   };
 
+  const getAvailableCameras = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(
+        (device) => device.kind === "videoinput",
+      );
+      setAvailableCameras(videoDevices);
+    } catch (error) {
+      console.log("Error getting cameras:", error);
+    }
+  };
+
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      await getAvailableCameras();
+      const constraints = {
+        video: {
+          facingMode: facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       setCameraStream(stream);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -146,6 +172,33 @@ const OrderView = () => {
         variant: "destructive",
         title: "Xatolik",
         description: "Kameraga ulanib bo'lmadi",
+      });
+    }
+  };
+
+  const switchCamera = async () => {
+    stopCamera();
+    const newFacingMode = facingMode === "environment" ? "user" : "environment";
+    setFacingMode(newFacingMode);
+
+    try {
+      const constraints = {
+        video: {
+          facingMode: newFacingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      setCameraStream(stream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Kamerani almashtirib bo'lmadi",
       });
     }
   };
@@ -203,28 +256,43 @@ const OrderView = () => {
     setIsEditing(false);
   };
 
-  const startDrawing = (e) => {
-    setIsDrawing(true);
+  const getCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+    if (e.touches) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.touches[0].clientY - rect.top) * (canvas.height / rect.height),
+      };
+    } else {
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height),
+      };
+    }
+  };
+
+  const startDrawing = (e) => {
+    e.preventDefault();
+    setIsDrawing(true);
+    const coords = getCoordinates(e);
+    const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(coords.x, coords.y);
   };
 
   const draw = (e) => {
+    e.preventDefault();
     if (!isDrawing) return;
+    const coords = getCoordinates(e);
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
     const ctx = canvas.getContext("2d");
     ctx.strokeStyle = drawColor;
     ctx.lineWidth = brushSize;
     ctx.lineCap = "round";
-    ctx.lineTo(x, y);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
   };
 
@@ -430,7 +498,7 @@ const OrderView = () => {
               <label className="text-sm font-medium">Rasm</label>
 
               {!imagePreview && !useCamera && (
-                <div className="flex gap-2">
+                <div className="flex justify-center">
                   <Button
                     type="button"
                     variant="outline"
@@ -438,32 +506,11 @@ const OrderView = () => {
                       setUseCamera(true);
                       startCamera();
                     }}
-                    className="flex-1"
+                    className="w-full max-w-xs"
                   >
                     <Camera className="w-4 h-4 mr-2" />
                     Kameradan olish
                   </Button>
-
-                  <div className="flex-1">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        document.getElementById("file-upload").click()
-                      }
-                      className="w-full"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Faylni tanlash
-                    </Button>
-                  </div>
                 </div>
               )}
 
@@ -473,6 +520,7 @@ const OrderView = () => {
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
                     className="w-full rounded-lg border"
                   />
                   <div className="flex gap-2">
@@ -484,16 +532,15 @@ const OrderView = () => {
                       <Camera className="w-4 h-4 mr-2" />
                       Rasmga olish
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setUseCamera(false);
-                        stopCamera();
-                      }}
-                    >
-                      Bekor qilish
-                    </Button>
+                    {availableCameras.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={switchCamera}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
@@ -509,9 +556,9 @@ const OrderView = () => {
                     <div className="absolute top-2 right-2 flex gap-2">
                       <Button
                         type="button"
-                        variant="secondary"
                         size="sm"
                         onClick={startEditing}
+                        className="bg-black text-white"
                       >
                         <Edit3 className="w-4 h-4" />
                       </Button>
@@ -567,11 +614,14 @@ const OrderView = () => {
                   <div className="relative border rounded-lg overflow-hidden">
                     <canvas
                       ref={canvasRef}
-                      className="w-full max-h-64 cursor-crosshair"
+                      className="w-full max-h-64 cursor-crosshair touch-none"
                       onMouseDown={startDrawing}
                       onMouseMove={draw}
                       onMouseUp={stopDrawing}
                       onMouseLeave={stopDrawing}
+                      onTouchStart={startDrawing}
+                      onTouchMove={draw}
+                      onTouchEnd={stopDrawing}
                     />
                   </div>
                   <div className="flex gap-2">
@@ -611,11 +661,14 @@ const OrderView = () => {
             </div>
           </div>
 
-          <DialogFooter className="flex gap-2 mt-6">
+          <div className="flex flex-col gap-2 mt-6 w-full">
             <Button
               variant="outline"
               onClick={() => {
                 setMinusDialogOpen(false);
+                setDescription("");
+                setImagePreview(null);
+                setSelectedImage(null);
               }}
             >
               Bekor qilish
@@ -633,7 +686,7 @@ const OrderView = () => {
                 </>
               )}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
