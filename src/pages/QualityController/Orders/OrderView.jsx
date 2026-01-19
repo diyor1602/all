@@ -23,7 +23,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Textarea } from "@/components/ui/textarea";
 
 const OrderView = () => {
   const { toast } = useToast();
@@ -648,16 +647,32 @@ const OrderView = () => {
 
             {/* Description Section */}
             <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Izoh
-              </label>
-              <Textarea
-                id="description"
-                placeholder="Yaroqsizlik sababini tavsiflang..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={description === "Astar" ? "default" : "secondary"}
+                  onClick={() => setDescription("Astar")}
+                >
+                  Astar
+                </Button>
+                <Button
+                  variant={description === "Tana" ? "default" : "secondary"}
+                  onClick={() => setDescription("Tana")}
+                >
+                  Tana
+                </Button>
+                <Button
+                  variant={description === "Yoqa" ? "default" : "secondary"}
+                  onClick={() => setDescription("Yoqa")}
+                >
+                  Yoqa
+                </Button>
+                <Button
+                  variant={description === "Pocha" ? "default" : "secondary"}
+                  onClick={() => setDescription("Pocha")}
+                >
+                  Pocha
+                </Button>
+              </div>
             </div>
           </div>
 
