@@ -21,6 +21,13 @@ import {
   Palette,
   RotateCcw,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 
 const OrderView = () => {
@@ -34,7 +41,6 @@ const OrderView = () => {
   const [plusDialogOpen, setPlusDialogOpen] = useState(false);
   const [minusDialogOpen, setMinusDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [description, setDescription] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [cameraStream, setCameraStream] = useState(null);
   const [useCamera, setUseCamera] = useState(false);
@@ -46,6 +52,23 @@ const OrderView = () => {
   const [brushSize, setBrushSize] = useState(3);
   const canvasRef = useRef(null);
   const videoRef = useRef(null);
+  const [selectedTarifCat, setSelectedTarifCat] = useState("");
+  const [selectedTarif, setSelectedTarif] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState("");
+
+  const getAttachedEmployees = (data) => {
+    if (!Array.isArray(data)) return [];
+
+    const map = new Map();
+
+    data.forEach((item) => {
+      if (item?.employee?.id && !map.has(item.employee.id)) {
+        map.set(item.employee.id, item.employee);
+      }
+    });
+
+    return Array.from(map.values());
+  };
 
   const fetchOrder = async () => {
     try {
@@ -136,7 +159,8 @@ const OrderView = () => {
     formData.append("order_id", id);
     formData.append("type", "fail");
     formData.append("image", selectedImage);
-    formData.append("description", description);
+    formData.append("tarification_id", selectedTarif);
+    formData.append("employee_id", selectedEmployee);
 
     try {
       await api.post("/qualityController/qualityControl", formData);
@@ -149,7 +173,9 @@ const OrderView = () => {
       // Reset form
       setSelectedImage(null);
       setImagePreview(null);
-      setDescription("");
+      setSelectedTarif("");
+      setSelectedTarifCat("");
+      setSelectedEmployee("");
       setUseCamera(false);
       if (cameraStream) {
         cameraStream.getTracks().forEach((track) => track.stop());
@@ -503,7 +529,8 @@ const OrderView = () => {
             // Reset when dialog closes
             setSelectedImage(null);
             setImagePreview(null);
-            setDescription("");
+            setSelectedTarifCat("");
+            setSelectedTarif("");
             setUseCamera(false);
             if (cameraStream) {
               cameraStream.getTracks().forEach((track) => track.stop());
@@ -658,35 +685,104 @@ const OrderView = () => {
               )}
             </div>
 
-            {/* Description Section */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={description === "Astar" ? "default" : "secondary"}
-                  onClick={() => setDescription("Astar")}
-                >
-                  Astar
-                </Button>
-                <Button
-                  variant={description === "Tana" ? "default" : "secondary"}
-                  onClick={() => setDescription("Tana")}
-                >
-                  Tana
-                </Button>
-                <Button
-                  variant={description === "Yoqa" ? "default" : "secondary"}
-                  onClick={() => setDescription("Yoqa")}
-                >
-                  Yoqa
-                </Button>
-                <Button
-                  variant={description === "Pocha" ? "default" : "secondary"}
-                  onClick={() => setDescription("Pocha")}
-                >
-                  Pocha
-                </Button>
-              </div>
+            {/* Tarification Section */}
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedTarifCat}
+                onValueChange={(value) => {
+                  setSelectedTarifCat(value);
+                  setSelectedTarif("");
+                  setSelectedEmployee("");
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Kategoriyani tanlang" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[250px] overflow-y-auto">
+                  {order?.order_model?.submodels[0]?.tarification_categories?.map(
+                    (category, index) => (
+                      <SelectItem key={index} value={category.id}>
+                        <div className="break-words whitespace-normal max-w-[250px] text-left">
+                          {category.name}
+                        </div>
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+              <Select
+                value={selectedTarif}
+                onValueChange={(value) => {
+                  setSelectedTarif(value);
+                  setSelectedEmployee(""); // Reset employee when tarif changes
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Ishni tanlang" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[250px] overflow-y-auto">
+                  {order?.order_model?.submodels[0]?.tarification_categories
+                    ?.find((cat) => cat.id === selectedTarifCat)
+                    ?.tarifications?.map((work, index) => (
+                      <SelectItem key={index} value={work.id}>
+                        <div className="break-words whitespace-normal max-w-[250px] text-left">
+                          {work.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Employee Selection Section */}
+            {selectedTarif && (
+              <>
+                {(() => {
+                  const employees = getAttachedEmployees(
+                    order?.order_model?.submodels[0]?.tarification_categories
+                      ?.find((cat) => cat.id === selectedTarifCat)
+                      ?.tarifications?.find(
+                        (tarif) => tarif.id === selectedTarif,
+                      )?.tarification_logs,
+                  );
+
+                  // Auto-select if only one employee available
+                  if (employees.length === 1 && !selectedEmployee) {
+                    setSelectedEmployee(String(employees[0].id));
+                  }
+
+                  if (employees.length === 0) {
+                    return (
+                      <div className="text-gray-500 text-sm p-2 text-center bg-gray-50 rounded-lg">
+                        Bu ishni bajargan hali hech kim bajarmagan
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Select
+                      value={selectedEmployee}
+                      onValueChange={setSelectedEmployee}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Xodimni tanlang" />
+                      </SelectTrigger>
+
+                      <SelectContent className="max-h-[250px] overflow-y-auto">
+                        {employees.map((employee) => (
+                          <SelectItem
+                            key={employee.id}
+                            value={String(employee.id)}
+                          >
+                            {employee.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  );
+                })()}
+              </>
+            )}
           </div>
 
           <div className="flex flex-col gap-2 mt-6 w-full">
@@ -694,7 +790,9 @@ const OrderView = () => {
               variant="outline"
               onClick={() => {
                 setMinusDialogOpen(false);
-                setDescription("");
+                setSelectedTarifCat("");
+                setSelectedTarif("");
+                setSelectedEmployee("");
                 setImagePreview(null);
                 setSelectedImage(null);
               }}
@@ -703,7 +801,7 @@ const OrderView = () => {
             </Button>
             <Button
               className="py-7"
-              disabled={sending || !selectedImage || !description.trim()}
+              disabled={sending || !selectedImage || !selectedTarif}
               onClick={handleMinus}
             >
               {sending ? (
