@@ -11,14 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, CheckCircle, TrendingUp } from "lucide-react";
 
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString("ru-RU", {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-  });
-};
-
 const Orders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState([]);
