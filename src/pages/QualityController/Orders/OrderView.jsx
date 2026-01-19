@@ -581,7 +581,7 @@ const OrderView = () => {
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full max-h-64 object-contain rounded-lg border"
+                      className="w-full rounded-lg border"
                     />
                     <div className="absolute top-2 right-2 flex gap-2">
                       <Button
@@ -644,7 +644,7 @@ const OrderView = () => {
                   <div className="relative border rounded-lg overflow-hidden">
                     <canvas
                       ref={canvasRef}
-                      className="w-full max-h-64 cursor-crosshair touch-none"
+                      className="w-full cursor-crosshair touch-none"
                       onMouseDown={startDrawing}
                       onMouseMove={draw}
                       onMouseUp={stopDrawing}
