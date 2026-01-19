@@ -18,7 +18,6 @@ import {
   ChevronDown,
   Camera,
   Edit3,
-  Download,
   Palette,
   RotateCcw,
 } from "lucide-react";
@@ -78,6 +77,34 @@ const OrderView = () => {
       startCamera();
     }
   }, [minusDialogOpen]);
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape" && isEditing) {
+        stopEditing();
+      }
+    };
+
+    const handleClickOutside = (e) => {
+      if (
+        isEditing &&
+        canvasRef.current &&
+        !canvasRef.current.contains(e.target)
+      ) {
+        stopEditing();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isEditing]);
 
   const handlePlus = async () => {
     setSending(true);
@@ -252,7 +279,11 @@ const OrderView = () => {
   };
 
   const stopEditing = () => {
-    setIsEditing(false);
+    if (isEditing) {
+      saveEditedImage();
+    } else {
+      setIsEditing(false);
+    }
   };
 
   const getCoordinates = (e) => {
@@ -481,7 +512,7 @@ const OrderView = () => {
           }
         }}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>
               Mahsulot yaroqsiz ekanligini tasdiqlaysizmi?
@@ -623,24 +654,6 @@ const OrderView = () => {
                       onTouchEnd={stopDrawing}
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={stopEditing}
-                      className="flex-1"
-                    >
-                      Bekor qilish
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={saveEditedImage}
-                      className="flex-1"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Saqlash
-                    </Button>
-                  </div>
                 </div>
               )}
             </div>
@@ -696,9 +709,7 @@ const OrderView = () => {
               {sending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <>
-                  <XCircle className="mr-2" /> Yaroqsiz deb belgilash
-                </>
+                "Yaroqsiz deb belgilash"
               )}
             </Button>
           </div>
