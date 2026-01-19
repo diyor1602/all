@@ -28,12 +28,13 @@ import {
 import { statuses } from "@/lib/status";
 
 const isFutureTime = (timeString) => {
-  if (!timeString) return false;
-  const [hours, minutes] = timeString.split(":").map(Number);
-  const now = new Date();
-  const time = new Date();
-  time.setHours(hours, minutes, 0, 0);
-  return time > now;
+  // if (!timeString) return false;
+  // const [hours, minutes] = timeString.split(":").map(Number);
+  // const now = new Date();
+  // const time = new Date();
+  // time.setHours(hours, minutes, 0, 0);
+  // return time > now;
+  return false;
 };
 
 const getStatusVariant = (status) => {
@@ -205,7 +206,7 @@ const ResultView = () => {
             <Card
               key={group?.id}
               className={`overflow-hidden transition-all duration-300 h-fit ${getCardBackground(
-                index
+                index,
               )}`}
             >
               <CardHeader className="bg-gray-50 p-4 border-b">
@@ -217,7 +218,7 @@ const ResultView = () => {
                     Bugungi umumiy:{" "}
                     {group.orders?.reduce(
                       (sum, order) => sum + (order.todayTotalQuantity || 0),
-                      0
+                      0,
                     )}
                   </Badge>
                 </div>
@@ -266,7 +267,7 @@ const ResultView = () => {
                             <span>
                               {Math.round(
                                 (order.totalQuantity / order.orderQuantity) *
-                                  100
+                                  100,
                               ) || 0}
                               %
                             </span>
@@ -299,7 +300,7 @@ const ResultView = () => {
                                     ?.map((time) => {
                                       const output = order.sewingOutputs?.find(
                                         (output) =>
-                                          output?.time?.time === time?.time
+                                          output?.time?.time === time?.time,
                                       );
                                       const hasQuantity = output?.quantity >= 0;
                                       const isFuture = isFutureTime(time?.time);
