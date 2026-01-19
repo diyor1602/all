@@ -51,6 +51,7 @@ const OrderView = () => {
   const [drawColor, setDrawColor] = useState("#ff0000");
   const [brushSize, setBrushSize] = useState(3);
   const canvasRef = useRef(null);
+  const editorRef = useRef(null);
   const videoRef = useRef(null);
   const [selectedTarifCat, setSelectedTarifCat] = useState("");
   const [selectedTarif, setSelectedTarif] = useState("");
@@ -111,8 +112,8 @@ const OrderView = () => {
     const handleClickOutside = (e) => {
       if (
         isEditing &&
-        canvasRef.current &&
-        !canvasRef.current.contains(e.target)
+        editorRef.current &&
+        !editorRef.current.contains(e.target)
       ) {
         stopEditing();
       }
@@ -636,7 +637,7 @@ const OrderView = () => {
               )}
 
               {isEditing && (
-                <div className="space-y-2">
+                <div className="space-y-2" ref={editorRef}>
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Palette className="w-4 h-4" />
