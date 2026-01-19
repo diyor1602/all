@@ -11,7 +11,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import {
   CheckCircle,
@@ -20,6 +19,10 @@ import {
   ChevronDown,
   Camera,
   Upload,
+  Edit3,
+  Download,
+  Palette,
+  RotateCcw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +43,11 @@ const OrderView = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [cameraStream, setCameraStream] = useState(null);
   const [useCamera, setUseCamera] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawColor, setDrawColor] = useState("#ff0000");
+  const [brushSize, setBrushSize] = useState(3);
+  const canvasRef = useRef(null);
   const videoRef = useRef(null);
 
   const fetchOrder = async () => {
@@ -174,6 +182,77 @@ const OrderView = () => {
       setSelectedImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const startEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = imagePreview;
+    }, 100);
+  };
+
+  const stopEditing = () => {
+    setIsEditing(false);
+  };
+
+  const startDrawing = (e) => {
+    setIsDrawing(true);
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    const ctx = canvas.getContext("2d");
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    const ctx = canvas.getContext("2d");
+    ctx.strokeStyle = drawColor;
+    ctx.lineWidth = brushSize;
+    ctx.lineCap = "round";
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = imagePreview;
+  };
+
+  const saveEditedImage = () => {
+    const canvas = canvasRef.current;
+    canvas.toBlob((blob) => {
+      const file = new File([blob], "edited-image.jpg", {
+        type: "image/jpeg",
+      });
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+      setIsEditing(false);
+    });
   };
 
   if (isLoading) {
@@ -419,7 +498,7 @@ const OrderView = () => {
                 </div>
               )}
 
-              {imagePreview && (
+              {imagePreview && !isEditing && (
                 <div className="space-y-2">
                   <div className="relative">
                     <img
@@ -427,17 +506,90 @@ const OrderView = () => {
                       alt="Preview"
                       className="w-full max-h-64 object-contain rounded-lg border"
                     />
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={startEditing}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setImagePreview(null);
+                          setSelectedImage(null);
+                        }}
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isEditing && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Palette className="w-4 h-4" />
+                      <input
+                        type="color"
+                        value={drawColor}
+                        onChange={(e) => setDrawColor(e.target.value)}
+                        className="w-8 h-8 border rounded cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm">Qalam:</label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="20"
+                        value={brushSize}
+                        onChange={(e) => setBrushSize(e.target.value)}
+                        className="w-20"
+                      />
+                      <span className="text-sm">{brushSize}px</span>
+                    </div>
                     <Button
                       type="button"
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setSelectedImage(null);
-                      }}
-                      className="absolute top-2 right-2"
+                      onClick={clearCanvas}
                     >
-                      <XCircle className="w-4 h-4" />
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="relative border rounded-lg overflow-hidden">
+                    <canvas
+                      ref={canvasRef}
+                      className="w-full max-h-64 cursor-crosshair"
+                      onMouseDown={startDrawing}
+                      onMouseMove={draw}
+                      onMouseUp={stopDrawing}
+                      onMouseLeave={stopDrawing}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={stopEditing}
+                      className="flex-1"
+                    >
+                      Bekor qilish
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={saveEditedImage}
+                      className="flex-1"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Saqlash
                     </Button>
                   </div>
                 </div>
