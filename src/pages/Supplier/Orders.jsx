@@ -9,8 +9,9 @@ import {
   Package,
   Loader2,
   CircleCheckBig,
+  Eye,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -370,21 +371,29 @@ const Orders = () => {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end">
-                            {income?.status === "new" ? (
+                          <div className="flex justify-end items-center gap-2">
+                            {income?.status === "new" && (
                               <Button
-                                size="sm"
+                                size="icon"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleReceive(income.id);
                                 }}
                                 className="flex items-center justify-center"
                               >
-                                <CircleCheckBig />
+                                <CircleCheckBig size={20} />
                               </Button>
-                            ) : (
-                              "-"
                             )}
+                            <Button
+                              size="icon"
+                              asChild
+                              variant="outline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Link to={`/supplier/orders/${income.id}`}>
+                                <Eye size={20} className="text-blue-500" />
+                              </Link>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
