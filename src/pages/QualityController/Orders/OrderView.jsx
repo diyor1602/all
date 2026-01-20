@@ -693,7 +693,7 @@ const OrderView = () => {
                   <div className="relative border rounded-lg overflow-hidden">
                     <canvas
                       ref={canvasRef}
-                      className="w-full cursor-crosshair touch-none"
+                      className="w-full h-[50vh] object-contain cursor-crosshair touch-none"
                       onMouseDown={startDrawing}
                       onMouseMove={draw}
                       onMouseUp={stopDrawing}
