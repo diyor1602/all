@@ -9,6 +9,7 @@ const allowPaths = [
   "truck",
   "coefficient",
   "dailyPayments",
+  "damages",
 ];
 
 const isTokenValid = (tok) => {

@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { CircleDollarSign, Clapperboard, Leaf } from "lucide-react";
+import { CircleDollarSign, Clapperboard, Leaf, Glasses } from "lucide-react";
 
 const navigation = [
   { name: "Ish", href: "/tailor", icon: CircleDollarSign, onMobile: true },
@@ -8,6 +8,12 @@ const navigation = [
     name: "Qo'llanma",
     href: "/tailor/video",
     icon: Clapperboard,
+    onMobile: false,
+  },
+  {
+    name: "Braklar",
+    href: "/damages",
+    icon: Glasses,
     onMobile: true,
   },
 ];
