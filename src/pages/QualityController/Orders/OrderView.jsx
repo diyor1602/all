@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
+import { Input } from "@/components/ui/input";
 
 const OrderView = () => {
   const { toast } = useToast();
@@ -56,6 +57,7 @@ const OrderView = () => {
   const [selectedTarifCat, setSelectedTarifCat] = useState("");
   const [selectedTarif, setSelectedTarif] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [description, setDescription] = useState("");
 
   const totalQuantity = order?.quantity || 0;
   const goodCount = order?.good_count || 0;
@@ -167,6 +169,7 @@ const OrderView = () => {
     formData.append("image", selectedImage);
     formData.append("tarification_id", selectedTarif);
     formData.append("employee_id", selectedEmployee);
+    formData.append("description", description);
 
     try {
       await api.post("/qualityController/qualityControl", formData);
@@ -491,6 +494,7 @@ const OrderView = () => {
             <button
               onClick={() => {
                 setMinusDialogOpen(true);
+                setDescription("");
               }}
               className="w-full h-32 sm:h-40 bg-red-50 hover:bg-red-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
             >
@@ -568,21 +572,10 @@ const OrderView = () => {
           }
         }}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Mahsulot yaroqsiz ekanligini tasdiqlaysizmi?
-            </DialogTitle>
-            <DialogDescription>
-              Iltimos, yaroqsiz mahsulotning rasmini va izohini qo'shing
-            </DialogDescription>
-          </DialogHeader>
-
+        <DialogContent className="max-w-2xl max-h-[95vh] overflow-auto">
           <div className="space-y-4 mt-4">
             {/* Image Upload/Camera Section */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Rasm</label>
-
               {!imagePreview && !useCamera && (
                 <div className="flex justify-center">
                   <Button
@@ -607,7 +600,7 @@ const OrderView = () => {
                     autoPlay
                     playsInline
                     muted
-                    className="w-full rounded-lg border"
+                    className="w-full h-[50vh] rounded-lg border"
                   />
                   <div className="flex gap-2">
                     <Button
@@ -637,7 +630,7 @@ const OrderView = () => {
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full rounded-lg border"
+                      className="w-full h-[50vh] object-contain rounded-lg border"
                     />
                     <div className="absolute top-2 right-2 flex gap-2">
                       <Button
@@ -727,7 +720,7 @@ const OrderView = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Kategoriyani tanlang" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[250px] overflow-y-auto">
+                <SelectContent className="max-h-[300px] overflow-y-auto">
                   {order?.order_model?.submodels[0]?.tarification_categories?.map(
                     (category, index) => (
                       <SelectItem key={index} value={category.id}>
@@ -749,7 +742,7 @@ const OrderView = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Ishni tanlang" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[250px] overflow-y-auto">
+                <SelectContent className="max-h-[300px] overflow-y-auto">
                   {order?.order_model?.submodels[0]?.tarification_categories
                     ?.find((cat) => cat.id === selectedTarifCat)
                     ?.tarifications?.map((work, index) => (
@@ -812,6 +805,13 @@ const OrderView = () => {
                 })()}
               </>
             )}
+
+            <Input
+              type="text"
+              placeholder="Izoh"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
 
           <div className="flex flex-col gap-2 mt-6 w-full">
@@ -824,6 +824,7 @@ const OrderView = () => {
                 setSelectedEmployee("");
                 setImagePreview(null);
                 setSelectedImage(null);
+                setDescription("");
               }}
             >
               Bekor qilish
