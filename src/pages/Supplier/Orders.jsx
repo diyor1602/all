@@ -372,7 +372,7 @@ const Orders = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end items-center gap-2">
-                            {income?.status === "new" && (
+                            {income?.status === "new" ? (
                               <Button
                                 size="icon"
                                 onClick={(e) => {
@@ -383,17 +383,20 @@ const Orders = () => {
                               >
                                 <CircleCheckBig size={20} />
                               </Button>
+                            ) : income.status === "active" ? (
+                              <Button
+                                size="icon"
+                                asChild
+                                variant="outline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Link to={`/supplier/orders/${income.id}`}>
+                                  <Eye size={20} className="text-blue-500" />
+                                </Link>
+                              </Button>
+                            ) : (
+                              "-"
                             )}
-                            <Button
-                              size="icon"
-                              asChild
-                              variant="outline"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Link to={`/supplier/orders/${income.id}`}>
-                                <Eye size={20} className="text-blue-500" />
-                              </Link>
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
