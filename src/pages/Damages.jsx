@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const statusMap = {
   pending: { label: "Kutilmoqda", variant: "secondary" },
@@ -16,38 +15,73 @@ const statusMap = {
 const Damages = () => {
   const { toast } = useToast();
 
-  const [loading, setLoading] = useState(false);
   const [damages, setDamages] = useState([]);
 
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
 
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const getDamages = async (pageNumber = 1) => {
-    setLoading(true);
-    try {
-      const res = await api.get(`/qualityControls?page=${pageNumber}`);
+  const loadMoreRef = useRef(null);
 
-      setDamages(res.data?.data || []);
-      setPage(res.data?.current_page || 1);
-      setLastPage(res.data?.last_page || 1);
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Braklar ro'yxatini olishda xatolik",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const getDamages = useCallback(
+    async (pageNumber = 1, append = false) => {
+      if (append) {
+        setIsLoadingMore(true);
+      } else {
+        setIsInitialLoading(true);
+      }
+      try {
+        const res = await api.get(`/qualityControls?page=${pageNumber}`);
+
+        setDamages((prev) => {
+          const newData = res.data?.data || [];
+          return append ? [...prev, ...newData] : newData;
+        });
+
+        setPage(res.data?.current_page || 1);
+        setLastPage(res.data?.last_page || 1);
+      } catch (err) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik",
+          description: "Braklar ro'yxatini olishda xatolik",
+        });
+      } finally {
+        setIsInitialLoading(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [toast],
+  );
 
   useEffect(() => {
-    getDamages(page);
-  }, [page]);
+    getDamages(1, false);
+  }, [getDamages]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+    if (page >= lastPage) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && !isLoadingMore && page < lastPage) {
+        getDamages(page + 1, true);
+      }
+    });
+
+    const current = loadMoreRef.current;
+    observer.observe(current);
+
+    return () => {
+      if (current) observer.unobserve(current);
+    };
+  }, [page, lastPage, isLoadingMore, getDamages]);
+
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-6 h-6 animate-spin" />
@@ -108,31 +142,19 @@ const Damages = () => {
         })}
       </div>
 
-      {/* PAGINATION */}
-      <div className="flex items-center justify-center gap-4 mt-8">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          Oldingi
-        </Button>
-
-        <span className="text-sm text-muted-foreground">
-          {page} / {lastPage}
-        </span>
-
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= lastPage}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Keyingi
-          <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
+      {/* INFINITE SCROLL SENTINEL */}
+      <div
+        ref={loadMoreRef}
+        className="flex items-center justify-center mt-8 py-4"
+      >
+        {isLoadingMore && (
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        )}
+        {!isLoadingMore && page >= lastPage && (
+          <span className="text-xs text-muted-foreground">
+            Barcha ma'lumotlar yuklandi
+          </span>
+        )}
       </div>
 
       {/* IMAGE MODAL */}

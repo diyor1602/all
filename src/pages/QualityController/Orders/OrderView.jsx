@@ -86,7 +86,6 @@ const OrderView = () => {
 
       setOrder(orderRes.data);
     } catch (error) {
-      console.log(error);
       toast({
         variant: "destructive",
         title: "Xatolik",
@@ -207,7 +206,11 @@ const OrderView = () => {
       );
       setAvailableCameras(videoDevices);
     } catch (error) {
-      console.log("Error getting cameras:", error);
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Kameraga ulanib bo'lmadi",
+      });
     }
   };
 
