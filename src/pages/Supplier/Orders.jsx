@@ -3,7 +3,6 @@ import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
 import {
-  CirclePlus,
   Search,
   ChevronDown,
   ChevronUp,
@@ -11,7 +10,7 @@ import {
   Loader2,
   CircleCheckBig,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -69,9 +68,9 @@ const Orders = () => {
   });
   const [expandedRows, setExpandedRows] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [receiveDialogOpen, setReceiveDialogOpen] = useState(false);
+  const [receiveId, setReceiveId] = useState(null);
+  const [isReceiving, setIsReceiving] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef();
   const lastIncomeElementRef = useCallback(
@@ -85,7 +84,7 @@ const Orders = () => {
       });
       if (node) observer.current.observe(node);
     },
-    [loading, hasMore]
+    [loading, hasMore],
   );
 
   // Create a debounced version of fetchIncomes
@@ -99,7 +98,7 @@ const Orders = () => {
         }, 500); // 500ms delay
       };
     })(),
-    []
+    [],
   );
 
   const fetchIncomes = async (page = 1, filterParams = {}) => {
@@ -192,29 +191,29 @@ const Orders = () => {
     }).format(date);
   };
 
-  const handleDelete = (id) => {
-    setDeleteDialogOpen(true);
-    setDeleteId(id);
+  const handleReceive = (id) => {
+    setReceiveDialogOpen(true);
+    setReceiveId(id);
   };
 
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true);
+  const handleConfirmReceive = async () => {
+    setIsReceiving(true);
     try {
-      await api.delete(`/supplier/supplierOrders/${deleteId}`);
+      await api.get(`/supplier/receive/${receiveId}`);
       toast({
         title: "Muvaffaqiyatli",
-        description: "Buyurtma o'chirildi",
+        description: "Buyurtma qabul qilindi",
       });
-      setDeleteDialogOpen(false);
+      setReceiveDialogOpen(false);
       fetchIncomes(1, filters);
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Buyurtma o'chirishda xatolik",
+        description: "Buyurtma qabul qilishda xatolik",
         variant: "destructive",
       });
     } finally {
-      setIsDeleting(false);
+      setIsReceiving(false);
     }
   };
 
@@ -222,15 +221,6 @@ const Orders = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Buyurtmalar</h1>
-        <Button
-          asChild
-          variant="default"
-          onClick={() => navigate("/supplier/supplier/create-order/")}
-        >
-          <Link to="/supplier/settings/supplier/create-order/">
-            <CirclePlus className="h-4 w-4 mr-2" /> Yangi buyurtma
-          </Link>
-        </Button>
       </div>
 
       <Card>
@@ -386,7 +376,7 @@ const Orders = () => {
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDelete(income.id);
+                                  handleReceive(income.id);
                                 }}
                                 className="flex items-center justify-center"
                               >
@@ -478,24 +468,24 @@ const Orders = () => {
           )}
         </CardContent>
       </Card>
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog open={receiveDialogOpen} onOpenChange={setReceiveDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Buyurtmani tasdiqlash</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            {`${deleteId} - raqamli buyurtmani qabul qilishga rozimisiz?`}
+            {`${receiveId} - raqamli buyurtmani qabul qilishga rozimisiz?`}
           </DialogDescription>
           <DialogFooter>
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
+                onClick={() => setReceiveDialogOpen(false)}
               >
                 Yo'q
               </Button>
-              <Button onClick={handleConfirmDelete} disabled={isDeleting}>
-                {isDeleting ? "Tasdiqlanmoqda..." : "Tasdiqlash"}
+              <Button onClick={handleConfirmReceive} disabled={isReceiving}>
+                {isReceiving ? "Tasdiqlanmoqda..." : "Tasdiqlash"}
               </Button>
             </div>
           </DialogFooter>
