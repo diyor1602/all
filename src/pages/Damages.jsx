@@ -1,16 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
-
-const statusMap = {
-  pending: { label: "Kutilmoqda", variant: "secondary" },
-  approved: { label: "Tasdiqlangan", variant: "success" },
-  rejected: { label: "Rad etilgan", variant: "destructive" },
-};
 
 const Damages = () => {
   const { toast } = useToast();
@@ -94,8 +87,6 @@ const Damages = () => {
       {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {damages.map((item) => {
-          const status = statusMap[item.status] || statusMap.pending;
-
           return (
             <Card key={item.id} className="overflow-hidden">
               {item.image && (
@@ -112,7 +103,6 @@ const Damages = () => {
                   <h3 className="font-semibold text-sm">
                     Buyurtma: {item.order?.name}
                   </h3>
-                  <Badge variant={status.variant}>{status.label}</Badge>
                 </div>
 
                 <div className="text-sm text-muted-foreground">
