@@ -99,6 +99,10 @@ const OrderView = () => {
     }
   };
 
+  const handleAddItem = (item) => {
+    setAddedItems((prev) => [...prev, item]);
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     const formData = new FormData();
@@ -219,49 +223,65 @@ const OrderView = () => {
                 Mahsulotlar topilmadi
               </div>
             ) : (
-              searchResults?.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 hover:border-blue-300"
-                >
-                  <div className="flex items-start gap-4 flex-wrap">
-                    {item.image && (
-                      <img
-                        src={item.image}
-                        className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                        alt={item.name}
-                      />
-                    )}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {item.name}
-                      </h3>
-                      <div className="mt-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">Rangi:</span>
-                          <span className="text-sm font-medium text-gray-700">
-                            {item.color?.name || "Noma'lum"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">Lot:</span>
-                          <span className="text-sm font-medium text-gray-700">
-                            {item.lot || "Noma'lum"}
-                          </span>
+              searchResults?.map((item, index) => {
+                const isInAdded = addedItems?.find(
+                  (addedItem) => addedItem.id === item.id,
+                );
+
+                const isInDefault = order?.items?.find(
+                  (orderItem) => orderItem.item?.id === item.id,
+                );
+
+                const isAlreadyAdded = isInDefault || isInAdded;
+
+                return (
+                  <div
+                    key={index}
+                    className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 hover:border-blue-300"
+                  >
+                    <div className="flex items-start gap-4 flex-wrap">
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                          alt={item.name}
+                        />
+                      )}
+                      <div>
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {item.name}
+                        </h3>
+                        <div className="mt-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              Rangi:
+                            </span>
+                            <span className="text-sm font-medium text-gray-700">
+                              {item.color?.name || "Noma'lum"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">Lot:</span>
+                            <span className="text-sm font-medium text-gray-700">
+                              {item.lot || "Noma'lum"}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="ml-auto">
-                      <Button
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        Qo'shish
-                      </Button>
+                      <div className="ml-auto">
+                        <Button
+                          onClick={() => handleAddItem(item)}
+                          size="sm"
+                          disabled={isAlreadyAdded}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          {isAlreadyAdded ? "Qo'shilgan" : "Qo'shish"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </DialogContent>
