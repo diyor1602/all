@@ -21,13 +21,6 @@ import {
   Palette,
   RotateCcw,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 
@@ -709,51 +702,41 @@ const OrderView = () => {
 
             {/* Tarification Section */}
             <div className="flex items-center gap-2">
-              <Select
+              <select
                 value={selectedTarifCat}
-                onValueChange={(value) => {
-                  setSelectedTarifCat(value);
+                onChange={(e) => {
+                  setSelectedTarifCat(e.target.value);
                   setSelectedTarif("");
                   setSelectedEmployee("");
                 }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Kategoriyani tanlang" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto">
-                  {order?.order_model?.submodels[0]?.tarification_categories?.map(
-                    (category, index) => (
-                      <SelectItem key={index} value={category.id}>
-                        <div className="break-words whitespace-normal max-w-[250px] text-left">
-                          {category.name}
-                        </div>
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
-              <Select
+                <option value="">Kategoriyani tanlang</option>
+                {order?.order_model?.submodels[0]?.tarification_categories?.map(
+                  (category, index) => (
+                    <option key={index} value={category.id}>
+                      {category.name}
+                    </option>
+                  ),
+                )}
+              </select>
+              <select
                 value={selectedTarif}
-                onValueChange={(value) => {
-                  setSelectedTarif(value);
+                onChange={(e) => {
+                  setSelectedTarif(e.target.value);
                   setSelectedEmployee(""); // Reset employee when tarif changes
                 }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Ishni tanlang" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto">
-                  {order?.order_model?.submodels[0]?.tarification_categories
-                    ?.find((cat) => cat.id === selectedTarifCat)
-                    ?.tarifications?.map((work, index) => (
-                      <SelectItem key={index} value={work.id}>
-                        <div className="break-words whitespace-normal max-w-[250px] text-left">
-                          {work.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                <option value="">Ishni tanlang</option>
+                {order?.order_model?.submodels[0]?.tarification_categories
+                  ?.find((cat) => String(cat.id) === String(selectedTarifCat))
+                  ?.tarifications?.map((work, index) => (
+                    <option key={index} value={work.id}>
+                      {work.name}
+                    </option>
+                  ))}
+              </select>
             </div>
 
             {/* Employee Selection Section */}
@@ -762,9 +745,11 @@ const OrderView = () => {
                 {(() => {
                   const employees = getAttachedEmployees(
                     order?.order_model?.submodels[0]?.tarification_categories
-                      ?.find((cat) => cat.id === selectedTarifCat)
+                      ?.find(
+                        (cat) => String(cat.id) === String(selectedTarifCat),
+                      )
                       ?.tarifications?.find(
-                        (tarif) => tarif.id === selectedTarif,
+                        (tarif) => String(tarif.id) === String(selectedTarif),
                       )?.tarification_logs,
                   );
 
@@ -782,25 +767,18 @@ const OrderView = () => {
                   }
 
                   return (
-                    <Select
+                    <select
                       value={selectedEmployee}
-                      onValueChange={setSelectedEmployee}
+                      onChange={(e) => setSelectedEmployee(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Xodimni tanlang" />
-                      </SelectTrigger>
-
-                      <SelectContent className="max-h-[250px] overflow-y-auto">
-                        {employees.map((employee) => (
-                          <SelectItem
-                            key={employee.id}
-                            value={String(employee.id)}
-                          >
-                            {employee.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <option value="">Xodimni tanlang</option>
+                      {employees.map((employee) => (
+                        <option key={employee.id} value={String(employee.id)}>
+                          {employee.name}
+                        </option>
+                      ))}
+                    </select>
                   );
                 })()}
               </>
@@ -814,7 +792,7 @@ const OrderView = () => {
             />
           </div>
 
-          <div className="flex flex-col gap-2 mt-6 w-full">
+          <div className="flex flex-col gap-2 mt-2 w-full">
             <Button
               variant="outline"
               onClick={() => {
