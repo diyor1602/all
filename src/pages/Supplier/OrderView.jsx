@@ -224,7 +224,7 @@ const OrderView = () => {
                   key={index}
                   className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 hover:border-blue-300"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-4 flex-wrap">
                     {item.image && (
                       <img
                         src={item.image}
@@ -232,7 +232,7 @@ const OrderView = () => {
                         alt={item.name}
                       />
                     )}
-                    <div className="flex-1 min-w-0">
+                    <div>
                       <h3 className="font-semibold text-gray-900 truncate">
                         {item.name}
                       </h3>
@@ -251,7 +251,7 @@ const OrderView = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex-shrink-0">
+                    <div className="ml-auto">
                       <Button
                         size="sm"
                         className="bg-blue-600 hover:bg-blue-700 text-white"
