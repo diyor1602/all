@@ -57,6 +57,12 @@ const OrderView = () => {
   const [selectedTarif, setSelectedTarif] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
 
+  const totalQuantity = order?.quantity || 0;
+  const goodCount = order?.good_count || 0;
+  const progressPercent = totalQuantity
+    ? Math.round((goodCount / totalQuantity) * 100)
+    : 0;
+
   const getAttachedEmployees = (data) => {
     if (!Array.isArray(data)) return [];
 
@@ -494,6 +500,25 @@ const OrderView = () => {
           </motion.div>
         </div>
       </motion.div>
+
+      <div className="mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-2">
+        <div className="flex items-center justify-between text-sm text-gray-700">
+          <span className="font-medium">Jarayon holati</span>
+          <span>
+            {goodCount}/{totalQuantity} dona
+          </span>
+        </div>
+        <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+          <div
+            className="h-3 rounded-full bg-green-500 transition-all"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+        <div className="text-right text-xs text-gray-600 font-medium">
+          {progressPercent}% bajarilgan
+        </div>
+      </div>
+
       <Dialog open={plusDialogOpen} onOpenChange={setPlusDialogOpen}>
         <DialogContent>
           <DialogHeader>
