@@ -105,12 +105,32 @@ const OrderView = () => {
 
   const handleSubmit = async () => {
     setSubmitting(true);
+
+    const formattedItems = [
+      ...(order?.items || []).map((item) => ({
+        id: item.id,
+        received_quantity: item.recieved_quantity,
+        received_price: item.recieved_price,
+      })),
+      ...(addedItems || []).map((item) => ({
+        item_id: item.id,
+        received_quantity: item.recieved_quantity,
+        received_price: item.recieved_price,
+      })),
+    ].filter((item) => item.received_quantity && item.received_price);
+
     const formData = new FormData();
     formData.append("image", selectedImage);
-    formData.append("items", JSON.stringify(order?.items));
     formData.append("comment", comment);
+
+    formattedItems.forEach((item, index) => {
+      Object.entries(item).forEach(([key, value]) => {
+        formData.append(`items[${index}][${key}]`, value);
+      });
+    });
+
     try {
-      const res = await api.post(`supplier/submits/${id}`, formData);
+      await api.post(`supplier/submits/${id}`, formData);
       toast({
         title: "Muvaffaqiyatli",
         description: "Buyurtma qabul qilindi",
@@ -155,6 +175,10 @@ const OrderView = () => {
                   placeholder="Olingan miqdor"
                   min={0}
                   step={0.1}
+                  value={item.recieved_quantity}
+                  onChange={(e) => {
+                    item.recieved_quantity = e.target.value;
+                  }}
                 />
               </div>
               <div>
@@ -163,6 +187,10 @@ const OrderView = () => {
                   placeholder="Jami narxi"
                   min={0}
                   step={0.1}
+                  value={item.recieved_price}
+                  onChange={(e) => {
+                    item.recieved_price = e.target.value;
+                  }}
                 />
               </div>
               <div>Rangi: {item.item?.color?.name}</div>
@@ -170,6 +198,41 @@ const OrderView = () => {
             </div>
           ))}
         </div>
+
+        {addedItems?.length > 0 && (
+          <div className="bg-white">
+            {addedItems?.map((item, index) => {
+              return (
+                <div key={index} className="flex flex-col gap-2">
+                  <div>{item.name}</div>
+                  <div>{item.color?.name}</div>
+                  <div>{item.lot}</div>
+                  <Input
+                    type="number"
+                    placeholder="Olingan miqdor"
+                    min={0}
+                    step={0.1}
+                    value={item.recieved_quantity}
+                    onChange={(e) => {
+                      item.recieved_quantity = e.target.value;
+                    }}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Jami narxi"
+                    min={0}
+                    step={0.1}
+                    value={item.recieved_price}
+                    onChange={(e) => {
+                      item.recieved_price = e.target.value;
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <Input
           type="file"
           accept="image/*"
