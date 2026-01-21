@@ -98,6 +98,15 @@ const CreateOrder = () => {
   }, []);
 
   useEffect(() => {
+    if (suppliers.length === 1) {
+      setFormData((prev) => ({
+        ...prev,
+        supplier_id: suppliers[0].id.toString(),
+      }));
+    }
+  }, [suppliers]);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       itemRefs.current.forEach((ref, index) => {
         if (ref && !ref.contains(event.target)) {
