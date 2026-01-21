@@ -225,7 +225,17 @@ const OrderView = () => {
 
         {order.items.map((item) => (
           <div key={item.id} className="bg-white p-3 rounded space-y-2">
-            <div>{item.item?.name}</div>
+            <div>Nomi: {item?.item?.name}</div>
+            <div>Kodi:{item?.item?.code}</div>
+            <div>Rangi:{item?.item?.color?.name}</div>
+            <div>Lot: {item?.item?.lot}</div>
+            {item?.item?.image && (
+              <img
+                src={item?.item?.image}
+                alt=""
+                className="w-16 h-16 object-cover"
+              />
+            )}
             <Input
               type="number"
               placeholder="Olingan miqdor"
@@ -316,7 +326,17 @@ const OrderView = () => {
 
                 return (
                   <div key={item.id} className="border p-3 rounded">
-                    <div>{item.name}</div>
+                    <div>Nomi: {item.name}</div>
+                    <div>Kodi: {item?.code}</div>
+                    <div>Rangi:{item?.color?.name}</div>
+                    <div>Lot: {item?.lot}</div>
+                    {item.image && (
+                      <img
+                        src={item?.image}
+                        alt=""
+                        className="w-16 h-16 object-cover"
+                      />
+                    )}
                     <Button
                       size="sm"
                       disabled={alreadyAdded}
