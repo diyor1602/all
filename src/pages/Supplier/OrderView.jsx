@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -14,8 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 
-const formatDate = (dateInput) => {
-  return dateInput
+/* -------------------- utils -------------------- */
+const formatDate = (dateInput) =>
+  dateInput
     ? new Date(dateInput).toLocaleDateString("ru-RU", {
         year: "numeric",
         month: "2-digit",
@@ -24,37 +25,54 @@ const formatDate = (dateInput) => {
         minute: "2-digit",
       })
     : "-";
-};
 
+/* -------------------- component -------------------- */
 const OrderView = () => {
   const { id } = useParams();
   const { toast } = useToast();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const [selectedImage, setSelectedImage] = useState(null);
   const [comment, setComment] = useState("");
-  const [items, setItems] = useState([
-    {
-      recieved_price: "",
-      recieved_quantity: "",
-      id: "",
-    },
-  ]);
+
   const [addedItems, setAddedItems] = useState([]);
+
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+
   const debouncedSearchText = useDebounce(searchText, 500);
 
+  /* -------------------- image preview -------------------- */
+  const imagePreview = useMemo(() => {
+    if (!selectedImage) return null;
+    return URL.createObjectURL(selectedImage);
+  }, [selectedImage]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
+  /* -------------------- fetch order -------------------- */
   const getOrder = async () => {
     setLoading(true);
     try {
       const res = await api.get(`/supplier/orders/${id}`);
-      setOrder(res.data);
-    } catch (error) {
+
+      const normalizedItems = res.data.items.map((i) => ({
+        ...i,
+        received_quantity: "",
+        received_price: "",
+      }));
+
+      setOrder({ ...res.data, items: normalizedItems });
+    } catch {
       toast({
         variant: "destructive",
         title: "Xatolik",
@@ -67,75 +85,116 @@ const OrderView = () => {
 
   useEffect(() => {
     getOrder();
-  }, []);
+  }, [id]);
 
+  /* -------------------- search -------------------- */
   useEffect(() => {
-    if (debouncedSearchText.trim()) {
-      searchItem();
-    } else {
+    if (!debouncedSearchText.trim()) {
       setSearchResults([]);
+      return;
     }
+
+    const search = async () => {
+      setSearching(true);
+      try {
+        const res = await api.get("/supplier/items/search", {
+          params: { search: debouncedSearchText },
+        });
+
+        setSearchResults(res.data);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Xatolik",
+          description: "Mahsulot qidirishda xatolik",
+        });
+      } finally {
+        setSearching(false);
+      }
+    };
+
+    search();
   }, [debouncedSearchText]);
 
-  const searchItem = async () => {
-    if (!debouncedSearchText.trim()) return;
+  /* -------------------- handlers -------------------- */
+  const updateOrderItem = (itemId, field, value) => {
+    setOrder((prev) => ({
+      ...prev,
+      items: prev.items.map((i) =>
+        i.id === itemId ? { ...i, [field]: value } : i,
+      ),
+    }));
+  };
 
-    setSearching(true);
-    try {
-      const res = await api.get("/supplier/items/search", {
-        params: {
-          search: debouncedSearchText,
-        },
-      });
-      setSearchResults(res.data);
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Mahsulot qidirishda xatolik",
-      });
-    } finally {
-      setSearching(false);
-    }
+  const updateAddedItem = (itemId, field, value) => {
+    setAddedItems((prev) =>
+      prev.map((i) => (i.id === itemId ? { ...i, [field]: value } : i)),
+    );
   };
 
   const handleAddItem = (item) => {
-    setAddedItems((prev) => [...prev, item]);
+    setAddedItems((prev) => [
+      ...prev,
+      {
+        ...item,
+        received_quantity: "",
+        received_price: "",
+      },
+    ]);
   };
 
+  /* -------------------- submit -------------------- */
   const handleSubmit = async () => {
     setSubmitting(true);
 
-    const formattedItems = [
-      ...(order?.items || []).map((item) => ({
-        id: item.id,
-        received_quantity: item.recieved_quantity,
-        received_price: item.recieved_price,
+    const itemsPayload = [
+      ...order.items.map((i) => ({
+        id: i.id,
+        received_quantity: i.received_quantity,
+        received_price: i.received_price,
       })),
-      ...(addedItems || []).map((item) => ({
-        item_id: item.id,
-        received_quantity: item.recieved_quantity,
-        received_price: item.recieved_price,
+      ...addedItems.map((i) => ({
+        item_id: i.id,
+        received_quantity: i.received_quantity,
+        received_price: i.received_price,
       })),
-    ].filter((item) => item.received_quantity && item.received_price);
+    ].filter(
+      (i) => Number(i.received_quantity) > 0 && Number(i.received_price) > 0,
+    );
+
+    if (!itemsPayload.length) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Kamida bitta mahsulot to‘ldirilishi kerak",
+      });
+      setSubmitting(false);
+      return;
+    }
 
     const formData = new FormData();
-    formData.append("image", selectedImage);
+    if (selectedImage) formData.append("image", selectedImage);
     formData.append("comment", comment);
 
-    formattedItems.forEach((item, index) => {
+    itemsPayload.forEach((item, index) => {
       Object.entries(item).forEach(([key, value]) => {
         formData.append(`items[${index}][${key}]`, value);
       });
     });
 
     try {
-      await api.post(`supplier/submits/${id}`, formData);
+      await api.post(`/supplier/submits/${id}`, formData);
+
       toast({
         title: "Muvaffaqiyatli",
         description: "Buyurtma qabul qilindi",
       });
-    } catch (err) {
+
+      setAddedItems([]);
+      setComment("");
+      setSelectedImage(null);
+      getOrder();
+    } catch {
       toast({
         variant: "destructive",
         title: "Xatolik",
@@ -146,9 +205,10 @@ const OrderView = () => {
     }
   };
 
+  /* -------------------- render -------------------- */
   if (loading)
     return (
-      <div className="w-full h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center">
         <Loader2 className="animate-spin" />
       </div>
     );
@@ -158,80 +218,54 @@ const OrderView = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-2">
-        <div>ID: {order?.id}</div>
-        <div>Deadline: {formatDate(order?.deadline)}</div>
-        <div>Izoh: {order?.comment}</div>
-        <div className="flex flex-col gap-2 mt-2">
-          {order?.items?.map((item, index) => (
-            <div key={index} className="bg-white flex flex-col gap-2">
-              <div>Nomi: {item.item?.name}</div>
-              <div>
-                Miqdori: {item.quantity} {item.item?.unit?.name}
-              </div>
-              <div>
-                <Input
-                  type="number"
-                  placeholder="Olingan miqdor"
-                  min={0}
-                  step={0.1}
-                  value={item.recieved_quantity}
-                  onChange={(e) => {
-                    item.recieved_quantity = e.target.value;
-                  }}
-                />
-              </div>
-              <div>
-                <Input
-                  type="number"
-                  placeholder="Jami narxi"
-                  min={0}
-                  step={0.1}
-                  value={item.recieved_price}
-                  onChange={(e) => {
-                    item.recieved_price = e.target.value;
-                  }}
-                />
-              </div>
-              <div>Rangi: {item.item?.color?.name}</div>
-              {item?.item?.image && <img src={item?.item?.image} alt="" />}
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-col gap-3">
+        <div>ID: {order.id}</div>
+        <div>Deadline: {formatDate(order.deadline)}</div>
+        <div>Izoh: {order.comment}</div>
 
-        {addedItems?.length > 0 && (
-          <div className="bg-white">
-            {addedItems?.map((item, index) => {
-              return (
-                <div key={index} className="flex flex-col gap-2">
-                  <div>{item.name}</div>
-                  <div>{item.color?.name}</div>
-                  <div>{item.lot}</div>
-                  <Input
-                    type="number"
-                    placeholder="Olingan miqdor"
-                    min={0}
-                    step={0.1}
-                    value={item.recieved_quantity}
-                    onChange={(e) => {
-                      item.recieved_quantity = e.target.value;
-                    }}
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Jami narxi"
-                    min={0}
-                    step={0.1}
-                    value={item.recieved_price}
-                    onChange={(e) => {
-                      item.recieved_price = e.target.value;
-                    }}
-                  />
-                </div>
-              );
-            })}
+        {order.items.map((item) => (
+          <div key={item.id} className="bg-white p-3 rounded space-y-2">
+            <div>{item.item?.name}</div>
+            <Input
+              type="number"
+              placeholder="Olingan miqdor"
+              value={item.received_quantity}
+              onChange={(e) =>
+                updateOrderItem(item.id, "received_quantity", e.target.value)
+              }
+            />
+            <Input
+              type="number"
+              placeholder="Jami narxi"
+              value={item.received_price}
+              onChange={(e) =>
+                updateOrderItem(item.id, "received_price", e.target.value)
+              }
+            />
           </div>
-        )}
+        ))}
+
+        {addedItems.map((item) => (
+          <div key={item.id} className="bg-white p-3 rounded space-y-2">
+            <div>{item.name}</div>
+            <Input
+              type="number"
+              placeholder="Olingan miqdor"
+              value={item.received_quantity}
+              onChange={(e) =>
+                updateAddedItem(item.id, "received_quantity", e.target.value)
+              }
+            />
+            <Input
+              type="number"
+              placeholder="Jami narxi"
+              value={item.received_price}
+              onChange={(e) =>
+                updateAddedItem(item.id, "received_price", e.target.value)
+              }
+            />
+          </div>
+        ))}
 
         <Input
           type="file"
@@ -239,18 +273,13 @@ const OrderView = () => {
           onChange={(e) => setSelectedImage(e.target.files[0])}
         />
 
-        {selectedImage && (
-          <div>
-            <img src={URL.createObjectURL(selectedImage)} alt="" />
-          </div>
-        )}
+        {imagePreview && <img src={imagePreview} className="max-w-xs" />}
 
         <Button onClick={() => setAddDialogOpen(true)}>
           Yana mahsulot qo'shish
         </Button>
 
         <Input
-          type="text"
           placeholder="Izoh"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
@@ -260,88 +289,41 @@ const OrderView = () => {
           {submitting ? <Loader2 className="animate-spin" /> : "Yakunlash"}
         </Button>
       </div>
+
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Yangi mahsulot qo'shish</DialogTitle>
             <DialogDescription>
-              Topilgan mahsulotlar: {searchResults?.length || 0}
+              Topilgan: {searchResults.length}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-2">
-            <Input
-              type="text"
-              placeholder="Qidirish"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-3 max-h-[70vh] overflow-y-auto pr-2">
+
+          <Input
+            placeholder="Qidirish"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+
+          <div className="max-h-[60vh] overflow-y-auto space-y-2">
             {searching ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="animate-spin text-blue-600" />
-              </div>
-            ) : searchResults?.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                Mahsulotlar topilmadi
-              </div>
+              <Loader2 className="animate-spin mx-auto" />
             ) : (
-              searchResults?.map((item, index) => {
-                const isInAdded = addedItems?.find(
-                  (addedItem) => addedItem.id === item.id,
-                );
-
-                const isInDefault = order?.items?.find(
-                  (orderItem) => orderItem.item?.id === item.id,
-                );
-
-                const isAlreadyAdded = isInDefault || isInAdded;
+              searchResults.map((item) => {
+                const alreadyAdded =
+                  addedItems.some((i) => i.id === item.id) ||
+                  order.items.some((i) => i.item?.id === item.id);
 
                 return (
-                  <div
-                    key={index}
-                    className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 hover:border-blue-300"
-                  >
-                    <div className="flex items-start gap-4 flex-wrap">
-                      {item.image && (
-                        <img
-                          src={item.image}
-                          className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                          alt={item.name}
-                        />
-                      )}
-                      <div>
-                        <h3 className="font-semibold text-gray-900 truncate">
-                          {item.name}
-                        </h3>
-                        <div className="mt-1 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
-                              Rangi:
-                            </span>
-                            <span className="text-sm font-medium text-gray-700">
-                              {item.color?.name || "Noma'lum"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">Lot:</span>
-                            <span className="text-sm font-medium text-gray-700">
-                              {item.lot || "Noma'lum"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ml-auto">
-                        <Button
-                          onClick={() => handleAddItem(item)}
-                          size="sm"
-                          disabled={isAlreadyAdded}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          {isAlreadyAdded ? "Qo'shilgan" : "Qo'shish"}
-                        </Button>
-                      </div>
-                    </div>
+                  <div key={item.id} className="border p-3 rounded">
+                    <div>{item.name}</div>
+                    <Button
+                      size="sm"
+                      disabled={alreadyAdded}
+                      onClick={() => handleAddItem(item)}
+                    >
+                      {alreadyAdded ? "Qo'shilgan" : "Qo'shish"}
+                    </Button>
                   </div>
                 );
               })
