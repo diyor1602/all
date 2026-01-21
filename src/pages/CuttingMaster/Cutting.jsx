@@ -49,11 +49,18 @@ const Cutting = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/cuttingMaster/orders", {
-        params: { status: "cutting" },
-      });
-      setOrders(response.data);
-      setFilteredOrders(response.data);
+      const [cuttingResponse, activeResponse] = await Promise.all([
+        api.get("/cuttingMaster/orders", {
+          params: { status: "cutting" },
+        }),
+        api.get("/cuttingMaster/orders", {
+          params: { status: "active" },
+        }),
+      ]);
+
+      const allOrders = [...cuttingResponse.data, ...activeResponse.data];
+      setOrders(allOrders);
+      setFilteredOrders(allOrders);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -81,14 +88,14 @@ const Cutting = () => {
           .includes(search.toLowerCase()) ||
         order?.order_model?.material?.name
           .toLowerCase()
-          .includes(search.toLowerCase())
+          .includes(search.toLowerCase()),
     );
     setFilteredOrders(filtered);
   }, [search, orders]);
 
   const totalQuantity = filteredOrders?.reduce(
     (total, order) => total + Number.parseInt(order?.quantity || 0),
-    0
+    0,
   );
 
   if (loading) {
@@ -235,12 +242,6 @@ const Cutting = () => {
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {order?.start_date && (
-                              <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                {formatDate(order?.start_date)}
-                              </Badge>
-                            )}
                             <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">
                               <ShoppingBag className="h-3 w-3 mr-1" />
                               {order?.quantity} ta
@@ -308,15 +309,15 @@ const Cutting = () => {
                               const sizes = [
                                 ...new Set(
                                   order.order_model.sizes.map(
-                                    (size) => size.size?.name
-                                  )
+                                    (size) => size.size?.name,
+                                  ),
                                 ),
                               ].sort((a, b) => a.localeCompare(b));
                               const colors = [
                                 ...new Set(
                                   order.order_model.sizes.map(
-                                    (size) => size.color?.name
-                                  )
+                                    (size) => size.color?.name,
+                                  ),
                                 ),
                               ].sort((a, b) => a.localeCompare(b));
 
@@ -330,7 +331,7 @@ const Cutting = () => {
                               // Calculate row and column totals
                               const rowTotals = new Map();
                               const colTotals = new Map(
-                                colors.map((color) => [color, 0])
+                                colors.map((color) => [color, 0]),
                               );
 
                               sizes.forEach((size) => {
@@ -341,14 +342,14 @@ const Cutting = () => {
                                   total += quantity;
                                   colTotals.set(
                                     color,
-                                    (colTotals.get(color) || 0) + quantity
+                                    (colTotals.get(color) || 0) + quantity,
                                   );
                                 });
                                 rowTotals.set(size, total);
                               });
 
                               const grandTotal = Array.from(
-                                rowTotals.values()
+                                rowTotals.values(),
                               ).reduce((sum, val) => sum + val, 0);
 
                               return (
@@ -386,7 +387,7 @@ const Cutting = () => {
                                             {colors.map((color) => {
                                               const quantity =
                                                 sizeColorMap.get(
-                                                  `${size}-${color}`
+                                                  `${size}-${color}`,
                                                 ) || 0;
                                               return (
                                                 <td
@@ -469,7 +470,7 @@ const Cutting = () => {
                               <div className="text-sm font-medium">
                                 {order?.order_printing_time?.planned_time
                                   ? new Date(
-                                      order?.order_printing_time?.planned_time
+                                      order?.order_printing_time?.planned_time,
                                     ).toLocaleString("en-GB")
                                   : "Belgilanmagan"}
                               </div>
@@ -499,7 +500,7 @@ const Cutting = () => {
                               <div className="text-sm font-medium">
                                 {order?.order_printing_time?.actual_time
                                   ? new Date(
-                                      order?.order_printing_time?.actual_time
+                                      order?.order_printing_time?.actual_time,
                                     ).toLocaleString("en-GB")
                                   : "Bajarilmagan"}
                               </div>
