@@ -11,6 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 import { Plus, Trash } from "lucide-react";
 
@@ -23,6 +30,8 @@ const CreateOrder = () => {
   const [itemSearches, setItemSearches] = useState([""]);
   const [showItemResults, setShowItemResults] = useState([false]);
   const itemRefs = useRef([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     supplier_id: "",
@@ -71,7 +80,7 @@ const CreateOrder = () => {
         .map((item) => item.item_id);
 
       const filteredItems = response.data.filter(
-        (item) => !selectedItemIds.includes(item.id.toString())
+        (item) => !selectedItemIds.includes(item.id.toString()),
       );
 
       setItems(filteredItems);
@@ -146,6 +155,7 @@ const CreateOrder = () => {
         code: item.code,
         color: item.color?.name || "",
         lot: item.lot || "",
+        image: item.image || null,
       };
       return {
         ...prev,
@@ -344,9 +354,18 @@ const CreateOrder = () => {
                         >
                           <span>{item.name}</span>
                           <div className="text-sm text-muted-foreground flex items-center gap-1">
-                            <div>Kod: {item.code}</div>
-                            <div>Rang: {item.color?.name || "-"}</div>
-                            <div>Lot: {item.lot}</div>
+                            <div>
+                              <div>Kod: {item.code}</div>
+                              <div>Rang: {item.color?.name || "-"}</div>
+                              <div>Lot: {item.lot}</div>
+                            </div>
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt=""
+                                className="w-20 h-20 object-cover"
+                              />
+                            )}
                           </div>
                         </div>
                       ))}
@@ -374,6 +393,17 @@ const CreateOrder = () => {
                           {item.lot || "-"}
                         </span>
                       </div>
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          alt=""
+                          className="w-20 h-20 object-cover"
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setImgDialogOpen(true);
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 )}
@@ -419,6 +449,17 @@ const CreateOrder = () => {
           </Button>
         </div>
       </form>
+      <Dialog open={imgDialogOpen} onOpenChange={setImgDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedItem?.item_name}</DialogTitle>
+            <DialogDescription>{selectedItem?.code}</DialogDescription>
+          </DialogHeader>
+          <div className="max-w-[90vw] max-h-[90vh] overflow-auto">
+            <img src={selectedItem?.image} alt="" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
