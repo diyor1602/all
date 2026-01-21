@@ -393,7 +393,7 @@ const OrderView = () => {
                     <div className="grid grid-cols-2 gap-4 items-end">
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                          Olingan miqdor
+                          Olingan miqdor ({item.quantity})
                         </label>
                         <Input
                           type="number"
