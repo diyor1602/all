@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  Eye,
   Calendar,
   User,
   AlertCircle,
@@ -19,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -161,7 +160,9 @@ const Damages = () => {
                   <div className="space-y-2">
                     <div className="flex items-center text-sm text-slate-600">
                       <User size={14} className="mr-2 text-slate-400" />
-                      <span className="truncate">{damage?.employee?.name}</span>
+                      <span className="truncate">
+                        {damage?.employee?.name || "-"}
+                      </span>
                     </div>
                     <div className="flex items-center text-sm text-slate-600">
                       <Calendar size={14} className="mr-2 text-slate-400" />
