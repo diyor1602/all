@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Eye, Calendar, User, AlertCircle } from "lucide-react";
+import {
+  Eye,
+  Calendar,
+  User,
+  AlertCircle,
+  Search,
+  ChevronFirst,
+  ChevronLast,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 const Damages = () => {
   const { toast } = useToast();
@@ -21,12 +30,14 @@ const Damages = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDamage, setSelectedDamage] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const getDamages = async (page = 1) => {
+  const getDamages = async (page = 1, search = "") => {
     setLoading(true);
     try {
+      const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
       const res = await api.get(
-        `/internalAccountant/qualityControls?page=${page}`,
+        `/internalAccountant/qualityControls?page=${page}${searchParam}`,
       );
       setDamages(res.data?.data || []);
       setMeta(res.data); // Store the full response for pagination labels
@@ -42,8 +53,13 @@ const Damages = () => {
   };
 
   useEffect(() => {
-    getDamages(currentPage);
-  }, [currentPage]);
+    getDamages(currentPage, searchQuery);
+  }, [currentPage, searchQuery]);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -63,6 +79,19 @@ const Damages = () => {
           <p className="text-slate-500 text-sm">
             Jami: {meta?.total || 0} ta holat aniqlangan
           </p>
+        </div>
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+            size={20}
+          />
+          <Input
+            type="text"
+            placeholder="Qidirish..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className="pl-10 w-64"
+          />
         </div>
       </div>
 
@@ -131,7 +160,15 @@ const Damages = () => {
           </div>
 
           {/* Pagination Controls */}
-          <div className="mt-8 flex justify-center items-center gap-4">
+          <div className="mt-8 flex justify-center items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(1)}
+            >
+              <ChevronFirst size={16} />
+            </Button>
             <Button
               variant="outline"
               disabled={currentPage === 1}
@@ -139,7 +176,7 @@ const Damages = () => {
             >
               Oldingi
             </Button>
-            <span className="text-sm font-medium">
+            <span className="text-sm font-medium px-3">
               Sahifa {meta?.current_page} / {meta?.last_page}
             </span>
             <Button
@@ -148,6 +185,14 @@ const Damages = () => {
               onClick={() => setCurrentPage((prev) => prev + 1)}
             >
               Keyingi
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === meta?.last_page}
+              onClick={() => setCurrentPage(meta?.last_page)}
+            >
+              <ChevronLast size={16} />
             </Button>
           </div>
         </>
