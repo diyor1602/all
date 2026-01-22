@@ -9,6 +9,8 @@ import {
   Search,
   ChevronFirst,
   ChevronLast,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,13 +26,24 @@ import { Input } from "@/components/ui/input";
 const Damages = () => {
   const { toast } = useToast();
 
+  // localStorage keys
+  const STORAGE_KEYS = {
+    SEARCH_QUERY: "damages_search_query",
+    CURRENT_PAGE: "damages_current_page",
+  };
+
   const [damages, setDamages] = useState([]);
   const [meta, setMeta] = useState(null); // Stores pagination info
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_PAGE);
+    return saved ? parseInt(saved, 10) : 1;
+  });
   const [selectedDamage, setSelectedDamage] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.SEARCH_QUERY) || "";
+  });
 
   const getDamages = async (page = 1, search = "") => {
     setLoading(true);
@@ -56,9 +69,16 @@ const Damages = () => {
     getDamages(currentPage, searchQuery);
   }, [currentPage, searchQuery]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CURRENT_PAGE, currentPage.toString());
+  }, [currentPage]);
+
   const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setSearchQuery(value);
+    localStorage.setItem(STORAGE_KEYS.SEARCH_QUERY, value);
     setCurrentPage(1); // Reset to first page when searching
+    localStorage.setItem(STORAGE_KEYS.CURRENT_PAGE, "1");
   };
 
   const formatDate = (dateString) => {
@@ -90,7 +110,7 @@ const Damages = () => {
             placeholder="Qidirish..."
             value={searchQuery}
             onChange={handleSearch}
-            className="pl-10 w-64"
+            className="pl-10 w-64 bg-white"
           />
         </div>
       </div>
@@ -174,17 +194,17 @@ const Damages = () => {
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => prev - 1)}
             >
-              Oldingi
+              <ChevronLeft size={16} />
             </Button>
             <span className="text-sm font-medium px-3">
-              Sahifa {meta?.current_page} / {meta?.last_page}
+              {meta?.current_page} / {meta?.last_page}
             </span>
             <Button
               variant="outline"
               disabled={currentPage === meta?.last_page}
               onClick={() => setCurrentPage((prev) => prev + 1)}
             >
-              Keyingi
+              <ChevronRight size={16} />
             </Button>
             <Button
               variant="outline"
