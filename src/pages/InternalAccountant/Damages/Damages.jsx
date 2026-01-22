@@ -78,6 +78,21 @@ const Damages = () => {
     localStorage.setItem(STORAGE_KEYS.SEARCH_QUERY, debouncedSearchQuery);
   }, [debouncedSearchQuery]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!dialogOpen || !selectedDamage) return;
+
+      if (e.key === "ArrowLeft") {
+        handlePreviousDamage();
+      } else if (e.key === "ArrowRight") {
+        handleNextDamage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dialogOpen, selectedDamage, damages]);
+
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
@@ -92,6 +107,20 @@ const Damages = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handlePreviousDamage = () => {
+    const currentIndex = damages.findIndex((d) => d.id === selectedDamage?.id);
+    if (currentIndex > 0) {
+      setSelectedDamage(damages[currentIndex - 1]);
+    }
+  };
+
+  const handleNextDamage = () => {
+    const currentIndex = damages.findIndex((d) => d.id === selectedDamage?.id);
+    if (currentIndex < damages.length - 1) {
+      setSelectedDamage(damages[currentIndex + 1]);
+    }
   };
 
   return (
@@ -214,64 +243,95 @@ const Damages = () => {
               <ChevronLast size={16} />
             </Button>
           </div>
+
+          {/* Detail Dialog */}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Zarar Tafsilotlari</DialogTitle>
+              </DialogHeader>
+              {selectedDamage && (
+                <div className="relative">
+                  {/* Left Navigation Button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
+                    onClick={handlePreviousDamage}
+                    disabled={
+                      damages.findIndex((d) => d.id === selectedDamage.id) === 0
+                    }
+                  >
+                    <ChevronLeft size={20} />
+                  </Button>
+
+                  {/* Right Navigation Button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
+                    onClick={handleNextDamage}
+                    disabled={
+                      damages.findIndex((d) => d.id === selectedDamage.id) ===
+                      damages.length - 1
+                    }
+                  >
+                    <ChevronRight size={20} />
+                  </Button>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 px-8 ml-1">
+                    <div className="rounded-lg overflow-hidden border">
+                      <img
+                        src={selectedDamage.image}
+                        className="w-full h-auto object-contain bg-black"
+                        alt="Detail"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
+                          Buyurtma
+                        </label>
+                        <p className="font-medium text-slate-800">
+                          {selectedDamage.order?.name}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
+                          Xato qilgan xodim
+                        </label>
+                        <p className="flex items-center text-red-600 font-semibold">
+                          <AlertCircle size={16} className="mr-2" />
+                          {selectedDamage.employee?.name}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
+                          Ish turi
+                        </label>
+                        <p className="text-slate-700">
+                          {selectedDamage.tarification?.name} (
+                          {selectedDamage.tarification?.code})
+                        </p>
+                      </div>
+                      <div className="bg-slate-100 p-3 rounded-md italic text-slate-600">
+                        "{selectedDamage.description || "Izoh qoldirilmagan"}"
+                      </div>
+                      <hr />
+                      <div className="text-xs text-slate-500">
+                        <p>
+                          Tekshirdi: {selectedDamage.created_by?.employee?.name}
+                        </p>
+                        <p>Sana: {formatDate(selectedDamage.created_at)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </>
       )}
-
-      {/* Detail Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Zarar Tafsilotlari</DialogTitle>
-          </DialogHeader>
-          {selectedDamage && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <div className="rounded-lg overflow-hidden border">
-                <img
-                  src={selectedDamage.image}
-                  className="w-full h-auto object-contain bg-black"
-                  alt="Detail"
-                />
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
-                    Buyurtma
-                  </label>
-                  <p className="font-medium text-slate-800">
-                    {selectedDamage.order?.name}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
-                    Xato qilgan xodim
-                  </label>
-                  <p className="flex items-center text-red-600 font-semibold">
-                    <AlertCircle size={16} className="mr-2" />
-                    {selectedDamage.employee?.name}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
-                    Ish turi
-                  </label>
-                  <p className="text-slate-700">
-                    {selectedDamage.tarification?.name} (
-                    {selectedDamage.tarification?.code})
-                  </p>
-                </div>
-                <div className="bg-slate-100 p-3 rounded-md italic text-slate-600">
-                  "{selectedDamage.description || "Izoh qoldirilmagan"}"
-                </div>
-                <hr />
-                <div className="text-xs text-slate-500">
-                  <p>Tekshirdi: {selectedDamage.created_by?.employee?.name}</p>
-                  <p>Sana: {formatDate(selectedDamage.created_at)}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
