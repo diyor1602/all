@@ -195,9 +195,7 @@ const Damages = () => {
                     </div>
                     <div className="flex items-center text-sm text-slate-600">
                       <Calendar size={14} className="mr-2 text-slate-400" />
-                      <span>
-                        {formatDate(damage?.created_at).split(",")[0]}
-                      </span>
+                      <span>{formatDate(damage?.created_at)}</span>
                     </div>
                   </div>
                 </CardContent>
