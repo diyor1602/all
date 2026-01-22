@@ -134,7 +134,11 @@ const Damages = () => {
             {damages.map((damage) => (
               <Card
                 key={damage.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow border-none shadow-sm"
+                className="overflow-hidden hover:shadow-lg transition-shadow border-none shadow-sm cursor-pointer"
+                onClick={() => {
+                  setSelectedDamage(damage);
+                  setDialogOpen(true);
+                }}
               >
                 <div className="relative h-40 bg-slate-200">
                   <img
@@ -148,7 +152,8 @@ const Damages = () => {
                 </div>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg truncate">
-                    {damage?.order?.id} - {damage?.order?.name}
+                    <span className="text-gray-500">#{damage?.order?.id}</span>{" "}
+                    - {damage?.order?.name}
                   </h3>
                   <p className="text-xs text-slate-500 mb-3 truncate">
                     {damage?.order?.order_model?.sub_models[0]?.submodel?.name}
@@ -166,19 +171,6 @@ const Damages = () => {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="p-4 pt-0">
-                  <Button
-                    variant="outline"
-                    className="w-full group"
-                    onClick={() => {
-                      setSelectedDamage(damage);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <Eye size={16} className="mr-2 group-hover:text-blue-500" />
-                    Batafsil
-                  </Button>
-                </CardFooter>
               </Card>
             ))}
           </div>
@@ -187,7 +179,7 @@ const Damages = () => {
           <div className="mt-8 flex justify-center items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(1)}
             >
@@ -195,6 +187,7 @@ const Damages = () => {
             </Button>
             <Button
               variant="outline"
+              size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => prev - 1)}
             >
@@ -205,6 +198,7 @@ const Damages = () => {
             </span>
             <Button
               variant="outline"
+              size="icon"
               disabled={currentPage === meta?.last_page}
               onClick={() => setCurrentPage((prev) => prev + 1)}
             >
@@ -212,7 +206,7 @@ const Damages = () => {
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               disabled={currentPage === meta?.last_page}
               onClick={() => setCurrentPage(meta?.last_page)}
             >
