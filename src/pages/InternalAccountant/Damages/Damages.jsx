@@ -284,10 +284,10 @@ const Damages = () => {
                   </Button>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 px-4 sm:px-8 sm:ml-1">
-                    <div className="rounded-lg overflow-hidden border">
+                    <div className="rounded-lg overflow-hidden">
                       <img
                         src={selectedDamage.image}
-                        className="w-full h-auto max-h-[60vh] object-contain bg-black"
+                        className="w-full h-auto max-h-[60vh] object-contain"
                         alt="Detail"
                       />
                     </div>
