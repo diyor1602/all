@@ -11,6 +11,7 @@ import {
   Siren,
   TreePalm,
   Lock,
+  Fan,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 import Nakladnoy from "./Nakladnoy";
@@ -86,6 +87,12 @@ const SettingsPage = () => {
       icon: Lock,
       link: "/internalAccountant/settings/salaryOrders",
       color: "bg-black",
+    },
+    {
+      name: "Braklar",
+      icon: Fan,
+      link: "/internalAccountant/damages",
+      color: "bg-yellow-500",
     },
   ];
 
