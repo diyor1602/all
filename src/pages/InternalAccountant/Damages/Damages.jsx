@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const Damages = () => {
   const { toast } = useToast();
@@ -44,6 +45,7 @@ const Damages = () => {
   const [searchQuery, setSearchQuery] = useState(() => {
     return localStorage.getItem(STORAGE_KEYS.SEARCH_QUERY) || "";
   });
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
 
   const getDamages = async (page = 1, search = "") => {
     setLoading(true);
@@ -66,19 +68,21 @@ const Damages = () => {
   };
 
   useEffect(() => {
-    getDamages(currentPage, searchQuery);
-  }, [currentPage, searchQuery]);
+    getDamages(currentPage, debouncedSearchQuery);
+  }, [currentPage, debouncedSearchQuery]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CURRENT_PAGE, currentPage.toString());
   }, [currentPage]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SEARCH_QUERY, debouncedSearchQuery);
+  }, [debouncedSearchQuery]);
+
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    localStorage.setItem(STORAGE_KEYS.SEARCH_QUERY, value);
     setCurrentPage(1); // Reset to first page when searching
-    localStorage.setItem(STORAGE_KEYS.CURRENT_PAGE, "1");
   };
 
   const formatDate = (dateString) => {
