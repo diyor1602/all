@@ -125,14 +125,14 @@ const Damages = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Sifat Nazorati</h1>
           <p className="text-slate-500 text-sm">
             Jami: {meta?.total || 0} ta holat aniqlangan
           </p>
         </div>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
             size={20}
@@ -142,7 +142,7 @@ const Damages = () => {
             placeholder="Qidirish..."
             value={searchQuery}
             onChange={handleSearch}
-            className="pl-10 w-64 bg-white"
+            className="pl-10 w-full sm:w-64 bg-white"
           />
         </div>
       </div>
@@ -206,12 +206,13 @@ const Damages = () => {
           </div>
 
           {/* Pagination Controls */}
-          <div className="mt-8 flex justify-center items-center gap-2">
+          <div className="mt-8 flex flex-wrap justify-center items-center gap-2">
             <Button
               variant="outline"
               size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(1)}
+              className="flex-shrink-0"
             >
               <ChevronFirst size={16} />
             </Button>
@@ -220,10 +221,11 @@ const Damages = () => {
               size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => prev - 1)}
+              className="flex-shrink-0"
             >
               <ChevronLeft size={16} />
             </Button>
-            <span className="text-sm font-medium px-3">
+            <span className="text-sm font-medium px-3 py-1 bg-white rounded border min-w-[60px] text-center">
               {meta?.current_page} / {meta?.last_page}
             </span>
             <Button
@@ -231,6 +233,7 @@ const Damages = () => {
               size="icon"
               disabled={currentPage === meta?.last_page}
               onClick={() => setCurrentPage((prev) => prev + 1)}
+              className="flex-shrink-0"
             >
               <ChevronRight size={16} />
             </Button>
@@ -239,6 +242,7 @@ const Damages = () => {
               size="icon"
               disabled={currentPage === meta?.last_page}
               onClick={() => setCurrentPage(meta?.last_page)}
+              className="flex-shrink-0"
             >
               <ChevronLast size={16} />
             </Button>
@@ -246,9 +250,11 @@ const Damages = () => {
 
           {/* Detail Dialog */}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Zarar Tafsilotlari</DialogTitle>
+                <DialogTitle className="text-lg">
+                  Zarar Tafsilotlari
+                </DialogTitle>
               </DialogHeader>
               {selectedDamage && (
                 <div className="relative">
@@ -256,7 +262,7 @@ const Damages = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50 sm:left-0"
                     onClick={handlePreviousDamage}
                     disabled={
                       damages.findIndex((d) => d.id === selectedDamage.id) === 0
@@ -269,7 +275,7 @@ const Damages = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50 sm:right-0"
                     onClick={handleNextDamage}
                     disabled={
                       damages.findIndex((d) => d.id === selectedDamage.id) ===
@@ -279,20 +285,20 @@ const Damages = () => {
                     <ChevronRight size={20} />
                   </Button>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 px-8 ml-1">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 px-4 sm:px-8 sm:ml-1">
                     <div className="rounded-lg overflow-hidden border">
                       <img
                         src={selectedDamage.image}
-                        className="w-full h-auto object-contain bg-black"
+                        className="w-full h-auto max-h-[60vh] object-contain bg-black"
                         alt="Detail"
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div>
                         <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
                           Buyurtma
                         </label>
-                        <p className="font-medium text-slate-800">
+                        <p className="font-medium text-slate-800 break-words">
                           {selectedDamage.order?.name}
                         </p>
                       </div>
@@ -301,15 +307,20 @@ const Damages = () => {
                           Xato qilgan xodim
                         </label>
                         <p className="flex items-center text-red-600 font-semibold">
-                          <AlertCircle size={16} className="mr-2" />
-                          {selectedDamage.employee?.name}
+                          <AlertCircle
+                            size={16}
+                            className="mr-2 flex-shrink-0"
+                          />
+                          <span className="break-words">
+                            {selectedDamage.employee?.name}
+                          </span>
                         </p>
                       </div>
                       <div>
                         <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
                           Ish turi
                         </label>
-                        <p className="text-slate-700">
+                        <p className="text-slate-700 break-words">
                           {selectedDamage.tarification?.name} (
                           {selectedDamage.tarification?.code})
                         </p>
@@ -318,8 +329,8 @@ const Damages = () => {
                         "{selectedDamage.description || "Izoh qoldirilmagan"}"
                       </div>
                       <hr />
-                      <div className="text-xs text-slate-500">
-                        <p>
+                      <div className="text-xs text-slate-500 space-y-1">
+                        <p className="break-words">
                           Tekshirdi: {selectedDamage.created_by?.employee?.name}
                         </p>
                         <p>Sana: {formatDate(selectedDamage.created_at)}</p>
