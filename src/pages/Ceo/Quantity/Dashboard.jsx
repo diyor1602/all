@@ -31,20 +31,20 @@ const calculateTotalExpenses = (order, future) => {
   return future
     ? order?.planned_costs?.department?.details?.reduce(
         (total, cost) => total + cost?.planned_cost,
-        0
+        0,
       ) +
         order?.planned_costs?.expenses?.details?.reduce(
           (total, cost) => total + cost?.planned_cost,
-          0
+          0,
         ) +
         parseFloat(order?.rasxod) * parseFloat(order?.order?.quantity)
     : order?.department_real_costs?.reduce(
         (total, cost) => total + cost?.cost,
-        0
+        0,
       ) +
         order?.expenses_real_costs?.reduce(
           (total, cost) => total + cost?.real_cost,
-          0
+          0,
         ) +
         parseFloat(order?.rasxod) * parseFloat(order?.produced_quantity);
 };
@@ -84,10 +84,10 @@ const Dashboard = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isNew, setIsNew] = useState(false);
   const [searchQuery, setSearchQuery] = useState(
-    localStorage.getItem("qSearchQuery") || ""
+    localStorage.getItem("qSearchQuery") || "",
   );
   const [dollarRate, setDollarRate] = useState(
-    localStorage.getItem("dollarRate") || 0
+    localStorage.getItem("dollarRate") || 0,
   );
   const [visiblePrice, setVisiblePrice] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
@@ -132,7 +132,7 @@ const Dashboard = () => {
     const fetchDollarRate = async () => {
       try {
         const response = await axios.get(
-          "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
+          "https://cbu.uz/uz/arkhiv-kursov-valyut/json/",
         );
         setDollarRate(response.data?.find((item) => item.Ccy === "USD")?.Rate);
       } catch (error) {
@@ -207,6 +207,7 @@ const Dashboard = () => {
           type: budgetType,
           quantity: budgetQuantity,
           department_id: selectedDepartmentToEdit?.id,
+          month: selectedMonth,
         });
       } else {
         await api.patch(
@@ -214,7 +215,7 @@ const Dashboard = () => {
           {
             type: budgetType,
             quantity: budgetQuantity,
-          }
+          },
         );
       }
 
@@ -248,12 +249,12 @@ const Dashboard = () => {
       setData(response.data);
       // collect all expense_costs into one array
       const allExpenses = response.data.flatMap(
-        (item) => item.expenses_real_costs || []
+        (item) => item.expenses_real_costs || [],
       );
 
       // remove duplicates by expense_id
       const uniqueExpenses = Array.from(
-        new Map(allExpenses.map((exp) => [exp.id, exp])).values()
+        new Map(allExpenses.map((exp) => [exp.id, exp])).values(),
       );
       setExpensesCosts(uniqueExpenses);
     } catch (error) {
@@ -303,7 +304,7 @@ const Dashboard = () => {
           .includes(query) ||
         order?.order?.order_model?.submodels
           ?.map((submodel) =>
-            submodel?.group?.group?.responsible_user?.employee?.name?.toLowerCase()
+            submodel?.group?.group?.responsible_user?.employee?.name?.toLowerCase(),
           )
           .join(", ")
           .includes(query)
@@ -313,17 +314,17 @@ const Dashboard = () => {
 
   const totalExpenses = filteredData?.reduce(
     (sum, o) => sum + calculateTotalExpenses(o, true),
-    0
+    0,
   );
 
   const totalQuantity = filteredData?.reduce(
     (sum, o) => sum + o?.order?.quantity,
-    0
+    0,
   );
 
   const totalRevenue = filteredData?.reduce(
     (sum, o) => sum + calculateTotalPrice(o, dollarRate, true),
-    0
+    0,
   );
 
   const totalProfit = totalRevenue - totalExpenses;
@@ -473,8 +474,8 @@ const Dashboard = () => {
                   (department) =>
                     departmentsWithBudgets?.find(
                       (budget) =>
-                        budget?.budget?.department_id === department?.id
-                    )?.budget?.quantity > 0
+                        budget?.budget?.department_id === department?.id,
+                    )?.budget?.quantity > 0,
                 )
                 ?.map((department) => (
                   <th
@@ -530,7 +531,7 @@ const Dashboard = () => {
                         ?.map(
                           (submodel) =>
                             submodel?.group?.group?.responsible_user?.employee
-                              ?.name
+                              ?.name,
                         )
                         .join(", ")}
                     </div>
@@ -566,7 +567,7 @@ const Dashboard = () => {
                       >
                         {formatNumber(
                           (order?.rasxod * 100) /
-                            (order?.order?.price * dollarRate)
+                            (order?.order?.price * dollarRate),
                         )}
                         %
                       </div>
@@ -596,7 +597,7 @@ const Dashboard = () => {
                       <div>
                         {formatNumber(
                           parseFloat(order?.rasxod) *
-                            parseFloat(order?.order?.quantity)
+                            parseFloat(order?.order?.quantity),
                         )}
                       </div>
                     </div>
@@ -606,23 +607,23 @@ const Dashboard = () => {
                       (department) =>
                         departmentsWithBudgets?.find(
                           (budget) =>
-                            budget?.budget?.department_id === department?.id
-                        )?.budget?.quantity > 0
+                            budget?.budget?.department_id === department?.id,
+                        )?.budget?.quantity > 0,
                     )
                     ?.map((department) => {
                       const realCost =
                         order?.department_real_costs?.find(
-                          (cost) => cost?.id === department?.id
+                          (cost) => cost?.id === department?.id,
                         )?.cost || 0;
 
                       const plannedCost =
                         order?.planned_costs?.department?.details?.find(
-                          (cost) => cost?.id === department?.id
+                          (cost) => cost?.id === department?.id,
                         )?.planned_cost || 1;
 
                       const percent = Math.min(
                         (realCost / plannedCost) * 100,
-                        100
+                        100,
                       ); // prevent overflow
 
                       return (
@@ -636,8 +637,8 @@ const Dashboard = () => {
                               percent < 50
                                 ? "bg-red-200"
                                 : percent < 80
-                                ? "bg-yellow-200"
-                                : "bg-green-200"
+                                  ? "bg-yellow-200"
+                                  : "bg-green-200"
                             }`}
                             style={{ width: `${percent}%` }}
                           ></div>
@@ -663,7 +664,7 @@ const Dashboard = () => {
                             <div className="text-gray-700 font-medium">
                               {formatNumber(
                                 (plannedCost * 100) /
-                                  calculateTotalExpenses(order, true)
+                                  calculateTotalExpenses(order, true),
                               )}
                               %
                             </div>
@@ -674,17 +675,17 @@ const Dashboard = () => {
                   {expensesCosts?.map((expense) => {
                     const realCost =
                       order?.expenses_real_costs?.find(
-                        (cost) => cost.id === expense.id
+                        (cost) => cost.id === expense.id,
                       )?.real_cost || 0;
 
                     const plannedCost =
                       order?.planned_costs?.expenses?.details?.find(
-                        (cost) => cost.id === expense.id
+                        (cost) => cost.id === expense.id,
                       )?.planned_cost || 1;
 
                     const percent = Math.min(
                       (realCost / plannedCost) * 100,
-                      100
+                      100,
                     );
 
                     return (
@@ -698,8 +699,8 @@ const Dashboard = () => {
                             percent < 50
                               ? "bg-red-200"
                               : percent < 80
-                              ? "bg-yellow-200"
-                              : "bg-green-200"
+                                ? "bg-yellow-200"
+                                : "bg-green-200"
                           }`}
                           style={{ width: `${percent}%` }}
                         ></div>
@@ -722,13 +723,13 @@ const Dashboard = () => {
                               percent < 50
                                 ? "text-red-600"
                                 : percent < 80
-                                ? "text-yellow-700"
-                                : "text-green-700"
+                                  ? "text-yellow-700"
+                                  : "text-green-700"
                             }`}
                           >
                             {formatNumber(
                               (plannedCost * 100) /
-                                calculateTotalExpenses(order, true)
+                                calculateTotalExpenses(order, true),
                             )}
                             %
                           </div>
@@ -743,7 +744,7 @@ const Dashboard = () => {
                           const total = order?.order?.quantity || 1;
                           const percent = Math.min(
                             (produced / total) * 100,
-                            100
+                            100,
                           );
 
                           return (
@@ -754,8 +755,8 @@ const Dashboard = () => {
                                   percent < 50
                                     ? "bg-red-200"
                                     : percent < 80
-                                    ? "bg-yellow-200"
-                                    : "bg-green-200"
+                                      ? "bg-yellow-200"
+                                      : "bg-green-200"
                                 }`}
                                 style={{ width: `${percent}%` }}
                               ></div>
@@ -767,13 +768,17 @@ const Dashboard = () => {
                                     calculateTotalPrice(
                                       order,
                                       dollarRate,
-                                      false
-                                    )
+                                      false,
+                                    ),
                                   )}
                                 </div>
                                 <div className="text-gray-600">
                                   {formatNumber(
-                                    calculateTotalPrice(order, dollarRate, true)
+                                    calculateTotalPrice(
+                                      order,
+                                      dollarRate,
+                                      true,
+                                    ),
                                   )}
                                 </div>
                                 <div
@@ -781,8 +786,8 @@ const Dashboard = () => {
                                     percent < 50
                                       ? "text-red-600"
                                       : percent < 80
-                                      ? "text-yellow-700"
-                                      : "text-green-700"
+                                        ? "text-yellow-700"
+                                        : "text-green-700"
                                   }`}
                                 >
                                   {percent.toFixed(1)}%
@@ -807,7 +812,7 @@ const Dashboard = () => {
                           {formatNumber(
                             (calculateTotalExpenses(order, false) /
                               calculateTotalExpenses(order, true)) *
-                              100
+                              100,
                           )}
                         </div>
                       </div>
@@ -826,7 +831,7 @@ const Dashboard = () => {
                           }
                         >
                           {formatNumber(
-                            calculateProfit(order, dollarRate, false)
+                            calculateProfit(order, dollarRate, false),
                           )}
                         </div>
                         <div
@@ -837,7 +842,7 @@ const Dashboard = () => {
                           }
                         >
                           {formatNumber(
-                            calculateProfit(order, dollarRate, true)
+                            calculateProfit(order, dollarRate, true),
                           )}
                         </div>
                       </div>
@@ -858,7 +863,7 @@ const Dashboard = () => {
                           {formatNumber(
                             (calculateProfit(order, dollarRate, false) /
                               calculateTotalPrice(order, dollarRate, false)) *
-                              100
+                              100,
                           )}
                         </div>
                         <div
@@ -871,7 +876,7 @@ const Dashboard = () => {
                           {formatNumber(
                             (calculateProfit(order, dollarRate, true) /
                               calculateTotalPrice(order, dollarRate, true)) *
-                              100
+                              100,
                           )}
                         </div>
                       </div>
@@ -900,8 +905,8 @@ const Dashboard = () => {
                       {formatNumber(
                         filteredData?.reduce(
                           (sum, o) => sum + (o?.order?.price || 0),
-                          0
-                        )
+                          0,
+                        ),
                       )}{" "}
                       $
                     </div>
@@ -909,8 +914,8 @@ const Dashboard = () => {
                       {formatNumber(
                         filteredData?.reduce(
                           (sum, o) => sum + (o?.order?.price || 0),
-                          0
-                        ) * dollarRate
+                          0,
+                        ) * dollarRate,
                       )}{" "}
                       so'm
                     </div>
@@ -925,8 +930,8 @@ const Dashboard = () => {
                 {formatNumber(
                   filteredData?.reduce(
                     (sum, o) => sum + Number(o?.model?.minute || 0),
-                    0
-                  )
+                    0,
+                  ),
                 )}
               </td>
 
@@ -937,20 +942,20 @@ const Dashboard = () => {
                     {formatNumber(
                       filteredData?.reduce(
                         (sum, o) => sum + Number(o?.rasxod || 0),
-                        0
-                      )
+                        0,
+                      ),
                     )}
                   </div>
                   <div
                     className={
                       (filteredData?.reduce(
                         (sum, o) => sum + Number(o?.rasxod || 0),
-                        0
+                        0,
                       ) *
                         100) /
                         (filteredData?.reduce(
                           (sum, o) => sum + Number(o?.order?.price || 0),
-                          0
+                          0,
                         ) *
                           dollarRate) >
                       33
@@ -961,14 +966,14 @@ const Dashboard = () => {
                     {formatNumber(
                       (filteredData?.reduce(
                         (sum, o) => sum + Number(o?.rasxod || 0),
-                        0
+                        0,
                       ) *
                         100) /
                         (filteredData?.reduce(
                           (sum, o) => sum + Number(o?.order?.price || 0),
-                          0
+                          0,
                         ) *
-                          dollarRate)
+                          dollarRate),
                     )}
                     %
                   </div>
@@ -976,12 +981,12 @@ const Dashboard = () => {
                     {formatNumber(
                       filteredData?.reduce(
                         (sum, o) => sum + Number(o?.rasxod || 0),
-                        0
+                        0,
                       ) /
                         filteredData?.reduce(
                           (sum, o) => sum + Number(o?.model?.minute || 0),
-                          0
-                        )
+                          0,
+                        ),
                     )}
                   </div>
                 </div>
@@ -994,15 +999,15 @@ const Dashboard = () => {
                     {formatNumber(
                       filteredData?.reduce(
                         (sum, o) => sum + Number(o?.produced_quantity || 0),
-                        0
-                      )
+                        0,
+                      ),
                     )}{" "}
                     /{" "}
                     {formatNumber(
                       filteredData?.reduce(
                         (sum, o) => sum + Number(o?.order?.quantity || 0),
-                        0
-                      )
+                        0,
+                      ),
                     )}
                   </div>
                   <div>
@@ -1012,10 +1017,10 @@ const Dashboard = () => {
                           sum +
                           Number(
                             parseFloat(o?.rasxod) *
-                              parseFloat(o?.order?.quantity)
+                              parseFloat(o?.order?.quantity),
                           ),
-                        0
-                      )
+                        0,
+                      ),
                     )}
                   </div>
                 </div>
@@ -1027,14 +1032,14 @@ const Dashboard = () => {
                   (department) =>
                     departmentsWithBudgets?.find(
                       (budget) =>
-                        budget?.budget?.department_id === department?.id
-                    )?.budget?.quantity > 0
+                        budget?.budget?.department_id === department?.id,
+                    )?.budget?.quantity > 0,
                 )
                 ?.map((department) => {
                   const real = filteredData?.reduce((sum, o) => {
                     const cost =
                       o?.department_real_costs?.find(
-                        (c) => c.id === department.id
+                        (c) => c.id === department.id,
                       )?.cost || 0;
                     return sum + cost;
                   }, 0);
@@ -1042,7 +1047,7 @@ const Dashboard = () => {
                   const planned = filteredData?.reduce((sum, o) => {
                     const plan =
                       o?.planned_costs?.department?.details?.find(
-                        (c) => c.id === department.id
+                        (c) => c.id === department.id,
                       )?.planned_cost || 0;
                     return sum + plan;
                   }, 0);
@@ -1065,8 +1070,8 @@ const Dashboard = () => {
                           percent < 50
                             ? "text-red-600"
                             : percent < 80
-                            ? "text-yellow-700"
-                            : "text-green-700"
+                              ? "text-yellow-700"
+                              : "text-green-700"
                         }`}
                       >
                         {percent.toFixed(1)}%
@@ -1087,7 +1092,7 @@ const Dashboard = () => {
                 const planned = filteredData?.reduce((sum, o) => {
                   const plan =
                     o?.planned_costs?.expenses?.details?.find(
-                      (c) => c.id === expense.id
+                      (c) => c.id === expense.id,
                     )?.planned_cost || 0;
                   return sum + plan;
                 }, 0);
@@ -1108,8 +1113,8 @@ const Dashboard = () => {
                         percent < 50
                           ? "text-red-600"
                           : percent < 80
-                          ? "text-yellow-700"
-                          : "text-green-700"
+                            ? "text-yellow-700"
+                            : "text-green-700"
                       }`}
                     >
                       {percent.toFixed(1)}%
@@ -1125,12 +1130,12 @@ const Dashboard = () => {
                       const real = filteredData?.reduce(
                         (sum, o) =>
                           sum + calculateTotalPrice(o, dollarRate, false),
-                        0
+                        0,
                       );
                       const planned = filteredData?.reduce(
                         (sum, o) =>
                           sum + calculateTotalPrice(o, dollarRate, true),
-                        0
+                        0,
                       );
                       const percent = planned ? (real / planned) * 100 : 0;
                       return (
@@ -1146,8 +1151,8 @@ const Dashboard = () => {
                               percent < 50
                                 ? "text-red-600"
                                 : percent < 80
-                                ? "text-yellow-700"
-                                : "text-green-700"
+                                  ? "text-yellow-700"
+                                  : "text-green-700"
                             }`}
                           >
                             {percent.toFixed(1)}%
@@ -1164,11 +1169,11 @@ const Dashboard = () => {
                   ? (() => {
                       const real = filteredData?.reduce(
                         (sum, o) => sum + calculateTotalExpenses(o, false),
-                        0
+                        0,
                       );
                       const planned = filteredData?.reduce(
                         (sum, o) => sum + calculateTotalExpenses(o, true),
-                        0
+                        0,
                       );
                       const percent = planned ? (real / planned) * 100 : 0;
                       return (
@@ -1184,8 +1189,8 @@ const Dashboard = () => {
                               percent < 50
                                 ? "text-red-600"
                                 : percent < 80
-                                ? "text-yellow-700"
-                                : "text-green-700"
+                                  ? "text-yellow-700"
+                                  : "text-green-700"
                             }`}
                           >
                             {percent.toFixed(1)}%
@@ -1202,18 +1207,18 @@ const Dashboard = () => {
                   ? (() => {
                       const real = filteredData?.reduce(
                         (sum, o) => sum + calculateProfit(o, dollarRate, false),
-                        0
+                        0,
                       );
                       const planned = filteredData?.reduce(
                         (sum, o) => sum + calculateProfit(o, dollarRate, true),
-                        0
+                        0,
                       );
                       const percent =
                         planned > 0
                           ? (real / planned) * 100
                           : real === 0
-                          ? 0
-                          : 100;
+                            ? 0
+                            : 100;
                       return (
                         <>
                           <div
@@ -1242,21 +1247,21 @@ const Dashboard = () => {
                   ? (() => {
                       const totalProfit = filteredData?.reduce(
                         (sum, o) => sum + calculateProfit(o, dollarRate, false),
-                        0
+                        0,
                       );
                       const totalRevenue = filteredData?.reduce(
                         (sum, o) =>
                           sum + calculateTotalPrice(o, dollarRate, false),
-                        0
+                        0,
                       );
                       const totalProfitPlan = filteredData?.reduce(
                         (sum, o) => sum + calculateProfit(o, dollarRate, true),
-                        0
+                        0,
                       );
                       const totalRevenuePlan = filteredData?.reduce(
                         (sum, o) =>
                           sum + calculateTotalPrice(o, dollarRate, true),
-                        0
+                        0,
                       );
 
                       const realPercent = totalRevenue
@@ -1304,8 +1309,8 @@ const Dashboard = () => {
                   (department) =>
                     departmentsWithBudgets?.find(
                       (budget) =>
-                        budget?.budget?.department_id === department?.id
-                    )?.budget?.quantity > 0
+                        budget?.budget?.department_id === department?.id,
+                    )?.budget?.quantity > 0,
                 )
                 ?.map((department) => (
                   <th
@@ -1371,16 +1376,16 @@ const Dashboard = () => {
                 const totalEarned = data
                   ?.filter((order) =>
                     order?.department_real_costs?.find(
-                      (cost) => cost?.id === department?.id
-                    )
+                      (cost) => cost?.id === department?.id,
+                    ),
                   )
                   ?.reduce(
                     (total, order) =>
                       total +
                       (order?.department_real_costs?.find(
-                        (cost) => cost?.id === department?.id
+                        (cost) => cost?.id === department?.id,
                       )?.cost || 0),
-                    0
+                    0,
                   );
 
                 return { ...department, totalEarned };
@@ -1410,8 +1415,8 @@ const Dashboard = () => {
                   <td className="py-1 px-2 border border-gray-300">
                     {formatNumber(
                       department?.employees?.filter(
-                        (employee) => parseFloat(employee?.percentage) > 0
-                      )?.length
+                        (employee) => parseFloat(employee?.percentage) > 0,
+                      )?.length,
                     )}
                   </td>
                   <td className="py-1 px-2 border border-gray-300">
@@ -1437,8 +1442,8 @@ const Dashboard = () => {
                     {formatNumber(
                       department?.totalEarned /
                         department?.employees?.filter(
-                          (employee) => parseFloat(employee?.percentage) > 0
-                        )?.length
+                          (employee) => parseFloat(employee?.percentage) > 0,
+                        )?.length,
                     )}
                   </td>
                 </tr>

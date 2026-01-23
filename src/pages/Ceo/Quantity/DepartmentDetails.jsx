@@ -72,14 +72,14 @@ const DepartmenDetails = () => {
         (acc, emp) =>
           acc +
           (selectedEmployee?.id === emp?.id ? 0 : parseFloat(emp?.percentage)),
-        0
+        0,
       );
 
     if (newPercentage > availablePercentage) {
       toast({
         title: "Diqqat",
         description: `Jami foiz 100% dan oshib ketmoqda. Maksimum ${availablePercentage?.toFixed(
-          2
+          2,
         )}% kirita olasiz.`,
         variant: "destructive",
       });
@@ -140,6 +140,7 @@ const DepartmenDetails = () => {
       await api.patch(`/ceo/departmentBudgets/${data?.budget?.id}`, {
         type: budgetType,
         quantity: budgetQuantity,
+        month: selectedMonth,
       });
       toast({
         title: "Muvaffaqiyatli",
@@ -161,7 +162,7 @@ const DepartmenDetails = () => {
 
   const totalPercentage = data?.employees?.reduce(
     (acc, emp) => acc + parseFloat(emp?.percentage),
-    0
+    0,
   );
 
   const availablePercentage = 100 - totalPercentage;
@@ -212,7 +213,7 @@ const DepartmenDetails = () => {
           <p className="text-gray-500 text-sm mb-1">Jami ajratilgan summa</p>
           <h3 className="text-xl font-semibold text-gray-800">
             {formatNumber(
-              (data?.department_totals?.total_possible / totalPercentage) * 100
+              (data?.department_totals?.total_possible / totalPercentage) * 100,
             )}{" "}
             <span className="text-gray-500 text-base">so'm</span>
           </h3>
@@ -226,7 +227,7 @@ const DepartmenDetails = () => {
             {formatNumber(
               (data?.department_totals?.total_possible / totalPercentage) *
                 100 -
-                data?.department_totals?.total_possible
+                data?.department_totals?.total_possible,
             )}{" "}
             <span className="text-gray-500 text-base">so'm</span>
           </h3>
@@ -359,7 +360,7 @@ const DepartmenDetails = () => {
                       <div>
                         {formatNumber(
                           emp?.totals?.total_earned /
-                            emp?.attendance?.present_days
+                            emp?.attendance?.present_days,
                         )}
                       </div>
                     </div>
@@ -370,7 +371,7 @@ const DepartmenDetails = () => {
                       <div>
                         {formatNumber(
                           emp?.totals?.total_possible /
-                            emp?.attendance?.total_working_days
+                            emp?.attendance?.total_working_days,
                         )}
                       </div>
                     </div>
@@ -390,15 +391,15 @@ const DepartmenDetails = () => {
                 {formatNumber(
                   data?.employees?.reduce(
                     (acc, e) => acc + parseFloat(e?.salary || 0),
-                    0
-                  )
+                    0,
+                  ),
                 )}
               </td>
               <td
                 className={`py-2.5 px-3 text-center border-r border-gray-200 ${
                   data?.employees?.reduce(
                     (acc, e) => acc + parseFloat(e?.percentage || 0),
-                    0
+                    0,
                   ) > 100
                     ? "text-red-600"
                     : "text-gray-800"
@@ -412,8 +413,8 @@ const DepartmenDetails = () => {
                 {formatNumber(
                   data?.employees?.reduce(
                     (acc, e) => acc + parseFloat(e?.totals?.total_earned || 0),
-                    0
-                  )
+                    0,
+                  ),
                 )}
               </td>
               <td className="py-2.5 px-3 text-right">
@@ -421,8 +422,8 @@ const DepartmenDetails = () => {
                   data?.employees?.reduce(
                     (acc, e) =>
                       acc + parseFloat(e?.totals?.total_possible || 0),
-                    0
-                  )
+                    0,
+                  ),
                 )}
               </td>
             </tr>
