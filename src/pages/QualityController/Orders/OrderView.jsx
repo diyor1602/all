@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
+import { useDebounce } from "@/hooks/useDebounce";
 import { statuses } from "@/lib/status";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,12 +51,41 @@ const OrderView = () => {
   const [selectedTarif, setSelectedTarif] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [description, setDescription] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchTerm, setSearchTerm] = useState([]);
+  const [selectedSearchResult, setSelectedSearchResult] = useState(null);
 
   const totalQuantity = order?.quantity || 0;
   const goodCount = order?.good_count || 0;
   const progressPercent = totalQuantity
     ? Math.round((goodCount / totalQuantity) * 100)
     : 0;
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const getEmployees = async () => {
+    if (debouncedSearchTerm.length < 2) return;
+    try {
+      const res = await api.get("/qualityController/employees", {
+        params: {
+          search: debouncedSearchTerm,
+          status: "working",
+        },
+      });
+      setSearchResults(res.data?.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Xodimlar ma'lumotlari yuklanmadi",
+      });
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    getEmployees();
+  }, [debouncedSearchTerm]);
 
   const getAttachedEmployees = (data) => {
     if (!Array.isArray(data)) return [];
@@ -160,8 +190,11 @@ const OrderView = () => {
     formData.append("type", "fail");
     formData.append("image", selectedImage);
     formData.append("tarification_id", selectedTarif);
-    formData.append("employee_id", selectedEmployee);
-    formData.append("description", description);
+    formData.append(
+      "employee_id",
+      selectedEmployee || selectedSearchResult?.id || "",
+    );
+    formData.append("description", `${description} + ${searchTerm}`);
 
     try {
       await api.post("/qualityController/qualityControl", formData);
@@ -283,14 +316,6 @@ const OrderView = () => {
         setUseCamera(false);
         stopCamera();
       });
-    }
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -487,6 +512,9 @@ const OrderView = () => {
               onClick={() => {
                 setMinusDialogOpen(true);
                 setDescription("");
+                setSearchTerm("");
+                setSearchResults([]);
+                setSelectedSearchResult(null);
               }}
               className="w-full h-32 sm:h-40 bg-red-50 hover:bg-red-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
             >
@@ -759,8 +787,53 @@ const OrderView = () => {
 
                   if (employees.length === 0) {
                     return (
-                      <div className="text-gray-500 text-sm p-2 text-center bg-gray-50 rounded-lg">
-                        Bu ishni bajargan hali hech kim bajarmagan
+                      <div>
+                        <Input
+                          type="text"
+                          placeholder="Xodim ismini kiriting"
+                          value={searchTerm}
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                          }}
+                        />
+                        <div className="max-h-40 overflow-y-auto border rounded-md">
+                          {selectedSearchResult?.name ? (
+                            <div className="px-3 py-2 bg-green-50 border-b">
+                              <div className="font-medium text-green-800">
+                                Tanlangan: {selectedSearchResult.name}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setSelectedSearchResult(null);
+                                  setSelectedEmployee("");
+                                  setSearchTerm("");
+                                }}
+                                className="text-xs text-red-600 hover:text-red-800 mt-1"
+                              >
+                                O'zgartirish
+                              </button>
+                            </div>
+                          ) : searchResults?.length > 0 ? (
+                            searchResults?.map((searchResult, index) => (
+                              <div
+                                key={index}
+                                onClick={() => {
+                                  setSelectedEmployee(String(searchResult.id));
+                                  setSelectedSearchResult(searchResult);
+                                }}
+                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
+                              >
+                                {searchResult?.name}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-gray-500 text-sm">
+                              {searchTerm.length < 3
+                                ? "Kamida 2 ta harf kiriting"
+                                : "Xodim topilmadi, siz yozgan ism yuboriladi!"}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   }
