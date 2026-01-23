@@ -107,7 +107,7 @@ const TailorPage = () => {
         // Only auto-populate inputs on initial load and if we have balance data
         if (isInitialLoad && balanceData.length > 0) {
           const sortedData = balanceData.sort(
-            (a, b) => a.model.id - b.model.id
+            (a, b) => a.model.id - b.model.id,
           );
 
           const newInputs = sortedData.map((item) => {
@@ -338,9 +338,8 @@ const TailorPage = () => {
 
       <MarqueeBanner
         texts={[
-          "Siz tikkan mahsulotni kiyib, yuzi kulsin.",
           "Qarg‘aydigan ish tikmang — baraka topmaysiz.",
-          "Mijozning mamnunligi — birinchi o‘rinda.",
+          "2026-yil, Sifatni yuksaltirish yili!",
         ]}
         interval={5000}
       />

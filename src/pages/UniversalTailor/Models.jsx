@@ -138,12 +138,12 @@ const Models = () => {
       prev
         .map((model) => {
           const filteredWorks = model.works.filter(
-            (work) => work.id !== tarifId
+            (work) => work.id !== tarifId,
           );
           if (filteredWorks.length === 0) return null;
           return { ...model, works: filteredWorks };
         })
-        .filter(Boolean)
+        .filter(Boolean),
     );
   };
 
@@ -182,7 +182,7 @@ const Models = () => {
     const selected = [];
 
     const packetTarificationIds = packetsData.flatMap((p) =>
-      p.tarification_packets_items.map((item) => item.tarification_id)
+      p.tarification_packets_items.map((item) => item.tarification_id),
     );
 
     balanceData.forEach((entry) => {
@@ -194,15 +194,15 @@ const Models = () => {
       if (!fullModel) return;
 
       let modelInSelected = selected.find(
-        (s) => s.model.order_id === entry.order_id
+        (s) => s.model.order_id === entry.order_id,
       );
 
       const category = fullModel.tarification_categories?.find((cat) =>
-        cat.tarification?.some((t) => t.id === tarificationId)
+        cat.tarification?.some((t) => t.id === tarificationId),
       );
 
       const tarification = category?.tarification?.find(
-        (t) => t.id === tarificationId
+        (t) => t.id === tarificationId,
       );
 
       if (!tarification || !category) return;
@@ -238,7 +238,7 @@ const Models = () => {
       setDisplayBalance(
         balanceData?.reduce((total, item) => {
           return total + (Number(item.amount_earned) || 0);
-        }, 0)
+        }, 0),
       );
 
       // Call auto select
@@ -276,7 +276,7 @@ const Models = () => {
         setDisplayBalance(
           balanceData.reduce((total, item) => {
             return total + (Number(item.amount_earned) || 0);
-          }, 0)
+          }, 0),
         );
 
         // ✅ Call after all 3 are ready
@@ -372,7 +372,7 @@ const Models = () => {
       const requests = packet.tarification_packets_items.map((item) =>
         api.post("/universalTailor/tarificationLog", {
           tarification_id: item.tarification_id,
-        })
+        }),
       );
 
       await Promise.all(requests);
@@ -419,8 +419,8 @@ const Models = () => {
       setDisplayBalance(
         updatedBalance.reduce(
           (total, item) => total + (Number(item.amount_earned) || 0),
-          0
-        )
+          0,
+        ),
       );
 
       // ✅ Refresh selected models correctly
@@ -489,7 +489,7 @@ const Models = () => {
                 if (!acc[modelName]) acc[modelName] = [];
                 acc[modelName].push(work);
                 return acc;
-              }, {})
+              }, {}),
             ).map(([modelName, works]) => (
               <div key={modelName}>
                 <div className="font-bold text-blue-600 border-b border-gray-300 pb-1 mb-2">
@@ -498,15 +498,15 @@ const Models = () => {
                 <div className="flex flex-col gap-2">
                   {works.map((myWork) => {
                     const isInBalance = balance?.some(
-                      (b) => b.tarification?.id === myWork.id
+                      (b) => b.tarification?.id === myWork.id,
                     );
                     const isInPacket = packets?.some((packet) =>
                       packet.tarification_packets_items?.some(
-                        (item) => item.tarification_id === myWork.id
-                      )
+                        (item) => item.tarification_id === myWork.id,
+                      ),
                     );
                     const isInSelected = selectedModels?.some((m) =>
-                      m.works?.some((w) => w.id === myWork.id)
+                      m.works?.some((w) => w.id === myWork.id),
                     );
 
                     const isUsed = isInBalance || isInPacket || isInSelected;
@@ -525,20 +525,20 @@ const Models = () => {
                           disabled={isUsed || sendingID === myWork.id}
                           onClick={async () => {
                             const modelObj = models.find(
-                              (m) => m.model?.id === myWork.model.id
+                              (m) => m.model?.id === myWork.model.id,
                             );
                             if (!modelObj) return;
 
                             const category =
                               modelObj.tarification_categories?.find((cat) =>
                                 cat.tarification?.some(
-                                  (t) => t.id === myWork.id
-                                )
+                                  (t) => t.id === myWork.id,
+                                ),
                               );
                             if (!category) return;
 
                             const alreadySelected = selectedModels.find(
-                              (s) => s.model.id === modelObj.id
+                              (s) => s.model.id === modelObj.id,
                             );
 
                             const workData = {
@@ -570,7 +570,7 @@ const Models = () => {
                                 "/universalTailor/tarificationLog",
                                 {
                                   tarification_id: myWork.id,
-                                }
+                                },
                               );
                               const audio = new Audio("/coins.wav");
                               audio.play();
@@ -591,8 +591,8 @@ const Models = () => {
                           {sendingID === myWork.id
                             ? "⏳ Bajarilmoqda"
                             : isUsed
-                            ? "✅ Qo'shilgan"
-                            : "➕ Qo'shish"}
+                              ? "✅ Qo'shilgan"
+                              : "➕ Qo'shish"}
                         </Button>
                       </div>
                     );
@@ -662,7 +662,7 @@ const Models = () => {
               ?.filter(
                 (model) =>
                   !selectedModels.some((s) => s.model.id === model.id) &&
-                  model.tarification_categories?.length > 0
+                  model.tarification_categories?.length > 0,
               )
               ?.map((model, index) => (
                 <div
@@ -704,9 +704,8 @@ const Models = () => {
       </Dialog>
       <MarqueeBanner
         texts={[
-          "Siz tikkan mahsulotni kiyib, yuzi kulsin.",
           "Qarg‘aydigan ish tikmang — baraka topmaysiz.",
-          "Mijozning mamnunligi — birinchi o‘rinda.",
+          "2026-yil, Sifatni yuksaltirish yili!",
         ]}
         interval={5000}
       />
@@ -752,7 +751,7 @@ const Models = () => {
                         </span>
                         <span className="text-xs text-gray-500">
                           {balance?.find(
-                            (b) => b.tarification?.id === item.tarification?.id
+                            (b) => b.tarification?.id === item.tarification?.id,
                           )?.quantity || "0"}
                         </span>
                       </div>
@@ -832,7 +831,7 @@ const Models = () => {
                   size={14}
                   onClick={() => {
                     setSelectedModels((prev) =>
-                      prev.filter((item) => item.model.id !== model.model.id)
+                      prev.filter((item) => item.model.id !== model.model.id),
                     );
                   }}
                 />
@@ -899,8 +898,8 @@ const Models = () => {
                             if (
                               packets.some((packet) =>
                                 packet.tarification_packets_items.some(
-                                  (item) => item.tarification_id === work.id
-                                )
+                                  (item) => item.tarification_id === work.id,
+                                ),
                               )
                             ) {
                               toast({
@@ -930,8 +929,8 @@ const Models = () => {
                             if (model.works.length === 0) {
                               setSelectedModels((prev) =>
                                 prev.filter(
-                                  (item) => item.model.id !== model.model.id
-                                )
+                                  (item) => item.model.id !== model.model.id,
+                                ),
                               );
                             }
                           }}
@@ -962,7 +961,7 @@ const Models = () => {
                                     {category.name}
                                   </div>
                                 </SelectItem>
-                              )
+                              ),
                             )}
                           </SelectContent>
                         </Select>
@@ -974,7 +973,7 @@ const Models = () => {
                                 const selectedTarification =
                                   model.model?.tarification_categories
                                     ?.find(
-                                      (category) => category.id === work.cat_id
+                                      (category) => category.id === work.cat_id,
                                     )
                                     ?.tarification?.find((t) => t.id === value);
                                 model.works[index].id = value;
@@ -999,23 +998,24 @@ const Models = () => {
                               <SelectContent className="max-h-[250px] overflow-y-auto">
                                 {model.model?.tarification_categories
                                   ?.find(
-                                    (category) => category.id === work.cat_id
+                                    (category) => category.id === work.cat_id,
                                   )
                                   ?.tarification?.filter(
                                     (tarification) =>
                                       // not already selected in this model
                                       !model.works.some(
                                         (w) =>
-                                          w.id === tarification.id && w !== work
+                                          w.id === tarification.id &&
+                                          w !== work,
                                       ) &&
                                       // not already included in any packet
                                       !packets.some((packet) =>
                                         packet.tarification_packets_items.some(
                                           (item) =>
                                             item.tarification_id ===
-                                            tarification.id
-                                        )
-                                      )
+                                            tarification.id,
+                                        ),
+                                      ),
                                   )
                                   ?.map((tarification, index) => (
                                     <SelectItem
@@ -1083,7 +1083,7 @@ const Models = () => {
                                 <Check />
                                 Bajarildi (
                                 {balance?.find(
-                                  (item) => item.tarification?.id === work.id
+                                  (item) => item.tarification?.id === work.id,
                                 )?.quantity || 0}
                                 )
                               </>
