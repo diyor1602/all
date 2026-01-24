@@ -29,6 +29,11 @@ const Home = () => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [aupCount, setAupCount] = useState(0);
   const [selectedDate, setSelectedDate] = useState(() => {
+    // Try to get date from localStorage first, otherwise use current date
+    const savedDate = localStorage.getItem("selectedDate");
+    if (savedDate) {
+      return savedDate;
+    }
     const date = new Date();
     date.setHours(date.getHours() + 5);
     return date.toISOString()?.split("T")[0];
@@ -48,10 +53,27 @@ const Home = () => {
       setCurrentDateTime(new Date());
     }, 1000);
 
-    // Initial data load and set interval for updates
+    // Initial data load
     fetchData();
-    dataIntervalRef.current = setInterval(fetchData, 60000);
   };
+
+  // Set up data refresh interval
+  useEffect(() => {
+    // Clear existing interval
+    if (dataIntervalRef.current) {
+      clearInterval(dataIntervalRef.current);
+    }
+
+    // Set new interval
+    dataIntervalRef.current = setInterval(fetchData, 60000);
+
+    // Cleanup
+    return () => {
+      if (dataIntervalRef.current) {
+        clearInterval(dataIntervalRef.current);
+      }
+    };
+  }, [selectedDate]);
 
   useEffect(() => {
     initializeApp();
@@ -92,6 +114,13 @@ const Home = () => {
 
   useEffect(() => {
     fetchData();
+  }, [selectedDate]);
+
+  // Save selectedDate to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedDate) {
+      localStorage.setItem("selectedDate", selectedDate);
+    }
   }, [selectedDate]);
 
   const handleNavigate = (id) => {
@@ -211,7 +240,10 @@ const Home = () => {
                 type="date"
                 className="bg-white"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setSelectedDate(newDate);
+                }}
               />
             </div>
           </div>
@@ -235,7 +267,7 @@ const Home = () => {
                 <p className="text-2xl font-bold text-slate-800">
                   {outputs.reduce(
                     (total, output) => total + output.today_plan,
-                    0
+                    0,
                   )}
                 </p>
               </div>
@@ -254,7 +286,7 @@ const Home = () => {
                 <p className="text-2xl font-bold text-slate-800">
                   {outputs.reduce(
                     (total, output) => total + output.today_quantity,
-                    0
+                    0,
                   )}
                 </p>
               </div>
@@ -262,11 +294,11 @@ const Home = () => {
                 className={`p-3 rounded-xl shadow-lg ${
                   outputs.reduce(
                     (total, output) => total + output.today_quantity,
-                    0
+                    0,
                   ) >=
                   outputs.reduce(
                     (total, output) => total + output.today_plan,
-                    0
+                    0,
                   )
                     ? "bg-gradient-to-r from-emerald-500 to-green-600"
                     : "bg-gradient-to-r from-red-500 to-red-700"
@@ -286,7 +318,7 @@ const Home = () => {
                 <p className="text-2xl font-bold text-slate-800">
                   {outputs.reduce(
                     (total, output) => total + output.total_quantity,
-                    0
+                    0,
                   )}
                 </p>
               </div>
@@ -340,7 +372,7 @@ const Home = () => {
                                   100
                                 : 0;
                             return sum + progress;
-                          }, 0) / outputs.length
+                          }, 0) / outputs.length,
                         )
                       : 0;
                   const style = getProgressStyle(avgProgress);
@@ -364,7 +396,7 @@ const Home = () => {
                                   100
                                 : 0;
                             return sum + progress;
-                          }, 0) / outputs.length
+                          }, 0) / outputs.length,
                         )
                       : 0;
                   return getProgressStyle(avgProgress).bg;
@@ -465,12 +497,12 @@ const Home = () => {
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className={`${getProgressColor(
-                                output.progressPercentage
+                                output.progressPercentage,
                               )} h-2 rounded-full`}
                               style={{
                                 width: `${Math.min(
                                   output.progressPercentage,
-                                  100
+                                  100,
                                 )}%`,
                                 animation: "fillProgress 1s ease-out",
                               }}
@@ -478,7 +510,7 @@ const Home = () => {
                           </div>
                           <span
                             className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
-                              output.progressPercentage
+                              output.progressPercentage,
                             )}`}
                           >
                             {output.progressPercentage}%
@@ -544,12 +576,12 @@ const Home = () => {
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className={`${getProgressColor(
-                                output.progressPercentage
+                                output.progressPercentage,
                               )} h-2 rounded-full`}
                               style={{
                                 width: `${Math.min(
                                   output.progressPercentage,
-                                  100
+                                  100,
                                 )}%`,
                                 animation: "fillProgress 1s ease-out",
                               }}
@@ -557,7 +589,7 @@ const Home = () => {
                           </div>
                           <span
                             className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
-                              output.progressPercentage
+                              output.progressPercentage,
                             )}`}
                           >
                             {output.progressPercentage}%
@@ -600,7 +632,7 @@ const Home = () => {
                 ?.sort(
                   (a, b) =>
                     parseFloat(b.per_employee_earning) -
-                    parseFloat(a.per_employee_earning)
+                    parseFloat(a.per_employee_earning),
                 )
                 ?.map((groupEarning, index) => (
                   <tr
@@ -627,19 +659,19 @@ const Home = () => {
                         "ru-RU",
                         {
                           maximumFractionDigits: 0,
-                        }
+                        },
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
                       {parseFloat(
-                        groupEarning.per_employee_earning || 0
+                        groupEarning.per_employee_earning || 0,
                       )?.toLocaleString("ru-RU", {
                         maximumFractionDigits: 0,
                       })}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-semibold text-green-600 dark:text-green-400">
                       {parseFloat(
-                        groupEarning.today_earning || 0
+                        groupEarning.today_earning || 0,
                       )?.toLocaleString("ru-RU", {
                         maximumFractionDigits: 0,
                       })}
