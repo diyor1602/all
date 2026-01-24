@@ -10,6 +10,7 @@ import {
   ChevronLast,
   ChevronLeft,
   ChevronRight,
+  Star,
 } from "lucide-react";
 import {
   Dialog,
@@ -30,6 +31,8 @@ const Damages = () => {
   const STORAGE_KEYS = {
     SEARCH_QUERY: "damages_search_query",
     CURRENT_PAGE: "damages_current_page",
+    START_DATE: "damages_start_date",
+    END_DATE: "damages_end_date",
   };
 
   const [damages, setDamages] = useState([]);
@@ -44,14 +47,31 @@ const Damages = () => {
   const [searchQuery, setSearchQuery] = useState(() => {
     return localStorage.getItem(STORAGE_KEYS.SEARCH_QUERY) || "";
   });
+  const [startDate, setStartDate] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.START_DATE) || "";
+  });
+  const [endDate, setEndDate] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.END_DATE) || "";
+  });
   const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
 
-  const getDamages = async (page = 1, search = "") => {
+  const getDamages = async (
+    page = 1,
+    search = "",
+    startDate = "",
+    endDate = "",
+  ) => {
     setLoading(true);
     try {
       const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+      const startDateParam = startDate
+        ? `&start_date=${encodeURIComponent(startDate)}`
+        : "";
+      const endDateParam = endDate
+        ? `&end_date=${encodeURIComponent(endDate)}`
+        : "";
       const res = await api.get(
-        `/internalAccountant/qualityControls?page=${page}${searchParam}`,
+        `/internalAccountant/qualityControls?page=${page}${searchParam}${startDateParam}${endDateParam}`,
       );
       setDamages(res.data?.data || []);
       setMeta(res.data); // Store the full response for pagination labels
@@ -67,8 +87,8 @@ const Damages = () => {
   };
 
   useEffect(() => {
-    getDamages(currentPage, debouncedSearchQuery);
-  }, [currentPage, debouncedSearchQuery]);
+    getDamages(currentPage, debouncedSearchQuery, startDate, endDate);
+  }, [currentPage, debouncedSearchQuery, startDate, endDate]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CURRENT_PAGE, currentPage.toString());
@@ -77,6 +97,14 @@ const Damages = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SEARCH_QUERY, debouncedSearchQuery);
   }, [debouncedSearchQuery]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.START_DATE, startDate);
+  }, [startDate]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.END_DATE, endDate);
+  }, [endDate]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -97,6 +125,18 @@ const Damages = () => {
     const value = e.target.value;
     setSearchQuery(value);
     setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleStartDateChange = (e) => {
+    const value = e.target.value;
+    setStartDate(value);
+    setCurrentPage(1); // Reset to first page when changing date
+  };
+
+  const handleEndDateChange = (e) => {
+    const value = e.target.value;
+    setEndDate(value);
+    setCurrentPage(1); // Reset to first page when changing date
   };
 
   const formatDate = (dateString) => {
@@ -125,25 +165,44 @@ const Damages = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Sifat Nazorati</h1>
           <p className="text-slate-500 text-sm">
             Jami: {meta?.total || 0} ta holat aniqlangan
           </p>
         </div>
-        <div className="relative w-full sm:w-auto">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
-            size={20}
-          />
-          <Input
-            type="text"
-            placeholder="Qidirish..."
-            value={searchQuery}
-            onChange={handleSearch}
-            className="pl-10 w-full sm:w-64 bg-white"
-          />
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <div className="relative w-full sm:w-auto">
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+              size={20}
+            />
+            <Input
+              type="text"
+              placeholder="Qidirish..."
+              value={searchQuery}
+              onChange={handleSearch}
+              className="pl-10 w-full sm:w-64 bg-white"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="date"
+              placeholder="Boshlanish sanasi"
+              value={startDate}
+              onChange={handleStartDateChange}
+              className="w-fit bg-white"
+            />
+
+            <Input
+              type="date"
+              placeholder="Tugash sanasi"
+              value={endDate}
+              onChange={handleEndDateChange}
+              className="w-fit bg-white"
+            />
+          </div>
         </div>
       </div>
 
@@ -191,6 +250,12 @@ const Damages = () => {
                       <User size={14} className="mr-2 text-slate-400" />
                       <span className="truncate">
                         {damage?.employee?.name || "-"}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-sm text-slate-600">
+                      <Star size={14} className="mr-2 text-slate-400" />
+                      <span className="truncate">
+                        {damage?.tarification?.name || "-"}
                       </span>
                     </div>
                     <div className="flex items-center text-sm text-slate-600">
