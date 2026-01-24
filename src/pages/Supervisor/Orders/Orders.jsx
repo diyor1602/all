@@ -55,19 +55,19 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(
-    localStorage.getItem("searchTerm") || ""
+    localStorage.getItem("searchTerm") || "",
   );
   const [statusFilter, setStatusFilter] = useState(
-    localStorage.getItem("statusFilter") || "tailoring"
+    localStorage.getItem("statusFilter") || "all",
   );
   const [sortBy, setSortBy] = useState(
-    localStorage.getItem("sortBy") || "newest"
+    localStorage.getItem("sortBy") || "newest",
   );
   const [seasonYear, setSeasonYear] = useState(
-    localStorage.getItem("seasonYear") || String(new Date().getFullYear())
+    localStorage.getItem("seasonYear") || String(new Date().getFullYear()),
   );
   const [seasonType, setSeasonType] = useState(
-    localStorage.getItem("seasonType") || "all"
+    localStorage.getItem("seasonType") || "all",
   );
 
   const [availableYears, setAvailableYears] = useState([]);
@@ -211,7 +211,7 @@ const Orders = () => {
                 <span>
                   {filteredOrders?.reduce(
                     (acc, order) => acc + order.quantity,
-                    0
+                    0,
                   )}
                 </span>
               </div>
@@ -369,7 +369,7 @@ const Orders = () => {
 
                     <Badge
                       className={`${getStatusColor(
-                        order.status
+                        order.status,
                       )} px-3 py-1 font-medium rounded-full shadow-sm`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -441,8 +441,8 @@ const Orders = () => {
                           {order.season_type === "winter"
                             ? "Qish"
                             : order.season_type === "summer"
-                            ? "Bahor"
-                            : "-"}
+                              ? "Bahor"
+                              : "-"}
                         </span>
                       </div>
                     </div>
@@ -463,7 +463,7 @@ const Orders = () => {
                   {/* Button with gradient */}
                   <Button
                     className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${getStatusColor(
-                      order.status
+                      order.status,
                     )} hover:opacity-90 hover:${getStatusColor(order.status)}`}
                     asChild
                   >
