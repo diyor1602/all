@@ -28,7 +28,7 @@ export default function Login() {
 
   return (
     <>
-      <div className="flex items-center justify-center min-h-[90vh] bg-white">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-[#884DEE] text-3xl font-medium text-center mb-8">
             Vizzano
