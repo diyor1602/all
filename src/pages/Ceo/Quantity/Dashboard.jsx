@@ -929,7 +929,16 @@ const Dashboard = () => {
               <td className="py-1 px-2 border border-gray-300">
                 {formatNumber(
                   filteredData?.reduce(
-                    (sum, o) => sum + Number(o?.model?.minute || 0),
+                    (sum, o) => sum + Number(o?.model?.minute),
+                    0,
+                  ),
+                )}{" "}
+                <br />
+                {formatNumber(
+                  filteredData?.reduce(
+                    (sum, o) =>
+                      sum +
+                      Number(o?.model?.minute) * Number(o?.order?.quantity),
                     0,
                   ),
                 )}
