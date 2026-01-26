@@ -36,14 +36,14 @@ export default function BaseLayout({ children, navigation }) {
 
   const forAllUsers = [
     { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
-    {
-      name: "Yangi mavsum",
-      href: "/dailyPayments",
-      icon: PartyPopper,
-      onMobile: false,
-      dontShow: parseFloat(localStorage.getItem("percentage")) <= 0,
-      customColor: "text-green-500 hover:bg-green-50",
-    },
+    // {
+    //   name: "Yangi mavsum",
+    //   href: "/dailyPayments",
+    //   icon: PartyPopper,
+    //   onMobile: false,
+    //   dontShow: parseFloat(localStorage.getItem("percentage")) <= 0,
+    //   customColor: "text-green-500 hover:bg-green-50",
+    // },
     {
       name: "Tikuv KPI",
       href: "/kpi",
@@ -94,7 +94,7 @@ export default function BaseLayout({ children, navigation }) {
       <div
         className={cn(
           "fixed inset-0 z-30 lg:hidden bg-black/80 backdrop-blur-sm transition-opacity duration-200",
-          sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={() => setSidebarOpen(false)}
       />
@@ -103,7 +103,7 @@ export default function BaseLayout({ children, navigation }) {
       <div
         className={cn(
           "fixed top-0 left-0 z-30 h-full w-64 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex h-full flex-col">
@@ -139,7 +139,7 @@ export default function BaseLayout({ children, navigation }) {
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
                         ? "bg-primary/10 text-primary"
-                        : item.customColor || "text-gray-700 hover:bg-gray-100"
+                        : item.customColor || "text-gray-700 hover:bg-gray-100",
                     )}
                     onClick={() => setSidebarOpen(false)}
                   >
@@ -148,7 +148,7 @@ export default function BaseLayout({ children, navigation }) {
                         "h-5 w-5",
                         isActive
                           ? "text-primary"
-                          : "text-gray-500" + item.customColor
+                          : "text-gray-500" + item.customColor,
                       )}
                     />
                     {item.name}
@@ -214,7 +214,7 @@ export default function BaseLayout({ children, navigation }) {
         <main
           className={cn(
             "min-h-screen py-8 px-4 sm:px-6 lg:px-8",
-            isChatPage ? "p-0" : ""
+            isChatPage ? "p-0" : "",
           )}
         >
           {children}
@@ -225,7 +225,7 @@ export default function BaseLayout({ children, navigation }) {
       <nav
         className={cn(
           "fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden z-20",
-          isChatPage ? "hidden" : ""
+          isChatPage ? "hidden" : "",
         )}
       >
         <ul className="flex justify-around">
@@ -241,7 +241,7 @@ export default function BaseLayout({ children, navigation }) {
                       "flex flex-col items-center py-2 px-3",
                       isActive
                         ? "text-primary"
-                        : item.customColor || "text-gray-500"
+                        : item.customColor || "text-gray-500",
                     )}
                   >
                     <item.icon className={"h-6 w-6 " + item.customColor} />
