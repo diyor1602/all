@@ -95,7 +95,7 @@ const NewSeason = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* --- Sticky Header --- */}
-      <div className="sticky top-0 z-30 backdrop-blur-lg">
+      <div className="sticky top-0 z-20 backdrop-blur-lg">
         <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-emerald-600 p-2 rounded-xl shadow-lg shadow-emerald-200">
