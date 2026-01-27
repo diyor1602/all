@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import formatNumber from "@/utils/formatNumber";
 
 const DepartmentView = () => {
   const { toast } = useToast();
@@ -58,6 +59,7 @@ const DepartmentView = () => {
   }, [id, selectedMonth]);
 
   const handleSubmit = async () => {
+    setSending(true);
     try {
       await api.post("/ceo/employeeSums", {
         month: selectedMonth,
@@ -101,7 +103,7 @@ const DepartmentView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen">
       <div className="space-y-6">
         {/* Header Section */}
         <Card className="bg-white shadow-sm border-0">
@@ -187,6 +189,9 @@ const DepartmentView = () => {
                       <th className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
                         Daqiqa uchun
                       </th>
+                      <th className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
+                        Topdi
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -194,9 +199,9 @@ const DepartmentView = () => {
                       ?.sort((a, b) =>
                         a?.employee?.name?.localeCompare(b?.employee?.name),
                       )
-                      ?.map((item) => (
+                      ?.map((item, index) => (
                         <tr
-                          key={item?.id}
+                          key={index}
                           className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
                           onClick={() => {
                             setEditingValue(item?.per_minute_sum);
@@ -235,6 +240,13 @@ const DepartmentView = () => {
                               </span>
                             </div>
                           </td>
+                          <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <span className="font-semibold text-slate-900 text-xs sm:text-sm">
+                                {formatNumber(item?.total_amount || 0)} so'm
+                              </span>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                   </tbody>
@@ -267,6 +279,11 @@ const DepartmentView = () => {
                   type="number"
                   value={editingValue}
                   onChange={(e) => setEditingValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSubmit();
+                    }
+                  }}
                   className="mt-1 text-sm"
                   placeholder="Summani kiriting"
                 />
