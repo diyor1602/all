@@ -190,6 +190,9 @@ const DepartmentView = () => {
                         Daqiqa uchun
                       </th>
                       <th className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
+                        Jami daqiqa
+                      </th>
+                      <th className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
                         Topdi
                       </th>
                     </tr>
@@ -237,6 +240,13 @@ const DepartmentView = () => {
                             <div className="flex items-center justify-end gap-1">
                               <span className="font-semibold text-slate-900 text-xs sm:text-sm">
                                 {item?.per_minute_sum || 0} so'm
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <span className="font-semibold text-slate-900 text-xs sm:text-sm">
+                                {formatNumber(item?.total_minutes, 0)}
                               </span>
                             </div>
                           </td>
