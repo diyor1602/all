@@ -8,11 +8,15 @@ import {
   X,
   MessageCircleMore,
   MessageSquareMore,
+  PartyPopper,
+  Home,
+  Radical,
+  Sprout,
+  BadgePercent,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
-import { Home, PartyPopper, Radical, Sprout, BadgePercent } from "lucide-react";
 
 export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,14 +40,14 @@ export default function BaseLayout({ children, navigation }) {
 
   const forAllUsers = [
     { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
-    // {
-    //   name: "Yangi mavsum",
-    //   href: "/dailyPayments",
-    //   icon: PartyPopper,
-    //   onMobile: false,
-    //   dontShow: parseFloat(localStorage.getItem("percentage")) <= 0,
-    //   customColor: "text-green-500 hover:bg-green-50",
-    // },
+    {
+      name: "Yangi mavsum",
+      href: "/dailyPayments",
+      icon: PartyPopper,
+      onMobile: false,
+      dontShow: parseFloat(localStorage.getItem("percentage")) <= 0,
+      customColor: "text-green-500 hover:bg-green-50",
+    },
     {
       name: "Tikuv KPI",
       href: "/kpi",

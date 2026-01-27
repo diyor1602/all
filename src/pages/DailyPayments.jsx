@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import api from "@/utils/api";
-import ModelImages from "@/components/ModelImages";
+// import ModelImages from "@/components/ModelImages";
 import { Input } from "@/components/ui/input";
 
 const formatNumber = (num, fractionDigits = 0) => {
@@ -56,7 +56,7 @@ const DailyPayments = () => {
   const [data, setData] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(
     localStorage.getItem("dailyPaymentsSelectedMonth") ||
-      new Date().toISOString().slice(0, 7)
+      new Date().toISOString().slice(0, 7),
   );
 
   useEffect(() => {
@@ -129,8 +129,8 @@ const DailyPayments = () => {
                   {formatNumber(
                     data?.orders?.reduce(
                       (acc, order) => acc + order?.[quantityKey] || 0,
-                      0
-                    )
+                      0,
+                    ),
                   )}
                 </span>
               </div>
@@ -143,20 +143,8 @@ const DailyPayments = () => {
               <div className="text-3xl font-semibold text-blue-600">
                 {formatNumber(earned + data?.total_bonus)} so'm
               </div>
-              <div className="text-lg text-gray-600 mt-2">
-                Oyning oxirida:{" "}
-                <span className="font-semibold text-gray-800">
-                  {formatNumber(data?.total_possible)} so'm
-                </span>
-              </div>
               {data?.total_possible - total > 0.5 && (
                 <>
-                  <div className="text-lg text-gray-600">
-                    Jarima:{" "}
-                    <span className="font-semibold text-red-600">
-                      {formatNumber(data?.total_possible - total)} so'm
-                    </span>
-                  </div>
                   <div className="text-lg text-gray-600">
                     Qolgan summa:{" "}
                     <span className="font-semibold text-blue-600">
@@ -169,12 +157,12 @@ const DailyPayments = () => {
           </div>
 
           {/* New global stats block */}
-          <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-md border border-gray-200 text-center md:text-left">
+          {/* <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-md border border-gray-200 text-center md:text-left">
             {(() => {
               const totalQuantity =
                 data?.orders?.reduce(
                   (acc, item) => acc + (item?.planned_quantity || 0),
-                  0
+                  0,
                 ) || 0;
               const totalAmount =
                 data?.total_remaining + data?.total_earned || 0;
@@ -196,7 +184,7 @@ const DailyPayments = () => {
                 </div>
               );
             })()}
-          </div>
+          </div> */}
 
           {/* Orders list */}
           <div className="flex flex-col gap-4">
@@ -204,7 +192,7 @@ const DailyPayments = () => {
               ?.sort(
                 (a, b) =>
                   b[quantityKey] / b.planned_quantity -
-                  a[quantityKey] / a.planned_quantity
+                  a[quantityKey] / a.planned_quantity,
               )
               ?.map((item, index) => {
                 const totalItem = item.planned_quantity || 0;
@@ -212,7 +200,7 @@ const DailyPayments = () => {
                   ? Math.round(
                       (item?.total_sewing_output_quantity /
                         item?.planned_quantity) *
-                        100
+                        100,
                     )
                   : 0;
 
@@ -240,28 +228,12 @@ const DailyPayments = () => {
                         {formatNumber(item?.earned_amount)} /{" "}
                         {formatNumber(item?.possible_full_earn_amount)} so'm
                       </div>
-                      {item?.[quantityKey] == item?.planned_quantity &&
-                        item?.possible_full_earn_amount -
-                          item?.earned_amount -
-                          item?.bonus >
-                          0 && (
-                          <div className="text-sm text-red-600 mt-1">
-                            Jarima:{" "}
-                            {formatNumber(
-                              item?.possible_full_earn_amount -
-                                item?.earned_amount -
-                                item?.bonus,
-                              2
-                            )}{" "}
-                            so'm
-                          </div>
-                        )}
                     </div>
 
                     {/* Model images */}
-                    <div className="flex flex-wrap gap-2 justify-center md:justify-start order-2 md:order-1">
+                    {/* <div className="flex flex-wrap gap-2 justify-center md:justify-start order-2 md:order-1">
                       <ModelImages modelCode={item?.model?.name} />
-                    </div>
+                    </div> */}
 
                     {/* Circle with percentage */}
                     <div className="relative flex items-center justify-center order-1 md:order-2">
