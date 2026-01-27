@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/utils/api";
 // import ModelImages from "@/components/ModelImages";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const formatNumber = (num, fractionDigits = 0) => {
   return parseFloat(num).toLocaleString("ru-RU", {
@@ -82,6 +83,18 @@ const DailyPayments = () => {
     fetchData();
   }, [selectedMonth]);
 
+  const navigateMonth = (direction) => {
+    const currentDate = new Date(selectedMonth + "-01");
+    if (direction === "prev") {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+    } else {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    const newMonth = currentDate.toISOString().slice(0, 7);
+    setSelectedMonth(newMonth);
+    localStorage.setItem("dailyPaymentsSelectedMonth", newMonth);
+  };
+
   const earned = data?.total_earned || 0;
   const total =
     data?.total_bonus + data?.total_earned + data?.total_remaining || 0;
@@ -96,15 +109,33 @@ const DailyPayments = () => {
 
   return (
     <div className="flex flex-col gap-8 text-gray-900">
-      <Input
-        type="month"
-        value={selectedMonth}
-        onChange={(e) => {
-          setSelectedMonth(e.target.value);
-          localStorage.setItem("dailyPaymentsSelectedMonth", e.target.value);
-        }}
-        className="w-fit bg-white"
-      />
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => navigateMonth("prev")}
+          className="bg-white hover:bg-gray-50"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => {
+            setSelectedMonth(e.target.value);
+            localStorage.setItem("dailyPaymentsSelectedMonth", e.target.value);
+          }}
+          className="w-fit bg-white"
+        />
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => navigateMonth("next")}
+          className="bg-white hover:bg-gray-50"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
 
       {/* Loading state */}
       {loading ? (
