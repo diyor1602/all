@@ -212,7 +212,7 @@ const NewSeason = () => {
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 font-medium">
-                    Ish vaqti
+                    Bajarildi
                   </p>
                   <p className="text-lg font-bold text-slate-900">
                     {new Intl.NumberFormat("ru-RU").format(
