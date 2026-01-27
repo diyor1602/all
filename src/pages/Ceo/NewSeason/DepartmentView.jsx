@@ -4,7 +4,13 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, User, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Loader2,
+  AlarmClock,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +38,7 @@ const DepartmentView = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const getData = async () => {
     try {
@@ -205,12 +212,7 @@ const DepartmentView = () => {
                       ?.map((item, index) => (
                         <tr
                           key={index}
-                          className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
-                          onClick={() => {
-                            setEditingValue(item?.per_minute_sum);
-                            setEditDialogOpen(true);
-                            setSelectedEmployee(item);
-                          }}
+                          className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                         >
                           <td className="py-2 px-2 sm:py-4 sm:px-4">
                             <div className="flex items-center gap-2 sm:gap-3">
@@ -237,7 +239,14 @@ const DepartmentView = () => {
                             </div>
                           </td>
                           <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
-                            <div className="flex items-center justify-end gap-1">
+                            <div
+                              className="flex items-center justify-end gap-1 cursor-pointer"
+                              onClick={() => {
+                                setEditingValue(item?.per_minute_sum);
+                                setEditDialogOpen(true);
+                                setSelectedEmployee(item);
+                              }}
+                            >
                               <span className="font-semibold text-slate-900 text-xs sm:text-sm">
                                 {item?.per_minute_sum || 0} so'm
                               </span>
@@ -251,7 +260,13 @@ const DepartmentView = () => {
                             </div>
                           </td>
                           <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
-                            <div className="flex items-center justify-end gap-1">
+                            <div
+                              className="flex items-center justify-end gap-1"
+                              onClick={() => {
+                                setSelectedEmployee(item);
+                                setDetailsDialogOpen(true);
+                              }}
+                            >
                               <span className="font-semibold text-slate-900 text-xs sm:text-sm">
                                 {formatNumber(item?.total_amount, 0)} so'm
                               </span>
@@ -343,6 +358,138 @@ const DepartmentView = () => {
                   className="max-w-full max-h-[60vh] rounded-lg object-contain"
                 />
               )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Details Dialog */}
+        <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+          <DialogContent className="sm:max-w-4xl max-w-[95vw]">
+            <DialogHeader className="pb-4">
+              <DialogTitle className="text-lg sm:text-xl font-semibold text-slate-900">
+                {selectedEmployee?.employee?.name}
+              </DialogTitle>
+              <p className="text-sm text-slate-500 mt-1">
+                Kunlik ish haqi ma'lumotlari
+              </p>
+            </DialogHeader>
+            <div className="overflow-auto max-h-[70vh]">
+              <div className="min-w-[600px]">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                    <p className="text-xs text-blue-600 font-medium mb-1">
+                      Kunlar soni
+                    </p>
+                    <p className="text-lg font-bold text-blue-900">
+                      {selectedEmployee?.days?.length || 0}
+                    </p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3 border border-green-100">
+                    <p className="text-xs text-green-600 font-medium mb-1">
+                      Jami topdi
+                    </p>
+                    <p className="text-lg font-bold text-green-900">
+                      {formatNumber(
+                        selectedEmployee?.days?.reduce(
+                          (sum, day) => sum + (day?.amount || 0),
+                          0,
+                        ),
+                        0,
+                      )}
+                    </p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+                    <p className="text-xs text-purple-600 font-medium mb-1">
+                      Jami daqiqa
+                    </p>
+                    <p className="text-lg font-bold text-purple-900">
+                      {formatNumber(
+                        selectedEmployee?.days?.reduce(
+                          (sum, day) => sum + (day?.minutes || 0),
+                          0,
+                        ),
+                        0,
+                      )}
+                    </p>
+                  </div>
+                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
+                    <p className="text-xs text-orange-600 font-medium mb-1">
+                      Daqiqasiga
+                    </p>
+                    <p className="text-lg font-bold text-orange-900">
+                      {selectedEmployee?.per_minute_sum || 0} so'm
+                    </p>
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="text-left py-3 px-4 font-semibold text-slate-700 text-sm">
+                          Sana
+                        </th>
+                        <th className="text-right py-3 px-4 font-semibold text-slate-700 text-sm">
+                          Topdi
+                        </th>
+                        <th className="text-right py-3 px-4 font-semibold text-slate-700 text-sm">
+                          Daqiqa
+                        </th>
+                        <th className="text-right py-3 px-4 font-semibold text-slate-700 text-sm">
+                          Daqiqasiga
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedEmployee?.days
+                        ?.sort((a, b) => {
+                          return new Date(a?.date) - new Date(b?.date);
+                        })
+                        .map((day, index) => (
+                          <tr
+                            key={index}
+                            className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                          >
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                <span className="font-medium text-slate-900 text-sm">
+                                  {day?.date?.split("-").reverse().join(".")}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="font-semibold text-green-600 text-sm">
+                                {formatNumber(day?.amount, 0)} so'm
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center gap-2 justify-end">
+                                <span className="font-semibold text-purple-600 text-sm">
+                                  {formatNumber(day?.minutes, 0)}
+                                </span>
+                                <AlarmClock className="w-4 h-4 text-purple-600" />
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="font-semibold text-orange-600 text-sm">
+                                {day?.per_minute_sum} so'm
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+
+                  {selectedEmployee?.days?.length === 0 && (
+                    <div className="text-center py-8 text-slate-500">
+                      Ma'lumotlar topilmadi
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

@@ -22,6 +22,10 @@ const AuthProvider = ({ children }) => {
         localStorage.setItem("user_id", res.data.user?.id);
         localStorage.setItem("name", res.data.user?.employee?.name);
         localStorage.setItem("percentage", res.data.user?.employee?.percentage);
+        localStorage.setItem(
+          "employee_sum",
+          res.data.user?.employee?.employee_sum,
+        );
         setUser({ username, role: res.data.user?.role?.name });
 
         navigate(res.data.user?.role?.name === "tv" ? "/tv" : "/home", {

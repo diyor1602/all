@@ -13,6 +13,7 @@ import {
   Radical,
   Sprout,
   BadgePercent,
+  CircleDollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,14 @@ export default function BaseLayout({ children, navigation }) {
       icon: PartyPopper,
       onMobile: false,
       dontShow: parseFloat(localStorage.getItem("percentage")) <= 0,
+      customColor: "text-green-500 hover:bg-green-50",
+    },
+    {
+      name: "Yangi mavsum",
+      href: "/newSeason",
+      icon: CircleDollarSign,
+      onMobile: false,
+      dontShow: !localStorage.getItem("employee_sum")?.length,
       customColor: "text-green-500 hover:bg-green-50",
     },
     {

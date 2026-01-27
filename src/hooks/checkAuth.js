@@ -10,6 +10,7 @@ const allowPaths = [
   "coefficient",
   "dailyPayments",
   "damages",
+  "newSeason",
 ];
 
 const isTokenValid = (tok) => {
