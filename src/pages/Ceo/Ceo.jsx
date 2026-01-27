@@ -11,6 +11,7 @@ import Monthly from "./Monthly/Monthly";
 import Calc from "./Calc/Calc";
 import Quantity from "./Quantity/Quantity";
 import OverCalc from "./OverCalc/OverCalc";
+import NewSeason from "./NewSeason/NewSeason";
 import Settings from "./Settings/Settings";
 
 const Ceo = () => {
@@ -28,6 +29,7 @@ const Ceo = () => {
       <Route path="calc/*" element={<Calc />} />
       <Route path="quantity/*" element={<Quantity />} />
       <Route path="overcalc/*" element={<OverCalc />} />
+      <Route path="newSeason/*" element={<NewSeason />} />
       <Route path="settings/*" element={<Settings />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>

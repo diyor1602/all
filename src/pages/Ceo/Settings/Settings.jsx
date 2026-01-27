@@ -8,6 +8,7 @@ import {
   CalendarClock,
   Flower,
   Calculator,
+  Trees,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -64,6 +65,12 @@ const SettingsPage = () => {
       icon: Calculator,
       link: "/ceo/calc",
       color: "bg-gray-500",
+    },
+    {
+      name: "Yangi mavsum",
+      icon: Trees,
+      link: "/ceo/newSeason",
+      color: "bg-sky-500",
     },
   ];
 
