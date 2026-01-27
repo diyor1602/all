@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -11,9 +10,43 @@ import {
   Wallet,
   CalendarDays,
   Target,
-  MoreHorizontal,
+  Sparkles,
+  Zap,
 } from "lucide-react";
-import formatNumber from "@/utils/formatNumber";
+
+// --- Helper: Custom Uzbek Day Formatter ---
+const getUzbekDay = (dateString) => {
+  const days = ["Yak", "Dush", "Sesh", "Chor", "Pay", "Juma", "Shan"];
+  const date = new Date(dateString);
+  return days[date.getDay()];
+};
+
+// --- Helper: Animated Counter for Money Feeling ---
+const AnimatedCounter = ({ value }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = parseInt(value) || 0;
+    if (start === end) return;
+
+    let totalMilSecDur = 1000;
+    let incrementTime = (totalMilSecDur / end) * 10;
+
+    let timer = setInterval(() => {
+      start += Math.ceil((end - start) / 10);
+      if (start >= end) {
+        start = end;
+        clearInterval(timer);
+      }
+      setDisplayValue(start);
+    }, 30);
+
+    return () => clearInterval(timer);
+  }, [value]);
+
+  return new Intl.NumberFormat("ru-RU").format(displayValue);
+};
 
 const NewSeason = () => {
   const { toast } = useToast();
@@ -54,90 +87,106 @@ const NewSeason = () => {
     getData();
   }, [selectedMonth]);
 
-  // Helper for progress percentage
   const getProgress = (current, total) => {
     if (!total) return 0;
     return Math.min((current / total) * 100, 100);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
+    <div className="min-h-screen bg-slate-50 pb-24 font-sans">
       {/* --- Sticky Header --- */}
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm transition-all duration-200">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-indigo-600 p-2 rounded-xl">
+            <div className="bg-emerald-600 p-2 rounded-xl shadow-lg shadow-emerald-200">
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-gray-900 tracking-tight">
-              Mavsum
-            </span>
+            <span className="font-bold text-slate-800 text-lg">Mavsum</span>
           </div>
 
-          <div className="flex items-center bg-gray-100/80 p-1 rounded-full border border-gray-200">
+          {/* Date Picker Control */}
+          <div className="flex items-center bg-white p-1 rounded-full border border-slate-200 shadow-sm">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigateMonth(-1)}
-              className="h-8 w-8 rounded-full hover:bg-white hover:shadow-sm"
+              className="h-8 w-8 rounded-full text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
             >
-              <ChevronLeft className="h-4 w-4 text-gray-600" />
+              <ChevronLeft className="h-5 w-5" />
             </Button>
 
-            <div className="relative group mx-1">
-              {/* Hidden native input, overlaid with custom text */}
-              <Input
+            <div className="relative mx-1">
+              {/* FIXED: Standard HTML input to ensure touch events work reliably */}
+              <input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+                className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
               />
-              <span className="text-sm font-semibold text-gray-700 px-2 py-1 block min-w-[90px] text-center pointer-events-none">
+              <div className="px-3 py-1 bg-slate-100 rounded-md text-sm font-bold text-slate-700 min-w-[90px] text-center">
                 {selectedMonth}
-              </span>
+              </div>
             </div>
 
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigateMonth(1)}
-              className="h-8 w-8 rounded-full hover:bg-white hover:shadow-sm"
+              className="h-8 w-8 rounded-full text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
             >
-              <ChevronRight className="h-4 w-4 text-gray-600" />
+              <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto pt-6 space-y-6">
+      <div className="max-w-md mx-auto px-4 pt-6 space-y-5">
         {loading ? (
           <LoadingSkeleton />
         ) : (
           <>
-            {/* --- Hero Card: Balance --- */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200">
-              {/* Decorative circles */}
-              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
-              <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-black/10 blur-xl"></div>
+            {/* --- Premium Money Card --- */}
+            <div className="relative overflow-hidden rounded-[2rem] shadow-2xl shadow-emerald-900/20 transform transition-transform hover:scale-[1.01] duration-300">
+              {/* Background Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800"></div>
 
-              <div className="relative z-10">
-                <p className="text-indigo-100 text-sm font-medium mb-1 flex items-center gap-2">
-                  <Wallet className="w-4 h-4" /> Topilgan summa
-                </p>
-                <h2 className="text-4xl font-bold tracking-tight mb-4">
-                  {formatNumber(data?.item?.total_amount, 0)}
-                  <span className="text-2xl text-indigo-200 font-normal ml-2">
+              {/* Decorative "Shine" Circles */}
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-3xl"></div>
+
+              <div className="relative z-10 p-7 text-white">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2 opacity-90">
+                    <div className="p-1.5 bg-white/20 backdrop-blur-md rounded-lg">
+                      <Wallet className="w-4 h-4 text-emerald-50" />
+                    </div>
+                    <span className="text-sm font-medium tracking-wide">
+                      Jami Ishlandi
+                    </span>
+                  </div>
+                  <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
+                </div>
+
+                {/* Big Money Display */}
+                <div className="flex items-baseline gap-1 mt-2 mb-6">
+                  <h2 className="text-4xl font-extrabold tracking-tight drop-shadow-sm">
+                    <AnimatedCounter value={data?.item?.total_amount} />
+                  </h2>
+                  <span className="text-xl font-medium text-emerald-100/80">
                     so'm
                   </span>
-                </h2>
+                </div>
 
-                {/* Progress Bar inside Hero */}
+                {/* Progress Bar with "Glow" */}
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs text-indigo-100/80">
+                  <div className="flex justify-between text-xs font-medium text-emerald-100/90">
                     <span>
-                      Maqsad: {formatNumber(data?.item?.possible_amount, 0)}
+                      Maqsad:{" "}
+                      {new Intl.NumberFormat("ru-RU").format(
+                        data?.item?.possible_amount,
+                      )}
                     </span>
-                    <span>
+                    <span className="bg-white/20 px-2 py-0.5 rounded text-white">
                       {getProgress(
                         data?.item?.total_amount,
                         data?.item?.possible_amount,
@@ -145,9 +194,9 @@ const NewSeason = () => {
                       %
                     </span>
                   </div>
-                  <div className="h-2 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
+                  <div className="h-2.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm p-[2px]">
                     <div
-                      className="h-full bg-white/90 rounded-full transition-all duration-1000 ease-out"
+                      className="h-full bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-full shadow-[0_0_10px_rgba(253,224,71,0.5)] transition-all duration-1000 ease-out"
                       style={{
                         width: `${getProgress(data?.item?.total_amount, data?.item?.possible_amount)}%`,
                       }}
@@ -157,87 +206,97 @@ const NewSeason = () => {
               </div>
             </div>
 
-            {/* --- Secondary Stats Grid --- */}
+            {/* --- Stats Grid --- */}
             <div className="grid grid-cols-2 gap-3">
-              <StatCard
-                icon={Clock}
-                label="Ish vaqti"
-                value={`${formatNumber(data?.item?.total_minutes, 0)} daq`}
-                subtext={`Jami: ${formatNumber(data?.item?.possible_minutes, 0)}`}
-                color="text-blue-600"
-                bg="bg-blue-50"
-              />
-              <StatCard
-                icon={Target}
-                label="Tarif"
-                value={`${formatNumber(data?.item?.per_minute_sum, 0)} so'm`}
-                subtext="Har daqiqa uchun"
-                color="text-orange-600"
-                bg="bg-orange-50"
-              />
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3 text-blue-600">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Ish vaqti
+                  </p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {new Intl.NumberFormat("ru-RU").format(
+                      data?.item?.total_minutes,
+                    )}{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      daq
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-3 text-orange-600">
+                  <Target className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Tarif</p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {new Intl.NumberFormat("ru-RU").format(
+                      data?.item?.per_minute_sum,
+                    )}{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      so'm
+                    </span>
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* --- History List (Unified for Mobile & Desktop) --- */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
-                <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                  <CalendarDays className="w-5 h-5 text-gray-400" />
-                  Kunlik hisobot
+            {/* --- Transaction List --- */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5 text-slate-400" />
+                  Kunlik Tarix
                 </h3>
-                <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
-                  {data?.item?.days?.length || 0} kun
-                </span>
               </div>
 
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-slate-100">
                 {data?.item?.days?.map((day, i) => (
                   <div
                     key={i}
-                    className="group p-4 hover:bg-gray-50/80 transition-colors flex items-center justify-between"
+                    className="p-4 flex items-center justify-between active:bg-slate-50 transition-colors"
                   >
                     <div className="flex items-center gap-4">
                       {/* Date Box */}
-                      <div className="flex flex-col items-center justify-center w-12 h-12 bg-gray-50 rounded-2xl border border-gray-100 group-hover:border-indigo-100 group-hover:bg-indigo-50 transition-colors">
-                        <span className="text-xs font-bold text-gray-400 uppercase">
-                          {new Date(day?.date).toLocaleDateString("uz-UZ", {
-                            weekday: "short",
-                          })}
+                      <div className="flex flex-col items-center justify-center w-12 h-12 bg-white rounded-2xl border-2 border-slate-100 shadow-sm">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          {getUzbekDay(day?.date)}
                         </span>
-                        <span className="text-sm font-bold text-gray-900">
+                        <span className="text-base font-bold text-slate-800 leading-none mt-0.5">
                           {day?.date?.split("-")[2]}
                         </span>
                       </div>
 
-                      {/* Info */}
-                      <div>
-                        <p className="text-sm text-gray-500 flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span className="font-medium text-gray-700">
-                            {day?.minutes} daqiqa
-                          </span>
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          Tarif: {day?.per_minute_sum} s/d
-                        </p>
+                      {/* Details */}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-700 flex items-center gap-1">
+                          {day?.minutes} daqiqa
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {day?.per_minute_sum} so'm dan
+                        </span>
                       </div>
                     </div>
 
                     {/* Amount */}
-                    <div className="text-right">
-                      <p className="font-bold text-emerald-600">
-                        +{formatNumber(day?.amount, 0)}
-                      </p>
-                      <p className="text-xs text-gray-400 uppercase font-medium">
-                        so'm
-                      </p>
+                    <div className="flex flex-col items-end">
+                      <span className="font-bold text-emerald-600 text-base">
+                        +{new Intl.NumberFormat("ru-RU").format(day?.amount)}
+                      </span>
+                      <div className="flex items-center gap-1 text-[10px] text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded-md mt-1">
+                        <Zap className="w-3 h-3" />
+                        <span>Muvaffaqiyatli</span>
+                      </div>
                     </div>
                   </div>
                 ))}
 
                 {(!data?.item?.days || data?.item?.days.length === 0) && (
-                  <div className="p-8 text-center text-gray-400">
-                    <MoreHorizontal className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                    <p className="text-sm">Ma'lumot topilmadi</p>
+                  <div className="py-10 text-center text-slate-400">
+                    <p>Bu oyda hali ma'lumot yo'q</p>
                   </div>
                 )}
               </div>
@@ -249,31 +308,14 @@ const NewSeason = () => {
   );
 };
 
-// --- Sub Components ---
-
-const StatCard = ({ icon: Icon, label, value, subtext, color, bg }) => (
-  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full">
-    <div
-      className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center mb-3`}
-    >
-      <Icon className={`w-5 h-5 ${color}`} />
-    </div>
-    <div>
-      <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
-      <p className="text-lg font-bold text-gray-900">{value}</p>
-      <p className="text-[10px] text-gray-400 font-medium mt-1">{subtext}</p>
-    </div>
-  </div>
-);
-
 const LoadingSkeleton = () => (
-  <div className="space-y-6 animate-pulse">
-    <div className="h-48 bg-gray-200 rounded-3xl w-full"></div>
+  <div className="space-y-5 animate-pulse">
+    <div className="h-48 bg-slate-200 rounded-[2rem] w-full"></div>
     <div className="grid grid-cols-2 gap-3">
-      <div className="h-32 bg-gray-200 rounded-2xl"></div>
-      <div className="h-32 bg-gray-200 rounded-2xl"></div>
+      <div className="h-28 bg-slate-200 rounded-2xl"></div>
+      <div className="h-28 bg-slate-200 rounded-2xl"></div>
     </div>
-    <div className="h-64 bg-gray-200 rounded-3xl w-full"></div>
+    <div className="h-64 bg-slate-200 rounded-3xl w-full"></div>
   </div>
 );
 
