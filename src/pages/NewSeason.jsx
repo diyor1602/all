@@ -12,6 +12,7 @@ import {
   Target,
   Sparkles,
   Zap,
+  Pizza,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -225,7 +226,7 @@ const NewSeason = () => {
               </div>
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-3 text-orange-600">
-                  <Target className="w-5 h-5" />
+                  <Pizza className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 font-medium">Tarif</p>
