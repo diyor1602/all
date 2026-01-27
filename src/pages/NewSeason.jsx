@@ -13,6 +13,7 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
+import formatNumber from "@/utils/formatNumber";
 
 // --- Helper: Custom Uzbek Day Formatter ---
 const getUzbekDay = (dateString) => {
@@ -92,7 +93,7 @@ const NewSeason = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 font-sans">
+    <div className="min-h-screen bg-slate-50">
       {/* --- Sticky Header --- */}
       <div className="sticky top-0 z-30 backdrop-blur-lg">
         <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
@@ -180,10 +181,7 @@ const NewSeason = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-medium text-emerald-100/90">
                     <span>
-                      Maqsad:{" "}
-                      {new Intl.NumberFormat("ru-RU").format(
-                        data?.item?.possible_amount,
-                      )}
+                      Maqsad: {formatNumber(data?.item?.possible_amount, 0)}
                     </span>
                     <span className="bg-white/20 px-2 py-0.5 rounded text-white">
                       {getProgress(
@@ -274,7 +272,7 @@ const NewSeason = () => {
                         {/* Details */}
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-slate-700 flex items-center gap-1">
-                            {day?.minutes} daqiqa
+                            {formatNumber(day?.minutes, 0)} daqiqa
                           </span>
                           <span className="text-xs text-slate-400">
                             {day?.per_minute_sum} so'm dan
