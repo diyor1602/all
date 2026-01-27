@@ -4,22 +4,14 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  User,
-  Edit2,
-  Loader2,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, User, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const DepartmentView = () => {
@@ -37,6 +29,8 @@ const DepartmentView = () => {
   const [editingValue, setEditingValue] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const getData = async () => {
     try {
@@ -114,23 +108,23 @@ const DepartmentView = () => {
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold text-slate-900">
+                <h1 className="text-lg sm:text-xl font-bold text-slate-900">
                   Bo'lim ma'lumotlari
                 </h1>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-slate-500">
                   Xodimlarning oylik ma'lumotlari
                 </p>
               </div>
 
               {/* Month Navigation */}
-              <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-1">
+              <div className="flex items-center gap-1 bg-slate-50 rounded-lg p-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth("prev")}
-                  className="h-8 w-8 p-0 hover:bg-slate-200 transition-colors"
+                  className="h-7 w-7 p-0 hover:bg-slate-200 transition-colors"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3 w-3" />
                 </Button>
 
                 <Input
@@ -143,16 +137,16 @@ const DepartmentView = () => {
                       e.target.value,
                     );
                   }}
-                  className="w-auto h-8 border-0 bg-transparent text-sm"
+                  className="w-28 sm:w-auto h-7 text-xs border-0 bg-transparent"
                 />
 
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth("next")}
-                  className="h-8 w-8 p-0 hover:bg-slate-200 transition-colors"
+                  className="h-7 w-7 p-0 hover:bg-slate-200 transition-colors"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-3 w-3" />
                 </Button>
               </div>
             </div>
@@ -182,15 +176,15 @@ const DepartmentView = () => {
         {/* Employees Table */}
         {!loading && (
           <Card className="bg-white shadow-sm border-0">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                      <th className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
                         Xodim
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">
+                      <th className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
                         Daqiqa uchun
                       </th>
                     </tr>
@@ -210,24 +204,35 @@ const DepartmentView = () => {
                             setSelectedEmployee(item);
                           }}
                         >
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-3">
-                              {item?.employee?.img && (
-                                <img
-                                  src={item?.employee?.img}
-                                  alt={item?.employee?.name}
-                                  className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100 shrink-0"
-                                />
-                              )}
+                          <td className="py-2 px-2 sm:py-4 sm:px-4">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <div className="relative">
+                                {item?.employee?.img ? (
+                                  <img
+                                    src={item?.employee?.img}
+                                    alt={item?.employee?.name}
+                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-slate-100 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedImage(item?.employee?.img);
+                                      setImageDialogOpen(true);
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+                                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500" />
+                                  </div>
+                                )}
+                              </div>
 
-                              <span className="font-medium text-slate-900">
+                              <span className="font-medium text-slate-900 text-xs sm:text-sm">
                                 {item?.employee?.name}
                               </span>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-right">
+                          <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <span className="font-semibold text-slate-900">
+                              <span className="font-semibold text-slate-900 text-xs sm:text-sm">
                                 {item?.per_minute_sum || 0} so'm
                               </span>
                             </div>
@@ -251,74 +256,68 @@ const DepartmentView = () => {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit2 className="h-5 w-5" />
-                Ma'lumot tahrirlash
+              <DialogTitle className="text-sm sm:text-base">
+                {selectedEmployee?.employee?.name} - Daqiqa uchun summa
               </DialogTitle>
             </DialogHeader>
-
             <div className="space-y-4">
-              {selectedEmployee && (
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                  <img
-                    src={
-                      selectedEmployee?.employee?.img ||
-                      "/api/placeholder/40/40"
-                    }
-                    alt={selectedEmployee?.employee?.name}
-                    className="w-10 h-10 rounded-full object-cover shrink-0"
-                  />
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      {selectedEmployee?.employee?.name}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      ID: {selectedEmployee?.employee?.id}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Daqiqa uchun to'lov
+              <div>
+                <label className="text-xs sm:text-sm font-medium text-slate-700">
+                  Summa (so'm)
                 </label>
                 <Input
                   type="number"
-                  value={editingValue || ""}
+                  value={editingValue}
                   onChange={(e) => setEditingValue(e.target.value)}
-                  className="text-lg font-semibold"
-                  placeholder="0"
+                  className="mt-1 text-sm"
+                  placeholder="Summani kiriting"
                 />
               </div>
-
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 justify-end">
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => {
                     setEditDialogOpen(false);
                     setEditingValue(null);
                     setSelectedEmployee(null);
                   }}
-                  className="flex-1"
+                  className="text-xs sm:text-sm"
                 >
                   Bekor qilish
                 </Button>
                 <Button
+                  size="sm"
                   onClick={handleSubmit}
-                  disabled={sending || !editingValue}
-                  className="flex-1"
+                  disabled={sending}
+                  className="text-xs sm:text-sm"
                 >
-                  {sending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saqlanmoqda...
-                    </>
-                  ) : (
-                    "Saqlash"
+                  {sending && (
+                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 animate-spin" />
                   )}
+                  Saqlash
                 </Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Image Dialog */}
+        <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+          <DialogContent className="sm:max-w-2xl max-w-[90vw]">
+            <DialogHeader>
+              <DialogTitle className="text-sm sm:text-base">
+                Xodim rasmi
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex items-center justify-center">
+              {selectedImage && (
+                <img
+                  src={selectedImage}
+                  alt="Xodim rasmi"
+                  className="max-w-full max-h-[60vh] rounded-lg object-contain"
+                />
+              )}
             </div>
           </DialogContent>
         </Dialog>
