@@ -31,7 +31,6 @@ const AnimatedCounter = ({ value }) => {
     if (start === end) return;
 
     let totalMilSecDur = 1000;
-    let incrementTime = (totalMilSecDur / end) * 10;
 
     let timer = setInterval(() => {
       start += Math.ceil((end - start) / 10);
@@ -95,7 +94,7 @@ const NewSeason = () => {
   return (
     <div className="min-h-screen bg-slate-50 pb-24 font-sans">
       {/* --- Sticky Header --- */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-slate-200/60 shadow-sm">
+      <div className="sticky top-0 z-30 backdrop-blur-lg">
         <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-emerald-600 p-2 rounded-xl shadow-lg shadow-emerald-200">
@@ -140,7 +139,7 @@ const NewSeason = () => {
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 pt-6 space-y-5">
+      <div className="max-w-md mx-auto pt-6 space-y-5">
         {loading ? (
           <LoadingSkeleton />
         ) : (
@@ -254,45 +253,47 @@ const NewSeason = () => {
               </div>
 
               <div className="divide-y divide-slate-100">
-                {data?.item?.days?.map((day, i) => (
-                  <div
-                    key={i}
-                    className="p-4 flex items-center justify-between active:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      {/* Date Box */}
-                      <div className="flex flex-col items-center justify-center w-12 h-12 bg-white rounded-2xl border-2 border-slate-100 shadow-sm">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          {getUzbekDay(day?.date)}
-                        </span>
-                        <span className="text-base font-bold text-slate-800 leading-none mt-0.5">
-                          {day?.date?.split("-")[2]}
-                        </span>
+                {data?.item?.days
+                  ?.sort((a, b) => new Date(b?.date) - new Date(a?.date))
+                  ?.map((day, i) => (
+                    <div
+                      key={i}
+                      className="p-4 flex items-center justify-between active:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Date Box */}
+                        <div className="flex flex-col items-center justify-center w-12 h-12 bg-white rounded-2xl border-2 border-slate-100 shadow-sm">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            {getUzbekDay(day?.date)}
+                          </span>
+                          <span className="text-base font-bold text-slate-800 leading-none mt-0.5">
+                            {day?.date?.split("-")[2]}
+                          </span>
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-700 flex items-center gap-1">
+                            {day?.minutes} daqiqa
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {day?.per_minute_sum} so'm dan
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Details */}
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-700 flex items-center gap-1">
-                          {day?.minutes} daqiqa
+                      {/* Amount */}
+                      <div className="flex flex-col items-end">
+                        <span className="font-bold text-emerald-600 text-base">
+                          +{new Intl.NumberFormat("ru-RU").format(day?.amount)}
                         </span>
-                        <span className="text-xs text-slate-400">
-                          {day?.per_minute_sum} so'm dan
-                        </span>
+                        <div className="flex items-center gap-1 text-[10px] text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded-md mt-1">
+                          <Zap className="w-3 h-3" />
+                          <span>Muvaffaqiyatli</span>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Amount */}
-                    <div className="flex flex-col items-end">
-                      <span className="font-bold text-emerald-600 text-base">
-                        +{new Intl.NumberFormat("ru-RU").format(day?.amount)}
-                      </span>
-                      <div className="flex items-center gap-1 text-[10px] text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded-md mt-1">
-                        <Zap className="w-3 h-3" />
-                        <span>Muvaffaqiyatli</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
 
                 {(!data?.item?.days || data?.item?.days.length === 0) && (
                   <div className="py-10 text-center text-slate-400">
