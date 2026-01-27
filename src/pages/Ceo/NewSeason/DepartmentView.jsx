@@ -253,7 +253,7 @@ const DepartmentView = () => {
                           <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <span className="font-semibold text-slate-900 text-xs sm:text-sm">
-                                {formatNumber(item?.total_amount || 0)} so'm
+                                {formatNumber(item?.total_amount, 0)} so'm
                               </span>
                             </div>
                           </td>
