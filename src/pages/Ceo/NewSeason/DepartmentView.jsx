@@ -160,7 +160,7 @@ const DepartmentView = () => {
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, index) => (
                   <div key={index} className="flex items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <Skeleton className="h-12 w-12 rounded-full shrink-0" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-48" />
                       <Skeleton className="h-3 w-24" />
@@ -206,24 +206,22 @@ const DepartmentView = () => {
                         >
                           <td className="py-2 px-2 sm:py-4 sm:px-4">
                             <div className="flex items-center gap-2 sm:gap-3">
-                              <div className="relative">
-                                {item?.employee?.img ? (
-                                  <img
-                                    src={item?.employee?.img}
-                                    alt={item?.employee?.name}
-                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-slate-100 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedImage(item?.employee?.img);
-                                      setImageDialogOpen(true);
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500" />
-                                  </div>
-                                )}
-                              </div>
+                              {item?.employee?.img ? (
+                                <img
+                                  src={item?.employee?.img}
+                                  alt={item?.employee?.name}
+                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-slate-100 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedImage(item?.employee?.img);
+                                    setImageDialogOpen(true);
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+                                  <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500" />
+                                </div>
+                              )}
 
                               <span className="font-medium text-slate-900 text-xs sm:text-sm">
                                 {item?.employee?.name}
