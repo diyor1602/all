@@ -4,14 +4,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  AlarmClock,
   ChevronLeft,
   ChevronRight,
-  Loader2,
   TrendingUp,
   Clock,
-  DollarSign,
+  Wallet,
+  CalendarDays,
   Target,
+  MoreHorizontal,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -54,182 +54,192 @@ const NewSeason = () => {
     getData();
   }, [selectedMonth]);
 
-  const stats = [
-    {
-      label: "Daqiqasiga",
-      value: `${formatNumber(data?.item?.per_minute_sum, 0)} so'm`,
-      icon: Target,
-      color: "from-orange-500 to-orange-600",
-    },
-    {
-      label: "Jami vaqt",
-      value: `${formatNumber(data?.item?.total_minutes, 0)} daqiqa`,
-      icon: Clock,
-      color: "from-purple-500 to-purple-600",
-    },
-    {
-      label: "Topilgan",
-      value: `${formatNumber(data?.item?.total_amount, 0)} so'm`,
-      icon: DollarSign,
-      color: "from-emerald-500 to-emerald-600",
-    },
-    {
-      label: "Kutilmoqda",
-      value: `${formatNumber(data?.item?.possible_amount, 0)} so'm`,
-      icon: TrendingUp,
-      color: "from-blue-500 to-blue-600",
-    },
-  ];
+  // Helper for progress percentage
+  const getProgress = (current, total) => {
+    if (!total) return 0;
+    return Math.min((current / total) * 100, 100);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Sticky Mobile-Friendly Header */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-blue-600" />
-            <span className="hidden sm:inline">Mavsum Statistikasi</span>
-            <span className="sm:hidden">Statistika</span>
-          </h1>
+    <div className="min-h-screen bg-gray-50/50 pb-20">
+      {/* --- Sticky Header --- */}
+      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm transition-all duration-200">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="bg-indigo-600 p-2 rounded-xl">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-gray-900 tracking-tight">
+              Mavsum
+            </span>
+          </div>
 
-          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
+          <div className="flex items-center bg-gray-100/80 p-1 rounded-full border border-gray-200">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigateMonth(-1)}
-              className="shrink-0"
+              className="h-8 w-8 rounded-full hover:bg-white hover:shadow-sm"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4 text-gray-600" />
             </Button>
-            <Input
-              type="month"
-              value={selectedMonth}
-              className="bg-transparent border-none focus-visible:ring-0 text-sm font-medium shadow-none"
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            />
+
+            <div className="relative group mx-1">
+              {/* Hidden native input, overlaid with custom text */}
+              <Input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+              />
+              <span className="text-sm font-semibold text-gray-700 px-2 py-1 block min-w-[90px] text-center pointer-events-none">
+                {selectedMonth}
+              </span>
+            </div>
+
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigateMonth(1)}
-              className="shrink-0"
+              className="h-8 w-8 rounded-full hover:bg-white hover:shadow-sm"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4 text-gray-600" />
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+      <div className="max-w-3xl mx-auto pt-6 space-y-6">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-[60vh] text-slate-400">
-            <Loader2 className="animate-spin mb-4" size={40} />
-            <p className="animate-pulse">Yuklanmoqda...</p>
-          </div>
+          <LoadingSkeleton />
         ) : (
           <>
-            {/* Progress Section - Better Visual Balance */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ProgressCard
-                title="Vaqt Progressi"
-                current={data?.item?.total_minutes}
-                total={data?.item?.possible_minutes}
-                unit="daq"
-                color="bg-blue-600"
-              />
-              <ProgressCard
-                title="Mablag' Progressi"
-                current={data?.item?.total_amount}
-                total={data?.item?.possible_amount}
-                unit="so'm"
-                color="bg-emerald-600"
-              />
-            </div>
+            {/* --- Hero Card: Balance --- */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200">
+              {/* Decorative circles */}
+              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-black/10 blur-xl"></div>
 
-            {/* Quick Stats Grid - More Compact on Mobile */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {stats.map((stat, i) => (
-                <div
-                  key={i}
-                  className={`bg-gradient-to-br ${stat.color} rounded-2xl p-4 text-white shadow-sm`}
-                >
-                  <stat.icon className="w-5 h-5 opacity-80 mb-2" />
-                  <p className="text-xs font-medium opacity-90 uppercase tracking-wider">
-                    {stat.label}
-                  </p>
-                  <p className="text-lg font-bold truncate">{stat.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Daily List - Responsive Table Replacement */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
-                  <AlarmClock className="w-5 h-5 text-slate-400" />
-                  Kunlik Hisobot
+              <div className="relative z-10">
+                <p className="text-indigo-100 text-sm font-medium mb-1 flex items-center gap-2">
+                  <Wallet className="w-4 h-4" /> Topilgan summa
+                </p>
+                <h2 className="text-4xl font-bold tracking-tight mb-4">
+                  {formatNumber(data?.item?.total_amount, 0)}
+                  <span className="text-2xl text-indigo-200 font-normal ml-2">
+                    so'm
+                  </span>
                 </h2>
+
+                {/* Progress Bar inside Hero */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-indigo-100/80">
+                    <span>
+                      Maqsad: {formatNumber(data?.item?.possible_amount, 0)}
+                    </span>
+                    <span>
+                      {getProgress(
+                        data?.item?.total_amount,
+                        data?.item?.possible_amount,
+                      ).toFixed(0)}
+                      %
+                    </span>
+                  </div>
+                  <div className="h-2 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
+                    <div
+                      className="h-full bg-white/90 rounded-full transition-all duration-1000 ease-out"
+                      style={{
+                        width: `${getProgress(data?.item?.total_amount, data?.item?.possible_amount)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* --- Secondary Stats Grid --- */}
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard
+                icon={Clock}
+                label="Ish vaqti"
+                value={`${formatNumber(data?.item?.total_minutes, 0)} daq`}
+                subtext={`Jami: ${formatNumber(data?.item?.possible_minutes, 0)}`}
+                color="text-blue-600"
+                bg="bg-blue-50"
+              />
+              <StatCard
+                icon={Target}
+                label="Tarif"
+                value={`${formatNumber(data?.item?.per_minute_sum, 0)} so'm`}
+                subtext="Har daqiqa uchun"
+                color="text-orange-600"
+                bg="bg-orange-50"
+              />
+            </div>
+
+            {/* --- History List (Unified for Mobile & Desktop) --- */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
+                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5 text-gray-400" />
+                  Kunlik hisobot
+                </h3>
+                <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
+                  {data?.item?.days?.length || 0} kun
+                </span>
               </div>
 
-              {/* Mobile View: Card List */}
-              <div className="block sm:hidden divide-y divide-slate-100">
+              <div className="divide-y divide-gray-50">
                 {data?.item?.days?.map((day, i) => (
                   <div
                     key={i}
-                    className="p-4 active:bg-slate-50 transition-colors"
+                    className="group p-4 hover:bg-gray-50/80 transition-colors flex items-center justify-between"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="font-bold text-slate-700">
-                        {day?.date?.split("-").reverse().join(".")}
-                      </span>
-                      <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg text-xs">
-                        +{formatNumber(day?.amount, 0)} s
-                      </span>
+                    <div className="flex items-center gap-4">
+                      {/* Date Box */}
+                      <div className="flex flex-col items-center justify-center w-12 h-12 bg-gray-50 rounded-2xl border border-gray-100 group-hover:border-indigo-100 group-hover:bg-indigo-50 transition-colors">
+                        <span className="text-xs font-bold text-gray-400 uppercase">
+                          {new Date(day?.date).toLocaleDateString("uz-UZ", {
+                            weekday: "short",
+                          })}
+                        </span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {day?.date?.split("-")[2]}
+                        </span>
+                      </div>
+
+                      {/* Info */}
+                      <div>
+                        <p className="text-sm text-gray-500 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span className="font-medium text-gray-700">
+                            {day?.minutes} daqiqa
+                          </span>
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Tarif: {day?.per_minute_sum} s/d
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm text-slate-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {day?.minutes} daqiqa
-                      </div>
-                      <div className="text-slate-400">
-                        {day?.per_minute_sum} s/dak
-                      </div>
+
+                    {/* Amount */}
+                    <div className="text-right">
+                      <p className="font-bold text-emerald-600">
+                        +{formatNumber(day?.amount, 0)}
+                      </p>
+                      <p className="text-xs text-gray-400 uppercase font-medium">
+                        so'm
+                      </p>
                     </div>
                   </div>
                 ))}
-              </div>
 
-              {/* Desktop View: Proper Table */}
-              <div className="hidden sm:block overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                    <tr>
-                      <th className="px-6 py-4 font-semibold">Sana</th>
-                      <th className="px-6 py-4 font-semibold text-right">
-                        Summa
-                      </th>
-                      <th className="px-6 py-4 font-semibold text-right">
-                        Vaqt
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data?.item?.days?.map((day, i) => (
-                      <tr
-                        key={i}
-                        className="hover:bg-slate-50/50 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-medium text-slate-900">
-                          {day?.date}
-                        </td>
-                        <td className="px-6 py-4 text-right text-emerald-600 font-bold">
-                          {formatNumber(day?.amount, 0)} so'm
-                        </td>
-                        <td className="px-6 py-4 text-right text-slate-600">
-                          {formatNumber(day?.minutes, 0)} daqiqa
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {(!data?.item?.days || data?.item?.days.length === 0) && (
+                  <div className="p-8 text-center text-gray-400">
+                    <MoreHorizontal className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                    <p className="text-sm">Ma'lumot topilmadi</p>
+                  </div>
+                )}
               </div>
             </div>
           </>
@@ -239,33 +249,32 @@ const NewSeason = () => {
   );
 };
 
-// Sub-component for clean progress bars
-const ProgressCard = ({ title, current, total, unit, color }) => {
-  const percent = Math.min((current / total) * 100 || 0, 100).toFixed(1);
-  return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-      <div className="flex justify-between items-end mb-3">
-        <div>
-          <h3 className="text-sm font-medium text-slate-500 mb-1">{title}</h3>
-          <p className="text-lg font-bold text-slate-900">
-            {formatNumber(current, 0)}{" "}
-            <span className="text-sm font-normal text-slate-400">
-              / {formatNumber(total, 0)} {unit}
-            </span>
-          </p>
-        </div>
-        <span className={`text-sm font-bold px-2 py-1 rounded-md bg-slate-100`}>
-          {percent}%
-        </span>
-      </div>
-      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-        <div
-          className={`h-full ${color} transition-all duration-700 ease-in-out`}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
+// --- Sub Components ---
+
+const StatCard = ({ icon: Icon, label, value, subtext, color, bg }) => (
+  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full">
+    <div
+      className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center mb-3`}
+    >
+      <Icon className={`w-5 h-5 ${color}`} />
     </div>
-  );
-};
+    <div>
+      <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
+      <p className="text-lg font-bold text-gray-900">{value}</p>
+      <p className="text-[10px] text-gray-400 font-medium mt-1">{subtext}</p>
+    </div>
+  </div>
+);
+
+const LoadingSkeleton = () => (
+  <div className="space-y-6 animate-pulse">
+    <div className="h-48 bg-gray-200 rounded-3xl w-full"></div>
+    <div className="grid grid-cols-2 gap-3">
+      <div className="h-32 bg-gray-200 rounded-2xl"></div>
+      <div className="h-32 bg-gray-200 rounded-2xl"></div>
+    </div>
+    <div className="h-64 bg-gray-200 rounded-3xl w-full"></div>
+  </div>
+);
 
 export default NewSeason;
