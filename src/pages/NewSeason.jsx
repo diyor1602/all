@@ -13,6 +13,7 @@ import {
   Pizza,
   Swords,
   Trophy,
+  SunSnow,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -223,6 +224,10 @@ const NewSeason = () => {
                     so'm
                   </span>
                 </div>
+
+                <div className="text-sm font-medium text-emerald-100/80">
+                  {formatNumber(data?.item?.total_qty, 0)} dona tikildi
+                </div>
               </div>
             </div>
 
@@ -241,11 +246,11 @@ const NewSeason = () => {
                     <div>
                       <p className="text-xs text-slate-500">Prognoz</p>
                       <h3 className="text-sm font-bold text-slate-800">
-                        Mavsum Yakuni
+                        Mavsum Davomida
                       </h3>
                     </div>
                   </div>
-                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                  <SunSnow className="w-4 h-4 text-emerald-500" />
                 </div>
 
                 {/* Main Forecast Value */}
