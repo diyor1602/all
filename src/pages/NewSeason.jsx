@@ -304,35 +304,33 @@ const NewSeason = () => {
 
             {/* --- Stats Grid --- */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3 text-blue-600">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-4 rounded-2xl shadow-sm border border-blue-200 flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center mb-3 text-white shadow-lg">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Bajarildi
-                  </p>
-                  <p className="text-lg font-bold text-slate-900">
+                  <p className="text-xs text-blue-600 font-medium">Bajarildi</p>
+                  <p className="text-lg font-bold text-blue-900">
                     {new Intl.NumberFormat("ru-RU").format(
                       data?.item?.total_minutes,
                     )}{" "}
-                    <span className="text-xs font-normal text-slate-400">
+                    <span className="text-xs font-normal text-blue-600">
                       daq
                     </span>
                   </p>
                 </div>
               </div>
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-3 text-orange-600">
+              <div className="bg-gradient-to-br from-orange-50 to-amber-100 p-4 rounded-2xl shadow-sm border border-orange-200 flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center mb-3 text-white shadow-lg">
                   <Pizza className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 font-medium">Tarif</p>
-                  <p className="text-lg font-bold text-slate-900">
+                  <p className="text-xs text-orange-600 font-medium">Tarif</p>
+                  <p className="text-lg font-bold text-orange-900">
                     {new Intl.NumberFormat("ru-RU").format(
                       data?.item?.per_minute_sum,
                     )}{" "}
-                    <span className="text-xs font-normal text-slate-400">
+                    <span className="text-xs font-normal text-orange-600">
                       so'm
                     </span>
                   </p>
