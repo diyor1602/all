@@ -9,7 +9,6 @@ import {
   Clock,
   Wallet,
   CalendarDays,
-  Target,
   Sparkles,
   Zap,
   Pizza,
