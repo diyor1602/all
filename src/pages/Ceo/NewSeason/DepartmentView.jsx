@@ -10,6 +10,8 @@ import {
   User,
   Loader2,
   AlarmClock,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import {
   Dialog,
@@ -39,6 +41,15 @@ const DepartmentView = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState(() => {
+    const saved = localStorage.getItem("departmentViewSortConfig");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          key: "employee",
+          direction: "asc",
+        };
+  });
 
   const getData = async () => {
     try {
@@ -90,6 +101,58 @@ const DepartmentView = () => {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    const newSortConfig = { key, direction };
+    setSortConfig(newSortConfig);
+    localStorage.setItem(
+      "departmentViewSortConfig",
+      JSON.stringify(newSortConfig),
+    );
+  };
+
+  const getSortedData = () => {
+    if (!data?.items) return [];
+
+    const sorted = [...data.items].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case "employee":
+          aValue = a?.employee?.name || "";
+          bValue = b?.employee?.name || "";
+          return sortConfig.direction === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        case "per_minute_sum":
+          aValue = Number(a?.per_minute_sum) || 0;
+          bValue = Number(b?.per_minute_sum) || 0;
+          return sortConfig.direction === "asc"
+            ? aValue - bValue
+            : bValue - aValue;
+        case "total_minutes":
+          aValue = Number(a?.total_minutes) || 0;
+          bValue = Number(b?.total_minutes) || 0;
+          return sortConfig.direction === "asc"
+            ? aValue - bValue
+            : bValue - aValue;
+        case "total_amount":
+          aValue = Number(a?.total_amount) || 0;
+          bValue = Number(b?.total_amount) || 0;
+          return sortConfig.direction === "asc"
+            ? aValue - bValue
+            : bValue - aValue;
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
   };
 
   const navigateMonth = (direction) => {
@@ -146,7 +209,7 @@ const DepartmentView = () => {
                       e.target.value,
                     );
                   }}
-                  className="w-28 sm:w-auto h-7 text-xs border-0 bg-transparent"
+                  className="w-28 sm:w-auto h-7 text-xs border-0 bg-transparent shadow-none"
                 />
 
                 <Button
@@ -190,90 +253,130 @@ const DepartmentView = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
-                        Xodim
+                      <th
+                        className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                        onClick={() => handleSort("employee")}
+                      >
+                        <div className="flex items-center gap-1">
+                          <span>Xodim</span>
+                          {sortConfig.key === "employee" &&
+                            (sortConfig.direction === "asc" ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            ))}
+                        </div>
                       </th>
-                      <th className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
-                        Daqiqa uchun
+                      <th
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                        onClick={() => handleSort("per_minute_sum")}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <span>Daqiqa uchun</span>
+                          {sortConfig.key === "per_minute_sum" &&
+                            (sortConfig.direction === "asc" ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            ))}
+                        </div>
                       </th>
-                      <th className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
-                        Jami daqiqa
+                      <th
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                        onClick={() => handleSort("total_minutes")}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <span>Jami daqiqa</span>
+                          {sortConfig.key === "total_minutes" &&
+                            (sortConfig.direction === "asc" ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            ))}
+                        </div>
                       </th>
-                      <th className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
-                        Topdi
+                      <th
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                        onClick={() => handleSort("total_amount")}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <span>Topdi</span>
+                          {sortConfig.key === "total_amount" &&
+                            (sortConfig.direction === "asc" ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            ))}
+                        </div>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data?.items
-                      ?.sort((a, b) =>
-                        a?.employee?.name?.localeCompare(b?.employee?.name),
-                      )
-                      ?.map((item, index) => (
-                        <tr
-                          key={index}
-                          className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                        >
-                          <td className="py-2 px-2 sm:py-4 sm:px-4">
-                            <div className="flex items-center gap-2 sm:gap-3">
-                              {item?.employee?.img ? (
-                                <img
-                                  src={item?.employee?.img}
-                                  alt={item?.employee?.name}
-                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-slate-100 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedImage(item?.employee?.img);
-                                    setImageDialogOpen(true);
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                                  <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500" />
-                                </div>
-                              )}
+                    {getSortedData().map((item, index) => (
+                      <tr
+                        key={index}
+                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                      >
+                        <td className="py-2 px-2 sm:py-4 sm:px-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            {item?.employee?.img ? (
+                              <img
+                                src={item?.employee?.img}
+                                alt={item?.employee?.name}
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-slate-100 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedImage(item?.employee?.img);
+                                  setImageDialogOpen(true);
+                                }}
+                              />
+                            ) : (
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+                                <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500" />
+                              </div>
+                            )}
 
-                              <span className="font-medium text-slate-900 text-xs sm:text-sm">
-                                {item?.employee?.name}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
-                            <div
-                              className="flex items-center justify-end gap-1 cursor-pointer"
-                              onClick={() => {
-                                setEditingValue(item?.per_minute_sum);
-                                setEditDialogOpen(true);
-                                setSelectedEmployee(item);
-                              }}
-                            >
-                              <span className="font-semibold text-slate-900 text-xs sm:text-sm">
-                                {item?.per_minute_sum || 0} so'm
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <span className="font-semibold text-slate-900 text-xs sm:text-sm">
-                                {formatNumber(item?.total_minutes, 0)}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
-                            <div
-                              className="flex items-center justify-end gap-1"
-                              onClick={() => {
-                                setSelectedEmployee(item);
-                                setDetailsDialogOpen(true);
-                              }}
-                            >
-                              <span className="font-semibold text-slate-900 text-xs sm:text-sm">
-                                {formatNumber(item?.total_amount, 0)} so'm
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            <span className="font-medium text-slate-900 text-xs sm:text-sm">
+                              {item?.employee?.name}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
+                          <div
+                            className="flex items-center justify-end gap-1 cursor-pointer"
+                            onClick={() => {
+                              setEditingValue(item?.per_minute_sum);
+                              setEditDialogOpen(true);
+                              setSelectedEmployee(item);
+                            }}
+                          >
+                            <span className="font-semibold text-slate-900 text-xs sm:text-sm">
+                              {item?.per_minute_sum || 0} so'm
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="font-semibold text-slate-900 text-xs sm:text-sm">
+                              {formatNumber(item?.total_minutes, 0)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
+                          <div
+                            className="flex items-center justify-end gap-1"
+                            onClick={() => {
+                              setSelectedEmployee(item);
+                              setDetailsDialogOpen(true);
+                            }}
+                          >
+                            <span className="font-semibold text-slate-900 text-xs sm:text-sm">
+                              {formatNumber(item?.total_amount, 0)} so'm
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
 
