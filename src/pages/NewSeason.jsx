@@ -31,8 +31,6 @@ const AnimatedCounter = ({ value }) => {
     const end = parseInt(value) || 0;
     if (start === end) return;
 
-    let totalMilSecDur = 1000;
-
     let timer = setInterval(() => {
       start += Math.ceil((end - start) / 10);
       if (start >= end) {
@@ -90,6 +88,54 @@ const NewSeason = () => {
   const getProgress = (current, total) => {
     if (!total) return 0;
     return Math.min((current / total) * 100, 100);
+  };
+
+  // Helper function to generate all days in a month
+  const getAllDaysInMonth = (monthString) => {
+    const [year, month] = monthString.split("-").map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate(); // Get last day of month
+
+    const allDays = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      allDays.push({
+        date: dateStr,
+        minutes: 0,
+        amount: 0,
+        per_minute_sum: data?.item?.per_minute_sum || 0,
+      });
+    }
+    return allDays;
+  };
+
+  // Merge API data with all days of the month
+  const getCompleteDaysList = () => {
+    if (!data?.item?.days) return [];
+
+    const allDays = getAllDaysInMonth(selectedMonth);
+    const apiDays = data.item.days;
+
+    // Get today's date and set to start of day for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Create a map of API days by date for easy lookup
+    const apiDaysMap = new Map();
+    apiDays.forEach((day) => {
+      apiDaysMap.set(day.date, day);
+    });
+
+    // Merge API data with all days, but filter out future days
+    return allDays
+      .filter((day) => {
+        const dayDate = new Date(day.date);
+        dayDate.setHours(0, 0, 0, 0);
+        return dayDate <= today; // Only show today or past days
+      })
+      .map((day) => {
+        const apiDay = apiDaysMap.get(day.date);
+        return apiDay || day; // Use API data if available, otherwise use default empty day
+      });
   };
 
   return (
@@ -251,7 +297,7 @@ const NewSeason = () => {
               </div>
 
               <div className="divide-y divide-slate-100">
-                {data?.item?.days
+                {getCompleteDaysList()
                   ?.sort((a, b) => new Date(b?.date) - new Date(a?.date))
                   ?.map((day, i) => (
                     <div
@@ -260,44 +306,76 @@ const NewSeason = () => {
                     >
                       <div className="flex items-center gap-4">
                         {/* Date Box */}
-                        <div className="flex flex-col items-center justify-center w-12 h-12 bg-white rounded-2xl border-2 border-slate-100 shadow-sm">
+                        <div
+                          className={`flex flex-col items-center justify-center w-12 h-12 rounded-2xl border-2 shadow-sm ${
+                            day.amount > 0
+                              ? "bg-white border-emerald-100"
+                              : "bg-slate-50 border-slate-200"
+                          }`}
+                        >
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             {getUzbekDay(day?.date)}
                           </span>
-                          <span className="text-base font-bold text-slate-800 leading-none mt-0.5">
+                          <span
+                            className={`text-base font-bold leading-none mt-0.5 ${
+                              day.amount > 0
+                                ? "text-slate-800"
+                                : "text-slate-400"
+                            }`}
+                          >
                             {day?.date?.split("-")[2]}
                           </span>
                         </div>
 
                         {/* Details */}
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-700 flex items-center gap-1">
-                            {formatNumber(day?.minutes, 0)} daqiqa
+                          <span
+                            className={`text-sm font-bold flex items-center gap-1 ${
+                              day.amount > 0
+                                ? "text-slate-700"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {day.amount > 0
+                              ? `${formatNumber(day?.minutes, 0)} daqiqa`
+                              : "Ishlanmagan"}
                           </span>
                           <span className="text-xs text-slate-400">
-                            {day?.per_minute_sum} so'm dan
+                            {day.amount > 0
+                              ? `${day?.per_minute_sum} so'm dan`
+                              : "Daromad yo'q"}
                           </span>
                         </div>
                       </div>
 
                       {/* Amount */}
                       <div className="flex flex-col items-end">
-                        <span className="font-bold text-emerald-600 text-base">
-                          +{new Intl.NumberFormat("ru-RU").format(day?.amount)}
-                        </span>
-                        <div className="flex items-center gap-1 text-[10px] text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded-md mt-1">
-                          <Zap className="w-3 h-3" />
-                          <span>Muvaffaqiyatli</span>
-                        </div>
+                        {day.amount > 0 ? (
+                          <>
+                            <span className="font-bold text-emerald-600 text-base">
+                              +
+                              {new Intl.NumberFormat("ru-RU").format(
+                                day?.amount,
+                              )}
+                            </span>
+                            <div className="flex items-center gap-1 text-[10px] text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded-md mt-1">
+                              <Zap className="w-3 h-3" />
+                              <span>💎 Barakali</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-bold text-slate-300 text-base">
+                              0 so'm
+                            </span>
+                            <div className="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md mt-1">
+                              <span>🌙 Tinch kun</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
-
-                {(!data?.item?.days || data?.item?.days.length === 0) && (
-                  <div className="py-10 text-center text-slate-400">
-                    <p>Bu oyda hali ma'lumot yo'q</p>
-                  </div>
-                )}
               </div>
             </div>
           </>
