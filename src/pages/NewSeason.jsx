@@ -209,7 +209,7 @@ const NewSeason = () => {
                       <Wallet className="w-4 h-4 text-emerald-50" />
                     </div>
                     <span className="text-sm font-medium tracking-wide">
-                      Jami Ishlandi
+                      Jami Mablag'
                     </span>
                   </div>
                   <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
