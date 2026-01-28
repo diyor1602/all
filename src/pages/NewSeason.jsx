@@ -10,7 +10,6 @@ import {
   Wallet,
   CalendarDays,
   Sparkles,
-  Zap,
   Pizza,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
@@ -359,7 +358,6 @@ const NewSeason = () => {
                               )}
                             </span>
                             <div className="flex items-center gap-1 text-[10px] text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded-md mt-1">
-                              <Zap className="w-3 h-3" />
                               <span>💎 Barakali</span>
                             </div>
                           </>
