@@ -11,6 +11,8 @@ import {
   CalendarDays,
   Sparkles,
   Pizza,
+  Swords,
+  Trophy,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -221,28 +223,75 @@ const NewSeason = () => {
                     so'm
                   </span>
                 </div>
+              </div>
+            </div>
 
-                {/* Progress Bar with "Glow" */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-medium text-emerald-100/90">
-                    <span>
-                      Maqsad: {formatNumber(data?.item?.possible_amount, 0)}
-                    </span>
-                    <span className="bg-white/20 px-2 py-0.5 rounded text-white">
-                      {getProgress(
-                        data?.item?.total_amount,
-                        data?.item?.possible_amount,
-                      ).toFixed(0)}
-                      %
-                    </span>
+            {/* --- Season Forecast Card (FIXED) --- */}
+            <div className="relative overflow-hidden rounded-2xl bg-white border border-emerald-100 shadow-lg">
+              {/* Soft gradient accent */}
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+
+              <div className="p-5 space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shadow">
+                      <TrendingUp className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Prognoz</p>
+                      <h3 className="text-sm font-bold text-slate-800">
+                        Mavsum Yakuni
+                      </h3>
+                    </div>
                   </div>
-                  <div className="h-2.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm p-[2px]">
-                    <div
-                      className="h-full bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-full shadow-[0_0_10px_rgba(253,224,71,0.5)] transition-all duration-1000 ease-out"
-                      style={{
-                        width: `${getProgress(data?.item?.total_amount, data?.item?.possible_amount)}%`,
-                      }}
-                    />
+                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                </div>
+
+                {/* Main Forecast Value */}
+                <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                  <p className="text-xs text-emerald-700 mb-1 font-medium">
+                    Kutilayotgan Daromad
+                  </p>
+                  <p className="text-2xl font-extrabold text-emerald-700">
+                    {formatNumber(data?.item?.possible_amount, 0)}{" "}
+                    <span className="text-sm font-medium">so'm</span>
+                  </p>
+                </div>
+
+                {/* Secondary Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Swords className="w-4 h-4 text-blue-600" />
+                      <p className="text-xs text-slate-500 font-medium">
+                        Jami Soni
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold text-slate-800">
+                      {formatNumber(data?.item?.possible_qty, 0)}{" "}
+                      <span className="text-xs font-normal text-slate-400">
+                        dona
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Trophy className="w-4 h-4 text-orange-600" />
+                      <p className="text-xs text-slate-500 font-medium">
+                        O‘rtacha Narx
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold text-slate-800">
+                      {formatNumber(
+                        data?.item?.possible_amount / data?.item?.possible_qty,
+                        0,
+                      )}{" "}
+                      <span className="text-xs font-normal text-slate-400">
+                        so'm
+                      </span>
+                    </p>
                   </div>
                 </div>
               </div>
