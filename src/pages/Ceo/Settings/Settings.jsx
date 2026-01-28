@@ -9,6 +9,7 @@ import {
   Flower,
   Calculator,
   Trees,
+  SunSnow,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -71,6 +72,12 @@ const SettingsPage = () => {
       icon: Trees,
       link: "/ceo/newSeason",
       color: "bg-sky-500",
+    },
+    {
+      name: "Yangi mavsum hisobot",
+      icon: SunSnow,
+      link: "/ceo/newSeason/overall",
+      color: "bg-rose-500",
     },
   ];
 
