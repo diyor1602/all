@@ -156,7 +156,7 @@ const NewSeason = () => {
         </div>
       </div>
 
-      <div className="max-w-md mx-auto pt-6 px-4 space-y-5">
+      <div className="max-w-md mx-auto space-y-5">
         {loading ? (
           <LoadingSkeleton />
         ) : (
