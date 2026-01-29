@@ -55,6 +55,24 @@ const DepartmentView = () => {
         };
   });
   const [groups, setGroups] = useState([]);
+  const [groupResponsibleUsers, setGroupResponsibleUsers] = useState([]);
+
+  const getGroupResponsibleUsers = async () => {
+    try {
+      const res = await api.get("/ceo/groupResponsibleUsers", {
+        params: {
+          month: selectedMonth,
+        },
+      });
+      setGroupResponsibleUsers(res.data);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Ma'lumotlar olishda xatolik",
+      });
+    }
+  };
 
   const getGroups = async () => {
     try {
@@ -101,6 +119,7 @@ const DepartmentView = () => {
 
   useEffect(() => {
     getData();
+    getGroupResponsibleUsers();
   }, [id, selectedMonth]);
 
   const handleSubmit = async () => {
@@ -461,7 +480,6 @@ const DepartmentView = () => {
                                   sum + (Number(item?.per_minute_sum) || 0),
                                 0,
                               ),
-                              0,
                             )}{" "}
                             so'm
                           </span>
