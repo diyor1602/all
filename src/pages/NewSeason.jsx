@@ -365,7 +365,9 @@ const NewSeason = () => {
                             </span>
                             {day.amount > 0 ? (
                               <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100">
-                                💎 Barakali
+                                {getUzbekDay(day?.date) === "Juma"
+                                  ? "🕌 Juma muborak"
+                                  : "💎 Barakali"}
                               </span>
                             ) : (
                               <span className="text-[10px] font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200">
