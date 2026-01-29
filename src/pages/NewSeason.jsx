@@ -340,13 +340,13 @@ const NewSeason = () => {
                               className={`text-sm font-bold ${day.amount > 0 ? "text-slate-700" : "text-slate-400"}`}
                             >
                               {day.amount > 0
-                                ? `${formatNumber(day?.minutes, 0)} daqiqa`
-                                : "Ishlanmagan"}
+                                ? `${formatNumber(day?.qty)} dona`
+                                : "0 dona"}
                             </span>
                             <span className="text-xs text-slate-400">
                               {day.amount > 0
-                                ? `${day?.per_minute_sum} so'm dan`
-                                : "Daromad yo'q"}
+                                ? `${formatNumber(day?.minutes, 0)} daqiqa`
+                                : "0 daqiqa"}
                             </span>
                           </div>
                         </div>
