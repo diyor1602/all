@@ -41,6 +41,10 @@ const DepartmentView = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [hideZeroPerMinute, setHideZeroPerMinute] = useState(() => {
+    const saved = localStorage.getItem("departmentViewHideZeroPerMinute");
+    return saved ? saved === "true" : false;
+  });
   const [sortConfig, setSortConfig] = useState(() => {
     const saved = localStorage.getItem("departmentViewSortConfig");
     return saved
@@ -155,6 +159,12 @@ const DepartmentView = () => {
     return sorted;
   };
 
+  const getDisplayedData = () => {
+    const sorted = getSortedData();
+    if (!hideZeroPerMinute) return sorted;
+    return sorted.filter((item) => (Number(item?.per_minute_sum) || 0) !== 0);
+  };
+
   const navigateMonth = (direction) => {
     const [year, month] = selectedMonth.split("-").map(Number);
     let newYear, newMonth;
@@ -249,6 +259,27 @@ const DepartmentView = () => {
         {!loading && (
           <Card className="bg-white shadow-sm border-0">
             <CardContent className="p-3 sm:p-6">
+              <div className="flex items-center justify-end pb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setHideZeroPerMinute((prev) => {
+                      const next = !prev;
+                      localStorage.setItem(
+                        "departmentViewHideZeroPerMinute",
+                        String(next),
+                      );
+                      return next;
+                    });
+                  }}
+                  className="text-xs sm:text-sm"
+                >
+                  {hideZeroPerMinute
+                    ? "Daqiqa uchun 0 ni ko'rsatish"
+                    : "Daqiqa uchun 0 ni yashirish"}
+                </Button>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -315,7 +346,7 @@ const DepartmentView = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {getSortedData().map((item, index) => (
+                    {getDisplayedData().map((item, index) => (
                       <tr
                         key={index}
                         className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
@@ -387,7 +418,7 @@ const DepartmentView = () => {
                     ))}
 
                     {/* Total Row */}
-                    {data?.items?.length > 0 && (
+                    {getDisplayedData().length > 0 && (
                       <tr className="border-t-2 border-slate-300 bg-slate-50 font-semibold">
                         <td className="py-3 px-2 sm:py-4 sm:px-4 text-center">
                           <span className="text-slate-900 text-sm sm:text-base">
@@ -402,7 +433,7 @@ const DepartmentView = () => {
                         <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
                           <span className="text-slate-900 text-sm sm:text-base">
                             {formatNumber(
-                              getSortedData().reduce(
+                              getDisplayedData().reduce(
                                 (sum, item) =>
                                   sum + (Number(item?.per_minute_sum) || 0),
                                 0,
@@ -415,7 +446,7 @@ const DepartmentView = () => {
                         <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
                           <span className="text-slate-900 text-sm sm:text-base">
                             {formatNumber(
-                              getSortedData().reduce(
+                              getDisplayedData().reduce(
                                 (sum, item) =>
                                   sum + (Number(item?.total_minutes) || 0),
                                 0,
@@ -427,7 +458,7 @@ const DepartmentView = () => {
                         <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
                           <span className="text-green-600 text-sm sm:text-base">
                             {formatNumber(
-                              getSortedData().reduce(
+                              getDisplayedData().reduce(
                                 (sum, item) =>
                                   sum + (Number(item?.total_amount) || 0),
                                 0,
@@ -442,7 +473,7 @@ const DepartmentView = () => {
                   </tbody>
                 </table>
 
-                {data?.items?.length === 0 && (
+                {getDisplayedData().length === 0 && (
                   <div className="text-center py-8 text-slate-500">
                     Xodimlar topilmadi
                   </div>
