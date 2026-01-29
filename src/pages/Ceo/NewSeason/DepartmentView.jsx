@@ -253,6 +253,9 @@ const DepartmentView = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200">
+                      <th className="text-center py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
+                        #
+                      </th>
                       <th
                         className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
                         onClick={() => handleSort("employee")}
@@ -317,6 +320,11 @@ const DepartmentView = () => {
                         key={index}
                         className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                       >
+                        <td className="py-2 px-2 sm:py-4 sm:px-4 text-center">
+                          <span className="font-medium text-slate-600 text-xs sm:text-sm">
+                            {index + 1}
+                          </span>
+                        </td>
                         <td className="py-2 px-2 sm:py-4 sm:px-4">
                           <div className="flex items-center gap-2 sm:gap-3">
                             {item?.employee?.img ? (
@@ -381,6 +389,11 @@ const DepartmentView = () => {
                     {/* Total Row */}
                     {data?.items?.length > 0 && (
                       <tr className="border-t-2 border-slate-300 bg-slate-50 font-semibold">
+                        <td className="py-3 px-2 sm:py-4 sm:px-4 text-center">
+                          <span className="text-slate-900 text-sm sm:text-base">
+                            #
+                          </span>
+                        </td>
                         <td className="py-3 px-2 sm:py-4 sm:px-4">
                           <span className="text-slate-900 text-sm sm:text-base">
                             Jami
