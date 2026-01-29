@@ -367,7 +367,7 @@ const NewSeason = () => {
                               <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100">
                                 {getUzbekDay(day?.date) === "Juma"
                                   ? "🕌 Juma muborak"
-                                  : "💎 Barakali"}
+                                  : "💎 Barakasini bersin"}
                               </span>
                             ) : (
                               <span className="text-[10px] font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200">
