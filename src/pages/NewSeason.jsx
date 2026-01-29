@@ -399,10 +399,10 @@ const NewSeason = () => {
                       </div>
                       <div className="text-right flex flex-col items-end">
                         <span className="font-bold text-emerald-600 text-base">
-                          {formatNumber(order.total_amount, 0)}
+                          {formatNumber(order.total_amount, 0)} so'm
                         </span>
                         <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                          so'm
+                          {order?.submodel?.name || "-"}
                         </span>
                       </div>
                     </div>
@@ -448,7 +448,7 @@ const StatCard = ({ icon, title, value, unit, color }) => {
       <div>
         <p className="text-xs font-medium">{title}</p>
         <p className="text-lg font-bold text-slate-900">
-          {formatNumber(value, 0)}{" "}
+          {formatNumber(value)}{" "}
           <span className="text-xs font-normal opacity-70">{unit}</span>
         </p>
       </div>
