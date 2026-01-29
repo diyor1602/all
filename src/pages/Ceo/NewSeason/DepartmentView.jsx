@@ -377,6 +377,55 @@ const DepartmentView = () => {
                         </td>
                       </tr>
                     ))}
+
+                    {/* Total Row */}
+                    {data?.items?.length > 0 && (
+                      <tr className="border-t-2 border-slate-300 bg-slate-50 font-semibold">
+                        <td className="py-3 px-2 sm:py-4 sm:px-4">
+                          <span className="text-slate-900 text-sm sm:text-base">
+                            Jami
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
+                          <span className="text-slate-900 text-sm sm:text-base">
+                            {formatNumber(
+                              getSortedData().reduce(
+                                (sum, item) =>
+                                  sum + (Number(item?.per_minute_sum) || 0),
+                                0,
+                              ),
+                              0,
+                            )}{" "}
+                            so'm
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
+                          <span className="text-slate-900 text-sm sm:text-base">
+                            {formatNumber(
+                              getSortedData().reduce(
+                                (sum, item) =>
+                                  sum + (Number(item?.total_minutes) || 0),
+                                0,
+                              ),
+                              0,
+                            )}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
+                          <span className="text-green-600 text-sm sm:text-base">
+                            {formatNumber(
+                              getSortedData().reduce(
+                                (sum, item) =>
+                                  sum + (Number(item?.total_amount) || 0),
+                                0,
+                              ),
+                              0,
+                            )}{" "}
+                            so'm
+                          </span>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
 
