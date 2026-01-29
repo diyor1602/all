@@ -54,6 +54,25 @@ const DepartmentView = () => {
           direction: "asc",
         };
   });
+  const [groups, setGroups] = useState([]);
+
+  const getGroups = async () => {
+    try {
+      const res = await api.get("/departments");
+
+      const departments = res.data?.flatMap((item) => item.departments);
+
+      const department = departments?.find((item) => item.id === Number(id));
+
+      setGroups(department?.groups || []);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Ma'lumotlar olishda xatolik",
+      });
+    }
+  };
 
   const getData = async () => {
     try {
@@ -75,6 +94,10 @@ const DepartmentView = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    getGroups();
+  }, [id]);
 
   useEffect(() => {
     getData();
@@ -481,6 +504,46 @@ const DepartmentView = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {groups?.length > 0 && (
+          <div className="overflow-x-auto rounded-md border border-slate-200">
+            <table className="min-w-full border-collapse text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-left font-medium text-slate-700"
+                  >
+                    Guruh
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-left font-medium text-slate-700"
+                  >
+                    Master
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 bg-white">
+                {groups
+                  ?.sort((a, b) => a.name.localeCompare(b.name))
+                  ?.map((group, idx) => (
+                    <tr
+                      key={group.id}
+                      className={`${idx % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-slate-100`}
+                    >
+                      <td className="px-4 py-3 text-slate-900 whitespace-nowrap">
+                        {group.name}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
+                        {group?.responsible_user?.employee?.name || "-"}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Edit Dialog */}
