@@ -151,6 +151,12 @@ const DepartmentView = () => {
           return sortConfig.direction === "asc"
             ? aValue - bValue
             : bValue - aValue;
+        case "possible_minutes":
+          aValue = Number(a?.possible_minutes) || 0;
+          bValue = Number(b?.possible_minutes) || 0;
+          return sortConfig.direction === "asc"
+            ? aValue - bValue
+            : bValue - aValue;
         case "possible_amount":
           aValue = Number(a?.possible_amount) || 0;
           bValue = Number(b?.possible_amount) || 0;
@@ -351,6 +357,20 @@ const DepartmentView = () => {
                       </th>
                       <th
                         className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
+                        onClick={() => handleSort("possible_minutes")}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <span>Qolgan daqiqalar</span>
+                          {sortConfig.key === "possible_minutes" &&
+                            (sortConfig.direction === "asc" ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            ))}
+                        </div>
+                      </th>
+                      <th
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
                         onClick={() => handleSort("possible_amount")}
                       >
                         <div className="flex items-center justify-end gap-1">
@@ -437,6 +457,13 @@ const DepartmentView = () => {
                         <td className="py-2 px-2 text-right border border-slate-200">
                           <div className="flex items-center justify-end gap-1">
                             <span className="font-semibold text-slate-900 text-xs">
+                              {formatNumber(item?.possible_minutes, 0)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-2 text-right border border-slate-200">
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="font-semibold text-slate-900 text-xs">
                               {formatNumber(item?.possible_amount, 0)} so'm
                             </span>
                           </div>
@@ -488,6 +515,18 @@ const DepartmentView = () => {
                               0,
                             )}{" "}
                             so'm
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-right border border-slate-200">
+                          <span className="text-slate-900 text-sm">
+                            {formatNumber(
+                              getDisplayedData().reduce(
+                                (sum, item) =>
+                                  sum + (Number(item?.possible_minutes) || 0),
+                                0,
+                              ),
+                              0,
+                            )}
                           </span>
                         </td>
                         <td className="py-3 px-2 text-right border border-slate-200">
