@@ -151,6 +151,12 @@ const DepartmentView = () => {
           return sortConfig.direction === "asc"
             ? aValue - bValue
             : bValue - aValue;
+        case "possible_amount":
+          aValue = Number(a?.possible_amount) || 0;
+          bValue = Number(b?.possible_amount) || 0;
+          return sortConfig.direction === "asc"
+            ? aValue - bValue
+            : bValue - aValue;
         default:
           return 0;
       }
@@ -193,7 +199,7 @@ const DepartmentView = () => {
                 <h1 className="text-lg sm:text-xl font-bold text-slate-900">
                   Bo'lim ma'lumotlari
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500">
+                <p className="text-xs text-slate-500">
                   Xodimlarning oylik ma'lumotlari
                 </p>
               </div>
@@ -273,7 +279,7 @@ const DepartmentView = () => {
                       return next;
                     });
                   }}
-                  className="text-xs sm:text-sm"
+                  className="text-xs"
                 >
                   {hideZeroPerMinute
                     ? "Daqiqa uchun 0 ni ko'rsatish"
@@ -284,11 +290,11 @@ const DepartmentView = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="text-center py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm">
+                      <th className="text-center py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs">
                         #
                       </th>
                       <th
-                        className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
                         onClick={() => handleSort("employee")}
                       >
                         <div className="flex items-center gap-1">
@@ -302,7 +308,7 @@ const DepartmentView = () => {
                         </div>
                       </th>
                       <th
-                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
                         onClick={() => handleSort("per_minute_sum")}
                       >
                         <div className="flex items-center justify-end gap-1">
@@ -316,7 +322,7 @@ const DepartmentView = () => {
                         </div>
                       </th>
                       <th
-                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
                         onClick={() => handleSort("total_minutes")}
                       >
                         <div className="flex items-center justify-end gap-1">
@@ -330,12 +336,26 @@ const DepartmentView = () => {
                         </div>
                       </th>
                       <th
-                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
                         onClick={() => handleSort("total_amount")}
                       >
                         <div className="flex items-center justify-end gap-1">
                           <span>Topdi</span>
                           {sortConfig.key === "total_amount" &&
+                            (sortConfig.direction === "asc" ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            ))}
+                        </div>
+                      </th>
+                      <th
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
+                        onClick={() => handleSort("possible_amount")}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <span>Topa oladi</span>
+                          {sortConfig.key === "possible_amount" &&
                             (sortConfig.direction === "asc" ? (
                               <ChevronUp className="h-3 w-3" />
                             ) : (
@@ -351,12 +371,12 @@ const DepartmentView = () => {
                         key={index}
                         className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                       >
-                        <td className="py-2 px-2 sm:py-4 sm:px-4 text-center">
-                          <span className="font-medium text-slate-600 text-xs sm:text-sm">
+                        <td className="py-2 px-2 text-center">
+                          <span className="font-medium text-slate-600 text-xs">
                             {index + 1}
                           </span>
                         </td>
-                        <td className="py-2 px-2 sm:py-4 sm:px-4">
+                        <td className="py-2 px-2">
                           <div className="flex items-center gap-2 sm:gap-3">
                             {item?.employee?.img ? (
                               <img
@@ -375,12 +395,12 @@ const DepartmentView = () => {
                               </div>
                             )}
 
-                            <span className="font-medium text-slate-900 text-xs sm:text-sm">
+                            <span className="font-medium text-slate-900 text-xs">
                               {item?.employee?.name}
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
+                        <td className="py-2 px-2 text-right">
                           <div
                             className="flex items-center justify-end gap-1 cursor-pointer"
                             onClick={() => {
@@ -389,19 +409,19 @@ const DepartmentView = () => {
                               setSelectedEmployee(item);
                             }}
                           >
-                            <span className="font-semibold text-slate-900 text-xs sm:text-sm">
+                            <span className="font-semibold text-slate-900 text-xs">
                               {item?.per_minute_sum || 0} so'm
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
+                        <td className="py-2 px-2 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <span className="font-semibold text-slate-900 text-xs sm:text-sm">
+                            <span className="font-semibold text-slate-900 text-xs">
                               {formatNumber(item?.total_minutes, 0)}
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2 sm:py-4 sm:px-4 text-right">
+                        <td className="py-2 px-2 text-right">
                           <div
                             className="flex items-center justify-end gap-1"
                             onClick={() => {
@@ -409,8 +429,15 @@ const DepartmentView = () => {
                               setDetailsDialogOpen(true);
                             }}
                           >
-                            <span className="font-semibold text-slate-900 text-xs sm:text-sm">
+                            <span className="font-semibold text-slate-900 text-xs">
                               {formatNumber(item?.total_amount, 0)} so'm
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-2 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="font-semibold text-slate-900 text-xs">
+                              {formatNumber(item?.possible_amount, 0)} so'm
                             </span>
                           </div>
                         </td>
@@ -420,18 +447,14 @@ const DepartmentView = () => {
                     {/* Total Row */}
                     {getDisplayedData().length > 0 && (
                       <tr className="border-t-2 border-slate-300 bg-slate-50 font-semibold">
-                        <td className="py-3 px-2 sm:py-4 sm:px-4 text-center">
-                          <span className="text-slate-900 text-sm sm:text-base">
-                            #
-                          </span>
+                        <td className="py-3 px-2 text-center">
+                          <span className="text-slate-900 text-sm">#</span>
                         </td>
-                        <td className="py-3 px-2 sm:py-4 sm:px-4">
-                          <span className="text-slate-900 text-sm sm:text-base">
-                            Jami
-                          </span>
+                        <td className="py-3 px-2">
+                          <span className="text-slate-900 text-sm">Jami</span>
                         </td>
-                        <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
-                          <span className="text-slate-900 text-sm sm:text-base">
+                        <td className="py-3 px-2 text-right">
+                          <span className="text-slate-900 text-sm">
                             {formatNumber(
                               getDisplayedData().reduce(
                                 (sum, item) =>
@@ -442,8 +465,8 @@ const DepartmentView = () => {
                             so'm
                           </span>
                         </td>
-                        <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
-                          <span className="text-slate-900 text-sm sm:text-base">
+                        <td className="py-3 px-2 text-right">
+                          <span className="text-slate-900 text-sm">
                             {formatNumber(
                               getDisplayedData().reduce(
                                 (sum, item) =>
@@ -454,12 +477,25 @@ const DepartmentView = () => {
                             )}
                           </span>
                         </td>
-                        <td className="py-3 px-2 sm:py-4 sm:px-4 text-right">
-                          <span className="text-green-600 text-sm sm:text-base">
+                        <td className="py-3 px-2 text-right">
+                          <span className="text-green-600 text-sm">
                             {formatNumber(
                               getDisplayedData().reduce(
                                 (sum, item) =>
                                   sum + (Number(item?.total_amount) || 0),
+                                0,
+                              ),
+                              0,
+                            )}{" "}
+                            so'm
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <span className="text-green-600 text-sm">
+                            {formatNumber(
+                              getDisplayedData().reduce(
+                                (sum, item) =>
+                                  sum + (Number(item?.possible_amount) || 0),
                                 0,
                               ),
                               0,
@@ -486,13 +522,13 @@ const DepartmentView = () => {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-sm sm:text-base">
+              <DialogTitle className="text-sm">
                 {selectedEmployee?.employee?.name} - Daqiqa uchun summa
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="text-xs sm:text-sm font-medium text-slate-700">
+                <label className="text-xs font-medium text-slate-700">
                   Summa (so'm)
                 </label>
                 <Input
@@ -517,7 +553,7 @@ const DepartmentView = () => {
                     setEditingValue(null);
                     setSelectedEmployee(null);
                   }}
-                  className="text-xs sm:text-sm"
+                  className="text-xs"
                 >
                   Bekor qilish
                 </Button>
@@ -525,7 +561,7 @@ const DepartmentView = () => {
                   size="sm"
                   onClick={handleSubmit}
                   disabled={sending}
-                  className="text-xs sm:text-sm"
+                  className="text-xs"
                 >
                   {sending && (
                     <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 animate-spin" />
@@ -541,9 +577,7 @@ const DepartmentView = () => {
         <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
           <DialogContent className="sm:max-w-2xl max-w-[90vw]">
             <DialogHeader>
-              <DialogTitle className="text-sm sm:text-base">
-                Xodim rasmi
-              </DialogTitle>
+              <DialogTitle className="text-sm">Xodim rasmi</DialogTitle>
             </DialogHeader>
             <div className="flex items-center justify-center">
               {selectedImage && (
