@@ -14,7 +14,7 @@ import {
   Swords,
   Trophy,
   SunSnow,
-  Package, // Yangi ikonka
+  Package,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
