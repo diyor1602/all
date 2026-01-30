@@ -8,12 +8,12 @@ import {
 } from "lucide-react";
 
 const navigation = [
-  {
-    name: "Xodimlar",
-    href: "/cuttingMaster/department-details",
-    icon: Users,
-    onMobile: false,
-  },
+  // {
+  //   name: "Xodimlar",
+  //   href: "/cuttingMaster/department-details",
+  //   icon: Users,
+  //   onMobile: false,
+  // },
   {
     name: "Kesish KPI",
     href: "/cuttingKpi",
