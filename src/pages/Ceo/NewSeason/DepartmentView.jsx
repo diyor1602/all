@@ -287,14 +287,14 @@ const DepartmentView = () => {
                 </Button>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full border border-slate-200 border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="text-center py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs">
+                      <th className="text-center py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs border border-slate-200">
                         #
                       </th>
                       <th
-                        className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
                         onClick={() => handleSort("employee")}
                       >
                         <div className="flex items-center gap-1">
@@ -308,7 +308,7 @@ const DepartmentView = () => {
                         </div>
                       </th>
                       <th
-                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
                         onClick={() => handleSort("per_minute_sum")}
                       >
                         <div className="flex items-center justify-end gap-1">
@@ -322,7 +322,7 @@ const DepartmentView = () => {
                         </div>
                       </th>
                       <th
-                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
                         onClick={() => handleSort("total_minutes")}
                       >
                         <div className="flex items-center justify-end gap-1">
@@ -336,7 +336,7 @@ const DepartmentView = () => {
                         </div>
                       </th>
                       <th
-                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
                         onClick={() => handleSort("total_amount")}
                       >
                         <div className="flex items-center justify-end gap-1">
@@ -350,7 +350,7 @@ const DepartmentView = () => {
                         </div>
                       </th>
                       <th
-                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
                         onClick={() => handleSort("possible_amount")}
                       >
                         <div className="flex items-center justify-end gap-1">
@@ -371,12 +371,12 @@ const DepartmentView = () => {
                         key={index}
                         className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                       >
-                        <td className="py-2 px-2 text-center">
+                        <td className="py-2 px-2 text-center border border-slate-200">
                           <span className="font-medium text-slate-600 text-xs">
                             {index + 1}
                           </span>
                         </td>
-                        <td className="py-2 px-2">
+                        <td className="py-2 px-2 border border-slate-200">
                           <div className="flex items-center gap-2 sm:gap-3">
                             {item?.employee?.img ? (
                               <img
@@ -400,7 +400,7 @@ const DepartmentView = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2 text-right">
+                        <td className="py-2 px-2 text-right border border-slate-200">
                           <div
                             className="flex items-center justify-end gap-1 cursor-pointer"
                             onClick={() => {
@@ -414,14 +414,14 @@ const DepartmentView = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2 text-right">
+                        <td className="py-2 px-2 text-right border border-slate-200">
                           <div className="flex items-center justify-end gap-1">
                             <span className="font-semibold text-slate-900 text-xs">
                               {formatNumber(item?.total_minutes, 0)}
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2 text-right">
+                        <td className="py-2 px-2 text-right border border-slate-200">
                           <div
                             className="flex items-center justify-end gap-1"
                             onClick={() => {
@@ -434,7 +434,7 @@ const DepartmentView = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2 text-right">
+                        <td className="py-2 px-2 text-right border border-slate-200">
                           <div className="flex items-center justify-end gap-1">
                             <span className="font-semibold text-slate-900 text-xs">
                               {formatNumber(item?.possible_amount, 0)} so'm
@@ -447,13 +447,13 @@ const DepartmentView = () => {
                     {/* Total Row */}
                     {getDisplayedData().length > 0 && (
                       <tr className="border-t-2 border-slate-300 bg-slate-50 font-semibold">
-                        <td className="py-3 px-2 text-center">
+                        <td className="py-3 px-2 text-center border border-slate-200">
                           <span className="text-slate-900 text-sm">#</span>
                         </td>
-                        <td className="py-3 px-2">
+                        <td className="py-3 px-2 border border-slate-200">
                           <span className="text-slate-900 text-sm">Jami</span>
                         </td>
-                        <td className="py-3 px-2 text-right">
+                        <td className="py-3 px-2 text-right border border-slate-200">
                           <span className="text-slate-900 text-sm">
                             {formatNumber(
                               getDisplayedData().reduce(
@@ -465,7 +465,7 @@ const DepartmentView = () => {
                             so'm
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-right">
+                        <td className="py-3 px-2 text-right border border-slate-200">
                           <span className="text-slate-900 text-sm">
                             {formatNumber(
                               getDisplayedData().reduce(
@@ -477,7 +477,7 @@ const DepartmentView = () => {
                             )}
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-right">
+                        <td className="py-3 px-2 text-right border border-slate-200">
                           <span className="text-green-600 text-sm">
                             {formatNumber(
                               getDisplayedData().reduce(
@@ -490,7 +490,7 @@ const DepartmentView = () => {
                             so'm
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-right">
+                        <td className="py-3 px-2 text-right border border-slate-200">
                           <span className="text-green-600 text-sm">
                             {formatNumber(
                               getDisplayedData().reduce(
