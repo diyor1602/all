@@ -404,7 +404,7 @@ const NewSeason = () => {
                           {formatNumber(order.total_amount, 0)} so'm
                         </span>
                         <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                          {order?.submodel?.name || "-"}
+                          {order?.submodel_name || "-"}
                         </span>
                       </div>
                     </div>
