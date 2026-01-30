@@ -134,14 +134,7 @@ export default function BaseLayout({ children, navigation }) {
           <div className="flex-1 overflow-y-auto">
             <nav className="space-y-1 px-3 py-4">
               {forAllUsers.map((item, index) => {
-                const userId = Number(localStorage.getItem("user_id"));
                 const isActive = location.pathname === item.href;
-                const canShow =
-                  !item.showUsers ||
-                  item.showUsers.length === 0 ||
-                  item.showUsers.includes(userId);
-
-                if (!canShow) return null;
                 if (item.dontShow) return null;
 
                 return (
