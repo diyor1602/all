@@ -3,7 +3,6 @@ import Cutting from "./Cutting";
 import Printing from "./Printing";
 import Orders from "./Orders";
 import CuttingStart from "./CuttingStart";
-import DepartmenDetails from "./DepartmentDetails";
 
 const CuttingMaster = () => {
   return (
@@ -12,7 +11,6 @@ const CuttingMaster = () => {
       <Route path="printing" element={<Printing />} />
       <Route path="orders" element={<Orders />} />
       <Route path="start/:id" element={<CuttingStart />} />
-      {/* <Route path="department-details" element={<DepartmenDetails />} /> */}
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
