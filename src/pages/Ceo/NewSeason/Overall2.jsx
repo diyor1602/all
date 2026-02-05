@@ -461,6 +461,12 @@ const Overall2 = () => {
                     icon={Users}
                     colorClass="text-emerald-500"
                   />
+                  <MetricItem
+                    label="Bir Dona Xarajati"
+                    value={data.cost_per_order}
+                    icon={CircleDollarSign}
+                    colorClass="text-indigo-500"
+                  />
                 </div>
 
                 <Separator />
