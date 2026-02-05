@@ -79,6 +79,12 @@ const SettingsPage = () => {
       link: "/ceo/newSeason/overall",
       color: "bg-rose-500",
     },
+    {
+      name: "Yangiiiiiiiii",
+      icon: SunSnow,
+      link: "/ceo/newSeason/overall2",
+      color: "bg-black",
+    },
   ];
 
   const container = {
