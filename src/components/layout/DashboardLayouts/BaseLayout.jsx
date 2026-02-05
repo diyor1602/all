@@ -43,14 +43,6 @@ export default function BaseLayout({ children, navigation }) {
     { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
     {
       name: "Yangi mavsum",
-      href: "/dailyPayments",
-      icon: PartyPopper,
-      onMobile: false,
-      dontShow: parseFloat(localStorage.getItem("percentage")) <= 0,
-      customColor: "text-green-500 hover:bg-green-50",
-    },
-    {
-      name: "Yangi mavsum",
       href: "/newSeason",
       icon: CircleDollarSign,
       onMobile: false,
