@@ -17,7 +17,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import YesterdayAbsence from "./SuperHR/Stats/YesterdayAbsence";
-import TailorRating from "./TailorRating";
 import { Input } from "@/components/ui/input";
 
 const Home = () => {
@@ -222,9 +221,7 @@ const Home = () => {
   };
 
   // Main app content
-  return localStorage.getItem("role") === "tailor" ? (
-    <TailorRating />
-  ) : (
+  return (
     <>
       {localStorage.getItem("role") === "superhr" && (
         <div className="mb-4">

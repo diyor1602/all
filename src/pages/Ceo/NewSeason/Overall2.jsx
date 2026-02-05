@@ -243,28 +243,68 @@ const Overall2 = () => {
                         <TableHead className="text-right">
                           Tikuv Budjeti
                         </TableHead>
+                        <TableHead className="text-right">
+                          Ishchi Xarajat
+                        </TableHead>
+                        <TableHead className="text-right">Transport</TableHead>
+                        <TableHead className="text-right">
+                          Oylik Xarajat
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Jami Xarajat
+                        </TableHead>
+                        <TableHead className="text-right">Foyda</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {orders.map((order, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell className="font-bold text-slate-700">
-                            #{order.order_id}
-                          </TableCell>
-                          <TableCell>
-                            {formatNumber(order.quantity)} dona
-                          </TableCell>
-                          <TableCell className="text-slate-500">
-                            ${order.price_usd?.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="font-semibold text-emerald-600">
-                            {formatNumber(order.revenue_uzs)}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatNumber(order.sewing_budget_allocated_uzs)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {orders.map((order, idx) => {
+                        const allocations =
+                          order.allocations_until_finish_uzs || {};
+                        const totalExpenses =
+                          order.total_until_finish_uzs_allocated || 0;
+                        const profit = order.revenue_uzs - totalExpenses;
+
+                        return (
+                          <TableRow key={idx}>
+                            <TableCell className="font-bold text-slate-700">
+                              #{order.order_id}
+                            </TableCell>
+                            <TableCell>
+                              {formatNumber(order.quantity)} dona
+                            </TableCell>
+                            <TableCell className="text-slate-500">
+                              ${order.price_usd?.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="font-semibold text-emerald-600">
+                              {formatNumber(order.revenue_uzs)}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {formatNumber(
+                                order.sewing_budget_allocated_uzs_direct,
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-blue-600">
+                              {formatNumber(
+                                allocations.employee_sum_allocated || 0,
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-orange-600">
+                              {formatNumber(allocations.transport || 0)}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-purple-600">
+                              {formatNumber(allocations.monthly_expenses || 0)}
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-rose-600">
+                              {formatNumber(totalExpenses)}
+                            </TableCell>
+                            <TableCell
+                              className={`text-right font-bold ${profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                            >
+                              {formatNumber(profit)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
