@@ -18,6 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -81,7 +82,7 @@ const Overall2 = () => {
   const finance = data?.finance || {};
   const orders = data?.orders || [];
 
-  // Derived Values
+  // Calculate sums for footer
   const { netProfit, profitMargin, expenseRatio } = useMemo(() => {
     const rev = finance.revenue_uzs || 0;
     const cost = finance.total_until_finish_uzs || 0;
@@ -92,6 +93,37 @@ const Overall2 = () => {
       expenseRatio: rev > 0 ? ((cost / rev) * 100).toFixed(1) : 0,
     };
   }, [finance]);
+
+  const sums = useMemo(() => {
+    return orders.reduce(
+      (acc, order) => {
+        const allocations = order.allocations_until_finish_uzs || {};
+        const totalExpenses = order.total_until_finish_uzs_allocated || 0;
+        const profit = order.revenue_uzs - totalExpenses;
+
+        acc.quantity += order.quantity || 0;
+        acc.revenue_uzs += order.revenue_uzs || 0;
+        acc.sewing_budget += order.sewing_budget_allocated_uzs_direct || 0;
+        acc.employee_expenses += allocations.employee_sum_allocated || 0;
+        acc.transport += allocations.transport || 0;
+        acc.monthly_expenses += allocations.monthly_expenses || 0;
+        acc.total_expenses += totalExpenses;
+        acc.profit += profit;
+
+        return acc;
+      },
+      {
+        quantity: 0,
+        revenue_uzs: 0,
+        sewing_budget: 0,
+        employee_expenses: 0,
+        transport: 0,
+        monthly_expenses: 0,
+        total_expenses: 0,
+        profit: 0,
+      },
+    );
+  }, [orders]);
 
   const MetricItem = ({
     label,
@@ -232,28 +264,43 @@ const Overall2 = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border">
+                <div className="rounded-lg border border-slate-300">
                   <Table>
-                    <TableHeader className="bg-slate-50/50">
-                      <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Hajm</TableHead>
-                        <TableHead>Narx ($)</TableHead>
-                        <TableHead>Tushum (UZS)</TableHead>
-                        <TableHead className="text-right">
+                    <TableHeader className="bg-slate-50/50 border-b border-slate-300">
+                      <TableRow className="border-b border-slate-200">
+                        <TableHead className="text-xs font-semibold border-r border-slate-200 px-2 py-2">
+                          Nomi
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold border-r border-slate-200 px-2 py-2">
+                          Hajm
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold border-r border-slate-200 px-2 py-2">
+                          Narx ($)
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold border-r border-slate-200 px-2 py-2">
+                          Tushum (UZS)
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right border-r border-slate-200 px-2 py-2">
                           Tikuv Budjeti
                         </TableHead>
-                        <TableHead className="text-right">
+                        <TableHead className="text-xs font-semibold text-right border-r border-slate-200 px-2 py-2">
                           Ishchi Xarajat
                         </TableHead>
-                        <TableHead className="text-right">Transport</TableHead>
-                        <TableHead className="text-right">
+                        <TableHead className="text-xs font-semibold text-right border-r border-slate-200 px-2 py-2">
+                          Transport
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right border-r border-slate-200 px-2 py-2">
                           Oylik Xarajat
                         </TableHead>
-                        <TableHead className="text-right">
+                        <TableHead className="text-xs font-semibold text-right border-r border-slate-200 px-2 py-2">
                           Jami Xarajat
                         </TableHead>
-                        <TableHead className="text-right">Foyda</TableHead>
+                        <TableHead className="text-xs font-semibold text-right border-r border-slate-200 px-2 py-2">
+                          Foyda
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right px-2 py-2">
+                          Foyda %
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -265,47 +312,106 @@ const Overall2 = () => {
                         const profit = order.revenue_uzs - totalExpenses;
 
                         return (
-                          <TableRow key={idx}>
-                            <TableCell className="font-bold text-slate-700">
-                              #{order.order_id}
+                          <TableRow
+                            key={idx}
+                            className="border-b border-slate-200"
+                          >
+                            <TableCell className="font-bold text-slate-700 text-xs border-r border-slate-200 px-2 py-2">
+                              #{order.order_name} {order.submodels[0]}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="text-xs border-r border-slate-200 px-2 py-2">
                               {formatNumber(order.quantity)} dona
                             </TableCell>
-                            <TableCell className="text-slate-500">
+                            <TableCell className="text-slate-500 text-xs border-r border-slate-200 px-2 py-2">
                               ${order.price_usd?.toFixed(2)}
                             </TableCell>
-                            <TableCell className="font-semibold text-emerald-600">
+                            <TableCell className="font-semibold text-emerald-600 text-xs border-r border-slate-200 px-2 py-2">
                               {formatNumber(order.revenue_uzs)}
                             </TableCell>
-                            <TableCell className="text-right font-medium">
+                            <TableCell className="text-right font-medium text-xs border-r border-slate-200 px-2 py-2">
                               {formatNumber(
                                 order.sewing_budget_allocated_uzs_direct,
                               )}
                             </TableCell>
-                            <TableCell className="text-right font-medium text-blue-600">
+                            <TableCell className="text-right font-medium text-blue-600 text-xs border-r border-slate-200 px-2 py-2">
                               {formatNumber(
                                 allocations.employee_sum_allocated || 0,
                               )}
                             </TableCell>
-                            <TableCell className="text-right font-medium text-orange-600">
+                            <TableCell className="text-right font-medium text-orange-600 text-xs border-r border-slate-200 px-2 py-2">
                               {formatNumber(allocations.transport || 0)}
                             </TableCell>
-                            <TableCell className="text-right font-medium text-purple-600">
+                            <TableCell className="text-right font-medium text-purple-600 text-xs border-r border-slate-200 px-2 py-2">
                               {formatNumber(allocations.monthly_expenses || 0)}
                             </TableCell>
-                            <TableCell className="text-right font-bold text-rose-600">
+                            <TableCell className="text-right font-bold text-rose-600 text-xs border-r border-slate-200 px-2 py-2">
                               {formatNumber(totalExpenses)}
                             </TableCell>
                             <TableCell
-                              className={`text-right font-bold ${profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                              className={`text-right font-bold text-xs border-r border-slate-200 px-2 py-2 ${profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
                             >
                               {formatNumber(profit)}
+                            </TableCell>
+                            <TableCell
+                              className={`text-right font-bold text-xs px-2 py-2 ${profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                            >
+                              {order.revenue_uzs > 0
+                                ? ((profit / order.revenue_uzs) * 100).toFixed(
+                                    1,
+                                  )
+                                : "0.0"}
+                              %
                             </TableCell>
                           </TableRow>
                         );
                       })}
                     </TableBody>
+                    <TableFooter className="bg-slate-100/50 font-bold">
+                      <TableRow className="border-t-2 border-slate-300">
+                        <TableCell className="text-xs font-bold text-slate-900 border-r border-slate-200 px-2 py-2">
+                          Jami
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-slate-900 border-r border-slate-200 px-2 py-2">
+                          {formatNumber(sums.quantity)} dona
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-slate-900 border-r border-slate-200 px-2 py-2">
+                          -
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-emerald-600 border-r border-slate-200 px-2 py-2">
+                          {formatNumber(sums.revenue_uzs)}
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-right border-r border-slate-200 px-2 py-2">
+                          {formatNumber(sums.sewing_budget)}
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-blue-600 text-right border-r border-slate-200 px-2 py-2">
+                          {formatNumber(sums.employee_expenses)}
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-orange-600 text-right border-r border-slate-200 px-2 py-2">
+                          {formatNumber(sums.transport)}
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-purple-600 text-right border-r border-slate-200 px-2 py-2">
+                          {formatNumber(sums.monthly_expenses)}
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-rose-600 text-right border-r border-slate-200 px-2 py-2">
+                          {formatNumber(sums.total_expenses)}
+                        </TableCell>
+                        <TableCell
+                          className={`text-xs font-bold text-right border-r border-slate-200 px-2 py-2 ${sums.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                        >
+                          {formatNumber(sums.profit)}
+                        </TableCell>
+                        <TableCell
+                          className={`text-xs font-bold text-right px-2 py-2 ${sums.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                        >
+                          {sums.revenue_uzs > 0
+                            ? ((sums.profit / sums.revenue_uzs) * 100).toFixed(
+                                1,
+                              )
+                            : "0.0"}
+                          %
+                        </TableCell>
+                      </TableRow>
+                    </TableFooter>
                   </Table>
                 </div>
               </CardContent>
