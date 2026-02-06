@@ -463,7 +463,7 @@ const Overall2 = () => {
                   />
                   <MetricItem
                     label="Bir Dona Xarajati"
-                    value={data.cost_per_order}
+                    value={data?.cost_per_order || 0}
                     icon={CircleDollarSign}
                     colorClass="text-indigo-500"
                   />
