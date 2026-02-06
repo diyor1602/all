@@ -133,11 +133,41 @@ const Overall2 = () => {
     );
   }, [orders]);
 
+  // Calculate percentages for expense breakdown
+  const expensePercentages = useMemo(() => {
+    const total = finance.total_until_finish_uzs || 0;
+    if (total === 0) return {};
+
+    return {
+      sewing: (
+        ((finance.sewing_budget_allocated_uzs || 0) / total) *
+        100
+      ).toFixed(1),
+      daily_payment: (
+        ((finance.monthly_daily_payment_total_until_finish_uzs || 0) / total) *
+        100
+      ).toFixed(1),
+      transport: (
+        ((finance.transport_total_until_finish_uzs || 0) / total) *
+        100
+      ).toFixed(1),
+      monthly_expenses: (
+        ((finance.monthly_expenses_total_until_finish_uzs || 0) / total) *
+        100
+      ).toFixed(1),
+      employee_sum: (
+        ((finance.employee_sum_allocated_total_until_finish_uzs || 0) / total) *
+        100
+      ).toFixed(1),
+    };
+  }, [finance]);
+
   const MetricItem = ({
     label,
     value,
     icon: Icon,
     colorClass = "text-slate-600",
+    percentage,
   }) => (
     <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
       <div className="flex items-center gap-2">
@@ -146,9 +176,16 @@ const Overall2 = () => {
         </div>
         <span className="text-xs font-medium text-slate-600">{label}</span>
       </div>
-      <span className="text-xs font-bold text-slate-900">
-        {formatNumber(value)}
-      </span>
+      <div className="text-right">
+        <span className="text-xs font-bold text-slate-900 block">
+          {formatNumber(value)}
+        </span>
+        {percentage && (
+          <span className="text-[9px] text-slate-500 font-medium">
+            {percentage}%
+          </span>
+        )}
+      </div>
     </div>
   );
 
@@ -542,24 +579,28 @@ const Overall2 = () => {
                     value={finance.sewing_budget_allocated_uzs}
                     icon={Users}
                     colorClass="text-blue-500"
+                    percentage={expensePercentages.sewing}
                   />
                   <MetricItem
                     label="Ustidan yozilgan"
                     value={finance.monthly_daily_payment_total_until_finish_uzs}
                     icon={Users}
                     colorClass="text-emerald-500"
+                    percentage={expensePercentages.daily_payment}
                   />
                   <MetricItem
                     label="Transport (Jami)"
                     value={finance.transport_total_until_finish_uzs}
                     icon={Truck}
                     colorClass="text-orange-500"
+                    percentage={expensePercentages.transport}
                   />
                   <MetricItem
                     label="Oylik Xarajatlar"
                     value={finance.monthly_expenses_total_until_finish_uzs}
                     icon={Calendar}
                     colorClass="text-purple-500"
+                    percentage={expensePercentages.monthly_expenses}
                   />
                   <MetricItem
                     label="AUP Oylik"
@@ -568,6 +609,7 @@ const Overall2 = () => {
                     }
                     icon={Users}
                     colorClass="text-emerald-500"
+                    percentage={expensePercentages.employee_sum}
                   />
                   <MetricItem
                     label="Bir Dona Xarajati"
