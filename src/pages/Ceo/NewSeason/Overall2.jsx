@@ -131,21 +131,21 @@ const Overall2 = () => {
     icon: Icon,
     colorClass = "text-slate-600",
   }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-md bg-white border ${colorClass}`}>
-          <Icon size={16} />
+    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+      <div className="flex items-center gap-2">
+        <div className={`p-1.5 rounded-md bg-white border ${colorClass}`}>
+          <Icon size={14} />
         </div>
-        <span className="text-sm font-medium text-slate-500">{label}</span>
+        <span className="text-xs font-medium text-slate-600">{label}</span>
       </div>
-      <span className="text-sm font-bold text-slate-900">
-        {formatNumber(value)} UZS
+      <span className="text-xs font-bold text-slate-900">
+        {formatNumber(value)}
       </span>
     </div>
   );
 
   return (
-    <div className="p-4 md:p-8 space-y-8 bg-[#f8fafc] min-h-screen font-sans">
+    <div className="space-y-8 bg-[#f8fafc] min-h-screen font-sans">
       {/* HEADER & FILTERS */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -155,7 +155,7 @@ const Overall2 = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border">
+        <div className="flex flex-wrap items-center gap-3 bg-white rounded-2xl shadow-sm border">
           <div className="flex bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setSelectedType("winter")}
@@ -427,8 +427,8 @@ const Overall2 = () => {
                   Xarajatlar Tafsiloti
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
                   <MetricItem
                     label="Ish haqi (Tikuv)"
                     value={finance.sewing_budget_allocated_uzs}
@@ -469,37 +469,36 @@ const Overall2 = () => {
                   />
                 </div>
 
-                <Separator />
+                <Separator className="my-3" />
 
-                <div className="p-4 rounded-xl bg-rose-50 border border-rose-100">
-                  <div className="flex flex-col gap-2">
+                <div className="p-3 rounded-lg bg-rose-50 border border-rose-100">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-bold text-rose-600 uppercase">
+                      <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wide">
                         Jami Xarajat
                       </p>
-                      <p className="text-xl font-black text-rose-900">
-                        {formatNumber(finance.total_until_finish_uzs)} UZS
+                      <p className="text-lg font-black text-rose-900 leading-tight">
+                        {formatNumber(finance.total_until_finish_uzs)}
+                      </p>
+                      <p className="text-[9px] text-rose-600 font-medium">
+                        UZS
                       </p>
                     </div>
-                    <Badge variant="destructive" className="w-fit">
-                      {expenseRatio}% ulush
+                    <Badge variant="destructive" className="text-xs px-2 py-1">
+                      {expenseRatio}%
                     </Badge>
                   </div>
                 </div>
 
-                <div className=" gap-4">
-                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">
-                      Valyuta Kursi ($)
-                    </p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Input
-                        className="h-7 text-xs font-bold p-2 bg-white"
-                        value={dollarRate}
-                        onChange={(e) => setDollarRate(e.target.value)}
-                      />
-                    </div>
-                  </div>
+                <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                    Valyuta Kursi ($)
+                  </p>
+                  <Input
+                    className="h-6 text-[11px] font-bold px-2 py-1 bg-white border-slate-200"
+                    value={dollarRate}
+                    onChange={(e) => setDollarRate(e.target.value)}
+                  />
                 </div>
               </CardContent>
             </Card>
