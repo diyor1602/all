@@ -457,7 +457,7 @@ const Overall2 = () => {
                       <div className="grid grid-cols-2 gap-3 mb-4">
                         <div className="bg-white p-2 rounded border border-slate-100">
                           <p className="text-[9px] text-slate-500 font-medium">
-                            Daqiqasiga
+                            Daqiqasiga jami
                           </p>
                           <p className="text-sm font-bold text-slate-900">
                             {formatNumber(dept.sum_rate_total)} so'm
