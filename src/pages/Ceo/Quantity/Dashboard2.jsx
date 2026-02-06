@@ -72,14 +72,17 @@ const Dashboard2 = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const [limitValue, setLimitValue] = useState(0);
+  const [limitPercentage, setLimitPercentage] = useState(0);
 
   const handleLimitSend = async () => {
     setIsEditing(true);
     try {
+      const calculatedLimit =
+        (editingOrder?.order?.price * dollarRate * limitPercentage) / 100;
       await api.get(`/ceo/confirmOrder`, {
         params: {
           order_id: editingOrder?.order?.id,
-          rasxod: limitValue,
+          rasxod: calculatedLimit,
         },
       });
       toast({
@@ -404,6 +407,10 @@ const Dashboard2 = () => {
                         className="cursor-pointer font-semibold"
                         onClick={() => {
                           setEditingOrder(order);
+                          setLimitPercentage(
+                            (order?.rasxod * 100) /
+                              (order?.order?.price * dollarRate) || 0,
+                          );
                           setLimitValue(order?.rasxod);
                           setLimitDialogOpen(true);
                         }}
@@ -1073,17 +1080,29 @@ const Dashboard2 = () => {
           <DialogHeader>
             <DialogTitle>Limitni tasdiqlash</DialogTitle>
             <DialogDescription>
-              Buyurtma limiti: {formatNumber(limitValue)} so'm
+              Buyurtma narxi:{" "}
+              {formatNumber(editingOrder?.order?.price * dollarRate)} so'm
+              <br />
+              Hisoblangan limit:{" "}
+              {formatNumber(
+                (editingOrder?.order?.price * dollarRate * limitPercentage) /
+                  100,
+              )}{" "}
+              so'm ({limitPercentage}%)
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center gap-2">
             <Input
               type="number"
-              placeholder="Limitni kiriting"
-              value={limitValue}
+              placeholder="Foizni kiriting"
+              value={parseFloat(limitPercentage).toFixed(2)}
               onKeyDown={(e) => e.key === "Enter" && handleLimitSend()}
-              onChange={(e) => setLimitValue(e.target.value)}
+              onChange={(e) => setLimitPercentage(e.target.value)}
+              min="0"
+              max="100"
+              step="0.1"
             />
+            <span>%</span>
             <Button onClick={handleLimitSend} disabled={isEditing}>
               {isEditing ? "Saqlanmoqda..." : "Saqlash"}
             </Button>
