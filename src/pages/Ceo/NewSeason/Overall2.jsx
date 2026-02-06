@@ -88,6 +88,7 @@ const Overall2 = () => {
 
   const finance = data?.finance || {};
   const orders = data?.orders || [];
+  const departments = data?.department_employee_sum_allocations || [];
 
   // Calculate sums for footer
   const { netProfit, profitMargin, expenseRatio } = useMemo(() => {
@@ -271,7 +272,7 @@ const Overall2 = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-slate-300">
+                <div className="rounded-lg border border-slate-300 max-h-[500px] overflow-y-auto">
                   <Table>
                     <TableHeader className="bg-slate-50/50 border-b border-slate-300">
                       <TableRow className="border-b border-slate-200">
@@ -420,6 +421,99 @@ const Overall2 = () => {
                       </TableRow>
                     </TableFooter>
                   </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* DEPARTMENTS SECTION */}
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Users className="text-blue-500" size={18} />
+                    Bo'limlar Tahlili
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Xodimlar va ish haqi tafsilotlari
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {departments.map((dept) => (
+                    <div
+                      key={dept.department_id}
+                      className="border border-slate-200 rounded-lg p-4 bg-slate-50"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-sm text-slate-900">
+                          {dept.department_name}
+                        </h3>
+                        <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs">
+                          {dept.employees_count} xodim
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-white p-2 rounded border border-slate-100">
+                          <p className="text-[9px] text-slate-500 font-medium">
+                            Daqiqasiga
+                          </p>
+                          <p className="text-sm font-bold text-slate-900">
+                            {formatNumber(dept.sum_rate_total)} so'm
+                          </p>
+                        </div>
+                        <div className="bg-white p-2 rounded border border-slate-100">
+                          <p className="text-[9px] text-slate-500 font-medium">
+                            Rejalashtirilgan
+                          </p>
+                          <p className="text-sm font-bold text-emerald-600">
+                            {formatNumber(dept.planned_amount, 0)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-slate-700 mb-2">
+                          Xodimlar:
+                        </p>
+                        <div className="max-h-32 overflow-y-auto space-y-1">
+                          {dept.employees.slice(0, 5).map((employee) => (
+                            <div
+                              key={employee.employee_id}
+                              className="flex items-center gap-2 bg-white p-1.5 rounded border border-slate-100"
+                            >
+                              {employee?.img && (
+                                <img
+                                  src={employee.img}
+                                  alt={employee.name}
+                                  className="w-6 h-6 rounded-full object-cover border border-slate-200"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-medium text-slate-900 truncate">
+                                  {employee.name}
+                                </p>
+                                <p className="text-[9px] text-slate-500">
+                                  {employee.per_minute_sum}/min
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[10px] font-bold text-blue-600">
+                                  {formatNumber(employee.earned_amount)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                          {dept.employees.length > 5 && (
+                            <p className="text-[9px] text-slate-500 text-center py-1">
+                              +{dept.employees.length - 5} ta xodim ko'proq
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
