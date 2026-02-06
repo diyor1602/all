@@ -41,6 +41,7 @@ const Overall2 = () => {
   const [dollarRate, setDollarRate] = useState(
     () => localStorage.getItem("newSeasonDollarRate") || 12269,
   );
+  const [tempDollarRate, setTempDollarRate] = useState(dollarRate);
   const [selectedYear, setSelectedYear] = useState(
     () =>
       localStorage.getItem("newSeasonSelectedYear") || new Date().getFullYear(),
@@ -48,6 +49,12 @@ const Overall2 = () => {
   const [selectedType, setSelectedType] = useState(
     () => localStorage.getItem("newSeasonSelectedType") || "winter",
   );
+
+  const applyDollarRate = () => {
+    setDollarRate(tempDollarRate);
+    localStorage.setItem("newSeasonDollarRate", tempDollarRate);
+    getData();
+  };
 
   const getData = async () => {
     setLoading(true);
@@ -494,11 +501,20 @@ const Overall2 = () => {
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">
                     Valyuta Kursi ($)
                   </p>
-                  <Input
-                    className="h-5 text-[10px] font-bold px-2 py-1 bg-white border-slate-200"
-                    value={dollarRate}
-                    onChange={(e) => setDollarRate(e.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      className="h-5 text-[10px] font-bold px-2 py-1 bg-white border-slate-200"
+                      value={tempDollarRate}
+                      onChange={(e) => setTempDollarRate(e.target.value)}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={applyDollarRate}
+                      className="h-5 px-2 text-xs bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      Qo'llash
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
