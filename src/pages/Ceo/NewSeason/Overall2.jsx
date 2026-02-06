@@ -170,26 +170,30 @@ const Overall2 = () => {
     icon: Icon,
     colorClass = "text-slate-600",
     percentage,
-  }) => (
-    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
-      <div className="flex items-center gap-2">
-        <div className={`p-1.5 rounded-md bg-white border ${colorClass}`}>
-          <Icon size={14} />
+  }) => {
+    const dollarValue = dollarRate > 0 ? (value / dollarRate).toFixed(2) : 0;
+
+    return (
+      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className={`p-1.5 rounded-md bg-white border ${colorClass}`}>
+            <Icon size={14} />
+          </div>
+          <span className="text-xs font-medium text-slate-600">{label}</span>
         </div>
-        <span className="text-xs font-medium text-slate-600">{label}</span>
-      </div>
-      <div className="text-right">
-        <span className="text-xs font-bold text-slate-900 block">
-          {formatNumber(value)}
-        </span>
-        {percentage && (
-          <span className="text-[9px] text-slate-500 font-medium">
-            {percentage}%
+        <div className="text-right">
+          <span className="text-xs font-bold text-slate-900 block">
+            {formatNumber(value)}
           </span>
-        )}
+          {percentage && (
+            <span className="text-[9px] text-slate-500 font-medium">
+              {percentage}% ({formatNumber(dollarValue, 0)}$)
+            </span>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-8 bg-[#f8fafc] min-h-screen font-sans">
