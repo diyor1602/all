@@ -30,7 +30,9 @@ import {
   Calendar,
   RefreshCcw,
   CircleDollarSign,
+  SquareArrowOutUpRight,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Overall2 = () => {
   const { toast } = useToast();
@@ -491,8 +493,15 @@ const Overall2 = () => {
                       className="border border-slate-200 rounded-lg p-4 bg-slate-50"
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-bold text-sm text-slate-900">
+                        <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
                           {dept.department_name}
+                          <Button asChild size="icon" variant="ghost">
+                            <Link
+                              to={`/ceo/newSeason/departmentView/${dept.department_id}`}
+                            >
+                              <SquareArrowOutUpRight />
+                            </Link>
+                          </Button>
                         </h3>
                         <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs">
                           {dept.employees_count} xodim
