@@ -64,6 +64,7 @@ const New = () => {
         code: "", // Add code
         color: "", // Add color
         lot: "", // Add lot
+        image: "", // Add image
       },
     ],
   });
@@ -239,6 +240,7 @@ const New = () => {
         code: item.code || "",
         color: item.color?.name || "",
         lot: item.lot || "",
+        image: item.image,
       };
       return {
         ...prev,
@@ -354,6 +356,19 @@ const New = () => {
       return;
     }
 
+    // check items' id
+    const hasInvalidId = formData.items.some(
+      (item) => !item.item_id || item.item_id <= 0,
+    );
+    if (hasInvalidId) {
+      toast({
+        title: "Diqqat",
+        description: "Mahsulotni tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // check items' quantity
     const hasInvalidQuantity = formData.items.some(
       (item) => !item.quantity || item.quantity <= 0,
@@ -361,7 +376,7 @@ const New = () => {
     if (hasInvalidQuantity) {
       toast({
         title: "Diqqat",
-        description: "Mahsulotlar sonini tekshiring",
+        description: "Mahsulotlar sonini kiriting",
         variant: "destructive",
       });
       return;
@@ -776,11 +791,12 @@ const New = () => {
                           {item.lot || "-"}
                         </span>
                       </div>
+                      {item.image && <img src={item.image} alt="" />}
                     </div>
                   </div>
                 )}
                 {showItemResults[index] && items.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto top-10">
                     <div className="py-1 flex flex-col gap-2">
                       {items.map((product) => (
                         <div
@@ -796,6 +812,9 @@ const New = () => {
                             <span className="text-xs text-muted-foreground">
                               {product.color?.name} {product.lot}
                             </span>
+                            {product.image && (
+                              <img src={product.image} alt="" />
+                            )}
                           </div>
                         </div>
                       ))}
