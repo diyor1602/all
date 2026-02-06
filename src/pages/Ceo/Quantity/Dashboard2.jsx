@@ -1095,7 +1095,7 @@ const Dashboard2 = () => {
             <Input
               type="number"
               placeholder="Foizni kiriting"
-              value={parseFloat(limitPercentage).toFixed(2)}
+              value={limitPercentage}
               onKeyDown={(e) => e.key === "Enter" && handleLimitSend()}
               onChange={(e) => setLimitPercentage(e.target.value)}
               min="0"
