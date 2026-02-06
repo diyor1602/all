@@ -434,7 +434,15 @@ const Overall2 = () => {
                     Bo'limlar Tahlili
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Xodimlar va ish haqi tafsilotlari
+                    Jami:{" "}
+                    {formatNumber(
+                      departments.reduce(
+                        (acc, dept) => acc + dept.planned_amount,
+                        0,
+                      ),
+                      0,
+                    )}{" "}
+                    so'm
                   </CardDescription>
                 </div>
               </CardHeader>
