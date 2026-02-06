@@ -46,6 +46,7 @@ const New = () => {
   const [newSourceName, setNewSourceName] = useState("");
   const itemRefs = useRef([]);
   const [openContragentCombobox, setOpenContragentCombobox] = useState(false);
+  const [types, setTypes] = useState([]);
 
   const [formData, setFormData] = useState({
     warehouse_id: "",
@@ -56,6 +57,7 @@ const New = () => {
     contragent_id: "", // Add contragent_id to formData
     items: [
       {
+        type_id: "",
         item_id: "",
         item_name: "", // Added to store the displayed name
         quantity: "",
@@ -69,16 +71,12 @@ const New = () => {
     ],
   });
 
-  const fetchItems = async (searchTerm = "") => {
-    if (!searchTerm.trim()) {
-      setItems([]);
-      return;
-    }
-
+  const fetchItems = async (searchTerm = "", typeId = "") => {
     try {
       const response = await api.get("/warehouseManager/items/search", {
         params: {
           search: searchTerm,
+          type_id: typeId,
         },
       });
 
@@ -120,6 +118,19 @@ const New = () => {
     try {
       const response = await api.get("/warehouseManager/currencies");
       setCurrencies(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Valutaralar olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchTypes = async () => {
+    try {
+      const response = await api.get("/warehouseManager/types");
+      setTypes(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -176,6 +187,7 @@ const New = () => {
     fetchCurrencies();
     fetchContragents();
     fetchAllSources();
+    fetchTypes();
   }, []);
 
   // Close dropdowns when clicking outside
@@ -226,6 +238,40 @@ const New = () => {
         items: newItems,
       };
     });
+  };
+
+  const handleItemTypeChange = (index, value) => {
+    setFormData((prev) => {
+      const newItems = [...prev.items];
+      newItems[index] = {
+        ...newItems[index],
+        type_id: value,
+        item_id: "",
+        item_name: "",
+        code: "",
+        color: "",
+        lot: "",
+        image: "",
+      };
+      return {
+        ...prev,
+        items: newItems,
+      };
+    });
+
+    setItemSearches((prev) => {
+      const next = [...prev];
+      next[index] = "";
+      return next;
+    });
+
+    setShowItemResults((prev) => {
+      const next = [...prev];
+      next[index] = false;
+      return next;
+    });
+
+    setItems([]);
   };
 
   const handleItemSelect = (index, item) => {
@@ -295,6 +341,7 @@ const New = () => {
       items: [
         ...prev.items,
         {
+          type_id: "",
           item_id: "",
           item_name: "",
           quantity: "",
@@ -453,13 +500,22 @@ const New = () => {
     newSearches[index] = value;
     setItemSearches(newSearches);
 
+    const typeId = formData.items[index]?.type_id;
+    if (!typeId) {
+      setItems([]);
+      const newShowResults = [...showItemResults];
+      newShowResults[index] = false;
+      setShowItemResults(newShowResults);
+      return;
+    }
+
     // Show the results dropdown
     const newShowResults = [...showItemResults];
     newShowResults[index] = true;
     setShowItemResults(newShowResults);
 
     // Fetch items based on the search term
-    fetchItems(value);
+    fetchItems(value, typeId);
   };
 
   // Get the selected order display text
@@ -749,8 +805,24 @@ const New = () => {
           {formData.items.map((item, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg"
+              className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 border rounded-lg"
             >
+              <Select
+                value={item.type_id || ""}
+                onValueChange={(value) => handleItemTypeChange(index, value)}
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Tur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {types.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <div
                 className="relative"
                 ref={(el) => (itemRefs.current[index] = el)}
@@ -762,6 +834,7 @@ const New = () => {
                     handleItemSearchChange(e.target.value, index)
                   }
                   className="bg-white"
+                  disabled={!item.type_id}
                   onFocus={() => {
                     if (itemSearches[index]) {
                       const newShowResults = [...showItemResults];
