@@ -478,38 +478,37 @@ const Overall2 = () => {
                           Xodimlar:
                         </p>
                         <div className="max-h-32 overflow-y-auto space-y-1">
-                          {dept.employees.slice(0, 5).map((employee) => (
-                            <div
-                              key={employee.employee_id}
-                              className="flex items-center gap-2 bg-white p-1.5 rounded border border-slate-100"
-                            >
-                              {employee?.img && (
-                                <img
-                                  src={employee.img}
-                                  alt={employee.name}
-                                  className="w-6 h-6 rounded-full object-cover border border-slate-200"
-                                />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-medium text-slate-900 truncate">
-                                  {employee.name}
-                                </p>
-                                <p className="text-[9px] text-slate-500">
-                                  {employee.per_minute_sum}/min
-                                </p>
+                          {dept.employees
+                            ?.sort(
+                              (a, b) => b.per_minute_sum - a.per_minute_sum,
+                            )
+                            .map((employee) => (
+                              <div
+                                key={employee.employee_id}
+                                className="flex items-center gap-2 bg-white p-1.5 rounded border border-slate-100"
+                              >
+                                {employee?.img && (
+                                  <img
+                                    src={employee.img}
+                                    alt={employee.name}
+                                    className="w-6 h-6 rounded-full object-cover border border-slate-200"
+                                  />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] font-medium text-slate-900 truncate">
+                                    {employee.name}
+                                  </p>
+                                  <p className="text-[9px] text-slate-500">
+                                    {employee.per_minute_sum} so'm
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-[10px] font-bold text-blue-600">
+                                    {formatNumber(employee.earned_amount)}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="text-right">
-                                <p className="text-[10px] font-bold text-blue-600">
-                                  {formatNumber(employee.earned_amount)}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                          {dept.employees.length > 5 && (
-                            <p className="text-[9px] text-slate-500 text-center py-1">
-                              +{dept.employees.length - 5} ta xodim ko'proq
-                            </p>
-                          )}
+                            ))}
                         </div>
                       </div>
                     </div>
