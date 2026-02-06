@@ -88,7 +88,7 @@ const New = () => {
 
       // Filter out already selected items
       const filteredItems = response.data.filter(
-        (item) => !selectedItemIds.includes(item.id.toString())
+        (item) => !selectedItemIds.includes(item.id.toString()),
       );
 
       setItems(filteredItems);
@@ -269,7 +269,7 @@ const New = () => {
     } else {
       // Find the source by ID - convert both to strings for comparison
       const source = allSources.find(
-        (s) => s.id.toString() === sourceId.toString()
+        (s) => s.id.toString() === sourceId.toString(),
       );
       if (source) {
         setFormData((prev) => ({
@@ -356,7 +356,7 @@ const New = () => {
 
     // check items' quantity
     const hasInvalidQuantity = formData.items.some(
-      (item) => !item.quantity || item.quantity <= 0
+      (item) => !item.quantity || item.quantity <= 0,
     );
     if (hasInvalidQuantity) {
       toast({
@@ -369,7 +369,7 @@ const New = () => {
 
     // check items' price
     const hasInvalidPrice = formData.items.some(
-      (item) => !item.price || item.price <= 0
+      (item) => !item.price || item.price <= 0,
     );
     if (hasInvalidPrice) {
       toast({
@@ -426,7 +426,7 @@ const New = () => {
       setFilteredSources(allSources);
     } else {
       const filtered = allSources.filter((source) =>
-        source.name.toLowerCase().includes(value.toLowerCase())
+        source.name.toLowerCase().includes(value.toLowerCase()),
       );
       setFilteredSources(filtered);
     }
@@ -452,13 +452,11 @@ const New = () => {
     if (!formData.order_id) return "";
 
     const selectedOrder = orders.find(
-      (order) => order.id.toString() === formData.order_id
+      (order) => order.id.toString() === formData.order_id,
     );
     if (!selectedOrder) return "";
 
-    return `${selectedOrder.name} - ${selectedOrder.comment} (${
-      statuses[selectedOrder.status]?.text
-    })`;
+    return `${selectedOrder.name} (${statuses[selectedOrder.status]?.text} | ${selectedOrder.quantity} dona)`;
   };
 
   // Get the selected source display text
@@ -467,7 +465,7 @@ const New = () => {
     if (!formData.source_id) return "";
 
     const selectedSource = allSources.find(
-      (source) => source.id.toString() === formData.source_id
+      (source) => source.id.toString() === formData.source_id,
     );
     if (!selectedSource) return "";
 
@@ -478,7 +476,7 @@ const New = () => {
     if (!formData.contragent_id) return "";
 
     const selectedContragent = contragents.find(
-      (contragent) => contragent.id.toString() === formData.contragent_id
+      (contragent) => contragent.id.toString() === formData.contragent_id,
     );
     if (!selectedContragent) return "";
 
@@ -568,7 +566,7 @@ const New = () => {
                               "mr-2 h-4 w-4",
                               formData.source_id === source.id.toString()
                                 ? "opacity-100"
-                                : "opacity-0"
+                                : "opacity-0",
                             )}
                           />
                           {source.name}
@@ -580,73 +578,6 @@ const New = () => {
               </PopoverContent>
             </Popover>
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Buyurtma</label>
-          <Popover open={openOrderCombobox} onOpenChange={setOpenOrderCombobox}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={openOrderCombobox}
-                className="w-full justify-between"
-              >
-                {formData.order_id
-                  ? getSelectedOrderText()
-                  : "Buyurtmani tanlang"}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Buyurtmani qidirish..." />
-                <CommandEmpty>Buyurtma topilmadi</CommandEmpty>
-                <CommandList>
-                  <CommandGroup>
-                    {orders.map((order) => (
-                      <CommandItem
-                        key={order.id}
-                        value={order.id}
-                        onSelect={() => {
-                          setFormData((prev) => {
-                            // Check if order has a contragent and set contragent_id if it does
-                            const contragentId = order.contragent
-                              ? order.contragent.id.toString()
-                              : prev.contragent_id;
-                            return {
-                              ...prev,
-                              order_id: order.id.toString(),
-                              contragent_id: contragentId,
-                            };
-                          });
-                          setOpenOrderCombobox(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            formData.order_id === order.id.toString()
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        <div className="flex flex-col">
-                          <span>
-                            {order?.id} {order?.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {order?.comment} ({order?.quantity}) (
-                            {statuses[order?.status]?.text})
-                          </span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
         </div>
 
         <div className="space-y-2">
@@ -682,6 +613,7 @@ const New = () => {
                           setFormData((prev) => ({
                             ...prev,
                             contragent_id: contragent.id.toString(),
+                            order_id: "",
                           }));
                           setOpenContragentCombobox(false);
                         }}
@@ -691,7 +623,7 @@ const New = () => {
                             "mr-2 h-4 w-4",
                             formData.contragent_id === contragent.id.toString()
                               ? "opacity-100"
-                              : "opacity-0"
+                              : "opacity-0",
                           )}
                         />
                         <div className="flex flex-col">
@@ -704,6 +636,80 @@ const New = () => {
                         </div>
                       </CommandItem>
                     ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Buyurtma</label>
+          <Popover open={openOrderCombobox} onOpenChange={setOpenOrderCombobox}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openOrderCombobox}
+                className="w-full justify-between"
+                disabled={!formData.contragent_id}
+              >
+                {formData.order_id
+                  ? getSelectedOrderText()
+                  : "Buyurtmani tanlang"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Buyurtmani qidirish..." />
+                <CommandEmpty>Buyurtma topilmadi</CommandEmpty>
+                <CommandList>
+                  <CommandGroup>
+                    {orders
+                      .filter(
+                        (order) =>
+                          order.contragent.id.toString() ===
+                          formData.contragent_id,
+                      )
+                      .map((order) => (
+                        <CommandItem
+                          key={order.id}
+                          value={order.id}
+                          onSelect={() => {
+                            setFormData((prev) => {
+                              // Check if order has a contragent and set contragent_id if it does
+                              const contragentId = order.contragent
+                                ? order.contragent.id.toString()
+                                : prev.contragent_id;
+                              return {
+                                ...prev,
+                                order_id: order.id.toString(),
+                                contragent_id: contragentId,
+                              };
+                            });
+                            setOpenOrderCombobox(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              formData.order_id === order.id.toString()
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span>
+                              {order?.id} {order?.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {order?.comment} ({order?.quantity}) (
+                              {statuses[order?.status]?.text})
+                            </span>
+                          </div>
+                        </CommandItem>
+                      ))}
                   </CommandGroup>
                 </CommandList>
               </Command>
