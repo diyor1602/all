@@ -549,7 +549,7 @@ const Overall2 = () => {
                                 </div>
                                 <div className="text-right">
                                   <p className="text-[10px] font-bold text-blue-600">
-                                    {formatNumber(employee.earned_amount)}
+                                    {formatNumber(employee.total_amount, 0)}
                                   </p>
                                 </div>
                               </div>
