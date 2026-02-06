@@ -17,6 +17,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -47,6 +53,8 @@ const New = () => {
   const itemRefs = useRef([]);
   const [openContragentCombobox, setOpenContragentCombobox] = useState(false);
   const [types, setTypes] = useState([]);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
 
   const [formData, setFormData] = useState({
     warehouse_id: "",
@@ -555,7 +563,7 @@ const New = () => {
   };
 
   return (
-    <div className="p-4">
+    <div>
       <h1 className="text-2xl font-bold mb-6">Yangi kirim</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -805,158 +813,206 @@ const New = () => {
           {formData.items.map((item, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 border rounded-lg"
+              className="rounded-xl border bg-white/60 p-4 shadow-sm"
             >
-              <Select
-                value={item.type_id || ""}
-                onValueChange={(value) => handleItemTypeChange(index, value)}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Tur" />
-                </SelectTrigger>
-                <SelectContent>
-                  {types.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <div
-                className="relative"
-                ref={(el) => (itemRefs.current[index] = el)}
-              >
-                <Input
-                  placeholder="Mahsulotni qidirish..."
-                  value={itemSearches[index]}
-                  onChange={(e) =>
-                    handleItemSearchChange(e.target.value, index)
-                  }
-                  className="bg-white"
-                  disabled={!item.type_id}
-                  onFocus={() => {
-                    if (itemSearches[index]) {
-                      const newShowResults = [...showItemResults];
-                      newShowResults[index] = true;
-                      setShowItemResults(newShowResults);
-                    }
-                  }}
-                />
-                {item.item_id && (
-                  <div className="mt-2 p-2 border rounded-md bg-muted/30">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Kod:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.code || "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Rang:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.color || "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Lot:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.lot || "-"}
-                        </span>
-                      </div>
-                      {item.image && <img src={item.image} alt="" />}
-                    </div>
-                  </div>
-                )}
-                {showItemResults[index] && items.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto top-10">
-                    <div className="py-1 flex flex-col gap-2">
-                      {items.map((product) => (
-                        <div
-                          key={product.id}
-                          className="px-4 py-2 hover:bg-muted cursor-pointer border"
-                          onClick={() => handleItemSelect(index, product)}
-                        >
-                          <div className="flex flex-col gap-2">
-                            <span>{product.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {product.code}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {product.color?.name} {product.lot}
-                            </span>
-                            {product.image && (
-                              <img src={product.image} alt="" />
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {showItemResults[index] &&
-                  items.length === 0 &&
-                  itemSearches[index] && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                      <div className="px-4 py-3 text-sm">
-                        <p>Mahsulot topilmadi</p>
-                      </div>
-                    </div>
-                  )}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold">
+                    Mahsulot #{index + 1}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Tur, mahsulot, miqdor va narxni kiriting
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => removeItem(index)}
+                  className="h-9 px-3"
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
               </div>
 
-              <Input
-                type="number"
-                value={item.quantity}
-                onChange={(e) =>
-                  handleItemChange(index, "quantity", e.target.value)
-                }
-                placeholder="Miqdor"
-                className="bg-white"
-              />
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-12">
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Tur</label>
+                  <Select
+                    value={item.type_id || ""}
+                    onValueChange={(value) =>
+                      handleItemTypeChange(index, value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Tur tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {types.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <Input
-                type="number"
-                value={item.price}
-                onChange={(e) =>
-                  handleItemChange(index, "price", e.target.value)
-                }
-                placeholder="Narx"
-                className="bg-white"
-              />
+                <div className="space-y-2 md:col-span-4">
+                  <label className="text-sm font-medium">Mahsulot</label>
+                  <div
+                    className="relative"
+                    ref={(el) => (itemRefs.current[index] = el)}
+                  >
+                    <Input
+                      placeholder="Mahsulotni qidirish..."
+                      value={itemSearches[index]}
+                      onChange={(e) =>
+                        handleItemSearchChange(e.target.value, index)
+                      }
+                      className="bg-white"
+                      disabled={!item.type_id}
+                      onFocus={() => {
+                        if (itemSearches[index]) {
+                          const newShowResults = [...showItemResults];
+                          newShowResults[index] = true;
+                          setShowItemResults(newShowResults);
+                        }
+                      }}
+                    />
+                    {item.item_id && (
+                      <div className="mt-2 rounded-lg border bg-muted/20 p-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex flex-1 flex-col gap-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Kod:</span>
+                              <span className="text-sm text-muted-foreground">
+                                {item.code || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Rang:</span>
+                              <span className="text-sm text-muted-foreground">
+                                {item.color || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Lot:</span>
+                              <span className="text-sm text-muted-foreground">
+                                {item.lot || "-"}
+                              </span>
+                            </div>
+                          </div>
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt=""
+                              className="h-16 w-16 rounded-md border object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => {
+                                setSelectedImage(item.image);
+                                setImageDialogOpen(true);
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {showItemResults[index] && items.length > 0 && (
+                      <div className="absolute z-10 mt-2 w-full overflow-hidden rounded-lg border bg-white shadow-lg">
+                        <div className="max-h-72 overflow-auto p-1">
+                          {items.map((product) => (
+                            <div
+                              key={product.id}
+                              className="flex gap-3 rounded-md px-3 py-2 hover:bg-muted cursor-pointer"
+                              onClick={() => handleItemSelect(index, product)}
+                            >
+                              <div className="flex flex-1 flex-col">
+                                <span className="text-sm font-medium">
+                                  {product.name}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {product.code}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {product.color?.name} {product.lot}
+                                </span>
+                              </div>
+                              {product.image && (
+                                <img
+                                  src={product.image}
+                                  alt=""
+                                  className="h-12 w-12 rounded-md border object-cover"
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {showItemResults[index] &&
+                      items.length === 0 &&
+                      itemSearches[index] && (
+                        <div className="absolute z-10 mt-2 w-full overflow-hidden rounded-lg border bg-white shadow-lg">
+                          <div className="px-4 py-3 text-sm text-muted-foreground">
+                            <p>Mahsulot topilmadi</p>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </div>
 
-              <Select
-                value={item.currency_id}
-                onValueChange={(value) =>
-                  handleItemChange(index, "currency_id", value)
-                }
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Valyuta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem
-                      key={currency.id}
-                      value={currency.id.toString()}
-                    >
-                      {currency.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Miqdor</label>
+                  <Input
+                    type="number"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      handleItemChange(index, "quantity", e.target.value)
+                    }
+                    placeholder="0"
+                    className="bg-white"
+                  />
+                </div>
 
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => removeItem(index)}
-                className="mt-2 md:mt-0 w-fit"
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Narx</label>
+                  <Input
+                    type="number"
+                    value={item.price}
+                    onChange={(e) =>
+                      handleItemChange(index, "price", e.target.value)
+                    }
+                    placeholder="0"
+                    className="bg-white"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Valyuta</label>
+                  <Select
+                    value={item.currency_id}
+                    onValueChange={(value) =>
+                      handleItemChange(index, "currency_id", value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Valyuta tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((currency) => (
+                        <SelectItem
+                          key={currency.id}
+                          value={currency.id.toString()}
+                        >
+                          {currency.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           ))}
-          <div className="flex justify-between items-center">
+
+          <div className="flex items-center justify-between">
             <Button type="button" onClick={addItem} variant="outline">
               + Mahsulot qo'shish
             </Button>
@@ -976,6 +1032,21 @@ const New = () => {
           </Button>
         </div>
       </form>
+
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Mahsulot rasmi</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <img
+              src={selectedImage}
+              alt="Product image"
+              className="max-w-full max-h-[70vh] object-contain rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
