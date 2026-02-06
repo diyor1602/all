@@ -149,8 +149,8 @@ const Overall2 = () => {
       {/* HEADER & FILTERS */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mavsumiy Tahlil</h1>
-          <p className="text-slate-500 text-sm">
+          <h1 className="text-lg font-bold text-slate-900">Mavsumiy Tahlil</h1>
+          <p className="text-slate-500 text-xs">
             Moliyaviy ko'rsatkichlar va buyurtmalar nazorati
           </p>
         </div>
@@ -159,13 +159,13 @@ const Overall2 = () => {
           <div className="flex bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setSelectedType("winter")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${selectedType === "winter" ? "bg-white shadow-sm text-blue-600" : "text-slate-500"}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${selectedType === "winter" ? "bg-white shadow-sm text-blue-600" : "text-slate-500"}`}
             >
               ❄️ Qishki
             </button>
             <button
               onClick={() => setSelectedType("summer")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${selectedType === "summer" ? "bg-white shadow-sm text-orange-600" : "text-slate-500"}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${selectedType === "summer" ? "bg-white shadow-sm text-orange-600" : "text-slate-500"}`}
             >
               ☀️ Yozgi
             </button>
@@ -177,18 +177,18 @@ const Overall2 = () => {
               type="number"
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-24 h-9 border-none bg-transparent font-bold focus-visible:ring-0"
+              className="w-20 h-8 border-none bg-transparent font-bold text-sm focus-visible:ring-0"
             />
           </div>
           <Button
             size="sm"
             onClick={getData}
             disabled={loading}
-            className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
+            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 h-8 px-3 text-xs"
           >
             <RefreshCcw
-              size={16}
-              className={`mr-2 ${loading ? "animate-spin" : ""}`}
+              size={14}
+              className={`mr-1 ${loading ? "animate-spin" : ""}`}
             />
             Yangilash
           </Button>
@@ -199,7 +199,7 @@ const Overall2 = () => {
       {loading ? (
         <div className="flex flex-col items-center justify-center h-96 space-y-4">
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-          <p className="text-slate-500 font-medium">
+          <p className="text-slate-500 font-medium text-sm">
             Ma'lumotlar hisoblanmoqda...
           </p>
         </div>
@@ -211,17 +211,17 @@ const Overall2 = () => {
               <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
                 <CardContent className="pt-6">
                   <div className="flex justify-between items-start">
-                    <p className="text-emerald-100 text-sm font-medium uppercase tracking-wider">
+                    <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">
                       Umumiy Tushum
                     </p>
                     <TrendingUp className="text-emerald-200" size={24} />
                   </div>
-                  <h2 className="text-3xl font-black mt-2">
+                  <h2 className="text-xl font-black mt-2">
                     {formatNumber(finance.revenue_uzs)}{" "}
-                    <span className="text-lg font-normal opacity-80">UZS</span>
+                    <span className="text-sm font-normal opacity-80">UZS</span>
                   </h2>
                   <div className="mt-4 flex items-center gap-2">
-                    <Badge className="bg-white/20 hover:bg-white/30 border-none text-white">
+                    <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
                       Kurs: {formatNumber(dollarRate)}
                     </Badge>
                   </div>
@@ -231,19 +231,19 @@ const Overall2 = () => {
               <Card className="border-none shadow-sm bg-white">
                 <CardContent className="pt-6">
                   <div className="flex justify-between items-start">
-                    <p className="text-slate-500 text-sm font-medium uppercase tracking-wider">
+                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">
                       Sof Foyda (Kutilayotgan)
                     </p>
                     <CircleDollarSign className="text-indigo-500" size={24} />
                   </div>
-                  <h2 className="text-3xl font-black mt-2 text-slate-900">
+                  <h2 className="text-xl font-black mt-2 text-slate-900">
                     {formatNumber(netProfit)}{" "}
-                    <span className="text-lg font-normal text-slate-400">
+                    <span className="text-sm font-normal text-slate-400">
                       UZS
                     </span>
                   </h2>
                   <div className="mt-4 flex items-center justify-between">
-                    <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
                       Rentabellik: {profitMargin}%
                     </span>
                   </div>
@@ -255,10 +255,10 @@ const Overall2 = () => {
             <Card className="shadow-sm border-slate-200">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">
+                  <CardTitle className="text-base">
                     Buyurtmalar Ro'yxati
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs">
                     Mavsum bo'yicha buyurtmalar tahlili
                   </CardDescription>
                 </div>
@@ -422,8 +422,8 @@ const Overall2 = () => {
           <div className="space-y-6">
             <Card className="shadow-sm border-slate-200 sticky top-6">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Wallet className="text-rose-500" size={20} />
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Wallet className="text-rose-500" size={18} />
                   Xarajatlar Tafsiloti
                 </CardTitle>
               </CardHeader>
@@ -495,7 +495,7 @@ const Overall2 = () => {
                     Valyuta Kursi ($)
                   </p>
                   <Input
-                    className="h-6 text-[11px] font-bold px-2 py-1 bg-white border-slate-200"
+                    className="h-5 text-[10px] font-bold px-2 py-1 bg-white border-slate-200"
                     value={dollarRate}
                     onChange={(e) => setDollarRate(e.target.value)}
                   />
