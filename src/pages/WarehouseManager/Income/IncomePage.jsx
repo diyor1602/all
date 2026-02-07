@@ -509,7 +509,7 @@ const IncomePage = () => {
                         income.items &&
                         income.items.length > 0 && (
                           <TableRow className="bg-muted/30">
-                            <TableCell colSpan={9} className="py-2 px-4">
+                            <TableCell colSpan={10} className="py-2 px-4">
                               <div className="rounded-md border border-border">
                                 <Table>
                                   <TableHeader>
@@ -518,7 +518,6 @@ const IncomePage = () => {
                                       <TableHead>Kod</TableHead>
                                       <TableHead>Miqdor</TableHead>
                                       <TableHead>Narx</TableHead>
-                                      <TableHead>Valyuta</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -545,6 +544,16 @@ const IncomePage = () => {
                                             </div>
                                           )}
                                           <span>{item.item.name}</span>
+                                          {item?.roll_number && (
+                                            <span className="text-xs">
+                                              Roll: {item.roll_number}
+                                            </span>
+                                          )}
+                                          {item?.length && (
+                                            <span className="text-xs">
+                                              Lot: {item.length}
+                                            </span>
+                                          )}
                                         </TableCell>
                                         <TableCell>
                                           {item.item.code || "-"}
@@ -553,9 +562,9 @@ const IncomePage = () => {
                                           {item.quantity}{" "}
                                           {item.item?.unit?.name}
                                         </TableCell>
-                                        <TableCell>{item.price}</TableCell>
                                         <TableCell>
-                                          {item.currency?.name || "-"}
+                                          {item.price}{" "}
+                                          {item.currency?.name || ""}
                                         </TableCell>
                                       </TableRow>
                                     ))}
