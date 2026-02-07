@@ -83,7 +83,7 @@ const New = () => {
         color: "", // Add color
         lot: "", // Add lot
         image: "", // Add image
-        rolle_number: "", // Add rolle_number
+        roll_number: "", // Add roll_number
         length: "", // Add length
       },
     ],
@@ -298,7 +298,7 @@ const New = () => {
         color: "",
         lot: "",
         image: "",
-        rolle_number: "", // Reset rolle_number
+        roll_number: "", // Reset roll_number
         length: "", // Reset length
       };
       return {
@@ -393,7 +393,7 @@ const New = () => {
           code: "",
           color: "",
           lot: "",
-          rolle_number: "", // Add rolle_number
+          roll_number: "", // Add roll_number
           length: "", // Add length
         },
       ],
@@ -612,7 +612,7 @@ const New = () => {
       : selectedUser.username;
   };
 
-  // Helper function to check if type requires rolle_number and length
+  // Helper function to check if type requires roll_number and length
   const isSpecialType = (typeId) => {
     if (!typeId) return false;
     const type = types.find((t) => t.id.toString() === typeId.toString());
@@ -1170,7 +1170,7 @@ const New = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* Show rolle_number and length fields only for Mato and Astar types */}
+                {/* Show roll_number and length fields only for Mato and Astar types */}
                 {isSpecialType(item.type_id) && (
                   <>
                     <div className="space-y-2 md:col-span-2">
@@ -1178,13 +1178,9 @@ const New = () => {
                         Rulon raqami
                       </label>
                       <Input
-                        value={item.rolle_number}
+                        value={item.roll_number}
                         onChange={(e) =>
-                          handleItemChange(
-                            index,
-                            "rolle_number",
-                            e.target.value,
-                          )
+                          handleItemChange(index, "roll_number", e.target.value)
                         }
                         placeholder="Rulon raqami"
                         className="bg-white"
