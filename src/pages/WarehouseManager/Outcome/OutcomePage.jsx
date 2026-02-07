@@ -47,6 +47,12 @@ import {
 } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const OutcomePage = () => {
   const { toast } = useToast();
@@ -56,6 +62,8 @@ const OutcomePage = () => {
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [downloadingIds, setDownloadingIds] = useState([]);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [filters, setFilters] = useState({
     search: "",
     warehouse_id: "",
@@ -78,7 +86,7 @@ const OutcomePage = () => {
       });
       if (node) observer.current.observe(node);
     },
-    [loading, hasMore]
+    [loading, hasMore],
   );
 
   const debouncedFetchOutcomes = useCallback(
@@ -91,7 +99,7 @@ const OutcomePage = () => {
         }, 500); // 500ms delay
       };
     })(),
-    []
+    [],
   );
 
   const fetchOutcomes = async (page = 1, filterParams = {}) => {
@@ -112,7 +120,7 @@ const OutcomePage = () => {
         params.append("end_date", filterParams.end_date);
 
       const response = await api.get(
-        `/warehouseManager/outcome?${params.toString()}`
+        `/warehouseManager/outcome?${params.toString()}`,
       );
 
       if (page === 1) {
@@ -202,6 +210,16 @@ const OutcomePage = () => {
     }));
   };
 
+  const openImageDialog = (e, item) => {
+    e.stopPropagation();
+    if (!item?.item?.image) return;
+    setSelectedImage({
+      src: item.item.image,
+      name: item.item.name,
+    });
+    setImageDialogOpen(true);
+  };
+
   const handleDownload = async (id) => {
     try {
       setDownloadingIds((prev) => [...prev, id]);
@@ -211,7 +229,7 @@ const OutcomePage = () => {
       });
 
       const url = window.URL.createObjectURL(
-        new Blob([response.data], { type: "application/pdf" })
+        new Blob([response.data], { type: "application/pdf" }),
       );
       const link = document.createElement("a");
       link.href = url;
@@ -411,8 +429,8 @@ const OutcomePage = () => {
                     <TableHead>Ombor</TableHead>
                     <TableHead>Chiqim turi</TableHead>
                     <TableHead>Izoh</TableHead>
-                    <TableHead>Sana</TableHead>
                     <TableHead>Mahsulotlar</TableHead>
+                    <TableHead>Sana</TableHead>
                     <TableHead>Buyurtma</TableHead>
                     <TableHead>Mas'ul Xodim</TableHead>
                     <TableHead className="text-right">Yuklab olish</TableHead>
@@ -523,13 +541,19 @@ const OutcomePage = () => {
                                       <TableRow key={item.id}>
                                         <TableCell className="flex items-center gap-2">
                                           {item.item.image ? (
-                                            <div className="w-8 h-8 rounded overflow-hidden">
+                                            <button
+                                              type="button"
+                                              className="w-8 h-8 rounded overflow-hidden cursor-pointer"
+                                              onClick={(e) =>
+                                                openImageDialog(e, item)
+                                              }
+                                            >
                                               <img
                                                 src={item.item.image}
                                                 alt={item.item.name}
                                                 className="w-full h-full object-cover"
                                               />
-                                            </div>
+                                            </button>
                                           ) : (
                                             <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
                                               <Package className="w-4 h-4" />
@@ -579,6 +603,26 @@ const OutcomePage = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="max-w-3xl w-full p-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b border-border">
+            <DialogTitle className="text-base font-semibold">
+              {selectedImage?.name || "Rasm"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center bg-muted/30 w-full h-[70vh] p-4">
+            {selectedImage?.src && (
+              <img
+                src={selectedImage.src}
+                alt={selectedImage?.name || "item-image"}
+                className="max-h-full max-w-full object-contain rounded-md"
+                loading="lazy"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
