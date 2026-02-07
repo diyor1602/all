@@ -659,141 +659,147 @@ const New = () => {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Kontragent</label>
-          <Popover
-            open={openContragentCombobox}
-            onOpenChange={setOpenContragentCombobox}
-          >
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={openContragentCombobox}
-                className="w-full justify-between"
-              >
-                {formData.contragent_id
-                  ? getSelectedContragentText()
-                  : "Kontragentni tanlang"}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Kontragentni qidirish..." />
-                <CommandEmpty>Kontragent topilmadi</CommandEmpty>
-                <CommandList>
-                  <CommandGroup>
-                    {contragents.map((contragent) => (
-                      <CommandItem
-                        key={contragent.id}
-                        value={contragent.id}
-                        onSelect={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            contragent_id: contragent.id.toString(),
-                            order_id: "",
-                          }));
-                          setOpenContragentCombobox(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            formData.contragent_id === contragent.id.toString()
-                              ? "opacity-100"
-                              : "opacity-0",
-                          )}
-                        />
-                        <div className="flex flex-col">
-                          <span>{contragent.name}</span>
-                          {contragent.description && (
-                            <span className="text-xs text-muted-foreground">
-                              {contragent.description}
-                            </span>
-                          )}
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Buyurtma</label>
-          <Popover open={openOrderCombobox} onOpenChange={setOpenOrderCombobox}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={openOrderCombobox}
-                className="w-full justify-between"
-                disabled={!formData.contragent_id}
-              >
-                {formData.order_id
-                  ? getSelectedOrderText()
-                  : "Buyurtmani tanlang"}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Buyurtmani qidirish..." />
-                <CommandEmpty>Buyurtma topilmadi</CommandEmpty>
-                <CommandList>
-                  <CommandGroup>
-                    {orders
-                      .filter(
-                        (order) =>
-                          order.contragent.id.toString() ===
-                          formData.contragent_id,
-                      )
-                      .map((order) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Kontragent</label>
+            <Popover
+              open={openContragentCombobox}
+              onOpenChange={setOpenContragentCombobox}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openContragentCombobox}
+                  className="w-full justify-between"
+                >
+                  {formData.contragent_id
+                    ? getSelectedContragentText()
+                    : "Kontragentni tanlang"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Kontragentni qidirish..." />
+                  <CommandEmpty>Kontragent topilmadi</CommandEmpty>
+                  <CommandList>
+                    <CommandGroup>
+                      {contragents.map((contragent) => (
                         <CommandItem
-                          key={order.id}
-                          value={order.id}
+                          key={contragent.id}
+                          value={contragent.id}
                           onSelect={() => {
-                            setFormData((prev) => {
-                              // Check if order has a contragent and set contragent_id if it does
-                              const contragentId = order.contragent
-                                ? order.contragent.id.toString()
-                                : prev.contragent_id;
-                              return {
-                                ...prev,
-                                order_id: order.id.toString(),
-                                contragent_id: contragentId,
-                              };
-                            });
-                            setOpenOrderCombobox(false);
+                            setFormData((prev) => ({
+                              ...prev,
+                              contragent_id: contragent.id.toString(),
+                              order_id: "",
+                            }));
+                            setOpenContragentCombobox(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              formData.order_id === order.id.toString()
+                              formData.contragent_id ===
+                                contragent.id.toString()
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}
                           />
                           <div className="flex flex-col">
-                            <span>
-                              {order?.id} {order?.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {order?.comment} ({order?.quantity}) (
-                              {statuses[order?.status]?.text})
-                            </span>
+                            <span>{contragent.name}</span>
+                            {contragent.description && (
+                              <span className="text-xs text-muted-foreground">
+                                {contragent.description}
+                              </span>
+                            )}
                           </div>
                         </CommandItem>
                       ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Buyurtma</label>
+            <Popover
+              open={openOrderCombobox}
+              onOpenChange={setOpenOrderCombobox}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openOrderCombobox}
+                  className="w-full justify-between"
+                  disabled={!formData.contragent_id}
+                >
+                  {formData.order_id
+                    ? getSelectedOrderText()
+                    : "Buyurtmani tanlang"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buyurtmani qidirish..." />
+                  <CommandEmpty>Buyurtma topilmadi</CommandEmpty>
+                  <CommandList>
+                    <CommandGroup>
+                      {orders
+                        .filter(
+                          (order) =>
+                            order.contragent.id.toString() ===
+                            formData.contragent_id,
+                        )
+                        .map((order) => (
+                          <CommandItem
+                            key={order.id}
+                            value={order.id}
+                            onSelect={() => {
+                              setFormData((prev) => {
+                                // Check if order has a contragent and set contragent_id if it does
+                                const contragentId = order.contragent
+                                  ? order.contragent.id.toString()
+                                  : prev.contragent_id;
+                                return {
+                                  ...prev,
+                                  order_id: order.id.toString(),
+                                  contragent_id: contragentId,
+                                };
+                              });
+                              setOpenOrderCombobox(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.order_id === order.id.toString()
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span>
+                                {order?.id} {order?.name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {order?.comment} ({order?.quantity}) (
+                                {statuses[order?.status]?.text})
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <div className="space-y-2">
