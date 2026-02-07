@@ -1188,14 +1188,14 @@ const New = () => {
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                      <label className="text-sm font-medium">Uzunlik</label>
+                      <label className="text-sm font-medium">Lot</label>
                       <Input
                         type="number"
                         value={item.length}
                         onChange={(e) =>
                           handleItemChange(index, "length", e.target.value)
                         }
-                        placeholder="Uzunlik"
+                        placeholder="Lot"
                         className="bg-white"
                       />
                     </div>
