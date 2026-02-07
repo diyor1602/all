@@ -30,7 +30,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Check, ChevronsUpDown, Trash } from "lucide-react";
+import { Check, ChevronsUpDown, Trash, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statuses } from "@/lib/status";
 
@@ -77,8 +77,13 @@ const New = () => {
         color: "", // Add color
         lot: "", // Add lot
         image: "", // Add image
-        roll_number: "", // Add roll_number
-        length: "", // Add length
+        rolls: [
+          {
+            roll_number: "",
+            length: "",
+            quantity: "",
+          },
+        ],
       },
     ],
   });
@@ -252,6 +257,70 @@ const New = () => {
     });
   };
 
+  const handleRollChange = (itemIndex, rollIndex, field, value) => {
+    setFormData((prev) => {
+      const newItems = [...prev.items];
+      const newRolls = [...newItems[itemIndex].rolls];
+      newRolls[rollIndex] = {
+        ...newRolls[rollIndex],
+        [field]: value,
+      };
+
+      // Calculate total quantity from all rolls
+      const totalQuantity = newRolls.reduce(
+        (sum, roll) => sum + (parseFloat(roll.quantity) || 0),
+        0,
+      );
+
+      newItems[itemIndex] = {
+        ...newItems[itemIndex],
+        rolls: newRolls,
+        quantity: totalQuantity.toString(), // Update main quantity field
+      };
+      return {
+        ...prev,
+        items: newItems,
+      };
+    });
+  };
+
+  const addRoll = (itemIndex) => {
+    setFormData((prev) => {
+      const newItems = [...prev.items];
+      const newRolls = [...newItems[itemIndex].rolls];
+      newRolls.push({
+        roll_number: "",
+        length: "",
+        quantity: "",
+      });
+      newItems[itemIndex] = {
+        ...newItems[itemIndex],
+        rolls: newRolls,
+      };
+      return {
+        ...prev,
+        items: newItems,
+      };
+    });
+  };
+
+  const removeRoll = (itemIndex, rollIndex) => {
+    setFormData((prev) => {
+      const newItems = [...prev.items];
+      const newRolls = newItems[itemIndex].rolls.filter(
+        (_, i) => i !== rollIndex,
+      );
+      newItems[itemIndex] = {
+        ...newItems[itemIndex],
+        rolls: newRolls,
+      };
+      return {
+        ...prev,
+        items: newItems,
+      };
+    });
+  };
+
   const handleItemTypeChange = (index, value) => {
     setFormData((prev) => {
       const newItems = [...prev.items];
@@ -264,8 +333,13 @@ const New = () => {
         color: "",
         lot: "",
         image: "",
-        roll_number: "", // Reset roll_number
-        length: "", // Reset length
+        rolls: [
+          {
+            roll_number: "",
+            length: "",
+            quantity: "",
+          },
+        ],
       };
       return {
         ...prev,
@@ -359,8 +433,13 @@ const New = () => {
           code: "",
           color: "",
           lot: "",
-          roll_number: "", // Add roll_number
-          length: "", // Add length
+          rolls: [
+            {
+              roll_number: "",
+              length: "",
+              quantity: "",
+            },
+          ],
         },
       ],
     }));
@@ -409,6 +488,35 @@ const New = () => {
       toast({
         title: "Diqqat",
         description: "Barcha maydonlarni to'ldiring",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // check rolls
+    const hasInvalidRolls = formData.items.some((item) => {
+      // Only check rolls for special types
+      if (!isSpecialType(item.type_id)) return false;
+
+      // If no rolls, it's valid (user can use main quantity)
+      if (!item.rolls || item.rolls.length === 0) return false;
+
+      // Check if any roll has invalid data
+      return item.rolls.some(
+        (roll) =>
+          !roll.roll_number ||
+          !roll.length ||
+          roll.length <= 0 ||
+          !roll.quantity ||
+          roll.quantity <= 0,
+      );
+    });
+
+    if (hasInvalidRolls) {
+      toast({
+        title: "Diqqat",
+        description:
+          "Rulonlar uchun to'liq ma'lumot kiriting (rulon raqami, lot, miqdor)",
         variant: "destructive",
       });
       return;
@@ -464,10 +572,24 @@ const New = () => {
         delete dataToSubmit.source_name;
       }
 
-      // Remove item_name from each item before submitting
+      // Remove item_name from each item before submitting and transform rolls
       dataToSubmit.items = dataToSubmit.items.map((item) => {
-        const { item_name, ...rest } = item;
-        return rest;
+        const { item_name, rolls, ...rest } = item;
+
+        // Transform rolls to the required format, or use empty array if no rolls
+        const transformedRolls =
+          rolls && rolls.length > 0
+            ? rolls.map((roll) => ({
+                roll_number: parseInt(roll.roll_number) || 0,
+                length: parseFloat(roll.length) || 0,
+                quantity: parseFloat(roll.quantity) || 0,
+              }))
+            : [];
+
+        return {
+          ...rest,
+          rolls: transformedRolls,
+        };
       });
 
       await api.post("/warehouseManager/incoming", dataToSubmit);
@@ -976,16 +1098,30 @@ const New = () => {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">Miqdor</label>
-                  <Input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      handleItemChange(index, "quantity", e.target.value)
-                    }
-                    placeholder="0"
-                    className="bg-white"
-                  />
+                  <label className="text-sm font-medium">
+                    {isSpecialType(item.type_id) && item.rolls.length > 0
+                      ? "Jami miqdor"
+                      : "Miqdor"}
+                  </label>
+                  {isSpecialType(item.type_id) && item.rolls.length > 0 ? (
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      disabled
+                      placeholder="0"
+                      className="bg-white"
+                    />
+                  ) : (
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        handleItemChange(index, "quantity", e.target.value)
+                      }
+                      placeholder="0"
+                      className="bg-white"
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -1025,43 +1161,121 @@ const New = () => {
                   </Select>
                 </div>
 
-                {/* Show roll_number and length fields only for Mato and Astar types */}
+                {/* Show rolls section only for Mato and Astar types */}
                 {isSpecialType(item.type_id) && (
-                  <>
-                    <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-4 md:col-span-12">
+                    <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">
-                        Rulon raqami
+                        {item.rolls.length > 0
+                          ? "Rulonlar"
+                          : "Rulonlar (mavjud emas)"}
                       </label>
-                      <Input
-                        value={item.roll_number}
-                        onChange={(e) =>
-                          handleItemChange(index, "roll_number", e.target.value)
-                        }
-                        placeholder="Rulon raqami"
-                        className="bg-white"
-                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addRoll(index)}
+                          className="h-8 px-2 bg-green-500 text-white"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Rulon qo'shish
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="space-y-2 md:col-span-2">
-                      <label className="text-sm font-medium">Lot</label>
-                      <Input
-                        type="number"
-                        value={item.length}
-                        onChange={(e) =>
-                          handleItemChange(index, "length", e.target.value)
-                        }
-                        placeholder="Lot"
-                        className="bg-white"
-                      />
-                    </div>
-                  </>
+                    {item.rolls.length > 0 && (
+                      <div className="space-y-3">
+                        {item.rolls.map((roll, rollIndex) => (
+                          <div
+                            key={rollIndex}
+                            className="grid grid-cols-1 gap-3 md:grid-cols-12 p-3 border rounded-lg bg-gray-50/50"
+                          >
+                            <div className="space-y-2 md:col-span-3">
+                              <label className="text-xs font-medium">
+                                Rulon raqami
+                              </label>
+                              <Input
+                                value={roll.roll_number}
+                                onChange={(e) =>
+                                  handleRollChange(
+                                    index,
+                                    rollIndex,
+                                    "roll_number",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Rulon raqami"
+                                className="bg-white"
+                              />
+                            </div>
+
+                            <div className="space-y-2 md:col-span-4">
+                              <label className="text-xs font-medium">Lot</label>
+                              <Input
+                                type="number"
+                                value={roll.length}
+                                onChange={(e) =>
+                                  handleRollChange(
+                                    index,
+                                    rollIndex,
+                                    "length",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Lot"
+                                className="bg-white"
+                              />
+                            </div>
+
+                            <div className="space-y-2 md:col-span-4">
+                              <label className="text-xs font-medium">
+                                Miqdor
+                              </label>
+                              <Input
+                                type="number"
+                                value={roll.quantity}
+                                onChange={(e) =>
+                                  handleRollChange(
+                                    index,
+                                    rollIndex,
+                                    "quantity",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Miqdor"
+                                className="bg-white"
+                              />
+                            </div>
+
+                            <div className="flex items-end md:col-span-1">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => removeRoll(index, rollIndex)}
+                                className="h-9 px-2"
+                              >
+                                <Trash className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
           ))}
 
           <div className="flex items-center justify-between">
-            <Button type="button" onClick={addItem} variant="outline">
+            <Button
+              type="button"
+              onClick={addItem}
+              variant="outline"
+              className="bg-sky-500 text-white"
+            >
               + Mahsulot qo'shish
             </Button>
           </div>
