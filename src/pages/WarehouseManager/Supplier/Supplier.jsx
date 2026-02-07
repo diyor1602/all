@@ -10,6 +10,7 @@ import {
   Package,
   Loader2,
   Trash2,
+  Image,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -72,6 +73,8 @@ const Supplier = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef();
   const lastIncomeElementRef = useCallback(
@@ -85,7 +88,7 @@ const Supplier = () => {
       });
       if (node) observer.current.observe(node);
     },
-    [loading, hasMore]
+    [loading, hasMore],
   );
 
   // Create a debounced version of fetchIncomes
@@ -99,7 +102,7 @@ const Supplier = () => {
         }, 500); // 500ms delay
       };
     })(),
-    []
+    [],
   );
 
   const fetchIncomes = async (page = 1, filterParams = {}) => {
@@ -115,7 +118,7 @@ const Supplier = () => {
         params.append("deadline", filterParams.deadline);
 
       const response = await api.get(
-        `/warehouseManager/supplierOrders?${params.toString()}`
+        `/warehouseManager/supplierOrders?${params.toString()}`,
       );
 
       if (page === 1) {
@@ -218,6 +221,11 @@ const Supplier = () => {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleImageClick = (imageUrl, itemName) => {
+    setSelectedImage({ url: imageUrl, name: itemName });
+    setImageDialogOpen(true);
   };
 
   return (
@@ -433,7 +441,16 @@ const Supplier = () => {
                                       <TableRow key={item.id}>
                                         <TableCell className="flex items-center gap-2">
                                           {item.item?.image ? (
-                                            <div className="w-8 h-8 rounded overflow-hidden">
+                                            <div
+                                              className="w-8 h-8 rounded overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleImageClick(
+                                                  item.item.image,
+                                                  item.item.name,
+                                                );
+                                              }}
+                                            >
                                               <img
                                                 src={item.item.image}
                                                 alt={item.item.name}
@@ -513,6 +530,27 @@ const Supplier = () => {
               {isDeleting ? "O'chirilmoqda..." : "O'chirish"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{selectedImage?.name || "Mahsulot rasmi"}</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center items-center bg-muted/20 rounded-lg p-4">
+            {selectedImage?.url ? (
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.name}
+                className="max-w-full max-h-96 object-contain rounded-lg"
+              />
+            ) : (
+              <div className="w-32 h-32 bg-muted rounded-lg flex items-center justify-center">
+                <Package className="w-12 h-12 text-muted-foreground" />
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
