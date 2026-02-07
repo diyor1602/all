@@ -58,6 +58,8 @@ const New = () => {
   const [users, setUsers] = useState([]);
   const [openResponsibleUserCombobox, setOpenResponsibleUserCombobox] =
     useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
 
   const [formData, setFormData] = useState({
     warehouse_id: "",
@@ -120,6 +122,19 @@ const New = () => {
       toast({
         title: "Xatolik",
         description: "Xodimlarni olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await api.get("/departments");
+      setDepartments(response.data?.flatMap((dep) => dep.departments));
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Departamentlarni olishda xatolik",
         variant: "destructive",
       });
     }
@@ -214,6 +229,7 @@ const New = () => {
     fetchAllSources();
     fetchTypes();
     fetchUsers();
+    fetchDepartments();
   }, []);
 
   // Close dropdowns when clicking outside
@@ -827,70 +843,109 @@ const New = () => {
           </Popover>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Mas'ul shaxs</label>
-          <Popover
-            open={openResponsibleUserCombobox}
-            onOpenChange={setOpenResponsibleUserCombobox}
-          >
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={openResponsibleUserCombobox}
-                className="w-full justify-between"
-              >
-                {formData.responsible_user_id
-                  ? getSelectedResponsibleUserText()
-                  : "Mas'ul shaxsni tanlang"}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Mas'ul shaxsni qidirish..." />
-                <CommandEmpty>Mas'ul shaxs topilmadi</CommandEmpty>
-                <CommandList>
-                  <CommandGroup>
-                    {users.map((user) => (
-                      <CommandItem
-                        key={user.id}
-                        value={user.id}
-                        onSelect={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            responsible_user_id: user.id.toString(),
-                          }));
-                          setOpenResponsibleUserCombobox(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            formData.responsible_user_id === user.id.toString()
-                              ? "opacity-100"
-                              : "opacity-0",
-                          )}
-                        />
-                        <div className="flex flex-col">
-                          <span>
-                            {user.employee ? user.employee.name : user.username}
-                          </span>
-                          {user.employee && user.employee.phone && (
-                            <span className="text-xs text-muted-foreground">
-                              {user.employee.user_id} (
-                              {user.employee?.department?.name}) (
-                              {user.employee?.position?.name})
-                            </span>
-                          )}
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Bo'lim</label>
+            <Select
+              value={selectedDepartment}
+              onValueChange={(value) => {
+                setSelectedDepartment(value);
+                setFormData((prev) => ({
+                  ...prev,
+                  responsible_user_id: "",
+                }));
+              }}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Bo'limni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((department) => (
+                  <SelectItem
+                    key={department.id}
+                    value={department.id.toString()}
+                  >
+                    {department.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Mas'ul shaxs</label>
+            <Popover
+              open={openResponsibleUserCombobox}
+              onOpenChange={setOpenResponsibleUserCombobox}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openResponsibleUserCombobox}
+                  className="w-full justify-between"
+                >
+                  {formData.responsible_user_id
+                    ? getSelectedResponsibleUserText()
+                    : "Mas'ul shaxsni tanlang"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Mas'ul shaxsni qidirish..." />
+                  <CommandEmpty>Mas'ul shaxs topilmadi</CommandEmpty>
+                  <CommandList>
+                    <CommandGroup>
+                      {users
+                        ?.filter(
+                          (user) =>
+                            user.employee?.department?.id.toString() ===
+                            selectedDepartment,
+                        )
+                        ?.map((user) => (
+                          <CommandItem
+                            key={user.id}
+                            value={user.id}
+                            onSelect={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                responsible_user_id: user.id.toString(),
+                              }));
+                              setOpenResponsibleUserCombobox(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.responsible_user_id ===
+                                  user.id.toString()
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span>
+                                {user.employee
+                                  ? user.employee.name
+                                  : user.username}
+                              </span>
+                              {user.employee && user.employee.phone && (
+                                <span className="text-xs text-muted-foreground">
+                                  {user.employee.user_id} (
+                                  {user.employee?.department?.name}) (
+                                  {user.employee?.position?.name})
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <div className="space-y-2">
