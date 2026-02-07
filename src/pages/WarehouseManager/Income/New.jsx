@@ -34,6 +34,8 @@ import { Check, ChevronsUpDown, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statuses } from "@/lib/status";
 
+const specialTypes = ["Mato", "Astar", "Мато", "Астар"];
+
 const New = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -75,6 +77,8 @@ const New = () => {
         color: "", // Add color
         lot: "", // Add lot
         image: "", // Add image
+        rolle_number: "", // Add rolle_number
+        length: "", // Add length
       },
     ],
   });
@@ -260,6 +264,8 @@ const New = () => {
         color: "",
         lot: "",
         image: "",
+        rolle_number: "", // Reset rolle_number
+        length: "", // Reset length
       };
       return {
         ...prev,
@@ -339,11 +345,6 @@ const New = () => {
   };
 
   const addItem = () => {
-    // Get all currently selected item IDs
-    const selectedItemIds = formData.items
-      .filter((item) => item.item_id)
-      .map((item) => item.item_id);
-
     setFormData((prev) => ({
       ...prev,
       items: [
@@ -358,6 +359,8 @@ const New = () => {
           code: "",
           color: "",
           lot: "",
+          rolle_number: "", // Add rolle_number
+          length: "", // Add length
         },
       ],
     }));
@@ -560,6 +563,13 @@ const New = () => {
     if (!selectedContragent) return "";
 
     return selectedContragent.name;
+  };
+
+  // Helper function to check if type requires rolle_number and length
+  const isSpecialType = (typeId) => {
+    if (!typeId) return false;
+    const type = types.find((t) => t.id.toString() === typeId.toString());
+    return type && specialTypes.includes(type.name);
   };
 
   return (
@@ -1014,6 +1024,42 @@ const New = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Show rolle_number and length fields only for Mato and Astar types */}
+                {isSpecialType(item.type_id) && (
+                  <>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-sm font-medium">
+                        Rulon raqami
+                      </label>
+                      <Input
+                        value={item.rolle_number}
+                        onChange={(e) =>
+                          handleItemChange(
+                            index,
+                            "rolle_number",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="Rulon raqami"
+                        className="bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-sm font-medium">Uzunlik</label>
+                      <Input
+                        type="number"
+                        value={item.length}
+                        onChange={(e) =>
+                          handleItemChange(index, "length", e.target.value)
+                        }
+                        placeholder="Uzunlik"
+                        className="bg-white"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))}
