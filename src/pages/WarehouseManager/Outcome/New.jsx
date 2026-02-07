@@ -17,6 +17,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -33,68 +39,56 @@ const New = () => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [items, setItems] = useState([]);
-  const [alldestinations, setAlldestinations] = useState([]);
-  const [filtereddestinations, setFiltereddestinations] = useState([]);
+  const [allSources, setAllSources] = useState([]);
+  const [filteredSources, setFilteredSources] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [orders, setOrders] = useState([]);
   const [contragents, setContragents] = useState([]);
   const [currencies, setCurrencies] = useState([]);
-  const [opendestinationCombobox, setOpendestinationCombobox] = useState(false);
+  const [openSourceCombobox, setOpenSourceCombobox] = useState(false);
   const [itemSearches, setItemSearches] = useState([""]);
   const [showItemResults, setShowItemResults] = useState([false]);
   const [openOrderCombobox, setOpenOrderCombobox] = useState(false);
-  const [newdestinationName, setNewdestinationName] = useState("");
-  const [users, setUsers] = useState([]);
+  const [newSourceName, setNewSourceName] = useState("");
   const itemRefs = useRef([]);
   const [openContragentCombobox, setOpenContragentCombobox] = useState(false);
+  const [types, setTypes] = useState([]);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [users, setUsers] = useState([]);
   const [openResponsibleUserCombobox, setOpenResponsibleUserCombobox] =
     useState(false);
 
   const [formData, setFormData] = useState({
     warehouse_id: "",
     destination_id: "",
-    destination_name: "",
+    destinaion_name: "",
     comment: "",
     order_id: "",
     contragent_id: "",
     responsible_user_id: "",
     items: [
       {
+        type_id: "",
         item_id: "",
-        item_name: "",
+        item_name: "", // Added to store the displayed name
         quantity: "",
         price: "",
         currency_id: "",
-        code: "",
-        color: "",
-        lot: "",
+        code: "", // Add code
+        color: "", // Add color
+        lot: "", // Add lot
+        image: "", // Add image
       },
     ],
   });
 
-  const fetchUsers = async () => {
-    try {
-      const response = await api.get("/warehouseManager/users");
-      setUsers(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Foydalanuvchilar olishda xatolik",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchItems = async (searchTerm = "") => {
-    if (!searchTerm.trim()) {
-      setItems([]);
-      return;
-    }
-
+  const fetchItems = async (searchTerm = "", typeId = "") => {
     try {
       const response = await api.get("/warehouseManager/items/search", {
         params: {
           search: searchTerm,
+          type_id: typeId,
         },
       });
 
@@ -105,7 +99,7 @@ const New = () => {
 
       // Filter out already selected items
       const filteredItems = response.data.filter(
-        (item) => !selectedItemIds.includes(item.id.toString())
+        (item) => !selectedItemIds.includes(item.id.toString()),
       );
 
       setItems(filteredItems);
@@ -118,15 +112,28 @@ const New = () => {
     }
   };
 
-  const fetchAlldestinations = async () => {
+  const fetchUsers = async () => {
     try {
-      const response = await api.get("/warehouseManager/destinations");
-      setAlldestinations(response.data);
-      setFiltereddestinations(response.data);
+      const response = await api.get("/warehouseManager/users");
+      setUsers(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Ishlab chiqarishlar olishda xatolik",
+        description: "Xodimlarni olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchAllSources = async () => {
+    try {
+      const response = await api.get("/warehouseManager/destinations");
+      setAllSources(response.data);
+      setFilteredSources(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Chiqim turini olishda xatolik",
         variant: "destructive",
       });
     }
@@ -136,6 +143,19 @@ const New = () => {
     try {
       const response = await api.get("/warehouseManager/currencies");
       setCurrencies(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Valutaralar olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchTypes = async () => {
+    try {
+      const response = await api.get("/warehouseManager/types");
+      setTypes(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -191,8 +211,9 @@ const New = () => {
     fetchOrders();
     fetchCurrencies();
     fetchContragents();
+    fetchAllSources();
+    fetchTypes();
     fetchUsers();
-    fetchAlldestinations();
   }, []);
 
   // Close dropdowns when clicking outside
@@ -245,6 +266,40 @@ const New = () => {
     });
   };
 
+  const handleItemTypeChange = (index, value) => {
+    setFormData((prev) => {
+      const newItems = [...prev.items];
+      newItems[index] = {
+        ...newItems[index],
+        type_id: value,
+        item_id: "",
+        item_name: "",
+        code: "",
+        color: "",
+        lot: "",
+        image: "",
+      };
+      return {
+        ...prev,
+        items: newItems,
+      };
+    });
+
+    setItemSearches((prev) => {
+      const next = [...prev];
+      next[index] = "";
+      return next;
+    });
+
+    setShowItemResults((prev) => {
+      const next = [...prev];
+      next[index] = false;
+      return next;
+    });
+
+    setItems([]);
+  };
+
   const handleItemSelect = (index, item) => {
     setFormData((prev) => {
       const newItems = [...prev.items];
@@ -257,6 +312,7 @@ const New = () => {
         code: item.code || "",
         color: item.color?.name || "",
         lot: item.lot || "",
+        image: item.image,
       };
       return {
         ...prev,
@@ -275,29 +331,29 @@ const New = () => {
     setShowItemResults(newShowResults);
   };
 
-  // Fix the handledestinationSelect function to properly handle destination selection
-  const handledestinationSelect = (destinationId) => {
-    // If destinationId is "new", we're creating a new destination
-    if (destinationId === "new") {
+  // Fix the handleSourceSelect function to properly handle source selection
+  const handleSourceSelect = (sourceId) => {
+    // If sourceId is "new", we're creating a new source
+    if (sourceId === "new") {
       setFormData((prev) => ({
         ...prev,
         destination_id: "",
-        destination_name: newdestinationName,
+        destinaion_name: newSourceName,
       }));
     } else {
-      // Find the destination by ID - convert both to strings for comparison
-      const destination = alldestinations.find(
-        (s) => s.id.toString() === destinationId.toString()
+      // Find the source by ID - convert both to strings for comparison
+      const source = allSources.find(
+        (s) => s.id.toString() === sourceId.toString(),
       );
-      if (destination) {
+      if (source) {
         setFormData((prev) => ({
           ...prev,
-          destination_id: destinationId.toString(), // Ensure it's stored as string
-          destination_name: "", // Clear destination_name when selecting existing destination
+          destination_id: sourceId.toString(), // Ensure it's stored as string
+          destinaion_name: "", // Clear destinaion_name when selecting existing source
         }));
       }
     }
-    setOpendestinationCombobox(false);
+    setOpenSourceCombobox(false);
   };
 
   const addItem = () => {
@@ -311,6 +367,7 @@ const New = () => {
       items: [
         ...prev.items,
         {
+          type_id: "",
           item_id: "",
           item_name: "",
           quantity: "",
@@ -354,7 +411,7 @@ const New = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.destination_id && !formData.destination_name) {
+    if (!formData.destination_id && !formData.destinaion_name) {
       toast({
         title: "Diqqat",
         description: "Chiqim turini tanlang",
@@ -363,11 +420,7 @@ const New = () => {
       return;
     }
 
-    if (
-      !formData.warehouse_id ||
-      !formData.items.length ||
-      !formData.responsible_user_id
-    ) {
+    if (!formData.warehouse_id || !formData.items.length) {
       toast({
         title: "Diqqat",
         description: "Barcha maydonlarni to'ldiring",
@@ -376,14 +429,27 @@ const New = () => {
       return;
     }
 
+    // check items' id
+    const hasInvalidId = formData.items.some(
+      (item) => !item.item_id || item.item_id <= 0,
+    );
+    if (hasInvalidId) {
+      toast({
+        title: "Diqqat",
+        description: "Mahsulotni tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // check items' quantity
     const hasInvalidQuantity = formData.items.some(
-      (item) => !item.quantity || item.quantity <= 0
+      (item) => !item.quantity || item.quantity <= 0,
     );
     if (hasInvalidQuantity) {
       toast({
         title: "Diqqat",
-        description: "Mahsulotlar sonini tekshiring",
+        description: "Mahsulotlar sonini kiriting",
         variant: "destructive",
       });
       return;
@@ -391,7 +457,7 @@ const New = () => {
 
     // check items' price
     const hasInvalidPrice = formData.items.some(
-      (item) => !item.price || item.price <= 0
+      (item) => !item.price || item.price <= 0,
     );
     if (hasInvalidPrice) {
       toast({
@@ -406,11 +472,11 @@ const New = () => {
       setSubmitting(true);
       const dataToSubmit = { ...formData };
 
-      // If we have a new destination name but no destination_id, use the destination_name
-      if (!dataToSubmit.destination_id && dataToSubmit.destination_name) {
+      // If we have a new source name but no destination_id, use the destinaion_name
+      if (!dataToSubmit.destination_id && dataToSubmit.destinaion_name) {
         dataToSubmit.destination_id = null;
       } else {
-        delete dataToSubmit.destination_name;
+        delete dataToSubmit.destinaion_name;
       }
 
       // Remove item_name from each item before submitting
@@ -433,8 +499,7 @@ const New = () => {
       toast({
         title: "Xatolik",
         description:
-          error.response?.data?.message ||
-          "Chiqim yaratishda xatolik yuz berdi",
+          error.response?.data?.error || "Chiqim yaratishda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
@@ -442,16 +507,16 @@ const New = () => {
     }
   };
 
-  const handledestinationSearchChange = (value) => {
-    setNewdestinationName(value);
+  const handleSourceSearchChange = (value) => {
+    setNewSourceName(value);
 
     if (value.trim() === "") {
-      setFiltereddestinations(alldestinations);
+      setFilteredSources(allSources);
     } else {
-      const filtered = alldestinations.filter((destination) =>
-        destination.name.toLowerCase().includes(value.toLowerCase())
+      const filtered = allSources.filter((source) =>
+        source.name.toLowerCase().includes(value.toLowerCase()),
       );
-      setFiltereddestinations(filtered);
+      setFilteredSources(filtered);
     }
   };
 
@@ -461,13 +526,22 @@ const New = () => {
     newSearches[index] = value;
     setItemSearches(newSearches);
 
+    const typeId = formData.items[index]?.type_id;
+    if (!typeId) {
+      setItems([]);
+      const newShowResults = [...showItemResults];
+      newShowResults[index] = false;
+      setShowItemResults(newShowResults);
+      return;
+    }
+
     // Show the results dropdown
     const newShowResults = [...showItemResults];
     newShowResults[index] = true;
     setShowItemResults(newShowResults);
 
     // Fetch items based on the search term
-    fetchItems(value);
+    fetchItems(value, typeId);
   };
 
   // Get the selected order display text
@@ -475,33 +549,31 @@ const New = () => {
     if (!formData.order_id) return "";
 
     const selectedOrder = orders.find(
-      (order) => order.id.toString() === formData.order_id
+      (order) => order.id.toString() === formData.order_id,
     );
     if (!selectedOrder) return "";
 
-    return `${selectedOrder.name} - ${selectedOrder.comment} (${
-      statuses[selectedOrder.status]?.text
-    })`;
+    return `${selectedOrder.name} (${statuses[selectedOrder.status]?.text} | ${selectedOrder.quantity} dona)`;
   };
 
-  // Get the selected destination display text
-  const getSelecteddestinationText = () => {
-    if (formData.destination_name) return formData.destination_name;
+  // Get the selected source display text
+  const getSelectedSourceText = () => {
+    if (formData.destinaion_name) return formData.destinaion_name;
     if (!formData.destination_id) return "";
 
-    const selecteddestination = alldestinations.find(
-      (destination) => destination.id.toString() === formData.destination_id
+    const selectedSource = allSources.find(
+      (source) => source.id.toString() === formData.destination_id,
     );
-    if (!selecteddestination) return "";
+    if (!selectedSource) return "";
 
-    return selecteddestination.name;
+    return selectedSource.name;
   };
 
   const getSelectedContragentText = () => {
     if (!formData.contragent_id) return "";
 
     const selectedContragent = contragents.find(
-      (contragent) => contragent.id.toString() === formData.contragent_id
+      (contragent) => contragent.id.toString() === formData.contragent_id,
     );
     if (!selectedContragent) return "";
 
@@ -512,7 +584,7 @@ const New = () => {
     if (!formData.responsible_user_id) return "";
 
     const selectedUser = users.find(
-      (user) => user.id.toString() === formData.responsible_user_id
+      (user) => user.id.toString() === formData.responsible_user_id,
     );
     if (!selectedUser) return "";
 
@@ -522,7 +594,7 @@ const New = () => {
   };
 
   return (
-    <div className="p-4">
+    <div>
       <h1 className="text-2xl font-bold mb-6">Yangi chiqim</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -554,17 +626,17 @@ const New = () => {
           <div className="space-y-2">
             <label className="text-sm font-medium">Chiqim turi</label>
             <Popover
-              open={opendestinationCombobox}
-              onOpenChange={setOpendestinationCombobox}
+              open={openSourceCombobox}
+              onOpenChange={setOpenSourceCombobox}
             >
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   role="combobox"
-                  aria-expanded={opendestinationCombobox}
+                  aria-expanded={openSourceCombobox}
                   className="w-full justify-between"
                 >
-                  {getSelecteddestinationText() || "Chiqim turini tanlang"}
+                  {getSelectedSourceText() || "Chiqim turini tanlang"}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -572,43 +644,42 @@ const New = () => {
                 <Command>
                   <CommandInput
                     placeholder="Chiqim turini qidirish..."
-                    value={newdestinationName}
-                    onValueChange={handledestinationSearchChange}
+                    value={newSourceName}
+                    onValueChange={handleSourceSearchChange}
                   />
                   <CommandList>
                     <CommandEmpty>
                       <div className="py-3 px-4">
                         <p>Chiqim turi topilmadi</p>
-                        {newdestinationName.trim() !== "" && (
+                        {newSourceName.trim() !== "" && (
                           <Button
                             variant="outline"
                             className="mt-2 w-full"
-                            onClick={() => handledestinationSelect("new")}
+                            onClick={() => handleSourceSelect("new")}
                             type="button"
                           >
-                            "{newdestinationName}" ni yangi chiqim turi sifatida
+                            "{newSourceName}" ni yangi chiqim turi sifatida
                             qo'shish
                           </Button>
                         )}
                       </div>
                     </CommandEmpty>
                     <CommandGroup>
-                      {filtereddestinations.map((destination) => (
+                      {filteredSources.map((source) => (
                         <CommandItem
-                          key={destination.id}
-                          value={destination.id.toString()}
-                          onSelect={(value) => handledestinationSelect(value)}
+                          key={source.id}
+                          value={source.id.toString()}
+                          onSelect={(value) => handleSourceSelect(value)}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              formData.destination_id ===
-                                destination.id.toString()
+                              formData.destination_id === source.id.toString()
                                 ? "opacity-100"
-                                : "opacity-0"
+                                : "opacity-0",
                             )}
                           />
-                          {destination.name}
+                          {source.name}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -617,73 +688,6 @@ const New = () => {
               </PopoverContent>
             </Popover>
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Buyurtma</label>
-          <Popover open={openOrderCombobox} onOpenChange={setOpenOrderCombobox}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={openOrderCombobox}
-                className="w-full justify-between"
-              >
-                {formData.order_id
-                  ? getSelectedOrderText()
-                  : "Buyurtmani tanlang"}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Buyurtmani qidirish..." />
-                <CommandEmpty>Buyurtma topilmadi</CommandEmpty>
-                <CommandList>
-                  <CommandGroup>
-                    {orders.map((order) => (
-                      <CommandItem
-                        key={order.id}
-                        value={order.id}
-                        onSelect={() => {
-                          setFormData((prev) => {
-                            // Check if order has a contragent and set contragent_id if it does
-                            const contragentId = order.contragent
-                              ? order.contragent.id.toString()
-                              : prev.contragent_id;
-                            return {
-                              ...prev,
-                              order_id: order.id.toString(),
-                              contragent_id: contragentId,
-                            };
-                          });
-                          setOpenOrderCombobox(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            formData.order_id === order.id.toString()
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        <div className="flex flex-col">
-                          <span>
-                            {order?.id} {order?.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {order?.comment} ({order?.quantity}) (
-                            {statuses[order?.status]?.text})
-                          </span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
         </div>
 
         <div className="space-y-2">
@@ -719,6 +723,7 @@ const New = () => {
                           setFormData((prev) => ({
                             ...prev,
                             contragent_id: contragent.id.toString(),
+                            order_id: "",
                           }));
                           setOpenContragentCombobox(false);
                         }}
@@ -728,7 +733,7 @@ const New = () => {
                             "mr-2 h-4 w-4",
                             formData.contragent_id === contragent.id.toString()
                               ? "opacity-100"
-                              : "opacity-0"
+                              : "opacity-0",
                           )}
                         />
                         <div className="flex flex-col">
@@ -741,6 +746,80 @@ const New = () => {
                         </div>
                       </CommandItem>
                     ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Buyurtma</label>
+          <Popover open={openOrderCombobox} onOpenChange={setOpenOrderCombobox}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openOrderCombobox}
+                className="w-full justify-between"
+                disabled={!formData.contragent_id}
+              >
+                {formData.order_id
+                  ? getSelectedOrderText()
+                  : "Buyurtmani tanlang"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Buyurtmani qidirish..." />
+                <CommandEmpty>Buyurtma topilmadi</CommandEmpty>
+                <CommandList>
+                  <CommandGroup>
+                    {orders
+                      .filter(
+                        (order) =>
+                          order.contragent.id.toString() ===
+                          formData.contragent_id,
+                      )
+                      .map((order) => (
+                        <CommandItem
+                          key={order.id}
+                          value={order.id}
+                          onSelect={() => {
+                            setFormData((prev) => {
+                              // Check if order has a contragent and set contragent_id if it does
+                              const contragentId = order.contragent
+                                ? order.contragent.id.toString()
+                                : prev.contragent_id;
+                              return {
+                                ...prev,
+                                order_id: order.id.toString(),
+                                contragent_id: contragentId,
+                              };
+                            });
+                            setOpenOrderCombobox(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              formData.order_id === order.id.toString()
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span>
+                              {order?.id} {order?.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {order?.comment} ({order?.quantity}) (
+                              {statuses[order?.status]?.text})
+                            </span>
+                          </div>
+                        </CommandItem>
+                      ))}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -790,7 +869,7 @@ const New = () => {
                             "mr-2 h-4 w-4",
                             formData.responsible_user_id === user.id.toString()
                               ? "opacity-100"
-                              : "opacity-0"
+                              : "opacity-0",
                           )}
                         />
                         <div className="flex flex-col">
@@ -831,137 +910,206 @@ const New = () => {
           {formData.items.map((item, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg"
+              className="rounded-xl border bg-white/60 p-4 shadow-sm"
             >
-              <div
-                className="relative"
-                ref={(el) => (itemRefs.current[index] = el)}
-              >
-                <Input
-                  placeholder="Mahsulotni qidirish..."
-                  value={itemSearches[index]}
-                  onChange={(e) =>
-                    handleItemSearchChange(e.target.value, index)
-                  }
-                  className="bg-white"
-                  onFocus={() => {
-                    if (itemSearches[index]) {
-                      const newShowResults = [...showItemResults];
-                      newShowResults[index] = true;
-                      setShowItemResults(newShowResults);
-                    }
-                  }}
-                />
-                {item.item_id && (
-                  <div className="mt-2 p-2 border rounded-md bg-muted/30">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Kod:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.code || "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Rang:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.color || "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Lot:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.lot || "-"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {showItemResults[index] && items.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                    <div className="py-1 flex flex-col gap-2">
-                      {items.map((product) => (
-                        <div
-                          key={product.id}
-                          className="px-4 py-2 hover:bg-muted cursor-pointer border"
-                          onClick={() => handleItemSelect(index, product)}
-                        >
-                          <div className="flex flex-col gap-2">
-                            <span>{product.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {product.code}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {product.color?.name} {product.lot}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {showItemResults[index] &&
-                  items.length === 0 &&
-                  itemSearches[index] && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                      <div className="px-4 py-3 text-sm">
-                        <p>Mahsulot topilmadi</p>
-                      </div>
-                    </div>
-                  )}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold">
+                    Mahsulot #{index + 1}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Tur, mahsulot, miqdor va narxni kiriting
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => removeItem(index)}
+                  className="h-9 px-3"
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
               </div>
 
-              <Input
-                type="number"
-                value={item.quantity}
-                onChange={(e) =>
-                  handleItemChange(index, "quantity", e.target.value)
-                }
-                placeholder="Miqdor"
-                className="bg-white"
-              />
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-12">
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Tur</label>
+                  <Select
+                    value={item.type_id || ""}
+                    onValueChange={(value) =>
+                      handleItemTypeChange(index, value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Tur tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {types.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <Input
-                type="number"
-                value={item.price}
-                onChange={(e) =>
-                  handleItemChange(index, "price", e.target.value)
-                }
-                placeholder="Narx"
-                className="bg-white"
-              />
+                <div className="space-y-2 md:col-span-4">
+                  <label className="text-sm font-medium">Mahsulot</label>
+                  <div
+                    className="relative"
+                    ref={(el) => (itemRefs.current[index] = el)}
+                  >
+                    <Input
+                      placeholder="Mahsulotni qidirish..."
+                      value={itemSearches[index]}
+                      onChange={(e) =>
+                        handleItemSearchChange(e.target.value, index)
+                      }
+                      className="bg-white"
+                      disabled={!item.type_id}
+                      onFocus={() => {
+                        if (itemSearches[index]) {
+                          const newShowResults = [...showItemResults];
+                          newShowResults[index] = true;
+                          setShowItemResults(newShowResults);
+                        }
+                      }}
+                    />
+                    {item.item_id && (
+                      <div className="mt-2 rounded-lg border bg-muted/20 p-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex flex-1 flex-col gap-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Kod:</span>
+                              <span className="text-sm text-muted-foreground">
+                                {item.code || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Rang:</span>
+                              <span className="text-sm text-muted-foreground">
+                                {item.color || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Lot:</span>
+                              <span className="text-sm text-muted-foreground">
+                                {item.lot || "-"}
+                              </span>
+                            </div>
+                          </div>
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt=""
+                              className="h-16 w-16 rounded-md border object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => {
+                                setSelectedImage(item.image);
+                                setImageDialogOpen(true);
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {showItemResults[index] && items.length > 0 && (
+                      <div className="absolute z-10 mt-2 w-full overflow-hidden rounded-lg border bg-white shadow-lg">
+                        <div className="max-h-72 overflow-auto p-1">
+                          {items.map((product) => (
+                            <div
+                              key={product.id}
+                              className="flex gap-3 rounded-md px-3 py-2 hover:bg-muted cursor-pointer"
+                              onClick={() => handleItemSelect(index, product)}
+                            >
+                              <div className="flex flex-1 flex-col">
+                                <span className="text-sm font-medium">
+                                  {product.name}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {product.code}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {product.color?.name} {product.lot}
+                                </span>
+                              </div>
+                              {product.image && (
+                                <img
+                                  src={product.image}
+                                  alt=""
+                                  className="h-12 w-12 rounded-md border object-cover"
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {showItemResults[index] &&
+                      items.length === 0 &&
+                      itemSearches[index] && (
+                        <div className="absolute z-10 mt-2 w-full overflow-hidden rounded-lg border bg-white shadow-lg">
+                          <div className="px-4 py-3 text-sm text-muted-foreground">
+                            <p>Mahsulot topilmadi</p>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </div>
 
-              <Select
-                value={item.currency_id}
-                onValueChange={(value) =>
-                  handleItemChange(index, "currency_id", value)
-                }
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Valyuta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem
-                      key={currency.id}
-                      value={currency.id.toString()}
-                    >
-                      {currency.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Miqdor</label>
+                  <Input
+                    type="number"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      handleItemChange(index, "quantity", e.target.value)
+                    }
+                    placeholder="0"
+                    className="bg-white"
+                  />
+                </div>
 
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => removeItem(index)}
-                className="mt-2 md:mt-0 w-fit"
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Narx</label>
+                  <Input
+                    type="number"
+                    value={item.price}
+                    onChange={(e) =>
+                      handleItemChange(index, "price", e.target.value)
+                    }
+                    placeholder="0"
+                    className="bg-white"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Valyuta</label>
+                  <Select
+                    value={item.currency_id}
+                    onValueChange={(value) =>
+                      handleItemChange(index, "currency_id", value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Valyuta tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((currency) => (
+                        <SelectItem
+                          key={currency.id}
+                          value={currency.id.toString()}
+                        >
+                          {currency.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           ))}
-          <div className="flex justify-between items-center">
+
+          <div className="flex items-center justify-between">
             <Button type="button" onClick={addItem} variant="outline">
               + Mahsulot qo'shish
             </Button>
@@ -981,6 +1129,21 @@ const New = () => {
           </Button>
         </div>
       </form>
+
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Mahsulot rasmi</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <img
+              src={selectedImage}
+              alt="Product image"
+              className="max-w-full max-h-[70vh] object-contain rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
