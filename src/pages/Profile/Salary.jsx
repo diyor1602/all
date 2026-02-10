@@ -4,7 +4,7 @@ const Salary = ({ userData }) => {
   // Calculate total salary
   const totalAmount = salaryPayments.reduce(
     (sum, item) => sum + parseFloat(item.amount || 0),
-    0
+    0,
   );
 
   // Format amount

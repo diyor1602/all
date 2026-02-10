@@ -54,7 +54,7 @@ const calculateCoefficient = (userData) => {
       30000 /
       (userData?.attendances?.filter((a) => a.status === "present")?.length ||
         1)) *
-      100
+      100,
   );
 };
 
@@ -159,7 +159,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(
-    localStorage.getItem("profileMonth") || new Date().toISOString().slice(0, 7)
+    localStorage.getItem("profileMonth") ||
+      new Date().toISOString().slice(0, 7),
   );
 
   // ✅ Load activeIndex from localStorage
@@ -215,8 +216,8 @@ const Profile = () => {
       value: formatNumber(
         userData.attendance_salaries?.reduce(
           (sum, salary) => sum + Number.parseFloat(salary.amount || 0),
-          0
-        )
+          0,
+        ),
       ),
       color: "bg-gradient-to-r from-indigo-500 to-blue-600",
       Icon: CalendarDays,
@@ -234,8 +235,8 @@ const Profile = () => {
       value: formatNumber(
         userData.employee_tarification_logs?.reduce(
           (sum, salary) => sum + Number.parseFloat(salary.amount_earned || 0),
-          0
-        )
+          0,
+        ),
       ),
       color: "bg-gradient-to-r from-emerald-500 to-green-600",
       Icon: Briefcase,
@@ -250,8 +251,8 @@ const Profile = () => {
       value: formatNumber(
         userData.salaryPayments?.reduce(
           (sum, salary) => sum + Number.parseFloat(salary.amount || 0),
-          0
-        )
+          0,
+        ),
       ),
       color: "bg-gradient-to-r from-orange-500 to-red-500",
       Icon: Wallet,
