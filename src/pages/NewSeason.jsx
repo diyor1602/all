@@ -269,7 +269,7 @@ const NewSeason = () => {
               />
               <StatCard
                 icon={<Pizza />}
-                title="Tarif"
+                title="Ulush"
                 value={data?.item?.per_minute_sum}
                 unit="so'm"
                 color="orange"
