@@ -1,11 +1,17 @@
 import BaseLayout from "./BaseLayout";
-import { Box } from "lucide-react";
+import { Box, AlertCircle } from "lucide-react";
 
 const navigation = [
   {
     name: "Buyurtmalar",
     href: "/qualityController/orders",
     icon: Box,
+    onMobile: true,
+  },
+  {
+    name: "Braklar",
+    href: "/qualityController/damages",
+    icon: AlertCircle,
     onMobile: true,
   },
 ];
