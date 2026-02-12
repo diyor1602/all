@@ -26,6 +26,19 @@ export default function Login() {
     }
   };
 
+  const handlePasswordKeyDown = (e) => {
+    if (e.key === " ") {
+      e.preventDefault();
+    }
+  };
+
+  const handlePasswordPaste = (e) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text");
+    const textWithoutSpaces = pastedText.replace(/\s/g, "");
+    setPassword(password + textWithoutSpaces);
+  };
+
   return (
     <>
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -48,6 +61,8 @@ export default function Login() {
                 placeholder="Parol"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handlePasswordKeyDown}
+                onPaste={handlePasswordPaste}
                 required
                 className="w-full px-4 py-3 bg-[#F8F9FA] rounded-md border-0 focus:ring-2 focus:ring-[#884DEE] outline-none"
               />
