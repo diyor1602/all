@@ -767,94 +767,90 @@ const OrderView = () => {
             </div>
 
             {/* Employee Selection Section */}
-            {selectedTarif && (
-              <>
-                {(() => {
-                  const employees = getAttachedEmployees(
-                    order?.order_model?.submodels[0]?.tarification_categories
-                      ?.find(
-                        (cat) => String(cat.id) === String(selectedTarifCat),
-                      )
-                      ?.tarifications?.find(
-                        (tarif) => String(tarif.id) === String(selectedTarif),
-                      )?.tarification_logs,
-                  );
+            <>
+              {(() => {
+                const employees = getAttachedEmployees(
+                  order?.order_model?.submodels[0]?.tarification_categories
+                    ?.find((cat) => String(cat.id) === String(selectedTarifCat))
+                    ?.tarifications?.find(
+                      (tarif) => String(tarif.id) === String(selectedTarif),
+                    )?.tarification_logs,
+                );
 
-                  // Auto-select if only one employee available
-                  if (employees.length === 1 && !selectedEmployee) {
-                    setSelectedEmployee(String(employees[0].id));
-                  }
+                // Auto-select if only one employee available
+                if (employees.length === 1 && !selectedEmployee) {
+                  setSelectedEmployee(String(employees[0].id));
+                }
 
-                  if (employees.length === 0) {
-                    return (
-                      <div>
-                        <Input
-                          type="text"
-                          placeholder="Xodim ismini kiriting"
-                          value={searchTerm}
-                          onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                          }}
-                        />
-                        <div className="max-h-40 overflow-y-auto border rounded-md">
-                          {selectedSearchResult?.name ? (
-                            <div className="px-3 py-2 bg-green-50 border-b">
-                              <div className="font-medium text-green-800">
-                                Tanlangan: {selectedSearchResult.name}
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setSelectedSearchResult(null);
-                                  setSelectedEmployee("");
-                                  setSearchTerm("");
-                                }}
-                                className="text-xs text-red-600 hover:text-red-800 mt-1"
-                              >
-                                O'zgartirish
-                              </button>
-                            </div>
-                          ) : searchResults?.length > 0 ? (
-                            searchResults?.map((searchResult, index) => (
-                              <div
-                                key={index}
-                                onClick={() => {
-                                  setSelectedEmployee(String(searchResult.id));
-                                  setSelectedSearchResult(searchResult);
-                                }}
-                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
-                              >
-                                {searchResult?.name}
-                              </div>
-                            ))
-                          ) : (
-                            <div className="px-3 py-2 text-gray-500 text-sm">
-                              {searchTerm.length < 3
-                                ? "Kamida 2 ta harf kiriting"
-                                : "Xodim topilmadi, siz yozgan ism yuboriladi!"}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }
-
+                if (employees.length === 0) {
                   return (
-                    <select
-                      value={selectedEmployee}
-                      onChange={(e) => setSelectedEmployee(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">Xodimni tanlang</option>
-                      {employees.map((employee) => (
-                        <option key={employee.id} value={String(employee.id)}>
-                          {employee.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div>
+                      <Input
+                        type="text"
+                        placeholder="Xodim ismini kiriting"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                        }}
+                      />
+                      <div className="max-h-40 overflow-y-auto border rounded-md">
+                        {selectedSearchResult?.name ? (
+                          <div className="px-3 py-2 bg-green-50 border-b">
+                            <div className="font-medium text-green-800">
+                              Tanlangan: {selectedSearchResult.name}
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSelectedSearchResult(null);
+                                setSelectedEmployee("");
+                                setSearchTerm("");
+                              }}
+                              className="text-xs text-red-600 hover:text-red-800 mt-1"
+                            >
+                              O'zgartirish
+                            </button>
+                          </div>
+                        ) : searchResults?.length > 0 ? (
+                          searchResults?.map((searchResult, index) => (
+                            <div
+                              key={index}
+                              onClick={() => {
+                                setSelectedEmployee(String(searchResult.id));
+                                setSelectedSearchResult(searchResult);
+                              }}
+                              className="px-3 py-2 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
+                            >
+                              {searchResult?.name}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-gray-500 text-sm">
+                            {searchTerm.length < 3
+                              ? "Kamida 2 ta harf kiriting"
+                              : "Xodim topilmadi, siz yozgan ism yuboriladi!"}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   );
-                })()}
-              </>
-            )}
+                }
+
+                return (
+                  <select
+                    value={selectedEmployee}
+                    onChange={(e) => setSelectedEmployee(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Xodimni tanlang</option>
+                    {employees.map((employee) => (
+                      <option key={employee.id} value={String(employee.id)}>
+                        {employee.name}
+                      </option>
+                    ))}
+                  </select>
+                );
+              })()}
+            </>
 
             <Input
               type="text"
@@ -881,7 +877,7 @@ const OrderView = () => {
             </Button>
             <Button
               className="py-7"
-              disabled={sending || !selectedImage || !selectedTarif}
+              disabled={sending || !selectedImage}
               onClick={handleMinus}
             >
               {sending ? (
