@@ -17,6 +17,11 @@ import {
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
+const reasonText = {
+  QC_FAIL_REFUND: "Berildi",
+  QC_FAIL_PENALTY: "Jarima",
+};
+
 const Damages = () => {
   const { toast } = useToast();
 
@@ -64,6 +69,16 @@ const Damages = () => {
     [toast],
   );
 
+  const doesHaveSameEmployee = (logs) => {
+    if (logs?.length !== 2) return false;
+    const employeeIds = logs.map((log) => log.employee_id);
+    return employeeIds.every((id) => id === logs[0].employee_id);
+  };
+
+  const isZero = (logs) => {
+    return logs.reduce((acc, log) => acc + Number(log.amount), 0) === 0;
+  };
+
   useEffect(() => {
     getDamages(1, false);
   }, [getDamages]);
@@ -108,7 +123,7 @@ const Damages = () => {
             return (
               <Card
                 key={item.id}
-                className="overflow-hidden hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-white to-gray-50"
+                className="overflow-hidden hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-white to-gray-50 h-fit"
               >
                 {/* IMAGE SECTION */}
                 <div className="relative group">
@@ -221,21 +236,57 @@ const Damages = () => {
                     </span>
                   </div>
 
-                  {item?.employee_money_logs?.length > 0 && (
-                    <div className="flex items-center space-x-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-md">
-                      <XCircle className="w-3 h-3" />
-                      <span className="font-medium">Jarima:</span>
-                      <span>
-                        {item.employee_money_logs.map((log, index) => (
-                          <span key={log.id || index}>
-                            {formatNumber(log.amount, 0)} so'm
-                            {index < item.employee_money_logs.length - 1 &&
-                              ", "}
-                          </span>
-                        ))}
-                      </span>
-                    </div>
-                  )}
+                  {item?.employee_money_logs?.length > 0 &&
+                    !isZero(item?.employee_money_logs) && (
+                      <div className="relative overflow-hidden rounded-lg border-2 border-red-200 bg-gradient-to-r from-red-50 to-orange-50 shadow-sm">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-500 to-orange-500"></div>
+                        <div className="p-3">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full">
+                              <XCircle className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="font-bold text-red-800 text-sm uppercase tracking-wide">
+                              Jarima
+                            </span>
+                            {doesHaveSameEmployee(
+                              item?.employee_money_logs,
+                            ) && (
+                              <div>
+                                {Number(item?.employee_money_logs[0]?.amount) +
+                                  Number(
+                                    item?.employee_money_logs[1]?.amount,
+                                  )}{" "}
+                                so'm
+                              </div>
+                            )}
+                            <div className="flex-1 h-px bg-gradient-to-r from-red-300 to-orange-300"></div>
+                          </div>
+                          <div className="space-y-1">
+                            {item.employee_money_logs.map((log, index) => (
+                              <div
+                                key={log.id || index}
+                                className="flex items-center justify-between bg-white/70 rounded px-2 py-1 border border-red-100"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-red-700 text-xs">
+                                    {formatNumber(log.amount, 0)} so'm
+                                  </span>
+                                  <span className="text-gray-600 text-xs">
+                                    • {log?.employee?.name}
+                                  </span>
+                                </div>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs bg-orange-100 text-orange-700 border-orange-200 px-1.5 py-0.5"
+                                >
+                                  {reasonText[log.reason]}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                 </CardContent>
               </Card>
             );

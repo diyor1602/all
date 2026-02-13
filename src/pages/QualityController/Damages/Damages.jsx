@@ -35,6 +35,18 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
 
+const engNames = {
+  astar: "intermediate",
+  tana: "body",
+  finish: "final",
+};
+
+const namesObject = {
+  astar: "OTK Astar",
+  tana: "OTK Tana",
+  finish: "OTK Finish",
+};
+
 const Damages = () => {
   const { toast } = useToast();
 
@@ -73,7 +85,26 @@ const Damages = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [sending, setSending] = useState(false);
+  const [selectedTarif, setSelectedTarif] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
+
+  const getOtkTarif = (key, order) => {
+    const actualName = namesObject[key];
+    if (!actualName) return null;
+
+    const submodel = order?.order_model?.submodels?.[0];
+    if (!submodel) return null;
+
+    const otkCategory = submodel.tarification_categories?.find(
+      (category) => category.name === "OTK",
+    );
+
+    if (!otkCategory) return null;
+
+    return otkCategory.tarifications?.find(
+      (tarif) => tarif.name === actualName,
+    );
+  };
 
   const getDamages = async (
     page = 1,
@@ -222,10 +253,12 @@ const Damages = () => {
 
   const handleSaveEmployee = async () => {
     setSending(true);
+    console.log(selectedTarif);
     try {
       const res = await api.post("/qualityController/qualityControlFix", {
         quality_control_id: selectedDamage?.id,
         fixed_employee_id: selectedEmployee?.id,
+        tarification_id: 71715,
       });
       toast({
         title: "Xodim saqlandi",
@@ -344,6 +377,19 @@ const Damages = () => {
                       className="absolute top-2 left-2 bg-blue-500 text-white hover:bg-blue-600 hover:text-white border-none outline-none"
                       onClick={(e) => {
                         e.stopPropagation();
+                        console.log(
+                          damage?.order?.order_model?.sub_models[0]?.submodel
+                            ?.name,
+                        );
+                        setSelectedTarif(
+                          getOtkTarif(
+                            engNames[
+                              damage?.order?.order_model?.submodels?.[0]
+                                ?.submodel?.name
+                            ],
+                            damage?.order,
+                          ),
+                        );
                         setSelectedDamage(damage);
                         setSelectedEmployee(damage?.employee);
                         setSearchTerm("");
