@@ -80,7 +80,7 @@ const Damages = () => {
     search = "",
     startDate = "",
     endDate = "",
-    status = "",
+    status = "pending",
   ) => {
     setLoading(true);
     try {
