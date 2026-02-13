@@ -498,7 +498,7 @@ const Damages = () => {
           >
             <DialogContent
               className="
-      w-[95vw] 
+      w-[100vw] 
       max-w-lg 
       p-4 sm:p-6
       max-h-[90vh] 
