@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Star,
   CheckCheck,
-  Pencil,
   Loader2,
   Send,
 } from "lucide-react";
