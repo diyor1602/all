@@ -14,6 +14,7 @@ import {
   CheckCheck,
   Loader2,
   Send,
+  Filter,
 } from "lucide-react";
 import {
   Dialog,
@@ -25,6 +26,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
 
 const Damages = () => {
@@ -36,6 +44,7 @@ const Damages = () => {
     CURRENT_PAGE: "damages_current_page",
     START_DATE: "damages_start_date",
     END_DATE: "damages_end_date",
+    STATUS: "damages_status",
   };
 
   const [damages, setDamages] = useState([]);
@@ -56,6 +65,9 @@ const Damages = () => {
   const [endDate, setEndDate] = useState(() => {
     return localStorage.getItem(STORAGE_KEYS.END_DATE) || "";
   });
+  const [status, setStatus] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.STATUS) || "pending";
+  });
   const [employeeDialogOpen, setEmployeeDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,6 +80,7 @@ const Damages = () => {
     search = "",
     startDate = "",
     endDate = "",
+    status = "",
   ) => {
     setLoading(true);
     try {
@@ -78,8 +91,9 @@ const Damages = () => {
       const endDateParam = endDate
         ? `&end_date=${encodeURIComponent(endDate)}`
         : "";
+      const statusParam = status ? `&status=${encodeURIComponent(status)}` : "";
       const res = await api.get(
-        `/qualityController/qualityControls?page=${page}${searchParam}${startDateParam}${endDateParam}`,
+        `/qualityController/qualityControls?page=${page}${searchParam}${startDateParam}${endDateParam}${statusParam}`,
       );
       setDamages(res.data?.data || []);
       setMeta(res.data); // Store the full response for pagination labels
@@ -121,8 +135,8 @@ const Damages = () => {
   }, [debouncedSearchTerm]);
 
   useEffect(() => {
-    getDamages(currentPage, debouncedSearchQuery, startDate, endDate);
-  }, [currentPage, debouncedSearchQuery, startDate, endDate]);
+    getDamages(currentPage, debouncedSearchQuery, startDate, endDate, status);
+  }, [currentPage, debouncedSearchQuery, startDate, endDate, status]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CURRENT_PAGE, currentPage.toString());
@@ -139,6 +153,10 @@ const Damages = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.END_DATE, endDate);
   }, [endDate]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.STATUS, status);
+  }, [status]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -171,6 +189,11 @@ const Damages = () => {
     const value = e.target.value;
     setEndDate(value);
     setCurrentPage(1); // Reset to first page when changing date
+  };
+
+  const handleStatusChange = (value) => {
+    setStatus(value);
+    setCurrentPage(1); // Reset to first page when changing status
   };
 
   const formatDate = (dateString) => {
@@ -209,7 +232,7 @@ const Damages = () => {
         duration: 1000,
       });
       setEmployeeDialogOpen(false);
-      getDamages();
+      getDamages(currentPage, debouncedSearchQuery, startDate, endDate, status);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -244,6 +267,21 @@ const Damages = () => {
               onChange={handleSearch}
               className="pl-10 w-full sm:w-64 bg-white"
             />
+          </div>
+          <div className="relative w-full sm:w-auto">
+            <Filter
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+              size={20}
+            />
+            <Select value={status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="pl-10 w-full bg-white">
+                <SelectValue placeholder="Holat" />
+              </SelectTrigger>
+              <SelectContent className="w-full">
+                <SelectItem value="pending">Braklar</SelectItem>
+                <SelectItem value="approved">Tekshirilgan</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex gap-2">
             <Input
