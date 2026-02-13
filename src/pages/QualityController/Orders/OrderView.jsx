@@ -695,7 +695,9 @@ const OrderView = () => {
                 >
                   <CheckCircle className="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" />
                   <span className="text-4xl sm:text-5xl font-bold text-green-500">
-                    {order?.[objKeyNames[selectedOtkType][0]] || 0}
+                    {selectedOtkType
+                      ? order?.[objKeyNames[selectedOtkType][0]] || 0
+                      : 0}
                   </span>
                   <span className="text-sm text-green-600">Sifatli</span>
                 </button>
@@ -722,7 +724,9 @@ const OrderView = () => {
                 >
                   <XCircle className="w-8 h-8 text-red-500 group-hover:scale-110 transition-transform" />
                   <span className="text-4xl sm:text-5xl font-bold text-red-500">
-                    {order?.[objKeyNames[selectedOtkType][1]] || 0}
+                    {selectedOtkType
+                      ? order?.[objKeyNames[selectedOtkType][1]] || 0
+                      : 0}
                   </span>
                   <span className="text-sm text-red-600">Yaroqsiz</span>
                 </button>

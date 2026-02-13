@@ -14,6 +14,7 @@ import {
   Clock,
   Image as ImageIcon,
 } from "lucide-react";
+import formatNumber from "@/utils/formatNumber";
 
 const Damages = () => {
   const { toast } = useToast();
@@ -208,6 +209,13 @@ const Damages = () => {
                       minute: "2-digit",
                     })}
                   </span>
+                </div>
+
+                <div>
+                  Jarima:{" "}
+                  {item?.employee_money_logs?.map((log) => (
+                    <>{formatNumber(log.amount, 0)} so'm</>
+                  ))}
                 </div>
               </CardContent>
             </Card>
