@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Clock,
   Image as ImageIcon,
+  XCircle,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -98,129 +99,147 @@ const Damages = () => {
     <>
       {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {damages.map((item) => {
-          const isFixed = !!item.fixed_employee;
-          const createdDate = new Date(item.created_at);
+        {damages
+          .sort((a, b) => b.id - a.id)
+          .map((item) => {
+            const isFixed = !!item.fixed_employee;
+            const createdDate = new Date(item.created_at);
 
-          return (
-            <Card
-              key={item.id}
-              className="overflow-hidden hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-white to-gray-50"
-            >
-              {/* IMAGE SECTION */}
-              <div className="relative group">
-                {item.image ? (
-                  <>
-                    <img
-                      src={item.image}
-                      alt="damage"
-                      className="w-full h-56 object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
-                      onClick={() => {
-                        setSelectedImage(item.image);
-                        setDialogOpen(true);
-                      }}
-                    />
-                    {isFixed && (
-                      <div className="absolute top-3 right-3">
-                        <Badge className="bg-green-500 hover:bg-green-600 text-white border-0">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          To'g'rilangan
-                        </Badge>
+            return (
+              <Card
+                key={item.id}
+                className="overflow-hidden hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-white to-gray-50"
+              >
+                {/* IMAGE SECTION */}
+                <div className="relative group">
+                  {item.image ? (
+                    <>
+                      <img
+                        src={item.image}
+                        alt="damage"
+                        className="w-full h-56 object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                        onClick={() => {
+                          setSelectedImage(item.image);
+                          setDialogOpen(true);
+                        }}
+                      />
+                      {isFixed ? (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-green-500 hover:bg-green-600 text-white border-0">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            To'g'rilangan
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-red-500 hover:bg-red-600 text-white border-0">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            To'g'rilanmagan
+                          </Badge>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="w-full h-56 bg-gray-100 flex items-center justify-center">
+                      <ImageIcon className="w-12 h-12 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg text-gray-900 mb-1">
+                        {item.order?.name || "Noma'lum buyurtma"}
+                      </h3>
+                      <Badge variant="secondary" className="text-xs">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        {item.tarification?.name || "Ish turi belgilanmagan"}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="pt-0 space-y-4">
+                  {/* DESCRIPTION */}
+                  {item.description && (
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
+                      <p className="text-sm text-blue-800 font-medium">Izoh:</p>
+                      <p className="text-sm text-blue-700 mt-1">
+                        {item.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* EMPLOYEES INFO */}
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                      <div className="flex-shrink-0">
+                        <User className="w-4 h-4 text-gray-500" />
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="w-full h-56 bg-gray-100 flex items-center justify-center">
-                    <ImageIcon className="w-12 h-12 text-gray-400" />
-                  </div>
-                )}
-              </div>
-
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-gray-900 mb-1">
-                      {item.order?.name || "Noma'lum buyurtma"}
-                    </h3>
-                    <Badge variant="secondary" className="text-xs">
-                      <AlertCircle className="w-3 h-3 mr-1" />
-                      {item.tarification?.name || "Ish turi belgilanmagan"}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-0 space-y-4">
-                {/* DESCRIPTION */}
-                {item.description && (
-                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
-                    <p className="text-sm text-blue-800 font-medium">Izoh:</p>
-                    <p className="text-sm text-blue-700 mt-1">
-                      {item.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* EMPLOYEES INFO */}
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                    <div className="flex-shrink-0">
-                      <User className="w-4 h-4 text-gray-500" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-500">OTK xodimi</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {item.created_by?.employee?.name || "—"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500">OTK xodimi</p>
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {item.created_by?.employee?.name || "—"}
-                      </p>
+
+                    <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                      <div className="flex-shrink-0">
+                        <Wrench className="w-4 h-4 text-gray-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-500">
+                          To'g'irlagan xodim
+                        </p>
+                        <p
+                          className={`text-sm font-medium truncate ${isFixed ? "text-green-700" : "text-gray-400"}`}
+                        >
+                          {item.fixed_employee?.name || "To'g'irlanmagan"}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                    <div className="flex-shrink-0">
-                      <Wrench className="w-4 h-4 text-gray-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500">
-                        To'g'irlagan xodim
-                      </p>
-                      <p
-                        className={`text-sm font-medium truncate ${isFixed ? "text-green-700" : "text-gray-400"}`}
-                      >
-                        {item.fixed_employee?.name || "To'g'irlanmagan"}
-                      </p>
-                    </div>
+                  {/* DATE INFO */}
+                  <div className="flex items-center space-x-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                    <Calendar className="w-3 h-3" />
+                    <span>
+                      {createdDate.toLocaleDateString("ru-RU", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <Clock className="w-3 h-3" />
+                    <span>
+                      {createdDate.toLocaleTimeString("ru-RU", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </div>
-                </div>
 
-                {/* DATE INFO */}
-                <div className="flex items-center space-x-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
-                  <Calendar className="w-3 h-3" />
-                  <span>
-                    {createdDate.toLocaleDateString("ru-RU", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </span>
-                  <Clock className="w-3 h-3" />
-                  <span>
-                    {createdDate.toLocaleTimeString("ru-RU", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-
-                <div>
-                  Jarima:{" "}
-                  {item?.employee_money_logs?.map((log) => (
-                    <>{formatNumber(log.amount, 0)} so'm</>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                  {item?.employee_money_logs?.length > 0 && (
+                    <div className="flex items-center space-x-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-md">
+                      <XCircle className="w-3 h-3" />
+                      <span className="font-medium">Jarima:</span>
+                      <span>
+                        {item.employee_money_logs.map((log, index) => (
+                          <span key={log.id || index}>
+                            {formatNumber(log.amount, 0)} so'm
+                            {index < item.employee_money_logs.length - 1 &&
+                              ", "}
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
       </div>
 
       {/* INFINITE SCROLL SENTINEL */}
