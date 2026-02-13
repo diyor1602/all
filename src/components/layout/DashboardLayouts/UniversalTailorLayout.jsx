@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { CircleDollarSign, Clapperboard, Leaf, Glasses } from "lucide-react";
+import { CircleDollarSign, Clapperboard, Leaf } from "lucide-react";
 
 const navigation = [
   {
@@ -19,12 +19,6 @@ const navigation = [
     href: "/universalTailor/video",
     icon: Clapperboard,
     onMobile: false,
-  },
-  {
-    name: "Braklar",
-    href: "/damages",
-    icon: Glasses,
-    onMobile: true,
   },
 ];
 

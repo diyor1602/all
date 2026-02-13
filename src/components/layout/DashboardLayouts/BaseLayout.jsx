@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth-context.js";
 import {
@@ -8,12 +8,12 @@ import {
   X,
   MessageCircleMore,
   MessageSquareMore,
-  PartyPopper,
   Home,
   Radical,
   Sprout,
   BadgePercent,
   CircleDollarSign,
+  Glasses,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,29 @@ export default function BaseLayout({ children, navigation }) {
 
   const imageUrl = localStorage.getItem("imgUrl");
   const hasValidImage = imageUrl && imageUrl !== "null";
+
+  const [damageCount, setDamageCount] = useState(0);
+
+  const getDamageCount = async () => {
+    try {
+      const res = await api.get("/pendingFailCount");
+      setDamageCount(res.data?.count || 0);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getDamageCount();
+
+    // Set up interval to fetch damage count every minute
+    const interval = setInterval(() => {
+      getDamageCount();
+    }, 60000); // 60000ms = 1 minute
+
+    // Clean up interval on component unmount
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -56,6 +79,16 @@ export default function BaseLayout({ children, navigation }) {
       onMobile: false,
     },
     ...navigation,
+    {
+      name: "Braklar",
+      href: "/damages",
+      icon: Glasses,
+      onMobile: true,
+      dontShow: !["universalTailor", "tailor"].includes(
+        localStorage.getItem("role"),
+      ),
+      badge: damageCount > 0 ? damageCount : null,
+    },
     {
       name: "Tikuvchilar",
       href: "/tailorRating",
@@ -141,14 +174,21 @@ export default function BaseLayout({ children, navigation }) {
                     )}
                     onClick={() => setSidebarOpen(false)}
                   >
-                    <item.icon
-                      className={cn(
-                        "h-5 w-5",
-                        isActive
-                          ? "text-primary"
-                          : "text-gray-500" + item.customColor,
+                    <div className="relative flex items-center">
+                      <item.icon
+                        className={cn(
+                          "h-5 w-5",
+                          isActive
+                            ? "text-primary"
+                            : "text-gray-500" + item.customColor,
+                        )}
+                      />
+                      {item.badge && (
+                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white shadow-lg ring-2 ring-white animate-pulse">
+                          {item.badge > 99 ? "99+" : item.badge}
+                        </span>
                       )}
-                    />
+                    </div>
                     {item.name}
                   </Link>
                 );
@@ -242,7 +282,14 @@ export default function BaseLayout({ children, navigation }) {
                         : item.customColor || "text-gray-500",
                     )}
                   >
-                    <item.icon className={"h-6 w-6 " + item.customColor} />
+                    <div className="relative">
+                      <item.icon className={"h-6 w-6 " + item.customColor} />
+                      {item.badge && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white shadow-lg ring-2 ring-white animate-pulse">
+                          {item.badge > 99 ? "99+" : item.badge}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs mt-1">{item.name}</span>
                   </Link>
                 </li>
