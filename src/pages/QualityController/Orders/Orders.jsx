@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import { Progress } from "@/components/ui/progress";
+import { CircularProgress } from "@/components/ui/circular-progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, CheckCircle, TrendingUp } from "lucide-react";
+import { Package } from "lucide-react";
 
 const Orders = () => {
   const { toast } = useToast();
@@ -174,29 +174,73 @@ const Orders = () => {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" />
-                      O'tgan:
-                    </span>
-                    <span className="text-sm font-semibold text-green-600">
-                      {order.good_count} dona
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" />
-                        Progress
-                      </span>
-                      <span className="font-medium">
-                        {progressPercentage.toFixed(1)}%
-                      </span>
+                  <div className="flex items-center justify-between gap-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                    {/* Intermediate Progress */}
+                    <div className="flex flex-col items-center gap-2">
+                      <CircularProgress
+                        value={
+                          order.quantity > 0
+                            ? ((order?.good_intermediate_count || 0) /
+                                order.quantity) *
+                              100
+                            : 0
+                        }
+                        size={55}
+                        strokeWidth={3}
+                      />
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Astar
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {order?.good_intermediate_count || 0}/{order.quantity}
+                        </div>
+                      </div>
                     </div>
-                    <Progress value={progressPercentage} className="h-2" />
-                    <div className="text-xs text-muted-foreground text-center">
-                      {order.good_count} / {order.quantity} dona
+
+                    {/* Body Progress */}
+                    <div className="flex flex-col items-center gap-2">
+                      <CircularProgress
+                        value={
+                          order.quantity > 0
+                            ? ((order?.good_body_count || 0) / order.quantity) *
+                              100
+                            : 0
+                        }
+                        size={55}
+                        strokeWidth={3}
+                      />
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Tana
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {order?.good_body_count || 0}/{order.quantity}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Final Progress */}
+                    <div className="flex flex-col items-center gap-2">
+                      <CircularProgress
+                        value={
+                          order.quantity > 0
+                            ? ((order?.good_final_count || 0) /
+                                order.quantity) *
+                              100
+                            : 0
+                        }
+                        size={55}
+                        strokeWidth={3}
+                      />
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Finish
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {order?.good_final_count || 0}/{order.quantity}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
