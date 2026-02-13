@@ -212,7 +212,7 @@ const OrderView = () => {
       "employee_id",
       selectedEmployee || selectedSearchResult?.id || "",
     );
-    formData.append("description", `${description} + ${searchTerm}`);
+    formData.append("description", `${description} ${searchTerm}`);
     formData.append("inspection_stage", engNames[selectedOtkType]);
 
     try {
