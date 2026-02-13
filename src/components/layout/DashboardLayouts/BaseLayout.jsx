@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
 
+const damageRoles = ["universalTailor", "tailor"];
+
 export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { logout } = useAuth();
@@ -32,11 +34,12 @@ export default function BaseLayout({ children, navigation }) {
   const [damageCount, setDamageCount] = useState(0);
 
   const getDamageCount = async () => {
+    if (!damageRoles.includes(localStorage.getItem("role"))) return;
     try {
       const res = await api.get("/pendingFailCount");
       setDamageCount(res.data?.count || 0);
     } catch (error) {
-      console.log(error);
+      // skip the error
     }
   };
 
@@ -84,9 +87,7 @@ export default function BaseLayout({ children, navigation }) {
       href: "/damages",
       icon: Glasses,
       onMobile: true,
-      dontShow: !["universalTailor", "tailor"].includes(
-        localStorage.getItem("role"),
-      ),
+      dontShow: !damageRoles.includes(localStorage.getItem("role")),
       badge: damageCount > 0 ? damageCount : null,
     },
     {
