@@ -36,9 +36,9 @@ import {
 import { useDebounce } from "@/hooks/useDebounce";
 
 const engNames = {
-  astar: "intermediate",
-  tana: "body",
-  finish: "final",
+  intermediate: "astar",
+  body: "tana",
+  final: "finish",
 };
 
 const namesObject = {
@@ -89,10 +89,11 @@ const Damages = () => {
   const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
 
   const getOtkTarif = (key, order) => {
-    const actualName = namesObject[key];
+    const keyName = engNames[key];
+    const actualName = namesObject[keyName];
     if (!actualName) return null;
 
-    const submodel = order?.order_model?.submodels?.[0];
+    const submodel = order?.order_model?.sub_models?.[0];
     if (!submodel) return null;
 
     const otkCategory = submodel.tarification_categories?.find(
@@ -253,12 +254,11 @@ const Damages = () => {
 
   const handleSaveEmployee = async () => {
     setSending(true);
-    console.log(selectedTarif);
     try {
-      const res = await api.post("/qualityController/qualityControlFix", {
+      await api.post("/qualityController/qualityControlFix", {
         quality_control_id: selectedDamage?.id,
         fixed_employee_id: selectedEmployee?.id,
-        tarification_id: 71715,
+        tarification_id: selectedTarif?.id,
       });
       toast({
         title: "Xodim saqlandi",
@@ -374,21 +374,23 @@ const Damages = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="absolute top-2 left-2 bg-blue-500 text-white hover:bg-blue-600 hover:text-white border-none outline-none"
+                      className={`absolute top-2 left-2 ${
+                        !getOtkTarif(damage?.inspection_stage, damage?.order)
+                          ? "bg-red-500 text-white hover:bg-red-600 hover:text-white"
+                          : "bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
+                      } border-none outline-none`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log(
-                          damage?.order?.order_model?.sub_models[0]?.submodel
-                            ?.name,
-                        );
+                        if (
+                          !getOtkTarif(damage?.inspection_stage, damage?.order)
+                        ) {
+                          alert(
+                            "Tarifikatsiya kiritilmagan. Texnologga murojaat qiling",
+                          );
+                          return;
+                        }
                         setSelectedTarif(
-                          getOtkTarif(
-                            engNames[
-                              damage?.order?.order_model?.submodels?.[0]
-                                ?.submodel?.name
-                            ],
-                            damage?.order,
-                          ),
+                          getOtkTarif(damage?.inspection_stage, damage?.order),
                         );
                         setSelectedDamage(damage);
                         setSelectedEmployee(damage?.employee);
