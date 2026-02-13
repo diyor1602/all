@@ -31,6 +31,12 @@ const engNames = {
   finish: "final",
 };
 
+const objKeyNames = {
+  astar: ["good_intermediate_count", "fail_intermediate_count"],
+  tana: ["good_body_count", "fail_body_count"],
+  finish: ["good_final_count", "fail_final_count"],
+};
+
 const namesObject = {
   astar: "OTK Astar",
   tana: "OTK Tana",
@@ -70,12 +76,6 @@ const OrderView = () => {
   const [selectedOtkType, setSelectedOtkType] = useState(
     localStorage.getItem("selectedOtkType") || null,
   );
-
-  const totalQuantity = order?.quantity || 0;
-  const goodCount = order?.good_count || 0;
-  const progressPercent = totalQuantity
-    ? Math.round((goodCount / totalQuantity) * 100)
-    : 0;
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -691,11 +691,7 @@ const OrderView = () => {
                 >
                   <CheckCircle className="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" />
                   <span className="text-4xl sm:text-5xl font-bold text-green-500">
-                    {/* {order?.good_count || 0} */}
-                    {getOtkTarif(selectedOtkType)?.tarification_logs?.reduce(
-                      (acc, log) => acc + log.quantity,
-                      0,
-                    )}
+                    {order?.[objKeyNames[selectedOtkType][0]] || 0}
                   </span>
                   <span className="text-sm text-green-600">Sifatli</span>
                 </button>
@@ -722,7 +718,7 @@ const OrderView = () => {
                 >
                   <XCircle className="w-8 h-8 text-red-500 group-hover:scale-110 transition-transform" />
                   <span className="text-4xl sm:text-5xl font-bold text-red-500">
-                    {order?.pending_fail_count || 0}
+                    {order?.[objKeyNames[selectedOtkType][1]] || 0}
                   </span>
                   <span className="text-sm text-red-600">Yaroqsiz</span>
                 </button>
