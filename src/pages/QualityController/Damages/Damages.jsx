@@ -368,7 +368,7 @@ const Damages = () => {
                       damage?.fixed_employee ? "bg-green-500" : "bg-red-500"
                     }`}
                   >
-                    {damage?.tarification?.code}
+                    {damage?.tarification?.code || "-"}
                   </Badge>
                   {!damage?.fixed_employee && (
                     <Button
