@@ -543,7 +543,7 @@ const Damages = () => {
                           <img
                             src={selectedEmployee?.img}
                             alt="Employee"
-                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
+                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex-shrink-0 object-cover"
                           />
                         ) : (
                           <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
