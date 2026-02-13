@@ -109,6 +109,10 @@ const Damages = () => {
                   Ish: {item.tarification?.name}
                 </div>
 
+                <div className="text-sm text-muted-foreground">
+                  Izoh: {item.description}
+                </div>
+
                 <div className="text-sm">
                   Xodim:{" "}
                   <span className="font-medium">
