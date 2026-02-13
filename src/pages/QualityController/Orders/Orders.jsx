@@ -55,7 +55,7 @@ const Orders = () => {
     .sort((a, b) => {
       const getProgress = (order) => {
         return order.quantity > 0
-          ? (order.good_count / order.quantity) * 100
+          ? (order.good_final_count / order.quantity) * 100
           : 0;
       };
 
