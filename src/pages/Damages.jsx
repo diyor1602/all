@@ -264,7 +264,7 @@ const Damages = () => {
             <img
               src={selectedImage}
               alt="damage-large"
-              className="w-full h-auto object-contain"
+              className="w-full h-auto object-contain rounded-lg"
             />
           )}
         </DialogContent>
