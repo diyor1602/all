@@ -14,6 +14,7 @@ import {
   CheckCheck,
   Pencil,
   Loader2,
+  Send,
 } from "lucide-react";
 import {
   Dialog,
@@ -292,23 +293,29 @@ const Damages = () => {
                     alt="Damage"
                     className="w-full h-full object-cover"
                   />
-                  <Badge className="absolute top-2 right-2 bg-red-500">
+                  <Badge
+                    className={`absolute top-2 right-2 ${
+                      damage?.fixed_employee ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  >
                     {damage?.tarification?.code}
                   </Badge>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute top-2 left-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedDamage(damage);
-                      setSelectedEmployee(damage?.employee);
-                      setSearchTerm("");
-                      setEmployeeDialogOpen(true);
-                    }}
-                  >
-                    <Pencil />
-                  </Button>
+                  {!damage?.fixed_employee && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute top-2 left-2 bg-blue-500 text-white hover:bg-blue-600 hover:text-white border-none outline-none"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedDamage(damage);
+                        setSelectedEmployee(damage?.employee);
+                        setSearchTerm("");
+                        setEmployeeDialogOpen(true);
+                      }}
+                    >
+                      <Send />
+                    </Button>
+                  )}
                 </div>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg truncate">
@@ -489,47 +496,63 @@ const Damages = () => {
             open={employeeDialogOpen}
             onOpenChange={setEmployeeDialogOpen}
           >
-            <DialogContent>
+            <DialogContent
+              className="
+      w-[95vw] 
+      max-w-lg 
+      p-4 sm:p-6
+      max-h-[90vh] 
+      overflow-hidden
+      rounded-xl
+    "
+            >
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
+                <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <User className="h-5 w-5 text-blue-600" />
                   Xodimni tanlash
                 </DialogTitle>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-slate-500 break-words">
                   {selectedDamage?.order?.name} -{" "}
-                  {selectedDamage?.tarification?.code}
+                  {selectedDamage?.tarification?.code} -{" "}
+                  {selectedDamage?.tarification?.name}
                 </p>
               </DialogHeader>
 
-              <div className="space-y-4">
+              {/* Scrollable Content Area */}
+              <div className="space-y-4 overflow-y-auto pr-1 max-h-[65vh]">
                 {/* Search Input */}
                 <div className="relative">
                   <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                     size={18}
                   />
                   <Input
                     placeholder="Xodimni qidirish (kamida 2 harf)"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 text-sm focus-visible:ring-0"
                   />
-                  {searchTerm && debouncedSearchTerm !== searchTerm && (
-                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-slate-400" />
-                  )}
                 </div>
 
-                {/* Selected Employee Display */}
+                {/* Selected Employee */}
                 {selectedEmployee && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {selectedEmployee?.name?.charAt(0)?.toUpperCase() ||
-                            "X"}
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-800">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {selectedEmployee?.img ? (
+                          <img
+                            src={selectedEmployee?.img}
+                            alt="Employee"
+                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                            {selectedEmployee?.name?.charAt(0)?.toUpperCase() ||
+                              "X"}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-800 truncate text-sm">
                             {selectedEmployee?.name}
                           </p>
                           <p className="text-xs text-slate-500">
@@ -537,7 +560,7 @@ const Damages = () => {
                           </p>
                         </div>
                       </div>
-                      <CheckCheck className="h-5 w-5 text-blue-600" />
+                      <CheckCheck className="h-5 w-5 text-blue-600 flex-shrink-0 ml-2" />
                     </div>
                   </div>
                 )}
@@ -548,26 +571,33 @@ const Damages = () => {
                     <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
                       Qidiruv natijalari
                     </p>
-                    <div className="max-h-60 overflow-y-auto border rounded-lg">
+
+                    <div className="max-h-56 overflow-y-auto border rounded-lg">
                       {searchResults.length > 0 ? (
                         searchResults.map((searchResult) => (
                           <div
                             key={searchResult.id}
-                            onClick={() => {
-                              setSelectedEmployee(searchResult);
-                            }}
+                            onClick={() => setSelectedEmployee(searchResult)}
                             className={`px-3 py-3 cursor-pointer hover:bg-slate-50 border-b last:border-b-0 flex items-center gap-3 transition-colors ${
                               selectedEmployee?.id === searchResult.id
                                 ? "bg-blue-50 border-l-4 border-l-blue-600"
                                 : ""
                             }`}
                           >
-                            <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-sm font-medium text-slate-600">
-                              {searchResult?.name?.charAt(0)?.toUpperCase() ||
-                                "X"}
-                            </div>
+                            {searchResult?.img ? (
+                              <img
+                                src={searchResult?.img}
+                                alt="Employee"
+                                className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-sm font-medium text-slate-600 flex-shrink-0">
+                                {searchResult?.name?.charAt(0)?.toUpperCase() ||
+                                  "X"}
+                              </div>
+                            )}
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-800 truncate">
+                              <p className="font-medium text-slate-800 truncate text-sm">
                                 {searchResult?.name}
                               </p>
                               <p className="text-xs text-slate-500">
@@ -592,7 +622,7 @@ const Damages = () => {
                   </div>
                 )}
 
-                {/* Search Instructions */}
+                {/* Empty States */}
                 {debouncedSearchTerm.length < 2 && searchTerm.length > 0 && (
                   <div className="text-center py-4 text-slate-500">
                     <Search className="h-8 w-8 mx-auto mb-2 text-slate-300" />
@@ -600,10 +630,9 @@ const Damages = () => {
                   </div>
                 )}
 
-                {/* Empty State */}
                 {!searchTerm && (
                   <div className="text-center py-6 text-slate-500">
-                    <User className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                    <User className="h-10 w-10 mx-auto mb-3 text-slate-300" />
                     <p className="text-sm font-medium">Xodimlarni qidiring</p>
                     <p className="text-xs mt-1">
                       Ism yoki familiyasini kiriting
@@ -613,19 +642,20 @@ const Damages = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
                 <Button
                   variant="outline"
                   onClick={() => setEmployeeDialogOpen(false)}
-                  className="flex-1"
+                  className="w-full text-sm"
                   disabled={sending}
                 >
                   Bekor qilish
                 </Button>
+
                 <Button
                   onClick={handleSaveEmployee}
                   disabled={sending || !selectedEmployee}
-                  className="flex-1"
+                  className="w-full text-sm"
                 >
                   {sending ? (
                     <>
