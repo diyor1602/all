@@ -20,6 +20,7 @@ import {
   Edit3,
   Palette,
   RotateCcw,
+  BadgeCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -212,6 +213,7 @@ const OrderView = () => {
       selectedEmployee || selectedSearchResult?.id || "",
     );
     formData.append("description", `${description} + ${searchTerm}`);
+    formData.append("inspection_stage", engNames[selectedOtkType]);
 
     try {
       await api.post("/qualityController/qualityControl", formData);
@@ -524,7 +526,7 @@ const OrderView = () => {
           >
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 shadow-md border border-blue-100">
               <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></div>
+                <BadgeCheck className="w-5 h-5 mr-2 text-blue-500" />
                 OTK turini tanlang
               </h3>
               <div className="flex gap-2">
@@ -689,7 +691,11 @@ const OrderView = () => {
                 >
                   <CheckCircle className="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" />
                   <span className="text-4xl sm:text-5xl font-bold text-green-500">
-                    {order?.good_count || 0}
+                    {/* {order?.good_count || 0} */}
+                    {getOtkTarif(selectedOtkType)?.tarification_logs?.reduce(
+                      (acc, log) => acc + log.quantity,
+                      0,
+                    )}
                   </span>
                   <span className="text-sm text-green-600">Sifatli</span>
                 </button>
@@ -724,23 +730,6 @@ const OrderView = () => {
             </div>
           </motion.div>
 
-          <div className="mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-2">
-            <div className="flex items-center justify-between text-sm text-gray-700">
-              <span className="font-medium">Jarayon holati</span>
-              <span>
-                {goodCount}/{totalQuantity} dona
-              </span>
-            </div>
-            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-              <div
-                className="h-3 rounded-full bg-green-500 transition-all"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-            <div className="text-right text-xs text-gray-600 font-medium">
-              {progressPercent}% bajarilgan
-            </div>
-          </div>
           <Dialog open={plusDialogOpen} onOpenChange={setPlusDialogOpen}>
             <DialogContent>
               <DialogHeader>
