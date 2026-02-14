@@ -254,8 +254,10 @@ const Damages = () => {
                           </span>
 
                           <div>
-                            {Number(item?.employee_money_logs[0]?.amount) +
-                              Number(item?.employee_money_logs[1]?.amount)}{" "}
+                            {Number(item?.employee_money_logs[0]?.amount || 0) +
+                              Number(
+                                item?.employee_money_logs[1]?.amount || 0,
+                              )}{" "}
                             so'm
                           </div>
                           <div className="flex-1 h-px bg-gradient-to-r from-red-300 to-orange-300"></div>
