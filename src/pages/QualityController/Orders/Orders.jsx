@@ -39,6 +39,12 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
+  const doesHaveOtk = (order) => {
+    return order.order_model?.sub_models[0]?.tarification_categories?.find(
+      (category) => category.name === "OTK",
+    );
+  };
+
   const filteredOrders = orders
     .filter((order) => {
       const searchStr = searchQuery.toLowerCase();
@@ -54,6 +60,7 @@ const Orders = () => {
           .includes(searchStr)
       );
     })
+    .filter((order) => doesHaveOtk(order))
     .sort((a, b) => {
       const getProgress = (order) => {
         return order.quantity > 0
@@ -252,7 +259,7 @@ const Orders = () => {
 
                 <div className="pt-2">
                   <Link to={`/qualityController/orders/${order.id}`}>
-                    <Button className="w-full" size="sm">
+                    <Button className="w-full" size="sm" variant="default">
                       BOSHLASH
                     </Button>
                   </Link>
