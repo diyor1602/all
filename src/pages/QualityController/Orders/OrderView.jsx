@@ -21,6 +21,7 @@ import {
   Palette,
   RotateCcw,
   BadgeCheck,
+  User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -71,8 +72,9 @@ const OrderView = () => {
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [description, setDescription] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [searchTerm, setSearchTerm] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedSearchResult, setSelectedSearchResult] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
   const [selectedOtkType, setSelectedOtkType] = useState(
     localStorage.getItem("selectedOtkType") || null,
   );
@@ -82,6 +84,7 @@ const OrderView = () => {
   const getEmployees = async () => {
     if (debouncedSearchTerm.length < 2) return;
     try {
+      setIsSearching(true);
       const res = await api.get("/qualityController/employees", {
         params: {
           search: debouncedSearchTerm,
@@ -93,9 +96,10 @@ const OrderView = () => {
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description: "Xodimlar ma'lumotlari yuklanmadi",
+        description: "Xodimlarni qidirishda xatolik yuz berdi",
       });
-      return [];
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -920,7 +924,7 @@ const OrderView = () => {
                 </div>
 
                 {/* Tarification Section */}
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <select
                     value={selectedTarifCat}
                     onChange={(e) => {
@@ -943,7 +947,7 @@ const OrderView = () => {
                     value={selectedTarif}
                     onChange={(e) => {
                       setSelectedTarif(e.target.value);
-                      setSelectedEmployee(""); // Reset employee when tarif changes
+                      setSelectedEmployee(""); 
                     }}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -958,7 +962,7 @@ const OrderView = () => {
                         </option>
                       ))}
                   </select>
-                </div>
+                </div> */}
 
                 {/* Employee Selection Section */}
                 <>
@@ -980,72 +984,163 @@ const OrderView = () => {
 
                     if (employees.length === 0) {
                       return (
-                        <div>
-                          <Input
-                            type="text"
-                            placeholder="Xodim ismini kiriting"
-                            value={searchTerm}
-                            onChange={(e) => {
-                              setSearchTerm(e.target.value);
-                            }}
-                          />
-                          <div className="max-h-40 overflow-y-auto border rounded-md">
-                            {selectedSearchResult?.name ? (
-                              <div className="px-3 py-2 bg-green-50 border-b">
-                                <div className="font-medium text-green-800">
-                                  Tanlangan: {selectedSearchResult.name}
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setSelectedSearchResult(null);
-                                    setSelectedEmployee("");
-                                    setSearchTerm("");
-                                  }}
-                                  className="text-xs text-red-600 hover:text-red-800 mt-1"
-                                >
-                                  O'zgartirish
-                                </button>
-                              </div>
-                            ) : searchResults?.length > 0 ? (
-                              searchResults?.map((searchResult, index) => (
-                                <div
-                                  key={index}
-                                  onClick={() => {
-                                    setSelectedEmployee(
-                                      String(searchResult.id),
-                                    );
-                                    setSelectedSearchResult(searchResult);
-                                  }}
-                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
-                                >
-                                  {searchResult?.name}
-                                </div>
-                              ))
-                            ) : (
-                              <div className="px-3 py-2 text-gray-500 text-sm">
-                                {searchTerm.length < 3
-                                  ? "Kamida 2 ta harf kiriting"
-                                  : "Xodim topilmadi, siz yozgan ism yuboriladi!"}
+                        <div className="space-y-3">
+                          <div className="relative">
+                            <Input
+                              type="text"
+                              placeholder="Xodim ismini kiriting..."
+                              value={searchTerm}
+                              onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                              }}
+                              className="pr-10 border-gray-200 focus:border-blue-400 focus:ring-blue-100 transition-all duration-200"
+                            />
+                            {isSearching && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
                               </div>
                             )}
+                          </div>
+
+                          <div className="relative">
+                            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg shadow-sm bg-white">
+                              {selectedSearchResult?.name ? (
+                                <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                      {selectedSearchResult?.img ? (
+                                        <img
+                                          src={selectedSearchResult?.img}
+                                          className="w-8 h-8 shrink-0 object-cover rounded-full"
+                                          alt=""
+                                        />
+                                      ) : (
+                                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                          <span className="text-xs font-medium text-blue-600">
+                                            {selectedSearchResult?.name
+                                              ?.charAt(0)
+                                              ?.toUpperCase()}
+                                          </span>
+                                        </div>
+                                      )}
+                                      <span className="font-medium text-green-800 text-xs">
+                                        Tanlangan: {selectedSearchResult.name}
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedSearchResult(null);
+                                        setSelectedEmployee("");
+                                        setSearchTerm("");
+                                      }}
+                                      className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors duration-200"
+                                    >
+                                      O'zgartirish
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : isSearching ? (
+                                <div className="px-4 py-8 text-center">
+                                  <Loader2 className="w-6 h-6 animate-spin text-blue-500 mx-auto mb-2" />
+                                  <p className="text-sm text-gray-500">
+                                    Xodimlar qidirilmoqda...
+                                  </p>
+                                </div>
+                              ) : searchResults?.length > 0 ? (
+                                <div className="py-1">
+                                  {searchResults?.map((searchResult, index) => (
+                                    <div
+                                      key={index}
+                                      onClick={() => {
+                                        setSelectedEmployee(
+                                          String(searchResult.id),
+                                        );
+                                        setSelectedSearchResult(searchResult);
+                                      }}
+                                      className="px-4 py-3 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 border-b border-gray-100 last:border-b-0 transition-all duration-200 group"
+                                    >
+                                      <div className="flex items-center space-x-3">
+                                        {searchResult?.img ? (
+                                          <img
+                                            src={searchResult.img}
+                                            className="w-8 h-8 object-cover shrink-0 rounded-full"
+                                            alt=""
+                                          />
+                                        ) : (
+                                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                            <span className="text-xs font-medium text-blue-600">
+                                              {searchResult?.name
+                                                ?.charAt(0)
+                                                ?.toUpperCase()}
+                                            </span>
+                                          </div>
+                                        )}
+
+                                        <span className="text-gray-700 group-hover:text-gray-900 font-medium text-xs">
+                                          {searchResult?.name}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="px-4 py-6 text-center">
+                                  {searchTerm.length < 2 ? (
+                                    <div className="space-y-2">
+                                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+                                        <span className="text-gray-400 text-lg">
+                                          🔍
+                                        </span>
+                                      </div>
+                                      <p className="text-sm text-gray-500">
+                                        Kamida 2 ta harf kiriting
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+                                        <span className="text-yellow-600 text-lg">
+                                          ✏️
+                                        </span>
+                                      </div>
+                                      <p className="text-sm text-gray-600">
+                                        Xodim topilmadi
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        Siz yozgan ism yuboriladi!
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
                     }
 
                     return (
-                      <select
-                        value={selectedEmployee}
-                        onChange={(e) => setSelectedEmployee(e.target.value)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="">Xodimni tanlang</option>
-                        {employees.map((employee) => (
-                          <option key={employee.id} value={String(employee.id)}>
-                            {employee.name}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
+                          <span>👥</span>
+                          <span>Xodimni tanlang</span>
+                        </label>
+                        <select
+                          value={selectedEmployee}
+                          onChange={(e) => setSelectedEmployee(e.target.value)}
+                          className="flex h-11 w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm shadow-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 hover:border-gray-300"
+                        >
+                          <option value="">Xodimni tanlang...</option>
+                          {employees.map((employee) => (
+                            <option
+                              key={employee.id}
+                              value={String(employee.id)}
+                            >
+                              {employee.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     );
                   })()}
                 </>

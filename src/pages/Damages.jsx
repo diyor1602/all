@@ -249,7 +249,7 @@ const Damages = () => {
                           <div className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full">
                             <XCircle className="w-4 h-4 text-white" />
                           </div>
-                          <span className="font-bold text-red-800 text-sm uppercase tracking-wide">
+                          <span className="font-bold text-red-800 text-xs uppercase tracking-wide">
                             Jarima
                           </span>
                           <div className="flex-1 h-px bg-gradient-to-r from-red-300 to-orange-300"></div>
@@ -258,19 +258,17 @@ const Damages = () => {
                           {item.employee_money_logs.map((log, index) => (
                             <div
                               key={log.id || index}
-                              className="flex flex-wrap bg-white/70 rounded px-2 py-1 border border-red-100"
+                              className="flex items-center bg-white/70 rounded px-2 py-1 border border-red-100"
                             >
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-red-700 text-xs">
-                                  {formatNumber(log.amount, 0)} so'm
-                                </span>
-                                <span className="text-gray-600 text-xs">
-                                  {log?.employee?.name}
-                                </span>
-                              </div>
+                              <span className="font-semibold text-red-700 text-xs flex-shrink-0">
+                                {formatNumber(log.amount, 0)} so'm
+                              </span>
+                              <span className="text-gray-600 text-xs ml-2 mr-2 truncate">
+                                {log?.employee?.name}
+                              </span>
                               <Badge
                                 variant="secondary"
-                                className="text-xs bg-orange-100 text-orange-700 border-orange-200 px-1.5 py-0.5"
+                                className="text-xs bg-orange-100 text-orange-700 border-orange-200 px-1.5 py-0.5 flex-shrink-0"
                               >
                                 {reasonText[log.reason]}
                               </Badge>
