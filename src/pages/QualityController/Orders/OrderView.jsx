@@ -216,11 +216,7 @@ const OrderView = () => {
       "employee_id",
       selectedEmployee || selectedSearchResult?.id || "",
     );
-    const descriptionText = selectedEmployee
-      ? `${description}`
-      : `${description} ${searchTerm}`;
-
-    formData.append("description", descriptionText);
+    formData.append("description", description);
     formData.append("inspection_stage", engNames[selectedOtkType]);
 
     try {
@@ -1170,7 +1166,7 @@ const OrderView = () => {
                 </Button>
                 <Button
                   className="py-7"
-                  disabled={sending || !selectedImage}
+                  disabled={sending || !selectedImage || !selectedEmployee}
                   onClick={handleMinus}
                 >
                   {sending ? (
