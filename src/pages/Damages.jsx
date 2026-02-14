@@ -252,14 +252,6 @@ const Damages = () => {
                           <span className="font-bold text-red-800 text-sm uppercase tracking-wide">
                             Jarima
                           </span>
-
-                          <div>
-                            {Number(item?.employee_money_logs[0]?.amount || 0) +
-                              Number(
-                                item?.employee_money_logs[1]?.amount || 0,
-                              )}{" "}
-                            so'm
-                          </div>
                           <div className="flex-1 h-px bg-gradient-to-r from-red-300 to-orange-300"></div>
                         </div>
                         <div className="space-y-1">
