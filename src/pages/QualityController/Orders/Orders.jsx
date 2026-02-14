@@ -15,7 +15,9 @@ const Orders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    localStorage.getItem("otkSearchQuery") || "",
+  );
 
   const fetchOrders = async () => {
     try {
@@ -102,7 +104,10 @@ const Orders = () => {
           <Input
             placeholder="Qidirish..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              localStorage.setItem("otkSearchQuery", e.target.value);
+            }}
             className="pl-10 w-full bg-white"
           />
         </div>
