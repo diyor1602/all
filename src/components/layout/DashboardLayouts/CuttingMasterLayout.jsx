@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, Scissors } from "lucide-react";
+import { BadgePercent, Scissors, Users } from "lucide-react";
 
 const navigation = [
   {
@@ -24,6 +24,12 @@ const navigation = [
     name: "Kesishda",
     href: "/cuttingMaster/cutting",
     icon: Scissors,
+    onMobile: true,
+  },
+  {
+    name: "Xodimlar",
+    href: "/cuttingMaster/employees",
+    icon: Users,
     onMobile: true,
   },
 ];
