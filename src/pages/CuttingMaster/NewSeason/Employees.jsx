@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  Loader2,
   AlarmClock,
   ChevronUp,
   ChevronDown,
@@ -35,10 +34,7 @@ const Employees = () => {
   const [loading, setLoading] = useState(false);
   const [id, setId] = useState(null);
   const [isGettingId, setIsGettingId] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [editingValue, setEditingValue] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -116,33 +112,6 @@ const Employees = () => {
   useEffect(() => {
     getData();
   }, [id, selectedMonth]);
-
-  const handleSubmit = async () => {
-    setSending(true);
-    try {
-      await api.post("/cuttingMaster/employeeSums", {
-        month: selectedMonth,
-        employee_id: selectedEmployee?.employee?.id,
-        sum: editingValue,
-      });
-      getData();
-      setEditDialogOpen(false);
-      setEditingValue(null);
-      setSelectedEmployee(null);
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Ma'lumotlar saqlandi",
-      });
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Ma'lumotlar saqlanmadi",
-      });
-    } finally {
-      setSending(false);
-    }
-  };
 
   const handleSort = (key) => {
     let direction = "asc";
@@ -458,14 +427,7 @@ const Employees = () => {
                           </div>
                         </td>
                         <td className="py-2 px-2 text-right border border-slate-200">
-                          <div
-                            className="flex items-center justify-end gap-1 cursor-pointer"
-                            onClick={() => {
-                              setEditingValue(item?.per_minute_sum);
-                              setEditDialogOpen(true);
-                              setSelectedEmployee(item);
-                            }}
-                          >
+                          <div className="flex items-center justify-end gap-1">
                             <span className="font-semibold text-slate-900 text-xs">
                               {item?.per_minute_sum || 0} so'm
                             </span>
@@ -599,61 +561,6 @@ const Employees = () => {
             </CardContent>
           </Card>
         )}
-
-        {/* Edit Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-sm">
-                {selectedEmployee?.employee?.name} - Daqiqa uchun summa
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-medium text-slate-700">
-                  Summa (so'm)
-                </label>
-                <Input
-                  type="number"
-                  value={editingValue}
-                  onChange={(e) => setEditingValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSubmit();
-                    }
-                  }}
-                  className="mt-1 text-sm"
-                  placeholder="Summani kiriting"
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditDialogOpen(false);
-                    setEditingValue(null);
-                    setSelectedEmployee(null);
-                  }}
-                  className="text-xs"
-                >
-                  Bekor qilish
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSubmit}
-                  disabled={sending}
-                  className="text-xs"
-                >
-                  {sending && (
-                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 animate-spin" />
-                  )}
-                  Saqlash
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Image Dialog */}
         <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
