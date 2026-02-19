@@ -279,7 +279,7 @@ const Employees = () => {
       const selectedDepartment = departments
         .flatMap((main) => main.departments)
         .find(
-          (dept) => dept.id.toString() === filters.department_id.toString()
+          (dept) => dept.id.toString() === filters.department_id.toString(),
         );
       setGroups(selectedDepartment?.groups || []);
     }
@@ -428,7 +428,7 @@ const Employees = () => {
         `/superhr/employees/export-excel?${params.toString()}`,
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create a blob URL and trigger download
@@ -437,7 +437,7 @@ const Employees = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`
+        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -477,7 +477,7 @@ const Employees = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`
+        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -514,7 +514,7 @@ const Employees = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `davomat_${attendanceFilter.start_date}_${attendanceFilter.end_date}.xlsx`
+        `davomat_${attendanceFilter.start_date}_${attendanceFilter.end_date}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -648,7 +648,7 @@ const Employees = () => {
                 <SelectItem key={dept.id} value={dept.id.toString()}>
                   {dept.name}
                 </SelectItem>
-              ))
+              )),
             )}
           </SelectContent>
         </Select>
@@ -780,6 +780,7 @@ const Employees = () => {
             <TableHead className="border">Lavozimi</TableHead>
             <TableHead className="border">Telefon</TableHead>
             <TableHead className="border">Holati</TableHead>
+            <TableHead className="border">Qo'shimcha</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -937,6 +938,17 @@ const Employees = () => {
                     </TooltipProvider>
                   </div>
                 </TableCell>
+                <TableCell className="border">
+                  {employee?.status === "kicked"
+                    ? new Date(employee.kicked_date)?.toLocaleDateString(
+                        "ru-RU",
+                      )
+                    : new Date(employee.hiring_date)?.toLocaleDateString(
+                        "ru-RU",
+                      )}
+                  <br />
+                  {employee.comment}
+                </TableCell>
               </TableRow>
             ))
           )}
@@ -991,7 +1003,7 @@ const Employees = () => {
                 }
 
                 return null;
-              }
+              },
             )}
 
             <PaginationItem>
@@ -1223,7 +1235,7 @@ const Employees = () => {
                                   {item?.created_at && (
                                     <p className="text-xs text-gray-500 mt-1">
                                       {new Date(
-                                        item.created_at
+                                        item.created_at,
                                       ).toLocaleDateString("ru-RU", {
                                         year: "numeric",
                                         month: "long",
