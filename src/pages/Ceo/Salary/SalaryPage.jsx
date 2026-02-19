@@ -57,6 +57,10 @@ const calculateNewSeasonSalary = (emp) => {
     emp?.daily_payment_salary ||
     0 + emp?.warehouse_salary ||
     0 + emp?.master_salary ||
+    0 + emp?.cutting_salary_minute ||
+    0 + emp?.master_salary_current ||
+    0 + emp?.sewing_output_salary ||
+    0 + emp?.warehouse_salary_minute ||
     0
   );
 };
@@ -106,21 +110,21 @@ const SalaryPage = () => {
       type === "monthly"
         ? String(employee.monthly_salary?.amount || "")
         : type === "newSeason"
-        ? String(employee.monthly_daily_payment?.amount || "")
-        : String(employee.monthly_piecework?.amount || "")
+          ? String(employee.monthly_daily_payment?.amount || "")
+          : String(employee.monthly_piecework?.amount || ""),
     );
     setAdditionalComment(
       type === "monthly"
         ? String(employee.monthly_salary?.comment || "")
         : type === "newSeason"
-        ? String(employee.monthly_daily_payment?.comment || "")
-        : String(employee.monthly_piecework?.comment || "")
+          ? String(employee.monthly_daily_payment?.comment || "")
+          : String(employee.monthly_piecework?.comment || ""),
     );
     type === "monthly"
       ? setMonthlyDialogOpen(true)
       : type === "newSeason"
-      ? setNewSeasonDialogOpen(true)
-      : setPieceworkDialogOpen(true);
+        ? setNewSeasonDialogOpen(true)
+        : setPieceworkDialogOpen(true);
   };
 
   const handleSaveAdditionalMonthlySalary = async () => {
@@ -359,7 +363,7 @@ const SalaryPage = () => {
 
   // Filter employees based on search text
   const filteredEmployees = employees.filter((employee) =>
-    employee.name.toLowerCase().includes(searchText.toLowerCase())
+    employee.name.toLowerCase().includes(searchText.toLowerCase()),
   );
 
   const formatDateLocal = (date) => {
@@ -514,11 +518,11 @@ const SalaryPage = () => {
 
     const advanceTotal = (paidAmounts.advance || []).reduce(
       (sum, payment) => sum + Number.parseFloat(payment.amount || 0),
-      0
+      0,
     );
     const salaryTotal = (paidAmounts.salary || []).reduce(
       (sum, payment) => sum + Number.parseFloat(payment.amount || 0),
-      0
+      0,
     );
 
     return { advanceTotal, salaryTotal };
@@ -530,7 +534,7 @@ const SalaryPage = () => {
       Number.parseFloat(employee?.tarification_salary || 0) +
       Number.parseFloat(employee?.attendance_salary || 0);
     const { advanceTotal, salaryTotal } = calculatePaymentTotals(
-      employee?.paid_amounts
+      employee?.paid_amounts,
     );
 
     // The maximum should be the total earned amount minus the OTHER type of payment
@@ -563,7 +567,7 @@ const SalaryPage = () => {
       } else if (initialFilters.department_id) {
         const groups = loadGroupsForDepartment(
           initialFilters.department_id,
-          rawData
+          rawData,
         );
 
         if (groups.length === 1 && !initialFilters.group_id) {
@@ -611,7 +615,7 @@ const SalaryPage = () => {
     const lastDayDate = new Date(
       Number.parseInt(year),
       Number.parseInt(month),
-      0
+      0,
     );
     const lastDay = formatDateLocal(lastDayDate);
 
@@ -876,7 +880,7 @@ const SalaryPage = () => {
               })
               .map((employee, index) => {
                 const { advanceTotal, salaryTotal } = calculatePaymentTotals(
-                  employee?.paid_amounts
+                  employee?.paid_amounts,
                 );
 
                 const selectedDepartmentName =
@@ -894,17 +898,17 @@ const SalaryPage = () => {
                   parseFloat(
                     employee?.monthly_salary?.amount >= 0
                       ? employee?.monthly_salary?.amount
-                      : employee?.attendance_salary
+                      : employee?.attendance_salary,
                   ) +
                   parseFloat(
                     employee?.monthly_piecework?.amount >= 0
                       ? employee?.monthly_piecework?.amount
-                      : employee?.tarification_salary
+                      : employee?.tarification_salary,
                   ) +
                   parseFloat(
                     employee?.monthly_daily_payment?.amount >= 0
                       ? employee?.monthly_daily_payment?.amount
-                      : newSeason
+                      : newSeason,
                   );
 
                 const isEarningWell =
@@ -917,7 +921,7 @@ const SalaryPage = () => {
                     className={cn(
                       "hover:bg-gray-50 transition-colors",
                       highlight && "bg-red-200 hover:bg-red-100",
-                      isEarningWell && "bg-yellow-200 hover:bg-yellow-100"
+                      isEarningWell && "bg-yellow-200 hover:bg-yellow-100",
                     )}
                   >
                     <td className="border border-gray-200 p-1 text-center">
@@ -945,14 +949,14 @@ const SalaryPage = () => {
                           employee?.monthly_daily_payment?.amount == newSeason
                             ? "bg-green-400"
                             : employee?.monthly_daily_payment?.amount >= 0
-                            ? "bg-orange-400"
-                            : ""
+                              ? "bg-orange-400"
+                              : ""
                         }`}
                       >
                         {formatNumber(
                           employee?.monthly_daily_payment?.amount >= 0
                             ? employee?.monthly_daily_payment?.amount
-                            : newSeason
+                            : newSeason,
                         )}
                       </div>
                     </td>
@@ -968,14 +972,14 @@ const SalaryPage = () => {
                           employee?.attendance_salary
                             ? "bg-green-400"
                             : employee?.monthly_salary?.amount >= 0
-                            ? "bg-orange-400"
-                            : ""
+                              ? "bg-orange-400"
+                              : ""
                         }`}
                       >
                         {formatNumber(
                           employee?.monthly_salary?.amount >= 0
                             ? employee?.monthly_salary?.amount
-                            : employee?.attendance_salary
+                            : employee?.attendance_salary,
                         )}
                       </div>
                     </td>
@@ -991,14 +995,14 @@ const SalaryPage = () => {
                           employee?.tarification_salary
                             ? "bg-green-400"
                             : employee?.monthly_piecework?.amount >= 0
-                            ? "bg-orange-400"
-                            : ""
+                              ? "bg-orange-400"
+                              : ""
                         }`}
                       >
                         {formatNumber(
                           employee?.monthly_piecework?.amount >= 0
                             ? employee?.monthly_piecework?.amount
-                            : employee?.tarification_salary
+                            : employee?.tarification_salary,
                         )}
                       </div>
                     </td>
@@ -1007,18 +1011,18 @@ const SalaryPage = () => {
                         parseFloat(
                           employee?.monthly_salary?.amount >= 0
                             ? employee?.monthly_salary?.amount
-                            : employee?.attendance_salary
+                            : employee?.attendance_salary,
                         ) +
                           parseFloat(
                             employee?.monthly_piecework?.amount >= 0
                               ? employee?.monthly_piecework?.amount
-                              : employee?.tarification_salary
+                              : employee?.tarification_salary,
                           ) +
                           parseFloat(
                             employee?.monthly_daily_payment?.amount >= 0
                               ? employee?.monthly_daily_payment?.amount
-                              : calculateNewSeasonSalary(employee)
-                          )
+                              : calculateNewSeasonSalary(employee),
+                          ),
                       )}
                     </td>
                     <td className="border border-gray-200 p-1 text-center">
@@ -1043,19 +1047,19 @@ const SalaryPage = () => {
                         parseFloat(
                           employee?.monthly_salary?.amount >= 0
                             ? employee?.monthly_salary?.amount
-                            : employee?.attendance_salary
+                            : employee?.attendance_salary,
                         ) +
                           parseFloat(
                             employee?.monthly_piecework?.amount >= 0
                               ? employee?.monthly_piecework?.amount
-                              : employee?.tarification_salary
+                              : employee?.tarification_salary,
                           ) +
                           parseFloat(
                             employee?.monthly_daily_payment?.amount >= 0
                               ? employee?.monthly_daily_payment?.amount
-                              : calculateNewSeasonSalary(employee)
+                              : calculateNewSeasonSalary(employee),
                           ) -
-                          parseFloat(employee?.total_paid)
+                          parseFloat(employee?.total_paid),
                       )}
                     </td>
                   </tr>
@@ -1072,7 +1076,7 @@ const SalaryPage = () => {
                 <td className="border border-gray-200 p-1 text-center">
                   {filteredEmployees.reduce(
                     (sum, emp) => sum + (Number(emp?.attendance_days) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td className="border border-gray-200 p-1 text-center">
@@ -1083,8 +1087,8 @@ const SalaryPage = () => {
                         (emp?.monthly_daily_payment?.amount >= 0
                           ? emp?.monthly_daily_payment?.amount
                           : Number(calculateNewSeasonSalary(emp)) || 0),
-                      0
-                    )
+                      0,
+                    ),
                   )}
                 </td>
                 <td className="border border-gray-200 p-1 text-center">
@@ -1095,10 +1099,10 @@ const SalaryPage = () => {
                         (Number(
                           emp?.monthly_salary?.amount >= 0
                             ? emp?.monthly_salary?.amount
-                            : emp?.attendance_salary
+                            : emp?.attendance_salary,
                         ) || 0),
-                      0
-                    )
+                      0,
+                    ),
                   )}
                 </td>
                 <td className="border border-gray-200 p-1 text-center">
@@ -1109,10 +1113,10 @@ const SalaryPage = () => {
                         (Number(
                           emp?.monthly_piecework?.amount >= 0
                             ? emp?.monthly_piecework?.amount
-                            : emp?.tarification_salary
+                            : emp?.tarification_salary,
                         ) || 0),
-                      0
-                    )
+                      0,
+                    ),
                   )}
                 </td>
                 <td className="border border-gray-200 p-1 text-center">
@@ -1123,30 +1127,30 @@ const SalaryPage = () => {
                         ((Number(
                           emp?.monthly_salary?.amount >= 0
                             ? emp?.monthly_salary?.amount
-                            : emp?.attendance_salary
+                            : emp?.attendance_salary,
                         ) || 0) +
                           (Number(
                             emp?.monthly_piecework?.amount >= 0
                               ? emp?.monthly_piecework?.amount
-                              : emp?.tarification_salary
+                              : emp?.tarification_salary,
                           ) || 0) +
                           (Number(
                             emp?.monthly_daily_payment?.amount >= 0
                               ? emp?.monthly_daily_payment?.amount
-                              : calculateNewSeasonSalary(emp)
+                              : calculateNewSeasonSalary(emp),
                           ) || 0)),
-                      0
-                    )
+                      0,
+                    ),
                   )}
                 </td>
                 <td className="border border-gray-200 p-1 text-center">
                   {formatNumber(
                     filteredEmployees.reduce((sum, emp) => {
                       const { advanceTotal } = calculatePaymentTotals(
-                        emp?.paid_amounts || {}
+                        emp?.paid_amounts || {},
                       );
                       return sum + advanceTotal;
-                    }, 0)
+                    }, 0),
                   )}
                 </td>
                 <td className="border border-gray-200 p-1 text-center">
@@ -1156,21 +1160,21 @@ const SalaryPage = () => {
                         (Number(
                           emp?.monthly_salary?.amount >= 0
                             ? emp?.monthly_salary?.amount
-                            : emp?.attendance_salary
+                            : emp?.attendance_salary,
                         ) || 0) +
                         (Number(
                           emp?.monthly_piecework?.amount >= 0
                             ? emp?.monthly_piecework?.amount
-                            : emp?.tarification_salary
+                            : emp?.tarification_salary,
                         ) || 0) +
                         (Number(
                           emp?.monthly_daily_payment?.amount >= 0
                             ? emp?.monthly_daily_payment?.amount
-                            : calculateNewSeasonSalary(emp)
+                            : calculateNewSeasonSalary(emp),
                         ) || 0);
                       const totalPaid = Number(emp?.total_paid || 0);
                       return sum + (totalEarned - totalPaid);
-                    }, 0)
+                    }, 0),
                   )}
                 </td>
               </tr>
@@ -1232,7 +1236,7 @@ const SalaryPage = () => {
                     <div className="divide-y">
                       {getPaymentHistory(
                         paymentDialog.employee,
-                        paymentDialog.type
+                        paymentDialog.type,
                       ).map((payment, index) => (
                         <div key={index} className="p-3 hover:bg-gray-50">
                           <div className="flex items-center justify-between">
@@ -1332,7 +1336,7 @@ const SalaryPage = () => {
                 "min-w-[100px]",
                 paymentDialog.type === "advance"
                   ? "bg-orange-500 hover:bg-orange-600"
-                  : "bg-green-500 hover:bg-green-600"
+                  : "bg-green-500 hover:bg-green-600",
               )}
             >
               {paymentLoading[
@@ -1396,7 +1400,7 @@ const SalaryPage = () => {
                   >
                     {formatNumber(
                       selectedEmployee.monthly_salary?.amount -
-                        selectedEmployee.attendance_salary
+                        selectedEmployee.attendance_salary,
                     )}{" "}
                     so'm
                   </span>
@@ -1439,7 +1443,7 @@ const SalaryPage = () => {
                   <Button
                     onClick={() =>
                       handleEditAdditionalMonthlySalary(
-                        selectedEmployee?.monthly_salary?.id
+                        selectedEmployee?.monthly_salary?.id,
                       )
                     }
                     disabled={!additionalAmount || sending}
@@ -1551,7 +1555,7 @@ const SalaryPage = () => {
                   >
                     {formatNumber(
                       selectedEmployee.monthly_piecework?.amount -
-                        selectedEmployee.tarification_salary
+                        selectedEmployee.tarification_salary,
                     )}{" "}
                     so'm
                   </span>
@@ -1594,7 +1598,7 @@ const SalaryPage = () => {
                   <Button
                     onClick={() =>
                       handleEditAdditionalPieceWork(
-                        selectedEmployee?.monthly_piecework?.id
+                        selectedEmployee?.monthly_piecework?.id,
                       )
                     }
                     disabled={!additionalAmount || sending}
@@ -1684,7 +1688,7 @@ const SalaryPage = () => {
                   Yangi miqdor:{" "}
                   <span className="font-medium">
                     {formatNumber(
-                      selectedEmployee.monthly_daily_payment?.amount
+                      selectedEmployee.monthly_daily_payment?.amount,
                     )}{" "}
                     so'm
                   </span>
@@ -1709,7 +1713,7 @@ const SalaryPage = () => {
                   >
                     {formatNumber(
                       selectedEmployee.monthly_daily_payment?.amount -
-                        calculateNewSeasonSalary(selectedEmployee)
+                        calculateNewSeasonSalary(selectedEmployee),
                     )}{" "}
                     so'm
                   </span>
@@ -1752,7 +1756,7 @@ const SalaryPage = () => {
                   <Button
                     onClick={() =>
                       handleEditAdditionalDailyPayment(
-                        selectedEmployee?.monthly_daily_payment?.id
+                        selectedEmployee?.monthly_daily_payment?.id,
                       )
                     }
                     disabled={!additionalAmount || sending}
