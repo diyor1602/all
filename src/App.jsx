@@ -26,7 +26,6 @@ import OrderManager from "./pages/OrderManager/OrderManager";
 import Supervisor from "./pages/Supervisor/Supervisor";
 import Transport from "./pages/Transport/Transport";
 import WarehouseManager from "./pages/WarehouseManager/WarehouseManager";
-import QualityControllerMaster from "./pages/QualityControllerMaster/QualityControllerMaster";
 import QualityController from "./pages/QualityController/QualityController";
 import PackageMaster from "./pages/PackageMaster/PackageMaster";
 import InternalAccountant from "./pages/InternalAccountant/InternalAccountant";
@@ -90,10 +89,6 @@ function App() {
           <Route path="/manufacturer/*" element={<Manufacturer />} />
           <Route path="/transport/*" element={<Transport />} />
           <Route path="/warehouseManager/*" element={<WarehouseManager />} />
-          <Route
-            path="/qualityControllerMaster/*"
-            element={<QualityControllerMaster />}
-          />
           <Route path="/qualityController/*" element={<QualityController />} />
           <Route path="/packageMaster/*" element={<PackageMaster />} />
           <Route

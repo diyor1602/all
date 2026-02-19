@@ -9,7 +9,6 @@ import OrderManagerLayout from "./DashboardLayouts/OrderManagerLayout";
 import SupervisorLayout from "./DashboardLayouts/SupervisorLayout";
 import TransportLayout from "./DashboardLayouts/TransportLayout";
 import WarehouseManagerLayout from "./DashboardLayouts/WarehouseManagerLayout";
-import QualityControllerMasterLayout from "./DashboardLayouts/QualityControllerMasterLayout";
 import QualityControllerLayout from "./DashboardLayouts/QualityControllerLayout";
 import PackageMasterLayout from "./DashboardLayouts/PackageMasterLayout";
 import InternalAccountantLayout from "./DashboardLayouts/InternalAccountantLayout";
@@ -33,7 +32,6 @@ const layouts = {
   orderManager: OrderManagerLayout,
   supervisor: SupervisorLayout,
   transport: TransportLayout,
-  qualityControllerMaster: QualityControllerMasterLayout,
   qualityController: QualityControllerLayout,
   packageMaster: PackageMasterLayout,
   internalAccountant: InternalAccountantLayout,
