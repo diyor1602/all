@@ -21,7 +21,6 @@ import {
   Palette,
   RotateCcw,
   BadgeCheck,
-  User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";

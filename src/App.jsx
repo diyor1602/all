@@ -30,6 +30,7 @@ import QualityController from "./pages/QualityController/QualityController";
 import PackageMaster from "./pages/PackageMaster/PackageMaster";
 import InternalAccountant from "./pages/InternalAccountant/InternalAccountant";
 import Supplier from "./pages/Supplier/Supplier";
+import MajorQualityController from "./pages/MajorQualityController/MajorQualityController";
 import Tv from "./pages/Tv/Tv";
 import Casher from "./pages/Casher/Casher";
 import ResultChecker from "./pages/ResultChecker/ResultChecker";
@@ -96,6 +97,10 @@ function App() {
             element={<InternalAccountant />}
           />
           <Route path="/supplier/*" element={<Supplier />} />
+          <Route
+            path="/majorQualityController/*"
+            element={<MajorQualityController />}
+          />
           <Route path="/tv/*" element={<Tv />} />
           <Route path="/casher/*" element={<Casher />} />
           <Route path="/resultChecker/*" element={<ResultChecker />} />
