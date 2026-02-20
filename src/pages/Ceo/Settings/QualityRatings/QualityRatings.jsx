@@ -125,129 +125,194 @@ const QualityRatings = () => {
     setIsImageDialogOpen(true);
   };
 
-  const closeImageDialog = () => {
-    setIsImageDialogOpen(false);
-    setSelectedImage(null);
-  };
-
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-4">
-        <Input
-          type="date"
-          value={startDate}
-          onChange={handleStartDateChange}
-          className="bg-white w-fit"
-        />
-        <Input
-          type="date"
-          value={endDate}
-          onChange={handleEndDateChange}
-          className="bg-white w-fit"
-        />
-        <Select
-          onValueChange={handleDepartmentChange}
-          value={selectedDepartment?.toString() || "all"}
-        >
-          <SelectTrigger className="bg-white w-48">
-            <SelectValue placeholder="Bo'limni tanlang" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Barcha bo'limlar</SelectItem>
-            {departments
-              ?.sort((a, b) => a.name.localeCompare(b.name))
-              .map((department) => (
-                <SelectItem
-                  key={department.id}
-                  value={department.id.toString()}
-                >
-                  {department.name}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
-        <Select
-          onValueChange={handleGroupChange}
-          value={selectedGroup?.toString() || "all"}
-          disabled={!selectedDepartment || groups.length === 0}
-        >
-          <SelectTrigger className="bg-white w-48">
-            <SelectValue placeholder="Guruhni tanlang" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Barcha guruhlar</SelectItem>
-            {groups
-              ?.sort((a, b) => a.name.localeCompare(b.name))
-              .map((group) => (
-                <SelectItem key={group.id} value={group.id.toString()}>
-                  {group.name}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+    <div className="space-y-4">
+      <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+        <div className="flex flex-wrap gap-3">
+          <div className="space-y-1">
+            <div className="text-xs text-gray-500">Boshlanish sana</div>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={handleStartDateChange}
+              className="bg-white w-fit"
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs text-gray-500">Tugash sana</div>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={handleEndDateChange}
+              className="bg-white w-fit"
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs text-gray-500">Bo'lim</div>
+            <Select
+              onValueChange={handleDepartmentChange}
+              value={selectedDepartment?.toString() || "all"}
+            >
+              <SelectTrigger className="bg-white w-full">
+                <SelectValue placeholder="Bo'limni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barcha bo'limlar</SelectItem>
+                {departments
+                  ?.sort((a, b) => a.name.localeCompare(b.name))
+                  .map((department) => (
+                    <SelectItem
+                      key={department.id}
+                      value={department.id.toString()}
+                    >
+                      {department.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs text-gray-500">Guruh</div>
+            <Select
+              onValueChange={handleGroupChange}
+              value={selectedGroup?.toString() || "all"}
+              disabled={!selectedDepartment || groups.length === 0}
+            >
+              <SelectTrigger className="bg-white w-full">
+                <SelectValue placeholder="Guruhni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barcha guruhlar</SelectItem>
+                {groups
+                  ?.sort((a, b) => a.name.localeCompare(b.name))
+                  .map((group) => (
+                    <SelectItem key={group.id} value={group.id.toString()}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
-      <div className="w-full overflow-auto mt-4">
-        <table className="w-full border-collapse border border-gray-300 bg-white">
-          <thead>
-            <tr>
-              <th className="border border-gray-300 px-4 py-2 bg-gray-50">№</th>
-              <th className="border border-gray-300 px-4 py-2 bg-gray-50">
-                Xodim
-              </th>
-              <th className="border border-gray-300 px-4 py-2 bg-gray-50">
-                Jami braklar
-              </th>
-              <th className="border border-gray-300 px-4 py-2 bg-gray-50">
-                To'g'rilanganlar
-              </th>
-              <th className="border border-gray-300 px-4 py-2 bg-gray-50">
-                Yakunlanmagan
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {data?.map((employee, index) => (
-              <tr key={index}>
-                <td className="border border-gray-300 px-4 py-2">
-                  {index + 1}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  <div className="flex items-center gap-2">
-                    {employee?.image ? (
-                      <img
-                        src={employee?.image}
-                        className="w-10 h-10 rounded-full object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() =>
-                          handleImageClick(
-                            employee.image,
-                            employee.employee_name,
-                          )
-                        }
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-                        {employee?.employee_name?.[0]}
-                      </div>
-                    )}
-                    <div>
-                      <div>{employee?.employee_name}</div>
-                      <div className="text-xs">{employee?.group?.name}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {employee?.fail_total}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {employee?.fail_approved}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {employee?.fail_pending}
-                </td>
+
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="w-full overflow-auto">
+          <table className="w-full min-w-[760px] border-collapse">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-gray-50">
+                <th className="border-b border-gray-200 px-4 py-3 text-left text-xs font-medium text-gray-600">
+                  №
+                </th>
+                <th className="border-b border-gray-200 px-4 py-3 text-left text-xs font-medium text-gray-600">
+                  Xodim
+                </th>
+                <th className="border-b border-gray-200 px-4 py-3 text-right text-xs font-medium text-gray-600">
+                  Jami braklar
+                </th>
+                <th className="border-b border-gray-200 px-4 py-3 text-right text-xs font-medium text-gray-600">
+                  To'g'rilanganlar
+                </th>
+                <th className="border-b border-gray-200 px-4 py-3 text-right text-xs font-medium text-gray-600">
+                  Yakunlanmagan
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-10 text-center text-sm text-gray-500"
+                  >
+                    Yuklanmoqda...
+                  </td>
+                </tr>
+              ) : !data?.length ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-10 text-center text-sm text-gray-500"
+                  >
+                    Ma'lumot topilmadi
+                  </td>
+                </tr>
+              ) : (
+                data?.map((employee, index) => (
+                  <tr
+                    key={index}
+                    className={
+                      index % 2 === 0
+                        ? "bg-white hover:bg-gray-50"
+                        : "bg-gray-50/40 hover:bg-gray-100/40"
+                    }
+                  >
+                    <td className="border-b border-gray-200 px-4 py-3 text-sm text-gray-700">
+                      {index + 1}
+                    </td>
+                    <td className="border-b border-gray-200 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {employee?.image ? (
+                          <img
+                            src={employee?.image}
+                            alt={employee?.employee_name}
+                            className="w-10 h-10 rounded-full object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity ring-1 ring-gray-200"
+                            onClick={() =>
+                              handleImageClick(
+                                employee.image,
+                                employee.employee_name,
+                              )
+                            }
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 ring-1 ring-gray-200">
+                            {employee?.employee_name?.[0]}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">
+                            {employee?.employee_name}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {employee?.group?.name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                      {employee?.fail_total}
+                    </td>
+                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                      {employee?.fail_approved}
+                    </td>
+                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                      {employee?.fail_pending}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            {!loading && data?.length > 0 && (
+              <tfoot>
+                <tr className="bg-gray-100/60 font-semibold">
+                  <td className="border-t border-gray-300 px-4 py-3 text-sm text-gray-700">
+                    Jami
+                  </td>
+                  <td className="border-t border-gray-300 px-4 py-3" />
+                  <td className="border-t border-gray-300 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                    {data.reduce((sum, e) => sum + (e?.fail_total || 0), 0)}
+                  </td>
+                  <td className="border-t border-gray-300 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                    {data.reduce((sum, e) => sum + (e?.fail_approved || 0), 0)}
+                  </td>
+                  <td className="border-t border-gray-300 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                    {data.reduce((sum, e) => sum + (e?.fail_pending || 0), 0)}
+                  </td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
       </div>
 
       <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
@@ -260,7 +325,7 @@ const QualityRatings = () => {
               <img
                 src={selectedImage.src}
                 alt={selectedImage.name}
-                className="max-w-full max-h-96 rounded-lg object-contain"
+                className="w-full max-h-[70vh] rounded-lg object-contain bg-gray-50"
               />
             )}
           </div>
