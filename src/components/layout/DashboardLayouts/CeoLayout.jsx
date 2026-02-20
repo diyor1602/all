@@ -37,7 +37,7 @@ const navigation = [
     name: "Talabnoma",
     href: "/ceo/requests",
     icon: ClipboardCheck,
-    onMobile: true,
+    onMobile: false,
   },
   {
     name: "Transfer",
