@@ -1072,7 +1072,8 @@ const OrderView = () => {
                                         )}
 
                                         <span className="text-gray-700 group-hover:text-gray-900 font-medium text-xs">
-                                          {searchResult?.name}
+                                          {searchResult?.name} <br />
+                                          {searchResult?.group?.name}
                                         </span>
                                       </div>
                                     </div>

@@ -187,8 +187,13 @@ const OrderView = () => {
         employee_id: item.employee,
       }));
 
+    const hasSelectedEmployee =
+      selectedEmployee !== null &&
+      selectedEmployee !== undefined &&
+      String(selectedEmployee).trim() !== "";
+
     const offenders =
-      selectedEmployee &&
+      hasSelectedEmployee &&
       !baseOffenders.some((o) => o.employee_id === selectedEmployee)
         ? [...baseOffenders, { employee_id: selectedEmployee }]
         : baseOffenders;
@@ -755,7 +760,7 @@ const OrderView = () => {
                     <div className="relative">
                       <Input
                         type="text"
-                        placeholder="Xodim ismini kiriting..."
+                        placeholder="Tikuvchi ismini kiriting..."
                         value={searchTerm}
                         onChange={(e) => {
                           setSearchTerm(e.target.value);
@@ -842,7 +847,8 @@ const OrderView = () => {
                                   )}
 
                                   <span className="text-gray-700 group-hover:text-gray-900 font-medium text-xs">
-                                    {searchResult?.name}
+                                    {searchResult?.name} <br />
+                                    {searchResult?.group?.name}
                                   </span>
                                 </div>
                               </div>
@@ -906,12 +912,7 @@ const OrderView = () => {
                 </Button>
                 <Button
                   className="py-7"
-                  disabled={
-                    sending ||
-                    !selectedImage ||
-                    !selectedEmployee ||
-                    hasEmptyEmployee
-                  }
+                  disabled={sending || !selectedImage || hasEmptyEmployee}
                   onClick={handleMinus}
                 >
                   {sending ? (
