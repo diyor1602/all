@@ -238,58 +238,60 @@ const QualityRatings = () => {
                   </td>
                 </tr>
               ) : (
-                data?.map((employee, index) => (
-                  <tr
-                    key={index}
-                    className={
-                      index % 2 === 0
-                        ? "bg-white hover:bg-gray-50"
-                        : "bg-gray-50/40 hover:bg-gray-100/40"
-                    }
-                  >
-                    <td className="border-b border-gray-200 px-4 py-3 text-sm text-gray-700">
-                      {index + 1}
-                    </td>
-                    <td className="border-b border-gray-200 px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {employee?.image ? (
-                          <img
-                            src={employee?.image}
-                            alt={employee?.employee_name}
-                            className="w-10 h-10 rounded-full object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity ring-1 ring-gray-200"
-                            onClick={() =>
-                              handleImageClick(
-                                employee.image,
-                                employee.employee_name,
-                              )
-                            }
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 ring-1 ring-gray-200">
-                            {employee?.employee_name?.[0]}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium text-gray-900 truncate">
-                            {employee?.employee_name}
-                          </div>
-                          <div className="text-xs text-gray-500 truncate">
-                            {employee?.group?.name}
+                data
+                  ?.sort((a, b) => b.fail_pending - a.fail_pending)
+                  .map((employee, index) => (
+                    <tr
+                      key={index}
+                      className={
+                        index % 2 === 0
+                          ? "bg-white hover:bg-gray-50"
+                          : "bg-gray-50/40 hover:bg-gray-100/40"
+                      }
+                    >
+                      <td className="border-b border-gray-200 px-4 py-3 text-sm text-gray-700">
+                        {index + 1}
+                      </td>
+                      <td className="border-b border-gray-200 px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          {employee?.image ? (
+                            <img
+                              src={employee?.image}
+                              alt={employee?.employee_name}
+                              className="w-10 h-10 rounded-full object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity ring-1 ring-gray-200"
+                              onClick={() =>
+                                handleImageClick(
+                                  employee.image,
+                                  employee.employee_name,
+                                )
+                              }
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 ring-1 ring-gray-200">
+                              {employee?.employee_name?.[0]}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {employee?.employee_name}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate">
+                              {employee?.group?.name}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
-                      {employee?.fail_total}
-                    </td>
-                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
-                      {employee?.fail_approved}
-                    </td>
-                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
-                      {employee?.fail_pending}
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                        {employee?.fail_total}
+                      </td>
+                      <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                        {employee?.fail_approved}
+                      </td>
+                      <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                        {employee?.fail_pending}
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
             {!loading && data?.length > 0 && (
