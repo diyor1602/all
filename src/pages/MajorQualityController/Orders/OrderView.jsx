@@ -18,18 +18,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 
-const engNames = {
-  astar: "intermediate",
-  tana: "body",
-  finish: "final",
-};
-
-const objKeyNames = {
-  astar: ["good_intermediate_count", "fail_intermediate_count"],
-  tana: ["good_body_count", "fail_body_count"],
-  finish: ["good_final_count", "fail_final_count"],
-};
-
 const namesObject = {
   astar: "OTK Astar",
   tana: "OTK Tana",
