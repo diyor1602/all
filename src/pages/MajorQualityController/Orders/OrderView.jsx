@@ -167,6 +167,47 @@ const OrderView = () => {
     };
   }, [isEditing]);
 
+  useEffect(() => {
+    const otkCategoryFromOrder =
+      order?.order_model?.submodels?.[0]?.tarification_categories?.find(
+        (cat) => cat?.name === "OTK",
+      );
+
+    if (!otkCategoryFromOrder) return;
+
+    setSelectedOtkTarifs((prev) => {
+      let next = prev;
+
+      Object.entries(namesObject).forEach(([key, tarifName]) => {
+        const logs =
+          otkCategoryFromOrder?.tarifications?.find((t) => t.name === tarifName)
+            ?.tarification_logs || [];
+        const unique = [
+          ...new Map(logs.map((log) => [log.employee?.id, log])).values(),
+        ];
+
+        if (
+          unique.length === 1 &&
+          prev?.[key]?.selected &&
+          !prev?.[key]?.employee
+        ) {
+          const id = String(unique?.[0]?.employee?.id ?? "");
+          if (!id) return;
+
+          next = {
+            ...next,
+            [key]: {
+              ...next[key],
+              employee: id,
+            },
+          };
+        }
+      });
+
+      return next;
+    });
+  }, [order]);
+
   const handleMinus = async () => {
     setSending(true);
     const baseOffenders = Object.values(selectedOtkTarifs)
@@ -690,56 +731,70 @@ const OrderView = () => {
 
                 {/* OTK tarification section */}
                 <div className="flex flex-col gap-3">
-                  {Object.entries(namesObject).map(([key, tarifName]) => (
-                    <div key={key} className="flex items-center gap-2">
-                      <Button
-                        variant={
-                          selectedOtkTarifs?.[key]?.selected
-                            ? "default"
-                            : "outline"
-                        }
-                        onClick={() =>
-                          setSelectedOtkTarifs((prev) => ({
-                            ...prev,
-                            [key]: {
-                              employee: null,
-                              selected: !prev[key]?.selected,
-                            },
-                          }))
-                        }
-                      >
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                      </Button>
+                  {Object.entries(namesObject).map(([key, tarifName]) => {
+                    const employees = getUniqueEmployees(tarifName);
+                    const isDisabled = employees.length === 0;
+                    const singleEmployeeId =
+                      employees.length === 1
+                        ? String(employees?.[0]?.employee?.id ?? "")
+                        : "";
 
-                      {selectedOtkTarifs?.[key]?.selected ? (
-                        <select
-                          value={selectedOtkTarifs?.[key]?.employee || ""}
-                          onChange={(e) =>
-                            setSelectedOtkTarifs((prev) => ({
-                              ...prev,
-                              [key]: {
-                                ...prev[key],
-                                employee: e.target.value,
-                              },
-                            }))
-                          }
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        >
-                          <option value="">Xodim tanlanmagan</option>
-                          {getUniqueEmployees(tarifName).map((log) => (
-                            <option
-                              key={log.employee?.id}
-                              value={log.employee?.id}
+                    return (
+                      <div key={key} className="flex items-center gap-2">
+                        <>
+                          <Button
+                            variant={
+                              selectedOtkTarifs?.[key]?.selected
+                                ? "default"
+                                : "outline"
+                            }
+                            disabled={isDisabled}
+                            onClick={() =>
+                              setSelectedOtkTarifs((prev) => ({
+                                ...prev,
+                                [key]: {
+                                  selected: !prev[key]?.selected,
+                                  employee: !prev[key]?.selected
+                                    ? singleEmployeeId || null
+                                    : null,
+                                },
+                              }))
+                            }
+                          >
+                            {key.charAt(0).toUpperCase() + key.slice(1)}
+                          </Button>
+
+                          {selectedOtkTarifs?.[key]?.selected ? (
+                            <select
+                              value={selectedOtkTarifs?.[key]?.employee || ""}
+                              onChange={(e) =>
+                                setSelectedOtkTarifs((prev) => ({
+                                  ...prev,
+                                  [key]: {
+                                    ...prev[key],
+                                    employee: e.target.value,
+                                  },
+                                }))
+                              }
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             >
-                              {log.employee?.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        "-"
-                      )}
-                    </div>
-                  ))}
+                              <option value="">Xodim tanlanmagan</option>
+                              {employees.map((log) => (
+                                <option
+                                  key={log.employee?.id}
+                                  value={log.employee?.id}
+                                >
+                                  {log.employee?.name}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            "-"
+                          )}
+                        </>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Employee Selection Section */}
