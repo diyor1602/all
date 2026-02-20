@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -34,6 +35,10 @@ const QualityRatings = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState({
+    key: "fail_pending",
+    direction: "desc",
+  });
 
   const getData = async (
     start = null,
@@ -125,6 +130,33 @@ const QualityRatings = () => {
     setIsImageDialogOpen(true);
   };
 
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return ArrowUpDown;
+    return sortConfig.direction === "asc" ? ArrowUp : ArrowDown;
+  };
+
+  const sortedData = Array.isArray(data)
+    ? [...data].sort((a, b) => {
+        const key = sortConfig.key;
+        const dir = sortConfig.direction === "asc" ? 1 : -1;
+        const av = Number(a?.[key] ?? 0);
+        const bv = Number(b?.[key] ?? 0);
+        return (av - bv) * dir;
+      })
+    : [];
+
   return (
     <div className="space-y-4">
       <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
@@ -208,13 +240,43 @@ const QualityRatings = () => {
                   Xodim
                 </th>
                 <th className="border-b border-gray-200 px-4 py-3 text-right text-xs font-medium text-gray-600">
-                  Jami braklar
+                  <button
+                    type="button"
+                    onClick={() => handleSort("fail_total")}
+                    className="w-full inline-flex items-center justify-end gap-1 select-none"
+                  >
+                    <span>Jami braklar</span>
+                    {(() => {
+                      const Icon = getSortIcon("fail_total");
+                      return <Icon className="h-3.5 w-3.5" />;
+                    })()}
+                  </button>
                 </th>
                 <th className="border-b border-gray-200 px-4 py-3 text-right text-xs font-medium text-gray-600">
-                  To'g'rilangan
+                  <button
+                    type="button"
+                    onClick={() => handleSort("fail_approved")}
+                    className="w-full inline-flex items-center justify-end gap-1 select-none"
+                  >
+                    <span>To'g'rilangan</span>
+                    {(() => {
+                      const Icon = getSortIcon("fail_approved");
+                      return <Icon className="h-3.5 w-3.5" />;
+                    })()}
+                  </button>
                 </th>
                 <th className="border-b border-gray-200 px-4 py-3 text-right text-xs font-medium text-gray-600">
-                  Yakunlanmagan
+                  <button
+                    type="button"
+                    onClick={() => handleSort("fail_pending")}
+                    className="w-full inline-flex items-center justify-end gap-1 select-none"
+                  >
+                    <span>Yakunlanmagan</span>
+                    {(() => {
+                      const Icon = getSortIcon("fail_pending");
+                      return <Icon className="h-3.5 w-3.5" />;
+                    })()}
+                  </button>
                 </th>
               </tr>
             </thead>
@@ -238,60 +300,58 @@ const QualityRatings = () => {
                   </td>
                 </tr>
               ) : (
-                data
-                  ?.sort((a, b) => b.fail_pending - a.fail_pending)
-                  .map((employee, index) => (
-                    <tr
-                      key={index}
-                      className={
-                        index % 2 === 0
-                          ? "bg-white hover:bg-gray-50"
-                          : "bg-gray-50/40 hover:bg-gray-100/40"
-                      }
-                    >
-                      <td className="border-b border-gray-200 px-4 py-3 text-sm text-gray-700">
-                        {index + 1}
-                      </td>
-                      <td className="border-b border-gray-200 px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          {employee?.image ? (
-                            <img
-                              src={employee?.image}
-                              alt={employee?.employee_name}
-                              className="w-10 h-10 rounded-full object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity ring-1 ring-gray-200"
-                              onClick={() =>
-                                handleImageClick(
-                                  employee.image,
-                                  employee.employee_name,
-                                )
-                              }
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 ring-1 ring-gray-200">
-                              {employee?.employee_name?.[0]}
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="text-sm font-medium text-gray-900 truncate">
-                              {employee?.employee_name}
-                            </div>
-                            <div className="text-xs text-gray-500 truncate">
-                              {employee?.group?.name}
-                            </div>
+                sortedData.map((employee, index) => (
+                  <tr
+                    key={index}
+                    className={
+                      index % 2 === 0
+                        ? "bg-white hover:bg-gray-50"
+                        : "bg-gray-50/40 hover:bg-gray-100/40"
+                    }
+                  >
+                    <td className="border-b border-gray-200 px-4 py-3 text-sm text-gray-700">
+                      {index + 1}
+                    </td>
+                    <td className="border-b border-gray-200 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {employee?.image ? (
+                          <img
+                            src={employee?.image}
+                            alt={employee?.employee_name}
+                            className="w-10 h-10 rounded-full object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity ring-1 ring-gray-200"
+                            onClick={() =>
+                              handleImageClick(
+                                employee.image,
+                                employee.employee_name,
+                              )
+                            }
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 ring-1 ring-gray-200">
+                            {employee?.employee_name?.[0]}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">
+                            {employee?.employee_name}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {employee?.group?.name}
                           </div>
                         </div>
-                      </td>
-                      <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
-                        {employee?.fail_total}
-                      </td>
-                      <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
-                        {employee?.fail_approved}
-                      </td>
-                      <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
-                        {employee?.fail_pending}
-                      </td>
-                    </tr>
-                  ))
+                      </div>
+                    </td>
+                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                      {employee?.fail_total}
+                    </td>
+                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                      {employee?.fail_approved}
+                    </td>
+                    <td className="border-b border-gray-200 px-4 py-3 text-right text-sm tabular-nums text-gray-700">
+                      {employee?.fail_pending}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
             {!loading && data?.length > 0 && (
