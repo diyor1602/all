@@ -39,14 +39,6 @@ const item = {
   show: { y: 0, opacity: 1 },
 };
 
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString("ru-RU", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
-
 const getStatusColor = (status) => {
   return statuses[status]?.color || "bg-gray-100 text-gray-800 border-gray-300";
 };
