@@ -1,13 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, AlertCircle, ChevronRight } from "lucide-react";
+import { Search, AlertCircle, Loader2 } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { statuses } from "@/lib/status";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -112,16 +109,8 @@ const OrderWithMinutes = () => {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
-        <div className="flex justify-between">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-md" />
-          ))}
-        </div>
+      <div className="flex w-full h-[90vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={33} />
       </div>
     );
   }
