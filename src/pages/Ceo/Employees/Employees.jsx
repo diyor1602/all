@@ -86,17 +86,16 @@ const Employees = () => {
     department_id: "",
     group_id: "",
     status: "working",
-    type: "aup",
+    type: "",
     search: "",
     page: 1,
   });
 
-  // SelectItem qiymatlari uchun useState
   const [selectValues, setSelectValues] = useState({
     department_id: "all",
     group_id: "all",
     status: "working",
-    type: "aup",
+    type: "",
   });
 
   const [groups, setGroups] = useState([]);
@@ -317,7 +316,7 @@ const Employees = () => {
         group_id: employees.data.find((emp) => emp.id === selectedEmployee.id)
           .group?.id,
         department_id: employees.data.find(
-          (emp) => emp.id === selectedEmployee.id
+          (emp) => emp.id === selectedEmployee.id,
         ).department?.id,
         status: employees.data.find((emp) => emp.id === selectedEmployee.id)
           .status,
@@ -396,7 +395,7 @@ const Employees = () => {
     if (employee.type === "aup") {
       if (
         !window.confirm(
-          "Xodim turini AUP dan Oddiyga o'zgartirishni tasdiqlaysizmi?"
+          "Xodim turini AUP dan Oddiyga o'zgartirishni tasdiqlaysizmi?",
         )
       )
         return;
@@ -409,7 +408,7 @@ const Employees = () => {
     } else {
       if (
         !window.confirm(
-          "Xodim turini Oddiydan AUPga o'zgartirishni tasdiqlaysizmi?"
+          "Xodim turini Oddiydan AUPga o'zgartirishni tasdiqlaysizmi?",
         )
       )
         return;
@@ -552,7 +551,7 @@ const Employees = () => {
                 <SelectItem key={dept.id} value={dept.id.toString()}>
                   {dept.name}
                 </SelectItem>
-              ))
+              )),
             )}
           </SelectContent>
         </Select>
@@ -710,7 +709,7 @@ const Employees = () => {
                 </TableCell>
                 <TableCell className="border">
                   {Number.parseFloat(employee?.salary || 0)?.toLocaleString(
-                    "ru-RU"
+                    "ru-RU",
                   )}
                 </TableCell>
                 <TableCell className="border">
@@ -728,7 +727,7 @@ const Employees = () => {
                 </TableCell>
                 <TableCell className="border">
                   {Number.parseFloat(employee?.bonus || 0)?.toLocaleString(
-                    "ru-RU"
+                    "ru-RU",
                   )}
                 </TableCell>
                 <TableCell className="border">
@@ -819,7 +818,7 @@ const Employees = () => {
                 }
 
                 return null;
-              }
+              },
             )}
 
             <PaginationItem>
