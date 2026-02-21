@@ -11,6 +11,7 @@ import {
   Trees,
   SunSnow,
   ChartArea,
+  Medal,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -18,6 +19,7 @@ import Coefficient from "./Coefficient/Coefficient";
 import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
 import QualityRatings from "./QualityRatings/QualityRatings";
+import Levels from "./Levels/Levels";
 
 const Settings = () => {
   return (
@@ -28,6 +30,7 @@ const Settings = () => {
       <Route path="salaryhistory" element={<SalaryHistory />} />
       <Route path="grouphistory" element={<GroupHistory />} />
       <Route path="qualityratings" element={<QualityRatings />} />
+      <Route path="levels" element={<Levels />} />
     </Routes>
   );
 };
@@ -93,6 +96,12 @@ const SettingsPage = () => {
       icon: ChartArea,
       link: "/ceo/settings/qualityratings",
       color: "bg-red-500",
+    },
+    {
+      name: "Reytinglar",
+      icon: Medal,
+      link: "/ceo/settings/levels",
+      color: "bg-yellow-500",
     },
   ];
 
