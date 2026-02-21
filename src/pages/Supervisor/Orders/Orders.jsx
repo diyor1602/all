@@ -200,7 +200,7 @@ const Orders = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       <div className="mb-6">
         <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <div className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -218,7 +218,7 @@ const Orders = () => {
             </Badge>
           </div>
 
-          <div className="flex flex-col gap-2 w-full md:flex-row md:w-auto">
+          <div className="flex flex-col gap-2 w-full md:flex-row md:w-auto flex-wrap">
             <div className="relative">
               <Search
                 className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
