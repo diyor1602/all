@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, AlertCircle, Loader2 } from "lucide-react";
+import { Search, AlertCircle, Loader2, Download } from "lucide-react";
+import ExcelJS from "exceljs";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { statuses } from "@/lib/status";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -30,6 +32,7 @@ const getStatusColor = (status) => {
 const OrderWithMinutes = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(
     localStorage.getItem("searchTerm") || "",
   );
@@ -114,6 +117,99 @@ const OrderWithMinutes = () => {
       </div>
     );
   }
+
+  const handleDownloadExcel = async () => {
+    if (filteredOrders.length === 0) {
+      toast({
+        title: "Xatolik",
+        description: "Yuklab olish uchun buyurtmalar topilmadi",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setDownloading(true);
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Buyurtmalar");
+
+      worksheet.columns = [
+        { header: "ID", key: "id", width: 10 },
+        { header: "Nomi", key: "name", width: 28 },
+        { header: "Model", key: "model", width: 22 },
+        { header: "Miqdor", key: "quantity", width: 12 },
+        { header: "Mavsum yili", key: "season_year", width: 14 },
+        { header: "Mavsum", key: "season_type", width: 12 },
+        { header: "Submodellar", key: "submodels", width: 40 },
+        { header: "Daqiqasi", key: "minute", width: 12 },
+        { header: "Umumiy daqiqa", key: "total_minute", width: 16 },
+        { header: "Holati", key: "status", width: 18 },
+        { header: "Izoh", key: "comment", width: 30 },
+      ];
+
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.views = [{ state: "frozen", ySplit: 1 }];
+
+      filteredOrders.forEach((order) => {
+        const submodels = order?.order_model?.submodels || [];
+        const submodelNames = submodels
+          .map((s) => s?.submodel?.name)
+          .filter(Boolean)
+          .join(", ");
+
+        const minute = Number(order?.order_model?.minute || 0);
+        const quantity = Number(order?.quantity || 0);
+
+        worksheet.addRow({
+          id: order?.id ?? "",
+          name: order?.name ?? "",
+          model: order?.order_model?.model?.name ?? "",
+          quantity,
+          season_year: order?.season_year ?? "",
+          season_type:
+            order?.season_type === "winter"
+              ? "Qish"
+              : order?.season_type === "summer"
+                ? "Bahor"
+                : "",
+          submodels: submodelNames,
+          minute,
+          total_minute: minute * quantity,
+          status: statuses[order?.status]?.text || order?.status || "",
+          comment: order?.comment ?? "",
+        });
+      });
+
+      worksheet.eachRow({ includeEmpty: false }, (row) => {
+        row.alignment = { vertical: "middle", wrapText: true };
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      const filename = `Buyurtmalar_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Excel yuklab olishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -223,6 +319,19 @@ const OrderWithMinutes = () => {
                 <SelectItem value="summer">Bahor</SelectItem>
               </SelectContent>
             </Select>
+
+            <Button
+              variant="default"
+              onClick={handleDownloadExcel}
+              disabled={downloading}
+            >
+              Yuklab olish
+              {downloading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Download />
+              )}
+            </Button>
           </div>
         </div>
       </div>
