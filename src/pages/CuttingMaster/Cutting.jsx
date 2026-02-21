@@ -100,7 +100,7 @@ const Cutting = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-purple-50 to-indigo-50 p-4 sm:p-6">
+      <div className="flex flex-col items-center justify-center h-screen">
         <div
           className="text-3xl font-extrabold text-purple-700 mb-8"
           aria-live="polite"
@@ -138,7 +138,7 @@ const Cutting = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50 p-3 sm:p-6"
+      className="min-h-screen"
     >
       <div className="max-w-6xl mx-auto">
         <motion.div
