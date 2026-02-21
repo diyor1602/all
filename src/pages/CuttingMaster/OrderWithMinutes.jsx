@@ -253,6 +253,7 @@ const OrderWithMinutes = () => {
                 <TableHead className="w-[160px]">Mavsum</TableHead>
                 <TableHead>Submodellar</TableHead>
                 <TableHead className="w-[140px]">Daqiqasi</TableHead>
+                <TableHead className="w-[140px]">Umumiy daqiqa</TableHead>
                 <TableHead className="w-[140px]">Holati</TableHead>
               </TableRow>
             </TableHeader>
@@ -313,7 +314,13 @@ const OrderWithMinutes = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {formatNumber(order?.order_model?.minute)}
+                      {formatNumber(order?.order_model?.minute, 0)}
+                    </TableCell>
+                    <TableCell>
+                      {formatNumber(
+                        order?.order_model?.minute * order.quantity,
+                        0,
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge
