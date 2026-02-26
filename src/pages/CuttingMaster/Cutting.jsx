@@ -15,7 +15,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Search,
   Package,
-  Calendar,
   MessageSquare,
   AlertCircle,
   Tag,
@@ -51,7 +50,7 @@ const Cutting = () => {
     try {
       const [cuttingResponse, activeResponse] = await Promise.all([
         api.get("/cuttingMaster/orders", {
-          params: { status: "cutting" },
+          // params: { status: "cutting" },
         }),
         api.get("/cuttingMaster/orders", {
           params: { status: "active" },
