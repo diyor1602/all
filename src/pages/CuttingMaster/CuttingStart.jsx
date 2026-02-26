@@ -37,6 +37,7 @@ const CuttingStart = () => {
   const [loading, setLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [cuttingCount, setCuttingCount] = useState("");
+  const [cuttingDate, setCuttingDate] = useState("");
 
   const [cuts, setCuts] = useState([]);
 
@@ -107,6 +108,7 @@ const CuttingStart = () => {
         params: {
           order_id: id,
           quantity: cuttingCount,
+          date: cuttingDate,
         },
         responseType: "blob",
       });
@@ -219,12 +221,12 @@ const CuttingStart = () => {
                 // Get unique sizes and colors
                 const sizes = [
                   ...new Set(
-                    order.order_model.sizes.map((size) => size.size?.name)
+                    order.order_model.sizes.map((size) => size.size?.name),
                   ),
                 ].sort((a, b) => a.localeCompare(b));
                 const colors = [
                   ...new Set(
-                    order.order_model.sizes.map((size) => size.color?.name)
+                    order.order_model.sizes.map((size) => size.color?.name),
                   ),
                 ].sort((a, b) => a.localeCompare(b));
 
@@ -246,7 +248,7 @@ const CuttingStart = () => {
                     total += quantity;
                     colTotals.set(
                       color,
-                      (colTotals.get(color) || 0) + quantity
+                      (colTotals.get(color) || 0) + quantity,
                     );
                   });
                   rowTotals.set(size, total);
@@ -254,7 +256,7 @@ const CuttingStart = () => {
 
                 const grandTotal = Array.from(rowTotals.values()).reduce(
                   (sum, val) => sum + val,
-                  0
+                  0,
                 );
 
                 return (
@@ -358,13 +360,29 @@ const CuttingStart = () => {
                 }}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="cutting_date" className="text-sm font-medium">
+                Kesish sanasi
+              </Label>
+              <Input
+                type="date"
+                value={cuttingDate}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(e) => setCuttingDate(e.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
         <CardFooter>
           <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
             <Button
               onClick={handleCutting}
-              disabled={isSending}
+              disabled={
+                isSending ||
+                !cuttingCount ||
+                !cuttingDate ||
+                cuttingDate > new Date().toISOString().split("T")[0]
+              }
               className="w-full sm:w-auto"
             >
               {isSending ? (
