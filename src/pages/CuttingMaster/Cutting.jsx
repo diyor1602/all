@@ -169,7 +169,6 @@ const Cutting = () => {
         <motion.div
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
           className="relative mb-6"
         >
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
