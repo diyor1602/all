@@ -38,7 +38,7 @@ const levelTheme = {
     border: "border-yellow-300",
     icon: "🥇",
     accent: "bg-yellow-500",
-    description: "+7% qo'shib beriladi",
+    description: "+8% qo'shib beriladi",
   },
   empty: {
     label: "Boshlang'ich",
