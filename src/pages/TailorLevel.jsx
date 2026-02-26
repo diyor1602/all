@@ -3,6 +3,7 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import {
   ChevronLeft,
   ChevronRight,
@@ -171,7 +172,7 @@ const TailorLevel = () => {
               </div>
               <p className="text-3xl font-black text-gray-800">
                 {data.summary?.money_sum
-                  ? `${formatNumber(data.summary.money_sum, 0)} so'm`
+                  ? `+ ${formatNumber(data.summary.money_sum, 0)} so'm`
                   : "0 so'm"}
               </p>
             </div>
@@ -182,6 +183,148 @@ const TailorLevel = () => {
           />
         </div>
       )}
+
+      {/* Progress */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="space-y-4">
+          {/* Next Level Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-gray-600">Keyingi bosqich</h3>
+            <div className="flex items-center gap-2">
+              <div className="text-xl">
+                {levelTheme[data?.progress?.next_level]?.icon || "🎯"}
+              </div>
+              <div className="text-lg">
+                {levelTheme[data?.progress?.next_level]?.label || "—"}
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium text-gray-500">
+                Progress
+              </span>
+              <span className="text-sm font-bold text-gray-800">
+                {data?.progress?.percent || 0}%
+              </span>
+            </div>
+            <Progress
+              value={data?.progress?.percent || 0}
+              className="h-3 [&>div]:bg-gradient-to-r [&>div]:from-blue-400 [&>div]:to-blue-600"
+            />
+          </div>
+
+          {/* Todo Item */}
+          {data?.progress?.todo && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <p className="text-xs font-medium text-amber-800">
+                {data.progress.todo}
+              </p>
+            </div>
+          )}
+
+          {/* Status Indicators */}
+          <div className="grid grid-cols-2 gap-3">
+            <div
+              className={`flex items-center gap-2 p-3 rounded-xl border ${
+                data?.progress?.qc?.ok
+                  ? "bg-green-50 border-green-200"
+                  : "bg-red-50 border-red-200"
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                  data?.progress?.qc?.ok ? "bg-green-500" : "bg-red-500"
+                }`}
+              >
+                {data?.progress?.qc?.ok ? (
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+              </div>
+              <span
+                className={`text-xs font-medium ${
+                  data?.progress?.qc?.ok ? "text-green-700" : "text-red-700"
+                }`}
+              >
+                Sifat bo'yicha
+              </span>
+            </div>
+
+            <div
+              className={`flex items-center gap-2 p-3 rounded-xl border ${
+                data?.progress?.attendance?.ok
+                  ? "bg-green-50 border-green-200"
+                  : "bg-red-50 border-red-200"
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                  data?.progress?.attendance?.ok ? "bg-green-500" : "bg-red-500"
+                }`}
+              >
+                {data?.progress?.attendance?.ok ? (
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+              </div>
+              <span
+                className={`text-xs font-medium ${
+                  data?.progress?.attendance?.ok
+                    ? "text-green-700"
+                    : "text-red-700"
+                }`}
+              >
+                Davomat bo'yicha
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* History List */}
       <div className="space-y-4">
