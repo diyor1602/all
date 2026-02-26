@@ -24,17 +24,20 @@ import {
   Clock,
   User,
   RulerIcon,
+  Calendar,
+  Snowflake,
+  Sun,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { statuses } from "@/lib/status";
-
-const formatDate = (date) => {
-  if (!date) return "Sana ko'rsatilmagan";
-  return `${date?.split(" ")?.[0]?.split("-")?.reverse()?.join(".")}, ${date
-    ?.split(" ")?.[1]
-    ?.slice(0, 5)}`;
-};
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Cutting = () => {
   const { toast } = useToast();
@@ -42,6 +45,8 @@ const Cutting = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filteredOrders, setFilteredOrders] = useState([]);
+  const [selectedSeasonYear, setSelectedSeasonYear] = useState("all");
+  const [selectedSeasonType, setSelectedSeasonType] = useState("all");
 
   const navigate = useNavigate();
 
@@ -90,8 +95,19 @@ const Cutting = () => {
           .toLowerCase()
           .includes(search.toLowerCase()),
     );
-    setFilteredOrders(filtered);
-  }, [search, orders]);
+
+    const seasonFiltered = filtered.filter((order) => {
+      const yearMatch =
+        selectedSeasonYear === "all" ||
+        order?.season_year?.toString() === selectedSeasonYear;
+      const typeMatch =
+        selectedSeasonType === "all" ||
+        order?.season_type === selectedSeasonType;
+      return yearMatch && typeMatch;
+    });
+
+    setFilteredOrders(seasonFiltered);
+  }, [search, orders, selectedSeasonYear, selectedSeasonType]);
 
   const totalQuantity = filteredOrders?.reduce(
     (total, order) => total + Number.parseInt(order?.quantity || 0),
@@ -185,6 +201,70 @@ const Cutting = () => {
           />
         </motion.div>
 
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mb-6 flex flex-col sm:flex-row gap-4"
+        >
+          <div className="flex-1">
+            <Select
+              value={selectedSeasonYear}
+              onValueChange={setSelectedSeasonYear}
+            >
+              <SelectTrigger className="bg-white shadow-md border-gray-200 focus:border-purple-500 focus:ring-purple-500">
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                  <SelectValue placeholder="Mavsum yili" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barchasi</SelectItem>
+                {[
+                  ...new Set(
+                    orders.map((order) => order?.season_year).filter(Boolean),
+                  ),
+                ]
+                  .sort((a, b) => b - a)
+                  .map((year) => (
+                    <SelectItem key={year} value={year?.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1">
+            <Select
+              value={selectedSeasonType}
+              onValueChange={setSelectedSeasonType}
+            >
+              <SelectTrigger className="bg-white shadow-md border-gray-200 focus:border-purple-500 focus:ring-purple-500">
+                <div className="flex items-center">
+                  <Tag className="h-4 w-4 mr-2 text-gray-500" />
+
+                  <SelectValue placeholder="Mavsum turi" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barchasi</SelectItem>
+                <SelectItem value="winter">
+                  <div className="flex items-center">
+                    <Snowflake className="h-4 w-4 mr-2 text-blue-500" />
+                    Qish
+                  </div>
+                </SelectItem>
+                <SelectItem value="summer">
+                  <div className="flex items-center">
+                    <Sun className="h-4 w-4 mr-2 text-orange-500" />
+                    Yoz
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </motion.div>
+
         <AnimatePresence>
           {filteredOrders.length === 0 ? (
             <motion.div
@@ -244,6 +324,30 @@ const Cutting = () => {
                               <ShoppingBag className="h-3 w-3 mr-1" />
                               {order?.quantity} ta
                             </Badge>
+                            {order?.season_year && (
+                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                                <Calendar className="h-3 w-3 mr-1" />
+                                {order?.season_year}
+                              </Badge>
+                            )}
+                            {order?.season_type && (
+                              <Badge
+                                className={
+                                  order?.season_type === "winter"
+                                    ? "bg-cyan-100 text-cyan-800 hover:bg-cyan-200"
+                                    : "bg-orange-100 text-orange-800 hover:bg-orange-200"
+                                }
+                              >
+                                {order?.season_type === "winter" ? (
+                                  <Snowflake className="h-3 w-3 mr-1" />
+                                ) : (
+                                  <Sun className="h-3 w-3 mr-1" />
+                                )}
+                                {order?.season_type === "winter"
+                                  ? "Qish"
+                                  : "Yoz"}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                         <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
