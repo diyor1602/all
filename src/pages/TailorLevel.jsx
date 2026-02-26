@@ -13,6 +13,7 @@ import {
   Check,
   X,
   TrendingUp,
+  Info,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -25,6 +26,8 @@ const levelTheme = {
     icon: "🥉",
     accent: "bg-orange-500",
     description: "+3% qo'shib beriladi",
+    more_details:
+      "Siz bu darajada bo'lgan vaqtingizdagi bajargan ishlariz uchun har biriga +3% qo'shib beriladi",
   },
   silver: {
     label: "Kumush",
@@ -34,6 +37,8 @@ const levelTheme = {
     icon: "🥈",
     accent: "bg-slate-400",
     description: "+5% qo'shib beriladi",
+    more_details:
+      "Siz bu darajada bo'lgan vaqtingizdagi bajargan ishlariz uchun har biriga +5% qo'shib beriladi",
   },
   gold: {
     label: "Oltin",
@@ -43,6 +48,8 @@ const levelTheme = {
     icon: "🥇",
     accent: "bg-yellow-500",
     description: "+8% qo'shib beriladi",
+    more_details:
+      "Siz bu darajada bo'lgan vaqtingizdagi bajargan ishlariz uchun har biriga +8% qo'shib beriladi",
   },
   empty: {
     label: "Boshlang'ich",
@@ -68,6 +75,7 @@ const TailorLevel = () => {
   const history = data.data?.employee_level_histories || [];
   const bonusHistory = data.data?.employee_money_logs || [];
   const [activeTab, setActiveTab] = useState("levels");
+  const [showDetails, setShowDetails] = useState(false);
 
   const getData = async () => {
     setLoading(true);
@@ -163,12 +171,18 @@ const TailorLevel = () => {
               {theme.label}
             </h2>
             {theme.description && (
-              <p className="text-sm font-semibold text-gray-600 mb-4">
-                {theme.description}
-              </p>
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-1 underline decoration-dotted underline-offset-2"
+                >
+                  {theme.description}
+                  <Info className="w-3 h-3 text-gray-400" />
+                </button>
+              </div>
             )}
 
-            <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 w-full shadow-inner border border-white">
+            <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 w-full shadow-inner border border-white mt-5">
               <div className="flex items-center justify-center gap-2 text-gray-500 mb-1">
                 <Wallet className="w-4 h-4" />
                 <span className="text-xs font-semibold uppercase tracking-wider">
@@ -186,6 +200,41 @@ const TailorLevel = () => {
           <div
             className={`absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-10 ${theme.accent}`}
           />
+
+          {/* Details Modal/Tooltip */}
+          {showDetails && theme.more_details && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-[2rem] z-20">
+              <div className="bg-white rounded-2xl p-6 mx-4 max-w-sm shadow-xl border border-gray-100">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-8 h-8 rounded-full ${theme.bg} flex items-center justify-center`}
+                    >
+                      <span className="text-lg">{theme.icon}</span>
+                    </div>
+                    <h4 className="font-bold text-gray-800">
+                      {theme.label} darajasi
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => setShowDetails(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {theme.more_details}
+                </p>
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-xl transition-colors"
+                >
+                  Tushunarli
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
