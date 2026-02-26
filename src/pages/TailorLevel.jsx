@@ -193,12 +193,21 @@ const TailorLevel = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-gray-600">Keyingi bosqich</h3>
             <div className="flex items-center gap-2">
-              <div className="text-xl">
-                {levelTheme[data?.progress?.next_level]?.icon || "🎯"}
-              </div>
-              <div className="text-lg">
-                {levelTheme[data?.progress?.next_level]?.label || "—"}
-              </div>
+              {loading ? (
+                <>
+                  <Skeleton className="w-6 h-6 rounded" />
+                  <Skeleton className="h-5 w-16" />
+                </>
+              ) : (
+                <>
+                  <div className="text-xl">
+                    {levelTheme[data?.progress?.next_level]?.icon || "🎯"}
+                  </div>
+                  <div className="text-lg">
+                    {levelTheme[data?.progress?.next_level]?.label || "—"}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -228,73 +237,96 @@ const TailorLevel = () => {
           )}
 
           {/* Status Indicators */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
-              className={`rounded-xl border p-4 transition-colors duration-200 ${
-                data?.progress?.qc?.ok
-                  ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
-                  : "bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
-              }`}
-            >
-              <div className="flex flex-col items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    data?.progress?.qc?.ok ? "bg-green-500" : "bg-red-500"
-                  }`}
-                >
-                  {data?.progress?.qc?.ok ? (
-                    <Check className="w-4 h-4 text-white" />
-                  ) : (
-                    <X className="w-4 h-4 text-white" />
-                  )}
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="rounded-xl border p-4 bg-gray-50 border-gray-200">
+                <div className="flex flex-col items-center gap-3">
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                  <div className="text-center">
+                    <Skeleton className="h-4 w-20" />
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p
-                    className={`text-sm font-semibold ${
-                      data?.progress?.qc?.ok ? "text-green-800" : "text-red-800"
-                    }`}
-                  >
-                    Sifat bo'yicha
-                  </p>
+              </div>
+              <div className="rounded-xl border p-4 bg-gray-50 border-gray-200">
+                <div className="flex flex-col items-center gap-3">
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                  <div className="text-center">
+                    <Skeleton className="h-4 w-20" />
+                  </div>
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                className={`rounded-xl border p-4 transition-colors duration-200 ${
+                  data?.progress?.qc?.ok
+                    ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                    : "bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      data?.progress?.qc?.ok ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  >
+                    {data?.progress?.qc?.ok ? (
+                      <Check className="w-4 h-4 text-white" />
+                    ) : (
+                      <X className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <p
+                      className={`text-sm font-semibold ${
+                        data?.progress?.qc?.ok
+                          ? "text-green-800"
+                          : "text-red-800"
+                      }`}
+                    >
+                      Sifat bo'yicha
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            <div
-              className={`rounded-xl border p-4 transition-colors duration-200 ${
-                data?.progress?.attendance?.ok
-                  ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
-                  : "bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
-              }`}
-            >
-              <div className="flex flex-col items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    data?.progress?.attendance?.ok
-                      ? "bg-green-500"
-                      : "bg-red-500"
-                  }`}
-                >
-                  {data?.progress?.attendance?.ok ? (
-                    <Check className="w-4 h-4 text-white" />
-                  ) : (
-                    <X className="w-4 h-4 text-white" />
-                  )}
-                </div>
-                <div className="text-center">
-                  <p
-                    className={`text-sm font-semibold ${
+              <div
+                className={`rounded-xl border p-4 transition-colors duration-200 ${
+                  data?.progress?.attendance?.ok
+                    ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                    : "bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       data?.progress?.attendance?.ok
-                        ? "text-green-800"
-                        : "text-red-800"
+                        ? "bg-green-500"
+                        : "bg-red-500"
                     }`}
                   >
-                    Davomat bo'yicha
-                  </p>
+                    {data?.progress?.attendance?.ok ? (
+                      <Check className="w-4 h-4 text-white" />
+                    ) : (
+                      <X className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <p
+                      className={`text-sm font-semibold ${
+                        data?.progress?.attendance?.ok
+                          ? "text-green-800"
+                          : "text-red-800"
+                      }`}
+                    >
+                      Davomat bo'yicha
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
