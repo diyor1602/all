@@ -12,6 +12,7 @@ import {
   Award,
   Check,
   X,
+  TrendingUp,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -65,6 +66,8 @@ const TailorLevel = () => {
   const currentLevel = data.employee?.current_level;
   const theme = levelTheme[currentLevel] || levelTheme.empty;
   const history = data.data?.employee_level_histories || [];
+  const bonusHistory = data.data?.employee_money_logs || [];
+  const [activeTab, setActiveTab] = useState("levels");
 
   const getData = async () => {
     setLoading(true);
@@ -330,62 +333,152 @@ const TailorLevel = () => {
         </div>
       </div>
 
-      {/* History List */}
+      {/* History Section with Tabs */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
+        {/* Tab Headers */}
+        <div className="flex items-center justify-center gap-2 px-1">
           <History className="w-4 h-4 text-gray-400" />
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-            Darajalar tarixi
+            Tarix
           </h3>
         </div>
 
+        {/* Tab Buttons */}
+        <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+          <button
+            onClick={() => setActiveTab("levels")}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              activeTab === "levels"
+                ? "bg-white text-gray-800 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Award className="w-4 h-4" />
+            Darajalar
+          </button>
+          <button
+            onClick={() => setActiveTab("bonuses")}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              activeTab === "bonuses"
+                ? "bg-white text-gray-800 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <TrendingUp className="w-4 h-4" />
+            Bonuslar
+          </button>
+        </div>
+
+        {/* Tab Content */}
         <div className="space-y-3">
-          {loading ? (
-            // Loading skeletons for history items
-            Array.from({ length: 3 }).map((_, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm"
-              >
-                <Skeleton className="w-12 h-12 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-32" />
-                </div>
-                <Skeleton className="w-2 h-2 rounded-full" />
-              </div>
-            ))
-          ) : history.length > 0 ? (
-            history.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm transition-transform active:scale-95"
-              >
-                <div className="text-3xl grayscale-[0.5] group-hover:grayscale-0">
-                  {levelTheme[item.level]?.icon || "🌱"}
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-gray-800 leading-tight">
-                    {levelTheme[item.level]?.label || item.level}
+          {activeTab === "levels" ? (
+            // Levels History Tab
+            <>
+              {loading ? (
+                // Loading skeletons for history items
+                Array.from({ length: 3 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm"
+                  >
+                    <Skeleton className="w-12 h-12 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                    <Skeleton className="w-2 h-2 rounded-full" />
+                  </div>
+                ))
+              ) : history.length > 0 ? (
+                history.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm transition-transform active:scale-95"
+                  >
+                    <div className="text-3xl grayscale-[0.5] group-hover:grayscale-0">
+                      {levelTheme[item.level]?.icon || "🌱"}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-800 leading-tight">
+                        {levelTheme[item.level]?.label || item.level}
+                      </p>
+                      <p className="text-[11px] text-gray-400 font-medium">
+                        {item.start_date?.split("-").reverse().join(".")} —{" "}
+                        {item.end_date?.split("-").reverse().join(".") ||
+                          "Hozirgacha"}
+                      </p>
+                    </div>
+                    <div
+                      className={`w-2 h-2 rounded-full ${levelTheme[item.level]?.accent || "bg-gray-200"}`}
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center py-12 bg-white rounded-[2rem] border border-dashed border-gray-200">
+                  <Award className="w-8 h-8 text-gray-200 mb-2" />
+                  <p className="text-gray-400 text-sm italic font-medium">
+                    Darajalar tarixi hali mavjud emas
                   </p>
-                  <p className="text-[11px] text-gray-400 font-medium">
-                    {item.start_date?.split("-").reverse().join(".")} —{" "}
-                    {item.end_date?.split("-").reverse().join(".") ||
-                      "Hozirgacha"}
-                  </p>
                 </div>
-                <div
-                  className={`w-2 h-2 rounded-full ${levelTheme[item.level]?.accent || "bg-gray-200"}`}
-                />
-              </div>
-            ))
+              )}
+            </>
           ) : (
-            <div className="flex flex-col items-center py-12 bg-white rounded-[2rem] border border-dashed border-gray-200">
-              <Award className="w-8 h-8 text-gray-200 mb-2" />
-              <p className="text-gray-400 text-sm italic font-medium">
-                Tarix hali mavjud emas
-              </p>
-            </div>
+            // Bonuses History Tab
+            <>
+              {loading ? (
+                // Loading skeletons for bonus items
+                Array.from({ length: 3 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm"
+                  >
+                    <Skeleton className="w-12 h-12 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                    <Skeleton className="w-16 h-6" />
+                  </div>
+                ))
+              ) : bonusHistory.length > 0 ? (
+                bonusHistory.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm transition-transform active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-800 leading-tight text-sm">
+                        {item.reason === "LEVEL_BONUS_SILVER"
+                          ? "Kumush darajasi bonusi"
+                          : item.reason === "LEVEL_BONUS_GOLD"
+                            ? "Oltin darajasi bonusi"
+                            : item.reason === "LEVEL_BONUS_BRONZE"
+                              ? "Bronza darajasi bonusi"
+                              : "Bonus"}
+                      </p>
+                      <p className="text-[11px] text-gray-400 font-medium">
+                        {item.date?.split("-").reverse().join(".")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-green-600">
+                        + {formatNumber(item.amount, 0)} so'm
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center py-12 bg-white rounded-[2rem] border border-dashed border-gray-200">
+                  <TrendingUp className="w-8 h-8 text-gray-200 mb-2" />
+                  <p className="text-gray-400 text-sm italic font-medium">
+                    Bonuslar tarixi hali mavjud emas
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
