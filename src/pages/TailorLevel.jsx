@@ -10,6 +10,8 @@ import {
   History,
   Wallet,
   Award,
+  Check,
+  X,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -226,101 +228,71 @@ const TailorLevel = () => {
           )}
 
           {/* Status Indicators */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div
-              className={`flex items-center gap-2 p-3 rounded-xl border ${
+              className={`rounded-xl border p-4 transition-colors duration-200 ${
                 data?.progress?.qc?.ok
-                  ? "bg-green-50 border-green-200"
-                  : "bg-red-50 border-red-200"
+                  ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                  : "bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
               }`}
             >
-              <div
-                className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                  data?.progress?.qc?.ok ? "bg-green-500" : "bg-red-500"
-                }`}
-              >
-                {data?.progress?.qc?.ok ? (
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    data?.progress?.qc?.ok ? "bg-green-500" : "bg-red-500"
+                  }`}
+                >
+                  {data?.progress?.qc?.ok ? (
+                    <Check className="w-4 h-4 text-white" />
+                  ) : (
+                    <X className="w-4 h-4 text-white" />
+                  )}
+                </div>
+                <div className="text-center">
+                  <p
+                    className={`text-sm font-semibold ${
+                      data?.progress?.qc?.ok ? "text-green-800" : "text-red-800"
+                    }`}
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
+                    Sifat bo'yicha
+                  </p>
+                </div>
               </div>
-              <span
-                className={`text-xs font-medium ${
-                  data?.progress?.qc?.ok ? "text-green-700" : "text-red-700"
-                }`}
-              >
-                Sifat bo'yicha
-              </span>
             </div>
 
             <div
-              className={`flex items-center gap-2 p-3 rounded-xl border ${
+              className={`rounded-xl border p-4 transition-colors duration-200 ${
                 data?.progress?.attendance?.ok
-                  ? "bg-green-50 border-green-200"
-                  : "bg-red-50 border-red-200"
+                  ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                  : "bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
               }`}
             >
-              <div
-                className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                  data?.progress?.attendance?.ok ? "bg-green-500" : "bg-red-500"
-                }`}
-              >
-                {data?.progress?.attendance?.ok ? (
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    data?.progress?.attendance?.ok
+                      ? "bg-green-500"
+                      : "bg-red-500"
+                  }`}
+                >
+                  {data?.progress?.attendance?.ok ? (
+                    <Check className="w-4 h-4 text-white" />
+                  ) : (
+                    <X className="w-4 h-4 text-white" />
+                  )}
+                </div>
+                <div className="text-center">
+                  <p
+                    className={`text-sm font-semibold ${
+                      data?.progress?.attendance?.ok
+                        ? "text-green-800"
+                        : "text-red-800"
+                    }`}
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
+                    Davomat bo'yicha
+                  </p>
+                </div>
               </div>
-              <span
-                className={`text-xs font-medium ${
-                  data?.progress?.attendance?.ok
-                    ? "text-green-700"
-                    : "text-red-700"
-                }`}
-              >
-                Davomat bo'yicha
-              </span>
             </div>
           </div>
         </div>

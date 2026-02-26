@@ -52,12 +52,13 @@ const Cutting = () => {
         api.get("/cuttingMaster/orders", {
           // params: { status: "cutting" },
         }),
-        api.get("/cuttingMaster/orders", {
-          params: { status: "active" },
-        }),
+        // api.get("/cuttingMaster/orders", {
+        //   params: { status: "active" },
+        // }),
       ]);
 
-      const allOrders = [...cuttingResponse.data, ...activeResponse.data];
+      // const allOrders = [...cuttingResponse.data, ...activeResponse.data];
+      const allOrders = [...cuttingResponse.data];
       setOrders(allOrders);
       setFilteredOrders(allOrders);
     } catch (error) {
@@ -202,13 +203,12 @@ const Cutting = () => {
             </motion.div>
           ) : (
             <Accordion type="single" collapsible className="space-y-4">
-              {filteredOrders.map((order, index) => (
+              {filteredOrders.map((order) => (
                 <motion.div
                   key={order.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.05 }}
                 >
                   <AccordionItem
                     value={order.id.toString()}
