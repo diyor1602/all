@@ -160,7 +160,8 @@ const TailorLevel = () => {
         </div>
       ) : (
         <div
-          className={`relative overflow-hidden rounded-[2rem] p-8 border-b-4 shadow-xl transition-all duration-500 bg-gradient-to-b ${theme.bg} ${theme.border}`}
+          className={`relative overflow-hidden rounded-[2rem] p-8 border-b-4 shadow-xl transition-all duration-500 bg-gradient-to-b ${theme.bg} ${theme.border} cursor-pointer`}
+          onClick={() => theme.more_details && setShowDetails(true)}
         >
           <div className="relative z-10 flex flex-col items-center text-center">
             <div className="text-7xl mb-4 drop-shadow-md">{theme.icon}</div>
@@ -173,7 +174,10 @@ const TailorLevel = () => {
             {theme.description && (
               <div className="flex items-center justify-center gap-2">
                 <button
-                  onClick={() => setShowDetails(!showDetails)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDetails(!showDetails);
+                  }}
                   className="text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-1 underline decoration-dotted underline-offset-2"
                 >
                   {theme.description}
@@ -203,7 +207,10 @@ const TailorLevel = () => {
 
           {/* Details Modal/Tooltip */}
           {showDetails && theme.more_details && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-[2rem] z-20">
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-[2rem] z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="bg-white rounded-2xl p-6 mx-4 max-w-sm shadow-xl border border-gray-100">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
