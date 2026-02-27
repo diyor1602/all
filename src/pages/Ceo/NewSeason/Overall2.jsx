@@ -112,6 +112,7 @@ const Overall2 = () => {
         const profit = order.revenue_uzs - totalExpenses;
 
         acc.quantity += order.quantity || 0;
+        acc.price += order.price_usd || 0;
         acc.revenue_uzs += order.revenue_uzs || 0;
         acc.sewing_budget += order.sewing_budget_allocated_uzs_direct || 0;
         acc.employee_expenses += allocations.employee_sum_allocated || 0;
@@ -124,6 +125,7 @@ const Overall2 = () => {
       },
       {
         quantity: 0,
+        price: 0,
         revenue_uzs: 0,
         sewing_budget: 0,
         employee_expenses: 0,
@@ -426,7 +428,7 @@ const Overall2 = () => {
                           {formatNumber(sums.quantity)} dona
                         </TableCell>
                         <TableCell className="text-xs font-bold text-slate-900 border-r border-slate-200 px-2 py-2">
-                          -
+                          {formatNumber(sums.price)} $
                         </TableCell>
                         <TableCell className="text-xs font-bold text-emerald-600 border-r border-slate-200 px-2 py-2">
                           {formatNumber(sums.revenue_uzs)}
