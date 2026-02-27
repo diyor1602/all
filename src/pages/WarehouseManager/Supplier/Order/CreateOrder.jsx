@@ -19,7 +19,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-import { Plus, Trash } from "lucide-react";
+import { ImageOff, Plus, Trash } from "lucide-react";
 
 const CreateOrder = () => {
   const { toast } = useToast();
@@ -333,7 +333,7 @@ const CreateOrder = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md">
+    <div className="p-4 bg-white rounded-lg shadow-md mb-20">
       <h1 className="text-2xl font-bold mb-6">
         Ta'minotchi uchun yangi buyurtma
       </h1>
@@ -455,13 +455,17 @@ const CreateOrder = () => {
                             </div>
                           </div>
 
-                          {item.image && (
+                          {item.image ? (
                             <div className="h-14 w-14 overflow-hidden rounded-md border bg-muted/20">
                               <img
                                 src={item.image}
                                 alt=""
                                 className="h-full w-full object-cover"
                               />
+                            </div>
+                          ) : (
+                            <div className="h-14 w-14 overflow-hidden rounded-md border bg-muted/20 flex items-center justify-center">
+                              <ImageOff className="h-5 w-5 text-muted-foreground" />
                             </div>
                           )}
                         </div>
@@ -470,36 +474,53 @@ const CreateOrder = () => {
                   </div>
                 )}
                 {item.item_id && (
-                  <div className="mt-3 rounded-md border bg-muted/30 p-3">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Kod:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.code}
-                        </span>
+                  <div className="mt-3 rounded-lg border bg-muted/20 p-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="grid grid-cols-1 gap-1.5 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Kod:</span>
+                          <span className="text-muted-foreground truncate">
+                            {item.code}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Rang:</span>
+                          <span className="text-muted-foreground truncate">
+                            {item.color || "-"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Lot:</span>
+                          <span className="text-muted-foreground truncate">
+                            {item.lot || "-"}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Rang:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.color || "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Lot:</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.lot || "-"}
-                        </span>
-                      </div>
-                      {item.image && (
-                        <img
-                          src={item.image}
-                          alt=""
-                          className="w-20 h-20 object-cover"
+
+                      {item.image ? (
+                        <button
+                          type="button"
+                          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-white shadow-sm transition hover:shadow-md"
                           onClick={() => {
                             setSelectedItem(item);
                             setImgDialogOpen(true);
                           }}
-                        />
+                        >
+                          <img
+                            src={item.image}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        </button>
+                      ) : (
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted/10">
+                          <div className="flex flex-col items-center gap-1">
+                            <ImageOff className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">
+                              Rasm yo'q
+                            </span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
