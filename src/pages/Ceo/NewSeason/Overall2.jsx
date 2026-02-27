@@ -368,7 +368,7 @@ const Overall2 = () => {
                             className="border-b border-slate-200"
                           >
                             <TableCell className="font-bold text-slate-700 text-xs border-r border-slate-200 px-2 py-2">
-                              #{order.order_name} {order.submodels[0]}
+                              {order.order_name} {order.submodels[0]}
                             </TableCell>
                             <TableCell className="text-xs border-r border-slate-200 px-2 py-2">
                               {formatNumber(order.quantity)} dona
