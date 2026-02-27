@@ -47,6 +47,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import formatNumber from "@/utils/formatNumber";
 
 const statuses = {
   new: { text: "Yangi", color: "bg-blue-500" },
@@ -431,7 +432,10 @@ const Supplier = () => {
                                     <TableRow>
                                       <TableHead>Mahsulot</TableHead>
                                       <TableHead>Kod</TableHead>
-                                      <TableHead>Miqdor</TableHead>
+                                      <TableHead>Aytilgan miqdor</TableHead>
+                                      <TableHead>
+                                        Olib kelingan miqdor
+                                      </TableHead>
                                       <TableHead>Narx</TableHead>
                                       <TableHead>Valyuta</TableHead>
                                     </TableRow>
@@ -468,10 +472,18 @@ const Supplier = () => {
                                           {item.item?.code || "-"}
                                         </TableCell>
                                         <TableCell>
-                                          {item.quantity}{" "}
+                                          {formatNumber(item.ordered_quantity)}{" "}
                                           {item.item?.unit?.name}
                                         </TableCell>
-                                        <TableCell>{item.price}</TableCell>
+                                        <TableCell>
+                                          {formatNumber(item.received_quantity)}{" "}
+                                          {item.item?.unit?.name}
+                                        </TableCell>
+                                        <TableCell>
+                                          {item?.received_price
+                                            ? formatNumber(item?.received_price)
+                                            : formatNumber(item.item?.price)}
+                                        </TableCell>
                                         <TableCell>
                                           {item.item?.currency?.name || "-"}
                                         </TableCell>
