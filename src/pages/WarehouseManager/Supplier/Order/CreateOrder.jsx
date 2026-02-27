@@ -32,6 +32,7 @@ const CreateOrder = () => {
   const itemRefs = useRef([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [imgDialogOpen, setImgDialogOpen] = useState(false);
+  const [types, setTypes] = useState([]);
 
   const [formData, setFormData] = useState({
     supplier_id: "",
@@ -39,6 +40,7 @@ const CreateOrder = () => {
     deadline: "",
     items: [
       {
+        type_id: "",
         item_id: "",
         item_name: "",
         quantity: "",
@@ -55,23 +57,19 @@ const CreateOrder = () => {
       setSuppliers(response.data);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to fetch suppliers",
+        title: "Xatolik",
+        description: "Ma'lumotlarni olishda xatolik yuz berdi.",
         variant: "destructive",
       });
     }
   };
 
-  const fetchItems = async (searchTerm = "") => {
-    if (!searchTerm.trim()) {
-      setItems([]);
-      return;
-    }
-
+  const fetchItems = async (searchTerm = "", typeId) => {
     try {
       const response = await api.get("/warehouseManager/items/search", {
         params: {
           search: searchTerm,
+          type_id: typeId,
         },
       });
 
@@ -86,8 +84,21 @@ const CreateOrder = () => {
       setItems(filteredItems);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to fetch items",
+        title: "Xatolik",
+        description: "Ma'lumotlarni olishda xatolik yuz berdi.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchTypes = async () => {
+    try {
+      const response = await api.get("/warehouseManager/types");
+      setTypes(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Ma'lumotlarni olishda xatolik yuz berdi.",
         variant: "destructive",
       });
     }
@@ -95,6 +106,7 @@ const CreateOrder = () => {
 
   useEffect(() => {
     fetchSuppliers();
+    fetchTypes();
   }, []);
 
   useEffect(() => {
@@ -182,6 +194,16 @@ const CreateOrder = () => {
   };
 
   const handleItemSearchChange = (value, index) => {
+    const typeId = formData.items?.[index]?.type_id;
+    if (!typeId) {
+      toast({
+        title: "Diqqat!",
+        description: "Avval turini tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newSearches = [...itemSearches];
     newSearches[index] = value;
     setItemSearches(newSearches);
@@ -190,7 +212,41 @@ const CreateOrder = () => {
     newShowResults[index] = true;
     setShowItemResults(newShowResults);
 
-    fetchItems(value);
+    fetchItems(value, typeId);
+  };
+
+  const handleItemTypeChange = (index, value) => {
+    setFormData((prev) => {
+      const newItems = [...prev.items];
+      newItems[index] = {
+        ...newItems[index],
+        type_id: value,
+        item_id: "",
+        item_name: "",
+        code: "",
+        color: "",
+        lot: "",
+        image: null,
+      };
+      return {
+        ...prev,
+        items: newItems,
+      };
+    });
+
+    setItems([]);
+
+    setItemSearches((prev) => {
+      const next = [...prev];
+      next[index] = "";
+      return next;
+    });
+
+    setShowItemResults((prev) => {
+      const next = [...prev];
+      next[index] = false;
+      return next;
+    });
   };
 
   const addItem = () => {
@@ -199,6 +255,7 @@ const CreateOrder = () => {
       items: [
         ...prev.items,
         {
+          type_id: "",
           item_id: "",
           item_name: "",
           quantity: "",
@@ -276,7 +333,7 @@ const CreateOrder = () => {
   };
 
   return (
-    <div className="p-4 md:max-w-4xl mx-auto bg-white rounded-lg shadow-md">
+    <div className="p-4 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-6">
         Ta'minotchi uchun yangi buyurtma
       </h1>
@@ -329,60 +386,91 @@ const CreateOrder = () => {
           />
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="space-y-4 rounded-lg border bg-muted/10 p-4">
+          <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Maxsulotlar</h2>
           </div>
 
           {formData.items.map((item, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg"
+              className="grid grid-cols-1 md:grid-cols-12 gap-4 rounded-lg border bg-white p-4 shadow-sm"
             >
               <div
-                className="relative"
+                className="relative md:col-span-8"
                 ref={(el) => (itemRefs.current[index] = el)}
               >
-                <Input
-                  type="text"
-                  placeholder="Maxsulotlar qidirish..."
-                  value={itemSearches[index]}
-                  onChange={(e) =>
-                    handleItemSearchChange(e.target.value, index)
-                  }
-                  className="bg-white"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Select
+                    value={item.type_id || ""}
+                    onValueChange={(value) =>
+                      handleItemTypeChange(index, value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Turini tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {types.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Input
+                    type="text"
+                    placeholder="Maxsulotlar qidirish..."
+                    value={itemSearches[index]}
+                    disabled={!item.type_id}
+                    onChange={(e) =>
+                      handleItemSearchChange(e.target.value, index)
+                    }
+                    className="bg-white"
+                  />
+                </div>
                 {showItemResults[index] && items.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                    <div className="max-h-48 overflow-auto">
+                  <div className="absolute z-20 w-full mt-2 overflow-hidden rounded-lg border bg-white shadow-xl">
+                    <div className="max-h-56 overflow-auto">
                       {items.map((item) => (
                         <div
                           key={item.id}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex flex-col gap-1"
+                          className="group flex gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/60"
                           onClick={() => handleItemSelect(index, item)}
                         >
-                          <span>{item.name}</span>
-                          <div className="text-sm text-muted-foreground flex items-center gap-1">
-                            <div>
-                              <div>Kod: {item.code}</div>
-                              <div>Rang: {item.color?.name || "-"}</div>
-                              <div>Lot: {item.lot}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium truncate">
+                              {item.name}
                             </div>
-                            {item.image && (
+                            <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 gap-x-3 gap-y-0.5">
+                              <div className="truncate">
+                                Turi: {item.type?.name}
+                              </div>
+                              <div className="truncate">Kod: {item.code}</div>
+                              <div className="truncate">
+                                Rang: {item.color?.name || "-"}
+                              </div>
+                              <div className="truncate">Lot: {item.lot}</div>
+                            </div>
+                          </div>
+
+                          {item.image && (
+                            <div className="h-14 w-14 overflow-hidden rounded-md border bg-muted/20">
                               <img
                                 src={item.image}
                                 alt=""
-                                className="w-20 h-20 object-cover"
+                                className="h-full w-full object-cover"
                               />
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
                 {item.item_id && (
-                  <div className="mt-2 p-2 border rounded-md bg-muted/30">
+                  <div className="mt-3 rounded-md border bg-muted/30 p-3">
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">Kod:</span>
@@ -425,24 +513,32 @@ const CreateOrder = () => {
                 onChange={(e) =>
                   handleItemChange(index, "quantity", e.target.value)
                 }
-                className="bg-white"
+                className="bg-white md:col-span-3"
               />
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-start justify-end md:col-span-1">
                 <Button
                   type="button"
                   variant="destructive"
                   onClick={() => removeItem(index)}
-                  className="ml-auto"
+                  className="h-9 w-9 p-0"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           ))}
-          <Button type="button" onClick={addItem} variant="outline">
-            <Plus /> Maxsulot qo'shish
-          </Button>
+
+          <div className="pt-1">
+            <Button
+              type="button"
+              onClick={addItem}
+              variant="outline"
+              className="w-full"
+            >
+              <Plus /> Maxsulot qo'shish
+            </Button>
+          </div>
         </div>
 
         <div className="flex justify-end items-center gap-2 flex-wrap">
