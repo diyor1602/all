@@ -20,6 +20,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import formatNumber from "@/utils/formatNumber";
+import { Link } from "react-router-dom";
 
 const deparmentKeywords = ["Kroy", "Крой"];
 
@@ -441,9 +442,12 @@ const Employees = () => {
                               </div>
                             )}
 
-                            <span className="font-medium text-slate-900 text-xs">
+                            <Link
+                              to={`/cuttingMaster/view-employee/${item?.employee?.id}`}
+                              className="font-medium text-slate-900 text-xs"
+                            >
                               {item?.employee?.name}
-                            </span>
+                            </Link>
                           </div>
                         </td>
                         <td className="py-2 px-2 text-right border border-slate-200">

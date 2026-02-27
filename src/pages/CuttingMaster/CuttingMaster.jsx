@@ -4,6 +4,7 @@ import Printing from "./Printing";
 import Orders from "./Orders";
 import CuttingStart from "./CuttingStart";
 import Employees from "./NewSeason/Employees";
+import ViewEmployee from "./NewSeason/ViewEmployee";
 import OrderWithMinutes from "./OrderWithMinutes";
 
 const CuttingMaster = () => {
@@ -14,6 +15,7 @@ const CuttingMaster = () => {
       <Route path="orders" element={<Orders />} />
       <Route path="start/:id" element={<CuttingStart />} />
       <Route path="employees" element={<Employees />} />
+      <Route path="view-employee/:id" element={<ViewEmployee />} />
       <Route path="order-with-minutes" element={<OrderWithMinutes />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
