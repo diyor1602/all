@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -68,6 +68,7 @@ const getTimeRemaining = (deadline) => {
 const OrderView = () => {
   const { id } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -235,10 +236,7 @@ const OrderView = () => {
     try {
       await api.post(`/supplier/submits/${id}`, formData);
       toast({ title: "Muvaffaqiyatli", description: "Ma'lumotlar saqlandi" });
-      setAddedItems([]);
-      setComment("");
-      setSelectedImage(null);
-      getOrder();
+      navigate("/supplier/orders");
     } catch {
       toast({
         variant: "destructive",
@@ -370,6 +368,7 @@ const OrderView = () => {
                         <h3 className="font-bold text-lg text-slate-900 leading-tight">
                           {product.name}
                         </h3>
+
                         {!isOriginal && (
                           <Button
                             variant="ghost"
@@ -381,9 +380,20 @@ const OrderView = () => {
                           </Button>
                         )}
                       </div>
+                      <div className="text-gray-600 text-sm">
+                        Buyurtma qilingan:{" "}
+                        <span className="font-bold">
+                          {formatNumber(item.ordered_quantity)}{" "}
+                          {product.unit.name}
+                        </span>
+                      </div>
                       <div className="grid grid-cols-2 gap-y-1 text-xs font-medium text-slate-500">
                         <span className="flex items-center gap-1">
                           <Hash size={12} /> {product.code}
+                        </span>
+                        <span>
+                          Narxi: {formatNumber(product.price)}{" "}
+                          {product.currency.name}
                         </span>
                         <span>Lot: {product.lot || "N/A"}</span>
                         <span>Rangi: {product.color?.name || "—"}</span>
@@ -393,7 +403,8 @@ const OrderView = () => {
                     <div className="grid grid-cols-2 gap-4 items-end">
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                          Olingan miqdor ({item.quantity})
+                          Olingan miqdor ({formatNumber(item.received_quantity)}{" "}
+                          {product.unit.name})
                         </label>
                         <Input
                           type="number"
@@ -417,7 +428,7 @@ const OrderView = () => {
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                          Jami narxi ({formatNumber(item.received_price)})
+                          Bir dona narxi ({formatNumber(item.received_price)})
                         </label>
                         <Input
                           type="number"

@@ -45,8 +45,8 @@ import {
 } from "@/components/ui/dialog";
 
 const statuses = {
-  pending: { text: "Kutilmoqda", color: "bg-yellow-500" },
-  executed: { text: "Jarayonda", color: "bg-green-500" },
+  pending: { text: "Yangi", color: "bg-blue-500" },
+  executed: { text: "Jarayonda", color: "bg-yellow-500" },
   completed: { text: "Bajarildi", color: "bg-green-500" },
 };
 

@@ -50,11 +50,9 @@ import {
 import formatNumber from "@/utils/formatNumber";
 
 const statuses = {
-  new: { text: "Yangi", color: "bg-blue-500" },
-  active: { text: "Aktiv", color: "bg-green-500" },
-  pending: { text: "Kutilmoqda", color: "bg-yellow-500" },
+  pending: { text: "Yangi", color: "bg-blue-500" },
+  executed: { text: "Jarayonda", color: "bg-yellow-500" },
   completed: { text: "Bajarildi", color: "bg-green-500" },
-  inactive: { text: "O'chirilgan", color: "bg-red-500" },
 };
 
 const Supplier = () => {
