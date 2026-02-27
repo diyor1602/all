@@ -258,7 +258,7 @@ const OrderView = () => {
       </div>
     );
 
-  if (order?.status !== "active")
+  if (order?.status !== "pending")
     return (
       <div className="h-screen flex items-center justify-center p-6 text-center">
         <Card className="max-w-md w-full p-8 space-y-4">

@@ -8,7 +8,6 @@ import {
   ChevronUp,
   Package,
   Loader2,
-  CircleCheckBig,
   Eye,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -43,16 +42,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 
 const statuses = {
-  new: { text: "Yangi", color: "bg-blue-500" },
-  active: { text: "Aktiv", color: "bg-green-500" },
   pending: { text: "Kutilmoqda", color: "bg-yellow-500" },
+  executed: { text: "Jarayonda", color: "bg-green-500" },
   completed: { text: "Bajarildi", color: "bg-green-500" },
-  inactive: { text: "O'chirilgan", color: "bg-red-500" },
 };
 
 const Orders = () => {
@@ -69,9 +64,12 @@ const Orders = () => {
   });
   const [expandedRows, setExpandedRows] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [receiveDialogOpen, setReceiveDialogOpen] = useState(false);
-  const [receiveId, setReceiveId] = useState(null);
-  const [isReceiving, setIsReceiving] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [imageDialogData, setImageDialogData] = useState({
+    src: "",
+    alt: "",
+    name: "",
+  });
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef();
   const lastIncomeElementRef = useCallback(
@@ -190,32 +188,6 @@ const Orders = () => {
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
-  };
-
-  const handleReceive = (id) => {
-    setReceiveDialogOpen(true);
-    setReceiveId(id);
-  };
-
-  const handleConfirmReceive = async () => {
-    setIsReceiving(true);
-    try {
-      await api.get(`/supplier/receive/${receiveId}`);
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Buyurtma qabul qilindi",
-      });
-      setReceiveDialogOpen(false);
-      fetchIncomes(1, filters);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Buyurtma qabul qilishda xatolik",
-        variant: "destructive",
-      });
-    } finally {
-      setIsReceiving(false);
-    }
   };
 
   return (
@@ -372,31 +344,16 @@ const Orders = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end items-center gap-2">
-                            {income?.status === "new" ? (
-                              <Button
-                                size="icon"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleReceive(income.id);
-                                }}
-                                className="flex items-center justify-center"
-                              >
-                                <CircleCheckBig size={20} />
-                              </Button>
-                            ) : income.status === "active" ? (
-                              <Button
-                                size="icon"
-                                asChild
-                                variant="outline"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Link to={`/supplier/orders/${income.id}`}>
-                                  <Eye size={20} className="text-blue-500" />
-                                </Link>
-                              </Button>
-                            ) : (
-                              "-"
-                            )}
+                            <Button
+                              size="icon"
+                              asChild
+                              variant="outline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Link to={`/supplier/orders/${income.id}`}>
+                                <Eye size={20} className="text-blue-500" />
+                              </Link>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -423,7 +380,36 @@ const Orders = () => {
                                       <TableRow key={item.id}>
                                         <TableCell className="flex items-center gap-2">
                                           {item.item?.image ? (
-                                            <div className="w-8 h-8 rounded overflow-hidden">
+                                            <div
+                                              className="w-8 h-8 rounded overflow-hidden cursor-pointer"
+                                              role="button"
+                                              tabIndex={0}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setImageDialogData({
+                                                  src: item.item.image,
+                                                  alt:
+                                                    item.item.name || "Image",
+                                                  name: item.item.name || "",
+                                                });
+                                                setImageDialogOpen(true);
+                                              }}
+                                              onKeyDown={(e) => {
+                                                if (
+                                                  e.key !== "Enter" &&
+                                                  e.key !== " "
+                                                )
+                                                  return;
+                                                e.stopPropagation();
+                                                setImageDialogData({
+                                                  src: item.item.image,
+                                                  alt:
+                                                    item.item.name || "Image",
+                                                  name: item.item.name || "",
+                                                });
+                                                setImageDialogOpen(true);
+                                              }}
+                                            >
                                               <img
                                                 src={item.item.image}
                                                 alt={item.item.name}
@@ -480,27 +466,26 @@ const Orders = () => {
           )}
         </CardContent>
       </Card>
-      <Dialog open={receiveDialogOpen} onOpenChange={setReceiveDialogOpen}>
-        <DialogContent>
+      <Dialog
+        open={imageDialogOpen}
+        onOpenChange={(open) => {
+          setImageDialogOpen(open);
+          if (!open) {
+            setImageDialogData({ src: "", alt: "", name: "" });
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Buyurtmani tasdiqlash</DialogTitle>
+            <DialogTitle>{imageDialogData.name || "Rasm"}</DialogTitle>
           </DialogHeader>
-          <DialogDescription>
-            {`${receiveId} - raqamli buyurtmani qabul qilishga rozimisiz?`}
-          </DialogDescription>
-          <DialogFooter>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setReceiveDialogOpen(false)}
-              >
-                Yo'q
-              </Button>
-              <Button onClick={handleConfirmReceive} disabled={isReceiving}>
-                {isReceiving ? "Tasdiqlanmoqda..." : "Tasdiqlash"}
-              </Button>
-            </div>
-          </DialogFooter>
+          <div className="w-full">
+            <img
+              src={imageDialogData.src}
+              alt={imageDialogData.alt}
+              className="w-full max-h-[70vh] object-contain rounded"
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import formatNumber from "@/utils/formatNumber";
 
 const ItemView = () => {
   const { toast } = useToast();
@@ -68,7 +69,7 @@ const ItemView = () => {
       }
 
       const response = await api.get(
-        `/warehouseManager/items?${params.toString()}`
+        `/warehouseManager/items?${params.toString()}`,
       );
 
       setTotalItems(response.data.total);
@@ -115,7 +116,7 @@ const ItemView = () => {
 
       if (node) observer.current.observe(node);
     },
-    [loading, hasMore]
+    [loading, hasMore],
   );
 
   const fetchTypes = async () => {
@@ -304,7 +305,7 @@ const ItemView = () => {
                           className="w-4 h-4 text-blue-600 hover:text-blue-800 cursor-pointer transition-colors duration-150"
                           onClick={() =>
                             navigate(
-                              `/warehouseManager/settings/items/show/${item?.id}`
+                              `/warehouseManager/settings/items/show/${item?.id}`,
                             )
                           }
                         />
@@ -312,7 +313,7 @@ const ItemView = () => {
                           className="w-4 h-4 text-orange-600 hover:text-orange-800 cursor-pointer transition-colors duration-150"
                           onClick={() =>
                             navigate(
-                              `/warehouseManager/settings/items/edit/${item?.id}`
+                              `/warehouseManager/settings/items/edit/${item?.id}`,
                             )
                           }
                         />
@@ -351,7 +352,7 @@ const ItemView = () => {
                       {item?.type?.name}
                     </td>
                     <td className="px-4 py-3 text-sm text-right text-gray-900 border-r border-gray-100 font-medium">
-                      {item?.price}
+                      {formatNumber(item?.price)}
                     </td>
                     <td className="px-4 py-3 text-sm text-center text-gray-900 border-r border-gray-100">
                       {item?.currency?.name}
