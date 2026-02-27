@@ -43,6 +43,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import formatNumber from "@/utils/formatNumber";
 
 const statuses = {
   pending: { text: "Yangi", color: "bg-blue-500" },
@@ -344,16 +345,20 @@ const Orders = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end items-center gap-2">
-                            <Button
-                              size="icon"
-                              asChild
-                              variant="outline"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Link to={`/supplier/orders/${income.id}`}>
-                                <Eye size={20} className="text-blue-500" />
-                              </Link>
-                            </Button>
+                            {income?.status === "pending" ? (
+                              <Button
+                                size="icon"
+                                asChild
+                                variant="outline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Link to={`/supplier/orders/${income.id}`}>
+                                  <Eye size={20} className="text-blue-500" />
+                                </Link>
+                              </Button>
+                            ) : (
+                              "-"
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -370,7 +375,10 @@ const Orders = () => {
                                     <TableRow>
                                       <TableHead>Mahsulot</TableHead>
                                       <TableHead>Kod</TableHead>
-                                      <TableHead>Miqdor</TableHead>
+                                      <TableHead>Aytilgan miqdor</TableHead>
+                                      <TableHead>
+                                        Olib kelingan miqdor
+                                      </TableHead>
                                       <TableHead>Narx</TableHead>
                                       <TableHead>Valyuta</TableHead>
                                     </TableRow>
@@ -427,10 +435,18 @@ const Orders = () => {
                                           {item.item?.code || "-"}
                                         </TableCell>
                                         <TableCell>
-                                          {item.quantity}{" "}
+                                          {formatNumber(item.ordered_quantity)}{" "}
                                           {item.item?.unit?.name}
                                         </TableCell>
-                                        <TableCell>{item.price}</TableCell>
+                                        <TableCell>
+                                          {formatNumber(item.received_quantity)}{" "}
+                                          {item.item?.unit?.name}
+                                        </TableCell>
+                                        <TableCell>
+                                          {item?.received_price
+                                            ? formatNumber(item?.received_price)
+                                            : formatNumber(item.item?.price)}
+                                        </TableCell>
                                         <TableCell>
                                           {item.item?.currency?.name || "-"}
                                         </TableCell>

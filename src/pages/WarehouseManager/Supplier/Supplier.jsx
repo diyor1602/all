@@ -10,7 +10,6 @@ import {
   Package,
   Loader2,
   Trash2,
-  Image,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
