@@ -29,18 +29,21 @@ const engNames = {
   astar: "intermediate",
   tana: "body",
   finish: "final",
+  kapishon: "hood",
 };
 
 const objKeyNames = {
   astar: ["good_intermediate_count", "fail_intermediate_count"],
   tana: ["good_body_count", "fail_body_count"],
   finish: ["good_final_count", "fail_final_count"],
+  kapishon: ["good_hood_count", "fail_hood_count"],
 };
 
 const namesObject = {
   astar: "OTK Astar",
   tana: "OTK Tana",
   finish: "OTK Finish",
+  kapishon: "OTK Kapishon",
 };
 
 const OrderView = () => {
@@ -532,25 +535,27 @@ const OrderView = () => {
                 <BadgeCheck className="w-5 h-5 mr-2 text-blue-500" />
                 OTK turini tanlang
               </h3>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center flex-wrap">
                 {[
                   {
                     key: "astar",
                     label: "Astar",
                     number: "1",
-                    color: "blue",
                   },
                   {
                     key: "tana",
                     label: "Tana",
                     number: "2",
-                    color: "green",
                   },
                   {
                     key: "finish",
                     label: "Finish",
                     number: "3",
-                    color: "purple",
+                  },
+                  {
+                    key: "kapishon",
+                    label: "Kapishon",
+                    number: "4",
                   },
                 ].map((item) => {
                   const tarif = getOtkTarif(item.key);

@@ -186,7 +186,7 @@ const Orders = () => {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between flex-wrap gap-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
                     {/* Intermediate Progress */}
                     <div className="flex flex-col items-center gap-2">
                       <CircularProgress
@@ -251,6 +251,28 @@ const Orders = () => {
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           {order?.good_final_count || 0}/{order.quantity}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hood Progress */}
+                    <div className="flex flex-col items-center gap-2">
+                      <CircularProgress
+                        value={
+                          order.quantity > 0
+                            ? ((order?.good_hood_count || 0) / order.quantity) *
+                              100
+                            : 0
+                        }
+                        size={55}
+                        strokeWidth={3}
+                      />
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Kapishon
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {order?.good_hood_count || 0}/{order.quantity}
                         </div>
                       </div>
                     </div>
