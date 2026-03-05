@@ -46,20 +46,7 @@ const OrderView = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSearchResult, setSelectedSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedOtkTarifs, setSelectedOtkTarifs] = useState({
-    astar: {
-      selected: false,
-      employee: null,
-    },
-    tana: {
-      selected: false,
-      employee: null,
-    },
-    finish: {
-      selected: false,
-      employee: null,
-    },
-  });
+  const [selectedOtkTarifs, setSelectedOtkTarifs] = useState({});
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -199,20 +186,7 @@ const OrderView = () => {
       setSelectedImage(null);
       setImagePreview(null);
       setSelectedEmployee("");
-      setSelectedOtkTarifs({
-        astar: {
-          selected: false,
-          employee: null,
-        },
-        tana: {
-          selected: false,
-          employee: null,
-        },
-        finish: {
-          selected: false,
-          employee: null,
-        },
-      });
+      setSelectedOtkTarifs({});
       setUseCamera(false);
       if (cameraStream) {
         cameraStream.getTracks().forEach((track) => track.stop());
