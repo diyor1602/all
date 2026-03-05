@@ -635,7 +635,7 @@ const OrderView = () => {
                               }
                             `}
                               >
-                                {item.summa.toLocaleString()} so'm
+                                {formatNumber(item.summa, 2)} so'm
                               </div>
                             )}
                           </div>
