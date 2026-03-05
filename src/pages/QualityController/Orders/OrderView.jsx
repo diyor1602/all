@@ -22,6 +22,7 @@ import {
   RotateCcw,
   BadgeCheck,
   Wallet,
+  Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -570,17 +571,7 @@ const OrderView = () => {
                             }}
                             className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md"
                           >
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
+                            <Check className="w-4 h-4 text-white" />
                           </motion.div>
                         )}
 
@@ -661,7 +652,7 @@ const OrderView = () => {
             transition={{ delay: 0.2 }}
             className="mt-8 py-8 bg-white rounded-2xl shadow-lg"
           >
-            <div className="grid grid-cols-2 gap-6 px-6">
+            <div className="grid grid-cols-2 gap-3 px-4">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -678,7 +669,7 @@ const OrderView = () => {
                   className="w-full h-32 sm:h-40 bg-green-50 hover:bg-green-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
                 >
                   <CheckCircle className="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" />
-                  <span className="text-4xl sm:text-5xl font-bold text-green-500">
+                  <span className="text-3xl sm:text-5xl font-bold text-green-500">
                     {order?.good_by_stage?.find(
                       (stage) =>
                         stage?.tarification?.id === selectedOtkType?.id,
@@ -708,7 +699,7 @@ const OrderView = () => {
                   className="w-full h-32 sm:h-40 bg-red-50 hover:bg-red-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
                 >
                   <XCircle className="w-8 h-8 text-red-500 group-hover:scale-110 transition-transform" />
-                  <span className="text-4xl sm:text-5xl font-bold text-red-500">
+                  <span className="text-3xl sm:text-5xl font-bold text-red-500">
                     {order?.fail_by_stage?.find(
                       (stage) =>
                         stage?.tarification?.id === selectedOtkType?.id,
