@@ -21,9 +21,11 @@ import {
   Palette,
   RotateCcw,
   BadgeCheck,
+  Wallet,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
+import formatNumber from "@/utils/formatNumber";
 
 const OrderView = () => {
   const { toast } = useToast();
@@ -427,6 +429,33 @@ const OrderView = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
+      {/* Earnings Display */}
+      {order?.auth_employee_earnings && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 shadow-md border border-emerald-100 mb-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-right">
+              <p className="text-xs text-gray-500">Bugun</p>
+              <p className="text-lg font-bold text-emerald-600">
+                {formatNumber(order.auth_employee_earnings.today_earned, 0)}{" "}
+                so'm
+              </p>
+            </div>
+            <div className="w-px h-8 bg-gray-300"></div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">Umumiy</p>
+              <p className="text-lg font-bold text-teal-600">
+                {formatNumber(order.auth_employee_earnings.total_earned, 0)}{" "}
+                so'm
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -438,10 +467,10 @@ const OrderView = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-semibold text-gray-800">
+              <div className="text-sm font-semibold text-gray-800">
                 {order?.name}
               </div>
-              <div className="font-semibold text-gray-800">
+              <div className="font-semibold text-gray-800 text-xs">
                 {order?.order_model?.sub_models[0]?.submodel?.name ||
                   "Buyurtma"}
               </div>
