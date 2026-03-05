@@ -230,7 +230,12 @@ const Levels = () => {
                 ) : (
                   filteredData
                     ?.sort((a, b) => {
-                      const levelOrder = { gold: 1, silver: 2, bronze: 3 };
+                      const levelOrder = {
+                        gold: 1,
+                        silver: 2,
+                        bronze: 3,
+                        null: 4,
+                      };
                       const aLevel = a.histories.find(
                         (h) => h.end_date === null,
                       )?.level;
