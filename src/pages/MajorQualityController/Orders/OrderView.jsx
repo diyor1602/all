@@ -18,12 +18,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 
-const namesObject = {
-  astar: "OTK Astar",
-  tana: "OTK Tana",
-  finish: "OTK Finish",
-};
-
 const OrderView = () => {
   const { toast } = useToast();
   const { id } = useParams();
@@ -166,47 +160,6 @@ const OrderView = () => {
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [isEditing]);
-
-  useEffect(() => {
-    const otkCategoryFromOrder =
-      order?.order_model?.submodels?.[0]?.tarification_categories?.find(
-        (cat) => cat?.name === "OTK",
-      );
-
-    if (!otkCategoryFromOrder) return;
-
-    setSelectedOtkTarifs((prev) => {
-      let next = prev;
-
-      Object.entries(namesObject).forEach(([key, tarifName]) => {
-        const logs =
-          otkCategoryFromOrder?.tarifications?.find((t) => t.name === tarifName)
-            ?.tarification_logs || [];
-        const unique = [
-          ...new Map(logs.map((log) => [log.employee?.id, log])).values(),
-        ];
-
-        if (
-          unique.length === 1 &&
-          prev?.[key]?.selected &&
-          !prev?.[key]?.employee
-        ) {
-          const id = String(unique?.[0]?.employee?.id ?? "");
-          if (!id) return;
-
-          next = {
-            ...next,
-            [key]: {
-              ...next[key],
-              employee: id,
-            },
-          };
-        }
-      });
-
-      return next;
-    });
-  }, [order]);
 
   const handleMinus = async () => {
     setSending(true);
@@ -731,70 +684,78 @@ const OrderView = () => {
 
                 {/* OTK tarification section */}
                 <div className="flex flex-col gap-3">
-                  {Object.entries(namesObject).map(([key, tarifName]) => {
-                    const employees = getUniqueEmployees(tarifName);
-                    const isDisabled = employees.length === 0;
-                    const singleEmployeeId =
-                      employees.length === 1
-                        ? String(employees?.[0]?.employee?.id ?? "")
-                        : "";
+                  {order?.order_model?.submodels[0]?.tarification_categories
+                    ?.find((cat) => {
+                      return cat?.name === "OTK";
+                    })
+                    ?.tarifications?.map((tarif, index) => {
+                      const employees = getUniqueEmployees(tarif?.name);
+                      const isDisabled = employees.length === 0;
+                      const singleEmployeeId =
+                        employees.length === 1
+                          ? String(employees?.[0]?.employee?.id ?? "")
+                          : "";
 
-                    return (
-                      <div key={key} className="flex items-center gap-2">
-                        <>
-                          <Button
-                            variant={
-                              selectedOtkTarifs?.[key]?.selected
-                                ? "default"
-                                : "outline"
-                            }
-                            disabled={isDisabled}
-                            onClick={() =>
-                              setSelectedOtkTarifs((prev) => ({
-                                ...prev,
-                                [key]: {
-                                  selected: !prev[key]?.selected,
-                                  employee: !prev[key]?.selected
-                                    ? singleEmployeeId || null
-                                    : null,
-                                },
-                              }))
-                            }
-                          >
-                            {key.charAt(0).toUpperCase() + key.slice(1)}
-                          </Button>
-
-                          {selectedOtkTarifs?.[key]?.selected ? (
-                            <select
-                              value={selectedOtkTarifs?.[key]?.employee || ""}
-                              onChange={(e) =>
+                      return (
+                        <div key={index} className="flex items-center gap-2">
+                          <>
+                            <Button
+                              variant={
+                                selectedOtkTarifs?.[tarif?.name]?.selected
+                                  ? "default"
+                                  : "outline"
+                              }
+                              disabled={isDisabled}
+                              onClick={() =>
                                 setSelectedOtkTarifs((prev) => ({
                                   ...prev,
-                                  [key]: {
-                                    ...prev[key],
-                                    employee: e.target.value,
+                                  [tarif?.name]: {
+                                    selected: !prev[tarif?.name]?.selected,
+                                    employee: !prev[tarif?.name]?.selected
+                                      ? singleEmployeeId || null
+                                      : null,
                                   },
                                 }))
                               }
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             >
-                              <option value="">Xodim tanlanmagan</option>
-                              {employees.map((log) => (
-                                <option
-                                  key={log.employee?.id}
-                                  value={log.employee?.id}
-                                >
-                                  {log.employee?.name}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            "-"
-                          )}
-                        </>
-                      </div>
-                    );
-                  })}
+                              {tarif?.name.charAt(0).toUpperCase() +
+                                tarif?.name.slice(1)}
+                            </Button>
+
+                            {selectedOtkTarifs?.[tarif?.name]?.selected ? (
+                              <select
+                                value={
+                                  selectedOtkTarifs?.[tarif?.name]?.employee ||
+                                  ""
+                                }
+                                onChange={(e) =>
+                                  setSelectedOtkTarifs((prev) => ({
+                                    ...prev,
+                                    [tarif?.name]: {
+                                      ...prev[tarif?.name],
+                                      employee: e.target.value,
+                                    },
+                                  }))
+                                }
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              >
+                                <option value="">Xodim tanlanmagan</option>
+                                {employees.map((log) => (
+                                  <option
+                                    key={log.employee?.id}
+                                    value={log.employee?.id}
+                                  >
+                                    {log.employee?.name}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              "-"
+                            )}
+                          </>
+                        </div>
+                      );
+                    })}
                 </div>
 
                 {/* Employee Selection Section */}
@@ -803,7 +764,7 @@ const OrderView = () => {
                     <div className="relative">
                       <Input
                         type="text"
-                        placeholder="Tikuvchi ismini kiriting..."
+                        placeholder="Xodim ismini kiriting..."
                         value={searchTerm}
                         onChange={(e) => {
                           setSearchTerm(e.target.value);

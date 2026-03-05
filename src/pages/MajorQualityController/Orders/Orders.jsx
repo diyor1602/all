@@ -64,7 +64,7 @@ const Orders = () => {
     .sort((a, b) => {
       const getProgress = (order) => {
         return order.quantity > 0
-          ? (order.good_final_count / order.quantity) * 100
+          ? (order.good_count / order.quantity) * 100
           : 0;
       };
 
@@ -186,75 +186,34 @@ const Orders = () => {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                    {/* Intermediate Progress */}
-                    <div className="flex flex-col items-center gap-2">
-                      <CircularProgress
-                        value={
-                          order.quantity > 0
-                            ? ((order?.good_intermediate_count || 0) /
-                                order.quantity) *
-                              100
-                            : 0
-                        }
-                        size={55}
-                        strokeWidth={3}
-                      />
-                      <div className="text-center">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Astar
+                  {order?.good_by_stage?.length > 0 && (
+                    <div className="flex items-center justify-between flex-wrap gap-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      {order?.good_by_stage?.map((stage, index) => (
+                        <div
+                          className="flex flex-col items-center gap-2"
+                          key={index}
+                        >
+                          <CircularProgress
+                            value={
+                              order.quantity > 0
+                                ? ((stage?.count || 0) / order.quantity) * 100
+                                : 0
+                            }
+                            size={55}
+                            strokeWidth={3}
+                          />
+                          <div className="text-center">
+                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {stage?.tarification?.name}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {stage?.count || 0}/{order.quantity}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {order?.good_intermediate_count || 0}/{order.quantity}
-                        </div>
-                      </div>
+                      ))}
                     </div>
-
-                    {/* Body Progress */}
-                    <div className="flex flex-col items-center gap-2">
-                      <CircularProgress
-                        value={
-                          order.quantity > 0
-                            ? ((order?.good_body_count || 0) / order.quantity) *
-                              100
-                            : 0
-                        }
-                        size={55}
-                        strokeWidth={3}
-                      />
-                      <div className="text-center">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Tana
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {order?.good_body_count || 0}/{order.quantity}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Final Progress */}
-                    <div className="flex flex-col items-center gap-2">
-                      <CircularProgress
-                        value={
-                          order.quantity > 0
-                            ? ((order?.good_final_count || 0) /
-                                order.quantity) *
-                              100
-                            : 0
-                        }
-                        size={55}
-                        strokeWidth={3}
-                      />
-                      <div className="text-center">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Finish
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {order?.good_final_count || 0}/{order.quantity}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="pt-2">
