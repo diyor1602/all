@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Blocks,
+  DraftingCompass,
   HeartCrack,
   History,
   Mailbox,
@@ -16,6 +17,7 @@ import AddGroup from "./Departments/AddGroup";
 import EditGroup from "./Departments/EditGroup";
 import TodayAbsence from "../Stats/TodayAbsence";
 import ExplanationLetters from "./ExplanationLetters/ExplanationLetters";
+import ApproveLevel from "./ApproveLevel/ApproveLevel";
 
 const Settings = () => {
   return (
@@ -28,6 +30,7 @@ const Settings = () => {
       <Route path="edit-group/:id" element={<EditGroup />} />
       <Route path="today-absence" element={<TodayAbsence />} />
       <Route path="explanation-letters" element={<ExplanationLetters />} />
+      <Route path="approve-level" element={<ApproveLevel />} />
     </Routes>
   );
 };
@@ -69,6 +72,12 @@ const SettingsPage = () => {
       icon: Mailbox,
       link: "/superhr/settings/explanation-letters",
       color: "bg-purple-500",
+    },
+    {
+      name: "Tikuvchilar reytingi",
+      icon: DraftingCompass,
+      link: "/superhr/settings/approve-level",
+      color: "bg-indigo-500",
     },
   ];
 
