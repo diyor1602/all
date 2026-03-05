@@ -432,47 +432,28 @@ const OrderView = () => {
       {/* Earnings Display */}
       {order?.auth_employee_earnings && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl p-4 mb-4 shadow-lg"
         >
-          {/* Subtle Decorative Background Element */}
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50" />
-
-          <div className="flex items-center justify-around relative z-10">
-            {/* Today's Earnings */}
-            <div className="flex flex-col items-center space-y-1">
-              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                Bugun
-              </span>
-              <div className="text-center">
-                <span className="text-2xl font-black text-slate-800 tracking-tight">
+          <div className="flex justify-between items-center text-white">
+            <div className="flex-1">
+              <p className="text-xs font-medium opacity-90 mb-1">Bugun</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold">
                   {formatNumber(order.auth_employee_earnings.today_earned, 0)}
                 </span>
-                <span className="ml-1 text-xs font-medium text-slate-400">
-                  so'm
-                </span>
+                <span className="text-sm font-medium opacity-90">so'm</span>
               </div>
             </div>
-
-            {/* Elegant Vertical Divider */}
-            <div className="h-10 w-[1px] bg-gradient-to-b from-transparent via-slate-200 to-transparent" />
-
-            {/* Total Earnings */}
-            <div className="flex flex-col items-center space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Umumiy
-              </span>
-              <div className="text-center">
-                <span className="text-2xl font-black text-slate-800 tracking-tight">
-                  {formatNumber(order.auth_employee_earnings.total_earned, 0)}
-                </span>
-                <span className="ml-1 text-xs font-medium text-slate-400">
-                  so'm
-                </span>
-              </div>
+            <div className="text-right opacity-75">
+              <p className="text-xs font-medium opacity-80 mb-1">
+                Umumiy balans
+              </p>
+              <p className="text-sm font-medium">
+                {formatNumber(order.auth_employee_earnings.total_earned, 0)}{" "}
+                so'm
+              </p>
             </div>
           </div>
         </motion.div>
