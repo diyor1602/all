@@ -25,27 +25,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 
-const engNames = {
-  astar: "intermediate",
-  tana: "body",
-  finish: "final",
-  kapishon: "hood",
-};
-
-const objKeyNames = {
-  astar: ["good_intermediate_count", "fail_intermediate_count"],
-  tana: ["good_body_count", "fail_body_count"],
-  finish: ["good_final_count", "fail_final_count"],
-  kapishon: ["good_hood_count", "fail_hood_count"],
-};
-
-const namesObject = {
-  astar: "OTK Astar",
-  tana: "OTK Tana",
-  finish: "OTK Finish",
-  kapishon: "OTK Kapishon",
-};
-
 const OrderView = () => {
   const { toast } = useToast();
   const { id } = useParams();
@@ -77,9 +56,14 @@ const OrderView = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSearchResult, setSelectedSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedOtkType, setSelectedOtkType] = useState(
-    localStorage.getItem("selectedOtkType") || null,
-  );
+  const [selectedOtkType, setSelectedOtkType] = useState(() => {
+    try {
+      const stored = localStorage.getItem("selectedOtkTarif");
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      return null;
+    }
+  });
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -187,8 +171,7 @@ const OrderView = () => {
       await api.post("/qualityController/qualityControl", {
         order_id: id,
         type: "good",
-        tarification_id: getOtkTarif(selectedOtkType)?.id,
-        inspection_stage: engNames[selectedOtkType],
+        stage_tarification_id: selectedOtkType?.id,
       });
       setPlusDialogOpen(false);
       toast({
@@ -213,13 +196,13 @@ const OrderView = () => {
     formData.append("order_id", id);
     formData.append("type", "fail");
     formData.append("image", selectedImage);
-    formData.append("tarification_id", selectedTarif);
+    formData.append("stage_tarification_id", selectedOtkType?.id);
+    formData.append("fail_tarification_id", selectedTarif);
     formData.append(
       "employee_id",
       selectedEmployee || selectedSearchResult?.id || "",
     );
     formData.append("description", description);
-    formData.append("inspection_stage", engNames[selectedOtkType]);
 
     try {
       await api.post("/qualityController/qualityControl", formData);
@@ -434,24 +417,6 @@ const OrderView = () => {
     });
   };
 
-  const getOtkTarif = (key) => {
-    const actualName = namesObject[key];
-    if (!actualName) return null;
-
-    const submodel = order?.order_model?.submodels?.[0];
-    if (!submodel) return null;
-
-    const otkCategory = submodel.tarification_categories?.find(
-      (category) => category.name === "OTK",
-    );
-
-    if (!otkCategory) return null;
-
-    return otkCategory.tarifications?.find(
-      (tarif) => tarif.name === actualName,
-    );
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -536,41 +501,24 @@ const OrderView = () => {
                 OTK turini tanlang
               </h3>
               <div className="flex gap-2 items-center flex-wrap">
-                {[
-                  {
-                    key: "astar",
-                    label: "Astar",
-                    number: "1",
-                  },
-                  {
-                    key: "tana",
-                    label: "Tana",
-                    number: "2",
-                  },
-                  {
-                    key: "finish",
-                    label: "Finish",
-                    number: "3",
-                  },
-                  {
-                    key: "kapishon",
-                    label: "Kapishon",
-                    number: "4",
-                  },
-                ].map((item) => {
-                  const tarif = getOtkTarif(item.key);
-                  const isSelected = selectedOtkType === item.key;
+                {order?.order_model?.submodels[0]?.tarification_categories
+                  ?.find((category) => category.name === "OTK")
+                  ?.tarifications?.map((item, index) => {
+                    const isSelected = selectedOtkType?.id === item.id;
 
-                  return (
-                    <motion.div
-                      key={item.key}
-                      whileHover={{ scale: isSelected ? 1.05 : 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setSelectedOtkType(item.key);
-                        localStorage.setItem("selectedOtkType", item.key);
-                      }}
-                      className={`
+                    return (
+                      <motion.div
+                        key={index}
+                        whileHover={{ scale: isSelected ? 1.05 : 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setSelectedOtkType(item);
+                          localStorage.setItem(
+                            "selectedOtkTarif",
+                            JSON.stringify(item),
+                          );
+                        }}
+                        className={`
                         flex-1 cursor-pointer rounded-xl p-3 border-2 transition-all duration-300 relative
                         ${
                           isSelected
@@ -578,43 +526,43 @@ const OrderView = () => {
                             : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
                         }
                       `}
-                    >
-                      {isSelected && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 500,
-                            damping: 20,
-                          }}
-                          className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md"
-                        >
-                          <svg
-                            className="w-4 h-4 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
+                      >
+                        {isSelected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 20,
+                            }}
+                            className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md"
                           >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </motion.div>
-                      )}
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </motion.div>
+                        )}
 
-                      <div className="flex flex-col items-center text-center space-y-1">
-                        <motion.div
-                          animate={{
-                            scale: isSelected ? [1, 1.1, 1] : 1,
-                          }}
-                          transition={{
-                            duration: 0.3,
-                            repeat: isSelected ? Infinity : 0,
-                            repeatDelay: 2,
-                          }}
-                          className={`
+                        <div className="flex flex-col items-center text-center space-y-1">
+                          <motion.div
+                            animate={{
+                              scale: isSelected ? [1, 1.1, 1] : 1,
+                            }}
+                            transition={{
+                              duration: 0.3,
+                              repeat: isSelected ? Infinity : 0,
+                              repeatDelay: 2,
+                            }}
+                            className={`
                             text-lg font-bold w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all
                             ${
                               isSelected
@@ -622,13 +570,13 @@ const OrderView = () => {
                                 : "border-gray-300 text-gray-500"
                             }
                           `}
-                        >
-                          {item.number}
-                        </motion.div>
+                          >
+                            {index + 1}
+                          </motion.div>
 
-                        <div className="space-y-0.5">
-                          <h4
-                            className={`
+                          <div className="space-y-0.5">
+                            <h4
+                              className={`
                             text-xs font-semibold transition-all
                             ${
                               isSelected
@@ -636,13 +584,13 @@ const OrderView = () => {
                                 : "text-gray-600"
                             }
                           `}
-                          >
-                            {item.label}
-                          </h4>
+                            >
+                              {item.name}
+                            </h4>
 
-                          {tarif?.summa && (
-                            <div
-                              className={`
+                            {item?.summa && (
+                              <div
+                                className={`
                               text-xs font-medium transition-all
                               ${
                                 isSelected
@@ -650,15 +598,15 @@ const OrderView = () => {
                                   : "text-gray-400"
                               }
                             `}
-                            >
-                              {tarif.summa.toLocaleString()} so'm
-                            </div>
-                          )}
+                              >
+                                {item.summa.toLocaleString()} so'm
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                      </motion.div>
+                    );
+                  })}
               </div>
 
               {!selectedOtkType && (
@@ -699,9 +647,10 @@ const OrderView = () => {
                 >
                   <CheckCircle className="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" />
                   <span className="text-4xl sm:text-5xl font-bold text-green-500">
-                    {selectedOtkType
-                      ? order?.[objKeyNames[selectedOtkType][0]] || 0
-                      : 0}
+                    {order?.good_by_stage?.find(
+                      (stage) =>
+                        stage?.tarification?.id === selectedOtkType?.id,
+                    )?.count || 0}
                   </span>
                   <span className="text-sm text-green-600">Sifatli</span>
                 </button>
@@ -728,9 +677,10 @@ const OrderView = () => {
                 >
                   <XCircle className="w-8 h-8 text-red-500 group-hover:scale-110 transition-transform" />
                   <span className="text-4xl sm:text-5xl font-bold text-red-500">
-                    {selectedOtkType
-                      ? order?.[objKeyNames[selectedOtkType][1]] || 0
-                      : 0}
+                    {order?.fail_by_stage?.find(
+                      (stage) =>
+                        stage?.tarification?.id === selectedOtkType?.id,
+                    )?.count || 0}
                   </span>
                   <span className="text-sm text-red-600">Yaroqsiz</span>
                 </button>
