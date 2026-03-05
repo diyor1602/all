@@ -35,18 +35,6 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
 
-const engNames = {
-  intermediate: "astar",
-  body: "tana",
-  final: "finish",
-};
-
-const namesObject = {
-  astar: "OTK Astar",
-  tana: "OTK Tana",
-  finish: "OTK Finish",
-};
-
 const Damages = () => {
   const { toast } = useToast();
 
@@ -87,25 +75,6 @@ const Damages = () => {
   const [sending, setSending] = useState(false);
   const [selectedTarif, setSelectedTarif] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
-
-  const getOtkTarif = (key, order) => {
-    const keyName = engNames[key];
-    const actualName = namesObject[keyName];
-    if (!actualName) return null;
-
-    const submodel = order?.order_model?.sub_models?.[0];
-    if (!submodel) return null;
-
-    const otkCategory = submodel.tarification_categories?.find(
-      (category) => category.name === "OTK",
-    );
-
-    if (!otkCategory) return null;
-
-    return otkCategory.tarifications?.find(
-      (tarif) => tarif.name === actualName,
-    );
-  };
 
   const getDamages = async (
     page = 1,
@@ -258,7 +227,7 @@ const Damages = () => {
       await api.post("/qualityController/qualityControlFix", {
         quality_control_id: selectedDamage?.id,
         fixed_employee_id: selectedEmployee?.id,
-        tarification_id: selectedTarif?.id,
+        tarification_id: selectedTarif,
       });
       toast({
         title: "Xodim saqlandi",
@@ -363,35 +332,31 @@ const Damages = () => {
                     alt="Damage"
                     className="w-full h-full object-cover"
                   />
-                  <Badge
+                  {/* <Badge
                     className={`absolute top-2 right-2 ${
                       damage?.fixed_employee ? "bg-green-500" : "bg-red-500"
                     }`}
                   >
                     {damage?.tarification?.code || "-"}
-                  </Badge>
+                  </Badge> */}
                   {!damage?.fixed_employee && (
                     <Button
                       variant="outline"
                       size="icon"
                       className={`absolute top-2 left-2 ${
-                        !getOtkTarif(damage?.inspection_stage, damage?.order)
+                        !damage?.stage_tarification?.id
                           ? "bg-red-500 text-white hover:bg-red-600 hover:text-white"
                           : "bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
                       } border-none outline-none`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (
-                          !getOtkTarif(damage?.inspection_stage, damage?.order)
-                        ) {
+                        if (!damage?.stage_tarification?.id) {
                           alert(
                             "Tarifikatsiya kiritilmagan. Texnologga murojaat qiling",
                           );
                           return;
                         }
-                        setSelectedTarif(
-                          getOtkTarif(damage?.inspection_stage, damage?.order),
-                        );
+                        setSelectedTarif(damage?.stage_tarification_id);
                         setSelectedDamage(damage);
                         setSelectedEmployee(damage?.employee);
                         setSearchTerm("");
@@ -423,12 +388,12 @@ const Damages = () => {
                         {damage?.fixed_employee?.name || "-"}
                       </span>
                     </div>
-                    <div className="flex items-center text-sm text-slate-600">
+                    {/* <div className="flex items-center text-sm text-slate-600">
                       <Star size={14} className="mr-2 text-slate-400" />
                       <span className="truncate">
                         {damage?.tarification?.name || "-"}
                       </span>
-                    </div>
+                    </div> */}
                     <div className="flex items-center text-sm text-slate-600">
                       <Calendar size={14} className="mr-2 text-slate-400" />
                       <span>{formatDate(damage?.created_at)}</span>
@@ -598,8 +563,7 @@ const Damages = () => {
                 </DialogTitle>
                 <p className="text-xs sm:text-sm text-slate-500 break-words">
                   {selectedDamage?.order?.name} -{" "}
-                  {selectedDamage?.tarification?.code} -{" "}
-                  {selectedDamage?.tarification?.name}
+                  {selectedDamage?.stage_tarification?.name}
                 </p>
               </DialogHeader>
 
