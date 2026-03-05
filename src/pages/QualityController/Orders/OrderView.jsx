@@ -664,32 +664,6 @@ const OrderView = () => {
                       alert("Iltimos otk turini tanlang!");
                       return;
                     }
-                    setPlusDialogOpen(true);
-                  }}
-                  className="w-full h-32 sm:h-40 bg-green-50 hover:bg-green-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
-                >
-                  <CheckCircle className="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" />
-                  <span className="text-3xl sm:text-5xl font-bold text-green-500">
-                    {order?.good_by_stage?.find(
-                      (stage) =>
-                        stage?.tarification?.id === selectedOtkType?.id,
-                    )?.count || 0}
-                  </span>
-                  <span className="text-sm text-green-600">Sifatli</span>
-                </button>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="relative"
-              >
-                <button
-                  onClick={() => {
-                    if (!selectedOtkType) {
-                      alert("Iltimos otk turini tanlang!");
-                      return;
-                    }
                     setMinusDialogOpen(true);
                     setDescription("");
                     setSearchTerm("");
@@ -706,6 +680,32 @@ const OrderView = () => {
                     )?.count || 0}
                   </span>
                   <span className="text-sm text-red-600">Yaroqsiz</span>
+                </button>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative"
+              >
+                <button
+                  onClick={() => {
+                    if (!selectedOtkType) {
+                      alert("Iltimos otk turini tanlang!");
+                      return;
+                    }
+                    setPlusDialogOpen(true);
+                  }}
+                  className="w-full h-32 sm:h-40 bg-green-50 hover:bg-green-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
+                >
+                  <CheckCircle className="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" />
+                  <span className="text-3xl sm:text-5xl font-bold text-green-500">
+                    {order?.good_by_stage?.find(
+                      (stage) =>
+                        stage?.tarification?.id === selectedOtkType?.id,
+                    )?.count || 0}
+                  </span>
+                  <span className="text-sm text-green-600">Sifatli</span>
                 </button>
               </motion.div>
             </div>
