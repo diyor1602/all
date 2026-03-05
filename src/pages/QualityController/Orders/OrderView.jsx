@@ -661,7 +661,7 @@ const OrderView = () => {
             transition={{ delay: 0.2 }}
             className="mt-8 py-8 bg-white rounded-2xl shadow-lg"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-6">
+            <div className="grid grid-cols-2 gap-6 px-6">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
