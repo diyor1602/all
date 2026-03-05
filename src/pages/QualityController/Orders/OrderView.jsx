@@ -61,7 +61,9 @@ const OrderView = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedOtkType, setSelectedOtkType] = useState(() => {
     try {
-      const stored = localStorage.getItem("selectedOtkTarif");
+      const orderId = order?.id;
+      if (!orderId) return null;
+      const stored = localStorage.getItem(`selectedOtkTarif_${orderId}`);
       return stored ? JSON.parse(stored) : null;
     } catch (error) {
       return null;
@@ -132,6 +134,17 @@ const OrderView = () => {
   useEffect(() => {
     fetchOrder();
   }, []);
+
+  useEffect(() => {
+    if (order?.id) {
+      try {
+        const stored = localStorage.getItem(`selectedOtkTarif_${order.id}`);
+        setSelectedOtkType(stored ? JSON.parse(stored) : null);
+      } catch (error) {
+        setSelectedOtkType(null);
+      }
+    }
+  }, [order?.id]);
 
   useEffect(() => {
     if (minusDialogOpen) {
@@ -547,7 +560,7 @@ const OrderView = () => {
                         onClick={() => {
                           setSelectedOtkType(item);
                           localStorage.setItem(
-                            "selectedOtkTarif",
+                            `selectedOtkTarif_${order?.id}`,
                             JSON.stringify(item),
                           );
                         }}
