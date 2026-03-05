@@ -154,12 +154,23 @@ const Levels = () => {
       const currentLevel = selectedEmployee?.histories?.find(
         (h) => h.end_date === null,
       )?.level;
+      const bonusApproval = selectedEmployee?.employee?.employee_bonus_approval;
 
-      const res = api.post("/employee-bonus-approvals", {
-        employee_id: selectedEmployee?.employee?.id,
-        level: currentLevel,
-        status,
-      });
+      let res;
+      if (bonusApproval?.id) {
+        // Use PATCH when employee_bonus_approval.id exists
+        res = api.patch(`/employee-bonus-approvals/${bonusApproval.id}`, {
+          status,
+        });
+      } else {
+        // Use POST when creating new approval
+        res = api.post("/employee-bonus-approvals", {
+          employee_id: selectedEmployee?.employee?.id,
+          level: currentLevel,
+          status,
+        });
+      }
+
       toast({
         variant: "default",
         title: "Muvaffaqiyatli",
