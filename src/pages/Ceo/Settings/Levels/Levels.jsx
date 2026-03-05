@@ -162,7 +162,7 @@ const Levels = () => {
             Darajalar Ro'yxati
           </CardTitle>
           <CardDescription>
-            Jami {data?.length || 0} ta xodim ro'yxatga olingan
+            Jami {filteredData?.length || 0} ta xodim ro'yxatga olingan
           </CardDescription>
         </CardHeader>
         <CardContent>
