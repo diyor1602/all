@@ -43,6 +43,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const levels = {
   bronze: {
@@ -77,23 +78,26 @@ const Levels = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const getData = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/employee-level-histories");
+      setData(response.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Ma'lumotlar olishda xatolik yuz berdi",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get("/employee-level-histories");
-        setData(response.data);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Xatolik",
-          description: "Ma'lumotlar olishda xatolik yuz berdi",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
     getData();
   }, []);
 
@@ -142,6 +146,38 @@ const Levels = () => {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const handleSubmit = async (status) => {
+    setSubmitting(true);
+    try {
+      const currentLevel = selectedEmployee?.histories?.find(
+        (h) => h.end_date === null,
+      )?.level;
+
+      const res = api.post("/employee-bonus-approvals", {
+        employee_id: selectedEmployee?.employee?.id,
+        level: currentLevel,
+        status,
+      });
+      toast({
+        variant: "default",
+        title: "Muvaffaqiyatli",
+        description: "Xodim statusi belgilangdi!",
+        duration: 1200,
+      });
+      setApproveDialogOpen(false);
+      getData();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Ma'lumotlarni saqlab bo'lmadi!",
+        duration: 1200,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -199,6 +235,7 @@ const Levels = () => {
                   <TableHead className="w-12 font-semibold">№</TableHead>
                   <TableHead className="font-semibold">Xodim</TableHead>
                   <TableHead className="font-semibold">Daraja</TableHead>
+                  <TableHead className="font-semibold">Xolat</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -210,6 +247,9 @@ const Levels = () => {
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-20" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-6 w-20" />
@@ -263,6 +303,31 @@ const Levels = () => {
                             {employee.employee.name}
                           </TableCell>
                           <TableCell>{getLevelBadge(currentLevel)}</TableCell>
+                          <TableCell>
+                            {employee?.employee?.employee_bonus_approval
+                              ?.status === "approved" ? (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedEmployee(employee);
+                                  setApproveDialogOpen(true);
+                                }}
+                              >
+                                Tasdiqlangan
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedEmployee(employee);
+                                  setApproveDialogOpen(true);
+                                }}
+                              >
+                                Tasdiqlanmagan
+                              </Button>
+                            )}
+                          </TableCell>
                         </TableRow>
                       );
                     })
@@ -272,6 +337,44 @@ const Levels = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedEmployee?.employee?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm">
+            {selectedEmployee?.employee?.employee_bonus_approval?.status ===
+            "approved"
+              ? "Xodimni darajadan olib tashlashga rozimisiz?"
+              : "Xodimni darajasini tasdiqlashga rozimisiz?"}
+          </div>
+
+          <div className="flex items-center gap-2 justify-end">
+            <Button
+              onClick={() => {
+                setApproveDialogOpen(false);
+              }}
+              variant="outline"
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              disable={submitting}
+              onClick={() => {
+                handleSubmit(
+                  selectedEmployee?.employee?.employee_bonus_approval
+                    ?.status === "approved"
+                    ? "rejected"
+                    : "approved",
+                );
+              }}
+            >
+              {submitting ? "Saqlanmoqda..." : "Tasdiqlash"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
