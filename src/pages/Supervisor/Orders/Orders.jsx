@@ -414,14 +414,14 @@ const Orders = () => {
                         .map((submodel) => (
                           <div
                             key={submodel.id}
-                            className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 text-xs"
+                            className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 text-xs whitespace-nowrap"
                           >
                             <Box size={12} className="text-gray-500" />
                             {submodel?.submodel?.name}
                           </div>
                         ))}
                       {order.order_model?.submodels?.length > 2 && (
-                        <div className="border border-gray-300 px-2 py-1 rounded text-xs text-gray-600">
+                        <div className="border border-gray-300 px-2 py-1 rounded text-xs text-gray-600 whitespace-nowrap">
                           +{order.order_model.submodels.length - 2}
                         </div>
                       )}
