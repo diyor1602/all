@@ -285,10 +285,9 @@ const NewOrder = () => {
   return (
     <div className="">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">
           Yangi buyurtma yaratish
         </h1>
-        <p className="text-gray-600">Yangi buyurtma ma'lumotlarini kiriting</p>
       </div>
       {loading ? (
         <div className="w-full h-[80vh] flex items-center justify-center">
