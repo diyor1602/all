@@ -182,6 +182,19 @@ const NewOrder = () => {
       return;
     }
 
+    // Check for empty size or color names
+    const hasEmptySize = matrix.sizes.some((size) => !size.name.trim());
+    const hasEmptyColor = matrix.colors.some((color) => !color.name.trim());
+
+    if (hasEmptySize || hasEmptyColor) {
+      toast({
+        title: "Xatolik",
+        description: "Barcha o'lcham va rang nomlari to'ldirilishi shart",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const sizesPayload = [];
 
     matrix.sizes.forEach((size) => {
@@ -716,59 +729,116 @@ const NewOrder = () => {
                             </div>
                           </th>
                         ))}
+                        <th className="border p-2 bg-gray-100 font-bold">
+                          Jami (qator)
+                        </th>
                       </tr>
                     </thead>
 
                     <tbody>
-                      {matrix.sizes.map((size) => (
-                        <tr key={size.id}>
-                          <td className="border p-2">
-                            <div className="flex gap-1">
-                              <Input
-                                value={size.name}
-                                placeholder="O'lcham"
-                                className="bg-white"
-                                onChange={(e) => {
-                                  setMatrix((prev) => ({
-                                    ...prev,
-                                    sizes: prev.sizes.map((s) =>
-                                      s.id === size.id
-                                        ? { ...s, name: e.target.value }
-                                        : s,
-                                    ),
-                                  }));
-                                }}
-                              />
+                      {matrix.sizes.map((size) => {
+                        // Calculate row total for this size
+                        const rowTotal = matrix.colors.reduce((sum, color) => {
+                          const key = `${size.id}-${color.id}`;
+                          return sum + Number(matrix.quantities[key] || 0);
+                        }, 0);
 
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                type="button"
-                                onClick={() => deleteSize(size.id)}
-                              >
-                                <Trash2 size={14} />
-                              </Button>
-                            </div>
-                          </td>
-
-                          {matrix.colors.map((color) => {
-                            const key = `${size.id}-${color.id}`;
-
-                            return (
-                              <td key={color.id} className="border p-1">
+                        return (
+                          <tr key={size.id}>
+                            <td className="border p-2">
+                              <div className="flex gap-1">
                                 <Input
-                                  type="number"
+                                  value={size.name}
+                                  placeholder="O'lcham"
                                   className="bg-white"
-                                  value={matrix.quantities[key] || ""}
-                                  onChange={(e) =>
-                                    updateQty(size.id, color.id, e.target.value)
-                                  }
+                                  onChange={(e) => {
+                                    setMatrix((prev) => ({
+                                      ...prev,
+                                      sizes: prev.sizes.map((s) =>
+                                        s.id === size.id
+                                          ? { ...s, name: e.target.value }
+                                          : s,
+                                      ),
+                                    }));
+                                  }}
                                 />
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
+
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  type="button"
+                                  onClick={() => deleteSize(size.id)}
+                                >
+                                  <Trash2 size={14} />
+                                </Button>
+                              </div>
+                            </td>
+
+                            {matrix.colors.map((color) => {
+                              const key = `${size.id}-${color.id}`;
+
+                              return (
+                                <td key={color.id} className="border p-1">
+                                  <Input
+                                    type="number"
+                                    className="bg-white"
+                                    value={matrix.quantities[key] || ""}
+                                    onChange={(e) =>
+                                      updateQty(
+                                        size.id,
+                                        color.id,
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </td>
+                              );
+                            })}
+                            <td className="border p-2 bg-gray-100 font-bold text-center">
+                              {rowTotal}
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {/* Column totals row */}
+                      <tr>
+                        <td className="border p-2 bg-gray-100 font-bold">
+                          Jami (ustun)
+                        </td>
+                        {matrix.colors.map((color) => {
+                          // Calculate column total for this color
+                          const columnTotal = matrix.sizes.reduce(
+                            (sum, size) => {
+                              const key = `${size.id}-${color.id}`;
+                              return sum + Number(matrix.quantities[key] || 0);
+                            },
+                            0,
+                          );
+
+                          return (
+                            <td
+                              key={color.id}
+                              className="border p-2 bg-gray-100 font-bold text-center"
+                            >
+                              {columnTotal}
+                            </td>
+                          );
+                        })}
+                        <td className="border p-2 bg-gray-200 font-bold text-center">
+                          {matrix.sizes.reduce(
+                            (grandTotal, size) =>
+                              grandTotal +
+                              matrix.colors.reduce((rowTotal, color) => {
+                                const key = `${size.id}-${color.id}`;
+                                return (
+                                  rowTotal + Number(matrix.quantities[key] || 0)
+                                );
+                              }, 0),
+                            0,
+                          )}
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
