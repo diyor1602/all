@@ -38,12 +38,10 @@ import { useNavigate } from "react-router-dom";
 const NewOrder = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [materials, setMaterials] = useState([]);
   const [models, setModels] = useState([]);
   const [contragents, setContragents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
-  const [materialOpen, setMaterialOpen] = useState(false);
   const [contragentOpen, setContragentOpen] = useState(false);
   const [matrix, setMatrix] = useState({
     sizes: [],
@@ -114,13 +112,10 @@ const NewOrder = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [materialsResponse, modelsResponse, contragentsResponse] =
-        await Promise.all([
-          api.get("/supervisor/materials"),
-          api.get("/supervisor/models"),
-          api.get("/supervisor/contragents"),
-        ]);
-      setMaterials(materialsResponse.data);
+      const [modelsResponse, contragentsResponse] = await Promise.all([
+        api.get("/supervisor/models"),
+        api.get("/supervisor/contragents"),
+      ]);
       setModels(modelsResponse.data);
       setContragents(contragentsResponse.data);
     } catch (error) {
@@ -142,7 +137,6 @@ const NewOrder = () => {
     season_type: "",
     model: {
       id: "",
-      material_id: null,
       submodels: [],
       sizes: [],
     },
@@ -228,7 +222,6 @@ const NewOrder = () => {
       season_type: payload.season_type,
       model: {
         id: payload.model.id,
-        material_id: payload.model.material_id,
         submodels:
           payload.model.submodels
             ?.map((submodel) =>
@@ -244,13 +237,6 @@ const NewOrder = () => {
       formattedPayload.contragent_name = payload.contragent.name;
     } else if (payload.contragent.id) {
       formattedPayload.contragent_id = payload.contragent.id;
-    }
-
-    if (payload.model.material?.isNew) {
-      formattedPayload.model.material_name = payload.model.material.name;
-      delete formattedPayload.model.material_id;
-    } else {
-      formattedPayload.model.material_id = payload.model.material_id;
     }
 
     setIsSending(true);
@@ -548,107 +534,6 @@ const NewOrder = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label
-                  htmlFor="orderMaterial"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Materialni tanlang
-                </Label>
-                <Popover open={materialOpen} onOpenChange={setMaterialOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={materialOpen}
-                      className="justify-between bg-white border-gray-300 hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      {payload.model.material?.name || "Material tanlang"}
-                      <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0">
-                    <Command>
-                      <CommandInput placeholder="Materialni qidirish yoki yaratish..." />
-                      <CommandList>
-                        <CommandEmpty>
-                          <div className="p-2">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              className="w-full justify-start"
-                              onClick={() => {
-                                const input = document.querySelector(
-                                  '[placeholder="Materialni qidirish yoki yaratish..."]',
-                                );
-                                const searchValue = input?.value || "";
-                                if (searchValue.trim()) {
-                                  setPayload((prev) => ({
-                                    ...prev,
-                                    model: {
-                                      ...prev.model,
-                                      material_id: null,
-                                      material: {
-                                        name: searchValue.trim(),
-                                        isNew: true,
-                                      },
-                                    },
-                                  }));
-                                  setMaterialOpen(false);
-                                }
-                              }}
-                            >
-                              <Plus className="mr-2 h-4 w-4" />
-                              Yangi material yaratish
-                            </Button>
-                          </div>
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {materials.map((material) => (
-                            <CommandItem
-                              key={material.id}
-                              value={material.name}
-                              onSelect={() => {
-                                setPayload((prev) => ({
-                                  ...prev,
-                                  model: {
-                                    ...prev.model,
-                                    material_id: material.id,
-                                    material: { ...material, isNew: false },
-                                  },
-                                }));
-                                setMaterialOpen(false);
-                              }}
-                            >
-                              <div className="w-full flex flex-col gap-1">
-                                <div>{material.name}</div>
-                                <div className="text-xs text-gray-500">
-                                  {material.color?.name} {material.lot}
-                                </div>
-                              </div>
-                              <Check
-                                className={cn(
-                                  "ml-auto h-4 w-4",
-                                  material.id === payload.model.material_id
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                {payload.model.material?.isNew && (
-                  <div className="text-sm text-green-600 flex items-center gap-1">
-                    <Plus className="h-3 w-3" />
-                    Yangi material: {payload.model.material.name}
-                  </div>
-                )}
               </div>
 
               {/* Comment */}
