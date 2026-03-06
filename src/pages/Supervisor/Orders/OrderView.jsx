@@ -57,19 +57,6 @@ const OrderView = () => {
     0,
   );
 
-  const totalSpendsRU = order?.order_model?.submodels?.reduce(
-    (acc, submodel) =>
-      acc +
-      parseFloat(
-        submodel?.spends?.reduce(
-          (acc, spend) =>
-            acc + (spend?.region == "ru" ? parseFloat(spend?.seconds) : 0),
-          0,
-        ),
-      ),
-    0,
-  );
-
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
@@ -266,22 +253,22 @@ const OrderView = () => {
 
             {/* Right Column - Time Information */}
             <div className="space-y-4">
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100 shadow-sm">
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-3 border border-indigo-100 shadow-sm">
                 <h4 className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-3 flex items-center">
                   <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2 animate-pulse"></div>
                   Sarflangan vaqt
                 </h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-indigo-100">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-indigo-100">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-500 rounded-lg shadow-sm">
+                      <div className="p-1.5 bg-indigo-500 rounded-lg shadow-sm">
                         <Timer className="h-4 w-4 text-white" />
                       </div>
                       <div>
                         <span className="text-xs font-medium text-indigo-600 block">
                           O'zbekiston
                         </span>
-                        <span className="text-lg font-bold text-indigo-900">
+                        <span className="text-base font-bold text-indigo-900">
                           {totalSpends?.toLocaleString("ru-RU", {
                             maximumFractionDigits: 2,
                           })}{" "}
@@ -293,24 +280,26 @@ const OrderView = () => {
                       <span className="text-xs text-indigo-600 block">
                         Daqiqa
                       </span>
-                      <span className="text-sm font-semibold text-indigo-800">
+                      <span className="text-xs font-semibold text-indigo-800">
                         {parseFloat(totalSpends / 60)?.toLocaleString("ru-RU", {
                           maximumFractionDigits: 2,
                         })}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-purple-100">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-purple-100">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-500 rounded-lg shadow-sm">
+                      <div className="p-1.5 bg-purple-500 rounded-lg shadow-sm">
                         <Timer className="h-4 w-4 text-white" />
                       </div>
                       <div>
                         <span className="text-xs font-medium text-purple-600 block">
-                          Rossiya
+                          Buyurtmachi
                         </span>
-                        <span className="text-lg font-bold text-purple-900">
-                          {parseFloat(totalSpendsRU)?.toLocaleString("ru-RU", {
+                        <span className="text-base font-bold text-purple-900">
+                          {parseFloat(
+                            order?.order_model?.minute * 60,
+                          )?.toLocaleString("ru-RU", {
                             maximumFractionDigits: 2,
                           })}{" "}
                           sekund
@@ -321,11 +310,48 @@ const OrderView = () => {
                       <span className="text-xs text-purple-600 block">
                         Daqiqa
                       </span>
-                      <span className="text-sm font-semibold text-purple-800">
-                        {parseFloat(totalSpendsRU / 60)?.toLocaleString(
+                      <span className="text-xs font-semibold text-purple-800">
+                        {parseFloat(order?.order_model?.minute)?.toLocaleString(
                           "ru-RU",
-                          { maximumFractionDigits: 2 },
+                          {
+                            maximumFractionDigits: 2,
+                          },
                         )}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-emerald-100">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 bg-emerald-500 rounded-lg shadow-sm">
+                        <Timer className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-medium text-emerald-600 block">
+                          Farq (O'zbekiston - Buyurtmachi)
+                        </span>
+                        <span className="text-base font-bold text-emerald-900">
+                          {parseFloat(
+                            (totalSpends || 0) -
+                              (order?.order_model?.minute || 0) * 60,
+                          )?.toLocaleString("ru-RU", {
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          sekund
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-emerald-600 block">
+                        Daqiqa
+                      </span>
+                      <span className="text-xs font-semibold text-emerald-800">
+                        {parseFloat(
+                          ((totalSpends || 0) -
+                            (order?.order_model?.minute || 0) * 60) /
+                            60,
+                        )?.toLocaleString("ru-RU", {
+                          maximumFractionDigits: 2,
+                        })}
                       </span>
                     </div>
                   </div>
