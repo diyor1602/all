@@ -403,7 +403,7 @@ const Orders = () => {
                   </TableCell>
                   <TableCell>
                     <div className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 w-fit whitespace-nowrap">
-                      <Box size={14} className="text-gray-500" />
+                      <Box size={12} className="text-gray-500" />
                       {order.order_model?.model?.name}
                     </div>
                   </TableCell>
