@@ -13,6 +13,7 @@ import {
   Eye,
   Snowflake,
   Sun,
+  Edit,
 } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -357,7 +358,7 @@ const Orders = () => {
                 <TableHead className="w-24 text-center">Yil</TableHead>
                 <TableHead className="w-24 text-center">Mavsum</TableHead>
                 <TableHead className="w-32 text-center">Holati</TableHead>
-                <TableHead className="w-32 text-center">Batafsil</TableHead>
+                <TableHead className="w-32 text-center">Amallar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -469,17 +470,18 @@ const Orders = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      size="sm"
-                      className={`${getStatusColor(
-                        order.status,
-                      )} text-white hover:opacity-90`}
-                      asChild
-                    >
-                      <Link to={`/supervisor/orders/${order.id}`}>
-                        <Eye size={16} />
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button size="icon" variant="ghost" asChild>
+                        <Link to={`/supervisor/orders/${order.id}`}>
+                          <Eye size={12} className="text-blue-500" />
+                        </Link>
+                      </Button>
+                      <Button size="icon" variant="ghost" asChild>
+                        <Link to={`/supervisor/orders/edit/${order.id}`}>
+                          <Edit size={12} className="text-green-500" />
+                        </Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </motion.tr>
               ))}
