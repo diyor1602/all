@@ -10,6 +10,9 @@ import {
   Calendar,
   ChevronRight,
   CirclePlus,
+  Eye,
+  Snowflake,
+  Sun,
 } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -17,8 +20,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { statuses } from "@/lib/status";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -182,9 +192,21 @@ const Orders = () => {
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-md" />
+            <div key={i} className="p-4 bg-white rounded-lg shadow-sm">
+              <div className="grid grid-cols-9 gap-4">
+                <Skeleton className="h-6 w-16" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-6 w-20 mx-auto" />
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-16 mx-auto" />
+                <Skeleton className="h-6 w-16 mx-auto" />
+                <Skeleton className="h-6 w-20 mx-auto" />
+                <Skeleton className="h-6 w-20 mx-auto" />
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -323,152 +345,147 @@ const Orders = () => {
           </p>
         </motion.div>
       ) : (
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-          {filteredOrders.map((order) => (
-            <motion.div key={order.id} variants={item} whileHover={{ y: -5 }}>
-              <Card className="overflow-hidden rounded-xl hover:shadow-xl transition-all duration-300 border-gray-200 shadow-md max-w-md bg-white">
-                {/* Status indicator with gradient */}
-                <div
-                  className={`h-2 ${
-                    getStatusColor(order.status).split(" ")[0]
-                  }`}
-                />
-
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center mb-4">
+        <div className="space-y-4">
+          <Table className="bg-white rounded-lg shadow-sm text-xs">
+            <TableHeader>
+              <TableRow className="text-xs">
+                <TableHead className="w-20">ID</TableHead>
+                <TableHead className="w-48">Nomi</TableHead>
+                <TableHead className="w-24 text-center">Miqdor</TableHead>
+                <TableHead className="w-32">Model</TableHead>
+                <TableHead className="w-32">Submodel</TableHead>
+                <TableHead className="w-24 text-center">Yil</TableHead>
+                <TableHead className="w-24 text-center">Mavsum</TableHead>
+                <TableHead className="w-32 text-center">Holati</TableHead>
+                <TableHead className="w-32 text-center">Batafsil</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders.map((order) => (
+                <motion.tr
+                  key={order.id}
+                  variants={item}
+                  whileHover={{ scale: 1.01 }}
+                  className="border-b hover:bg-gray-50 transition-all duration-100 ease-in-out"
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <Tag size={16} className="text-gray-500" />
+                      <span className="font-bold">#{order.id}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div
-                      className={`flex items-center gap-2 ${
-                        statuses[order.status]?.secondaryBg
-                      } px-3 py-1.5 rounded-lg`}
+                      className={`p-2 rounded border-l-4 ${statuses[order.status]?.border} bg-gradient-to-r from-gray-50 to-white`}
                     >
-                      <Tag
+                      <span className="font-medium text-gray-800">
+                        {order.name}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div
+                      className={`flex items-center justify-center gap-1 ${statuses[order.status]?.secondaryBg} px-3 py-1.5 rounded-full`}
+                    >
+                      <Package
                         size={16}
                         className={statuses[order.status]?.textColor}
                       />
                       <span
-                        className={`${
-                          statuses[order.status]?.textColor
-                        } font-bold`}
-                      >
-                        #{order.id}
-                      </span>
-                    </div>
-
-                    <Badge
-                      className={`${getStatusColor(
-                        order.status,
-                      )} px-3 py-1 font-medium rounded-full shadow-sm`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusActive(order.id);
-                      }}
-                    >
-                      {statuses[order.status]?.text || "Noma'lum"}
-                    </Badge>
-                  </div>
-
-                  {/* Order name with subtle background */}
-                  <div
-                    className={`${
-                      statuses[order.status]?.border
-                    } mb-4 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border-l-4`}
-                  >
-                    <h3 className="text-lg font-bold text-gray-800 truncate">
-                      {order.name}
-                    </h3>
-                  </div>
-
-                  {/* Quantity with highlight - CHANGED FROM BLUE TO PURPLE */}
-                  <div className="flex justify-between items-center mb-4">
-                    <div
-                      className={`flex items-center gap-2 ${
-                        statuses[order.status]?.secondaryBg
-                      } px-4 py-2 rounded-full`}
-                    >
-                      <Package
-                        size={18}
-                        className={statuses[order.status]?.textColor}
-                      />
-                      <span
-                        className={`${
-                          statuses[order.status]?.textColor
-                        } font-bold text-lg`}
+                        className={`font-bold ${statuses[order.status]?.textColor}`}
                       >
                         {order.quantity}
                       </span>
-                      <span
-                        className={`${
-                          statuses[order.status]?.textColor
-                        } text-lg`}
-                      >
+                      <span className={statuses[order.status]?.textColor}>
                         ta
                       </span>
                     </div>
-
-                    {/* Model pill */}
-                    <Badge
-                      variant="outline"
-                      className="bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5"
-                    >
+                  </TableCell>
+                  <TableCell>
+                    <div className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 w-fit">
                       <Box size={14} className="text-gray-500" />
                       {order.order_model?.model?.name}
-                    </Badge>
-                  </div>
-
-                  {/* Date range with card effect */}
-                  <div className="flex mb-5 p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
-                    <div className="flex items-center gap-2 w-full">
-                      <Calendar size={16} className="text-gray-500" />
-                      <div className="flex justify-between w-full text-sm">
-                        <span className="text-gray-700 font-medium">
-                          {order.season_year}
-                        </span>
-                        <span className="text-gray-400">→</span>
-                        <span className="text-gray-700 font-medium">
-                          {order.season_type === "winter"
-                            ? "Qish"
-                            : order.season_type === "summer"
-                              ? "Bahor"
-                              : "-"}
-                        </span>
-                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-wrap mb-5 p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
-                    {order.order_model?.submodels?.map((submodel) => (
-                      <Badge
-                        key={submodel.id}
-                        className="bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5 hover:bg-gray-100"
-                      >
-                        <Box size={14} className="text-gray-500" />
-                        {submodel?.submodel?.name}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  {/* Button with gradient */}
-                  <Button
-                    className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${getStatusColor(
-                      order.status,
-                    )} hover:opacity-90 hover:${getStatusColor(order.status)}`}
-                    asChild
-                  >
-                    <Link to={`/supervisor/orders/${order.id}`}>
-                      Batafsil
-                      <ChevronRight size={18} />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {order.order_model?.submodels
+                        ?.slice(0, 2)
+                        .map((submodel) => (
+                          <div
+                            key={submodel.id}
+                            className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 text-xs"
+                          >
+                            <Box size={12} className="text-gray-500" />
+                            {submodel?.submodel?.name}
+                          </div>
+                        ))}
+                      {order.order_model?.submodels?.length > 2 && (
+                        <div className="border border-gray-300 px-2 py-1 rounded text-xs text-gray-600">
+                          +{order.order_model.submodels.length - 2}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Calendar size={16} className="text-gray-500" />
+                      <span className="font-medium text-gray-700">
+                        {order.season_year}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div
+                      className={`px-2 py-1 rounded text-sm font-medium flex items-center justify-center gap-1 ${
+                        order.season_type === "winter"
+                          ? "bg-blue-100 text-blue-700"
+                          : order.season_type === "summer"
+                            ? "bg-orange-100 text-orange-700"
+                            : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {order.season_type === "winter" ? (
+                        <>
+                          <Snowflake size={14} className="text-blue-500" /> Qish
+                        </>
+                      ) : order.season_type === "summer" ? (
+                        <>
+                          <Sun size={14} className="text-orange-500" /> Bahor
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div
+                      className={`${getStatusColor(
+                        order.status,
+                      )} px-3 py-1 font-medium rounded-full shadow-sm cursor-pointer hover:opacity-80 inline-block text-white whitespace-nowrap`}
+                      onClick={() => handleStatusActive(order.id)}
+                    >
+                      {statuses[order.status]?.text || "Noma'lum"}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      size="sm"
+                      className={`${getStatusColor(
+                        order.status,
+                      )} text-white hover:opacity-90`}
+                      asChild
+                    >
+                      <Link to={`/supervisor/orders/${order.id}`}>
+                        <Eye size={16} />
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </motion.tr>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );
