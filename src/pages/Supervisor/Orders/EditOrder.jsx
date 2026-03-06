@@ -327,7 +327,7 @@ const EditOrder = () => {
       await api.patch(`/supervisor/orders/${id}`, formattedPayload);
       toast({
         title: "Muvaffaqiyatli",
-        description: "Buyurtma muvaffaqiyatli yaratildi",
+        description: "Buyurtma muvaffaqiyatli tahrirlandi",
         style: {
           backgroundColor: "green",
           color: "white",
@@ -339,7 +339,7 @@ const EditOrder = () => {
       toast({
         title: "Xatolik",
         description:
-          error.response?.data?.message || "Buyurtma yaratishda xatolik",
+          error.response?.data?.message || "Buyurtmani tahrirlashda xatolik",
         variant: "destructive",
       });
     } finally {
