@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
+  ArrowLeftRight,
+  Globe2,
   Loader2,
   MessageSquareIcon,
   TagIcon,
@@ -17,12 +19,12 @@ import {
   Scissors,
   Users,
   User,
-  Filter,
   Package,
   Pencil,
   Download,
   Building2,
   FileDigit,
+  PlaneTakeoff,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -262,7 +264,7 @@ const OrderView = () => {
                   <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-indigo-100">
                     <div className="flex items-center gap-3">
                       <div className="p-1.5 bg-indigo-500 rounded-lg shadow-sm">
-                        <Timer className="h-4 w-4 text-white" />
+                        <Globe2 className="h-4 w-4 text-white" />
                       </div>
                       <div>
                         <span className="text-xs font-medium text-indigo-600 block">
@@ -290,7 +292,7 @@ const OrderView = () => {
                   <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-purple-100">
                     <div className="flex items-center gap-3">
                       <div className="p-1.5 bg-purple-500 rounded-lg shadow-sm">
-                        <Timer className="h-4 w-4 text-white" />
+                        <PlaneTakeoff className="h-4 w-4 text-white" />
                       </div>
                       <div>
                         <span className="text-xs font-medium text-purple-600 block">
@@ -323,7 +325,7 @@ const OrderView = () => {
                   <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-emerald-100">
                     <div className="flex items-center gap-3">
                       <div className="p-1.5 bg-emerald-500 rounded-lg shadow-sm">
-                        <Timer className="h-4 w-4 text-white" />
+                        <ArrowLeftRight className="h-4 w-4 text-white" />
                       </div>
                       <div>
                         <span className="text-xs font-medium text-emerald-600 block">
