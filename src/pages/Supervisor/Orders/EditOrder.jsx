@@ -324,7 +324,7 @@ const EditOrder = () => {
 
     setIsSending(true);
     try {
-      await api.post("/supervisor/orders", formattedPayload);
+      await api.patch(`/supervisor/orders/${id}`, formattedPayload);
       toast({
         title: "Muvaffaqiyatli",
         description: "Buyurtma muvaffaqiyatli yaratildi",
