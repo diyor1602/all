@@ -388,7 +388,7 @@ const Orders = () => {
                       className={`flex items-center justify-center gap-1 ${statuses[order.status]?.secondaryBg} px-3 py-1.5 rounded-full`}
                     >
                       <Package
-                        size={16}
+                        size={12}
                         className={statuses[order.status]?.textColor}
                       />
                       <span
@@ -429,7 +429,7 @@ const Orders = () => {
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <Calendar size={16} className="text-gray-500" />
+                      <Calendar size={12} className="text-gray-500" />
                       <span className="font-medium text-gray-700">
                         {order.season_year}
                       </span>
