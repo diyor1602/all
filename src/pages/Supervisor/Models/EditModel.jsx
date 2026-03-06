@@ -30,7 +30,6 @@ const EditModel = () => {
 
   // New size and submodel inputs
   const [newSize, setNewSize] = useState("");
-  const [newSubmodel, setNewSubmodel] = useState("");
 
   // Model form data
   const [model, setModel] = useState({
@@ -93,33 +92,6 @@ const EditModel = () => {
       });
       setNewSize("");
     }
-  };
-
-  const handleRemoveSize = (sizeId) => {
-    setModel({
-      ...model,
-      sizes: model.sizes.filter((s) => s.id !== sizeId),
-    });
-  };
-
-  const handleAddSubmodel = () => {
-    if (newSubmodel.trim()) {
-      setModel({
-        ...model,
-        submodels: [
-          ...model.submodels,
-          { name: newSubmodel.trim(), id: Date.now() },
-        ],
-      });
-      setNewSubmodel("");
-    }
-  };
-
-  const handleRemoveSubmodel = (submodelId) => {
-    setModel({
-      ...model,
-      submodels: model.submodels.filter((sm) => sm.id !== submodelId),
-    });
   };
 
   const handleImageUpload = async (e) => {
@@ -269,7 +241,7 @@ const EditModel = () => {
           rasxod: parseFloat(model.rasxod) * 250,
           minute: parseFloat(model.rasxod),
           images: existingImages.map((image) => ({ id: image.id })),
-        })
+        }),
       );
 
       // Add all new images
@@ -390,38 +362,17 @@ const EditModel = () => {
           </Card>
 
           <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <Card className="bg-white shadow-sm">
+            <Card className="bg-white shadow-sm h-fit">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
                   <div className="flex items-center gap-2">
-                    Submodellar ({model.submodels.length}){" "}
+                    Submodel
                     <span className="text-red-500">*</span>
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={newSubmodel}
-                      onChange={(e) => setNewSubmodel(e.target.value)}
-                      placeholder="Yangi submodel nomi"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && newSubmodel.trim()) {
-                          e.preventDefault();
-                          handleAddSubmodel();
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={handleAddSubmodel}
-                      disabled={!newSubmodel.trim()}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
                   {model.submodels.length > 0 ? (
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {model.submodels.map((submodel) => (
@@ -430,14 +381,6 @@ const EditModel = () => {
                           className="flex items-center justify-between p-2 bg-green-50 border border-green-100 rounded-md"
                         >
                           <span>{submodel.name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveSubmodel(submodel.id)}
-                          >
-                            <X className="h-4 w-4 text-red-500" />
-                          </Button>
                         </div>
                       ))}
                     </div>
@@ -490,14 +433,6 @@ const EditModel = () => {
                           className="flex items-center justify-between p-2 bg-purple-50 border border-purple-100 rounded-md"
                         >
                           <span>{size.name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveSize(size.id)}
-                          >
-                            <X className="h-4 w-4 text-red-500" />
-                          </Button>
                         </div>
                       ))}
                     </div>
