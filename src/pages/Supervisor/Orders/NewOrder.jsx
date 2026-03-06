@@ -41,31 +41,88 @@ const NewOrder = () => {
   const [materials, setMaterials] = useState([]);
   const [models, setModels] = useState([]);
   const [contragents, setContragents] = useState([]);
-  const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [materialOpen, setMaterialOpen] = useState(false);
   const [contragentOpen, setContragentOpen] = useState(false);
-  const [colorOpens, setColorOpens] = useState({});
+  const [matrix, setMatrix] = useState({
+    sizes: [],
+    colors: [],
+    quantities: {},
+  });
+
+  const uid = () => Math.random().toString(36).slice(2, 9);
+
+  const addSize = () => {
+    setMatrix((prev) => ({
+      ...prev,
+      sizes: [...prev.sizes, { id: uid(), name: "" }],
+    }));
+  };
+
+  const addColor = () => {
+    setMatrix((prev) => ({
+      ...prev,
+      colors: [...prev.colors, { id: uid(), name: "" }],
+    }));
+  };
+
+  const updateQty = (sizeId, colorId, value) => {
+    const key = `${sizeId}-${colorId}`;
+
+    setMatrix((prev) => ({
+      ...prev,
+      quantities: {
+        ...prev.quantities,
+        [key]: value,
+      },
+    }));
+  };
+
+  const deleteSize = (sizeId) => {
+    setMatrix((prev) => {
+      const sizes = prev.sizes.filter((s) => s.id !== sizeId);
+
+      const quantities = { ...prev.quantities };
+
+      Object.keys(quantities).forEach((key) => {
+        if (key.startsWith(sizeId + "-")) {
+          delete quantities[key];
+        }
+      });
+
+      return { ...prev, sizes, quantities };
+    });
+  };
+
+  const deleteColor = (colorId) => {
+    setMatrix((prev) => {
+      const colors = prev.colors.filter((c) => c.id !== colorId);
+
+      const quantities = { ...prev.quantities };
+
+      Object.keys(quantities).forEach((key) => {
+        if (key.endsWith("-" + colorId)) {
+          delete quantities[key];
+        }
+      });
+
+      return { ...prev, colors, quantities };
+    });
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [
-        materialsResponse,
-        modelsResponse,
-        contragentsResponse,
-        colorsResponse,
-      ] = await Promise.all([
-        api.get("/supervisor/materials"),
-        api.get("/supervisor/models"),
-        api.get("/supervisor/contragents"),
-        api.get("/supervisor/colors"),
-      ]);
+      const [materialsResponse, modelsResponse, contragentsResponse] =
+        await Promise.all([
+          api.get("/supervisor/materials"),
+          api.get("/supervisor/models"),
+          api.get("/supervisor/contragents"),
+        ]);
       setMaterials(materialsResponse.data);
       setModels(modelsResponse.data);
       setContragents(contragentsResponse.data);
-      setColors(colorsResponse.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -80,8 +137,6 @@ const NewOrder = () => {
   const [payload, setPayload] = useState({
     name: "",
     quantity: "",
-    start_date: "",
-    end_date: "",
     comment: "",
     season_year: new Date().getFullYear(),
     season_type: "",
@@ -127,43 +182,34 @@ const NewOrder = () => {
       return;
     }
 
-    // Calculate total quantity from all sizes
-    const sizes =
-      payload.model.sizes
-        ?.map((size) => {
-          const sizeData = {
-            id: size.id,
-            quantity: Number.parseInt(size.quantity) || 0,
-          };
+    const sizesPayload = [];
 
-          // For new colors, always use color_name
-          if (size.color?.isNew) {
-            sizeData.color_name = size.color.name;
-          }
-          // For existing colors that were previously created in this session
-          else if (size.color?.isNewlyCreated) {
-            sizeData.color_name = size.color.name;
-          }
-          // For pre-existing colors from the database
-          else if (size.color?.id) {
-            sizeData.color_id = size.color.id;
-          }
+    matrix.sizes.forEach((size) => {
+      matrix.colors.forEach((color) => {
+        const key = `${size.id}-${color.id}`;
+        const qty = Number(matrix.quantities[key] || 0);
 
-          return sizeData;
-        })
-        .filter((size) => size.id && size.quantity > 0) || [];
+        if (size.name && color.name && qty > 0) {
+          sizesPayload.push({
+            size_name: size.name,
+            color_name: color.name,
+            quantity: qty,
+          });
+        }
+      });
+    });
+
+    const sizes = sizesPayload;
 
     const totalQuantity = sizes.reduce(
       (sum, size) => sum + (size.quantity || 0),
-      0
+      0,
     );
 
     const formattedPayload = {
       name: payload.name,
       quantity: totalQuantity,
       price: 0,
-      start_date: payload.start_date,
-      end_date: payload.end_date,
       comment: payload.comment,
       season_year: payload.season_year,
       season_type: payload.season_type,
@@ -173,7 +219,7 @@ const NewOrder = () => {
         submodels:
           payload.model.submodels
             ?.map((submodel) =>
-              typeof submodel === "object" ? submodel.id : submodel
+              typeof submodel === "object" ? submodel.id : submodel,
             )
             .filter(Boolean) || [],
         sizes: sizes,
@@ -217,13 +263,6 @@ const NewOrder = () => {
     } finally {
       setIsSending(false);
     }
-  };
-
-  const handleColorOpen = (index, isOpen) => {
-    setColorOpens((prev) => ({
-      ...prev,
-      [index]: isOpen,
-    }));
   };
 
   useEffect(() => {
@@ -307,7 +346,7 @@ const NewOrder = () => {
                             className="w-full justify-start"
                             onClick={() => {
                               const input = document.querySelector(
-                                '[placeholder="Kontragent qidirish yoki yaratish..."]'
+                                '[placeholder="Kontragent qidirish yoki yaratish..."]',
                               );
                               const searchValue = input?.value || "";
                               if (searchValue.trim()) {
@@ -350,7 +389,7 @@ const NewOrder = () => {
                                 "mr-2 h-4 w-4",
                                 payload.contragent.id === contragent.id
                                   ? "opacity-100"
-                                  : "opacity-0"
+                                  : "opacity-0",
                               )}
                             />
                             {contragent.name}
@@ -385,35 +424,6 @@ const NewOrder = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="orderStartDate">Boshlanish sanasi</Label>
-              <Input
-                type="date"
-                id="orderStartDate"
-                placeholder="Boshlanish sanasi"
-                value={payload.start_date}
-                className="bg-white"
-                onChange={(e) => {
-                  setPayload({ ...payload, start_date: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderEndDate">Tugash sanasi</Label>
-              <Input
-                type="date"
-                id="orderEndDate"
-                placeholder="Tugash sanasi"
-                value={payload.end_date}
-                min={payload.start_date}
-                className="bg-white"
-                onChange={(e) => {
-                  setPayload({ ...payload, end_date: e.target.value });
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
               <Label htmlFor="orderModel">Modelni tanlang</Label>
               <Popover open={modelOpen} onOpenChange={setModelOpen}>
                 <PopoverTrigger asChild>
@@ -438,23 +448,19 @@ const NewOrder = () => {
                             key={model.id}
                             value={model.name}
                             onSelect={() => {
+                              const selectedModel = models.find(
+                                (m) => m.id === model.id,
+                              );
+                              const hasOnlyOneSubmodel =
+                                selectedModel?.submodels?.length === 1;
+
                               setPayload({
                                 ...payload,
                                 model: {
                                   ...model,
-                                  submodels: [], // reset selection to empty
-                                  sizesList: model.sizes,
-                                  sizes: [
-                                    {
-                                      id: "",
-                                      quantity: "",
-                                      color: {
-                                        id: null,
-                                        name: "",
-                                        isNew: false,
-                                      },
-                                    },
-                                  ],
+                                  submodels: hasOnlyOneSubmodel
+                                    ? [selectedModel.submodels[0].id]
+                                    : [], // auto-select if only one
                                 },
                               });
 
@@ -479,7 +485,7 @@ const NewOrder = () => {
                                 "ml-auto h-4 w-4",
                                 model === payload.model
                                   ? "opacity-100"
-                                  : "opacity-0"
+                                  : "opacity-0",
                               )}
                             />
                           </CommandItem>
@@ -517,7 +523,7 @@ const NewOrder = () => {
                             className="w-full justify-start"
                             onClick={() => {
                               const input = document.querySelector(
-                                '[placeholder="Materialni qidirish yoki yaratish..."]'
+                                '[placeholder="Materialni qidirish yoki yaratish..."]',
                               );
                               const searchValue = input?.value || "";
                               if (searchValue.trim()) {
@@ -569,7 +575,7 @@ const NewOrder = () => {
                                 "ml-auto h-4 w-4",
                                 material.id === payload.model.material_id
                                   ? "opacity-100"
-                                  : "opacity-0"
+                                  : "opacity-0",
                               )}
                             />
                           </CommandItem>
@@ -606,6 +612,7 @@ const NewOrder = () => {
           {payload?.model?.id && (
             <>
               <div className="mt-4 flex flex-wrap gap-2 items-center">
+                Submodel:
                 {models
                   ?.find((model) => model.id === payload.model.id)
                   ?.submodels.map((submodel) => (
@@ -618,9 +625,23 @@ const NewOrder = () => {
                         }
                         type="button"
                         onClick={() => {
+                          const currentModel = models.find(
+                            (m) => m.id === payload.model.id,
+                          );
+                          const hasOnlyOneSubmodel =
+                            currentModel?.submodels?.length === 1;
+
+                          // Don't allow unselecting if there's only one submodel
+                          if (
+                            hasOnlyOneSubmodel &&
+                            payload.model.submodels?.includes(submodel.id)
+                          ) {
+                            return;
+                          }
+
                           setPayload((prev) => {
                             const exists = prev.model.submodels?.includes(
-                              submodel.id
+                              submodel.id,
                             );
                             return {
                               ...prev,
@@ -640,263 +661,117 @@ const NewOrder = () => {
                   ))}
               </div>
 
-              {/* Sizes section */}
-              <div className="mt-4 flex flex-col gap-4">
-                <div className="font-medium">O'lcham va ranglar</div>
-                {payload?.model?.sizes?.map((size, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 flex-wrap bg-blue-50 p-2 rounded-lg"
+              <div className="mt-4 space-y-3">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={addSize}
+                    className="bg-blue-500 hover:bg-blue-400"
                   >
-                    {/* Size selection */}
-                    <Select
-                      value={size.id?.toString() || ""}
-                      onValueChange={(value) => {
-                        const selectedSize = payload.model.sizesList.find(
-                          (s) => s.id === Number.parseInt(value)
-                        );
-                        const newSizes = [...payload.model.sizes];
-                        newSizes[index] = {
-                          ...newSizes[index],
-                          id: Number.parseInt(value),
-                          name: selectedSize?.name || "",
-                        };
-                        setPayload({
-                          ...payload,
-                          model: {
-                            ...payload.model,
-                            sizes: newSizes,
-                          },
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="w-[180px] bg-white">
-                        <SelectValue placeholder="O'lcham tanlang">
-                          {size.id
-                            ? payload.model.sizesList?.find(
-                                (s) => s.id === size.id
-                              )?.name || ""
-                            : ""}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {payload.model?.sizesList?.map((sizeItem) => (
-                          <SelectItem
-                            key={sizeItem.id}
-                            value={sizeItem.id.toString()}
-                          >
-                            {sizeItem.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Plus className="w-4 h-4 mr-1" /> O'lcham
+                  </Button>
 
-                    {/* Searchable Color selection */}
-                    <Popover
-                      open={colorOpens[index] || false}
-                      onOpenChange={(isOpen) => handleColorOpen(index, isOpen)}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={colorOpens[index] || false}
-                          className="w-fit justify-between bg-white"
-                        >
-                          {size.color?.name || "Rang tanlang"}
-                          <ChevronsUpDown className="opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-0">
-                        <Command>
-                          <CommandInput placeholder="Rang qidirish yoki yaratish..." />
-                          <CommandList>
-                            <CommandEmpty>
-                              <div className="p-2">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  className="w-full justify-start"
-                                  onClick={() => {
-                                    const input = document.querySelector(
-                                      '[placeholder="Rang qidirish yoki yaratish..."]'
-                                    );
-                                    const searchValue = input?.value || "";
-                                    if (searchValue.trim()) {
-                                      const newColor = {
-                                        id: Date.now(), // Temporary ID for local state
-                                        name: searchValue.trim(),
-                                        isNewlyCreated: true, // Mark as newly created in this session
-                                      };
-
-                                      // Add the new color to the colors state
-                                      setColors([...colors, newColor]);
-
-                                      // Update the selected color in the form
-                                      const newSizes = [...payload.model.sizes];
-                                      newSizes[index] = {
-                                        ...newSizes[index],
-                                        color: {
-                                          ...newColor,
-                                          isNew: true,
-                                          isNewlyCreated: true, // Mark as newly created in this session
-                                        },
-                                      };
-                                      setPayload({
-                                        ...payload,
-                                        model: {
-                                          ...payload.model,
-                                          sizes: newSizes,
-                                        },
-                                      });
-                                      handleColorOpen(index, false);
-                                    }
-                                  }}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Yangi rang yaratish
-                                </Button>
-                              </div>
-                            </CommandEmpty>
-                            <CommandGroup>
-                              {colors.map((color) => (
-                                <CommandItem
-                                  key={color.id}
-                                  value={color.name}
-                                  onSelect={() => {
-                                    const newSizes = [...payload.model.sizes];
-                                    newSizes[index] = {
-                                      ...newSizes[index],
-                                      color: {
-                                        id: color.id,
-                                        name: color.name,
-                                        isNew: false,
-                                        // Preserve the isNewlyCreated flag if this color was created in this session
-                                        isNewlyCreated:
-                                          color.isNewlyCreated || false,
-                                      },
-                                    };
-                                    setPayload({
-                                      ...payload,
-                                      model: {
-                                        ...payload.model,
-                                        sizes: newSizes,
-                                      },
-                                    });
-                                    handleColorOpen(index, false);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      size.color?.id === color.id
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {color.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-
-                    {size.color?.isNew && (
-                      <div className="text-xs text-green-600 flex items-center gap-1">
-                        <Plus className="h-3 w-3" />
-                        Yangi
-                      </div>
-                    )}
-
-                    {/* Quantity input */}
-                    <Input
-                      type="number"
-                      placeholder="Miqdori"
-                      className="w-[120px] bg-white"
-                      value={size.quantity}
-                      onChange={(e) => {
-                        const newSizes = [...payload.model.sizes];
-                        newSizes[index] = {
-                          ...newSizes[index],
-                          quantity: Number.parseInt(e.target.value),
-                        };
-                        setPayload({
-                          ...payload,
-                          model: {
-                            ...payload.model,
-                            sizes: newSizes,
-                          },
-                        });
-                      }}
-                    />
-
-                    {/* Remove button */}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        const newSizes = payload.model.sizes.filter(
-                          (_, i) => i !== index
-                        );
-                        setPayload({
-                          ...payload,
-                          model: {
-                            ...payload.model,
-                            sizes: newSizes,
-                          },
-                        });
-                      }}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                ))}
-
-                {/* sum of quantity */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Jami:</span>
-                  <span className="text-lg font-semibold">
-                    {payload.model.sizes.reduce(
-                      (sum, size) =>
-                        sum + (Number.parseInt(size.quantity) || 0),
-                      0
-                    )}
-                  </span>
+                  <Button
+                    type="button"
+                    onClick={addColor}
+                    className="bg-orange-500 hover:bg-orange-400"
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Rang
+                  </Button>
                 </div>
 
-                {/* Add new size button */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-2 w-fit"
-                  onClick={() => {
-                    setPayload({
-                      ...payload,
-                      model: {
-                        ...payload.model,
-                        sizes: [
-                          ...payload.model.sizes,
-                          {
-                            id: "",
-                            quantity: "",
-                            color: {
-                              id: null,
-                              name: "",
-                              isNew: false,
-                            },
-                          },
-                        ],
-                      },
-                    });
-                  }}
-                >
-                  <Plus />
-                  Qo'shish
-                </Button>
+                <div className="overflow-auto">
+                  <table className="border w-full text-sm">
+                    <thead>
+                      <tr>
+                        <th className="border p-2">O'lcham / Rang</th>
+
+                        {matrix.colors.map((color) => (
+                          <th key={color.id} className="border p-2">
+                            <div className="flex gap-1">
+                              <Input
+                                value={color.name}
+                                placeholder="Rang"
+                                className="bg-white"
+                                onChange={(e) => {
+                                  setMatrix((prev) => ({
+                                    ...prev,
+                                    colors: prev.colors.map((c) =>
+                                      c.id === color.id
+                                        ? { ...c, name: e.target.value }
+                                        : c,
+                                    ),
+                                  }));
+                                }}
+                              />
+
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                type="button"
+                                onClick={() => deleteColor(color.id)}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {matrix.sizes.map((size) => (
+                        <tr key={size.id}>
+                          <td className="border p-2">
+                            <div className="flex gap-1">
+                              <Input
+                                value={size.name}
+                                placeholder="O'lcham"
+                                className="bg-white"
+                                onChange={(e) => {
+                                  setMatrix((prev) => ({
+                                    ...prev,
+                                    sizes: prev.sizes.map((s) =>
+                                      s.id === size.id
+                                        ? { ...s, name: e.target.value }
+                                        : s,
+                                    ),
+                                  }));
+                                }}
+                              />
+
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                type="button"
+                                onClick={() => deleteSize(size.id)}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </div>
+                          </td>
+
+                          {matrix.colors.map((color) => {
+                            const key = `${size.id}-${color.id}`;
+
+                            return (
+                              <td key={color.id} className="border p-1">
+                                <Input
+                                  type="number"
+                                  className="bg-white"
+                                  value={matrix.quantities[key] || ""}
+                                  onChange={(e) =>
+                                    updateQty(size.id, color.id, e.target.value)
+                                  }
+                                />
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </>
           )}
