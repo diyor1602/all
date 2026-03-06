@@ -283,481 +283,504 @@ const NewOrder = () => {
   }, []);
 
   return (
-    <>
-      <div className="text-2xl font-bold mb-4">Yangi buyurtma yaratish</div>
+    <div className="">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          Yangi buyurtma yaratish
+        </h1>
+        <p className="text-gray-600">Yangi buyurtma ma'lumotlarini kiriting</p>
+      </div>
       {loading ? (
         <div className="w-full h-[80vh] flex items-center justify-center">
-          <Loader2 className="animate-spin text-primary" size={36} />
+          <div className="text-center">
+            <Loader2
+              className="animate-spin text-primary mx-auto mb-4"
+              size={48}
+            />
+            <p className="text-gray-600">Ma'lumotlar yuklanmoqda...</p>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="season_year">Yil</Label>
-              <Select
-                value={String(payload.season_year)}
-                onValueChange={(value) =>
-                  setPayload({ ...payload, season_year: Number(value) })
-                }
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Yil tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 7 }, (_, i) => {
-                    const year = new Date().getFullYear() - 3 + i;
-                    return (
-                      <SelectItem key={year} value={String(year)}>
-                        {year}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="season_type">Mavsum</Label>
-              <Select
-                value={payload.season_type}
-                onValueChange={(value) =>
-                  setPayload({ ...payload, season_type: value })
-                }
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Mavsum tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="winter">Qish</SelectItem>
-                  <SelectItem value="summer">Bahor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Searchable Contragent Selection */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderContragent">Kontragent</Label>
-              <Popover open={contragentOpen} onOpenChange={setContragentOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={contragentOpen}
-                    className="justify-between bg-white"
-                  >
-                    {payload.contragent.name || "Kontragent tanlang"}
-                    <ChevronsUpDown className="opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0">
-                  <Command>
-                    <CommandInput placeholder="Kontragent qidirish yoki yaratish..." />
-                    <CommandList>
-                      <CommandEmpty>
-                        <div className="p-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="w-full justify-start"
-                            onClick={() => {
-                              const input = document.querySelector(
-                                '[placeholder="Kontragent qidirish yoki yaratish..."]',
-                              );
-                              const searchValue = input?.value || "";
-                              if (searchValue.trim()) {
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+              <span className="w-2 h-8 bg-blue-500 rounded mr-3"></span>
+              Asosiy ma'lumotlar
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="season_year"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Yil
+                </Label>
+                <Select
+                  value={String(payload.season_year)}
+                  onValueChange={(value) =>
+                    setPayload({ ...payload, season_year: Number(value) })
+                  }
+                >
+                  <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="Yil tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 7 }, (_, i) => {
+                      const year = new Date().getFullYear() - 3 + i;
+                      return (
+                        <SelectItem key={year} value={String(year)}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="season_type"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Mavsum
+                </Label>
+                <Select
+                  value={payload.season_type}
+                  onValueChange={(value) =>
+                    setPayload({ ...payload, season_type: value })
+                  }
+                >
+                  <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="Mavsum tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="winter">Qish</SelectItem>
+                    <SelectItem value="summer">Bahor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Searchable Contragent Selection */}
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="orderContragent"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Kontragent
+                </Label>
+                <Popover open={contragentOpen} onOpenChange={setContragentOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={contragentOpen}
+                      className="justify-between bg-white border-gray-300 hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      {payload.contragent.name || "Kontragent tanlang"}
+                      <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0">
+                    <Command>
+                      <CommandInput placeholder="Kontragent qidirish yoki yaratish..." />
+                      <CommandList>
+                        <CommandEmpty>
+                          <div className="p-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="w-full justify-start"
+                              onClick={() => {
+                                const input = document.querySelector(
+                                  '[placeholder="Kontragent qidirish yoki yaratish..."]',
+                                );
+                                const searchValue = input?.value || "";
+                                if (searchValue.trim()) {
+                                  setPayload((prev) => ({
+                                    ...prev,
+                                    contragent: {
+                                      id: null,
+                                      name: searchValue.trim(),
+                                      isNew: true,
+                                    },
+                                  }));
+                                  setContragentOpen(false);
+                                }
+                              }}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Yangi kontragent yaratish
+                            </Button>
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {contragents.map((contragent) => (
+                            <CommandItem
+                              key={contragent.id}
+                              value={contragent.name}
+                              onSelect={() => {
                                 setPayload((prev) => ({
                                   ...prev,
                                   contragent: {
-                                    id: null,
-                                    name: searchValue.trim(),
-                                    isNew: true,
+                                    id: contragent.id,
+                                    name: contragent.name,
+                                    isNew: false,
                                   },
                                 }));
                                 setContragentOpen(false);
-                              }
-                            }}
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Yangi kontragent yaratish
-                          </Button>
-                        </div>
-                      </CommandEmpty>
-                      <CommandGroup>
-                        {contragents.map((contragent) => (
-                          <CommandItem
-                            key={contragent.id}
-                            value={contragent.name}
-                            onSelect={() => {
-                              setPayload((prev) => ({
-                                ...prev,
-                                contragent: {
-                                  id: contragent.id,
-                                  name: contragent.name,
-                                  isNew: false,
-                                },
-                              }));
-                              setContragentOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                payload.contragent.id === contragent.id
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                            {contragent.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              {payload.contragent.isNew && (
-                <div className="text-sm text-green-600 flex items-center gap-1">
-                  <Plus className="h-3 w-3" />
-                  Yangi kontragent: {payload.contragent.name}
-                </div>
-              )}
-            </div>
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  payload.contragent.id === contragent.id
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {contragent.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {payload.contragent.isNew && (
+                  <div className="text-sm text-green-600 flex items-center gap-1">
+                    <Plus className="h-3 w-3" />
+                    Yangi kontragent: {payload.contragent.name}
+                  </div>
+                )}
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderName">Buyurtma nomi</Label>
-              <Input
-                type="text"
-                id="orderName"
-                placeholder="Buyurtma nomi"
-                value={payload.name}
-                required
-                className="bg-white"
-                onChange={(e) =>
-                  setPayload({ ...payload, name: e.target.value })
-                }
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="orderName"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Buyurtma nomi
+                </Label>
+                <Input
+                  type="text"
+                  id="orderName"
+                  placeholder="Buyurtma nomi"
+                  value={payload.name}
+                  required
+                  className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) =>
+                    setPayload({ ...payload, name: e.target.value })
+                  }
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderModel">Modelni tanlang</Label>
-              <Popover open={modelOpen} onOpenChange={setModelOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={modelOpen}
-                    className="justify-between bg-white"
-                  >
-                    {payload.model.name || "Model tanlang"}
-                    <ChevronsUpDown className="opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0">
-                  <Command>
-                    <CommandInput placeholder="Modelni qidirish..." />
-                    <CommandList>
-                      <CommandEmpty>Model topilmadi</CommandEmpty>
-                      <CommandGroup>
-                        {models.map((model) => (
-                          <CommandItem
-                            key={model.id}
-                            value={model.name}
-                            onSelect={() => {
-                              const selectedModel = models.find(
-                                (m) => m.id === model.id,
-                              );
-                              const hasOnlyOneSubmodel =
-                                selectedModel?.submodels?.length === 1;
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="orderModel"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Modelni tanlang
+                </Label>
+                <Popover open={modelOpen} onOpenChange={setModelOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={modelOpen}
+                      className="justify-between bg-white border-gray-300 hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      {payload.model.name || "Model tanlang"}
+                      <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0">
+                    <Command>
+                      <CommandInput placeholder="Modelni qidirish..." />
+                      <CommandList>
+                        <CommandEmpty>Model topilmadi</CommandEmpty>
+                        <CommandGroup>
+                          {models.map((model) => (
+                            <CommandItem
+                              key={model.id}
+                              value={model.name}
+                              onSelect={() => {
+                                const selectedModel = models.find(
+                                  (m) => m.id === model.id,
+                                );
+                                const hasOnlyOneSubmodel =
+                                  selectedModel?.submodels?.length === 1;
 
-                              setPayload({
-                                ...payload,
-                                model: {
-                                  ...model,
-                                  submodels: hasOnlyOneSubmodel
-                                    ? [selectedModel.submodels[0].id]
-                                    : [], // auto-select if only one
-                                },
-                              });
+                                setPayload({
+                                  ...payload,
+                                  model: {
+                                    ...model,
+                                    submodels: hasOnlyOneSubmodel
+                                      ? [selectedModel.submodels[0].id]
+                                      : [], // auto-select if only one
+                                  },
+                                });
 
-                              setModelOpen(false);
-                            }}
-                          >
-                            <div className="w-full flex flex-col gap-1">
-                              <div>{model.name}</div>
-                              <div className="flex gap-2 flex-wrap">
-                                {model.submodels?.map((submodel) => (
-                                  <span
-                                    key={submodel.id}
-                                    className="rounded-full bg-gray-200 px-2 py-1 text-xs"
-                                  >
-                                    {submodel.name}
-                                  </span>
-                                ))}
+                                setModelOpen(false);
+                              }}
+                            >
+                              <div className="w-full flex flex-col gap-1">
+                                <div>{model.name}</div>
+                                <div className="flex gap-2 flex-wrap">
+                                  {model.submodels?.map((submodel) => (
+                                    <span
+                                      key={submodel.id}
+                                      className="rounded-full bg-gray-200 px-2 py-1 text-xs"
+                                    >
+                                      {submodel.name}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                            <Check
-                              className={cn(
-                                "ml-auto h-4 w-4",
-                                model === payload.model
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  model === payload.model
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderMaterial">Materialni tanlang</Label>
-              <Popover open={materialOpen} onOpenChange={setMaterialOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={materialOpen}
-                    className="justify-between bg-white"
-                  >
-                    {payload.model.material?.name || "Material tanlang"}
-                    <ChevronsUpDown className="opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0">
-                  <Command>
-                    <CommandInput placeholder="Materialni qidirish yoki yaratish..." />
-                    <CommandList>
-                      <CommandEmpty>
-                        <div className="p-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="w-full justify-start"
-                            onClick={() => {
-                              const input = document.querySelector(
-                                '[placeholder="Materialni qidirish yoki yaratish..."]',
-                              );
-                              const searchValue = input?.value || "";
-                              if (searchValue.trim()) {
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="orderMaterial"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Materialni tanlang
+                </Label>
+                <Popover open={materialOpen} onOpenChange={setMaterialOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={materialOpen}
+                      className="justify-between bg-white border-gray-300 hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      {payload.model.material?.name || "Material tanlang"}
+                      <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0">
+                    <Command>
+                      <CommandInput placeholder="Materialni qidirish yoki yaratish..." />
+                      <CommandList>
+                        <CommandEmpty>
+                          <div className="p-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="w-full justify-start"
+                              onClick={() => {
+                                const input = document.querySelector(
+                                  '[placeholder="Materialni qidirish yoki yaratish..."]',
+                                );
+                                const searchValue = input?.value || "";
+                                if (searchValue.trim()) {
+                                  setPayload((prev) => ({
+                                    ...prev,
+                                    model: {
+                                      ...prev.model,
+                                      material_id: null,
+                                      material: {
+                                        name: searchValue.trim(),
+                                        isNew: true,
+                                      },
+                                    },
+                                  }));
+                                  setMaterialOpen(false);
+                                }
+                              }}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Yangi material yaratish
+                            </Button>
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {materials.map((material) => (
+                            <CommandItem
+                              key={material.id}
+                              value={material.name}
+                              onSelect={() => {
                                 setPayload((prev) => ({
                                   ...prev,
                                   model: {
                                     ...prev.model,
-                                    material_id: null,
-                                    material: {
-                                      name: searchValue.trim(),
-                                      isNew: true,
-                                    },
+                                    material_id: material.id,
+                                    material: { ...material, isNew: false },
                                   },
                                 }));
                                 setMaterialOpen(false);
-                              }
-                            }}
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Yangi material yaratish
-                          </Button>
-                        </div>
-                      </CommandEmpty>
-                      <CommandGroup>
-                        {materials.map((material) => (
-                          <CommandItem
-                            key={material.id}
-                            value={material.name}
-                            onSelect={() => {
-                              setPayload((prev) => ({
-                                ...prev,
-                                model: {
-                                  ...prev.model,
-                                  material_id: material.id,
-                                  material: { ...material, isNew: false },
-                                },
-                              }));
-                              setMaterialOpen(false);
-                            }}
-                          >
-                            <div className="w-full flex flex-col gap-1">
-                              <div>{material.name}</div>
-                              <div className="text-xs text-gray-500">
-                                {material.color?.name} {material.lot}
+                              }}
+                            >
+                              <div className="w-full flex flex-col gap-1">
+                                <div>{material.name}</div>
+                                <div className="text-xs text-gray-500">
+                                  {material.color?.name} {material.lot}
+                                </div>
                               </div>
-                            </div>
-                            <Check
-                              className={cn(
-                                "ml-auto h-4 w-4",
-                                material.id === payload.model.material_id
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              {payload.model.material?.isNew && (
-                <div className="text-sm text-green-600 flex items-center gap-1">
-                  <Plus className="h-3 w-3" />
-                  Yangi material: {payload.model.material.name}
-                </div>
-              )}
-            </div>
-
-            {/* Comment */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="orderComment">Izoh</Label>
-              <Input
-                id="orderComment"
-                name="orderComment"
-                value={payload.comment}
-                className="bg-white"
-                onChange={(e) =>
-                  setPayload({ ...payload, comment: e.target.value })
-                }
-                placeholder="Buyurtma haqida izoh"
-              />
-            </div>
-          </div>
-
-          {payload?.model?.id && (
-            <>
-              <div className="mt-4 flex flex-wrap gap-2 items-center">
-                Submodel:
-                {models
-                  ?.find((model) => model.id === payload.model.id)
-                  ?.submodels.map((submodel) => (
-                    <div key={submodel.id}>
-                      <Button
-                        variant={
-                          payload.model.submodels?.includes(submodel.id)
-                            ? "default"
-                            : "outline"
-                        }
-                        type="button"
-                        onClick={() => {
-                          const currentModel = models.find(
-                            (m) => m.id === payload.model.id,
-                          );
-                          const hasOnlyOneSubmodel =
-                            currentModel?.submodels?.length === 1;
-
-                          // Don't allow unselecting if there's only one submodel
-                          if (
-                            hasOnlyOneSubmodel &&
-                            payload.model.submodels?.includes(submodel.id)
-                          ) {
-                            return;
-                          }
-
-                          setPayload((prev) => {
-                            const exists = prev.model.submodels?.includes(
-                              submodel.id,
-                            );
-                            return {
-                              ...prev,
-                              model: {
-                                ...prev.model,
-                                submodels: exists
-                                  ? [] // if clicked again, unselect
-                                  : [submodel.id], // ✅ allow only ONE
-                              },
-                            };
-                          });
-                        }}
-                      >
-                        {submodel.name}
-                      </Button>
-                    </div>
-                  ))}
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  material.id === payload.model.material_id
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {payload.model.material?.isNew && (
+                  <div className="text-sm text-green-600 flex items-center gap-1">
+                    <Plus className="h-3 w-3" />
+                    Yangi material: {payload.model.material.name}
+                  </div>
+                )}
               </div>
 
-              <div className="mt-4 space-y-3">
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    onClick={addSize}
-                    className="bg-blue-500 hover:bg-blue-400"
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> O'lcham
-                  </Button>
+              {/* Comment */}
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="orderComment"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Izoh
+                </Label>
+                <Input
+                  id="orderComment"
+                  name="orderComment"
+                  value={payload.comment}
+                  className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) =>
+                    setPayload({ ...payload, comment: e.target.value })
+                  }
+                  placeholder="Buyurtma haqida izoh"
+                />
+              </div>
+            </div>
 
-                  <Button
-                    type="button"
-                    onClick={addColor}
-                    className="bg-orange-500 hover:bg-orange-400"
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> Rang
-                  </Button>
+            {payload?.model?.id && (
+              <>
+                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <span className="w-2 h-8 bg-green-500 rounded mr-3"></span>
+                    Submodel tanlash
+                  </h2>
+                  <div className="flex flex-wrap gap-3 items-center">
+                    {models
+                      ?.find((model) => model.id === payload.model.id)
+                      ?.submodels.map((submodel) => (
+                        <div key={submodel.id}>
+                          <Button
+                            variant={
+                              payload.model.submodels?.includes(submodel.id)
+                                ? "default"
+                                : "outline"
+                            }
+                            type="button"
+                            className={`transition-all duration-200 ${
+                              payload.model.submodels?.includes(submodel.id)
+                                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                                : "border-gray-300 hover:border-blue-500 hover:bg-blue-50"
+                            }`}
+                            onClick={() => {
+                              const currentModel = models.find(
+                                (m) => m.id === payload.model.id,
+                              );
+                              const hasOnlyOneSubmodel =
+                                currentModel?.submodels?.length === 1;
+
+                              // Don't allow unselecting if there's only one submodel
+                              if (
+                                hasOnlyOneSubmodel &&
+                                payload.model.submodels?.includes(submodel.id)
+                              ) {
+                                return;
+                              }
+
+                              setPayload((prev) => {
+                                const exists = prev.model.submodels?.includes(
+                                  submodel.id,
+                                );
+                                return {
+                                  ...prev,
+                                  model: {
+                                    ...prev.model,
+                                    submodels: exists
+                                      ? [] // if clicked again, unselect
+                                      : [submodel.id], // ✅ allow only ONE
+                                  },
+                                };
+                              });
+                            }}
+                          >
+                            {submodel.name}
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
                 </div>
 
-                <div className="overflow-auto">
-                  <table className="border w-full text-sm">
-                    <thead>
-                      <tr>
-                        <th className="border p-2">O'lcham / Rang</th>
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                    <span className="w-2 h-8 bg-purple-500 rounded mr-3"></span>
+                    O'lcham va rang matritsasi
+                  </h2>
 
-                        {matrix.colors.map((color) => (
-                          <th key={color.id} className="border p-2">
-                            <div className="flex gap-1">
-                              <Input
-                                value={color.name}
-                                placeholder="Rang"
-                                className="bg-white"
-                                onChange={(e) => {
-                                  setMatrix((prev) => ({
-                                    ...prev,
-                                    colors: prev.colors.map((c) =>
-                                      c.id === color.id
-                                        ? { ...c, name: e.target.value }
-                                        : c,
-                                    ),
-                                  }));
-                                }}
-                              />
+                  <div className="flex gap-3 mb-6">
+                    <Button
+                      type="button"
+                      onClick={addSize}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md transition-all duration-200"
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> O'lcham qo'shish
+                    </Button>
 
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                type="button"
-                                onClick={() => deleteColor(color.id)}
-                              >
-                                <Trash2 size={14} />
-                              </Button>
-                            </div>
+                    <Button
+                      type="button"
+                      onClick={addColor}
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md transition-all duration-200"
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Rang qo'shish
+                    </Button>
+                  </div>
+
+                  <div className="overflow-auto rounded-lg border border-gray-200">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="border p-3 font-semibold text-gray-700">
+                            O'lcham / Rang
                           </th>
-                        ))}
-                        <th className="border p-2 bg-gray-100 font-bold">
-                          Jami (qator)
-                        </th>
-                      </tr>
-                    </thead>
 
-                    <tbody>
-                      {matrix.sizes.map((size) => {
-                        // Calculate row total for this size
-                        const rowTotal = matrix.colors.reduce((sum, color) => {
-                          const key = `${size.id}-${color.id}`;
-                          return sum + Number(matrix.quantities[key] || 0);
-                        }, 0);
-
-                        return (
-                          <tr key={size.id}>
-                            <td className="border p-2">
-                              <div className="flex gap-1">
+                          {matrix.colors.map((color) => (
+                            <th key={color.id} className="border p-3">
+                              <div className="flex gap-2">
                                 <Input
-                                  value={size.name}
-                                  placeholder="O'lcham"
-                                  className="bg-white"
+                                  value={color.name}
+                                  placeholder="Rang"
+                                  className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
                                   onChange={(e) => {
                                     setMatrix((prev) => ({
                                       ...prev,
-                                      sizes: prev.sizes.map((s) =>
-                                        s.id === size.id
-                                          ? { ...s, name: e.target.value }
-                                          : s,
+                                      colors: prev.colors.map((c) =>
+                                        c.id === color.id
+                                          ? { ...c, name: e.target.value }
+                                          : c,
                                       ),
                                     }));
                                   }}
@@ -767,49 +790,25 @@ const NewOrder = () => {
                                   size="icon"
                                   variant="ghost"
                                   type="button"
-                                  onClick={() => deleteSize(size.id)}
+                                  onClick={() => deleteColor(color.id)}
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                 >
                                   <Trash2 size={14} />
                                 </Button>
                               </div>
-                            </td>
+                            </th>
+                          ))}
+                          <th className="border p-3 bg-blue-50 font-bold text-gray-700">
+                            Jami (qator)
+                          </th>
+                        </tr>
+                      </thead>
 
-                            {matrix.colors.map((color) => {
-                              const key = `${size.id}-${color.id}`;
-
-                              return (
-                                <td key={color.id} className="border p-1">
-                                  <Input
-                                    type="number"
-                                    className="bg-white"
-                                    value={matrix.quantities[key] || ""}
-                                    onChange={(e) =>
-                                      updateQty(
-                                        size.id,
-                                        color.id,
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-                                </td>
-                              );
-                            })}
-                            <td className="border p-2 bg-gray-100 font-bold text-center">
-                              {rowTotal}
-                            </td>
-                          </tr>
-                        );
-                      })}
-
-                      {/* Column totals row */}
-                      <tr>
-                        <td className="border p-2 bg-gray-100 font-bold">
-                          Jami (ustun)
-                        </td>
-                        {matrix.colors.map((color) => {
-                          // Calculate column total for this color
-                          const columnTotal = matrix.sizes.reduce(
-                            (sum, size) => {
+                      <tbody>
+                        {matrix.sizes.map((size) => {
+                          // Calculate row total for this size
+                          const rowTotal = matrix.colors.reduce(
+                            (sum, color) => {
                               const key = `${size.id}-${color.id}`;
                               return sum + Number(matrix.quantities[key] || 0);
                             },
@@ -817,37 +816,118 @@ const NewOrder = () => {
                           );
 
                           return (
-                            <td
-                              key={color.id}
-                              className="border p-2 bg-gray-100 font-bold text-center"
-                            >
-                              {columnTotal}
-                            </td>
+                            <tr key={size.id}>
+                              <td className="border p-2">
+                                <div className="flex gap-1">
+                                  <Input
+                                    value={size.name}
+                                    placeholder="O'lcham"
+                                    className="bg-white"
+                                    onChange={(e) => {
+                                      setMatrix((prev) => ({
+                                        ...prev,
+                                        sizes: prev.sizes.map((s) =>
+                                          s.id === size.id
+                                            ? { ...s, name: e.target.value }
+                                            : s,
+                                        ),
+                                      }));
+                                    }}
+                                  />
+
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    type="button"
+                                    onClick={() => deleteSize(size.id)}
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </div>
+                              </td>
+
+                              {matrix.colors.map((color) => {
+                                const key = `${size.id}-${color.id}`;
+
+                                return (
+                                  <td key={color.id} className="border p-1">
+                                    <Input
+                                      type="number"
+                                      className="bg-white"
+                                      value={matrix.quantities[key] || ""}
+                                      onChange={(e) =>
+                                        updateQty(
+                                          size.id,
+                                          color.id,
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                  </td>
+                                );
+                              })}
+                              <td className="border p-3 bg-blue-50 font-bold text-center text-gray-700">
+                                {rowTotal}
+                              </td>
+                            </tr>
                           );
                         })}
-                        <td className="border p-2 bg-gray-200 font-bold text-center">
-                          {matrix.sizes.reduce(
-                            (grandTotal, size) =>
-                              grandTotal +
-                              matrix.colors.reduce((rowTotal, color) => {
+
+                        {/* Column totals row */}
+                        <tr>
+                          <td className="border p-2 bg-gray-100 font-bold">
+                            Jami (ustun)
+                          </td>
+                          {matrix.colors.map((color) => {
+                            // Calculate column total for this color
+                            const columnTotal = matrix.sizes.reduce(
+                              (sum, size) => {
                                 const key = `${size.id}-${color.id}`;
                                 return (
-                                  rowTotal + Number(matrix.quantities[key] || 0)
+                                  sum + Number(matrix.quantities[key] || 0)
                                 );
-                              }, 0),
-                            0,
-                          )}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </>
-          )}
+                              },
+                              0,
+                            );
 
-          <div className="flex justify-end">
-            <Button type="submit" className="mt-4" disabled={isSending}>
+                            return (
+                              <td
+                                key={color.id}
+                                className="border p-2 bg-gray-100 font-bold text-center"
+                              >
+                                {columnTotal}
+                              </td>
+                            );
+                          })}
+                          <td className="border p-2 bg-gray-200 font-bold text-center">
+                            {matrix.sizes.reduce(
+                              (grandTotal, size) =>
+                                grandTotal +
+                                matrix.colors.reduce((rowTotal, color) => {
+                                  const key = `${size.id}-${color.id}`;
+                                  return (
+                                    rowTotal +
+                                    Number(matrix.quantities[key] || 0)
+                                  );
+                                }, 0),
+                              0,
+                            )}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex justify-end mt-8">
+            <Button
+              type="submit"
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 shadow-lg transition-all duration-200 disabled:opacity-50"
+              disabled={isSending}
+            >
               {isSending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -855,15 +935,15 @@ const NewOrder = () => {
                 </>
               ) : (
                 <>
-                  <Save />
-                  Saqlash
+                  <Save className="mr-2 h-4 w-4" />
+                  Buyurtmani saqlash
                 </>
               )}
             </Button>
           </div>
         </form>
       )}
-    </>
+    </div>
   );
 };
 
