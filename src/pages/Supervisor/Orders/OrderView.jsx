@@ -7,12 +7,9 @@ import {
   ArrowLeft,
   Loader2,
   MessageSquareIcon,
-  CalendarCheckIcon,
-  CalendarIcon,
   TagIcon,
   RulerIcon,
   Timer,
-  Shirt,
   CheckCircle,
   Calendar,
   InboxIcon,
@@ -36,14 +33,6 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
-
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString("ru-RU", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
 
 const OrderView = () => {
   const { id } = useParams();
@@ -159,6 +148,7 @@ const OrderView = () => {
             ) : (
               <Download className="h-4 w-4" />
             )}
+            PDF
           </Button>
           <Button
             className="flex items-center"
@@ -194,114 +184,169 @@ const OrderView = () => {
           </CardTitle>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Order Details Section */}
+            {/* Left Column - Basic Information */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-700">Buyurtma haqida</h4>
-
-              <div className="space-y-2">
-                {order?.contragent && (
-                  <div className="flex gap-2 items-center">
-                    <Building2 className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
-                      Kontragent: {order?.contragent?.name || "Kontragent"}
+              <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center">
+                  <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></div>
+                  Asosiy ma'lumotlar
+                </h4>
+                <div className="space-y-3">
+                  {order?.contragent && (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/30 hover:bg-white/40 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-blue-100 rounded-lg">
+                          <Building2 className="h-3 w-3 text-blue-600" />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700">
+                          Kontragent
+                        </span>
+                      </div>
+                      <span className="text-xs font-semibold text-gray-900">
+                        {order?.contragent?.name || "Kontragent"}
+                      </span>
+                    </div>
+                  )}
+                  {order?.season_year && (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/30 hover:bg-white/40 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-emerald-100 rounded-lg">
+                          <Calendar className="h-3 w-3 text-emerald-600" />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700">
+                          Mavsum
+                        </span>
+                      </div>
+                      <span className="text-xs font-semibold text-gray-900">
+                        {order?.season_year}{" "}
+                        {order?.season_type === "winter"
+                          ? "Qish"
+                          : order?.season_type === "summer"
+                            ? "Bahor"
+                            : "-"}
+                      </span>
+                    </div>
+                  )}
+                  {order?.quantity && (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/30 hover:bg-white/40 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-purple-100 rounded-lg">
+                          <FileDigit className="h-3 w-3 text-purple-600" />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700">
+                          Miqdori
+                        </span>
+                      </div>
+                      <span className="text-xs font-semibold text-gray-900">
+                        {order?.quantity} ta
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/30 hover:bg-white/40 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-purple-100 rounded-lg">
+                        <FileDigit className="h-3 w-3 text-purple-600" />
+                      </div>
+                      <span className="text-xs font-medium text-gray-700">
+                        Submodel
+                      </span>
+                    </div>
+                    <span className="text-xs font-semibold text-gray-900">
+                      {order?.order_model?.submodels
+                        ?.map((submodel) => submodel?.submodel?.name)
+                        .join(", ")}
                     </span>
                   </div>
-                )}
-                {order?.season_year && (
-                  <div className="flex gap-2 items-center">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
-                      Mavsum: {order?.season_year || "0"}{" "}
-                      {order?.season_type === "winter"
-                        ? "Qish"
-                        : order?.season_type === "summer"
-                          ? "Bahor"
-                          : "-"}
-                    </span>
-                  </div>
-                )}
-                {order?.quantity && (
-                  <div className="flex gap-2 items-center">
-                    <FileDigit className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
-                      Miqdori: {order?.quantity || "0"} ta
-                    </span>
-                  </div>
-                )}
-                {order?.start_date && (
-                  <div className="flex gap-2 items-center">
-                    <CalendarIcon className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
-                      Boshlash: {formatDate(order?.start_date)}
-                    </span>
-                  </div>
-                )}
-
-                {order?.end_date && (
-                  <div className="flex gap-2 items-center">
-                    <CalendarCheckIcon className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
-                      Tugash: {formatDate(order?.end_date)}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex gap-2 items-center">
-                  <Timer className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-bold">
-                    Jami UZ:{" "}
-                    {totalSpends?.toLocaleString("ru-RU", {
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    sekund /{" "}
-                    {parseFloat(totalSpends / 60)?.toLocaleString("ru-RU", {
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    minut
-                  </span>
                 </div>
-                <div className="flex gap-2 items-center">
-                  <Timer className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-bold">
-                    Jami RU:{" "}
-                    {parseFloat(totalSpendsRU)?.toLocaleString("ru-RU", {
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    sekund /{" "}
-                    {parseFloat(totalSpendsRU / 60)?.toLocaleString("ru-RU", {
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    minut
-                  </span>
+              </div>
+            </div>
+
+            {/* Right Column - Time Information */}
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100 shadow-sm">
+                <h4 className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-3 flex items-center">
+                  <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2 animate-pulse"></div>
+                  Sarflangan vaqt
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-indigo-100">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-500 rounded-lg shadow-sm">
+                        <Timer className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-medium text-indigo-600 block">
+                          O'zbekiston
+                        </span>
+                        <span className="text-lg font-bold text-indigo-900">
+                          {totalSpends?.toLocaleString("ru-RU", {
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          sekund
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-indigo-600 block">
+                        Daqiqa
+                      </span>
+                      <span className="text-sm font-semibold text-indigo-800">
+                        {parseFloat(totalSpends / 60)?.toLocaleString("ru-RU", {
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/60 hover:bg-white/70 transition-colors border border-purple-100">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-500 rounded-lg shadow-sm">
+                        <Timer className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-medium text-purple-600 block">
+                          Rossiya
+                        </span>
+                        <span className="text-lg font-bold text-purple-900">
+                          {parseFloat(totalSpendsRU)?.toLocaleString("ru-RU", {
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          sekund
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-purple-600 block">
+                        Daqiqa
+                      </span>
+                      <span className="text-sm font-semibold text-purple-800">
+                        {parseFloat(totalSpendsRU / 60)?.toLocaleString(
+                          "ru-RU",
+                          { maximumFractionDigits: 2 },
+                        )}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Comment Section - Full Width */}
           {order?.comment && (
-            <div className="bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100 mt-4 flex items-center gap-2 flex-wrap">
-              <MessageSquareIcon className="h-4 w-4 text-gray-500 mt-1" />
-              <span className="text-sm">{order?.comment}</span>
-            </div>
-          )}
-          {order?.order_model?.sizes && order.order_model.sizes.length > 0 && (
-            <div className="mt-6 bg-white bg-opacity-40 p-4 rounded-lg border border-indigo-100">
-              <h4 className="font-medium text-gray-700 mb-3 flex items-center">
-                <Shirt className="h-4 w-4 mr-2 text-indigo-500" />
-                <span>Submodellar</span>
+            <div className="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200 shadow-sm">
+              <h4 className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2 flex items-center">
+                <div className="w-2 h-2 bg-amber-500 rounded-full mr-2"></div>
+                Izoh
               </h4>
-              <div className="flex items-center flex-wrap gap-3">
-                {order?.order_model?.submodels?.map((submodel) => (
-                  <Badge
-                    key={submodel?.id}
-                    className="bg-white text-indigo-700 border border-indigo-200 px-3 py-2 text-base w-fit hover:bg-indigo-50"
-                  >
-                    <span className="font-bold">
-                      {submodel?.submodel?.name}
-                    </span>{" "}
-                  </Badge>
-                ))}
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <MessageSquareIcon className="h-4 w-4 text-amber-600" />
+                </div>
+                <p className="text-xs text-gray-700 leading-relaxed flex-1">
+                  {order?.comment}
+                </p>
               </div>
             </div>
           )}
