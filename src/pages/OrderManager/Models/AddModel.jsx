@@ -202,7 +202,7 @@ const AddModel = () => {
           description: modelData.description,
           sizes: modelData.sizes,
           submodels: modelData.submodels,
-        })
+        }),
       );
 
       // Add all images as an array
@@ -282,7 +282,8 @@ const AddModel = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="minute">
-                    Patok uchun daqiqa <span className="text-red-500">*</span>
+                    Daqiqa (bitish minuti){" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="minute"

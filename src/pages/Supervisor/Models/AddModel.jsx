@@ -26,7 +26,7 @@ const AddModel = () => {
 
   // New size and submodel inputs
   const [newSize, setNewSize] = useState("");
-  const [newSubmodel, setNewSubmodel] = useState("");
+  const [submodel, setSubmodel] = useState("");
 
   // Model form data
   const [model, setModel] = useState({
@@ -34,7 +34,7 @@ const AddModel = () => {
     description: "",
     rasxod: "0",
     minute: "0",
-    submodels: [],
+    submodel: "",
     sizes: [],
     images: [],
   });
@@ -64,23 +64,11 @@ const AddModel = () => {
     });
   };
 
-  const handleAddSubmodel = () => {
-    if (newSubmodel.trim()) {
-      setModel({
-        ...model,
-        submodels: [
-          ...model.submodels,
-          { name: newSubmodel.trim(), id: Date.now() },
-        ],
-      });
-      setNewSubmodel("");
-    }
-  };
-
-  const handleRemoveSubmodel = (submodelId) => {
+  const handleSubmodelChange = (value) => {
+    setSubmodel(value);
     setModel({
       ...model,
-      submodels: model.submodels.filter((sm) => sm.id !== submodelId),
+      submodel: value,
     });
   };
 
@@ -151,10 +139,10 @@ const AddModel = () => {
       return false;
     }
 
-    if (model.submodels.length === 0) {
+    if (!model.submodel.trim()) {
       toast({
         title: "Xato",
-        description: "Kamida bitta submodel kiritilishi shart",
+        description: "Submodel kiritilishi shart",
         variant: "destructive",
       });
       return false;
@@ -187,7 +175,7 @@ const AddModel = () => {
         minute: parseFloat(model.rasxod),
         description: model.description || "",
         sizes: model.sizes.map((size) => ({ name: size.name })),
-        submodels: model.submodels.map((submodel) => ({ name: submodel.name })),
+        submodels: model.submodel ? [{ name: model.submodel }] : [],
         images: model.images.map((image) => image.file),
       };
 
@@ -204,7 +192,7 @@ const AddModel = () => {
           description: modelData.description,
           sizes: modelData.sizes,
           submodels: modelData.submodels,
-        })
+        }),
       );
 
       // Add all images as an array
@@ -318,58 +306,19 @@ const AddModel = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
                   <div className="flex items-center gap-2">
-                    Submodellar ({model.submodels.length}){" "}
-                    <span className="text-red-500">*</span>
+                    Submodel <span className="text-red-500">*</span>
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={newSubmodel}
-                      onChange={(e) => setNewSubmodel(e.target.value)}
-                      placeholder="Yangi submodel nomi"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && newSubmodel.trim()) {
-                          e.preventDefault();
-                          handleAddSubmodel();
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={handleAddSubmodel}
-                      disabled={!newSubmodel.trim()}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {model.submodels.length > 0 ? (
-                    <div className="space-y-2">
-                      {model.submodels.map((submodel) => (
-                        <div
-                          key={submodel.id}
-                          className="flex items-center justify-between p-2 bg-green-50 border border-green-100 rounded-md"
-                        >
-                          <span>{submodel.name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveSubmodel(submodel.id)}
-                          >
-                            <X className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-sm italic">
-                      Hozircha submodellar qo'shilmagan
-                    </p>
-                  )}
+                  <Input
+                    id="submodel"
+                    value={submodel}
+                    onChange={(e) => handleSubmodelChange(e.target.value)}
+                    placeholder="Submodel nomini kiriting"
+                    required
+                  />
                 </div>
               </CardContent>
             </Card>
