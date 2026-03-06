@@ -10,6 +10,7 @@ import {
   TagIcon,
   RulerIcon,
   Timer,
+  Shirt,
   CheckCircle,
   Calendar,
   InboxIcon,
@@ -246,8 +247,8 @@ const OrderView = () => {
                   )}
                   <div className="flex items-center justify-between p-2 rounded-lg bg-white/30 hover:bg-white/40 transition-colors">
                     <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-purple-100 rounded-lg">
-                        <FileDigit className="h-3 w-3 text-purple-600" />
+                      <div className="p-1.5 bg-red-100 rounded-lg">
+                        <Shirt className="h-3 w-3 text-red-600" />
                       </div>
                       <span className="text-xs font-medium text-gray-700">
                         Submodel
@@ -562,80 +563,136 @@ const OrderView = () => {
             </div>
           )}
 
-          <div className="mt-6">
-            {order?.order_model?.submodels.map((submodel) => (
-              <Card
-                className="bg-gradient-to-r from-purple-50 to-indigo-50 border-none shadow-sm"
-                key={submodel?.id}
-              >
-                <CardHeader className="pb-2 pt-4">
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-lg text-purple-800">
-                      {submodel.submodel.name} tikish ma'lumotlari
-                    </CardTitle>
-                  </div>
-                  {submodel.group && (
-                    <div className="text-sm text-gray-600 flex items-center">
-                      <Users className="h-4 w-4 mr-2 text-purple-500" />
-                      Patok: {submodel.group.group.name}
-                    </div>
-                  )}
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  {/* Summary information */}
-                  <div className="mt-4 bg-purple-100 p-3 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="font-bold text-purple-800 flex items-center">
-                        <Filter className="h-4 w-4 mr-2" />
-                        Jami:
+          <div className="mt-8">
+            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
+                <Shirt className="h-4 w-4 text-white" />
+              </div>
+              Tikish ma'lumotlari
+            </h3>
+            <div className="grid grid-cols-1 gap-6">
+              {order?.order_model?.submodels.map((submodel) => (
+                <Card
+                  className="bg-white/60 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
+                  key={submodel?.id}
+                >
+                  {/* Card Header */}
+                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 text-white">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="text-lg font-bold text-white">
+                        {submodel.submodel.name}
+                      </h4>
+                      <div className="px-3 py-1 bg-white/20 rounded-full">
+                        <span className="text-xs font-medium text-white">
+                          {submodel?.total_quantity || 0} dona
+                        </span>
                       </div>
-                      <span className="font-bold text-purple-800">
-                        {submodel.total_quantity} dona / {order.quantity} dona
-                      </span>
                     </div>
+                    {submodel.group && (
+                      <div className="flex items-center gap-2 text-white/90">
+                        <Users className="h-4 w-4" />
+                        <span className="text-sm">
+                          Patok: {submodel.group.group.name}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-2 flex items-center gap-2 justify-end">
-                    <div className="font-bold text-purple-800 flex items-center">
-                      Bajarilgan foiz:
-                    </div>
-                    <div className="font-bold text-purple-800">
-                      {((submodel.total_quantity / order.quantity) * 100)
-                        .toFixed(2)
-                        .toString()}
-                      %
-                    </div>
-                  </div>
-                  {submodel.sewingOutputs.length > 0 && (
-                    <div className="mt-4">
-                      <h5 className="font-medium text-purple-800 flex items-center mb-3">
-                        Bugungi natijalar (
-                        {submodel.sewingOutputs?.reduce(
-                          (acc, output) => acc + output?.quantity,
-                          0,
-                        )}
-                        )
-                      </h5>
-                      {submodel.sewingOutputs.map((output) => (
+
+                  <CardContent className="p-5">
+                    {/* Progress Section */}
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Bajarilgan
+                        </span>
+                        <span className="text-lg font-bold text-indigo-600">
+                          {((submodel.total_quantity / order.quantity) * 100)
+                            .toFixed(2)
+                            .toString()}
+                          %
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                         <div
-                          key={output.id}
-                          className="mt-2 bg-purple-100 p-3 rounded-lg"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="font-bold text-purple-800 flex items-center">
-                              {output?.time?.time}
-                            </div>
-                            <span className="font-bold text-purple-800">
-                              {output?.quantity} dona
+                          className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500 ease-out"
+                          style={{
+                            width: `${Math.min(
+                              (submodel.total_quantity / order.quantity) * 100,
+                              100,
+                            )}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-500">
+                          {submodel.total_quantity} dona
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {order.quantity} dona
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Today's Results */}
+                    {submodel.sewingOutputs.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h5 className="text-sm font-semibold text-gray-700 flex items-center">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                            Bugungi natijalar
+                          </h5>
+                          <div className="px-2 py-1 bg-green-100 rounded-full">
+                            <span className="text-xs font-bold text-green-700">
+                              {submodel.sewingOutputs?.reduce(
+                                (acc, output) => acc + output?.quantity,
+                                0,
+                              )}{" "}
+                              dona
                             </span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                        <div className="space-y-2">
+                          {submodel.sewingOutputs.map((output) => (
+                            <div
+                              key={output.id}
+                              className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100 hover:from-green-100 hover:to-emerald-100 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                                  <Timer className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <span className="text-sm font-medium text-gray-800">
+                                    {output?.time?.time}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-bold text-green-700">
+                                  {output?.quantity} dona
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Empty State */}
+                    {submodel.sewingOutputs.length === 0 && (
+                      <div className="text-center py-6">
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <InboxIcon className="h-6 w-6 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          Bugungi natijalar mavjud emas
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
 
           {order?.specification_categories &&
