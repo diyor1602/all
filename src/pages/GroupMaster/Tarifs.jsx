@@ -88,7 +88,7 @@ const Tarifs = () => {
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-lg shadow-sm">
                   <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
                   <span className="text-xs font-bold text-slate-600">
-                    {formatNumber(totalQuantity)} dona jami
+                    {formatNumber(totalQuantity)} dona
                   </span>
                 </div>
               </div>
