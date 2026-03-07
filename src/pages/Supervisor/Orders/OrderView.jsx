@@ -578,7 +578,7 @@ const OrderView = () => {
                           <Package className="h-4 w-4 text-white" />
                         </div>
                         <span className="font-semibold text-gray-800">
-                          Retseptlar
+                          Detallar
                         </span>
                       </div>
                       <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">
