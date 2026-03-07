@@ -625,7 +625,7 @@ const NewOrder = () => {
                     O'lcham va rang matritsasi
                   </h2>
 
-                  <div className="flex gap-3 mb-6">
+                  <div className="flex gap-3 mb-6 flex-wrap">
                     <Button
                       type="button"
                       onClick={addSize}
