@@ -59,15 +59,15 @@ const Tarifs = () => {
           .toLowerCase()
           .includes(search.toLowerCase()) ||
         order?.order_model?.submodels?.some((submodel) =>
-          submodel?.submodel?.name.toLowerCase().includes(search.toLowerCase())
-        )
+          submodel?.submodel?.name.toLowerCase().includes(search.toLowerCase()),
+        ),
     );
     setFilteredOrders(filtered);
   }, [search, orders]);
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-b from-blue-50 to-purple-50 p-4 sm:p-6">
+      <div className="flex flex-col items-center justify-center h-screen">
         <div
           className="text-3xl font-extrabold text-purple-700 mb-8"
           aria-live="polite"
@@ -114,7 +114,7 @@ const Tarifs = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 p-3 sm:p-6"
+      className="min-h-screen"
     >
       <div className="max-w-7xl mx-auto">
         <motion.div
@@ -128,7 +128,7 @@ const Tarifs = () => {
           <div className="text-lg font-semibold text-purple-800">
             {filteredOrders?.reduce(
               (total, order) => total + Number.parseInt(order?.quantity),
-              0
+              0,
             )}{" "}
             ta
           </div>
