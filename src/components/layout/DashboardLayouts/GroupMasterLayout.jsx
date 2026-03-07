@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Bot, FilePlus, Users, Clock } from "lucide-react";
+import { Bot, FilePlus, Users, Clock, Bug } from "lucide-react";
 
 const navigation = [
   {
@@ -24,6 +24,12 @@ const navigation = [
     name: "Tarif",
     href: "/groupMaster/tarifs",
     icon: Bot,
+    onMobile: false,
+  },
+  {
+    name: "Braklar",
+    href: "/groupMaster/ownDamages",
+    icon: Bug,
     onMobile: false,
   },
 ];
