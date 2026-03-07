@@ -79,6 +79,11 @@ const OwnDamages = () => {
                             <div>{q?.stage_tarification?.name}</div>
                           )}
                           <div>{q?.description}</div>
+                          <div>
+                            {new Date(q?.created_at)?.toLocaleDateString(
+                              "ru-RU",
+                            )}
+                          </div>
                         </div>
                       );
                     })}
