@@ -24,7 +24,9 @@ const Tarifs = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    localStorage.getItem("tarifSearch") || "",
+  );
   const [filteredOrders, setFilteredOrders] = useState([]);
 
   const fetchOrders = async () => {
@@ -101,7 +103,10 @@ const Tarifs = () => {
                 placeholder="ID yoki nom bo'yicha qidirish..."
                 className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all text-sm font-medium"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  localStorage.setItem("tarifSearch", e.target.value);
+                }}
               />
             </div>
           </div>

@@ -15,6 +15,7 @@ import {
   Hourglass,
   FileDigit,
   Users,
+  Package,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -47,8 +54,13 @@ const OrderView = () => {
   const [tarifDialogOpen, setTarifDialogOpen] = useState(false);
   const [selectedTarification, setSelectedTarification] = useState(null);
   const [selectedTarifLang, setSelectedTarifLang] = useState(
-    localStorage.getItem("tarifLang") || "uz"
+    localStorage.getItem("tarifLang") || "uz",
   );
+  const [imageDialog, setImageDialog] = useState({
+    open: false,
+    image: null,
+    title: "",
+  });
 
   const fetchOrder = async () => {
     try {
@@ -174,7 +186,8 @@ const OrderView = () => {
                 <div className="flex gap-2 items-center">
                   <Users className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-bold">
-                    Tikayotgan guruh: {selectedSubmodel?.group?.group?.name}
+                    Tikayotgan guruh:{" "}
+                    {selectedSubmodel?.group?.group?.name || "-"}
                   </span>
                 </div>
               </div>
@@ -194,19 +207,19 @@ const OrderView = () => {
               // Get unique sizes and colors
               const sizes = [
                 ...new Set(
-                  order.order_model.sizes.map((size) => size.size?.name)
+                  order.order_model.sizes.map((size) => size.size_name),
                 ),
               ].sort((a, b) => a.localeCompare(b));
               const colors = [
                 ...new Set(
-                  order.order_model.sizes.map((size) => size.color?.name)
+                  order.order_model.sizes.map((size) => size.color_name),
                 ),
               ].sort((a, b) => a.localeCompare(b));
 
               // Create a map for quick lookup
               const sizeColorMap = new Map();
               order.order_model.sizes.forEach((item) => {
-                const key = `${item.size?.name}-${item.color?.name}`;
+                const key = `${item.size_name}-${item.color_name}`;
                 sizeColorMap.set(key, item.quantity || 0);
               });
 
@@ -226,7 +239,7 @@ const OrderView = () => {
 
               const grandTotal = Array.from(rowTotals.values()).reduce(
                 (sum, val) => sum + val,
-                0
+                0,
               );
 
               return (
@@ -306,9 +319,9 @@ const OrderView = () => {
       {order?.order_model?.submodels?.length > 0 && (
         <div className="w-full space-y-4">
           <div className="flex flex-wrap gap-2 bg-blue-50 p-3 rounded-lg">
-            {order?.order_model?.submodels?.map((submodel) => (
+            {order?.order_model?.submodels?.map((submodel, index) => (
               <Button
-                key={submodel?.submodel?.id}
+                key={index}
                 variant={
                   selectedSubmodel?.submodel?.id === submodel?.submodel?.id
                     ? "default"
@@ -325,6 +338,100 @@ const OrderView = () => {
               </Button>
             ))}
           </div>
+
+          {/* Recipes */}
+          {order?.order_recipes && order.order_recipes.length > 0 && (
+            <div className="mt-6">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem
+                  value="recipes"
+                  className="border border-orange-200 rounded-xl overflow-hidden"
+                >
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-orange-50/50 bg-orange-100/50">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-3">
+                          <Package className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="font-semibold text-gray-800">
+                          Detallar
+                        </span>
+                      </div>
+                      <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">
+                        {order.order_recipes.length} ta
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {order.order_recipes.map((recipe, index) => (
+                        <div
+                          key={index}
+                          className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200 shadow-sm hover:shadow-md transition-all duration-300 group relative h-fit"
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Image */}
+                            <div className="flex-shrink-0">
+                              {recipe.item?.image ? (
+                                <button
+                                  onClick={() =>
+                                    setImageDialog({
+                                      open: true,
+                                      image: recipe.item.image,
+                                      title: recipe.item.name,
+                                    })
+                                  }
+                                  className="w-16 h-16 rounded-lg overflow-hidden bg-white border border-orange-200 shadow-sm hover:shadow-md transition-all duration-300 group"
+                                >
+                                  <img
+                                    src={recipe.item.image}
+                                    alt={recipe.item?.name || "Retsept"}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </button>
+                              ) : (
+                                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 border border-orange-200 flex items-center justify-center">
+                                  <Package className="h-8 w-8 text-orange-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <h5 className="text-sm font-semibold text-gray-800 mb-1">
+                                {recipe.item?.name || "Noma'lum retsept"}
+                              </h5>
+
+                              {/* Quantity Badge */}
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="px-2 py-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-full">
+                                  <span className="text-xs font-bold text-white">
+                                    {recipe.quantity}
+                                  </span>
+                                </div>
+                                {recipe.item?.unit && (
+                                  <span className="text-xs text-gray-600">
+                                    {recipe.item.unit}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Additional info if available */}
+                              {recipe.item?.description && (
+                                <p className="text-xs text-gray-600 line-clamp-2">
+                                  {recipe.item.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
 
           <div className="mt-4">
             <div className="flex items-center gap-2 w-full mt-6">
@@ -354,7 +461,7 @@ const OrderView = () => {
               </h2>
             </div>
 
-            {tarifications?.length > 0 && (
+            {tarifications?.length > 0 ? (
               <Card className="border-none shadow-md bg-gradient-to-r from-indigo-50 to-purple-50">
                 <CardHeader>
                   <CardTitle>
@@ -369,9 +476,9 @@ const OrderView = () => {
                                 (item?.tarifications?.reduce(
                                   (acc, subitem) =>
                                     acc + parseFloat(subitem?.summa),
-                                  0
+                                  0,
                                 ) || 0),
-                              0
+                              0,
                             )
                             ?.toLocaleString("ru-RU", {
                               minimumFractionDigits: 2,
@@ -389,9 +496,9 @@ const OrderView = () => {
                                 (item?.tarifications?.reduce(
                                   (acc, subitem) =>
                                     acc + parseFloat(subitem?.second),
-                                  0
+                                  0,
                                 ) || 0),
-                              0
+                              0,
                             )
                             ?.toLocaleString("ru-RU", {
                               minimumFractionDigits: 2,
@@ -427,7 +534,7 @@ const OrderView = () => {
                             {tarification?.tarifications
                               ?.reduce(
                                 (acc, item) => acc + parseFloat(item?.summa),
-                                0
+                                0,
                               )
                               ?.toLocaleString({
                                 minimumFractionDigits: 2,
@@ -439,7 +546,7 @@ const OrderView = () => {
                             {tarification?.tarifications
                               ?.reduce(
                                 (acc, item) => acc + parseFloat(item?.second),
-                                0
+                                0,
                               )
                               ?.toLocaleString({
                                 minimumFractionDigits: 2,
@@ -468,6 +575,10 @@ const OrderView = () => {
                   </div>
                 </CardContent>
               </Card>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                Tarifikatsiyalar mavjud emas. Texnologga murojaat qiling!
+              </div>
             )}
           </div>
         </div>
@@ -500,7 +611,7 @@ const OrderView = () => {
                     a.code.localeCompare(b.code, undefined, {
                       numeric: true,
                       sensitivity: "base",
-                    })
+                    }),
                   )
                   ?.map((tarif, index) => (
                     <tr key={index} className="text-center">
@@ -529,6 +640,26 @@ const OrderView = () => {
                   ))}
               </tbody>
             </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Image View Dialog */}
+      <Dialog
+        open={imageDialog.open}
+        onOpenChange={(open) => setImageDialog({ ...imageDialog, open })}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{imageDialog.title}</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            {imageDialog.image && (
+              <img
+                src={imageDialog.image}
+                alt={imageDialog.title}
+                className="max-w-full max-h-96"
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

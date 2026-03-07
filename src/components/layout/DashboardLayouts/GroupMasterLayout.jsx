@@ -24,7 +24,7 @@ const navigation = [
     name: "Tarif",
     href: "/groupMaster/tarifs",
     icon: Bot,
-    onMobile: false,
+    onMobile: true,
   },
   {
     name: "Braklar",

@@ -456,19 +456,19 @@ const OrderView = () => {
               // Get unique sizes and colors
               const sizes = [
                 ...new Set(
-                  order.order_model.sizes.map((size) => size.size?.name),
+                  order.order_model.sizes.map((size) => size.size_name),
                 ),
               ].sort((a, b) => a.localeCompare(b));
               const colors = [
                 ...new Set(
-                  order.order_model.sizes.map((size) => size.color?.name),
+                  order.order_model.sizes.map((size) => size.color_name),
                 ),
               ].sort((a, b) => a.localeCompare(b));
 
               // Create a map for quick lookup
               const sizeColorMap = new Map();
               order.order_model.sizes.forEach((item) => {
-                const key = `${item.size?.name}-${item.color?.name}`;
+                const key = `${item.size_name}-${item.color_name}`;
                 sizeColorMap.set(key, item.quantity || 0);
               });
 
