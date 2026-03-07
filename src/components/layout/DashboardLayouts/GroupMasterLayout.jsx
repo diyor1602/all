@@ -30,7 +30,7 @@ const navigation = [
     name: "Braklar",
     href: "/groupMaster/ownDamages",
     icon: Bug,
-    onMobile: false,
+    onMobile: true,
   },
 ];
 
