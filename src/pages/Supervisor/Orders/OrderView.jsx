@@ -25,6 +25,8 @@ import {
   Building2,
   FileDigit,
   PlaneTakeoff,
+  Upload,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -45,6 +47,8 @@ const OrderView = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const totalSpends = order?.order_model?.submodels?.reduce(
     (acc, submodel) =>
@@ -82,26 +86,83 @@ const OrderView = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/supervisor/orders/${id}`);
-        setOrder(response.data);
-      } catch (error) {
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+        setSelectedFile(file);
+      } else {
         toast({
           title: "Xatolik",
-          description: "Bunday buyurtma topilmadi",
+          description: "Iltimos, faqat Excel faylini tanlang (.xlsx, .xls)",
           variant: "destructive",
         });
-        navigate("/technolog/orders");
-      } finally {
-        setLoading(false);
       }
-    };
+    }
+  };
 
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "Xatolik",
+        description: "Iltimos, avval faylni tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await api.post(
+        `/supervisor/orders/${id}/import-excel`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      fetchOrder();
+      toast({
+        title: "Muvaffaqiyat",
+        description: "Excel fayli muvaffaqiyatli yuklandi",
+        duration: 1200,
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Excel faylini yuklashda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const fetchOrder = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/supervisor/orders/${id}`);
+      setOrder(response.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Bunday buyurtma topilmadi",
+        variant: "destructive",
+      });
+      navigate("/technolog/orders");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOrder();
-  }, [id, navigate, toast]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -810,6 +871,59 @@ const OrderView = () => {
                 </Card>
               </div>
             )}
+        </CardContent>
+      </Card>
+
+      {/* Excel Upload Section */}
+      <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-none shadow-lg rounded-lg overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle>
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+              <h3 className="text-xl font-semibold text-gray-800">
+                Excel faylini yuklash
+              </h3>
+            </div>
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileSelect}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-emerald-50 file:text-emerald-700
+                    hover:file:bg-emerald-100
+                    cursor-pointer"
+                />
+                {selectedFile && (
+                  <p className="mt-2 text-sm text-gray-600">
+                    Tanlangan fayl:{" "}
+                    <span className="font-medium">{selectedFile.name}</span>
+                  </p>
+                )}
+              </div>
+              <Button
+                onClick={handleUpload}
+                disabled={!selectedFile || isUploading}
+                className="flex items-center bg-emerald-600 hover:bg-emerald-700"
+              >
+                {isUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-2" />
+                )}
+                {isUploading ? "Yuklanmoqda..." : "Yuklash"}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
