@@ -53,7 +53,7 @@ const ConnectToWork = () => {
   const [planLoader, setPlanLoader] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [selectedTarifLang, setSelectedTarifLang] = useState(
-    localStorage.getItem("tarifLang") || "uz"
+    localStorage.getItem("tarifLang") || "uz",
   );
   const [selectedEmployee, setSelectedEmployee] = useState("all");
 
@@ -66,12 +66,12 @@ const ConnectToWork = () => {
             submodel?.spends?.reduce(
               (acc, spend) =>
                 acc + (spend?.region == "uz" ? parseFloat(spend?.seconds) : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const totalSpendsRU = useMemo(
@@ -83,12 +83,12 @@ const ConnectToWork = () => {
             submodel?.spends?.reduce(
               (acc, spend) =>
                 acc + (spend?.region == "ru" ? parseFloat(spend?.seconds) : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
   const totalSpendSummaUZ = useMemo(
     () =>
@@ -100,12 +100,12 @@ const ConnectToWork = () => {
               (acc, spend) =>
                 acc +
                 Number.parseFloat(spend?.region == "uz" ? spend?.summa : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const totalSpendSummaRU = useMemo(
@@ -118,12 +118,12 @@ const ConnectToWork = () => {
               (acc, spend) =>
                 acc +
                 Number.parseFloat(spend?.region == "ru" ? spend?.summa : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   useEffect(() => {
@@ -172,12 +172,12 @@ const ConnectToWork = () => {
   useEffect(() => {
     if (selectedSubmodel) {
       const foundSubmodel = order?.order_model?.submodels?.find(
-        (submodel) => submodel?.id === selectedSubmodel?.id
+        (submodel) => submodel?.id === selectedSubmodel?.id,
       );
       setTarifications(
         foundSubmodel?.tarification_categories?.filter(
-          (category) => category?.region === selectedTarifLang
-        ) || []
+          (category) => category?.region === selectedTarifLang,
+        ) || [],
       );
     }
   }, [selectedSubmodel, order, selectedTarifLang]);
@@ -291,8 +291,6 @@ const ConnectToWork = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Order Details Section */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-700">Buyurtma haqida</h4>
-
               <div className="space-y-2">
                 {order?.quantity && (
                   <div className="flex gap-2 items-center">
@@ -368,30 +366,14 @@ const ConnectToWork = () => {
 
             {/* Material Information */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-700">Material haqida</h4>
-
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <BoxIcon className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">
-                    Material: {order?.order_model?.material?.name || "N/A"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <TagIcon className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">
-                    Material kodi: {order?.order_model?.material?.code || "N/A"}
-                  </span>
-                </div>
-
                 <div className="flex items-center gap-2">
                   <BarChartIcon
                     className={cn(
                       "h-4 w-4",
                       order?.order_model?.status
                         ? "text-green-500"
-                        : "text-red-500"
+                        : "text-red-500",
                     )}
                   />
                   <span
@@ -399,12 +381,12 @@ const ConnectToWork = () => {
                       "text-sm font-bold",
                       order?.order_model?.status
                         ? "text-green-500"
-                        : "text-red-500"
+                        : "text-red-500",
                     )}
                   >
                     Limit:{" "}
                     {Number.parseFloat(
-                      order?.order_model?.rasxod || 0
+                      order?.order_model?.rasxod || 0,
                     ).toLocaleString() || "N/A"}{" "}
                     so'm
                     <span className="text-sm ml-1">
@@ -420,7 +402,7 @@ const ConnectToWork = () => {
                       "h-4 w-4",
                       totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500"
-                        : "text-black"
+                        : "text-black",
                     )}
                   />
                   <span
@@ -428,7 +410,7 @@ const ConnectToWork = () => {
                       "font-bold",
                       totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500 text-xl"
-                        : "text-sm"
+                        : "text-sm",
                     )}
                   >
                     Jami UZ:{" "}
@@ -444,7 +426,7 @@ const ConnectToWork = () => {
                       "h-4 w-4",
                       totalSpendSummaRU > order?.order_model?.rasxod
                         ? "text-red-500"
-                        : "text-black"
+                        : "text-black",
                     )}
                   />
                   <span
@@ -452,7 +434,7 @@ const ConnectToWork = () => {
                       "font-bold",
                       totalSpendSummaRU > order?.order_model?.rasxod
                         ? "text-red-500 text-xl"
-                        : "text-sm"
+                        : "text-sm",
                     )}
                   >
                     Jami RU:{" "}
@@ -587,7 +569,7 @@ const ConnectToWork = () => {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              {tarifications?.length > 0 && (
+              {tarifications?.length > 0 ? (
                 <Card className="border-none shadow-md bg-gradient-to-r from-indigo-50 to-purple-50">
                   <CardHeader>
                     <CardTitle>
@@ -604,12 +586,12 @@ const ConnectToWork = () => {
                                         (sum, subitem) =>
                                           sum +
                                           Number.parseFloat(
-                                            subitem?.summa || 0
+                                            subitem?.summa || 0,
                                           ),
-                                        0
+                                        0,
                                       )
                                     : 0),
-                                0
+                                0,
                               )
                               ?.toLocaleString("ru-RU", {
                                 minimumFractionDigits: 2,
@@ -629,12 +611,12 @@ const ConnectToWork = () => {
                                         (sum, subitem) =>
                                           sum +
                                           Number.parseFloat(
-                                            subitem?.second || 0
+                                            subitem?.second || 0,
                                           ),
-                                        0
+                                        0,
                                       )
                                     : 0),
-                                0
+                                0,
                               )
                               ?.toLocaleString("ru-RU", {
                                 minimumFractionDigits: 2,
@@ -673,7 +655,7 @@ const ConnectToWork = () => {
                                       (acc, item) =>
                                         acc +
                                         Number.parseFloat(item?.summa || 0),
-                                      0
+                                      0,
                                     )
                                     .toLocaleString("ru-RU", {
                                       minimumFractionDigits: 2,
@@ -689,7 +671,7 @@ const ConnectToWork = () => {
                                       (acc, item) =>
                                         acc +
                                         Number.parseFloat(item?.second || 0),
-                                      0
+                                      0,
                                     )
                                     .toLocaleString("ru-RU", {
                                       minimumFractionDigits: 2,
@@ -703,7 +685,7 @@ const ConnectToWork = () => {
                               title="Tahrirlash"
                               onClick={() =>
                                 navigate(
-                                  `/groupMaster/connectWorkEdit/${tarification?.id}`
+                                  `/groupMaster/connectWorkEdit/${tarification?.id}`,
                                 )
                               }
                             >
@@ -745,7 +727,7 @@ const ConnectToWork = () => {
                                       a.code.localeCompare(b.code, undefined, {
                                         numeric: true,
                                         sensitivity: "base",
-                                      })
+                                      }),
                                     )
                                     ?.map((tarif, index) => (
                                       <tr
@@ -769,12 +751,12 @@ const ConnectToWork = () => {
                                         </td>
                                         <td className="border border-gray-300 p-1">
                                           {Number.parseFloat(
-                                            tarif?.second
+                                            tarif?.second,
                                           )?.toLocaleString()}
                                         </td>
                                         <td className="border border-gray-300 p-1">
                                           {Number.parseFloat(
-                                            tarif?.summa
+                                            tarif?.summa,
                                           )?.toLocaleString()}
                                         </td>
                                       </tr>
@@ -797,6 +779,10 @@ const ConnectToWork = () => {
                     </div>
                   </CardContent>
                 </Card>
+              ) : (
+                <div className="text-center text-gray-500">
+                  Hali tarifikatsiyalar kiriltamgan. Texnologga murojaat qiling!
+                </div>
               )}
             </div>
           </div>
