@@ -143,100 +143,97 @@ const OrderCard = ({ order, navigate }) => {
     <motion.div
       onClick={() => navigate(`/groupMaster/tarifs/${order.id}`)}
       className={`group relative flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300
-         border border-slate-200/60 rounded-[24px] p-6 
-        hover:shadow-2xl hover:shadow-slate-200 hover:-translate-y-1.5 bg-white`}
+         border border-slate-200/60 rounded-[20px] p-4 
+        hover:shadow-xl hover:shadow-slate-200 hover:-translate-y-1 bg-white`}
     >
       {/* Visual Status Side-Bar */}
       <div
-        className={`absolute left-0 top-0 bottom-0 w-2 ${statusCfg.color} opacity-80`}
+        className={`absolute left-0 top-0 bottom-0 w-1.5 ${statusCfg.color} opacity-80`}
       />
 
-      <div>
-        {/* ID & Status Badge */}
-        <div className="flex justify-between items-center mb-5">
-          <span className="text-[11px] tracking-widest text-slate-400 uppercase">
-            ID: #{order.id}
-          </span>
-          <div
-            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white shadow-sm shrink-0 ${statusCfg.color}`}
-          >
-            {statusCfg.text}
-          </div>
-        </div>
-
-        {/* Title & Model */}
-        <div className="mb-6">
-          <h3 className="text-xl font-bold text-slate-900 group-hover:text-slate-800 transition-colors leading-tight mb-2">
-            {order.name}
-          </h3>
-          <div className="flex items-center gap-2">
-            <div
-              className={`p-1.5 rounded-lg ${statusCfg.color} bg-opacity-10`}
-            >
-              <Package className={`h-4 w-4 ${statusCfg.textColor}`} />
+      <div className="space-y-3">
+        {/* Header Row */}
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold text-slate-900 group-hover:text-slate-800 transition-colors leading-tight truncate">
+              {order.name}
+            </h3>
+            <div className="flex items-center gap-1.5 mt-1">
+              <Package className={`h-3 w-3 ${statusCfg.textColor}`} />
+              <span className="text-xs font-medium text-slate-600 truncate">
+                {order?.order_model?.model?.name}
+              </span>
             </div>
-            <span className="text-sm font-bold text-slate-500 truncate italic">
-              {order?.order_model?.model?.name}
+          </div>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <span className="text-[10px] tracking-wider text-slate-400 uppercase">
+              #{order.id}
             </span>
+            <div
+              className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white shadow-sm ${statusCfg.color}`}
+            >
+              {statusCfg.text}
+            </div>
           </div>
         </div>
 
-        {/* Season Display */}
-        <div className="flex items-center gap-2 mb-4">
-          <div
-            className={`p-2 rounded-xl ${
-              order?.season_type === "winter"
-                ? "bg-blue-50 border border-blue-200"
-                : "bg-amber-50 border border-amber-200"
-            }`}
-          >
-            {order?.season_type === "winter" ? (
-              <Snowflake className="h-5 w-5 text-blue-600" />
-            ) : (
-              <Sun className="h-5 w-5 text-amber-600" />
-            )}
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-900">
-              {order?.season_year}
-            </span>
-            <span
-              className={`text-xs font-medium ${
+        {/* Info Row */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Season */}
+          <div className="flex items-center gap-1.5">
+            <div
+              className={`p-1 rounded-lg ${
                 order?.season_type === "winter"
-                  ? "text-blue-600"
-                  : "text-amber-600"
+                  ? "bg-blue-50 border border-blue-200"
+                  : "bg-amber-50 border border-amber-200"
               }`}
             >
-              {order?.season_type === "winter" ? "Qish" : "Bahor"}
-            </span>
+              {order?.season_type === "winter" ? (
+                <Snowflake className="h-3.5 w-3.5 text-blue-600" />
+              ) : (
+                <Sun className="h-3.5 w-3.5 text-amber-600" />
+              )}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-slate-900">
+                {order?.season_year}
+              </span>
+              <span
+                className={`text-[9px] font-medium ${
+                  order?.season_type === "winter"
+                    ? "text-blue-600"
+                    : "text-amber-600"
+                }`}
+              >
+                {order?.season_type === "winter" ? "Qish" : "Bahor"}
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Data Tiles */}
-        <div className="grid grid-cols-1 gap-3 mb-6">
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3.5 border border-slate-200/60 ring-1 ring-white/40 shadow-[0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(15,23,42,0.06)]">
-            <p className="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-tighter">
+          {/* Quantity */}
+          <div className="text-right">
+            <p className="text-[9px] uppercase font-bold text-slate-400">
               Soni
             </p>
-            <p className="text-base font-black text-slate-900">
+            <p className="text-sm font-black text-slate-900">
               {formatNumber(order.quantity)}{" "}
-              <span className="text-xs font-normal text-slate-400">ta</span>
+              <span className="text-[9px] font-normal text-slate-400">ta</span>
             </p>
           </div>
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3.5 border border-slate-200/60 ring-1 ring-white/40 shadow-[0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(15,23,42,0.06)]">
-            <p className="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-tighter">
+
+          {/* Submodel */}
+          <div className="">
+            <p className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">
               Submodel
             </p>
-            <div className="flex items-center gap-1.5 overflow-hidden">
-              <Layers
-                className={`h-3.5 w-3.5 shrink-0 ${statusCfg.textColor}`}
-              />
-              <p className="text-sm font-bold text-slate-900 truncate">
+            <div className="flex items-center gap-1 overflow-hidden">
+              <Layers className={`h-3 w-3 shrink-0 ${statusCfg.textColor}`} />
+              <p className="text-xs font-bold text-slate-900 truncate">
                 {submodels[0]?.submodel?.name || "-"}
               </p>
               {submodels.length > 1 && (
                 <span
-                  className={`px-1.5 py-0.5 rounded-md ${statusCfg.color} bg-opacity-20 ${statusCfg.textColor} text-[10px] font-bold`}
+                  className={`px-1 py-0.5 rounded text-[8px] font-bold ${statusCfg.color} bg-opacity-20 ${statusCfg.textColor}`}
                 >
                   +{submodels.length - 1}
                 </span>
@@ -246,21 +243,21 @@ const OrderCard = ({ order, navigate }) => {
         </div>
       </div>
 
-      {/* Footer Strip */}
-      <div className="flex items-center justify-between pt-5 border-t border-slate-200/40">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <MessageSquare className="h-4 w-4 shrink-0 opacity-40" />
-          <p className="text-xs truncate font-medium">
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-200/40">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-40" />
+          <p className="text-[10px] truncate font-medium text-slate-500">
             {order.comment || "Izoh yo'q"}
           </p>
         </div>
 
         <div
-          className={`ml-4 h-10 w-10 rounded-2xl flex items-center justify-center transition-all 
+          className={`ml-3 h-8 w-8 rounded-xl flex items-center justify-center transition-all 
           bg-white shadow-sm border border-slate-100
           group-hover:scale-110 group-hover:bg-slate-900 group-hover:text-white`}
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </div>
       </div>
     </motion.div>
