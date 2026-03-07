@@ -946,7 +946,7 @@ const OrderView = () => {
               <img
                 src={imageDialog.image}
                 alt={imageDialog.title}
-                className="max-w-full max-h-96 rounded-lg shadow-lg"
+                className="max-w-full max-h-96"
               />
             )}
           </div>
