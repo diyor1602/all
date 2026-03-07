@@ -13,7 +13,6 @@ import {
   RulerIcon,
   Timer,
   Shirt,
-  CheckCircle,
   Calendar,
   InboxIcon,
   Scissors,
@@ -35,6 +34,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { Badge } from "@/components/ui/badge";
 import { statuses } from "@/lib/status";
@@ -49,6 +54,11 @@ const OrderView = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [imageDialog, setImageDialog] = useState({
+    open: false,
+    image: null,
+    title: "",
+  });
 
   const totalSpends = order?.order_model?.submodels?.reduce(
     (acc, submodel) =>
@@ -553,6 +563,100 @@ const OrderView = () => {
               );
             })()}
 
+          {/* Recipes */}
+          {order?.orderRecipes && order.orderRecipes.length > 0 && (
+            <div className="mt-6">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem
+                  value="recipes"
+                  className="border border-orange-200 rounded-xl overflow-hidden"
+                >
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-orange-50/50 bg-orange-100/50">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-3">
+                          <Package className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="font-semibold text-gray-800">
+                          Retseptlar
+                        </span>
+                      </div>
+                      <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">
+                        {order.orderRecipes.length} ta
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {order.orderRecipes.map((recipe, index) => (
+                        <div
+                          key={index}
+                          className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200 shadow-sm hover:shadow-md transition-all duration-300 group relative h-fit"
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Image */}
+                            <div className="flex-shrink-0">
+                              {recipe.item?.image ? (
+                                <button
+                                  onClick={() =>
+                                    setImageDialog({
+                                      open: true,
+                                      image: recipe.item.image,
+                                      title: recipe.item.name,
+                                    })
+                                  }
+                                  className="w-16 h-16 rounded-lg overflow-hidden bg-white border border-orange-200 shadow-sm hover:shadow-md transition-all duration-300 group"
+                                >
+                                  <img
+                                    src={recipe.item.image}
+                                    alt={recipe.item?.name || "Retsept"}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </button>
+                              ) : (
+                                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 border border-orange-200 flex items-center justify-center">
+                                  <Package className="h-8 w-8 text-orange-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <h5 className="text-sm font-semibold text-gray-800 mb-1">
+                                {recipe.item?.name || "Noma'lum retsept"}
+                              </h5>
+
+                              {/* Quantity Badge */}
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="px-2 py-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-full">
+                                  <span className="text-xs font-bold text-white">
+                                    {recipe.quantity}
+                                  </span>
+                                </div>
+                                {recipe.item?.unit && (
+                                  <span className="text-xs text-gray-600">
+                                    {recipe.item.unit}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Additional info if available */}
+                              {recipe.item?.description && (
+                                <p className="text-xs text-gray-600 line-clamp-2">
+                                  {recipe.item.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
+
           <div className="mt-8">
             <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
@@ -827,6 +931,27 @@ const OrderView = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Image View Dialog */}
+      <Dialog
+        open={imageDialog.open}
+        onOpenChange={(open) => setImageDialog({ ...imageDialog, open })}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{imageDialog.title}</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            {imageDialog.image && (
+              <img
+                src={imageDialog.image}
+                alt={imageDialog.title}
+                className="max-w-full max-h-96 rounded-lg shadow-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
