@@ -281,8 +281,8 @@ const Tailoring = () => {
 
                           // Create a map for quick lookup
                           const sizeColorMap = new Map();
-                          order.orderModel.sizes.forEach((item, index) => {
-                            const key = `${item.size?.name}-${item.color?.name}-${index}`;
+                          order.orderModel.sizes.forEach((item) => {
+                            const key = `${item.size?.name}-${item.color?.name}`;
                             sizeColorMap.set(key, item.quantity || 0);
                           });
 
