@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const OwnDamages = () => {
   const { toast } = useToast();
 
   const [damages, setDamages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedImage, setSeletedImage] = useState(null);
 
   const getDamages = async () => {
     setLoading(true);
@@ -51,6 +54,10 @@ const OwnDamages = () => {
                         src={d.img}
                         alt=""
                         className="w-10 h-10 rounded-full object-cover shrink-0"
+                        onClick={() => {
+                          setSeletedImage(d.img);
+                          setOpen(true);
+                        }}
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full object-cover shrink-0 bg-gray-200 flex items-center justify-center">
@@ -67,6 +74,10 @@ const OwnDamages = () => {
                           <img
                             src={q.image}
                             className="w-full h-20 object-cover"
+                            onClick={() => {
+                              setSeletedImage(q.image);
+                              setOpen(true);
+                            }}
                           />
                           <div>{q?.order?.name}</div>
                           <div>
@@ -91,6 +102,18 @@ const OwnDamages = () => {
                 </div>
               );
             })}
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent>
+              <div className="w-full max-h-[80vh] overflow-auto">
+                <img
+                  src={selectedImage}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>
