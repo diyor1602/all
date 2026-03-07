@@ -13,11 +13,11 @@ import {
   AlertCircle,
   Tag,
   ShoppingBag,
-  Shell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { statuses } from "@/lib/status";
 import { useNavigate } from "react-router-dom";
+import formatNumber from "@/utils/formatNumber";
 
 const Tarifs = () => {
   const { toast } = useToast();
@@ -123,12 +123,14 @@ const Tarifs = () => {
           className="mb-6 flex items-center justify-between gap-3 flex-wrap"
         >
           <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
-            Buyurtmalar ({filteredOrders?.length})
+            Buyurtmalar ({formatNumber(filteredOrders?.length)})
           </h1>
           <div className="text-lg font-semibold text-purple-800">
-            {filteredOrders?.reduce(
-              (total, order) => total + Number.parseInt(order?.quantity),
-              0,
+            {formatNumber(
+              filteredOrders?.reduce(
+                (total, order) => total + Number.parseInt(order?.quantity),
+                0,
+              ),
             )}{" "}
             ta
           </div>
@@ -201,7 +203,7 @@ const Tarifs = () => {
                             {order?.quantity} ta
                           </Badge>
                           <div
-                            className={`text-white px-2 py-1 text-xs rounded-full ${
+                            className={`text-white px-2 py-1 text-xs rounded-full whitespace-nowrap ${
                               statuses[order?.status]?.color
                             }`}
                           >
@@ -226,18 +228,6 @@ const Tarifs = () => {
                               {order?.order_model?.model?.name}
                             </p>
                           </div>
-
-                          <div>
-                            <div className="flex items-center mb-1">
-                              <Shell className="h-3 w-3 mr-1 text-purple-600" />
-                              <span className="text-xs font-medium text-gray-600">
-                                Material
-                              </span>
-                            </div>
-                            <p className="font-semibold text-gray-800 text-sm">
-                              {order?.order_model?.material?.name || "-"}
-                            </p>
-                          </div>
                         </div>
                       </div>
 
@@ -248,9 +238,6 @@ const Tarifs = () => {
                           <span className="text-base font-bold text-gray-800">
                             Submodellar
                           </span>
-                          <Badge className="ml-2 bg-pink-200 text-pink-800 text-xs hover:bg-pink-200 transition-colors">
-                            {order?.order_model?.submodels?.length || 0} ta
-                          </Badge>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {order?.order_model?.submodels?.map((submodel) => (

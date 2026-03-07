@@ -136,8 +136,6 @@ const EditOrder = () => {
       const res = await api.get(`/supervisor/orders/${id}`);
       const orderData = res.data;
 
-      console.log(res.data);
-
       const mappedPayload = {
         name: orderData.name || "",
         quantity: orderData.quantity?.toString() || "",

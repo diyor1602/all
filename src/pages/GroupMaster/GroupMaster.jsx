@@ -1,6 +1,4 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Tailoring from "./Tailoring";
-import ConnectToWork from "./ConnectToWork";
 import Result from "./Result";
 import ConnectResult from "./ConnectResult";
 import ConnectWorkEdit from "./ConnectWorkEdit";
@@ -13,8 +11,6 @@ import AttendanceHistory from "./AttendanceHistory";
 const GroupMaster = () => {
   return (
     <Routes>
-      <Route path="tailoring" element={<Tailoring />} />
-      <Route path="tailoring/:id" element={<ConnectToWork />} />
       <Route path="result/:id" element={<ConnectResult />} />
       <Route path="result" element={<Result />} />
       <Route path="connectWorkEdit/:id" element={<ConnectWorkEdit />} />
