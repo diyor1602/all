@@ -2,19 +2,19 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/utils/api";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Search,
   Package,
   MessageSquare,
   AlertCircle,
-  Tag,
-  ShoppingBag,
+  ChevronRight,
+  Layers,
+  LayoutGrid,
+  TrendingUp,
+  Loader,
+  Sun,
+  Snowflake,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { statuses } from "@/lib/status";
 import { useNavigate } from "react-router-dom";
 import formatNumber from "@/utils/formatNumber";
@@ -36,7 +36,8 @@ const Tarifs = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: error.response?.data?.message || "Nimadir xato ketdi",
+        description:
+          error.response?.data?.message || "Ma'lumotlarni yuklashda xatolik",
         variant: "destructive",
       });
     } finally {
@@ -53,240 +54,243 @@ const Tarifs = () => {
       (order) =>
         order?.name?.toLowerCase().includes(search.toLowerCase()) ||
         order?.id?.toString().includes(search) ||
-        order?.quantity?.toString().includes(search) ||
-        order?.comment?.toLowerCase().includes(search.toLowerCase()) ||
         order?.order_model?.model?.name
           .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        order?.order_model?.submodels?.some((submodel) =>
-          submodel?.submodel?.name.toLowerCase().includes(search.toLowerCase()),
-        ),
+          .includes(search.toLowerCase()),
     );
     setFilteredOrders(filtered);
   }, [search, orders]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div
-          className="text-3xl font-extrabold text-purple-700 mb-8"
-          aria-live="polite"
-        >
-          Buyurtmalar yuklanmoqda
-        </div>
-        <div className="flex gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            aria-hidden="true"
-          >
-            <Skeleton className="w-20 h-20 rounded-lg bg-gradient-to-r from-blue-200 to-purple-200" />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            aria-hidden="true"
-          >
-            <Skeleton className="w-20 h-20 rounded-lg bg-gradient-to-r from-purple-200 to-pink-200" />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            aria-hidden="true"
-          >
-            <Skeleton className="w-20 h-20 rounded-lg bg-gradient-to-r from-pink-200 to-blue-200" />
-          </motion.div>
-        </div>
-        <div className="mt-8 flex flex-col gap-4 w-full max-w-md px-4">
-          <Skeleton className="w-full h-6 rounded-full bg-gradient-to-r from-blue-200 to-purple-200" />
-          <Skeleton className="w-3/4 h-6 rounded-full bg-gradient-to-r from-purple-200 to-pink-200" />
-          <Skeleton className="w-5/6 h-6 rounded-full bg-gradient-to-r from-pink-200 to-blue-200" />
-          <Skeleton className="w-2/3 h-6 rounded-full bg-gradient-to-r from-blue-200 to-purple-200" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState />;
+
+  const totalQuantity = filteredOrders?.reduce(
+    (total, order) => total + Number(order?.quantity || 0),
+    0,
+  );
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen"
-    >
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
-          className="mb-6 flex items-center justify-between gap-3 flex-wrap"
-        >
-          <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
-            Buyurtmalar ({formatNumber(filteredOrders?.length)})
-          </h1>
-          <div className="text-lg font-semibold text-purple-800">
-            {formatNumber(
-              filteredOrders?.reduce(
-                (total, order) => total + Number.parseInt(order?.quantity),
-                0,
-              ),
-            )}{" "}
-            ta
-          </div>
-        </motion.div>
+        {/* Header Section */}
+        <header className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                Buyurtmalar
+              </h1>
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-lg shadow-sm">
+                  <LayoutGrid className="h-3.5 w-3.5 text-purple-600" />
+                  <span className="text-xs font-bold text-slate-600">
+                    {formatNumber(filteredOrders.length)} ta buyurtma
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-lg shadow-sm">
+                  <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                  <span className="text-xs font-bold text-slate-600">
+                    {formatNumber(totalQuantity)} dona jami
+                  </span>
+                </div>
+              </div>
+            </div>
 
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="relative mb-6"
-        >
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="ID yoki nom bo'yicha qidirish..."
+                className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all text-sm font-medium"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
-          <Input
-            type="text"
-            placeholder="Qidirish..."
-            className="pl-10 py-6 bg-white shadow-md rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-lg"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Qidirish"
-          />
-        </motion.div>
+        </header>
 
-        <AnimatePresence>
+        {/* Orders Grid */}
+        <AnimatePresence mode="popLayout">
           {filteredOrders.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="text-center py-12 px-4 bg-white rounded-xl shadow-sm"
-            >
-              <AlertCircle className="mx-auto h-12 w-12 text-purple-400 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900">
-                Buyurtmalar topilmadi
-              </h3>
-              <p className="mt-2 text-gray-600 text-lg">
-                Boshqa qidiruv so'rovini kiriting
-              </p>
-            </motion.div>
+            <EmptyState />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredOrders.map((order, index) => (
-                <motion.div
+                <OrderCard
                   key={order.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card className="h-fit bg-white shadow-md hover:shadow-lg transition-shadow duration-300 border-0">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="bg-gradient-to-r from-purple-400 to-blue-500 p-2 rounded-lg mr-3">
-                            <Package className="h-5 w-5 text-white" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg font-bold text-gray-800">
-                              {order?.name}
-                            </CardTitle>
-                            <p className="text-sm text-purple-600 font-medium">
-                              #{order?.id}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2 items-center">
-                          <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 w-fit">
-                            <ShoppingBag className="h-3 w-3 mr-1" />
-                            {order?.quantity} ta
-                          </Badge>
-                          <div
-                            className={`text-white px-2 py-1 text-xs rounded-full whitespace-nowrap ${
-                              statuses[order?.status]?.color
-                            }`}
-                          >
-                            {statuses[order?.status]?.text}
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                      {/* Key Information Section */}
-                      <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-2 rounded-lg border border-purple-100">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <div className="flex items-center mb-1">
-                              <Tag className="h-3 w-3 mr-1 text-purple-600" />
-                              <span className="text-xs font-medium text-gray-600">
-                                Model
-                              </span>
-                            </div>
-                            <p className="font-semibold text-gray-800 text-sm">
-                              {order?.order_model?.model?.name}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Submodels */}
-                      <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-4 rounded-lg border-2 border-pink-200">
-                        <div className="flex items-center mb-3">
-                          <Tag className="h-5 w-5 mr-2 text-pink-600" />
-                          <span className="text-base font-bold text-gray-800">
-                            Submodellar
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {order?.order_model?.submodels?.map((submodel) => (
-                            <Badge
-                              key={submodel.id}
-                              className="bg-white text-pink-800 border-2 border-pink-300 text-sm px-3 py-1.5 font-semibold hover:bg-pink-100 transition-colors"
-                            >
-                              {submodel?.submodel?.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Comment */}
-                      {order?.comment && (
-                        <div>
-                          <div className="flex items-center mb-2">
-                            <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
-                            <span className="text-sm font-bold text-gray-700">
-                              Izoh
-                            </span>
-                          </div>
-                          <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                            <p className="text-sm text-gray-700">
-                              {order?.comment}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Button */}
-                      <Button
-                        className="w-full mt-4"
-                        onClick={() =>
-                          navigate(`/groupMaster/tarifs/${order?.id}`)
-                        }
-                      >
-                        Batafsil
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  order={order}
+                  index={index}
+                  navigate={navigate}
+                />
               ))}
             </div>
           )}
         </AnimatePresence>
       </div>
+    </div>
+  );
+};
+
+const OrderCard = ({ order, navigate }) => {
+  const statusCfg = statuses[order?.status] || {
+    color: "bg-slate-500",
+    secondaryBg: "bg-slate-50",
+    textColor: "text-slate-700",
+    text: "Noma'lum",
+  };
+
+  const submodels = order?.order_model?.submodels || [];
+
+  return (
+    <motion.div
+      onClick={() => navigate(`/groupMaster/tarifs/${order.id}`)}
+      className={`group relative flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300
+         border border-slate-200/60 rounded-[24px] p-6 
+        hover:shadow-2xl hover:shadow-slate-200 hover:-translate-y-1.5 bg-white`}
+    >
+      {/* Visual Status Side-Bar */}
+      <div
+        className={`absolute left-0 top-0 bottom-0 w-2 ${statusCfg.color} opacity-80`}
+      />
+
+      <div>
+        {/* ID & Status Badge */}
+        <div className="flex justify-between items-center mb-5">
+          <span className="text-[11px] tracking-widest text-slate-400 uppercase">
+            ID: #{order.id}
+          </span>
+          <div
+            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white shadow-sm shrink-0 ${statusCfg.color}`}
+          >
+            {statusCfg.text}
+          </div>
+        </div>
+
+        {/* Title & Model */}
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-slate-900 group-hover:text-slate-800 transition-colors leading-tight mb-2">
+            {order.name}
+          </h3>
+          <div className="flex items-center gap-2">
+            <div
+              className={`p-1.5 rounded-lg ${statusCfg.color} bg-opacity-10`}
+            >
+              <Package className={`h-4 w-4 ${statusCfg.textColor}`} />
+            </div>
+            <span className="text-sm font-bold text-slate-500 truncate italic">
+              {order?.order_model?.model?.name}
+            </span>
+          </div>
+        </div>
+
+        {/* Season Display */}
+        <div className="flex items-center gap-2 mb-4">
+          <div
+            className={`p-2 rounded-xl ${
+              order?.season_type === "winter"
+                ? "bg-blue-50 border border-blue-200"
+                : "bg-amber-50 border border-amber-200"
+            }`}
+          >
+            {order?.season_type === "winter" ? (
+              <Snowflake className="h-5 w-5 text-blue-600" />
+            ) : (
+              <Sun className="h-5 w-5 text-amber-600" />
+            )}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-slate-900">
+              {order?.season_year}
+            </span>
+            <span
+              className={`text-xs font-medium ${
+                order?.season_type === "winter"
+                  ? "text-blue-600"
+                  : "text-amber-600"
+              }`}
+            >
+              {order?.season_type === "winter" ? "Qish" : "Bahor"}
+            </span>
+          </div>
+        </div>
+
+        {/* Data Tiles */}
+        <div className="grid grid-cols-1 gap-3 mb-6">
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3.5 border border-slate-200/60 ring-1 ring-white/40 shadow-[0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(15,23,42,0.06)]">
+            <p className="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-tighter">
+              Soni
+            </p>
+            <p className="text-base font-black text-slate-900">
+              {formatNumber(order.quantity)}{" "}
+              <span className="text-xs font-normal text-slate-400">ta</span>
+            </p>
+          </div>
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3.5 border border-slate-200/60 ring-1 ring-white/40 shadow-[0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(15,23,42,0.06)]">
+            <p className="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-tighter">
+              Submodel
+            </p>
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              <Layers
+                className={`h-3.5 w-3.5 shrink-0 ${statusCfg.textColor}`}
+              />
+              <p className="text-sm font-bold text-slate-900 truncate">
+                {submodels[0]?.submodel?.name || "-"}
+              </p>
+              {submodels.length > 1 && (
+                <span
+                  className={`px-1.5 py-0.5 rounded-md ${statusCfg.color} bg-opacity-20 ${statusCfg.textColor} text-[10px] font-bold`}
+                >
+                  +{submodels.length - 1}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Strip */}
+      <div className="flex items-center justify-between pt-5 border-t border-slate-200/40">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <MessageSquare className="h-4 w-4 shrink-0 opacity-40" />
+          <p className="text-xs truncate font-medium">
+            {order.comment || "Izoh yo'q"}
+          </p>
+        </div>
+
+        <div
+          className={`ml-4 h-10 w-10 rounded-2xl flex items-center justify-center transition-all 
+          bg-white shadow-sm border border-slate-100
+          group-hover:scale-110 group-hover:bg-slate-900 group-hover:text-white`}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </div>
+      </div>
     </motion.div>
   );
 };
+
+const LoadingState = () => (
+  <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+    <div className="relative mb-4">
+      <Loader className="animate-spin" />
+    </div>
+    <h2 className="text-xl font-bold text-slate-800">Yuklanmoqda</h2>
+  </div>
+);
+
+const EmptyState = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="text-center py-24 bg-white rounded-[32px] border-2 border-dashed border-slate-200"
+  >
+    <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+      <AlertCircle className="h-10 w-10 text-slate-300" />
+    </div>
+    <h3 className="text-2xl font-black text-slate-900">Ma'lumot topilmadi</h3>
+    <p className="text-slate-500 mt-2 max-w-xs mx-auto">
+      Qidiruv bo'yicha hech qanday buyurtma topilmadi. Iltimos, boshqa so'z
+      bilan urinib ko'ring.
+    </p>
+  </motion.div>
+);
 
 export default Tarifs;
