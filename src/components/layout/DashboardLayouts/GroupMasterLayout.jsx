@@ -1,13 +1,7 @@
 import BaseLayout from "./BaseLayout";
-import { Bot, FilePlus, ListChecks, Shirt, Users, Clock } from "lucide-react";
+import { Bot, FilePlus, Shirt, Users, Clock } from "lucide-react";
 
 const navigation = [
-  {
-    name: "Tasdiqlash",
-    href: "/groupMaster/pending",
-    icon: ListChecks,
-    onMobile: false,
-  },
   {
     name: "Tikuv",
     href: "/groupMaster/tailoring",

@@ -13,7 +13,6 @@ import {
   AlertCircle,
   Tag,
   ShoppingBag,
-  Ruler,
   Shell,
   RulerIcon,
 } from "lucide-react";
@@ -62,8 +61,8 @@ const Tailoring = () => {
           .toLowerCase()
           .includes(search.toLowerCase()) ||
         order?.orderModel?.submodels?.some((submodel) =>
-          submodel?.submodel?.name.toLowerCase().includes(search.toLowerCase())
-        )
+          submodel?.submodel?.name.toLowerCase().includes(search.toLowerCase()),
+        ),
     );
     setFilteredOrders(filtered);
   }, [search, orders]);
@@ -131,7 +130,7 @@ const Tailoring = () => {
           <div className="text-lg font-semibold text-purple-800">
             {filteredOrders?.reduce(
               (total, order) => total + Number.parseInt(order?.quantity),
-              0
+              0,
             )}{" "}
             ta
           </div>
@@ -176,7 +175,7 @@ const Tailoring = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredOrders.map((order, index) => (
                 <motion.div
-                  key={order.id}
+                  key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
@@ -247,14 +246,16 @@ const Tailoring = () => {
                           </Badge>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {order?.orderModel?.submodels?.map((submodel) => (
-                            <Badge
-                              key={submodel.id}
-                              className="bg-white text-pink-800 border-2 border-pink-300 text-sm px-3 py-1.5 font-semibold hover:bg-pink-100 transition-colors"
-                            >
-                              {submodel?.submodel?.name}
-                            </Badge>
-                          ))}
+                          {order?.orderModel?.submodels?.map(
+                            (submodel, index) => (
+                              <Badge
+                                key={index}
+                                className="bg-white text-pink-800 border-2 border-pink-300 text-sm px-3 py-1.5 font-semibold hover:bg-pink-100 transition-colors"
+                              >
+                                {submodel?.submodel?.name}
+                              </Badge>
+                            ),
+                          )}
                         </div>
                       </div>
 
@@ -266,29 +267,29 @@ const Tailoring = () => {
                           const sizes = [
                             ...new Set(
                               order.orderModel.sizes.map(
-                                (size) => size.size?.name
-                              )
+                                (size) => size.size?.name,
+                              ),
                             ),
                           ].sort((a, b) => a.localeCompare(b));
                           const colors = [
                             ...new Set(
                               order.orderModel.sizes.map(
-                                (size) => size.color?.name
-                              )
+                                (size) => size.color?.name,
+                              ),
                             ),
                           ].sort((a, b) => a.localeCompare(b));
 
                           // Create a map for quick lookup
                           const sizeColorMap = new Map();
-                          order.orderModel.sizes.forEach((item) => {
-                            const key = `${item.size?.name}-${item.color?.name}`;
+                          order.orderModel.sizes.forEach((item, index) => {
+                            const key = `${item.size?.name}-${item.color?.name}-${index}`;
                             sizeColorMap.set(key, item.quantity || 0);
                           });
 
                           // Calculate row and column totals
                           const rowTotals = new Map();
                           const colTotals = new Map(
-                            colors.map((color) => [color, 0])
+                            colors.map((color) => [color, 0]),
                           );
 
                           sizes.forEach((size) => {
@@ -299,14 +300,14 @@ const Tailoring = () => {
                               total += quantity;
                               colTotals.set(
                                 color,
-                                (colTotals.get(color) || 0) + quantity
+                                (colTotals.get(color) || 0) + quantity,
                               );
                             });
                             rowTotals.set(size, total);
                           });
 
                           const grandTotal = Array.from(
-                            rowTotals.values()
+                            rowTotals.values(),
                           ).reduce((sum, val) => sum + val, 0);
 
                           return (
@@ -336,15 +337,15 @@ const Tailoring = () => {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {sizes.map((size) => (
-                                      <tr key={size}>
+                                    {sizes.map((size, index) => (
+                                      <tr key={index}>
                                         <td className="bg-yellow-50 border border-gray-300 p-2 font-medium text-center">
                                           {size}
                                         </td>
                                         {colors.map((color) => {
                                           const quantity =
                                             sizeColorMap.get(
-                                              `${size}-${color}`
+                                              `${size}-${color}`,
                                             ) || 0;
                                           return (
                                             <td
