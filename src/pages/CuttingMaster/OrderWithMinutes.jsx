@@ -1,13 +1,22 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, AlertCircle, Loader2, Download } from "lucide-react";
-import ExcelJS from "exceljs";
+import {
+  Search,
+  Package,
+  AlertCircle,
+  Tag,
+  Box,
+  Calendar,
+  Snowflake,
+  Sun,
+} from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import { statuses } from "@/lib/status";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -25,14 +34,18 @@ import {
 } from "@/components/ui/select";
 import formatNumber from "@/utils/formatNumber";
 
+const item = {
+  hidden: { y: 20, opacity: 0 },
+  show: { y: 0, opacity: 1 },
+};
+
 const getStatusColor = (status) => {
   return statuses[status]?.color || "bg-gray-100 text-gray-800 border-gray-300";
 };
 
-const OrderWithMinutes = () => {
+const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [downloading, setDownloading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(
     localStorage.getItem("searchTerm") || "",
   );
@@ -76,6 +89,58 @@ const OrderWithMinutes = () => {
     fetchOrders();
   }, []);
 
+  const handleStatusActive = async (id) => {
+    if (orders.find((order) => order.id === id).status === "inactive") {
+      if (!window.confirm("Buyurtmani aktiv qilishni tasdiqlaysizmi?")) {
+        return;
+      }
+      try {
+        await api.patch(`/cuttingMaster/orders/change/${id}`, {
+          status: "active",
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Buyurtma aktiv qilindi!",
+          style: {
+            backgroundColor: "green",
+            color: "white",
+          },
+        });
+        fetchOrders();
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Holat o'zgartirishda xatolik",
+          variant: "destructive",
+        });
+      }
+    } else if (orders.find((order) => order.id === id).status === "active") {
+      if (!window.confirm("Buyurtmani aktiv emasga o'zgartirasizmi?")) {
+        return;
+      }
+      try {
+        await api.patch(`/cuttingMaster/orders/change/${id}`, {
+          status: "inactive",
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Buyurtma statusi aktiv emasga o'zgartirildi!",
+          style: {
+            backgroundColor: "green",
+            color: "white",
+          },
+        });
+        fetchOrders();
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Holat o'zgartirishda xatolik",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   // Filter and sort orders
   const filteredOrders = orders
     .filter((order) => {
@@ -112,104 +177,31 @@ const OrderWithMinutes = () => {
 
   if (loading) {
     return (
-      <div className="flex w-full h-[90vh] items-center justify-center">
-        <Loader2 className="animate-spin text-primary" size={33} />
+      <div className="p-6 space-y-4">
+        <div className="flex justify-between">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="p-4 bg-white rounded-lg shadow-sm">
+              <div className="grid grid-cols-9 gap-4">
+                <Skeleton className="h-6 w-16" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-6 w-20 mx-auto" />
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-16 mx-auto" />
+                <Skeleton className="h-6 w-16 mx-auto" />
+                <Skeleton className="h-6 w-20 mx-auto" />
+                <Skeleton className="h-6 w-20 mx-auto" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
-
-  const handleDownloadExcel = async () => {
-    if (filteredOrders.length === 0) {
-      toast({
-        title: "Xatolik",
-        description: "Yuklab olish uchun buyurtmalar topilmadi",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setDownloading(true);
-
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Buyurtmalar");
-
-      worksheet.columns = [
-        { header: "ID", key: "id", width: 10 },
-        { header: "Nomi", key: "name", width: 28 },
-        { header: "Model", key: "model", width: 22 },
-        { header: "Miqdor", key: "quantity", width: 12 },
-        { header: "Mavsum yili", key: "season_year", width: 14 },
-        { header: "Mavsum", key: "season_type", width: 12 },
-        { header: "Submodellar", key: "submodels", width: 40 },
-        { header: "Daqiqasi", key: "minute", width: 12 },
-        { header: "Umumiy daqiqa", key: "total_minute", width: 16 },
-        { header: "Holati", key: "status", width: 18 },
-        { header: "Izoh", key: "comment", width: 30 },
-      ];
-
-      worksheet.getRow(1).font = { bold: true };
-      worksheet.views = [{ state: "frozen", ySplit: 1 }];
-
-      filteredOrders.forEach((order) => {
-        const submodels = order?.order_model?.submodels || [];
-        const submodelNames = submodels
-          .map((s) => s?.submodel?.name)
-          .filter(Boolean)
-          .join(", ");
-
-        const minute = Number(order?.order_model?.minute || 0);
-        const quantity = Number(order?.quantity || 0);
-
-        worksheet.addRow({
-          id: order?.id ?? "",
-          name: order?.name ?? "",
-          model: order?.order_model?.model?.name ?? "",
-          quantity,
-          season_year: order?.season_year ?? "",
-          season_type:
-            order?.season_type === "winter"
-              ? "Qish"
-              : order?.season_type === "summer"
-                ? "Bahor"
-                : "",
-          submodels: submodelNames,
-          minute,
-          total_minute: minute * quantity,
-          status: statuses[order?.status]?.text || order?.status || "",
-          comment: order?.comment ?? "",
-        });
-      });
-
-      worksheet.eachRow({ includeEmpty: false }, (row) => {
-        row.alignment = { vertical: "middle", wrapText: true };
-      });
-
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-
-      const filename = `Buyurtmalar_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Excel yuklab olishda xatolik",
-        variant: "destructive",
-      });
-    } finally {
-      setDownloading(false);
-    }
-  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -319,19 +311,6 @@ const OrderWithMinutes = () => {
                 <SelectItem value="summer">Bahor</SelectItem>
               </SelectContent>
             </Select>
-
-            <Button
-              variant="default"
-              onClick={handleDownloadExcel}
-              disabled={downloading}
-            >
-              Yuklab olish
-              {downloading ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Download />
-              )}
-            </Button>
           </div>
         </div>
       </div>
@@ -351,96 +330,134 @@ const OrderWithMinutes = () => {
           </p>
         </motion.div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <Table>
+        <div className="space-y-4">
+          <Table className="bg-white rounded-lg shadow-sm text-xs">
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[90px]">ID</TableHead>
-                <TableHead>Nomi</TableHead>
-                <TableHead>Model</TableHead>
-                <TableHead className="w-[120px]">Miqdor</TableHead>
-                <TableHead className="w-[160px]">Mavsum</TableHead>
-                <TableHead>Submodellar</TableHead>
-                <TableHead className="w-[140px]">Daqiqasi</TableHead>
-                <TableHead className="w-[140px]">Umumiy daqiqa</TableHead>
-                <TableHead className="w-[140px]">Holati</TableHead>
+              <TableRow className="text-xs">
+                <TableHead className="w-20">ID</TableHead>
+                <TableHead className="w-48">Nomi</TableHead>
+                <TableHead className="w-24 text-center">Miqdor</TableHead>
+                <TableHead className="w-32">Model</TableHead>
+                <TableHead className="w-32">Submodel</TableHead>
+                <TableHead className="w-32">Daqiqa</TableHead>
+                <TableHead className="w-24 text-center">Yil</TableHead>
+                <TableHead className="w-24 text-center">Mavsum</TableHead>
+                <TableHead className="w-32 text-center">Holati</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.map((order) => {
-                const submodels = order.order_model?.submodels || [];
-                const shownSubmodels = submodels.slice(0, 2);
-                const extraCount = Math.max(
-                  0,
-                  submodels.length - shownSubmodels.length,
-                );
-
-                return (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-semibold text-gray-800">
-                      #{order.id}
-                    </TableCell>
-                    <TableCell className="font-medium text-gray-900">
-                      {order.name}
-                    </TableCell>
-                    <TableCell className="text-gray-700">
-                      {order.order_model?.model?.name || "-"}
-                    </TableCell>
-                    <TableCell className="text-gray-800">
-                      {order.quantity} ta
-                    </TableCell>
-                    <TableCell className="text-gray-700">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{order.season_year}</span>
-                        <span className="text-xs text-gray-500">
-                          {order.season_type === "winter"
-                            ? "Qish"
-                            : order.season_type === "summer"
-                              ? "Bahor"
-                              : "-"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1.5">
-                        {shownSubmodels.map((submodel) => (
-                          <Badge
-                            key={submodel.id}
-                            variant="outline"
-                            className="bg-gray-50 text-gray-700 border-gray-200"
-                          >
-                            {submodel?.submodel?.name}
-                          </Badge>
-                        ))}
-                        {extraCount > 0 && (
-                          <Badge
-                            variant="outline"
-                            className="bg-gray-50 text-gray-700 border-gray-200"
-                          >
-                            +{extraCount}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {formatNumber(order?.order_model?.minute, 0)}
-                    </TableCell>
-                    <TableCell>
-                      {formatNumber(
-                        order?.order_model?.minute * order.quantity,
-                        0,
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={`${getStatusColor(order.status)} px-3 py-1 font-medium rounded-full shadow-sm`}
+              {filteredOrders.map((order) => (
+                <motion.tr
+                  key={order.id}
+                  variants={item}
+                  whileHover={{ scale: 1.01 }}
+                  className="border-b hover:bg-gray-50 transition-all duration-100 ease-in-out"
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <Tag size={16} className="text-gray-500" />
+                      <span className="font-bold">#{order.id}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div
+                      className={`p-2 rounded border-l-4 ${statuses[order.status]?.border} bg-gradient-to-r from-gray-50 to-white`}
+                    >
+                      <span className="font-medium text-gray-800">
+                        {order.name}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div
+                      className={`flex items-center justify-center gap-1 ${statuses[order.status]?.secondaryBg} px-3 py-1.5 rounded-full`}
+                    >
+                      <Package
+                        size={12}
+                        className={statuses[order.status]?.textColor}
+                      />
+                      <span
+                        className={`font-bold ${statuses[order.status]?.textColor}`}
                       >
-                        {statuses[order.status]?.text || "Noma'lum"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                        {order.quantity}
+                      </span>
+                      <span className={statuses[order.status]?.textColor}>
+                        ta
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 w-fit whitespace-nowrap">
+                      <Box size={12} className="text-gray-500" />
+                      {order.order_model?.model?.name}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {order.order_model?.submodels
+                        ?.slice(0, 2)
+                        .map((submodel) => (
+                          <div
+                            key={submodel.id}
+                            className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 text-xs whitespace-nowrap"
+                          >
+                            <Box size={12} className="text-gray-500" />
+                            {submodel?.submodel?.name}
+                          </div>
+                        ))}
+                      {order.order_model?.submodels?.length > 2 && (
+                        <div className="border border-gray-300 px-2 py-1 rounded text-xs text-gray-600 whitespace-nowrap">
+                          +{order.order_model.submodels.length - 2}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {formatNumber(order?.order_model?.minute)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Calendar size={12} className="text-gray-500" />
+                      <span className="font-medium text-gray-700">
+                        {order.season_year}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div
+                      className={`px-2 py-1 rounded text-sm font-medium flex items-center justify-center gap-1 ${
+                        order.season_type === "winter"
+                          ? "bg-blue-100 text-blue-700"
+                          : order.season_type === "summer"
+                            ? "bg-orange-100 text-orange-700"
+                            : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {order.season_type === "winter" ? (
+                        <>
+                          <Snowflake size={14} className="text-blue-500" /> Qish
+                        </>
+                      ) : order.season_type === "summer" ? (
+                        <>
+                          <Sun size={14} className="text-orange-500" /> Bahor
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div
+                      className={`${getStatusColor(
+                        order.status,
+                      )} px-3 py-1 font-medium rounded-full shadow-sm cursor-pointer hover:opacity-80 inline-block text-white whitespace-nowrap`}
+                      onClick={() => handleStatusActive(order.id)}
+                    >
+                      {statuses[order.status]?.text || "Noma'lum"}
+                    </div>
+                  </TableCell>
+                </motion.tr>
+              ))}
             </TableBody>
           </Table>
         </div>
@@ -449,4 +466,4 @@ const OrderWithMinutes = () => {
   );
 };
 
-export default OrderWithMinutes;
+export default Orders;

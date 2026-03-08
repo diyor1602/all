@@ -38,13 +38,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-  },
-};
-
 const item = {
   hidden: { y: 20, opacity: 0 },
   show: { y: 0, opacity: 1 },
