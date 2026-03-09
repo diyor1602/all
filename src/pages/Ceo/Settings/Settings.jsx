@@ -6,7 +6,6 @@ import {
   BadgePercent,
   BadgeDollarSign,
   CalendarClock,
-  Flower,
   Calculator,
   Trees,
   SunSnow,
@@ -62,12 +61,6 @@ const SettingsPage = () => {
       color: "bg-purple-500",
     },
     {
-      name: "Yangi mavsum",
-      icon: Flower,
-      link: "/ceo/quantity",
-      color: "bg-green-500",
-    },
-    {
       name: "Hisob",
       icon: Calculator,
       link: "/ceo/calc",
@@ -86,7 +79,7 @@ const SettingsPage = () => {
       color: "bg-rose-500",
     },
     {
-      name: "Yangiiiiiiiii",
+      name: "Mavsumiy tahlil",
       icon: SunSnow,
       link: "/ceo/newSeason/overall2",
       color: "bg-black",
