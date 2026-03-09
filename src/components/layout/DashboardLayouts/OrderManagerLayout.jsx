@@ -1,17 +1,11 @@
 import BaseLayout from "./BaseLayout";
-import { Box, Puzzle, Building2 } from "lucide-react";
+import { Box, Building2 } from "lucide-react";
 
 const navigation = [
   {
     name: "Buyurtmalar",
     href: "/orderManager/orders",
     icon: Box,
-    onMobile: true,
-  },
-  {
-    name: "Modellar",
-    href: "/orderManager/models",
-    icon: Puzzle,
     onMobile: true,
   },
   {

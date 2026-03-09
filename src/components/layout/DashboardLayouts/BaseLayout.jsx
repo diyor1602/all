@@ -90,12 +90,12 @@ export default function BaseLayout({ children, navigation }) {
       dontShow: !damageRoles.includes(localStorage.getItem("role")),
       badge: damageCount > 0 ? damageCount : null,
     },
-    {
-      name: "Tikuvchilar",
-      href: "/tailorRating",
-      icon: Sprout,
-      onMobile: false,
-    },
+    // {
+    //   name: "Tikuvchilar",
+    //   href: "/tailorRating",
+    //   icon: Sprout,
+    //   onMobile: false,
+    // },
     // {
     //   name: "Jo'natmalar",
     //   href: "/truck",
