@@ -213,6 +213,7 @@ const EditOrder = () => {
   const [payload, setPayload] = useState({
     name: "",
     quantity: "",
+    price: "",
     comment: "",
     season_year: new Date().getFullYear(),
     season_type: "",
@@ -297,7 +298,7 @@ const EditOrder = () => {
     const formattedPayload = {
       name: payload.name,
       quantity: totalQuantity,
-      price: 0,
+      price: payload.price,
       comment: payload.comment,
       season_year: payload.season_year,
       season_type: payload.season_type,
