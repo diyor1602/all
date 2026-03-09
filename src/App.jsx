@@ -37,7 +37,6 @@ import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
 import Tailor from "./pages/Tailor/Tailor";
 import UniversalTailor from "./pages/UniversalTailor/UniversalTailor";
-import Manufacturer from "./pages/Manufacturer/Manufacturer";
 import Truck from "./pages/Truck";
 import Coefficient from "./pages/Coefficient/Coefficient";
 import DailyPayments from "./pages/DailyPayments";
@@ -87,7 +86,6 @@ function App() {
           <Route path="/constructor/*" element={<Constructor />} />
           <Route path="/orderManager/*" element={<OrderManager />} />
           <Route path="/supervisor/*" element={<Supervisor />} />
-          <Route path="/manufacturer/*" element={<Manufacturer />} />
           <Route path="/transport/*" element={<Transport />} />
           <Route path="/warehouseManager/*" element={<WarehouseManager />} />
           <Route path="/qualityController/*" element={<QualityController />} />

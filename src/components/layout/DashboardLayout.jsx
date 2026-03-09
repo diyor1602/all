@@ -18,7 +18,6 @@ import ResultCheckerLayout from "./DashboardLayouts/ResultCheckerLayout";
 import CeoLayout from "./DashboardLayouts/CeoLayout";
 import TailorLayout from "./DashboardLayouts/TailorLayout";
 import UniversalTailorLayout from "./DashboardLayouts/UniversalTailorLayout";
-import ManufacturerLayout from "./DashboardLayouts/ManufacturerLayout";
 import MajorQualityControllerLayout from "./DashboardLayouts/MajorQualityControllerLayout";
 import { Outlet } from "react-router-dom";
 
@@ -42,7 +41,6 @@ const layouts = {
   ceo: CeoLayout,
   tailor: TailorLayout,
   universalTailor: UniversalTailorLayout,
-  manufacturer: ManufacturerLayout,
   majorQualityController: MajorQualityControllerLayout,
   nolayout: NoLayout,
 };
