@@ -3,6 +3,9 @@ import Orders from "./Orders/Orders";
 import OrderView from "./Orders/OrderView";
 import NewOrder from "./Orders/NewOrder";
 import EditOrder from "./Orders/EditOrder";
+import Models from "./Models/Models";
+import AddModel from "./Models/AddModel";
+import EditModel from "./Models/EditModel";
 import ExcelOrders from "./Orders/ExcelOrders";
 import Contragent from "./Contragent/Contragent";
 
@@ -13,6 +16,9 @@ const OrderManager = () => {
       <Route path="orders/:id" element={<OrderView />} />
       <Route path="orders/edit/:id" element={<EditOrder />} />
       <Route path="orders/new" element={<NewOrder />} />
+      <Route path="models" element={<Models />} />
+      <Route path="models/add" element={<AddModel />} />
+      <Route path="models/edit/:id" element={<EditModel />} />
       <Route path="excel" element={<ExcelOrders />} />
       <Route path="contragent" element={<Contragent />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
