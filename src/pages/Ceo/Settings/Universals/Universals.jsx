@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader, X } from "lucide-react";
+import { Loader, X, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 const keywords = ["tikuv", "тикув"];
@@ -170,6 +170,30 @@ const Universals = () => {
     }
   };
 
+  const handleDelete = async (ids) => {
+    try {
+      // Send individual delete requests for each group assignment
+      const requests = ids.map((id) =>
+        api.delete(`/employee-assistant-groups/${id}`),
+      );
+
+      await Promise.all(requests);
+
+      toast({
+        title: "Muvaffaqiyat",
+        description: "Xodim o'chirildi",
+      });
+      getData();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Ma'lumotlarini olib bo'lmadi",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div>
       {loading ? (
@@ -260,10 +284,28 @@ const Universals = () => {
                         )}
                       </div>
                     </div>
-                    <div className="shrink-0">
+                    <div className="flex items-center gap-4 shrink-0">
                       <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                         {item.assistant_groups?.length || 0} guruh
                       </div>
+                      {item.assistant_groups?.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            window.confirm(
+                              "Rostdan ham o'chirishni istaysizmi?",
+                            )
+                              ? handleDelete(
+                                  item.assistant_groups.map((g) => g.id),
+                                )
+                              : null
+                          }
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
