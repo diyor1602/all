@@ -44,6 +44,7 @@ import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
 import { Link } from "react-router-dom";
 import NoImage from "/noimage.png";
+import formatNumber from "@/utils/formatNumber";
 
 const Models = () => {
   const { toast } = useToast();
@@ -116,7 +117,7 @@ const Models = () => {
           (model.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
           (model.description || "")
             .toLowerCase()
-            .includes(searchTerm.toLowerCase())
+            .includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -124,12 +125,12 @@ const Models = () => {
     if (activeSubmodelNames.length > 0) {
       filtered = filtered.filter((model) => {
         const modelSubmodelNames = (model.submodels || []).map(
-          (sm) => sm.name || ""
+          (sm) => sm.name || "",
         );
 
         // Check if ALL selected submodel names are in this model
         return activeSubmodelNames.every((activeName) =>
-          modelSubmodelNames.includes(activeName)
+          modelSubmodelNames.includes(activeName),
         );
       });
     }
@@ -140,7 +141,7 @@ const Models = () => {
   const handleToggleSubmodel = (submodelName) => {
     if (activeSubmodelNames.includes(submodelName)) {
       setActiveSubmodelNames(
-        activeSubmodelNames.filter((name) => name !== submodelName)
+        activeSubmodelNames.filter((name) => name !== submodelName),
       );
     } else {
       setActiveSubmodelNames([...activeSubmodelNames, submodelName]);
@@ -169,14 +170,10 @@ const Models = () => {
               <TooltipTrigger>
                 <div className="flex flex-col gap-1">
                   <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
-                    {parseFloat(model?.rasxod)?.toLocaleString("ru-RU") || "0"}{" "}
-                    so'm
+                    {formatNumber(parseFloat(model?.rasxod))} so'm
                   </div>
                   <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
-                    {(parseFloat(model?.rasxod) / 250)?.toLocaleString(
-                      "ru-RU"
-                    ) || "0"}{" "}
-                    daqiqa
+                    {formatNumber(parseFloat(model?.rasxod) / 250)} daqiqa
                   </div>
                 </div>
               </TooltipTrigger>
