@@ -11,6 +11,7 @@ import {
   SunSnow,
   ChartArea,
   Medal,
+  Pizza,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -19,6 +20,7 @@ import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
 import QualityRatings from "./QualityRatings/QualityRatings";
 import Levels from "./Levels/Levels";
+import Universals from "./Universals/Universals";
 
 const Settings = () => {
   return (
@@ -30,6 +32,7 @@ const Settings = () => {
       <Route path="grouphistory" element={<GroupHistory />} />
       <Route path="qualityratings" element={<QualityRatings />} />
       <Route path="levels" element={<Levels />} />
+      <Route path="universals" element={<Universals />} />
     </Routes>
   );
 };
@@ -95,6 +98,12 @@ const SettingsPage = () => {
       icon: Medal,
       link: "/ceo/settings/levels",
       color: "bg-yellow-500",
+    },
+    {
+      name: "Universallar",
+      icon: Pizza,
+      link: "/ceo/settings/universals",
+      color: "bg-lime-500",
     },
   ];
 
