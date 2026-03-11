@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { Loader, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 const keywords = ["tikuv", "тикув"];
@@ -172,222 +172,303 @@ const Universals = () => {
 
   return (
     <div>
-      <div className="flex items-center gap-2">
-        <Input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => {
-            setSelectedMonth(e.target.value);
-            localStorage.setItem("selectedMonth", e.target.value);
-          }}
-          className="w-fit bg-white"
-        />
-        <Button
-          onClick={() => {
-            setSearchText("");
-            setResults([]);
-            setSelectedResult(null);
-            setStartDate("");
-            setEndDate("");
-            setSearchDialogOpen(true);
-          }}
-        >
-          Xodim qo'shish
-        </Button>
-      </div>
-      <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Xodimlarni qidirish</DialogTitle>
-          </DialogHeader>
-          <Input
-            placeholder="Xodimni qidiring..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-
-          {selectedResult ? (
-            <>
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {selectedResult?.img ? (
+      {loading ? (
+        <div className="flex flex-col items-center gap-2 w-full h-[90vh] justify-center">
+          <Loader className="animate-spin" />
+          <span>Ma'lumotlar yuklanmoqda...</span>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-2">
+            <Input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                localStorage.setItem("selectedMonth", e.target.value);
+              }}
+              className="w-fit bg-white"
+            />
+            <Button
+              onClick={() => {
+                setSearchText("");
+                setResults([]);
+                setSelectedResult(null);
+                setStartDate("");
+                setEndDate("");
+                setSearchDialogOpen(true);
+              }}
+            >
+              Xodim qo'shish
+            </Button>
+          </div>
+          {data.length === 0 ? (
+            <div className="mt-4 flex items-center justify-center py-8">
+              <div className="flex items-center gap-2">
+                <span>Xodimlar belgilanmagan!</span>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-6">
+              <div className="text-sm text-gray-500 mb-4">
+                {data.length} ta xodim belgilangan
+              </div>
+              <div className="grid gap-3">
+                {data.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all"
+                  >
+                    {item?.employee_img ? (
                       <img
-                        src={selectedResult.img}
-                        alt={selectedResult.name}
-                        className="w-12 h-12 object-cover rounded-full"
+                        src={item.employee_img}
+                        alt={item.employee_name}
+                        className="w-14 h-14 rounded-full object-cover shrink-0 ring-2 ring-gray-100"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-lg">
-                        {selectedResult.name.charAt(0).toUpperCase()}
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 text-white font-semibold text-lg ring-2 ring-gray-100">
+                        {item.employee_name.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <div>
-                      <div className="font-semibold">{selectedResult.name}</div>
-                      <div className="text-sm text-gray-600">
-                        {selectedResult.position}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 text-lg truncate">
+                        {item.employee_name}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {item?.assistant_groups?.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-gray-500">
+                              Oladigan guruhlari:
+                            </span>
+                            {item.assistant_groups
+                              ?.sort((a, b) =>
+                                a.group_name.localeCompare(b.group_name),
+                              )
+                              .map((group, index) => (
+                                <span
+                                  key={group.id || index}
+                                  className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium"
+                                >
+                                  {group.group_name}
+                                </span>
+                              ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Guruhlar belgilanmagan
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        {item.assistant_groups?.length || 0} guruh
                       </div>
                     </div>
                   </div>
-                  <Button
-                    onClick={() => setSelectedResult(null)}
-                    variant="outline"
-                    size="icon"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
+                ))}
               </div>
-              <div>
-                {departments
-                  ?.filter((dept) =>
-                    keywords.some((keyword) =>
-                      dept.name.toLowerCase().includes(keyword.toLowerCase()),
-                    ),
-                  )
-                  .map((dept) => (
-                    <div key={dept.id}>
-                      <div className="mb-2">{dept.name}</div>
-                      <div className="flex flex-wrap gap-2">
-                        {dept?.groups
-                          ?.sort((a, b) => a.name.localeCompare(b.name))
-                          .map((group) => (
+            </div>
+          )}
+          <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Xodimlarni qidirish</DialogTitle>
+              </DialogHeader>
+              <Input
+                placeholder="Xodimni qidiring..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+
+              {selectedResult ? (
+                <>
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {selectedResult?.img ? (
+                          <img
+                            src={selectedResult.img}
+                            alt={selectedResult.name}
+                            className="w-12 h-12 object-cover rounded-full"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-lg">
+                            {selectedResult.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-semibold">
+                            {selectedResult.name}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {selectedResult.position}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => setSelectedResult(null)}
+                        variant="outline"
+                        size="icon"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    {departments
+                      ?.filter((dept) =>
+                        keywords.some((keyword) =>
+                          dept.name
+                            .toLowerCase()
+                            .includes(keyword.toLowerCase()),
+                        ),
+                      )
+                      .map((dept) => (
+                        <div key={dept.id}>
+                          <div className="mb-2">{dept.name}</div>
+                          <div className="flex flex-wrap gap-2">
+                            {dept?.groups
+                              ?.sort((a, b) => a.name.localeCompare(b.name))
+                              .map((group) => (
+                                <Button
+                                  key={group.id}
+                                  variant={
+                                    selectedGroups.includes(group.id)
+                                      ? "default"
+                                      : "outline"
+                                  }
+                                  onClick={() => {
+                                    if (selectedGroups.includes(group.id)) {
+                                      setSelectedGroups(
+                                        selectedGroups.filter(
+                                          (id) => id !== group.id,
+                                        ),
+                                      );
+                                    } else {
+                                      setSelectedGroups([
+                                        ...selectedGroups,
+                                        group.id,
+                                      ]);
+                                    }
+                                  }}
+                                >
+                                  {group.name}
+                                </Button>
+                              ))}
+                          </div>
+                          <div className="flex items-center gap-2 mt-4">
+                            <div className="space-y-1">
+                              <Label>Boshlanish sanasi</Label>
+                              <Input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Tugash sanasi</Label>
+                              <Input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-end gap-2 mt-4">
                             <Button
-                              key={group.id}
-                              variant={
-                                selectedGroups.includes(group.id)
-                                  ? "default"
-                                  : "outline"
-                              }
+                              variant="outline"
                               onClick={() => {
-                                if (selectedGroups.includes(group.id)) {
-                                  setSelectedGroups(
-                                    selectedGroups.filter(
-                                      (id) => id !== group.id,
-                                    ),
-                                  );
-                                } else {
-                                  setSelectedGroups([
-                                    ...selectedGroups,
-                                    group.id,
-                                  ]);
-                                }
+                                setSelectedGroups([]);
+                                setSearchText("");
+                                setResults([]);
+                                setSelectedResult(null);
+                                setSearchDialogOpen(false);
+                                setStartDate("");
+                                setEndDate("");
                               }}
                             >
-                              {group.name}
+                              Bekor qilish
                             </Button>
-                          ))}
-                      </div>
-                      <div className="flex items-center gap-2 mt-4">
-                        <div className="space-y-1">
-                          <Label>Boshlanish sanasi</Label>
-                          <Input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                          />
+                            <Button
+                              disabled={sending || !startDate || !endDate}
+                              onClick={handleSubmit}
+                            >
+                              {sending ? "Yuborilmoqda..." : "Saqlash"}
+                            </Button>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <Label>Tugash sanasi</Label>
-                          <Input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                          />
+                      ))}
+                  </div>
+                </>
+              ) : searching ? (
+                <div className="mt-4 flex items-center justify-center py-8">
+                  <div className="flex items-center gap-2">
+                    <Loader className="animate-spin" />
+                    <span>Qidirilmoqda...</span>
+                  </div>
+                </div>
+              ) : results.length > 0 ? (
+                <div className="mt-4 max-h-96 overflow-y-auto space-y-2">
+                  <div className="text-sm text-gray-500 mb-2">
+                    {results.length} ta xodim topildi
+                  </div>
+                  {results.map((result) => (
+                    <div
+                      key={result.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-blue-300 transition-all cursor-pointer group"
+                      onClick={() => setSelectedResult(result)}
+                    >
+                      {result?.img ? (
+                        <img
+                          src={result.img}
+                          alt={result.name}
+                          className="w-12 h-12 object-cover rounded-full shrink-0 ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 text-white font-semibold text-lg ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all">
+                          {result.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate">
+                          {result.name}
+                        </div>
+                        <div className="text-sm text-gray-600 truncate">
+                          {result.position}
+                        </div>
+                        <div className="text-xs text-gray-500 flex items-center gap-2 mt-1">
+                          {result.department?.name && (
+                            <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                              {result.department.name}
+                            </span>
+                          )}
+                          {result.group?.name && (
+                            <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                              {result.group.name}
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center justify-end gap-2 mt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedGroups([]);
-                            setSearchText("");
-                            setResults([]);
-                            setSelectedResult(null);
-                            setSearchDialogOpen(false);
-                            setStartDate("");
-                            setEndDate("");
+                      <div className="shrink-0">
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedResult(result);
                           }}
                         >
-                          Bekor qilish
-                        </Button>
-                        <Button
-                          disabled={sending || !startDate || !endDate}
-                          onClick={handleSubmit}
-                        >
-                          {sending ? "Yuborilmoqda..." : "Saqlash"}
-                        </Button>
+                          Qo'shish
+                        </button>
                       </div>
                     </div>
                   ))}
-              </div>
-            </>
-          ) : searching ? (
-            <div className="mt-4 flex items-center justify-center py-8">
-              <div className="flex items-center gap-2 text-gray-500">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                <span>Qidirilmoqda...</span>
-              </div>
-            </div>
-          ) : results.length > 0 ? (
-            <div className="mt-4 max-h-96 overflow-y-auto space-y-2">
-              <div className="text-sm text-gray-500 mb-2">
-                {results.length} ta xodim topildi
-              </div>
-              {results.map((result) => (
-                <div
-                  key={result.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-blue-300 transition-all cursor-pointer group"
-                  onClick={() => setSelectedResult(result)}
-                >
-                  {result?.img ? (
-                    <img
-                      src={result.img}
-                      alt={result.name}
-                      className="w-12 h-12 object-cover rounded-full shrink-0 ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 text-white font-semibold text-lg ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all">
-                      {result.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">
-                      {result.name}
-                    </div>
-                    <div className="text-sm text-gray-600 truncate">
-                      {result.position}
-                    </div>
-                    <div className="text-xs text-gray-500 flex items-center gap-2 mt-1">
-                      {result.department?.name && (
-                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                          {result.department.name}
-                        </span>
-                      )}
-                      {result.group?.name && (
-                        <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                          {result.group.name}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="shrink-0">
-                    <button
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedResult(result);
-                      }}
-                    >
-                      Qo'shish
-                    </button>
-                  </div>
                 </div>
-              ))}
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+              ) : null}
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 };
