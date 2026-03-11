@@ -12,6 +12,7 @@ import {
   Snowflake,
   Sun,
   Edit,
+  CirclePlus,
 } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -216,9 +217,11 @@ const Orders = () => {
               <div className="flex items-center gap-1">
                 <span>{filteredOrders.length}</span> <span>ta</span>
                 <span>
-                  {filteredOrders?.reduce(
-                    (acc, order) => acc + order.quantity,
-                    0,
+                  {formatNumber(
+                    filteredOrders?.reduce(
+                      (acc, order) => acc + order.quantity,
+                      0,
+                    ),
                   )}
                 </span>
               </div>
@@ -314,6 +317,11 @@ const Orders = () => {
                 <SelectItem value="summer">Bahor</SelectItem>
               </SelectContent>
             </Select>
+            <Button asChild>
+              <Link to="/orderManager/orders/new">
+                <CirclePlus /> Yangi buyurtma
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
