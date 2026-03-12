@@ -7,6 +7,7 @@ import OrderView from "./Orders/OrderView";
 import NewOrder from "./Orders/NewOrder";
 import EditOrder from "./Orders/EditOrder";
 import Plan from "./Plan/Plan";
+import Analysis from "./Analysis/Analysis";
 
 const Supervisor = () => {
   return (
@@ -19,6 +20,7 @@ const Supervisor = () => {
       <Route path="models/add" element={<AddModel />} />
       <Route path="models/edit/:id" element={<EditModel />} />
       <Route path="plan/*" element={<Plan />} />
+      <Route path="analysis" element={<Analysis />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

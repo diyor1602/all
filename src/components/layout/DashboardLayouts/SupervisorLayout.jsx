@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Puzzle, Box, NotebookPen } from "lucide-react";
+import { Puzzle, Box, NotebookPen, ChartArea } from "lucide-react";
 
 const navigation = [
   {
@@ -12,6 +12,12 @@ const navigation = [
     name: "Modellar",
     href: "/supervisor/models",
     icon: Puzzle,
+    onMobile: true,
+  },
+  {
+    name: "Tahlil",
+    href: "/supervisor/analysis",
+    icon: ChartArea,
     onMobile: true,
   },
   {
