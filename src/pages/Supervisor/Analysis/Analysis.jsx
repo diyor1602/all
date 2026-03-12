@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import formatNumber from "@/utils/formatNumber";
+import {
+  Search,
+  RotateCcw,
+  Filter,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 
 const months = [
   "Yanvar",
@@ -18,11 +26,54 @@ const months = [
   "Dekabr",
 ];
 
-const AlertMessage = ({ message }) => {
+const Badge = ({ children, variant = "default" }) => {
+  const variants = {
+    default: "bg-slate-100 text-slate-700 border-slate-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    yellow: "bg-amber-50 text-amber-700 border-amber-200",
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    gray: "bg-gray-100 text-gray-700 border-gray-200",
+  };
+
   return (
-    <div className="bg-red-500 text-white px-2 py-1 rounded w-fit">
-      {message}
-    </div>
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium ${variants[variant]}`}
+    >
+      {children}
+    </span>
+  );
+};
+
+const AlertMessage = ({ message }) => {
+  return <Badge variant="red">{message}</Badge>;
+};
+
+const getMonthLabel = (monthValue) => {
+  if (!monthValue) return "";
+  const date = new Date(monthValue);
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${monthName}, ${year}`;
+};
+
+const getMonthValue = (monthValue) => {
+  if (!monthValue) return "";
+  const date = new Date(monthValue);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+};
+
+const SortIcon = ({ field, sortConfig }) => {
+  if (sortConfig.key !== field) {
+    return <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" />;
+  }
+
+  return sortConfig.direction === "asc" ? (
+    <ArrowUp className="h-3.5 w-3.5 text-blue-600" />
+  ) : (
+    <ArrowDown className="h-3.5 w-3.5 text-blue-600" />
   );
 };
 
@@ -31,6 +82,23 @@ const Analysis = () => {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [filters, setFilters] = useState({
+    id: "",
+    name: "",
+    group: "",
+    month: "",
+    technologistStatus: "",
+    limitStatus: "",
+    exceededStatus: "",
+    recipeStatus: "",
+  });
+
+  const [sortConfig, setSortConfig] = useState({
+    key: "",
+    direction: "asc",
+  });
 
   useEffect(() => {
     setLoading(true);
@@ -42,113 +110,694 @@ const Analysis = () => {
       .catch((err) => {
         toast({
           title: "Error",
-          description: err.response.data.message,
+          description: err?.response?.data?.message || "Xatolik yuz berdi",
           variant: "destructive",
         });
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [toast]);
+
+  const normalizedData = useMemo(() => {
+    return (data?.data || []).map((item, index) => {
+      const orderId = item?.order?.id || "";
+      const orderName = item?.order?.name || "";
+      const submodelName = item?.submodels?.[0]?.submodel?.submodel_name || "";
+      const quantity = item?.order?.quantity || 0;
+      const groups = item?.groups?.length
+        ? item.groups.map((g) => g.name).join(", ")
+        : "";
+      const selectedMonths = item?.selected_months || [];
+      const monthsText = selectedMonths.length
+        ? selectedMonths.map((m) => getMonthLabel(m.month)).join(", ")
+        : "";
+      const monthValues = selectedMonths.map((m) => getMonthValue(m.month));
+      const tarificationSum = item?.submodels?.[0]?.tarification_sum || 0;
+      const groupLimit = item?.group_limit || 0;
+      const exceededCount =
+        item?.submodels?.[0]?.exceeded_tarifications?.length || 0;
+      const hasRecipe = !!item?.has_recipe;
+
+      return {
+        raw: item,
+        index: index + 1,
+        orderId: String(orderId),
+        orderName,
+        submodelName,
+        quantity,
+        groups,
+        monthsText,
+        monthValues,
+        tarificationSum,
+        groupLimit,
+        difference: tarificationSum - groupLimit,
+        exceededCount,
+        hasRecipe,
+        technologistStatus: tarificationSum > 0 ? "Bor" : "Yoq",
+        groupStatus: groups ? "Bor" : "Yoq",
+        monthStatus: monthsText ? "Bor" : "Yoq",
+        exceededStatus: exceededCount > 0 ? "Bor" : "Joyida",
+        recipeStatus: hasRecipe ? "Bor" : "Yoq",
+      };
+    });
+  }, [data]);
+
+  const uniqueGroups = useMemo(() => {
+    const groupSet = new Set();
+    normalizedData.forEach((item) => {
+      if (item.groups) {
+        item.groups.split(", ").forEach((g) => groupSet.add(g));
+      }
+    });
+    return [...groupSet];
+  }, [normalizedData]);
+
+  const filteredData = useMemo(() => {
+    let result = normalizedData.filter((item) => {
+      const fullName = `${item.orderName} ${item.submodelName}`.toLowerCase();
+      const global = globalSearch.toLowerCase();
+
+      const matchesGlobal =
+        !global ||
+        item.orderId.toLowerCase().includes(global) ||
+        fullName.includes(global) ||
+        item.groups.toLowerCase().includes(global) ||
+        item.monthsText.toLowerCase().includes(global);
+
+      const matchesId =
+        !filters.id ||
+        item.orderId.toLowerCase().includes(filters.id.toLowerCase());
+
+      const matchesName =
+        !filters.name || fullName.includes(filters.name.toLowerCase());
+
+      const matchesGroup =
+        !filters.group ||
+        item.groups.toLowerCase().includes(filters.group.toLowerCase());
+
+      const matchesMonth =
+        !filters.month || item.monthValues.includes(filters.month);
+
+      const matchesTechnologist =
+        !filters.technologistStatus ||
+        item.technologistStatus === filters.technologistStatus;
+
+      const matchesLimit =
+        !filters.limitStatus ||
+        (filters.limitStatus === "Oshgan" &&
+          item.tarificationSum > item.groupLimit) ||
+        (filters.limitStatus === "Joyida" &&
+          item.tarificationSum <= item.groupLimit);
+
+      const matchesExceeded =
+        !filters.exceededStatus ||
+        (filters.exceededStatus === "Bor" && item.exceededCount > 0) ||
+        (filters.exceededStatus === "Joyida" && item.exceededCount === 0);
+
+      const matchesRecipe =
+        !filters.recipeStatus || item.recipeStatus === filters.recipeStatus;
+
+      return (
+        matchesGlobal &&
+        matchesId &&
+        matchesName &&
+        matchesGroup &&
+        matchesMonth &&
+        matchesTechnologist &&
+        matchesLimit &&
+        matchesExceeded &&
+        matchesRecipe
+      );
+    });
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        if (sortConfig.key === "name") {
+          aValue = `${a.orderName} ${a.submodelName}`.toLowerCase();
+          bValue = `${b.orderName} ${b.submodelName}`.toLowerCase();
+        }
+
+        if (sortConfig.key === "month") {
+          aValue = a.monthValues?.[0] || "";
+          bValue = b.monthValues?.[0] || "";
+        }
+
+        if (typeof aValue === "string") aValue = aValue.toLowerCase();
+        if (typeof bValue === "string") bValue = bValue.toLowerCase();
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return result;
+  }, [normalizedData, globalSearch, filters, sortConfig]);
+
+  const resetFilters = () => {
+    setGlobalSearch("");
+    setFilters({
+      id: "",
+      name: "",
+      group: "",
+      month: "",
+      technologistStatus: "",
+      limitStatus: "",
+      exceededStatus: "",
+      recipeStatus: "",
+    });
+    setSortConfig({
+      key: "",
+      direction: "asc",
+    });
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return {
+        key,
+        direction: "asc",
+      };
+    });
+  };
+
+  const stickyBase =
+    "sticky bg-inherit backdrop-blur supports-[backdrop-filter]:bg-white/95";
+  const stickyHeader =
+    "sticky top-0 z-30 bg-slate-100 supports-[backdrop-filter]:bg-slate-100/95";
+  const stickyFilterRow =
+    "sticky top-[48px] z-20 bg-white supports-[backdrop-filter]:bg-white/95";
 
   return (
-    <div>
-      <div>Buyurtmalar {data?.count} ta</div>
-      <div className="w-full overflow-auto mt-4">
-        <table className="w-full border-collapse border border-gray-300 text-xs">
-          <thead>
-            <tr>
-              <th className="border border-gray-300 px-2 py-1">№</th>
-              <th className="border border-gray-300 px-2 py-1">ID</th>
-              <th className="border border-gray-300 px-2 py-1">Nomi</th>
-              <th className="border border-gray-300 px-2 py-1">Miqdori</th>
-              <th className="border border-gray-300 px-2 py-1">Guruh</th>
-              <th className="border border-gray-300 px-2 py-1">Oy</th>
-              <th className="border border-gray-300 px-2 py-1">Texnolog</th>
-              <th className="border border-gray-300 px-2 py-1">Limit</th>
-              <th className="border border-gray-300 px-2 py-1">Farq</th>
-              <th className="border border-gray-300 px-2 py-1">Qozixona</th>
-              <th className="border border-gray-300 px-2 py-1">Detallar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data?.data?.map((order, index) => (
-              <tr key={index}>
-                <td className="border border-gray-300 px-2 py-1">
-                  {index + 1}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {order.order?.id}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {order.order?.name} <br />{" "}
-                  {order.submodels[0]?.submodel?.submodel_name}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {formatNumber(order?.order?.quantity)}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {order?.groups?.length > 0 ? (
-                    order.groups?.map((group) => group.name).join(", ")
-                  ) : (
-                    <AlertMessage message="Yo'q" />
-                  )}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {order.selected_months?.length > 0 ? (
-                    order.selected_months
-                      .map((month) => {
-                        const date = new Date(month.month);
-                        const monthName = months[date.getMonth()];
-                        const year = date.getFullYear();
-                        return `${monthName}, ${year}`;
-                      })
-                      .join(", ")
-                  ) : (
-                    <AlertMessage message="Yo'q" />
-                  )}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {order?.submodels[0]?.tarification_sum > 0 ? (
-                    formatNumber(order?.submodels[0]?.tarification_sum)
-                  ) : (
-                    <AlertMessage message="Yo'q" />
-                  )}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {formatNumber(order?.group_limit)}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {order?.submodels[0]?.tarification_sum >
-                  order?.group_limit ? (
-                    <AlertMessage
-                      message={formatNumber(
-                        order?.submodels[0]?.tarification_sum -
-                          order?.group_limit,
-                      )}
-                    />
-                  ) : (
-                    formatNumber(order?.submodels[0]?.tarification_sum)
-                  )}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {order?.submodels[0]?.exceeded_tarifications?.length > 0 ? (
-                    <AlertMessage
-                      message={
-                        order?.submodels[0]?.exceeded_tarifications?.length
-                      }
-                    />
-                  ) : (
-                    "Joyida"
-                  )}
-                </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  {order.has_recipe ? "Bor" : <AlertMessage message="Yo'q" />}
-                </td>
+    <div className="space-y-4">
+      <div className="border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-800">
+              Buyurtmalar tahlili
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Jami{" "}
+              <span className="font-semibold text-slate-800">
+                {filteredData.length}
+              </span>{" "}
+              ta buyurtma
+              {data?.count ? (
+                <span className="text-slate-400">
+                  {" "}
+                  / umumiy {data.count} ta
+                </span>
+              ) : null}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-[320px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Qidirish..."
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-blue-400 focus:bg-white"
+              />
+            </div>
+
+            <button
+              onClick={resetFilters}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Tozalash
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-hidden border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-auto max-h-[75vh]">
+          <table className="min-w-[1550px] w-full border-separate border-spacing-0 text-sm">
+            <thead>
+              <tr className="h-12 bg-slate-100 text-slate-700">
+                <th
+                  className={`${stickyHeader} ${stickyBase} left-0 z-40 border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  style={{ width: 70, minWidth: 70 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("index")}
+                    className="flex items-center gap-1"
+                  >
+                    №
+                    <SortIcon field="index" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} ${stickyBase} left-[70px] z-40 border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  style={{ width: 110, minWidth: 110 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("orderId")}
+                    className="flex items-center gap-1"
+                  >
+                    ID
+                    <SortIcon field="orderId" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} ${stickyBase} left-[180px] z-40 border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  style={{ width: 280, minWidth: 280 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("name")}
+                    className="flex items-center gap-1"
+                  >
+                    Nomi
+                    <SortIcon field="name" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("quantity")}
+                    className="flex items-center gap-1"
+                  >
+                    Miqdori
+                    <SortIcon field="quantity" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("groups")}
+                    className="flex items-center gap-1"
+                  >
+                    Guruh
+                    <SortIcon field="groups" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("month")}
+                    className="flex items-center gap-1"
+                  >
+                    Oy
+                    <SortIcon field="month" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("tarificationSum")}
+                    className="flex items-center gap-1"
+                  >
+                    Texnolog
+                    <SortIcon field="tarificationSum" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("groupLimit")}
+                    className="flex items-center gap-1"
+                  >
+                    Limit
+                    <SortIcon field="groupLimit" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("difference")}
+                    className="flex items-center gap-1"
+                  >
+                    Farq
+                    <SortIcon field="difference" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("exceededCount")}
+                    className="flex items-center gap-1"
+                  >
+                    Qozixona
+                    <SortIcon field="exceededCount" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("hasRecipe")}
+                    className="flex items-center gap-1"
+                  >
+                    Detallar
+                    <SortIcon field="hasRecipe" sortConfig={sortConfig} />
+                  </button>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+
+              <tr className="h-[52px] bg-white">
+                <th
+                  className={`${stickyFilterRow} ${stickyBase} left-0 z-30 border-b border-r border-slate-200 px-2 py-2`}
+                  style={{ width: 70, minWidth: 70 }}
+                />
+
+                <th
+                  className={`${stickyFilterRow} ${stickyBase} left-[70px] z-30 border-b border-r border-slate-200 px-2 py-2`}
+                  style={{ width: 110, minWidth: 110 }}
+                >
+                  <input
+                    value={filters.id}
+                    onChange={(e) => handleFilterChange("id", e.target.value)}
+                    placeholder="ID..."
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                  />
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} ${stickyBase} left-[180px] z-30 border-b border-r border-slate-200 px-2 py-2`}
+                  style={{ width: 280, minWidth: 280 }}
+                >
+                  <input
+                    value={filters.name}
+                    onChange={(e) => handleFilterChange("name", e.target.value)}
+                    placeholder="Nomi..."
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                  />
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                />
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                >
+                  <select
+                    value={filters.group}
+                    onChange={(e) =>
+                      handleFilterChange("group", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    {uniqueGroups.map((group) => (
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                >
+                  <input
+                    type="month"
+                    value={filters.month}
+                    onChange={(e) =>
+                      handleFilterChange("month", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                  />
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                >
+                  <select
+                    value={filters.technologistStatus}
+                    onChange={(e) =>
+                      handleFilterChange("technologistStatus", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Bor">Bor</option>
+                    <option value="Yoq">Yo'q</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                >
+                  <select
+                    value={filters.limitStatus}
+                    onChange={(e) =>
+                      handleFilterChange("limitStatus", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Oshgan">Oshgan</option>
+                    <option value="Joyida">Joyida</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                />
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                >
+                  <select
+                    value={filters.exceededStatus}
+                    onChange={(e) =>
+                      handleFilterChange("exceededStatus", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Bor">Bor</option>
+                    <option value="Joyida">Joyida</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-slate-200 px-2 py-2`}
+                >
+                  <select
+                    value={filters.recipeStatus}
+                    onChange={(e) =>
+                      handleFilterChange("recipeStatus", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Bor">Bor</option>
+                    <option value="Yoq">Yo'q</option>
+                  </select>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={11}
+                    className="px-4 py-10 text-center text-sm text-slate-500"
+                  >
+                    Yuklanmoqda...
+                  </td>
+                </tr>
+              ) : filteredData.length > 0 ? (
+                filteredData.map((item, rowIndex) => {
+                  const order = item.raw;
+                  const exceeded = item.tarificationSum > item.groupLimit;
+                  const rowBg =
+                    rowIndex % 2 === 0 ? "bg-white" : "bg-slate-50/60";
+
+                  return (
+                    <tr
+                      key={`${item.orderId}-${rowIndex}`}
+                      className="hover:bg-blue-50/40 transition"
+                    >
+                      <td
+                        className={`${stickyBase} left-0 z-20 border-b border-r border-slate-200 px-3 py-3 font-medium text-slate-600 ${rowBg}`}
+                        style={{ width: 70, minWidth: 70 }}
+                      >
+                        {rowIndex + 1}
+                      </td>
+
+                      <td
+                        className={`${stickyBase} left-[70px] z-20 border-b border-r border-slate-200 px-3 py-3 font-semibold text-slate-800 ${rowBg}`}
+                        style={{ width: 110, minWidth: 110 }}
+                      >
+                        {item.orderId}
+                      </td>
+
+                      <td
+                        className={`${stickyBase} left-[180px] z-20 border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                        style={{ width: 280, minWidth: 280 }}
+                      >
+                        <div className="space-y-1">
+                          <div className="font-medium text-slate-800">
+                            {item.orderName || "-"}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {item.submodelName || "-"}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-3 py-3 font-medium text-slate-700 ${rowBg}`}
+                      >
+                        {formatNumber(item.quantity)}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                      >
+                        {item.groups ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {item.groups.split(", ").map((group) => (
+                              <Badge key={group} variant="gray">
+                                {group}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                      >
+                        {order.selected_months?.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {order.selected_months.map((month, idx) => (
+                              <Badge key={idx} variant="blue">
+                                {getMonthLabel(month.month)}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                      >
+                        {item.tarificationSum > 0 ? (
+                          <Badge variant="green">
+                            {formatNumber(item.tarificationSum)}
+                          </Badge>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-3 py-3 font-medium text-slate-700 ${rowBg}`}
+                      >
+                        {formatNumber(item.groupLimit)}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                      >
+                        {exceeded ? (
+                          <AlertMessage
+                            message={formatNumber(item.difference)}
+                          />
+                        ) : (
+                          <Badge variant="green">
+                            {formatNumber(item.tarificationSum)}
+                          </Badge>
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                      >
+                        {item.exceededCount > 0 ? (
+                          <AlertMessage message={item.exceededCount} />
+                        ) : (
+                          <Badge variant="green">Joyida</Badge>
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-slate-200 px-3 py-3 ${rowBg}`}
+                      >
+                        {item.hasRecipe ? (
+                          <Badge variant="green">Bor</Badge>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={11}
+                    className="px-4 py-10 text-center text-sm text-slate-500"
+                  >
+                    Hech narsa topilmadi
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
