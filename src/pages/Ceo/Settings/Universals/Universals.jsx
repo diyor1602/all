@@ -277,6 +277,9 @@ const Universals = () => {
                       <div className="hidden sm:block font-semibold text-gray-900 text-lg truncate">
                         {item.employee_name}
                       </div>
+                      <div className="text-xs text-gray-500">
+                        {item?.position_name}
+                      </div>
                       <div className="text-sm text-gray-600 mt-1">
                         {item?.assistant_groups?.length > 0 ? (
                           <div className="flex flex-wrap items-center gap-2">

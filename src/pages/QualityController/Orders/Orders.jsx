@@ -162,7 +162,7 @@ const Orders = () => {
                 <div className="border-b pb-3">
                   <h3 className="text-lg font-semibold text-primary">
                     {order.order_model?.sub_models[0]?.submodel?.name ||
-                      "No Submodel"}
+                      "Submodelsiz"}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     {order.order_model?.model?.name}
