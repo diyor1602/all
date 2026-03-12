@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Loader2,
   Calendar,
@@ -27,6 +28,8 @@ const Damages = () => {
   const { toast } = useToast();
 
   const [damages, setDamages] = useState([]);
+
+  const [activeTab, setActiveTab] = useState("unfixed");
 
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -103,9 +106,44 @@ const Damages = () => {
 
   return (
     <>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="my-8">
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-gray-100/80 backdrop-blur-sm p-1 rounded-2xl shadow-lg border border-gray-200/50">
+          <TabsTrigger
+            value="unfixed"
+            className="relative group data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-500/25 rounded-xl transition-all duration-300 ease-out hover:bg-gray-200/50"
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <XCircle className="w-4 h-4" />
+              <span className="font-medium">To'g'irlanmagan</span>
+              <div className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-xs font-bold">
+                {damages.filter((item) => !item.fixed_employee_id).length}
+              </div>
+            </div>
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-500/20 to-red-600/20 opacity-0 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
+          </TabsTrigger>
+          <TabsTrigger
+            value="fixed"
+            className="relative group data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-green-500/25 rounded-xl transition-all duration-300 ease-out hover:bg-gray-200/50"
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <CheckCircle className="w-4 h-4" />
+              <span className="font-medium">To'g'irlangan</span>
+              <div className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-xs font-bold">
+                {damages.filter((item) => item.fixed_employee_id).length}
+              </div>
+            </div>
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/20 to-green-600/20 opacity-0 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {damages
+          .filter((item) => {
+            if (activeTab === "fixed") return Boolean(item.fixed_employee_id);
+            return !item.fixed_employee_id;
+          })
           .sort((a, b) => b.id - a.id)
           .map((item) => {
             const isFixed = item.fixed_employee_id;
