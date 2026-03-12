@@ -301,9 +301,6 @@ const Universals = () => {
                       </div>
 
                       <div className="flex items-center justify-between gap-4 mt-3 sm:mt-0 sm:hidden">
-                        <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
-                          {item.assistant_groups?.length || 0} guruh
-                        </div>
                         {item.assistant_groups?.length > 0 && (
                           <Button
                             variant="outline"
@@ -317,7 +314,7 @@ const Universals = () => {
                                   )
                                 : null
                             }
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 ml-auto"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -325,10 +322,7 @@ const Universals = () => {
                       </div>
                     </div>
 
-                    <div className="hidden sm:flex items-center justify-between sm:justify-start gap-4 shrink-0 w-full sm:w-auto">
-                      <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
-                        {item.assistant_groups?.length || 0} guruh
-                      </div>
+                    <div className="hidden sm:flex items-center justify-end gap-4 shrink-0 w-full sm:w-auto">
                       {item.assistant_groups?.length > 0 && (
                         <Button
                           variant="outline"
