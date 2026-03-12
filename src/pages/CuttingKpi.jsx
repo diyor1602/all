@@ -61,7 +61,7 @@ const analyzeProgress = (plan, month) => {
 
   // Sort daily outputs
   const sortedOutputs = [...plan.days].sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
+    (a, b) => new Date(a.date) - new Date(b.date),
   );
   const lastOutputDate = new Date(sortedOutputs[sortedOutputs.length - 1].date);
   const lastOutputDay = lastOutputDate.getDate();
@@ -73,7 +73,7 @@ const analyzeProgress = (plan, month) => {
   // Calculate working days
   const workingDaysPassed = getWorkingDays(
     startOfMonth,
-    new Date(selectedYear, selectedMonth - 1, lastOutputDay)
+    new Date(selectedYear, selectedMonth - 1, lastOutputDay),
   );
   const workingDaysTotal = getWorkingDays(startOfMonth, endOfMonth);
   let workingDaysRemaining;
@@ -89,7 +89,7 @@ const analyzeProgress = (plan, month) => {
       workingDaysTotal -
       getWorkingDays(
         startOfMonth,
-        new Date(selectedYear, selectedMonth - 1, lastOutputDay)
+        new Date(selectedYear, selectedMonth - 1, lastOutputDay),
       );
   }
 
@@ -206,7 +206,7 @@ const calculateTotalProgress = (groupPlans, month) => {
     const currentDay = today.getDate();
     workingDaysPassed = getWorkingDays(
       startOfMonth,
-      new Date(selectedYear, selectedMonth - 1, currentDay)
+      new Date(selectedYear, selectedMonth - 1, currentDay),
     );
     workingDaysRemaining = totalWorkingDays - workingDaysPassed;
   } else if (today > endOfMonth) {
@@ -225,7 +225,7 @@ const calculateTotalProgress = (groupPlans, month) => {
       acc.totalTarget += parseFloat(plan.quantity);
       return acc;
     },
-    { totalCompleted: 0, totalTarget: 0 }
+    { totalCompleted: 0, totalTarget: 0 },
   );
 
   const remaining = Math.max(0, totals.totalTarget - totals.totalCompleted);
@@ -233,7 +233,7 @@ const calculateTotalProgress = (groupPlans, month) => {
     totals.totalTarget > 0
       ? Math.min(
           100,
-          Math.round((totals.totalCompleted / totals.totalTarget) * 100)
+          Math.round((totals.totalCompleted / totals.totalTarget) * 100),
         )
       : 0;
 
@@ -296,7 +296,7 @@ const CuttingKpi = () => {
   const fetchGroupPlans = async () => {
     setLoadingGroupPlans(true);
     try {
-      const response = await api.get(`/${role}/cuttingPlans`, {
+      const response = await api.get(`/cuttingPlans`, {
         params: {
           year: month?.split("-")[0],
           month: month?.split("-")[1],
@@ -353,7 +353,7 @@ const CuttingKpi = () => {
     };
     try {
       setSending(true);
-      await api.post(`/${role}/cuttingPlans`, payload);
+      await api.post(`/cuttingPlans`, payload);
       toast({
         title: "Muvaffaqiyatli",
         description: "Guruh plani qo'shildi",
@@ -452,7 +452,7 @@ const CuttingKpi = () => {
                 Jami kesilgan:{" "}
                 <span className="font-bold">
                   {groupPlans?.find(
-                    (plan) => plan.department_id === selectedGroup?.id
+                    (plan) => plan.department_id === selectedGroup?.id,
                   )?.monthly_total || 0}
                 </span>{" "}
                 ta
@@ -461,7 +461,7 @@ const CuttingKpi = () => {
                 Jami plan:{" "}
                 <span className="font-bold">
                   {groupPlans?.find(
-                    (plan) => plan.department_id === selectedGroup?.id
+                    (plan) => plan.department_id === selectedGroup?.id,
                   )?.quantity || 0}
                 </span>{" "}
                 ta
@@ -471,7 +471,7 @@ const CuttingKpi = () => {
           <div className="flex flex-col space-y-2 max-h-[400px] overflow-y-auto">
             {(() => {
               const selectedPlan = groupPlans?.find(
-                (plan) => plan.department_id === selectedGroup?.id
+                (plan) => plan.department_id === selectedGroup?.id,
               );
               if (!selectedPlan) return null;
 
@@ -483,7 +483,7 @@ const CuttingKpi = () => {
                 monthNumber,
                 year,
                 monthlyPlan,
-                selectedPlan.days || []
+                selectedPlan.days || [],
               );
 
               return dailyData.map((day, index) => (
@@ -577,7 +577,7 @@ const CuttingKpi = () => {
                   <span className="font-bold">
                     {calculateTotalProgress(
                       groupPlans,
-                      month
+                      month,
                     )?.totalCompleted.toLocaleString() || 0}
                   </span>{" "}
                   ta
@@ -587,7 +587,7 @@ const CuttingKpi = () => {
                   <span className="font-bold">
                     {calculateTotalProgress(
                       groupPlans,
-                      month
+                      month,
                     )?.totalTarget.toLocaleString() || 0}
                   </span>{" "}
                   ta
@@ -603,7 +603,7 @@ const CuttingKpi = () => {
                 .flatMap((plan) =>
                   (plan.days || []).map((day) => ({
                     ...day,
-                  }))
+                  })),
                 );
 
               // Group by date
@@ -632,13 +632,13 @@ const CuttingKpi = () => {
                 new Date(
                   new Date(month + "-01").getFullYear(),
                   new Date(month + "-01").getMonth(),
-                  1
+                  1,
                 ),
                 new Date(
                   new Date(month + "-01").getFullYear(),
                   new Date(month + "-01").getMonth() + 1,
-                  0
-                )
+                  0,
+                ),
               );
 
               const dailyTarget = totalPlan / workingDaysInMonth;
@@ -847,7 +847,7 @@ const CuttingKpi = () => {
                         Rejaga yetish uchun har bir ish kunida kamida{" "}
                         <span className="font-bold">
                           {Math.ceil(
-                            totalProgress.requiredDailyOutput
+                            totalProgress.requiredDailyOutput,
                           ).toLocaleString()}
                         </span>{" "}
                         ta kesish kerak.
@@ -872,8 +872,8 @@ const CuttingKpi = () => {
           {departments
             ?.filter((department) =>
               keywords.some((kw) =>
-                department?.name?.toLowerCase().includes(kw)
-              )
+                department?.name?.toLowerCase().includes(kw),
+              ),
             )
             .map((department) => (
               <div
@@ -912,7 +912,7 @@ const CuttingKpi = () => {
                             onClick={() => {
                               setImageDialogOpen(true);
                               setImage(
-                                department.responsible_user?.employee?.img
+                                department.responsible_user?.employee?.img,
                               );
                             }}
                           />
@@ -928,7 +928,7 @@ const CuttingKpi = () => {
                                 department?.responsible_user?.employee?.img &&
                                   setImageDialogOpen(true);
                                 setImage(
-                                  department.responsible_user?.employee?.img
+                                  department.responsible_user?.employee?.img,
                                 );
                               }}
                             >
@@ -947,7 +947,7 @@ const CuttingKpi = () => {
                           onClick={() => {
                             if (localStorage.getItem("role") === "ceo") {
                               const plan = groupPlans?.find(
-                                (plan) => plan.department_id === department.id
+                                (plan) => plan.department_id === department.id,
                               );
 
                               if (plan) {
@@ -977,8 +977,9 @@ const CuttingKpi = () => {
                             <span className="font-bold text-lg text-blue-600">
                               {parseFloat(
                                 groupPlans?.find(
-                                  (plan) => plan.department_id === department.id
-                                )?.quantity || 0
+                                  (plan) =>
+                                    plan.department_id === department.id,
+                                )?.quantity || 0,
                               ).toLocaleString("ru-RU")}
                             </span>
                             <span className="text-sm text-gray-500">ta</span>
@@ -1001,8 +1002,9 @@ const CuttingKpi = () => {
                             <span className="font-bold text-lg text-blue-600">
                               {parseFloat(
                                 groupPlans?.find(
-                                  (plan) => plan.department_id === department.id
-                                )?.monthly_total || 0
+                                  (plan) =>
+                                    plan.department_id === department.id,
+                                )?.monthly_total || 0,
                               ).toLocaleString("ru-RU")}
                             </span>
                             <span className="text-sm text-gray-500">ta</span>
@@ -1012,7 +1014,7 @@ const CuttingKpi = () => {
                         {/* Daily Output Analysis */}
                         {(() => {
                           const plan = groupPlans?.find(
-                            (p) => p.department_id === department.id
+                            (p) => p.department_id === department.id,
                           );
                           // Don't show if no plan, no daily outputs, or plan quantity is 0/not set
                           if (
@@ -1071,8 +1073,8 @@ const CuttingKpi = () => {
                                         ? "Planni bajardi ✅"
                                         : "Planni bajarmadi ❌"
                                       : analysis.onTrack
-                                      ? "Planni bajara oladi"
-                                      : "Planni bajarish uchun harakat qilish kerak"}
+                                        ? "Planni bajara oladi"
+                                        : "Planni bajarish uchun harakat qilish kerak"}
                                   </p>
 
                                   <p className="text-xs mt-0.5">
@@ -1080,7 +1082,7 @@ const CuttingKpi = () => {
                                       `Rejada: ~${Math.round(
                                         analysis.avgDailyOutput *
                                           analysis.workingDaysRemaining +
-                                          analysis.completed
+                                          analysis.completed,
                                       ).toLocaleString()} / ${analysis.target.toLocaleString()}`
                                     ) : analysis.workingDaysRemaining > 0 ? (
                                       <div>

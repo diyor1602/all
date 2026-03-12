@@ -10,10 +10,10 @@ import {
   MessageSquareMore,
   Home,
   Radical,
-  Sprout,
   BadgePercent,
   CircleDollarSign,
   Glasses,
+  SquareScissors,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -79,6 +79,12 @@ export default function BaseLayout({ children, navigation }) {
       name: "Tikuv KPI",
       href: "/kpi",
       icon: BadgePercent,
+      onMobile: false,
+    },
+    {
+      name: "Bichuv KPI",
+      href: "/cuttingKpi",
+      icon: SquareScissors,
       onMobile: false,
     },
     ...navigation,
