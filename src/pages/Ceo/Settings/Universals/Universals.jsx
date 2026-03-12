@@ -90,7 +90,7 @@ const Universals = () => {
     try {
       setSearching(true);
       const response = await api.get("ceo/employees", {
-        params: { search: searchValue },
+        params: { search: searchValue, status: "working" },
         signal: abortControllerRef.current.signal,
       });
       setResults(response.data?.data || []);
