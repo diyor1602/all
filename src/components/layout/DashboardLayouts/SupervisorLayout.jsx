@@ -18,7 +18,7 @@ const navigation = [
     name: "Tahlil",
     href: "/supervisor/analysis",
     icon: ChartArea,
-    onMobile: true,
+    onMobile: false,
   },
   {
     name: "Reja",

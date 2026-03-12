@@ -89,6 +89,8 @@ const Analysis = () => {
     group: "",
     month: "",
     status: "",
+    seasonType: "",
+    seasonYear: "",
     technologistStatus: "",
     limitStatus: "",
     exceededStatus: "",
@@ -202,6 +204,16 @@ const Analysis = () => {
         !filters.status ||
         (item.raw?.order?.status && item.raw.order.status === filters.status);
 
+      const matchesSeasonType =
+        !filters.seasonType ||
+        (item.raw?.order?.season_type &&
+          item.raw.order.season_type === filters.seasonType);
+
+      const matchesSeasonYear =
+        !filters.seasonYear ||
+        (item.raw?.order?.season_year &&
+          String(item.raw.order.season_year) === filters.seasonYear);
+
       const matchesTechnologist =
         !filters.technologistStatus ||
         item.technologistStatus === filters.technologistStatus;
@@ -227,6 +239,8 @@ const Analysis = () => {
         matchesGroup &&
         matchesMonth &&
         matchesStatus &&
+        matchesSeasonType &&
+        matchesSeasonYear &&
         matchesTechnologist &&
         matchesLimit &&
         matchesExceeded &&
@@ -272,6 +286,8 @@ const Analysis = () => {
       group: "",
       month: "",
       status: "",
+      seasonType: "",
+      seasonYear: "",
       technologistStatus: "",
       limitStatus: "",
       exceededStatus: "",
@@ -448,6 +464,32 @@ const Analysis = () => {
                 >
                   <button
                     type="button"
+                    onClick={() => handleSort("seasonYear")}
+                    className="flex items-center gap-1"
+                  >
+                    Yil
+                    <SortIcon field="seasonYear" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("seasonType")}
+                    className="flex items-center gap-1"
+                  >
+                    Fasl
+                    <SortIcon field="seasonType" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
                     onClick={() => handleSort("tarificationSum")}
                     className="flex items-center gap-1"
                   >
@@ -585,6 +627,36 @@ const Analysis = () => {
                 <th
                   className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 >
+                  <input
+                    type="number"
+                    placeholder="Yil..."
+                    value={filters.seasonYear}
+                    onChange={(e) =>
+                      handleFilterChange("seasonYear", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  />
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.seasonType}
+                    onChange={(e) =>
+                      handleFilterChange("seasonType", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="winter">Qish</option>
+                    <option value="summer">Bahor</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
                   <select
                     value={filters.technologistStatus}
                     onChange={(e) =>
@@ -656,7 +728,7 @@ const Analysis = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={13}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Yuklanmoqda...
@@ -725,7 +797,7 @@ const Analysis = () => {
                       >
                         {item.raw?.order?.status ? (
                           <span
-                            className={`text-white px-2 py-1 rounded-full text-xs ${
+                            className={`text-white px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                               statuses[item.raw.order.status]?.color
                             }`}
                           >
@@ -749,6 +821,38 @@ const Analysis = () => {
                           </div>
                         ) : (
                           <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.raw?.order?.season_year ? (
+                          <span className="font-medium text-slate-700">
+                            {item.raw.order.season_year}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs">-</span>
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.raw?.order?.season_type ? (
+                          <Badge
+                            variant={
+                              item.raw.order.season_type === "winter"
+                                ? "blue"
+                                : "green"
+                            }
+                          >
+                            {item.raw.order.season_type === "winter"
+                              ? "Qish"
+                              : "Bahor"}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-400 text-xs">-</span>
                         )}
                       </td>
 
@@ -809,7 +913,7 @@ const Analysis = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={13}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Hech narsa topilmadi
