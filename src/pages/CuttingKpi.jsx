@@ -353,7 +353,7 @@ const CuttingKpi = () => {
     };
     try {
       setSending(true);
-      await api.post(`/cuttingPlans`, payload);
+      await api.post(`/${role}/cuttingPlans`, payload);
       toast({
         title: "Muvaffaqiyatli",
         description: "Guruh plani qo'shildi",
