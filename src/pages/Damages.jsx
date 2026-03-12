@@ -167,6 +167,7 @@ const Damages = () => {
                           setSelectedImage(item.image);
                           setDialogOpen(true);
                         }}
+                        loading="lazy"
                       />
                       {isFixed ? (
                         isOwnFixed ? (
