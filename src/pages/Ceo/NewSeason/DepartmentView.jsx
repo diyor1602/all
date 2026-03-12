@@ -313,6 +313,9 @@ const DepartmentView = () => {
                             ))}
                         </div>
                       </th>
+                      <th className="text-left py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs border border-slate-200">
+                        Guruh / Lavozim
+                      </th>
                       <th
                         className="text-right py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
                         onClick={() => handleSort("per_minute_sum")}
@@ -420,6 +423,16 @@ const DepartmentView = () => {
                             </span>
                           </div>
                         </td>
+                        <td className="py-2 px-2 border border-slate-200">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-slate-900 text-xs">
+                              {item?.employee?.group?.name || "-"}
+                            </span>
+                            <span className="text-slate-600 text-xs">
+                              {item?.employee?.position?.name || "-"}
+                            </span>
+                          </div>
+                        </td>
                         <td className="py-2 px-2 text-right border border-slate-200">
                           <div
                             className="flex items-center justify-end gap-1 cursor-pointer"
@@ -480,6 +493,7 @@ const DepartmentView = () => {
                         <td className="py-3 px-2 border border-slate-200">
                           <span className="text-slate-900 text-sm">Jami</span>
                         </td>
+                        <td className="py-3 px-2 border border-slate-200" />
                         <td className="py-3 px-2 text-right border border-slate-200">
                           <span className="text-slate-900 text-sm">
                             {formatNumber(
