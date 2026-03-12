@@ -340,6 +340,17 @@ const Analysis = () => {
               Jami{" "}
               <span className="font-semibold text-slate-800">
                 {filteredData.length}
+                {filteredData?.reduce(
+                  (sum, item) => sum + (item.quantity || 0),
+                  0,
+                ) > 0
+                  ? ` (${formatNumber(
+                      filteredData?.reduce(
+                        (sum, item) => sum + (item.quantity || 0),
+                        0,
+                      ),
+                    )})`
+                  : ""}
               </span>{" "}
               ta buyurtma
               {data?.count ? (
