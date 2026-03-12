@@ -20,6 +20,9 @@ const Universals = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedEmployeeForImage, setSelectedEmployeeForImage] =
+    useState(null);
   const [selectedMonth, setSelectedMonth] = useState(
     localStorage.getItem("universalsMonth") ||
       new Date().toISOString().slice(0, 7),
@@ -194,6 +197,12 @@ const Universals = () => {
     }
   };
 
+  const openEmployeeImageDialog = (employee) => {
+    if (!employee?.employee_img) return;
+    setSelectedEmployeeForImage(employee);
+    setImageDialogOpen(true);
+  };
+
   return (
     <div>
       {loading ? (
@@ -203,15 +212,15 @@ const Universals = () => {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
             <Input
               type="month"
               value={selectedMonth}
               onChange={(e) => {
                 setSelectedMonth(e.target.value);
-                localStorage.setItem("selectedMonth", e.target.value);
+                localStorage.setItem("universalsMonth", e.target.value);
               }}
-              className="w-fit bg-white"
+              className="w-full sm:w-fit bg-white"
             />
             <Button
               onClick={() => {
@@ -222,6 +231,7 @@ const Universals = () => {
                 setEndDate("");
                 setSearchDialogOpen(true);
               }}
+              className="w-full sm:w-auto"
             >
               Xodim qo'shish
             </Button>
@@ -241,29 +251,35 @@ const Universals = () => {
                 {data.map((item, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all"
+                    className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all"
                   >
-                    {item?.employee_img ? (
-                      <img
-                        src={item.employee_img}
-                        alt={item.employee_name}
-                        className="w-14 h-14 rounded-full object-cover shrink-0 ring-2 ring-gray-100"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 text-white font-semibold text-lg ring-2 ring-gray-100">
-                        {item.employee_name.charAt(0).toUpperCase()}
+                    <div className="flex items-start gap-3 w-full sm:w-auto">
+                      {item?.employee_img ? (
+                        <img
+                          src={item.employee_img}
+                          alt={item.employee_name}
+                          className="w-14 h-14 rounded-full object-cover shrink-0 ring-2 ring-gray-100 cursor-pointer"
+                          onClick={() => openEmployeeImageDialog(item)}
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 text-white font-semibold text-lg ring-2 ring-gray-100">
+                          {item.employee_name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 sm:hidden">
+                        <div className="font-semibold text-gray-900 text-lg break-words">
+                          {item.employee_name}
+                        </div>
                       </div>
-                    )}
+                    </div>
+
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-900 text-lg truncate">
+                      <div className="hidden sm:block font-semibold text-gray-900 text-lg truncate">
                         {item.employee_name}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
                         {item?.assistant_groups?.length > 0 ? (
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-gray-500">
-                              Oladigan guruhlari:
-                            </span>
                             {item.assistant_groups
                               ?.sort((a, b) =>
                                 a.group_name.localeCompare(b.group_name),
@@ -283,9 +299,34 @@ const Universals = () => {
                           </span>
                         )}
                       </div>
+
+                      <div className="flex items-center justify-between gap-4 mt-3 sm:mt-0 sm:hidden">
+                        <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
+                          {item.assistant_groups?.length || 0} guruh
+                        </div>
+                        {item.assistant_groups?.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              window.confirm(
+                                "Rostdan ham o'chirishni istaysizmi?",
+                              )
+                                ? handleDelete(
+                                    item.assistant_groups.map((g) => g.id),
+                                  )
+                                : null
+                            }
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 shrink-0">
-                      <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+
+                    <div className="hidden sm:flex items-center justify-between sm:justify-start gap-4 shrink-0 w-full sm:w-auto">
+                      <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
                         {item.assistant_groups?.length || 0} guruh
                       </div>
                       {item.assistant_groups?.length > 0 && (
@@ -312,8 +353,34 @@ const Universals = () => {
               </div>
             </div>
           )}
+
+          <Dialog
+            open={imageDialogOpen}
+            onOpenChange={(open) => {
+              setImageDialogOpen(open);
+              if (!open) setSelectedEmployeeForImage(null);
+            }}
+          >
+            <DialogContent className="max-w-[95vw] sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedEmployeeForImage?.employee_name}
+                </DialogTitle>
+              </DialogHeader>
+              {selectedEmployeeForImage?.employee_img && (
+                <div className="w-full">
+                  <img
+                    src={selectedEmployeeForImage.employee_img}
+                    alt={selectedEmployeeForImage.employee_name}
+                    className="w-full max-h-[70vh] object-contain rounded-md"
+                  />
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
-            <DialogContent>
+            <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Xodimlarni qidirish</DialogTitle>
               </DialogHeader>
@@ -399,7 +466,7 @@ const Universals = () => {
                                 </Button>
                               ))}
                           </div>
-                          <div className="flex items-center gap-2 mt-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-4">
                             <div className="space-y-1">
                               <Label>Boshlanish sanasi</Label>
                               <Input
@@ -458,7 +525,7 @@ const Universals = () => {
                   {results.map((result) => (
                     <div
                       key={result.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-blue-300 transition-all cursor-pointer group"
+                      className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-blue-300 transition-all cursor-pointer group"
                       onClick={() => setSelectedResult(result)}
                     >
                       {result?.img ? (
@@ -492,9 +559,9 @@ const Universals = () => {
                           )}
                         </div>
                       </div>
-                      <div className="shrink-0">
+                      <div className="shrink-0 w-full sm:w-auto">
                         <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
+                          className="w-full sm:w-auto opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedResult(result);
