@@ -27,8 +27,8 @@ const Orders = () => {
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch orders",
+        title: "Xatolik",
+        description: "Buyurtmalarni olib bo'lmadi",
       });
     } finally {
       setLoading(false);
@@ -153,7 +153,7 @@ const Orders = () => {
                   </div>
                   <Badge
                     variant={isCompleted ? "default" : "secondary"}
-                    className="text-xs"
+                    className={`text-xs ${statuses[order.status]?.color} text-white`}
                   >
                     {statuses[order.status]?.text}
                   </Badge>
