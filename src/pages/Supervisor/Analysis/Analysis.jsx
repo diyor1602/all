@@ -168,7 +168,8 @@ const Analysis = () => {
         item.groups.split(", ").forEach((g) => groupSet.add(g));
       }
     });
-    return [...groupSet];
+    const sortedGroups = [...groupSet].sort();
+    return [...sortedGroups, "Guruhsiz"];
   }, [normalizedData]);
 
   const filteredData = useMemo(() => {
@@ -188,7 +189,9 @@ const Analysis = () => {
 
       const matchesGroup =
         !filters.group ||
-        item.groups.toLowerCase().includes(filters.group.toLowerCase());
+        (filters.group === "Guruhsiz" && !item.groups) ||
+        (filters.group !== "Guruhsiz" &&
+          item.groups.toLowerCase().includes(filters.group.toLowerCase()));
 
       const matchesMonth =
         !filters.month || item.monthValues.includes(filters.month);
