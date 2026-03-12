@@ -9,6 +9,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
+import { statuses } from "@/lib/status";
 
 const months = [
   "Yanvar",
@@ -87,6 +88,7 @@ const Analysis = () => {
     name: "",
     group: "",
     month: "",
+    status: "",
     technologistStatus: "",
     limitStatus: "",
     exceededStatus: "",
@@ -196,6 +198,10 @@ const Analysis = () => {
       const matchesMonth =
         !filters.month || item.monthValues.includes(filters.month);
 
+      const matchesStatus =
+        !filters.status ||
+        (item.raw?.order?.status && item.raw.order.status === filters.status);
+
       const matchesTechnologist =
         !filters.technologistStatus ||
         item.technologistStatus === filters.technologistStatus;
@@ -220,6 +226,7 @@ const Analysis = () => {
         matchesName &&
         matchesGroup &&
         matchesMonth &&
+        matchesStatus &&
         matchesTechnologist &&
         matchesLimit &&
         matchesExceeded &&
@@ -264,6 +271,7 @@ const Analysis = () => {
       name: "",
       group: "",
       month: "",
+      status: "",
       technologistStatus: "",
       limitStatus: "",
       exceededStatus: "",
@@ -414,6 +422,19 @@ const Analysis = () => {
                 >
                   <button
                     type="button"
+                    onClick={() => handleSort("status")}
+                    className="flex items-center gap-1"
+                  >
+                    Holati
+                    <SortIcon field="status" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
                     onClick={() => handleSort("month")}
                     className="flex items-center gap-1"
                   >
@@ -532,6 +553,25 @@ const Analysis = () => {
                 <th
                   className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 >
+                  <select
+                    value={filters.status}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    {Object.entries(statuses).map(([key, status]) => (
+                      <option key={key} value={key}>
+                        {status.text}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
                   <input
                     type="month"
                     value={filters.month}
@@ -616,7 +656,7 @@ const Analysis = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={11}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Yuklanmoqda...
@@ -647,7 +687,10 @@ const Analysis = () => {
                       >
                         <div className="space-y-1">
                           <div className="font-medium text-slate-800">
-                            #{item.orderId} - {item.orderName || "-"}
+                            <span className="text-slate-500">
+                              #{item.orderId}{" "}
+                            </span>
+                            - {item.orderName || "-"}
                           </div>
                           <div className="text-xs text-slate-500">
                             {item.submodelName || "-"}
@@ -674,6 +717,22 @@ const Analysis = () => {
                           </div>
                         ) : (
                           <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.raw?.order?.status ? (
+                          <span
+                            className={`text-white px-2 py-1 rounded-full text-xs ${
+                              statuses[item.raw.order.status]?.color
+                            }`}
+                          >
+                            {statuses[item.raw.order.status]?.text || "-"}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs">-</span>
                         )}
                       </td>
 
@@ -750,7 +809,7 @@ const Analysis = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={11}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Hech narsa topilmadi
