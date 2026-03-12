@@ -8,7 +8,6 @@ import {
   CloudSun,
   Gem,
   Rotate3d,
-  SquareScissors,
   TentTree,
   Users,
   Settings,
@@ -61,12 +60,6 @@ const navigation = [
     name: "Xodimlar",
     href: "/ceo/employees",
     icon: Users,
-    onMobile: false,
-  },
-  {
-    name: "Bichuv KPI",
-    href: "/cuttingKpi",
-    icon: SquareScissors,
     onMobile: false,
   },
   {

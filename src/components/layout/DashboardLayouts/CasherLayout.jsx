@@ -6,7 +6,6 @@ import {
   ClipboardCheck,
   Gem,
   Rotate3d,
-  SquareScissors,
   Users,
 } from "lucide-react";
 
@@ -51,12 +50,6 @@ const navigation = [
     name: "Xodimlar",
     href: "/casher/employees",
     icon: Users,
-    onMobile: false,
-  },
-  {
-    name: "Bichuv KPI",
-    href: "/cuttingKpi",
-    icon: SquareScissors,
     onMobile: false,
   },
 ];

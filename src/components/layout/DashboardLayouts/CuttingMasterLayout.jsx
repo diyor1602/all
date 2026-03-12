@@ -1,13 +1,7 @@
 import BaseLayout from "./BaseLayout";
-import { BadgePercent, PackageOpen, Scissors, Users } from "lucide-react";
+import { PackageOpen, Scissors, Users } from "lucide-react";
 
 const navigation = [
-  {
-    name: "Kesish KPI",
-    href: "/cuttingKpi",
-    icon: BadgePercent,
-    onMobile: true,
-  },
   // {
   //   name: "Buyurtmalar",
   //   href: "/cuttingMaster/orders",
