@@ -5,7 +5,6 @@ import formatNumber from "@/utils/formatNumber";
 import {
   Search,
   RotateCcw,
-  Filter,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -85,7 +84,6 @@ const Analysis = () => {
 
   const [globalSearch, setGlobalSearch] = useState("");
   const [filters, setFilters] = useState({
-    id: "",
     name: "",
     group: "",
     month: "",
@@ -109,8 +107,8 @@ const Analysis = () => {
       })
       .catch((err) => {
         toast({
-          title: "Error",
-          description: err?.response?.data?.message || "Xatolik yuz berdi",
+          title: "Xatolik",
+          description: "Xatolik yuz berdi",
           variant: "destructive",
         });
       })
@@ -185,10 +183,6 @@ const Analysis = () => {
         item.groups.toLowerCase().includes(global) ||
         item.monthsText.toLowerCase().includes(global);
 
-      const matchesId =
-        !filters.id ||
-        item.orderId.toLowerCase().includes(filters.id.toLowerCase());
-
       const matchesName =
         !filters.name || fullName.includes(filters.name.toLowerCase());
 
@@ -220,7 +214,6 @@ const Analysis = () => {
 
       return (
         matchesGlobal &&
-        matchesId &&
         matchesName &&
         matchesGroup &&
         matchesMonth &&
@@ -265,7 +258,6 @@ const Analysis = () => {
   const resetFilters = () => {
     setGlobalSearch("");
     setFilters({
-      id: "",
       name: "",
       group: "",
       month: "",
@@ -307,17 +299,17 @@ const Analysis = () => {
   const stickyHeader =
     "sticky top-0 z-30 bg-slate-100 supports-[backdrop-filter]:bg-slate-100/95";
   const stickyFilterRow =
-    "sticky top-[48px] z-20 bg-white supports-[backdrop-filter]:bg-white/95";
+    "sticky top-[33px] z-20 bg-white supports-[backdrop-filter]:bg-white/95";
 
   return (
     <div className="space-y-4">
-      <div className="border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="border border-slate-200 bg-white p-2 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-slate-800">
+            <h1 className="text-xs font-semibold text-slate-800">
               Buyurtmalar tahlili
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-xs text-slate-500">
               Jami{" "}
               <span className="font-semibold text-slate-800">
                 {filteredData.length}
@@ -334,21 +326,21 @@ const Analysis = () => {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative w-full sm:w-[320px]">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Qidirish..."
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
-                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-blue-400 focus:bg-white"
+                className="h-8 w-full rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs outline-none transition focus:border-blue-400 focus:bg-white"
               />
             </div>
 
             <button
               onClick={resetFilters}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
             >
-              <RotateCcw className="h-4 w-4" />
+              <RotateCcw className="h-3.5 w-3.5" />
               Tozalash
             </button>
           </div>
@@ -356,12 +348,12 @@ const Analysis = () => {
       </div>
 
       <div className="overflow-hidden border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-auto max-h-[75vh]">
-          <table className="min-w-[1550px] w-full border-separate border-spacing-0 text-sm">
+        <div className="overflow-auto max-h-[85vh]">
+          <table className="min-w-[1550px] w-full border-separate border-spacing-0 text-xs">
             <thead>
-              <tr className="h-12 bg-slate-100 text-slate-700">
+              <tr className="h-8 bg-slate-100 text-slate-700">
                 <th
-                  className={`${stickyHeader} ${stickyBase} left-0 z-40 border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} ${stickyBase} left-0 z-40 border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                   style={{ width: 70, minWidth: 70 }}
                 >
                   <button
@@ -375,21 +367,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} ${stickyBase} left-[70px] z-40 border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
-                  style={{ width: 110, minWidth: 110 }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleSort("orderId")}
-                    className="flex items-center gap-1"
-                  >
-                    ID
-                    <SortIcon field="orderId" sortConfig={sortConfig} />
-                  </button>
-                </th>
-
-                <th
-                  className={`${stickyHeader} ${stickyBase} left-[180px] z-40 border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} ${stickyBase} left-[70px] z-40 border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                   style={{ width: 280, minWidth: 280 }}
                 >
                   <button
@@ -403,7 +381,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                 >
                   <button
                     type="button"
@@ -416,7 +394,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                 >
                   <button
                     type="button"
@@ -429,7 +407,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                 >
                   <button
                     type="button"
@@ -442,7 +420,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                 >
                   <button
                     type="button"
@@ -455,7 +433,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                 >
                   <button
                     type="button"
@@ -468,7 +446,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                 >
                   <button
                     type="button"
@@ -481,7 +459,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} border-b border-r border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                 >
                   <button
                     type="button"
@@ -494,7 +472,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyHeader} border-b border-slate-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide`}
+                  className={`${stickyHeader} border-b border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
                 >
                   <button
                     type="button"
@@ -507,49 +485,37 @@ const Analysis = () => {
                 </th>
               </tr>
 
-              <tr className="h-[52px] bg-white">
+              <tr className="h-[40px] bg-white">
                 <th
-                  className={`${stickyFilterRow} ${stickyBase} left-0 z-30 border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} ${stickyBase} left-0 z-30 border-b border-r border-slate-200 px-1.5 py-1.5`}
                   style={{ width: 70, minWidth: 70 }}
                 />
 
                 <th
-                  className={`${stickyFilterRow} ${stickyBase} left-[70px] z-30 border-b border-r border-slate-200 px-2 py-2`}
-                  style={{ width: 110, minWidth: 110 }}
-                >
-                  <input
-                    value={filters.id}
-                    onChange={(e) => handleFilterChange("id", e.target.value)}
-                    placeholder="ID..."
-                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
-                  />
-                </th>
-
-                <th
-                  className={`${stickyFilterRow} ${stickyBase} left-[180px] z-30 border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} ${stickyBase} left-[70px] z-30 border-b border-r border-slate-200 px-1.5 py-1.5`}
                   style={{ width: 280, minWidth: 280 }}
                 >
                   <input
                     value={filters.name}
                     onChange={(e) => handleFilterChange("name", e.target.value)}
                     placeholder="Nomi..."
-                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
                   />
                 </th>
 
                 <th
-                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 />
 
                 <th
-                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 >
                   <select
                     value={filters.group}
                     onChange={(e) =>
                       handleFilterChange("group", e.target.value)
                     }
-                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
                   >
                     <option value="">Barchasi</option>
                     {uniqueGroups.map((group) => (
@@ -561,7 +527,7 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 >
                   <input
                     type="month"
@@ -569,19 +535,19 @@ const Analysis = () => {
                     onChange={(e) =>
                       handleFilterChange("month", e.target.value)
                     }
-                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
                   />
                 </th>
 
                 <th
-                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 >
                   <select
                     value={filters.technologistStatus}
                     onChange={(e) =>
                       handleFilterChange("technologistStatus", e.target.value)
                     }
-                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
                   >
                     <option value="">Barchasi</option>
                     <option value="Bor">Bor</option>
@@ -590,14 +556,14 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 >
                   <select
                     value={filters.limitStatus}
                     onChange={(e) =>
                       handleFilterChange("limitStatus", e.target.value)
                     }
-                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
                   >
                     <option value="">Barchasi</option>
                     <option value="Oshgan">Oshgan</option>
@@ -606,18 +572,18 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 />
 
                 <th
-                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 >
                   <select
                     value={filters.exceededStatus}
                     onChange={(e) =>
                       handleFilterChange("exceededStatus", e.target.value)
                     }
-                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
                   >
                     <option value="">Barchasi</option>
                     <option value="Bor">Bor</option>
@@ -626,14 +592,14 @@ const Analysis = () => {
                 </th>
 
                 <th
-                  className={`${stickyFilterRow} border-b border-slate-200 px-2 py-2`}
+                  className={`${stickyFilterRow} border-b border-slate-200 px-1.5 py-1.5`}
                 >
                   <select
                     value={filters.recipeStatus}
                     onChange={(e) =>
                       handleFilterChange("recipeStatus", e.target.value)
                     }
-                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-400"
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
                   >
                     <option value="">Barchasi</option>
                     <option value="Bor">Bor</option>
@@ -647,8 +613,8 @@ const Analysis = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={11}
-                    className="px-4 py-10 text-center text-sm text-slate-500"
+                    colSpan={10}
+                    className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Yuklanmoqda...
                   </td>
@@ -666,26 +632,19 @@ const Analysis = () => {
                       className="hover:bg-blue-50/40 transition"
                     >
                       <td
-                        className={`${stickyBase} left-0 z-20 border-b border-r border-slate-200 px-3 py-3 font-medium text-slate-600 ${rowBg}`}
+                        className={`${stickyBase} left-0 z-20 border-b border-r border-slate-200 px-2 py-2 font-medium text-slate-600 ${rowBg} text-center`}
                         style={{ width: 70, minWidth: 70 }}
                       >
                         {rowIndex + 1}
                       </td>
 
                       <td
-                        className={`${stickyBase} left-[70px] z-20 border-b border-r border-slate-200 px-3 py-3 font-semibold text-slate-800 ${rowBg}`}
-                        style={{ width: 110, minWidth: 110 }}
-                      >
-                        {item.orderId}
-                      </td>
-
-                      <td
-                        className={`${stickyBase} left-[180px] z-20 border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                        className={`${stickyBase} left-[70px] z-20 border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
                         style={{ width: 280, minWidth: 280 }}
                       >
                         <div className="space-y-1">
                           <div className="font-medium text-slate-800">
-                            {item.orderName || "-"}
+                            #{item.orderId} - {item.orderName || "-"}
                           </div>
                           <div className="text-xs text-slate-500">
                             {item.submodelName || "-"}
@@ -694,13 +653,13 @@ const Analysis = () => {
                       </td>
 
                       <td
-                        className={`border-b border-r border-slate-200 px-3 py-3 font-medium text-slate-700 ${rowBg}`}
+                        className={`border-b border-r border-slate-200 px-2 py-2 font-medium text-slate-700 ${rowBg}`}
                       >
                         {formatNumber(item.quantity)}
                       </td>
 
                       <td
-                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
                       >
                         {item.groups ? (
                           <div className="flex flex-wrap gap-1.5">
@@ -716,7 +675,7 @@ const Analysis = () => {
                       </td>
 
                       <td
-                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
                       >
                         {order.selected_months?.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
@@ -732,7 +691,7 @@ const Analysis = () => {
                       </td>
 
                       <td
-                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
                       >
                         {item.tarificationSum > 0 ? (
                           <Badge variant="green">
@@ -744,13 +703,13 @@ const Analysis = () => {
                       </td>
 
                       <td
-                        className={`border-b border-r border-slate-200 px-3 py-3 font-medium text-slate-700 ${rowBg}`}
+                        className={`border-b border-r border-slate-200 px-2 py-2 font-medium text-slate-700 ${rowBg}`}
                       >
                         {formatNumber(item.groupLimit)}
                       </td>
 
                       <td
-                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
                       >
                         {exceeded ? (
                           <AlertMessage
@@ -764,7 +723,7 @@ const Analysis = () => {
                       </td>
 
                       <td
-                        className={`border-b border-r border-slate-200 px-3 py-3 ${rowBg}`}
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
                       >
                         {item.exceededCount > 0 ? (
                           <AlertMessage message={item.exceededCount} />
@@ -774,7 +733,7 @@ const Analysis = () => {
                       </td>
 
                       <td
-                        className={`border-b border-slate-200 px-3 py-3 ${rowBg}`}
+                        className={`border-b border-slate-200 px-2 py-2 ${rowBg}`}
                       >
                         {item.hasRecipe ? (
                           <Badge variant="green">Bor</Badge>
@@ -788,8 +747,8 @@ const Analysis = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={11}
-                    className="px-4 py-10 text-center text-sm text-slate-500"
+                    colSpan={10}
+                    className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Hech narsa topilmadi
                   </td>
