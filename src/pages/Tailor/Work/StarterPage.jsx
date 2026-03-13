@@ -1,18 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Loader2,
-  Wallet,
-  ReceiptText,
-  Package2,
-  ChevronRight,
-} from "lucide-react";
+import { Loader2, Wallet, Package2, ChevronRight } from "lucide-react";
 import { statuses } from "@/lib/status";
 import formatNumber from "@/utils/formatNumber";
+import { useNavigate } from "react-router-dom";
 
 const StarterPage = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -153,8 +149,11 @@ text-white shadow-lg border border-white/10"
 
               return (
                 <div
+                  onClick={() =>
+                    navigate(`/tailor/order-calculate/${order?.order_id}`)
+                  }
                   key={`${order?.order_id || index}-${index}`}
-                  className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-100 transition-all active:scale-[0.99]"
+                  className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-100 transition-all active:scale-[0.99] cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
