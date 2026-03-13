@@ -456,7 +456,9 @@ const OrderCalculate = () => {
                     {data?.order_name}
                   </h1>
                   <p className="mt-1 text-sm text-white/70">
-                    {data?.submodels[0]?.name}
+                    {data?.submodels[0]?.name}{" "}
+                    <span className="font-bold">{data?.order_quantity}</span>{" "}
+                    dona
                   </p>
                 </div>
               </div>

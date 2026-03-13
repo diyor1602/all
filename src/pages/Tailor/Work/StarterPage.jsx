@@ -167,7 +167,11 @@ text-white shadow-lg border border-white/10"
                             {order?.order_name || "Buyurtma"}
                           </h3>
                           <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-                            {order?.order_submodel?.name || "Submodel yo'q"}
+                            {order?.order_submodel?.name || "Submodel yo'q"}{" "}
+                            <span className="font-bold">
+                              {order?.order_quantity}
+                            </span>{" "}
+                            dona
                           </p>
                         </div>
                       </div>
