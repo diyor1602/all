@@ -265,7 +265,7 @@ const OrderCalculate = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Ishni qo'shib bo'lmadi",
+        description: error?.response?.data?.message || "Ishni qo'shib bo'lmadi",
         variant: "destructive",
       });
     } finally {
@@ -321,7 +321,8 @@ const OrderCalculate = () => {
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Bugungi ishni yangilab bo'lmadi",
+        description:
+          error?.response?.data?.message || "Bugungi ishni yangilab bo'lmadi",
         variant: "destructive",
       });
     } finally {
