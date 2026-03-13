@@ -507,6 +507,9 @@ const ApproveLevel = () => {
                       >
                         <div className="flex items-center gap-3">
                           {getLevelBadge(history.level)}
+                          <div className="font-semibold text-green-600">
+                            {formatNumber(history.level_bonus_total, 0)}
+                          </div>
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {formatDate(history.start_date)} -{" "}
