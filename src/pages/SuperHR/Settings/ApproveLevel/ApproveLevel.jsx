@@ -15,6 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -384,6 +385,27 @@ const ApproveLevel = () => {
                     })
                 )}
               </TableBody>
+              <TableFooter>
+                <TableRow className="bg-muted/50 font-semibold">
+                  <TableCell colSpan={4} className="text-right">
+                    Jami:
+                  </TableCell>
+                  <TableCell>
+                    {formatNumber(
+                      filteredData?.reduce(
+                        (total, employee) =>
+                          total +
+                          employee?.histories?.reduce(
+                            (sum, history) => sum + history.level_bonus_total,
+                            0,
+                          ),
+                        0,
+                      ),
+                      0,
+                    )}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           </div>
         </CardContent>
