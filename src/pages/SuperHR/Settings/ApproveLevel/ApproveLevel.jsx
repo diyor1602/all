@@ -83,12 +83,20 @@ const ApproveLevel = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(
+    localStorage.getItem("selectedMonth") ||
+      new Date().toISOString().slice(0, 7),
+  );
 
   const getData = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/employee-level-histories");
-      setData(response.data);
+      const response = await api.get("/employee-level-histories", {
+        params: {
+          month: selectedMonth,
+        },
+      });
+      setData(response.data?.data);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -102,7 +110,7 @@ const ApproveLevel = () => {
 
   useEffect(() => {
     getData();
-  }, []);
+  }, [selectedMonth]);
 
   const filteredData = data?.filter((employee) => {
     const matchesSearch = employee.employee.name
@@ -264,6 +272,12 @@ const ApproveLevel = () => {
                 </SelectContent>
               </Select>
             </div>
+            <Input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-fit"
+            />
           </div>
 
           <div className="rounded-md border">
