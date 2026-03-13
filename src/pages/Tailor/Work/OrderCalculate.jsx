@@ -627,8 +627,7 @@ const OrderCalculate = () => {
                     Bugun hali ish qilinmagan
                   </h3>
                   <p className="mt-1 text-sm text-slate-500">
-                    Kerak bo‘lsa yuqoridagi tugma orqali forma ochib, yangi ish
-                    kiriting.
+                    Yuqoridagi tugma orqali forma ochib, yangi ish kiriting.
                   </p>
                 </div>
               )}
