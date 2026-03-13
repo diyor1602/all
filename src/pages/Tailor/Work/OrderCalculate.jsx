@@ -434,7 +434,7 @@ const OrderCalculate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen">
       {loading ? (
         <div className="flex h-[85vh] flex-col items-center justify-center">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
