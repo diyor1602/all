@@ -6,7 +6,6 @@ import {
   Loader2,
   Calendar,
   Clock3,
-  Wallet,
   ChevronDown,
   ChevronUp,
   Package,
@@ -14,9 +13,9 @@ import {
   Layers3,
   Plus,
   Save,
-  Pencil,
   X,
   FolderOpen,
+  BadgePlus,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -276,7 +275,7 @@ const OrderCalculate = () => {
   const handleStartEdit = (log) => {
     if (log.date !== todayString) return;
     setEditingLogId(log.id);
-    setEditingQuantity(String(log.quantity || ""));
+    setEditingQuantity(0);
   };
 
   const handleCancelEdit = () => {
@@ -297,7 +296,7 @@ const OrderCalculate = () => {
     if (!editingQuantity || Number(editingQuantity) <= 0) {
       toast({
         title: "Noto'g'ri son",
-        description: "Quantity 0 dan katta bo'lishi kerak",
+        description: "Miqdor 0 dan katta bo'lishi kerak",
         variant: "destructive",
       });
       return;
@@ -306,8 +305,9 @@ const OrderCalculate = () => {
     try {
       setUpdating(true);
 
-      await api.patch(`/tailor/tarificationLog/${log.id}`, {
+      await api.post("/tailor/tarificationLog", {
         quantity: Number(editingQuantity),
+        tarification_id: log.tarification_id,
       });
 
       toast({
@@ -376,13 +376,18 @@ const OrderCalculate = () => {
             <div className="text-xs text-slate-500">Soni</div>
 
             {isToday && isEditing ? (
-              <input
-                type="number"
-                min="1"
-                value={editingQuantity}
-                onChange={(e) => setEditingQuantity(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 font-semibold text-slate-900 outline-none focus:border-blue-500"
-              />
+              <>
+                <div className="mt-1 font-semibold text-slate-900">
+                  {log.quantity || 0}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  value={editingQuantity}
+                  onChange={(e) => setEditingQuantity(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 font-semibold text-slate-900 outline-none focus:border-blue-500"
+                />
+              </>
             ) : (
               <div className="mt-1 font-semibold text-slate-900">
                 {log.quantity || 0}
@@ -423,8 +428,8 @@ const OrderCalculate = () => {
                 onClick={() => handleStartEdit(log)}
                 className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
               >
-                <Pencil size={16} />
-                O'zgartirish
+                <BadgePlus size={16} />
+                Qo'shish
               </button>
             )}
           </div>
