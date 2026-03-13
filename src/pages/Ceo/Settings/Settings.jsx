@@ -19,7 +19,6 @@ import Coefficient from "./Coefficient/Coefficient";
 import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
 import QualityRatings from "./QualityRatings/QualityRatings";
-import Levels from "./Levels/Levels";
 import Universals from "./Universals/Universals";
 
 const Settings = () => {
@@ -31,7 +30,6 @@ const Settings = () => {
       <Route path="salaryhistory" element={<SalaryHistory />} />
       <Route path="grouphistory" element={<GroupHistory />} />
       <Route path="qualityratings" element={<QualityRatings />} />
-      <Route path="levels" element={<Levels />} />
       <Route path="universals" element={<Universals />} />
     </Routes>
   );
@@ -92,12 +90,6 @@ const SettingsPage = () => {
       icon: ChartArea,
       link: "/ceo/settings/qualityratings",
       color: "bg-red-500",
-    },
-    {
-      name: "Reytinglar",
-      icon: Medal,
-      link: "/ceo/settings/levels",
-      color: "bg-yellow-500",
     },
     {
       name: "Universallar",
