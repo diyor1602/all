@@ -76,6 +76,7 @@ const ApproveLevel = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [approvalFilter, setApprovalFilter] = useState("all");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -110,7 +111,18 @@ const ApproveLevel = () => {
     )?.level;
     const matchesStatus =
       statusFilter === "all" || currentLevel === statusFilter;
-    return matchesSearch && matchesStatus;
+
+    // Filter by approval status
+    const approvalStatus = employee.employee?.employee_bonus_approval?.status;
+    let matchesApproval = true;
+
+    if (approvalFilter === "approved") {
+      matchesApproval = approvalStatus === "approved";
+    } else if (approvalFilter === "rejected") {
+      matchesApproval = approvalStatus === "rejected";
+    }
+
+    return matchesSearch && matchesStatus && matchesApproval;
   });
 
   const getLevelBadge = (level) => {
@@ -213,7 +225,7 @@ const ApproveLevel = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-4 mb-6">
+          <div className="flex items-center space-x-4 mb-6 flex-wrap gap-3">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -234,6 +246,19 @@ const ApproveLevel = () => {
                   <SelectItem value="bronze">Bronza</SelectItem>
                   <SelectItem value="silver">Kumush</SelectItem>
                   <SelectItem value="gold">Oltin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={approvalFilter} onValueChange={setApprovalFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Tasdiq holati" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barchasi</SelectItem>
+                  <SelectItem value="approved">Tasdiqlangan</SelectItem>
+                  <SelectItem value="rejected">Tasdiqlanmagan</SelectItem>
                 </SelectContent>
               </Select>
             </div>
