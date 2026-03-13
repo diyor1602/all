@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import formatNumber from "@/utils/formatNumber";
 
 const levels = {
   bronze: {
@@ -272,6 +273,7 @@ const ApproveLevel = () => {
                   <TableHead className="font-semibold">Xodim</TableHead>
                   <TableHead className="font-semibold">Daraja</TableHead>
                   <TableHead className="font-semibold">Xolat</TableHead>
+                  <TableHead className="font-semibold">Bonus</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -283,6 +285,9 @@ const ApproveLevel = () => {
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-20" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-6 w-20" />
@@ -362,6 +367,16 @@ const ApproveLevel = () => {
                               >
                                 Tasdiqlanmagan
                               </Button>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {formatNumber(
+                              employee?.histories?.reduce(
+                                (sum, history) =>
+                                  sum + history.level_bonus_total,
+                                0,
+                              ),
+                              0,
                             )}
                           </TableCell>
                         </TableRow>
