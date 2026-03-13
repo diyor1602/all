@@ -1,9 +1,7 @@
 import BaseLayout from "./BaseLayout";
-import { CircleDollarSign, DollarSign, Leaf } from "lucide-react";
+import { DollarSign } from "lucide-react";
 
 const navigation = [
-  { name: "Ish", href: "/tailor", icon: CircleDollarSign, onMobile: true },
-  { name: "Yangisi", href: "/tailor/models", icon: Leaf, onMobile: true },
   {
     name: "Boshlash",
     href: "/tailor/starter",
