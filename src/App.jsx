@@ -31,7 +31,6 @@ import PackageMaster from "./pages/PackageMaster/PackageMaster";
 import InternalAccountant from "./pages/InternalAccountant/InternalAccountant";
 import Supplier from "./pages/Supplier/Supplier";
 import MajorQualityController from "./pages/MajorQualityController/MajorQualityController";
-import Tv from "./pages/Tv/Tv";
 import Casher from "./pages/Casher/Casher";
 import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
@@ -99,7 +98,6 @@ function App() {
             path="/majorQualityController/*"
             element={<MajorQualityController />}
           />
-          <Route path="/tv/*" element={<Tv />} />
           <Route path="/casher/*" element={<Casher />} />
           <Route path="/resultChecker/*" element={<ResultChecker />} />
           <Route path="/ceo/*" element={<Ceo />} />
