@@ -9,7 +9,6 @@ import {
   Calculator,
   Trees,
   SunSnow,
-  ChartArea,
   Medal,
   Pizza,
 } from "lucide-react";
@@ -18,7 +17,6 @@ import SalaryOrders from "./SalaryOrders/SalaryOrders";
 import Coefficient from "./Coefficient/Coefficient";
 import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
-import QualityRatings from "./QualityRatings/QualityRatings";
 import Levels from "./Levels/Levels";
 import Universals from "./Universals/Universals";
 
@@ -30,7 +28,6 @@ const Settings = () => {
       <Route path="coefficient" element={<Coefficient />} />
       <Route path="salaryhistory" element={<SalaryHistory />} />
       <Route path="grouphistory" element={<GroupHistory />} />
-      <Route path="qualityratings" element={<QualityRatings />} />
       <Route path="levels" element={<Levels />} />
       <Route path="universals" element={<Universals />} />
     </Routes>
@@ -86,12 +83,6 @@ const SettingsPage = () => {
       icon: SunSnow,
       link: "/ceo/newSeason/overall2",
       color: "bg-black",
-    },
-    {
-      name: "Sifat reyting",
-      icon: ChartArea,
-      link: "/ceo/settings/qualityratings",
-      color: "bg-red-500",
     },
     {
       name: "Reytinglar",
