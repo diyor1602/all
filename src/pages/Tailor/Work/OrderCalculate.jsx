@@ -585,7 +585,7 @@ const OrderCalculate = () => {
                         </select>
                       </div>
 
-                      <div className="md:col-span-1.5">
+                      <div className="md:col-span-2">
                         <label className="mb-2 block text-sm font-medium text-slate-700">
                           Soni
                         </label>
