@@ -102,7 +102,7 @@ const OrderCalculate = () => {
             id: category.id,
             name: category.name,
             submodel_name: submodel.name,
-            label: `${category.name} • ${submodel.name}`,
+            label: `${category.name}`,
           });
         }
       });
@@ -344,12 +344,12 @@ const OrderCalculate = () => {
             </h3>
 
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 whitespace-nowrap">
                 <Layers3 size={13} />
                 {log.category_name || "Kategoriya yo'q"}
               </span>
 
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 whitespace-nowrap">
                 <Package size={13} />
                 {log.submodel_name || "Submodel yo'q"}
               </span>
@@ -362,16 +362,15 @@ const OrderCalculate = () => {
               ) : null}
             </div>
           </div>
-
-          <div className="shrink-0 text-right">
-            <div className="text-xs text-slate-500">Topilgan</div>
-            <div className="mt-1 text-base font-bold text-slate-900">
-              {formatNumber(log.amount_earned || 0)}
-            </div>
-          </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-slate-50 px-3 py-2 col-span-2">
+            <div className="text-xs text-slate-500">Jami</div>
+            <div className="mt-1 font-semibold text-slate-900">
+              {formatNumber(log.amount_earned || 0)} so'm
+            </div>
+          </div>
           <div className="rounded-xl bg-slate-50 px-3 py-2">
             <div className="text-xs text-slate-500">Soni</div>
 
@@ -391,11 +390,6 @@ const OrderCalculate = () => {
           </div>
 
           <div className="rounded-xl bg-slate-50 px-3 py-2">
-            <div className="text-xs text-slate-500">Sana</div>
-            <div className="mt-1 font-semibold text-slate-900">{log.date}</div>
-          </div>
-
-          <div className="rounded-xl bg-slate-50 px-3 py-2 col-span-2 sm:col-span-1">
             <div className="text-xs text-slate-500">1 dona narxi</div>
             <div className="mt-1 font-semibold text-slate-900">
               {formatNumber(log.tarification_summa || 0)}
@@ -439,7 +433,7 @@ const OrderCalculate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
       {loading ? (
         <div className="flex h-[85vh] flex-col items-center justify-center">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -457,16 +451,12 @@ const OrderCalculate = () => {
           <div className="mb-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-5 sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-white/10 p-3 backdrop-blur">
-                  <Wallet className="text-white" size={22} />
-                </div>
                 <div>
                   <h1 className="text-xl font-bold text-white sm:text-2xl">
-                    Ish hisoboti
+                    {data?.order_name}
                   </h1>
                   <p className="mt-1 text-sm text-white/70">
-                    Yangi ish qo‘shish, bugungi ishlarni o‘zgartirish va tarixni
-                    ko‘rish
+                    {data?.submodels[0]?.name}
                   </p>
                 </div>
               </div>
@@ -514,10 +504,7 @@ const OrderCalculate = () => {
                   Bugungi topilgan summa
                 </div>
                 <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                  {formatNumber(todayEarned)}
-                </div>
-                <div className="mt-2 text-sm text-slate-500">
-                  Sana: {todayString}
+                  {formatNumber(todayEarned)} so'm
                 </div>
               </div>
 
@@ -591,7 +578,7 @@ const OrderCalculate = () => {
                               {item.name}
                               {item.code ? ` | ${item.code}` : ""}
                               {item.summa
-                                ? ` | ${formatNumber(item.summa)}`
+                                ? ` | ${formatNumber(item.summa)} so'm`
                                 : ""}
                             </option>
                           ))}
@@ -655,10 +642,7 @@ const OrderCalculate = () => {
                   Umumiy topilgan summa
                 </div>
                 <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                  {formatNumber(totalEarned)}
-                </div>
-                <div className="mt-2 text-sm text-slate-500">
-                  Barcha sanalar bo‘yicha jami daromad
+                  {formatNumber(totalEarned)} so'm
                 </div>
               </div>
 
@@ -687,12 +671,8 @@ const OrderCalculate = () => {
                                   />
                                 </div>
                                 <div>
-                                  <div className="text-base font-semibold text-slate-900">
-                                    {group.date}
-                                  </div>
-                                  <div className="mt-1 text-sm text-slate-500">
-                                    Ishlar soni: {group.items.length} • Jami
-                                    son: {group.quantity}
+                                  <div className="text-xs font-semibold text-slate-900">
+                                    {group.date?.split("-").reverse().join(".")}
                                   </div>
                                 </div>
                               </div>
@@ -700,11 +680,8 @@ const OrderCalculate = () => {
 
                             <div className="flex items-center gap-3">
                               <div className="text-right">
-                                <div className="text-xs text-slate-500">
-                                  Kunlik jami
-                                </div>
-                                <div className="mt-1 text-lg font-bold text-slate-900">
-                                  {formatNumber(group.total)}
+                                <div className="text-sm font-bold text-slate-900">
+                                  {formatNumber(group.total)} so'm
                                 </div>
                               </div>
 
