@@ -1,14 +1,12 @@
-import TailorPage from "./TailorPage";
-import Models from "./Models";
-import Video from "./Video";
+import StarterPage from "./Work/StarterPage";
+import OrderCalculate from "./Work/OrderCalculate";
 import { Routes, Route } from "react-router-dom";
 
 const UniversalTailor = () => {
   return (
     <Routes>
-      <Route path="/" element={<TailorPage />} />
-      <Route path="/video" element={<Video />} />
-      <Route path="/models" element={<Models />} />
+      <Route path="/starter" element={<StarterPage />} />
+      <Route path="/order-calculate/:id" element={<OrderCalculate />} />
     </Routes>
   );
 };

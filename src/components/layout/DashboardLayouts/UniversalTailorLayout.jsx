@@ -1,24 +1,12 @@
 import BaseLayout from "./BaseLayout";
-import { CircleDollarSign, Clapperboard, Leaf } from "lucide-react";
+import { DollarSign } from "lucide-react";
 
 const navigation = [
   {
-    name: "Ish",
-    href: "/universalTailor",
-    icon: CircleDollarSign,
+    name: "Boshlash",
+    href: "/universalTailor/starter",
+    icon: DollarSign,
     onMobile: true,
-  },
-  {
-    name: "Yangisi",
-    href: "/universalTailor/models",
-    icon: Leaf,
-    onMobile: true,
-  },
-  {
-    name: "Qo'llanma",
-    href: "/universalTailor/video",
-    icon: Clapperboard,
-    onMobile: false,
   },
 ];
 
