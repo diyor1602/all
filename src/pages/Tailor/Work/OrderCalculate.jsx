@@ -509,24 +509,15 @@ const OrderCalculate = () => {
 
           {selectedTab === "today" && (
             <div className="space-y-5">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:col-span-2">
-                  <div className="text-sm text-slate-500">
-                    Bugungi topilgan summa
-                  </div>
-                  <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                    {formatNumber(todayEarned)}
-                  </div>
-                  <div className="mt-2 text-sm text-slate-500">
-                    Sana: {todayString}
-                  </div>
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="text-sm text-slate-500">
+                  Bugungi topilgan summa
                 </div>
-
-                <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="text-sm text-slate-500">Bugungi jami son</div>
-                  <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                    {todayTotalQuantity}
-                  </div>
+                <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+                  {formatNumber(todayEarned)}
+                </div>
+                <div className="mt-2 text-sm text-slate-500">
+                  Sana: {todayString}
                 </div>
               </div>
 
@@ -659,24 +650,15 @@ const OrderCalculate = () => {
 
           {selectedTab === "history" && (
             <div className="space-y-5">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:col-span-2">
-                  <div className="text-sm text-slate-500">
-                    Umumiy topilgan summa
-                  </div>
-                  <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                    {formatNumber(totalEarned)}
-                  </div>
-                  <div className="mt-2 text-sm text-slate-500">
-                    Barcha sanalar bo‘yicha jami daromad
-                  </div>
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:col-span-2">
+                <div className="text-sm text-slate-500">
+                  Umumiy topilgan summa
                 </div>
-
-                <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="text-sm text-slate-500">Jami ishlar soni</div>
-                  <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                    {sortedAllOwnLogs.length}
-                  </div>
+                <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+                  {formatNumber(totalEarned)}
+                </div>
+                <div className="mt-2 text-sm text-slate-500">
+                  Barcha sanalar bo‘yicha jami daromad
                 </div>
               </div>
 
