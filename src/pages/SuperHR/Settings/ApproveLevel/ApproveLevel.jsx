@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -96,7 +96,7 @@ const ApproveLevel = () => {
           month: selectedMonth,
         },
       });
-      setData(response.data?.data);
+      setData(response.data?.data || []);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -109,31 +109,39 @@ const ApproveLevel = () => {
   };
 
   useEffect(() => {
+    localStorage.setItem("selectedMonth", selectedMonth);
     getData();
   }, [selectedMonth]);
 
-  const filteredData = data?.filter((employee) => {
-    const matchesSearch = employee.employee.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const currentLevel = employee.histories.find(
-      (h) => h.end_date === null,
-    )?.level;
-    const matchesStatus =
-      statusFilter === "all" || currentLevel === statusFilter;
+  const filteredData = useMemo(() => {
+    return (data || []).filter((employee) => {
+      const employeeName = employee?.employee?.name || "";
+      const matchesSearch = employeeName
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
-    // Filter by approval status
-    const approvalStatus = employee.employee?.employee_bonus_approval?.status;
-    let matchesApproval = true;
+      const currentLevel = employee?.histories?.find(
+        (h) => h.end_date === null,
+      )?.level;
 
-    if (approvalFilter === "approved") {
-      matchesApproval = approvalStatus === "approved";
-    } else if (approvalFilter === "rejected") {
-      matchesApproval = approvalStatus === "rejected";
-    }
+      const matchesStatus =
+        statusFilter === "all" || currentLevel === statusFilter;
 
-    return matchesSearch && matchesStatus && matchesApproval;
-  });
+      const approvalStatus =
+        employee?.employee?.employee_bonus_approval?.status;
+
+      let matchesApproval = true;
+
+      if (approvalFilter === "approved") {
+        matchesApproval = approvalStatus === "approved";
+      } else if (approvalFilter === "rejected") {
+        // "Tasdiqlanmagan" ga rejected, null, undefined ham kiradi
+        matchesApproval = approvalStatus !== "approved";
+      }
+
+      return matchesSearch && matchesStatus && matchesApproval;
+    });
+  }, [data, searchTerm, statusFilter, approvalFilter]);
 
   const getLevelBadge = (level) => {
     const levelConfig = levels[level];
@@ -163,6 +171,7 @@ const ApproveLevel = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "Hozirgi kungacha";
+
     return new Date(dateString).toLocaleDateString("ru-RU", {
       year: "numeric",
       month: "long",
@@ -171,22 +180,22 @@ const ApproveLevel = () => {
   };
 
   const handleSubmit = async (status) => {
+    if (!selectedEmployee) return;
+
     setSubmitting(true);
     try {
       const currentLevel = selectedEmployee?.histories?.find(
         (h) => h.end_date === null,
       )?.level;
+
       const bonusApproval = selectedEmployee?.employee?.employee_bonus_approval;
 
-      let res;
       if (bonusApproval?.id) {
-        // Use PATCH when employee_bonus_approval.id exists
-        res = api.patch(`/employee-bonus-approvals/${bonusApproval.id}`, {
+        await api.patch(`/employee-bonus-approvals/${bonusApproval.id}`, {
           status,
         });
       } else {
-        // Use POST when creating new approval
-        res = api.post("/employee-bonus-approvals", {
+        await api.post("/employee-bonus-approvals", {
           employee_id: selectedEmployee?.employee?.id,
           level: currentLevel,
           status,
@@ -199,8 +208,9 @@ const ApproveLevel = () => {
         description: "Xodim statusi belgilangdi!",
         duration: 1200,
       });
+
       setApproveDialogOpen(false);
-      getData();
+      await getData();
     } catch (err) {
       toast({
         variant: "destructive",
@@ -212,6 +222,21 @@ const ApproveLevel = () => {
       setSubmitting(false);
     }
   };
+
+  const sortedData = [...filteredData].sort((a, b) => {
+    const levelOrder = {
+      gold: 1,
+      silver: 2,
+      bronze: 3,
+      null: 4,
+      undefined: 4,
+    };
+
+    const aLevel = a?.histories?.find((h) => h.end_date === null)?.level;
+    const bLevel = b?.histories?.find((h) => h.end_date === null)?.level;
+
+    return (levelOrder[aLevel] ?? 4) - (levelOrder[bLevel] ?? 4);
+  });
 
   return (
     <div className="w-full space-y-6">
@@ -234,6 +259,7 @@ const ApproveLevel = () => {
             Jami {filteredData?.length || 0} ta xodim ro'yxatga olingan
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <div className="flex items-center space-x-4 mb-6 flex-wrap gap-3">
             <div className="relative flex-1 max-w-sm">
@@ -245,6 +271,7 @@ const ApproveLevel = () => {
                 className="pl-8"
               />
             </div>
+
             <div className="flex items-center space-x-2">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -259,10 +286,11 @@ const ApproveLevel = () => {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="flex items-center space-x-2">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <Select value={approvalFilter} onValueChange={setApprovalFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-44">
                   <SelectValue placeholder="Tasdiq holati" />
                 </SelectTrigger>
                 <SelectContent>
@@ -272,6 +300,7 @@ const ApproveLevel = () => {
                 </SelectContent>
               </Select>
             </div>
+
             <Input
               type="month"
               value={selectedMonth}
@@ -287,10 +316,11 @@ const ApproveLevel = () => {
                   <TableHead className="w-12 font-semibold">№</TableHead>
                   <TableHead className="font-semibold">Xodim</TableHead>
                   <TableHead className="font-semibold">Daraja</TableHead>
-                  <TableHead className="font-semibold">Xolat</TableHead>
+                  <TableHead className="font-semibold">Holat</TableHead>
                   <TableHead className="font-semibold">Bonus</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {loading ? (
                   Array.from({ length: 5 }).map((_, index) => (
@@ -305,17 +335,17 @@ const ApproveLevel = () => {
                         <Skeleton className="h-6 w-20" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-6 w-24" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-6 w-20" />
                       </TableCell>
                     </TableRow>
                   ))
-                ) : filteredData?.length === 0 ? (
+                ) : sortedData?.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={3}
+                      colSpan={5}
                       className="text-center py-8 text-muted-foreground"
                     >
                       {searchTerm
@@ -324,81 +354,75 @@ const ApproveLevel = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredData
-                    ?.sort((a, b) => {
-                      const levelOrder = {
-                        gold: 1,
-                        silver: 2,
-                        bronze: 3,
-                        null: 4,
-                      };
-                      const aLevel = a.histories.find(
-                        (h) => h.end_date === null,
-                      )?.level;
-                      const bLevel = b.histories.find(
-                        (h) => h.end_date === null,
-                      )?.level;
-                      return levelOrder[aLevel] - levelOrder[bLevel];
-                    })
-                    ?.map((employee, sortedIndex) => {
-                      const currentLevel = employee.histories.find(
-                        (h) => h.end_date === null,
-                      )?.level;
-                      return (
-                        <TableRow
-                          key={`${employee.employee.id || employee.employee.name}-${sortedIndex}`}
-                          className="hover:bg-muted/30 transition-colors"
+                  sortedData.map((employee, sortedIndex) => {
+                    const currentLevel = employee?.histories?.find(
+                      (h) => h.end_date === null,
+                    )?.level;
+
+                    const approvalStatus =
+                      employee?.employee?.employee_bonus_approval?.status;
+
+                    const isApproved = approvalStatus === "approved";
+
+                    return (
+                      <TableRow
+                        key={`${employee?.employee?.id || employee?.employee?.name}-${sortedIndex}`}
+                        className="hover:bg-muted/30 transition-colors"
+                      >
+                        <TableCell className="font-medium">
+                          {sortedIndex + 1}
+                        </TableCell>
+
+                        <TableCell
+                          className="font-medium cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => handleEmployeeClick(employee)}
                         >
-                          <TableCell className="font-medium">
-                            {sortedIndex + 1}
-                          </TableCell>
-                          <TableCell
-                            className="font-medium cursor-pointer hover:text-primary transition-colors"
-                            onClick={() => handleEmployeeClick(employee)}
-                          >
-                            {employee.employee.name}
-                          </TableCell>
-                          <TableCell>{getLevelBadge(currentLevel)}</TableCell>
-                          <TableCell>
-                            {employee?.employee?.employee_bonus_approval
-                              ?.status === "approved" ? (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedEmployee(employee);
-                                  setApproveDialogOpen(true);
-                                }}
-                              >
-                                Tasdiqlangan
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedEmployee(employee);
-                                  setApproveDialogOpen(true);
-                                }}
-                              >
-                                Tasdiqlanmagan
-                              </Button>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {formatNumber(
-                              employee?.histories?.reduce(
-                                (sum, history) =>
-                                  sum + history.level_bonus_total,
-                                0,
-                              ),
+                          {employee?.employee?.name}
+                        </TableCell>
+
+                        <TableCell>{getLevelBadge(currentLevel)}</TableCell>
+
+                        <TableCell>
+                          {isApproved ? (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedEmployee(employee);
+                                setApproveDialogOpen(true);
+                              }}
+                            >
+                              Tasdiqlangan
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedEmployee(employee);
+                                setApproveDialogOpen(true);
+                              }}
+                            >
+                              Tasdiqlanmagan
+                            </Button>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          {formatNumber(
+                            employee?.histories?.reduce(
+                              (sum, history) =>
+                                sum + (history?.level_bonus_total || 0),
                               0,
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
+                            ),
+                            0,
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
+
               <TableFooter>
                 <TableRow className="bg-muted/50 font-semibold">
                   <TableCell colSpan={4} className="text-right">
@@ -409,10 +433,11 @@ const ApproveLevel = () => {
                       filteredData?.reduce(
                         (total, employee) =>
                           total +
-                          employee?.histories?.reduce(
-                            (sum, history) => sum + history.level_bonus_total,
+                          (employee?.histories?.reduce(
+                            (sum, history) =>
+                              sum + (history?.level_bonus_total || 0),
                             0,
-                          ),
+                          ) || 0),
                         0,
                       ),
                       0,
@@ -430,11 +455,12 @@ const ApproveLevel = () => {
           <DialogHeader>
             <DialogTitle>{selectedEmployee?.employee?.name}</DialogTitle>
           </DialogHeader>
+
           <div className="text-sm">
             {selectedEmployee?.employee?.employee_bonus_approval?.status ===
             "approved"
               ? "Xodimni darajadan olib tashlashga rozimisiz?"
-              : "Xodimni darajasini tasdiqlashga rozimisiz?"}
+              : "Xodimning darajasini tasdiqlashga rozimisiz?"}
           </div>
 
           <div className="flex items-center gap-2 justify-end">
@@ -446,8 +472,9 @@ const ApproveLevel = () => {
             >
               Bekor qilish
             </Button>
+
             <Button
-              disable={submitting}
+              disabled={submitting}
               onClick={() => {
                 handleSubmit(
                   selectedEmployee?.employee?.employee_bonus_approval
@@ -457,7 +484,12 @@ const ApproveLevel = () => {
                 );
               }}
             >
-              {submitting ? "Saqlanmoqda..." : "Tasdiqlash"}
+              {submitting
+                ? "Saqlanmoqda..."
+                : selectedEmployee?.employee?.employee_bonus_approval
+                      ?.status === "approved"
+                  ? "Olib tashlash"
+                  : "Tasdiqlash"}
             </Button>
           </div>
         </DialogContent>
@@ -477,9 +509,8 @@ const ApproveLevel = () => {
 
           {selectedEmployee && (
             <div className="space-y-6">
-              {/* Employee Image */}
               <div className="flex items-center justify-center">
-                {selectedEmployee.employee.img ? (
+                {selectedEmployee?.employee?.img ? (
                   <img
                     src={selectedEmployee.employee.img}
                     alt={selectedEmployee.employee.name}
@@ -492,25 +523,24 @@ const ApproveLevel = () => {
                 )}
               </div>
 
-              {/* Current Level */}
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">Joriy Daraja</h3>
                 {(() => {
-                  const currentLevel = selectedEmployee.histories.find(
+                  const currentLevel = selectedEmployee?.histories?.find(
                     (h) => h.end_date === null,
                   )?.level;
                   return getLevelBadge(currentLevel);
                 })()}
               </div>
 
-              {/* History */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Daraja Tarixi
                 </h3>
+
                 <div className="space-y-3">
-                  {selectedEmployee.histories
+                  {[...(selectedEmployee?.histories || [])]
                     .sort(
                       (a, b) => new Date(b.start_date) - new Date(a.start_date),
                     )
@@ -522,9 +552,10 @@ const ApproveLevel = () => {
                         <div className="flex items-center gap-3">
                           {getLevelBadge(history.level)}
                           <div className="font-semibold text-green-600">
-                            {formatNumber(history.level_bonus_total, 0)}
+                            {formatNumber(history.level_bonus_total || 0, 0)}
                           </div>
                         </div>
+
                         <div className="text-sm text-muted-foreground">
                           {formatDate(history.start_date)} -{" "}
                           {formatDate(history.end_date)}
