@@ -69,6 +69,7 @@ const OrderView = () => {
       return null;
     }
   });
+  const [enteredQuantity, setEnteredQuantity] = useState("");
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -188,6 +189,7 @@ const OrderView = () => {
         order_id: id,
         type: "good",
         stage_tarification_id: selectedOtkType?.id,
+        quantity: enteredQuantity,
       });
       setPlusDialogOpen(false);
       toast({
@@ -199,7 +201,8 @@ const OrderView = () => {
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description: "Yuborishda xatolik yuz berdi",
+        description:
+          error?.response?.data?.message || "Yuborishda xatolik yuz berdi",
       });
     } finally {
       setSending(false);
@@ -243,7 +246,8 @@ const OrderView = () => {
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description: "Yuborishda xatolik yuz berdi",
+        description:
+          error?.response?.data?.message || "Yuborishda xatolik yuz berdi",
       });
     } finally {
       setSending(false);
@@ -707,6 +711,7 @@ const OrderView = () => {
                       alert("Iltimos otk turini tanlang!");
                       return;
                     }
+                    setEnteredQuantity("");
                     setPlusDialogOpen(true);
                   }}
                   className="w-full h-32 sm:h-40 bg-green-50 hover:bg-green-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
@@ -731,6 +736,12 @@ const OrderView = () => {
                   Mahsulot sifatli ekanligini tasdiqlaysizmi?
                 </DialogTitle>
               </DialogHeader>
+              <Input
+                type="number"
+                value={enteredQuantity}
+                onChange={(e) => setEnteredQuantity(e.target.value)}
+                placeholder="Miqdorni kiriting"
+              />
               <div className="flex flex-col gap-2 mt-4">
                 <Button
                   variant="outline"
@@ -742,7 +753,7 @@ const OrderView = () => {
                 </Button>
                 <Button
                   className="py-7"
-                  disabled={sending}
+                  disabled={sending || enteredQuantity <= 0}
                   onClick={handlePlus}
                 >
                   {sending ? (
