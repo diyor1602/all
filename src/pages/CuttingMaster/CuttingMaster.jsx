@@ -6,6 +6,8 @@ import CuttingStart from "./CuttingStart";
 import Employees from "./NewSeason/Employees";
 import ViewEmployee from "./NewSeason/ViewEmployee";
 import OrderWithMinutes from "./OrderWithMinutes";
+import EditOrder from "./EditOrder";
+import OrderView from "./OrderView";
 
 const CuttingMaster = () => {
   return (
@@ -17,6 +19,8 @@ const CuttingMaster = () => {
       <Route path="employees" element={<Employees />} />
       <Route path="view-employee/:id" element={<ViewEmployee />} />
       <Route path="order-with-minutes" element={<OrderWithMinutes />} />
+      <Route path="orders/edit/:id" element={<EditOrder />} />
+      <Route path="orders/:id" element={<OrderView />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

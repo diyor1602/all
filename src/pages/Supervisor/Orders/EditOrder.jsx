@@ -33,10 +33,9 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 const EditOrder = () => {
-  const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
   const [models, setModels] = useState([]);

@@ -9,6 +9,8 @@ import {
   Calendar,
   Snowflake,
   Sun,
+  Eye,
+  Edit,
 } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -33,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import formatNumber from "@/utils/formatNumber";
+import { Link } from "react-router-dom";
 
 const item = {
   hidden: { y: 20, opacity: 0 },
@@ -343,6 +346,7 @@ const Orders = () => {
                 <TableHead className="w-24 text-center">Yil</TableHead>
                 <TableHead className="w-24 text-center">Mavsum</TableHead>
                 <TableHead className="w-32 text-center">Holati</TableHead>
+                <TableHead className="w-32 text-center">Amallar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -454,6 +458,20 @@ const Orders = () => {
                       onClick={() => handleStatusActive(order.id)}
                     >
                       {statuses[order.status]?.text || "Noma'lum"}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center gap-2">
+                      <Button size="icon" variant="ghost" asChild>
+                        <Link to={`/cuttingMaster/orders/${order.id}`}>
+                          <Eye size={12} className="text-blue-500" />
+                        </Link>
+                      </Button>
+                      <Button size="icon" variant="ghost" asChild>
+                        <Link to={`/cuttingMaster/orders/edit/${order.id}`}>
+                          <Edit size={12} className="text-green-500" />
+                        </Link>
+                      </Button>
                     </div>
                   </TableCell>
                 </motion.tr>
