@@ -1,7 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Wallet, Package2, ChevronRight } from "lucide-react";
+import {
+  Loader2,
+  Wallet,
+  Package2,
+  ChevronRight,
+  Search,
+  X,
+} from "lucide-react";
 import { statuses } from "@/lib/status";
 import formatNumber from "@/utils/formatNumber";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +19,7 @@ const StarterPage = () => {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +58,25 @@ const StarterPage = () => {
       return earnedB - earnedA; // Sort by highest earned first
     });
   }, [orders, orderEarningsMap]);
+
+  const filteredOrders = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return sortedOrders;
+
+    return sortedOrders.filter((order) => {
+      const name = String(order?.order_name || "").toLowerCase();
+      const submodel = String(order?.order_submodel?.name || "").toLowerCase();
+      const quantity = String(order?.order_quantity ?? "").toLowerCase();
+      const id = String(order?.order_id ?? "").toLowerCase();
+
+      return (
+        name.includes(q) ||
+        submodel.includes(q) ||
+        quantity.includes(q) ||
+        id.includes(q)
+      );
+    });
+  }, [sortedOrders, search]);
 
   const totalEarnedToday = data?.summary?.total_earned_today || 0;
 
@@ -124,8 +151,43 @@ text-white shadow-lg border border-white/10"
             Buyurtmalar ro'yxati
           </h2>
           <span className="text-xs text-slate-500">
-            {sortedOrders.length} ta
+            {filteredOrders.length} ta
           </span>
+        </div>
+
+        <div className="px-1 mb-4">
+          <div className="group relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Search size={16} className="text-slate-400" />
+            </div>
+
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Qidirish: buyurtma, submodel, ID..."
+              className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-300 focus:ring-4 focus:ring-slate-200/60"
+            />
+
+            {search?.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute inset-y-0 right-0 flex items-center pr-3"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-slate-200">
+                  <X size={16} />
+                </span>
+              </button>
+            )}
+          </div>
+
+          {sortedOrders.length > 0 && search.trim().length > 0 && (
+            <div className="mt-2 text-xs text-slate-500">
+              {filteredOrders.length === 0
+                ? "Mos buyurtma topilmadi"
+                : `${filteredOrders.length} ta natija topildi`}
+            </div>
+          )}
         </div>
 
         {/* Empty state */}
@@ -143,7 +205,7 @@ text-white shadow-lg border border-white/10"
           </div>
         ) : (
           <div className="space-y-3">
-            {sortedOrders.map((order, index) => {
+            {filteredOrders.map((order, index) => {
               const status = statuses[order?.order_status];
               const earned = orderEarningsMap[order?.order_id] || 0;
 
