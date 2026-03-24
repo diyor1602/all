@@ -61,6 +61,7 @@ const calculateNewSeasonSalary = (emp) => {
     0 + emp?.master_salary_current ||
     0 + emp?.sewing_output_salary ||
     0 + emp?.warehouse_salary_minute ||
+    0 + emp?.assistant_salary ||
     0
   );
 };
