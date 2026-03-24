@@ -1,12 +1,17 @@
 import React from "react";
 import TailorLevel from "./TailorLevel";
 import Profile from "./Profile/Profile";
+import YesterdayAbsence from "./SuperHR/Stats/YesterdayAbsence";
 
-const levelRoles = ["tailor", "universalTailor"];
+const programByRoles = {
+  tailor: <TailorLevel />,
+  universalTailor: <TailorLevel />,
+  superhr: <YesterdayAbsence />,
+};
 
 const Home = () => {
   const role = localStorage.getItem("role");
-  return levelRoles.includes(role) ? <TailorLevel /> : <Profile />;
+  return programByRoles[role] || <Profile />;
 };
 
 export default Home;
