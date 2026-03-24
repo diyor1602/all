@@ -258,8 +258,12 @@ const EditOrder = () => {
     }
 
     // Check for empty size or color names
-    const hasEmptySize = matrix.sizes.some((size) => !size.name.trim());
-    const hasEmptyColor = matrix.colors.some((color) => !color.name.trim());
+    const hasEmptySize = matrix.sizes.some(
+      (size) => !size.name || !size.name.trim(),
+    );
+    const hasEmptyColor = matrix.colors.some(
+      (color) => !color.name || !color.name.trim(),
+    );
 
     if (hasEmptySize || hasEmptyColor) {
       toast({
