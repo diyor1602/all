@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import useModelImages from "@/hooks/useModelImages";
 import {
-  Loader2,
+  AlertCircle,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  Loader2,
   X,
 } from "lucide-react";
 import {
@@ -18,6 +19,8 @@ const ModelImages = ({ modelCode }) => {
   const { images, loading, error } = useModelImages(modelCode);
   const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const previewImage = images?.[0];
 
   const handleNext = () => {
     if (images.length === 0) return;
@@ -66,45 +69,37 @@ const ModelImages = ({ modelCode }) => {
     <div className="flex flex-wrap gap-3 justify-center">
       {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center w-full h-32 bg-purple-50 rounded-2xl border border-purple-200 p-5 animate-pulse">
-          <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
-          <span className="ml-2 text-purple-600 font-medium">
-            Rasmlar yuklanmoqda...
-          </span>
+        <div className="flex items-center justify-center w-full bg-purple-50 rounded-2xl border border-purple-200 p-1 animate-pulse text-xs text-purple-600">
+          <Loader2 className="w-4 h-4 animate-spin" />
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="flex items-center justify-center w-full h-32 bg-red-50 rounded-2xl border border-red-200 text-red-600 text-sm gap-3 p-5">
-          <AlertTriangle className="w-5 h-5" />
-          <span>Rasmlarni olishda xatolik yuz berdi</span>
+        <div className="flex items-center justify-center w-full bg-red-50 rounded-2xl border border-red-200 p-1 text-xs text-red-600">
+          <AlertCircle className="w-4 h-4" />
         </div>
       )}
 
       {/* Images */}
-      {!loading &&
-        !error &&
-        images.length > 0 &&
-        images.map((image, index) => (
-          <div
-            key={index}
-            className="w-24 h-24 rounded-xl overflow-hidden shadow-md border border-gray-200 hover:scale-105 transition-transform cursor-pointer"
-            onClick={() => openDialogAtIndex(index)}
-          >
-            <img
-              src={image}
-              alt={`model-${index}`}
-              className="w-full h-full object-cover object-top"
-              loading="lazy"
-            />
-          </div>
-        ))}
+      {!loading && !error && images.length > 0 && previewImage && (
+        <div
+          className="w-12 h-12 rounded-xl overflow-hidden shadow-md border border-gray-200 hover:scale-105 transition-transform cursor-pointer"
+          onClick={() => openDialogAtIndex(0)}
+        >
+          <img
+            src={previewImage}
+            alt={`model-preview`}
+            className="w-full h-full object-cover object-top"
+            loading="lazy"
+          />
+        </div>
+      )}
 
       {/* No Images */}
       {!loading && !error && images.length === 0 && (
-        <div className="flex items-center justify-center w-full h-32 bg-gray-50 rounded-2xl border border-gray-200 text-gray-400 text-sm p-5">
-          Rasm topilmadi
+        <div className="flex items-center justify-center w-full bg-red-50 rounded-2xl border border-red-200 p-1 text-xs text-red-600">
+          <AlertCircle className="w-4 h-4" />
         </div>
       )}
 
