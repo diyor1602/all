@@ -17,6 +17,7 @@ import {
   Package,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
+import ModelImages from "@/components/ModelImages";
 
 // --- Helper: Custom Uzbek Day Formatter ---
 const getUzbekDay = (dateString) => {
@@ -381,32 +382,32 @@ const NewSeason = () => {
                 ) : /* --- Modellari bo'yicha (ORDERS) --- */
                 data?.item?.orders?.length > 0 ? (
                   data.item.orders.map((order, i) => (
-                    <div
-                      key={i}
-                      className="p-4 flex items-center justify-between hover:bg-slate-50 transition-all duration-200 group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl flex items-center justify-center border border-emerald-100 shadow-sm group-hover:shadow transition-shadow duration-200">
-                          <Package className="w-6 h-6 text-emerald-600" />
+                    <div key={i}>
+                      <div className="p-4 flex items-center justify-between hover:bg-slate-50 transition-all duration-200 group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl flex items-center justify-center border border-emerald-100 shadow-sm group-hover:shadow transition-shadow duration-200">
+                            <Package className="w-6 h-6 text-emerald-600" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-slate-800">
+                              {order.order_name}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              {formatNumber(order.total_qty, 0)} dona •{" "}
+                              {formatNumber(order.total_minutes, 0)} daq
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-800">
-                            {order.order_name}
+                        <div className="text-right flex flex-col items-end">
+                          <span className="font-bold text-emerald-600 text-base">
+                            {formatNumber(order.total_amount, 0)} so'm
                           </span>
-                          <span className="text-xs text-slate-500">
-                            {formatNumber(order.total_qty, 0)} dona •{" "}
-                            {formatNumber(order.total_minutes, 0)} daq
+                          <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
+                            {order?.submodel_name || "-"}
                           </span>
                         </div>
                       </div>
-                      <div className="text-right flex flex-col items-end">
-                        <span className="font-bold text-emerald-600 text-base">
-                          {formatNumber(order.total_amount, 0)} so'm
-                        </span>
-                        <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                          {order?.submodel_name || "-"}
-                        </span>
-                      </div>
+                      <ModelImages modelCode={order?.model_name} />
                     </div>
                   ))
                 ) : (
