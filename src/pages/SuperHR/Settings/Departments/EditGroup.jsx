@@ -42,31 +42,32 @@ const EditGroup = () => {
         responsible_user_id: res.data.responsible_user_id.toString(),
       });
 
-      try {
-        const userRes = await api.get(
-          `/superhr/users/${res.data.responsible_user_id}/`
-        );
+      const responsibleUser = res.data?.responsible_user;
+      if (responsibleUser) {
+        const normalizedResponsibleUser = {
+          user_id:
+            responsibleUser?.employee?.user_id ??
+            responsibleUser?.id ??
+            res.data.responsible_user_id,
+          name:
+            responsibleUser?.employee?.name ??
+            responsibleUser?.name ??
+            responsibleUser?.username ??
+            "",
+        };
 
-        const userData = userRes.data.data || userRes.data;
-
-        setCurrentResponsibleUser(userData);
+        setCurrentResponsibleUser(normalizedResponsibleUser);
         setUsers((prevUsers) => {
           const userExists = prevUsers.some(
-            (user) => user.user_id === userData.user_id
+            (user) => user.user_id === normalizedResponsibleUser.user_id,
           );
           if (!userExists) {
-            return [...prevUsers, userData];
+            return [...prevUsers, normalizedResponsibleUser];
           }
           return prevUsers;
         });
-      } catch (error) {
-        toast({
-          title: "Xatolik!",
-          description:
-            "Mas'ul xodim ma'lumotlarini yuklashda xatolik yuz berdi",
-          variant: "destructive",
-          duration: 2000,
-        });
+      } else {
+        setCurrentResponsibleUser(null);
       }
     } catch (error) {
       toast({
@@ -111,7 +112,7 @@ const EditGroup = () => {
 
       if (currentResponsibleUser) {
         const currentUserInResults = searchResults.some(
-          (user) => user.user_id === currentResponsibleUser.user_id
+          (user) => user.user_id === currentResponsibleUser.user_id,
         );
 
         if (!currentUserInResults) {
@@ -271,7 +272,7 @@ const EditGroup = () => {
                   <SelectItem key={dept.id} value={dept.id.toString()}>
                     {mainDept.name} - {dept.name}
                   </SelectItem>
-                ))
+                )),
               )}
             </SelectContent>
           </Select>
