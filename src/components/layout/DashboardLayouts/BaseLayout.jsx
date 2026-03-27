@@ -97,12 +97,6 @@ export default function BaseLayout({ children, navigation }) {
       badge: damageCount > 0 ? damageCount : null,
     },
     // {
-    //   name: "Tikuvchilar",
-    //   href: "/tailorRating",
-    //   icon: Sprout,
-    //   onMobile: false,
-    // },
-    // {
     //   name: "Jo'natmalar",
     //   href: "/truck",
     //   icon: Truck,

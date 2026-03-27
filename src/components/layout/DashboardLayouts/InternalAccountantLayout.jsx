@@ -1,5 +1,12 @@
 import BaseLayout from "./BaseLayout";
-import { Users, Settings, HandCoins, Box, Calculator } from "lucide-react";
+import {
+  Users,
+  Settings,
+  HandCoins,
+  Box,
+  Calculator,
+  Sprout,
+} from "lucide-react";
 
 const navigation = [
   {
@@ -30,6 +37,12 @@ const navigation = [
     name: "Hisob",
     href: "/internalAccountant/overCalc",
     icon: Calculator,
+    onMobile: false,
+  },
+  {
+    name: "Tikuvchilar",
+    href: "/tailorRating",
+    icon: Sprout,
     onMobile: false,
   },
 ];
