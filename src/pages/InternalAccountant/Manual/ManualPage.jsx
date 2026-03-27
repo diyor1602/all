@@ -38,14 +38,6 @@ const item = {
   show: { y: 0, opacity: 1 },
 };
 
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString("ru-RU", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
-
 const getStatusColor = (status) => {
   return statuses[status]?.color || "bg-gray-100 text-gray-800 border-gray-300";
 };
@@ -54,10 +46,10 @@ const ManualPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(
-    localStorage.getItem("searchTerm") || ""
+    localStorage.getItem("searchTerm") || "",
   );
   const [statusFilter, setStatusFilter] = useState(
-    localStorage.getItem("statusFilter") || "all"
+    localStorage.getItem("statusFilter") || "all",
   );
   const [sortBy, setSortBy] = useState(localStorage.getItem("sortBy") || "");
   const { toast } = useToast();
@@ -251,7 +243,7 @@ const ManualPage = () => {
 
                     <Badge
                       className={`${getStatusColor(
-                        order.status
+                        order.status,
                       )} px-3 py-1 font-medium rounded-full shadow-sm`}
                     >
                       {statuses[order.status]?.text || "Noma'lum"}
@@ -312,11 +304,11 @@ const ManualPage = () => {
                       <Calendar size={16} className="text-gray-500" />
                       <div className="flex justify-between w-full text-sm">
                         <span className="text-gray-700 font-medium">
-                          {formatDate(order.start_date)}
+                          {order.season_year}
                         </span>
                         <span className="text-gray-400">→</span>
                         <span className="text-gray-700 font-medium">
-                          {formatDate(order.end_date)}
+                          {order.season_type === "winter" ? "Qish" : "Bahor"}
                         </span>
                       </div>
                     </div>
@@ -336,7 +328,7 @@ const ManualPage = () => {
 
                   <Button
                     className={`w-full mt-2 gap-2 text-white shadow-md py-6 rounded-lg font-medium ${getStatusColor(
-                      order.status
+                      order.status,
                     )} hover:opacity-90 hover:${getStatusColor(order.status)}`}
                     onClick={() =>
                       navigate(`/internalAccountant/manual/work/${order.id}`)
