@@ -2,6 +2,40 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Switch } from "@/components/ui/switch";
+import {
+  Wrench,
+  AlertTriangle,
+  Briefcase,
+  UserCog,
+  ImagePlus,
+} from "lucide-react";
+
+const templates = [
+  {
+    id: 1,
+    text: "Menda ish yo'q",
+    icon: Briefcase,
+    color: "bg-blue-100 text-blue-700",
+  },
+  {
+    id: 2,
+    text: "Mashinam buzildi",
+    icon: Wrench,
+    color: "bg-red-100 text-red-700",
+  },
+  {
+    id: 3,
+    text: "Texnolog kerak",
+    icon: UserCog,
+    color: "bg-yellow-100 text-yellow-700",
+  },
+  {
+    id: 4,
+    text: "Yordam kerak",
+    icon: AlertTriangle,
+    color: "bg-orange-100 text-orange-700",
+  },
+];
 
 const Issue = () => {
   const { toast } = useToast();
@@ -16,26 +50,24 @@ const Issue = () => {
     try {
       const formData = new FormData();
       formData.append("description", description);
-      if (image) {
-        formData.append("image", image);
-      }
+      if (image) formData.append("image", image);
       formData.append("for_admins", forAdmins);
+
       await api.post("/issue", formData);
+
       toast({
-        title: "Muvaffaqiyatli",
-        description: "Sizning fikringiz muvaffaqiyatli yuborildi",
-        style: {
-          background: "green",
-          color: "white",
-        },
-        duration: 2000,
+        title: "Yuborildi ✅",
+        description: "Xabaringiz muvaffaqiyatli yuborildi",
+        style: { background: "#16a34a", color: "white" },
       });
+
       setDescription("");
       setImage(null);
     } catch (error) {
       toast({
-        title: "Xatolik",
-        description: error?.response?.data?.message || "Fikringiz yuborilmadi",
+        title: "Xatolik ❌",
+        description:
+          error?.response?.data?.message || "Yuborishda muammo bo‘ldi",
         variant: "destructive",
       });
     } finally {
@@ -44,70 +76,72 @@ const Issue = () => {
   };
 
   return (
-    <div className="flex items-center justify-center">
-      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-6 md:p-8 space-y-6">
-        <h1 className="text-2xl font-bold text-center text-gray-800">
-          Fikr Bildirish
+    <div className="flex justify-center">
+      <div className="w-full max-w-md bg-white/80 backdrop-blur-xl shadow-xl rounded-3xl p-5 space-y-5">
+        {/* Title */}
+        <h1 className="text-xl font-semibold text-center text-gray-800">
+          Muammo haqida xabar berish
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="flex items-center gap-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Rahbariyatga yuborish
-            </label>
-            <Switch checked={forAdmins} onCheckedChange={setForAdmins} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tavsif
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none p-3 text-gray-800"
-              rows="5"
-              placeholder="Fikringizni batafsil yozing..."
-              required
-            />
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Rasm (ixtiyoriy)
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer bg-gray-100 hover:bg-gray-200 border border-dashed border-gray-400 p-3 rounded-xl transition duration-200">
-              <svg
-                className="w-6 h-6 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 16.5V8a2 2 0 012-2h3m10 0a2 2 0 012 2v8.5M16 21v-5a2 2 0 00-2-2h-4a2 2 0 00-2 2v5m4-4h.01"
-                />
-              </svg>
-              <span className="text-gray-700">
-                {image ? image.name : "Fayl tanlang"}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => setImage(e.target.files[0])}
-              />
-            </label>
-          </div>
+        {/* Toggle */}
+        <div className="flex items-center justify-between bg-gray-100 rounded-xl p-3">
+          <span className="text-sm text-gray-700">Rahbariyatga yuborish</span>
+          <Switch checked={forAdmins} onCheckedChange={setForAdmins} />
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition duration-200"
-          >
-            {loading ? "Yuborilmoqda..." : "Yuborish"}
-          </button>
-        </form>
+        {/* Templates */}
+        <div>
+          <p className="text-sm text-gray-500 mb-2">Tez tanlash:</p>
+          <div className="grid grid-cols-2 gap-2">
+            {templates.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setDescription(item.text)}
+                  className={`flex w-full h-12 items-center gap-2 p-3 rounded-xl text-sm font-medium active:scale-95 transition ${item.color}`}
+                >
+                  <Icon size={16} />
+                  {item.text}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Textarea */}
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Muammoni yozing..."
+          className="w-full rounded-2xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none p-4 text-gray-800 text-sm"
+          rows="4"
+          required
+        />
+
+        {/* Image upload */}
+        <label className="flex items-center justify-center gap-2 cursor-pointer bg-gray-100 hover:bg-gray-200 border border-dashed border-gray-400 p-4 rounded-xl transition">
+          <ImagePlus size={18} />
+          <span className="text-sm text-gray-700">
+            {image ? image.name : "Rasm qo‘shish"}
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => setImage(e.target.files[0])}
+          />
+        </label>
+
+        {/* Submit */}
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full bg-indigo-600 active:scale-95 hover:bg-indigo-700 text-white font-semibold py-3 rounded-2xl transition"
+        >
+          {loading ? "Yuborilmoqda..." : "Yuborish"}
+        </button>
       </div>
     </div>
   );
