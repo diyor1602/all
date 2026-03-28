@@ -1,11 +1,17 @@
 import BaseLayout from "./BaseLayout";
-import { DollarSign } from "lucide-react";
+import { DollarSign, Send } from "lucide-react";
 
 const navigation = [
   {
     name: "Boshlash",
     href: "/universalTailor/starter",
     icon: DollarSign,
+    onMobile: true,
+  },
+  {
+    name: "Muammo",
+    href: "/issue",
+    icon: Send,
     onMobile: true,
   },
 ];
