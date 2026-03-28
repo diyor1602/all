@@ -40,6 +40,8 @@ const OrderView = () => {
   const canvasRef = useRef(null);
   const editorRef = useRef(null);
   const videoRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const lastPreviewUrlRef = useRef(null);
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [description, setDescription] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -114,11 +116,42 @@ const OrderView = () => {
   }, []);
 
   useEffect(() => {
-    if (minusDialogOpen) {
-      setUseCamera(true);
+    if (minusDialogOpen && useCamera) {
       startCamera();
     }
   }, [minusDialogOpen]);
+
+  useEffect(() => {
+    if (minusDialogOpen && useCamera) {
+      startCamera();
+    }
+
+    if (!useCamera) {
+      stopCamera();
+    }
+  }, [useCamera]);
+
+  useEffect(() => {
+    if (
+      lastPreviewUrlRef.current &&
+      lastPreviewUrlRef.current !== imagePreview
+    ) {
+      URL.revokeObjectURL(lastPreviewUrlRef.current);
+    }
+
+    if (imagePreview?.startsWith("blob:")) {
+      lastPreviewUrlRef.current = imagePreview;
+    } else {
+      lastPreviewUrlRef.current = null;
+    }
+
+    return () => {
+      if (lastPreviewUrlRef.current) {
+        URL.revokeObjectURL(lastPreviewUrlRef.current);
+        lastPreviewUrlRef.current = null;
+      }
+    };
+  }, [imagePreview]);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -275,6 +308,36 @@ const OrderView = () => {
       cameraStream.getTracks().forEach((track) => track.stop());
       setCameraStream(null);
     }
+  };
+
+  const handleImageFile = (file) => {
+    if (!file) return;
+
+    if (!file.type?.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Faqat rasm fayllarni yuklash mumkin",
+      });
+      return;
+    }
+
+    stopCamera();
+    setUseCamera(false);
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const onFileInputChange = (e) => {
+    const file = e.target.files?.[0];
+    handleImageFile(file);
+    e.target.value = "";
+  };
+
+  const onDropImage = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    handleImageFile(file);
   };
 
   const capturePhoto = () => {
@@ -525,20 +588,61 @@ const OrderView = () => {
               <div className="space-y-4 mt-4">
                 {/* Image Upload/Camera Section */}
                 <div className="space-y-2">
-                  {!imagePreview && !useCamera && (
-                    <div className="flex justify-center">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setUseCamera(true);
-                          startCamera();
-                        }}
-                        className="w-full max-w-xs"
-                      >
-                        <Camera className="w-4 h-4 mr-2" />
-                        Kameradan olish
-                      </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={useCamera ? "default" : "outline"}
+                      onClick={() => {
+                        setSelectedImage(null);
+                        setImagePreview(null);
+                        setIsEditing(false);
+                        setUseCamera(true);
+                      }}
+                      className="flex-1"
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Kamera
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={!useCamera ? "default" : "outline"}
+                      onClick={() => {
+                        stopCamera();
+                        setIsEditing(false);
+                        setUseCamera(false);
+                      }}
+                      className="flex-1"
+                    >
+                      Rasm tanlash
+                    </Button>
+                  </div>
+
+                  {!useCamera && !imagePreview && (
+                    <div
+                      className="w-full rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center"
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                      }}
+                      onDrop={onDropImage}
+                      onClick={() => fileInputRef.current?.click()}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                    >
+                      <div className="text-sm text-gray-600">
+                        Rasmni shu yerga tashlang yoki bosib tanlang
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={onFileInputChange}
+                      />
                     </div>
                   )}
 
