@@ -11,6 +11,7 @@ import {
   Mailbox,
   TreePalm,
   UserCog,
+  Wrench,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddGroup from "./Departments/AddGroup";
@@ -18,6 +19,7 @@ import EditGroup from "./Departments/EditGroup";
 import TodayAbsence from "../Stats/TodayAbsence";
 import ExplanationLetters from "./ExplanationLetters/ExplanationLetters";
 import ApproveLevel from "./ApproveLevel/ApproveLevel";
+import Damages from "./Damages/Damages";
 
 const Settings = () => {
   return (
@@ -31,6 +33,7 @@ const Settings = () => {
       <Route path="today-absence" element={<TodayAbsence />} />
       <Route path="explanation-letters" element={<ExplanationLetters />} />
       <Route path="approve-level" element={<ApproveLevel />} />
+      <Route path="damages" element={<Damages />} />
     </Routes>
   );
 };
@@ -78,6 +81,12 @@ const SettingsPage = () => {
       icon: DraftingCompass,
       link: "/superhr/settings/approve-level",
       color: "bg-indigo-500",
+    },
+    {
+      name: "Braklar",
+      icon: Wrench,
+      link: "/superhr/settings/damages",
+      color: "bg-red-500",
     },
   ];
 
