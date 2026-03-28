@@ -127,6 +127,8 @@ const Analysis = () => {
       const orderName = item?.order?.name || "";
       const submodelName = item?.submodels?.[0]?.submodel?.submodel_name || "";
       const quantity = item?.order?.quantity || 0;
+      const sewingOutputQuantity =
+        item?.submodels?.[0]?.sewing_output_quantity || 0;
       const groups = item?.groups?.length
         ? item.groups.map((g) => g.name).join(", ")
         : "";
@@ -148,6 +150,7 @@ const Analysis = () => {
         orderName,
         submodelName,
         quantity,
+        sewingOutputQuantity,
         groups,
         monthsText,
         monthValues,
@@ -436,6 +439,22 @@ const Analysis = () => {
                 >
                   <button
                     type="button"
+                    onClick={() => handleSort("sewingOutputQuantity")}
+                    className="flex items-center gap-1"
+                  >
+                    Tikuv chiq.
+                    <SortIcon
+                      field="sewingOutputQuantity"
+                      sortConfig={sortConfig}
+                    />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
                     onClick={() => handleSort("groups")}
                     className="flex items-center gap-1"
                   >
@@ -579,6 +598,10 @@ const Analysis = () => {
                     className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
                   />
                 </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                />
 
                 <th
                   className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
@@ -739,7 +762,7 @@ const Analysis = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={14}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Yuklanmoqda...
@@ -788,10 +811,16 @@ const Analysis = () => {
                       </td>
 
                       <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 font-medium ${rowBg} ${item.sewingOutputQuantity > item.quantity ? "text-red-600" : ` text-slate-700`}`}
+                      >
+                        {formatNumber(item.sewingOutputQuantity)}
+                      </td>
+
+                      <td
                         className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
                       >
                         {item.groups ? (
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="whitespace-nowrap">
                             {item.groups.split(", ").map((group) => (
                               <Badge key={group} variant="gray">
                                 {group}
@@ -924,7 +953,7 @@ const Analysis = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={14}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Hech narsa topilmadi
