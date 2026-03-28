@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Switch } from "@/components/ui/switch";
@@ -41,8 +41,23 @@ const Issue = () => {
   const { toast } = useToast();
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [forAdmins, setForAdmins] = useState(false);
+
+  useEffect(() => {
+    if (!image) {
+      setImagePreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(image);
+    setImagePreviewUrl(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [image]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -130,9 +145,19 @@ const Issue = () => {
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => setImage(e.target.files[0])}
+            onChange={(e) => setImage(e.target.files?.[0] || null)}
           />
         </label>
+
+        {imagePreviewUrl && (
+          <div className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <img
+              src={imagePreviewUrl}
+              alt="Selected"
+              className="h-48 w-full object-cover"
+            />
+          </div>
+        )}
 
         {/* Submit */}
         <button
