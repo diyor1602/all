@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -233,9 +232,6 @@ const Damages = () => {
                     alt="Damage"
                     className="w-full h-full object-cover"
                   />
-                  <Badge className="absolute top-2 right-2 bg-red-500">
-                    {damage?.tarification?.code}
-                  </Badge>
                 </div>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg truncate">
