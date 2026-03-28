@@ -54,6 +54,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DialogDescription } from "@radix-ui/react-dialog";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -68,6 +75,9 @@ const Work = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const [selectedStatus, setSelectedStatus] = useState(
+    localStorage.getItem("empStatus") || "working",
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState("");
   const [dialogData, setDialogData] = useState([]);
@@ -78,9 +88,10 @@ const Work = () => {
   const [employees, setEmployees] = useState([]);
   const [tarifications, setTarifications] = useState([]);
   const [selectedTarifLang, setSelectedTarifLang] = useState(
-    localStorage.getItem("tarifLang") || "uz"
+    localStorage.getItem("tarifLang") || "uz",
   );
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [gettingUsers, setGettingUsers] = useState(false);
   const [selectedWorks, setSelectedWorks] = useState([
     {
       id: "",
@@ -107,7 +118,7 @@ const Work = () => {
   });
   const [selectedDate, setSelectedDate] = useState(
     localStorage.getItem("salarySelectedDate") ||
-      new Date().toISOString().split("T")[0]
+      new Date().toISOString().split("T")[0],
   );
 
   const [attendanceSalary, setAttendanceSalary] = useState(0);
@@ -244,11 +255,11 @@ const Work = () => {
           {
             numeric: true,
             sensitivity: "base",
-          }
+          },
         );
       } else if (sortConfig.key === "employee") {
         compare = (a?.employee?.name || "").localeCompare(
-          b?.employee?.name || ""
+          b?.employee?.name || "",
         );
       } else if (sortConfig.key === "quantity") {
         compare = (a.quantity || 0) - (b.quantity || 0);
@@ -269,7 +280,7 @@ const Work = () => {
         `/internalAccountant/employeeTarificationLog/${editingID}`,
         {
           quantity: Number.parseInt(newQuantity),
-        }
+        },
       );
       toast({
         title: "Muvaffaqiyat",
@@ -301,12 +312,12 @@ const Work = () => {
             submodel?.submodel_spend?.reduce(
               (acc, spend) =>
                 acc + (spend?.region == "uz" ? parseFloat(spend?.seconds) : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const totalSpendsRU = useMemo(
@@ -318,12 +329,12 @@ const Work = () => {
             submodel?.submodel_spend?.reduce(
               (acc, spend) =>
                 acc + (spend?.region == "ru" ? parseFloat(spend?.seconds) : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const totalSpendSummaUZ = useMemo(
@@ -336,12 +347,12 @@ const Work = () => {
               (acc, spend) =>
                 acc +
                 Number.parseFloat(spend?.region == "uz" ? spend?.summa : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const totalSpendSummaRU = useMemo(
@@ -354,12 +365,12 @@ const Work = () => {
               (acc, spend) =>
                 acc +
                 Number.parseFloat(spend?.region == "ru" ? spend?.summa : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const fetchOrder = async () => {
@@ -382,13 +393,14 @@ const Work = () => {
 
   useEffect(() => {
     fetchOrder();
-  }, [id, navigate, toast]);
+  }, [id, navigate]);
 
   const fetchEmployees = async () => {
+    setGettingUsers(true);
     try {
       const response = await api.get(`/internalAccountant/users`, {
         params: {
-          id: selectedSubmodel?.id,
+          status: selectedStatus,
         },
       });
       setEmployees(response.data);
@@ -398,6 +410,8 @@ const Work = () => {
         description: "Bunday ishchilar topilmadi",
         variant: "destructive",
       });
+    } finally {
+      setGettingUsers(false);
     }
   };
 
@@ -405,7 +419,7 @@ const Work = () => {
     if (selectedSubmodel) {
       fetchEmployees();
     }
-  }, [selectedSubmodel]);
+  }, [selectedSubmodel, selectedStatus]);
 
   const fetchTarifLogs = async () => {
     try {
@@ -471,8 +485,8 @@ const Work = () => {
   const updateWork = (tempId, field, value) => {
     setSelectedWorks(
       selectedWorks.map((work) =>
-        work.tempId === tempId ? { ...work, [field]: value } : work
-      )
+        work.tempId === tempId ? { ...work, [field]: value } : work,
+      ),
     );
   };
 
@@ -520,7 +534,7 @@ const Work = () => {
 
     const invalidWorks = selectedWorks.filter(
       (work) =>
-        !work.id || !work.quantity || Number.parseInt(work.quantity) <= 0
+        !work.id || !work.quantity || Number.parseInt(work.quantity) <= 0,
     );
 
     if (invalidWorks.length > 0) {
@@ -581,8 +595,8 @@ const Work = () => {
     const base64Font = btoa(
       new Uint8Array(fontData).reduce(
         (data, byte) => data + String.fromCharCode(byte),
-        ""
-      )
+        "",
+      ),
     );
     return base64Font;
   };
@@ -615,7 +629,7 @@ const Work = () => {
             if (!acc[user.name]) acc[user.name] = 0;
             acc[user.name] += user.quantity;
             return acc;
-          }, {})
+          }, {}),
         )
           .map(([name, total]) => `${name}: ${total} ta`)
           .join("\n"),
@@ -663,7 +677,7 @@ const Work = () => {
             if (!acc[user.name]) acc[user.name] = 0;
             acc[user.name] += user.quantity;
             return acc;
-          }, {})
+          }, {}),
         )
           .map(([name, total]) => `${name}: ${total} ta`)
           .join("\n"),
@@ -715,7 +729,7 @@ const Work = () => {
                           "ru-RU",
                           {
                             maximumFractionDigits: 0,
-                          }
+                          },
                         )}
                       </td>
                     </tr>
@@ -743,7 +757,7 @@ const Work = () => {
                       "ru-RU",
                       {
                         maximumFractionDigits: 0,
-                      }
+                      },
                     )}
                   </h3>
                   <table className="w-full border-collapse border border-gray-300">
@@ -768,7 +782,7 @@ const Work = () => {
                             </td>
                             <td className="border border-gray-300 p-2 text-right">
                               {Number.parseFloat(
-                                employee.salary
+                                employee.salary,
                               ).toLocaleString("ru-RU", {
                                 maximumFractionDigits: 0,
                               })}
@@ -890,7 +904,7 @@ const Work = () => {
                           "ru-RU",
                           {
                             maximumFractionDigits: 2,
-                          }
+                          },
                         )}
                       </span>{" "}
                       minut
@@ -931,7 +945,7 @@ const Work = () => {
                         "h-4 w-4",
                         order?.order_model?.status
                           ? "text-green-500"
-                          : "text-red-500"
+                          : "text-red-500",
                       )}
                     />
                     <span
@@ -939,12 +953,12 @@ const Work = () => {
                         "text-sm font-bold",
                         order?.order_model?.status
                           ? "text-green-500"
-                          : "text-red-500"
+                          : "text-red-500",
                       )}
                     >
                       Limit:{" "}
                       {Number.parseFloat(
-                        order?.order_model?.rasxod || 0
+                        order?.order_model?.rasxod || 0,
                       ).toLocaleString() || "N/A"}{" "}
                       so'm
                       <span className="text-sm ml-1">
@@ -960,7 +974,7 @@ const Work = () => {
                         "h-4 w-4",
                         totalSpendSummaUZ > order?.order_model?.rasxod
                           ? "text-red-500"
-                          : "text-black"
+                          : "text-black",
                       )}
                     />
                     <span
@@ -968,7 +982,7 @@ const Work = () => {
                         "font-bold",
                         totalSpendSummaUZ > order?.order_model?.rasxod
                           ? "text-red-500 text-xl"
-                          : "text-sm"
+                          : "text-sm",
                       )}
                     >
                       Jami UZ:{" "}
@@ -984,7 +998,7 @@ const Work = () => {
                         "h-4 w-4",
                         totalSpendSummaRU > order?.order_model?.rasxod
                           ? "text-red-500"
-                          : "text-black"
+                          : "text-black",
                       )}
                     />
                     <span
@@ -992,7 +1006,7 @@ const Work = () => {
                         "font-bold",
                         totalSpendSummaRU > order?.order_model?.rasxod
                           ? "text-red-500 text-xl"
-                          : "text-sm"
+                          : "text-sm",
                       )}
                     >
                       Jami RU:{" "}
@@ -1021,7 +1035,7 @@ const Work = () => {
                   parseFloat(
                     selectedTarifLang == "uz"
                       ? totalSpendSummaUZ
-                      : totalSpendSummaRU || 0
+                      : totalSpendSummaRU || 0,
                   ) * parseFloat(order?.quantity || 0)
                 ).toLocaleString("ru-RU", {
                   maximumFractionDigits: 0,
@@ -1037,14 +1051,14 @@ const Work = () => {
                     "ru-RU",
                     {
                       maximumFractionDigits: 0,
-                    }
-                  )} so'm`
+                    },
+                  )} so'm`,
                 );
                 setDialogOpen(true);
                 setDialogData(
                   attendanceSalary?.tarification_employees?.filter(
-                    (employee) => employee.salary > 0
-                  )
+                    (employee) => employee.salary > 0,
+                  ),
                 );
               }}
             >
@@ -1061,9 +1075,9 @@ const Work = () => {
                     (parseFloat(
                       selectedTarifLang == "uz"
                         ? totalSpendSummaUZ
-                        : totalSpendSummaRU || 0
+                        : totalSpendSummaRU || 0,
                     ) *
-                      parseFloat(order?.quantity || 0))
+                      parseFloat(order?.quantity || 0)),
                 )?.toLocaleString("ru-RU", {
                   maximumFractionDigits: 0,
                 })}{" "}
@@ -1079,13 +1093,13 @@ const Work = () => {
                     "ru-RU",
                     {
                       maximumFractionDigits: 0,
-                    }
-                  )} so'm`
+                    },
+                  )} so'm`,
                 );
                 setDialogData(
                   attendanceSalary?.salary_employees?.filter(
-                    (employee) => employee.salary > 0
-                  )
+                    (employee) => employee.salary > 0,
+                  ),
                 );
               }}
             >
@@ -1104,16 +1118,16 @@ const Work = () => {
               onClick={() => {
                 setDialogType(
                   `Universallar bosgan summa: ${parseFloat(
-                    attendanceSalary?.fixed_with_tarification_total
+                    attendanceSalary?.fixed_with_tarification_total,
                   )?.toLocaleString("ru-RU", {
                     maximumFractionDigits: 0,
-                  })} so'm`
+                  })} so'm`,
                 );
                 setDialogOpen(true);
                 setDialogData(
                   attendanceSalary?.fixed_with_tarification_employees?.filter(
-                    (employee) => employee.salary > 0
-                  )
+                    (employee) => employee.salary > 0,
+                  ),
                 );
               }}
             >
@@ -1126,7 +1140,7 @@ const Work = () => {
                   "ru-RU",
                   {
                     maximumFractionDigits: 0,
-                  }
+                  },
                 )}{" "}
               </span>
             </div>
@@ -1136,10 +1150,10 @@ const Work = () => {
                 onClick={() => {
                   setDialogType(
                     `Qo'shimcha kun kelganlar jami: ${parseFloat(
-                      attendanceSalary?.extra_days_total
+                      attendanceSalary?.extra_days_total,
                     )?.toLocaleString("ru-RU", {
                       maximumFractionDigits: 0,
-                    })} so'm`
+                    })} so'm`,
                   );
                   setExtraDaysDialogOpen(true);
                   setDialogData(attendanceSalary?.extra_days);
@@ -1160,9 +1174,9 @@ const Work = () => {
                   parseFloat(attendanceSalary?.tarification_total) +
                     parseFloat(attendanceSalary?.salary_total) -
                     parseFloat(
-                      attendanceSalary?.fixed_with_tarification_total
+                      attendanceSalary?.fixed_with_tarification_total,
                     ) +
-                    parseFloat(attendanceSalary?.extra_days_total)
+                    parseFloat(attendanceSalary?.extra_days_total),
                 )?.toLocaleString("ru-RU", {
                   maximumFractionDigits: 0,
                 })}{" "}
@@ -1175,13 +1189,13 @@ const Work = () => {
                   ((parseFloat(attendanceSalary?.tarification_total || 0) +
                     parseFloat(attendanceSalary?.salary_total || 0) -
                     parseFloat(
-                      attendanceSalary?.fixed_with_tarification_total || 0
+                      attendanceSalary?.fixed_with_tarification_total || 0,
                     ) +
                     parseFloat(attendanceSalary?.extra_days_total || 0)) /
                     (parseFloat(
                       selectedTarifLang === "uz"
                         ? totalSpendSummaUZ
-                        : totalSpendSummaRU || 0
+                        : totalSpendSummaRU || 0,
                     ) *
                       parseFloat(order?.quantity || 0))) *
                   100
@@ -1197,13 +1211,13 @@ const Work = () => {
                   parseFloat(
                     selectedTarifLang === "uz"
                       ? totalSpendSummaUZ
-                      : totalSpendSummaRU || 0
+                      : totalSpendSummaRU || 0,
                   ) *
                     parseFloat(order?.quantity || 0) -
                   (parseFloat(attendanceSalary?.tarification_total || 0) +
                     parseFloat(attendanceSalary?.salary_total || 0) -
                     parseFloat(
-                      attendanceSalary?.fixed_with_tarification_total || 0
+                      attendanceSalary?.fixed_with_tarification_total || 0,
                     ) +
                     parseFloat(attendanceSalary?.extra_days_total || 0))
                 )?.toLocaleString("ru-RU", {
@@ -1312,12 +1326,14 @@ const Work = () => {
                         role="combobox"
                         aria-expanded={empComboOpen}
                         className="w-fit justify-between"
+                        disabled={gettingUsers}
                       >
                         {selectedEmployee
                           ? employees?.find(
-                              (emp) => emp.id === selectedEmployee
+                              (emp) => emp.id === selectedEmployee,
                             )?.name
                           : "Xodimni tanlang"}
+                        {gettingUsers && <Loader2 className="animate-spin" />}
                         <ChevronsUpDown className="opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -1354,6 +1370,24 @@ const Work = () => {
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  <Select
+                    value={selectedStatus}
+                    onValueChange={(value) => {
+                      setSelectedStatus(value);
+                      localStorage.setItem("empStatus", value);
+                      setSelectedEmployee(null);
+                    }}
+                  >
+                    <SelectTrigger
+                      className={`${selectedStatus === "kicked" ? "bg-red-200" : "bg-green-200"} w-fit`}
+                    >
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="working">Ishlayotgan</SelectItem>
+                      <SelectItem value="kicked">Ishdan ketgan</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Input
                     type="date"
                     max={new Date().toISOString().split("T")[0]}
@@ -1363,7 +1397,7 @@ const Work = () => {
                       setSelectedDate(e.target.value);
                       localStorage.setItem(
                         "salarySelectedDate",
-                        e.target.value
+                        e.target.value,
                       );
                     }}
                   />
@@ -1408,11 +1442,11 @@ const Work = () => {
                                     {work.id
                                       ? `${
                                           tarifications?.find(
-                                            (t) => t.id === work.id
+                                            (t) => t.id === work.id,
                                           )?.code || ""
                                         } - ${
                                           tarifications?.find(
-                                            (t) => t.id === work.id
+                                            (t) => t.id === work.id,
                                           )?.name || ""
                                         }`
                                       : "Ishni tanlang"}
@@ -1437,15 +1471,15 @@ const Work = () => {
                                               {
                                                 numeric: true,
                                                 sensitivity: "base",
-                                              }
-                                            )
+                                              },
+                                            ),
                                           )
                                           ?.filter((tarification) => {
                                             const isAlreadySelected =
                                               selectedWorks.some(
                                                 (w) =>
                                                   w.id === tarification.id &&
-                                                  w.tempId !== work.tempId
+                                                  w.tempId !== work.tempId,
                                               );
                                             return !isAlreadySelected;
                                           })
@@ -1457,7 +1491,7 @@ const Work = () => {
                                                 updateWork(
                                                   work.tempId,
                                                   "id",
-                                                  tarification.id
+                                                  tarification.id,
                                                 );
                                                 setWorkPopoverOpen((prev) => ({
                                                   ...prev,
@@ -1489,7 +1523,7 @@ const Work = () => {
                                 min="1"
                                 max={(() => {
                                   const tarification = getSelectedTarification(
-                                    work.id
+                                    work.id,
                                   );
                                   return tarification
                                     ? Math.max(0, tarification.limit)
@@ -1501,12 +1535,12 @@ const Work = () => {
                                   updateWork(
                                     work.tempId,
                                     "quantity",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 className={(() => {
                                   const tarification = getSelectedTarification(
-                                    work.id
+                                    work.id,
                                   );
                                   const availableLimit = tarification
                                     ? tarification.limit
@@ -1520,7 +1554,7 @@ const Work = () => {
                               />
                               {(() => {
                                 const tarification = getSelectedTarification(
-                                  work.id
+                                  work.id,
                                 );
 
                                 if (tarification) {
@@ -1555,7 +1589,7 @@ const Work = () => {
                             <div className="mt-4 p-3 bg-white rounded border">
                               {(() => {
                                 const tarification = getSelectedTarification(
-                                  work.id
+                                  work.id,
                                 );
                                 return tarification ? (
                                   <div className="space-y-3">
@@ -1786,7 +1820,7 @@ const Work = () => {
                               className="border border-gray-300 p-2 text-center"
                               onClick={() => {
                                 navigator.clipboard.writeText(
-                                  tarifLog?.tarification?.code
+                                  tarifLog?.tarification?.code,
                                 );
                                 toast({
                                   title: "Nusxa olindi",
@@ -1802,7 +1836,7 @@ const Work = () => {
                               className="border border-gray-300 p-2"
                               onClick={() => {
                                 navigator.clipboard.writeText(
-                                  tarifLog?.tarification?.name
+                                  tarifLog?.tarification?.name,
                                 );
                                 toast({
                                   title: "Nusxa olindi",
@@ -1816,7 +1850,7 @@ const Work = () => {
                               className="border border-gray-300 p-2"
                               onClick={() => {
                                 navigator.clipboard.writeText(
-                                  tarifLog?.employee?.name
+                                  tarifLog?.employee?.name,
                                 );
                                 toast({
                                   title: "Nusxa olindi",
@@ -1880,7 +1914,7 @@ const Work = () => {
                             </td>
                             <td className="border border-gray-300 p-2">
                               {parseFloat(
-                                tarifLog?.amount_earned
+                                tarifLog?.amount_earned,
                               ).toLocaleString("ru-RU", {
                                 minimumFractionDigits: 0,
                                 maximumFractionDigits: 0,
@@ -1905,7 +1939,7 @@ const Work = () => {
                               .reduce(
                                 (acc, log) =>
                                   acc + parseFloat(log?.quantity || 0),
-                                0
+                                0,
                               )
                               .toLocaleString("ru-RU", {
                                 minimumFractionDigits: 0,
@@ -1917,7 +1951,7 @@ const Work = () => {
                               .reduce(
                                 (acc, log) =>
                                   acc + parseFloat(log?.amount_earned || 0),
-                                0
+                                0,
                               )
                               .toLocaleString("ru-RU", {
                                 minimumFractionDigits: 0,
@@ -2011,10 +2045,10 @@ const Work = () => {
                                   }
                                   acc[user.name] += user.quantity;
                                   return acc;
-                                }, {})
+                                }, {}),
                               )
                                 .sort(([aName], [bName]) =>
-                                  aName.localeCompare(bName)
+                                  aName.localeCompare(bName),
                                 )
                                 .map(([name, totalQuantity], idx) => (
                                   <li
@@ -2120,10 +2154,10 @@ const Work = () => {
                                   }
                                   acc[user.name] += user.quantity;
                                   return acc;
-                                }, {})
+                                }, {}),
                               )
                                 .sort(([aName], [bName]) =>
-                                  aName.localeCompare(bName)
+                                  aName.localeCompare(bName),
                                 )
                                 .map(([name, totalQuantity], idx) => (
                                   <li
@@ -2169,8 +2203,8 @@ const Work = () => {
                       employee.group_id ===
                         selectedSubmodel?.group?.group?.id &&
                       !tarifLogs?.some(
-                        (log) => log.employee?.id === employee.id
-                      )
+                        (log) => log.employee?.id === employee.id,
+                      ),
                   )
                   ?.sort((a, b) => a.name.localeCompare(b.name))
                   ?.map((employee, index) => (
