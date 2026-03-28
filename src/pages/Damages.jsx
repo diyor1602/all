@@ -256,7 +256,7 @@ const Damages = () => {
                         <p
                           className={`text-sm font-medium truncate ${isFixed ? "text-green-700" : "text-gray-400"}`}
                         >
-                          {item.fixed_employee?.name || "To'g'irlanmagan"}
+                          {item.fixed_employee?.name || "-"}
                         </p>
                       </div>
                     </div>
