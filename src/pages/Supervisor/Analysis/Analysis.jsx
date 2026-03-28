@@ -93,6 +93,7 @@ const Analysis = () => {
     seasonYear: "",
     technologistStatus: "",
     limitStatus: "",
+    sewingOutputCompare: "",
     exceededStatus: "",
     recipeStatus: "",
   });
@@ -228,6 +229,13 @@ const Analysis = () => {
         (filters.limitStatus === "Joyida" &&
           item.tarificationSum <= item.groupLimit);
 
+      const matchesSewingOutput =
+        !filters.sewingOutputCompare ||
+        (filters.sewingOutputCompare === "greater" &&
+          item.sewingOutputQuantity > item.quantity) ||
+        (filters.sewingOutputCompare === "not_greater" &&
+          item.sewingOutputQuantity <= item.quantity);
+
       const matchesExceeded =
         !filters.exceededStatus ||
         (filters.exceededStatus === "Bor" && item.exceededCount > 0) ||
@@ -246,6 +254,7 @@ const Analysis = () => {
         matchesSeasonYear &&
         matchesTechnologist &&
         matchesLimit &&
+        matchesSewingOutput &&
         matchesExceeded &&
         matchesRecipe
       );
@@ -293,6 +302,7 @@ const Analysis = () => {
       seasonYear: "",
       technologistStatus: "",
       limitStatus: "",
+      sewingOutputCompare: "",
       exceededStatus: "",
       recipeStatus: "",
     });
@@ -605,7 +615,19 @@ const Analysis = () => {
 
                 <th
                   className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
-                />
+                >
+                  <select
+                    value={filters.sewingOutputCompare}
+                    onChange={(e) =>
+                      handleFilterChange("sewingOutputCompare", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="greater">Ko'p</option>
+                    <option value="not_greater">Kam/teng</option>
+                  </select>
+                </th>
 
                 <th
                   className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
