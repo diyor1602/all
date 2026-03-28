@@ -116,7 +116,7 @@ const Damages = () => {
               <XCircle className="w-4 h-4" />
               <span className="font-medium">To'g'irlanmagan</span>
               <div className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-xs font-bold">
-                {damages.filter((item) => !item.fixed_employee_id).length}
+                {damages.filter((item) => item.status !== "approved").length}
               </div>
             </div>
             <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-500/20 to-red-600/20 opacity-0 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
@@ -129,7 +129,7 @@ const Damages = () => {
               <CheckCircle className="w-4 h-4" />
               <span className="font-medium">To'g'irlangan</span>
               <div className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-xs font-bold">
-                {damages.filter((item) => item.fixed_employee_id).length}
+                {damages.filter((item) => item.status === "approved").length}
               </div>
             </div>
             <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/20 to-green-600/20 opacity-0 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
@@ -141,12 +141,13 @@ const Damages = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {damages
           .filter((item) => {
-            if (activeTab === "fixed") return Boolean(item.fixed_employee_id);
-            return !item.fixed_employee_id;
+            if (activeTab === "fixed")
+              return Boolean(item.status === "approved");
+            return item.status !== "approved";
           })
           .sort((a, b) => b.id - a.id)
           .map((item) => {
-            const isFixed = item.fixed_employee_id;
+            const isFixed = item.status === "approved";
             const isOwnFixed = item.fixed_employee_id === item.employee_id;
             const createdDate = new Date(item.created_at);
 
