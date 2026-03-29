@@ -267,6 +267,31 @@ const Damages = () => {
     setCurrentPage(1);
   };
 
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setStartDate("");
+    setEndDate("");
+    setStatus("pending");
+    setSelectedDepartment("");
+    setSelectedGroup("");
+    setCurrentPage(1);
+
+    localStorage.removeItem(STORAGE_KEYS.SEARCH_QUERY);
+    localStorage.removeItem(STORAGE_KEYS.START_DATE);
+    localStorage.removeItem(STORAGE_KEYS.END_DATE);
+    localStorage.removeItem(STORAGE_KEYS.STATUS);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_PAGE);
+  };
+
+  const isFiltersActive =
+    searchQuery ||
+    startDate ||
+    endDate ||
+    status !== "pending" ||
+    selectedDepartment ||
+    selectedGroup ||
+    currentPage !== 1;
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("ru-RU", {
       year: "numeric",
@@ -421,6 +446,15 @@ const Damages = () => {
               className="w-full sm:w-[160px] bg-white"
             />
           </div>
+
+          <Button
+            variant="outline"
+            onClick={handleClearFilters}
+            disabled={!isFiltersActive}
+            className="w-full sm:w-auto bg-white"
+          >
+            Tozalash
+          </Button>
         </div>
       </div>
 
