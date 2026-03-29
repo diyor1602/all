@@ -142,7 +142,7 @@ const Orders = () => {
             return (
               <div
                 key={i}
-                className="flex flex-col gap-4 bg-white p-6 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-200"
+                className="flex flex-col gap-4 bg-white p-6 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-200 h-fit"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">
