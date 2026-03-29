@@ -375,15 +375,17 @@ const Damages = () => {
                 <SelectValue placeholder="Guruh" />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {groupOptions.map((group) => (
-                  <SelectItem
-                    key={group.id}
-                    value={String(group.id)}
-                    className="truncate"
-                  >
-                    {group.name}
-                  </SelectItem>
-                ))}
+                {groupOptions
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((group) => (
+                    <SelectItem
+                      key={group.id}
+                      value={String(group.id)}
+                      className="truncate"
+                    >
+                      {group.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -449,13 +451,6 @@ const Damages = () => {
                     alt="Damage"
                     className="w-full h-full object-cover"
                   />
-                  {/* <Badge
-                    className={`absolute top-2 right-2 ${
-                      damage?.fixed_employee ? "bg-green-500" : "bg-red-500"
-                    }`}
-                  >
-                    {damage?.tarification?.code || "-"}
-                  </Badge> */}
                   {!damage?.fixed_employee && (
                     <Button
                       variant="outline"
@@ -504,12 +499,6 @@ const Damages = () => {
                         {damage?.fixed_employee?.name || "-"}
                       </span>
                     </div>
-                    {/* <div className="flex items-center text-sm text-slate-600">
-                      <Star size={14} className="mr-2 text-slate-400" />
-                      <span className="truncate">
-                        {damage?.tarification?.name || "-"}
-                      </span>
-                    </div> */}
                     <div className="flex items-center text-sm text-slate-600">
                       <Calendar size={14} className="mr-2 text-slate-400" />
                       <span>{formatDate(damage?.created_at)}</span>
