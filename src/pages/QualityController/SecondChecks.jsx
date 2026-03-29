@@ -137,7 +137,7 @@ const SecondChecks = () => {
                     if (!y || !m) return;
                     setSelectedMonth(new Date(y, m - 1, 1));
                   }}
-                  className="h-10 w-[150px] rounded-xl border-slate-200 bg-slate-50 text-slate-700 shadow-none"
+                  className="h-10 w-fit rounded-xl border-slate-200 bg-slate-50 text-slate-700 shadow-none"
                   disabled={loading}
                 />
 
