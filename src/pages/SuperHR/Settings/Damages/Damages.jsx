@@ -45,6 +45,10 @@ const Damages = () => {
     STATUS: "damages_status",
   };
 
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
+
   const [damages, setDamages] = useState([]);
   const [meta, setMeta] = useState(null); // Stores pagination info
   const [loading, setLoading] = useState(true);
@@ -73,12 +77,31 @@ const Damages = () => {
   const [sending, setSending] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
 
+  const departmentOptions = departments
+    .flatMap((main) =>
+      (main?.departments || []).map((dept) => ({
+        id: dept?.id,
+        name: dept?.name,
+        groups: dept?.groups || [],
+      })),
+    )
+    .filter((d) => d?.id);
+
+  const selectedDepartmentObj = departmentOptions.find(
+    (d) => String(d.id) === String(selectedDepartment),
+  );
+  const groupOptions = (selectedDepartmentObj?.groups || []).filter(
+    (g) => g?.id,
+  );
+
   const getDamages = async (
     page = 1,
     search = "",
     startDate = "",
     endDate = "",
     status = "pending",
+    departmentId = "",
+    groupId = "",
   ) => {
     setLoading(true);
     try {
@@ -90,8 +113,14 @@ const Damages = () => {
         ? `&end_date=${encodeURIComponent(endDate)}`
         : "";
       const statusParam = status ? `&status=${encodeURIComponent(status)}` : "";
+      const departmentParam = departmentId
+        ? `&department_id=${encodeURIComponent(departmentId)}`
+        : "";
+      const groupParam = groupId
+        ? `&group_id=${encodeURIComponent(groupId)}`
+        : "";
       const res = await api.get(
-        `/superhr/qualityControls?page=${page}${searchParam}${startDateParam}${endDateParam}${statusParam}`,
+        `/superhr/qualityControls?page=${page}${searchParam}${startDateParam}${endDateParam}${statusParam}${departmentParam}${groupParam}`,
       );
       setDamages(res.data?.data || []);
       setMeta(res.data); // Store the full response for pagination labels
@@ -132,9 +161,42 @@ const Damages = () => {
     getEmployees();
   }, [debouncedSearchTerm]);
 
+  const getDepartments = async () => {
+    try {
+      const res = await api.get("/departments");
+      setDepartments(Array.isArray(res.data) ? res.data : res.data?.data || []);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Bo'limlar ma'lumotlari yuklanmadi",
+      });
+    }
+  };
+
   useEffect(() => {
-    getDamages(currentPage, debouncedSearchQuery, startDate, endDate, status);
-  }, [currentPage, debouncedSearchQuery, startDate, endDate, status]);
+    getDepartments();
+  }, []);
+
+  useEffect(() => {
+    getDamages(
+      currentPage,
+      debouncedSearchQuery,
+      startDate,
+      endDate,
+      status,
+      selectedDepartment,
+      selectedGroup,
+    );
+  }, [
+    currentPage,
+    debouncedSearchQuery,
+    startDate,
+    endDate,
+    status,
+    selectedDepartment,
+    selectedGroup,
+  ]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CURRENT_PAGE, currentPage.toString());
@@ -194,6 +256,17 @@ const Damages = () => {
     setCurrentPage(1); // Reset to first page when changing status
   };
 
+  const handleDepartmentChange = (value) => {
+    setSelectedDepartment(value);
+    setSelectedGroup("");
+    setCurrentPage(1);
+  };
+
+  const handleGroupChange = (value) => {
+    setSelectedGroup(value);
+    setCurrentPage(1);
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("ru-RU", {
       year: "numeric",
@@ -229,7 +302,15 @@ const Damages = () => {
         duration: 1000,
       });
       setEmployeeDialogOpen(false);
-      getDamages(currentPage, debouncedSearchQuery, startDate, endDate, status);
+      getDamages(
+        currentPage,
+        debouncedSearchQuery,
+        startDate,
+        endDate,
+        status,
+        selectedDepartment,
+        selectedGroup,
+      );
     } catch (error) {
       toast({
         variant: "destructive",
@@ -247,12 +328,10 @@ const Damages = () => {
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Sifat Nazorati</h1>
-          <p className="text-slate-500 text-sm">
-            Jami: {meta?.total || 0} ta holat aniqlangan
-          </p>
+          <p className="text-slate-500 text-sm">Jami: {meta?.total || 0} ta</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-          <div className="relative w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <div className="relative w-full sm:flex-1 sm:min-w-[240px] sm:w-auto">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
               size={20}
@@ -265,7 +344,50 @@ const Damages = () => {
               className="pl-10 w-full sm:w-64 bg-white"
             />
           </div>
-          <div className="relative w-full sm:w-auto">
+          <div className="w-full sm:w-56 sm:min-w-[220px]">
+            <Select
+              value={selectedDepartment}
+              onValueChange={handleDepartmentChange}
+            >
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue placeholder="Bo'lim" />
+              </SelectTrigger>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                {departmentOptions.map((dept) => (
+                  <SelectItem
+                    key={dept.id}
+                    value={String(dept.id)}
+                    className="truncate"
+                  >
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-full sm:w-56 sm:min-w-[220px]">
+            <Select
+              value={selectedGroup}
+              onValueChange={handleGroupChange}
+              disabled={!selectedDepartment}
+            >
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue placeholder="Guruh" />
+              </SelectTrigger>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                {groupOptions.map((group) => (
+                  <SelectItem
+                    key={group.id}
+                    value={String(group.id)}
+                    className="truncate"
+                  >
+                    {group.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="relative w-full sm:w-44 sm:min-w-[180px]">
             <Filter
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
               size={20}
@@ -274,19 +396,19 @@ const Damages = () => {
               <SelectTrigger className="pl-10 w-full bg-white">
                 <SelectValue placeholder="Holat" />
               </SelectTrigger>
-              <SelectContent className="w-full">
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="pending">Braklar</SelectItem>
                 <SelectItem value="approved">Tekshirilgan</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <Input
               type="date"
               placeholder="Boshlanish sanasi"
               value={startDate}
               onChange={handleStartDateChange}
-              className="w-fit bg-white"
+              className="w-full sm:w-[160px] bg-white"
             />
 
             <Input
@@ -294,7 +416,7 @@ const Damages = () => {
               placeholder="Tugash sanasi"
               value={endDate}
               onChange={handleEndDateChange}
-              className="w-fit bg-white"
+              className="w-full sm:w-[160px] bg-white"
             />
           </div>
         </div>
