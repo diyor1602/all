@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Box, AlertCircle } from "lucide-react";
+import { Box, AlertCircle, Cctv } from "lucide-react";
 
 const navigation = [
   {
@@ -12,6 +12,12 @@ const navigation = [
     name: "Braklar",
     href: "/qualityController/damages",
     icon: AlertCircle,
+    onMobile: true,
+  },
+  {
+    name: "Ikkinchi tekshiruv",
+    href: "/qualityController/second-checks",
+    icon: Cctv,
     onMobile: true,
   },
 ];
