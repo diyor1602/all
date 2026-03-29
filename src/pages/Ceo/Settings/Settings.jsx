@@ -10,8 +10,8 @@ import {
   Trees,
   SunSnow,
   ChartArea,
-  Medal,
   Pizza,
+  Coins,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -20,6 +20,7 @@ import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
 import QualityRatings from "./QualityRatings/QualityRatings";
 import Universals from "./Universals/Universals";
+import Moneys from "./Moneys/Moneys";
 
 const Settings = () => {
   return (
@@ -31,6 +32,7 @@ const Settings = () => {
       <Route path="grouphistory" element={<GroupHistory />} />
       <Route path="qualityratings" element={<QualityRatings />} />
       <Route path="universals" element={<Universals />} />
+      <Route path="moneys" element={<Moneys />} />
     </Routes>
   );
 };
@@ -68,7 +70,7 @@ const SettingsPage = () => {
       color: "bg-gray-500",
     },
     {
-      name: "Yangi mavsum",
+      name: "Summa berish",
       icon: Trees,
       link: "/ceo/newSeason",
       color: "bg-sky-500",
@@ -96,6 +98,12 @@ const SettingsPage = () => {
       icon: Pizza,
       link: "/ceo/settings/universals",
       color: "bg-lime-500",
+    },
+    {
+      name: "Jarima va Bonuslar",
+      icon: Coins,
+      link: "/ceo/settings/moneys",
+      color: "bg-amber-500",
     },
   ];
 
