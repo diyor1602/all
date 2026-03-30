@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import ModelImages from "@/components/ModelImages";
+import formatNumber from "@/utils/formatNumber";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -762,15 +763,11 @@ const OrderView = () => {
                     Jami UZ:{" "}
                     <span className="font-bold">
                       {" "}
-                      {totalSpends?.toLocaleString("ru-RU", {
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatNumber(totalSpends)}
                     </span>{" "}
                     sekund /{" "}
                     <span className="font-bold">
-                      {parseFloat(totalSpends / 60)?.toLocaleString("ru-RU", {
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatNumber(totalSpends / 60)}
                     </span>{" "}
                     minut
                   </span>
@@ -780,15 +777,11 @@ const OrderView = () => {
                   <span className="text-sm">
                     Jami RU:{" "}
                     <span className="font-bold">
-                      {parseFloat(totalSpendsRU)?.toLocaleString("ru-RU", {
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatNumber(totalSpendsRU)}
                     </span>{" "}
                     sekund /{" "}
                     <span className="font-bold">
-                      {parseFloat(totalSpendsRU / 60)?.toLocaleString("ru-RU", {
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatNumber(totalSpendsRU / 60)}
                     </span>{" "}
                     minut
                   </span>
@@ -842,17 +835,13 @@ const OrderView = () => {
                     )}
                     onClick={() => setLimitDialogOpen(true)}
                   >
-                    Limit:{" "}
-                    {parseFloat(order?.order_model?.rasxod || 0).toLocaleString(
-                      "ru-RU",
-                    ) || "N/A"}{" "}
-                    so'm
+                    Limit: {formatNumber(order?.order_model?.rasxod)} so'm
                     <span className="text-sm ml-1">
                       {order?.order_model?.status
                         ? "(Tasdiqlangan)"
                         : "(Tasdiqlanmagan)"}
                     </span>{" "}
-                    / {order?.order_model?.minute} minut
+                    / {formatNumber(order?.order_model?.minute)} minut
                   </span>
                 </div>
                 <div className="flex gap-2 items-center">
@@ -872,11 +861,7 @@ const OrderView = () => {
                         : "text-sm",
                     )}
                   >
-                    Jami UZ:{" "}
-                    {totalSpendSummaUZ?.toLocaleString("ru-RU", {
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    so'm
+                    Jami UZ: {formatNumber(totalSpendSummaUZ)} so'm
                   </span>
                 </div>
                 <div className="flex gap-2 items-center">
@@ -896,11 +881,7 @@ const OrderView = () => {
                         : "text-sm",
                     )}
                   >
-                    Jami RU:{" "}
-                    {totalSpendSummaRU?.toLocaleString("ru-RU", {
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    so'm
+                    Jami RU: {formatNumber(totalSpendSummaRU)} so'm
                   </span>
                 </div>
               </div>
@@ -1251,8 +1232,8 @@ const OrderView = () => {
                         <div className="flex items-center gap-2">
                           <Coins size={20} />
                           <div>
-                            {tarifications
-                              .reduce(
+                            {formatNumber(
+                              tarifications.reduce(
                                 (acc, item) =>
                                   acc +
                                   (item?.tarifications?.reduce(
@@ -1261,18 +1242,16 @@ const OrderView = () => {
                                     0,
                                   ) || 0),
                                 0,
-                              )
-                              ?.toLocaleString("ru-RU", {
-                                minimumFractionDigits: 2,
-                              })}{" "}
+                              ),
+                            )}{" "}
                             so'm
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <Hourglass size={20} />
                           <div>
-                            {tarifications
-                              .reduce(
+                            {formatNumber(
+                              tarifications.reduce(
                                 (acc, item) =>
                                   acc +
                                   (item?.tarifications?.reduce(
@@ -1281,10 +1260,8 @@ const OrderView = () => {
                                     0,
                                   ) || 0),
                                 0,
-                              )
-                              ?.toLocaleString("ru-RU", {
-                                minimumFractionDigits: 2,
-                              })}{" "}
+                              ),
+                            )}{" "}
                             sekund
                           </div>
                         </div>
@@ -1315,28 +1292,24 @@ const OrderView = () => {
                             <div className="flex items-center justify-between gap-2 flex-wrap text-sm ">
                               <div className="flex items-center gap-2">
                                 <Coins size={20} />
-                                {tarification?.tarifications
-                                  ?.reduce(
+                                {formatNumber(
+                                  tarification?.tarifications?.reduce(
                                     (acc, item) =>
                                       acc + parseFloat(item?.summa),
                                     0,
-                                  )
-                                  ?.toLocaleString({
-                                    minimumFractionDigits: 2,
-                                  })}{" "}
+                                  ),
+                                )}{" "}
                                 so'm
                               </div>
                               <div className="flex items-center gap-2">
                                 <Hourglass size={20} />
-                                {tarification?.tarifications
-                                  ?.reduce(
+                                {formatNumber(
+                                  tarification?.tarifications?.reduce(
                                     (acc, item) =>
                                       acc + parseFloat(item?.second),
                                     0,
-                                  )
-                                  ?.toLocaleString({
-                                    minimumFractionDigits: 2,
-                                  })}{" "}
+                                  ),
+                                )}{" "}
                                 sekund
                               </div>
                             </div>
@@ -1502,10 +1475,10 @@ const OrderView = () => {
                         {tarif?.razryad?.name}
                       </td>
                       <td className="border border-gray-300 p-1">
-                        {parseFloat(tarif?.second)?.toLocaleString()}
+                        {formatNumber(tarif?.second)}
                       </td>
                       <td className="border border-gray-300 p-1">
-                        {parseFloat(tarif?.summa)?.toLocaleString()}
+                        {formatNumber(tarif?.summa)}
                       </td>
                       <td className="border border-gray-300 p-1">
                         <Button
