@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import formatNumber from "@/utils/formatNumber";
 
 const item = {
   hidden: { y: 20, opacity: 0 },
@@ -217,9 +218,11 @@ const Orders = () => {
               <div className="flex items-center gap-1">
                 <span>{filteredOrders.length}</span> <span>ta</span>
                 <span>
-                  {filteredOrders?.reduce(
-                    (acc, order) => acc + order.quantity,
-                    0,
+                  {formatNumber(
+                    filteredOrders?.reduce(
+                      (acc, order) => acc + order.quantity,
+                      0,
+                    ),
                   )}
                 </span>
               </div>
