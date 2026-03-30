@@ -43,6 +43,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import ModelImages from "@/components/ModelImages";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -77,7 +78,7 @@ const OrderView = () => {
   const [isTarifExcelLoading, setIsTarifExcelLoading] = useState(false);
   const [tarifPdfDownloading, setTarifPdfDownloading] = useState(false);
   const [selectedTarifLang, setSelectedTarifLang] = useState(
-    localStorage.getItem("tarifLang") || "uz"
+    localStorage.getItem("tarifLang") || "uz",
   );
   const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const [limitValue, setLimitValue] = useState("");
@@ -127,12 +128,12 @@ const OrderView = () => {
             submodel?.spends?.reduce(
               (acc, spend) =>
                 acc + (spend?.region == "uz" ? parseFloat(spend?.seconds) : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const totalSpendsRU = useMemo(
@@ -144,12 +145,12 @@ const OrderView = () => {
             submodel?.spends?.reduce(
               (acc, spend) =>
                 acc + (spend?.region == "ru" ? parseFloat(spend?.seconds) : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const totalSpendSummaRU = useMemo(
@@ -161,12 +162,12 @@ const OrderView = () => {
             submodel?.spends?.reduce(
               (acc, spend) =>
                 acc + (spend?.region == "ru" ? parseFloat(spend?.summa) : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const totalSpendSummaUZ = useMemo(
@@ -178,12 +179,12 @@ const OrderView = () => {
             submodel?.spends?.reduce(
               (acc, spend) =>
                 acc + (spend?.region == "uz" ? parseFloat(spend?.summa) : 0),
-              0
-            )
+              0,
+            ),
           ),
-        0
+        0,
       ),
-    [order?.order_model?.submodels]
+    [order?.order_model?.submodels],
   );
 
   const handleDownloadTarif = useCallback(
@@ -224,7 +225,7 @@ const OrderView = () => {
       selectedSubmodel?.submodel?.name,
       selectedTarifLang,
       toast,
-    ]
+    ],
   );
 
   const handleDownloadSingleTarif = async (tarif) => {
@@ -314,7 +315,7 @@ const OrderView = () => {
           a.code.localeCompare(b.code, undefined, {
             numeric: true,
             sensitivity: "base",
-          })
+          }),
         )
         ?.forEach((tarif) => {
           worksheet.addRow({
@@ -419,12 +420,12 @@ const OrderView = () => {
     setTabLoading(true);
     try {
       const response = await api.get(
-        `/technologist/tarification/category/${selectedSubmodel?.id}`
+        `/technologist/tarification/category/${selectedSubmodel?.id}`,
       );
       setTarifications(
         response.data?.filter((tarification) => {
           return tarification?.region === selectedTarifLang;
-        })
+        }),
       );
     } catch (error) {
       toast({
@@ -442,7 +443,7 @@ const OrderView = () => {
     setTabLoading(true);
     try {
       const response = await api.get(
-        `/technologist/specification/${selectedSubmodel?.id}`
+        `/technologist/specification/${selectedSubmodel?.id}`,
       );
       setSpecifications(response.data);
     } catch (error) {
@@ -599,7 +600,7 @@ const OrderView = () => {
         "download",
         `${order?.id} ${order?.name} ${selectedSubmodel?.submodel?.name} ${
           selectedTarifLang == "ru" ? "RU" : "UZ"
-        } tarifikatsiya.pdf`
+        } tarifikatsiya.pdf`,
       );
       document.body.appendChild(link);
       link.click();
@@ -798,6 +799,9 @@ const OrderView = () => {
                     Tikayotgan guruh: {selectedSubmodel?.group?.group?.name}
                   </span>
                 </div>
+                <div className="flex items-start">
+                  <ModelImages modelCode={order?.order_model?.model?.name} />
+                </div>
               </div>
             </div>
 
@@ -826,7 +830,7 @@ const OrderView = () => {
                       "h-4 w-4",
                       order?.order_model?.status
                         ? "text-green-500"
-                        : "text-red-500"
+                        : "text-red-500",
                     )}
                   />
                   <span
@@ -834,13 +838,13 @@ const OrderView = () => {
                       "text-sm font-bold cursor-pointer",
                       order?.order_model?.status
                         ? "text-green-500"
-                        : "text-red-500"
+                        : "text-red-500",
                     )}
                     onClick={() => setLimitDialogOpen(true)}
                   >
                     Limit:{" "}
                     {parseFloat(order?.order_model?.rasxod || 0).toLocaleString(
-                      "ru-RU"
+                      "ru-RU",
                     ) || "N/A"}{" "}
                     so'm
                     <span className="text-sm ml-1">
@@ -857,7 +861,7 @@ const OrderView = () => {
                       "h-4 w-4",
                       totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500"
-                        : "text-black"
+                        : "text-black",
                     )}
                   />
                   <span
@@ -865,7 +869,7 @@ const OrderView = () => {
                       "font-bold",
                       totalSpendSummaUZ > order?.order_model?.rasxod
                         ? "text-red-500 text-xl"
-                        : "text-sm"
+                        : "text-sm",
                     )}
                   >
                     Jami UZ:{" "}
@@ -881,7 +885,7 @@ const OrderView = () => {
                       "h-4 w-4",
                       totalSpendSummaRU > order?.order_model?.rasxod
                         ? "text-red-500"
-                        : "text-black"
+                        : "text-black",
                     )}
                   />
                   <span
@@ -889,7 +893,7 @@ const OrderView = () => {
                       "font-bold",
                       totalSpendSummaRU > order?.order_model?.rasxod
                         ? "text-red-500 text-xl"
-                        : "text-sm"
+                        : "text-sm",
                     )}
                   >
                     Jami RU:{" "}
@@ -916,12 +920,12 @@ const OrderView = () => {
               // Get unique sizes and colors
               const sizes = [
                 ...new Set(
-                  order.order_model.sizes.map((size) => size.size?.name)
+                  order.order_model.sizes.map((size) => size.size?.name),
                 ),
               ].sort((a, b) => a.localeCompare(b));
               const colors = [
                 ...new Set(
-                  order.order_model.sizes.map((size) => size.color?.name)
+                  order.order_model.sizes.map((size) => size.color?.name),
                 ),
               ].sort((a, b) => a.localeCompare(b));
 
@@ -948,7 +952,7 @@ const OrderView = () => {
 
               const grandTotal = Array.from(rowTotals.values()).reduce(
                 (sum, val) => sum + val,
-                0
+                0,
               );
 
               return (
@@ -1217,7 +1221,7 @@ const OrderView = () => {
                     className="h-8 w-8 rounded-full text-white bg-sky-500 hover:bg-sky-600"
                     onClick={() =>
                       navigate(
-                        `/technologist/new-tarif/${selectedSubmodel?.id}`
+                        `/technologist/new-tarif/${selectedSubmodel?.id}`,
                       )
                     }
                   >
@@ -1254,9 +1258,9 @@ const OrderView = () => {
                                   (item?.tarifications?.reduce(
                                     (acc, subitem) =>
                                       acc + parseFloat(subitem?.summa),
-                                    0
+                                    0,
                                   ) || 0),
-                                0
+                                0,
                               )
                               ?.toLocaleString("ru-RU", {
                                 minimumFractionDigits: 2,
@@ -1274,9 +1278,9 @@ const OrderView = () => {
                                   (item?.tarifications?.reduce(
                                     (acc, subitem) =>
                                       acc + parseFloat(subitem?.second),
-                                    0
+                                    0,
                                   ) || 0),
-                                0
+                                0,
                               )
                               ?.toLocaleString("ru-RU", {
                                 minimumFractionDigits: 2,
@@ -1315,7 +1319,7 @@ const OrderView = () => {
                                   ?.reduce(
                                     (acc, item) =>
                                       acc + parseFloat(item?.summa),
-                                    0
+                                    0,
                                   )
                                   ?.toLocaleString({
                                     minimumFractionDigits: 2,
@@ -1328,7 +1332,7 @@ const OrderView = () => {
                                   ?.reduce(
                                     (acc, item) =>
                                       acc + parseFloat(item?.second),
-                                    0
+                                    0,
                                   )
                                   ?.toLocaleString({
                                     minimumFractionDigits: 2,
@@ -1356,7 +1360,7 @@ const OrderView = () => {
                                   className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
                                   onClick={() => {
                                     navigate(
-                                      `/technologist/edit-tarif/${tarification?.id}`
+                                      `/technologist/edit-tarif/${tarification?.id}`,
                                     );
                                   }}
                                 >
@@ -1470,7 +1474,7 @@ const OrderView = () => {
                     a.code.localeCompare(b.code, undefined, {
                       numeric: true,
                       sensitivity: "base",
-                    })
+                    }),
                   )
                   ?.map((tarif, index) => (
                     <tr key={tarif.id} className="text-center">
