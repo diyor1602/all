@@ -11,6 +11,8 @@ import {
   Eye,
   Snowflake,
   Sun,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -62,6 +64,9 @@ const Orders = () => {
   const [seasonType, setSeasonType] = useState(
     localStorage.getItem("seasonType") || "all",
   );
+  const [tariffFilter, setTariffFilter] = useState(
+    localStorage.getItem("tariffFilter") || "all",
+  );
 
   const [availableYears, setAvailableYears] = useState([]);
 
@@ -90,12 +95,14 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  // Filter and sort orders
   const filteredOrders = orders
     .filter((order) => {
+      const firstSubmodelHasTarifications =
+        order?.order_model?.submodels?.[0]?.has_tarifications;
+
       const matchesSearch =
         searchTerm === "" ||
-        order?.id.toString().includes(searchTerm) ||
+        order?.id?.toString().includes(searchTerm) ||
         order?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order?.quantity?.toString().includes(searchTerm) ||
         order?.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -112,8 +119,17 @@ const Orders = () => {
       const matchesSeasonType =
         seasonType === "all" || order.season_type === seasonType;
 
+      const matchesTariff =
+        tariffFilter === "all" ||
+        (tariffFilter === "has" && firstSubmodelHasTarifications === true) ||
+        (tariffFilter === "no" && firstSubmodelHasTarifications === false);
+
       return (
-        matchesSearch && matchesStatus && matchesSeasonYear && matchesSeasonType
+        matchesSearch &&
+        matchesStatus &&
+        matchesSeasonYear &&
+        matchesSeasonType &&
+        matchesTariff
       );
     })
     .sort((a, b) => {
@@ -134,12 +150,13 @@ const Orders = () => {
         <div className="space-y-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="p-4 bg-white rounded-lg shadow-sm">
-              <div className="grid grid-cols-9 gap-4">
+              <div className="grid grid-cols-10 gap-4">
                 <Skeleton className="h-6 w-16" />
                 <Skeleton className="h-6 w-32" />
                 <Skeleton className="h-6 w-20 mx-auto" />
                 <Skeleton className="h-6 w-24" />
                 <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-20 mx-auto" />
                 <Skeleton className="h-6 w-16 mx-auto" />
                 <Skeleton className="h-6 w-16 mx-auto" />
                 <Skeleton className="h-6 w-20 mx-auto" />
@@ -160,10 +177,11 @@ const Orders = () => {
             <div>Buyurtmalar</div>
             <Badge className="text-sm">
               <div className="flex items-center gap-1">
-                <span>{filteredOrders.length}</span> <span>ta</span>
+                <span>{filteredOrders.length}</span>
+                <span>ta</span>
                 <span>
                   {filteredOrders?.reduce(
-                    (acc, order) => acc + order.quantity,
+                    (acc, order) => acc + Number(order.quantity || 0),
                     0,
                   )}
                 </span>
@@ -225,6 +243,7 @@ const Orders = () => {
                 <SelectItem value="quantity-low">Eng kam miqdorda</SelectItem>
               </SelectContent>
             </Select>
+
             <Select
               value={seasonYear}
               onValueChange={(value) => {
@@ -244,6 +263,7 @@ const Orders = () => {
                 ))}
               </SelectContent>
             </Select>
+
             <Select
               value={seasonType}
               onValueChange={(value) => {
@@ -258,6 +278,23 @@ const Orders = () => {
                 <SelectItem value="all">Barchasi</SelectItem>
                 <SelectItem value="winter">Qish</SelectItem>
                 <SelectItem value="summer">Bahor</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={tariffFilter}
+              onValueChange={(value) => {
+                setTariffFilter(value);
+                localStorage.setItem("tariffFilter", value);
+              }}
+            >
+              <SelectTrigger className="w-full md:w-40 bg-white">
+                <SelectValue placeholder="Tarif" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tarif: Barchasi</SelectItem>
+                <SelectItem value="has">Tarif bor</SelectItem>
+                <SelectItem value="no">Tarif yo'q</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -288,128 +325,162 @@ const Orders = () => {
                 <TableHead className="w-24 text-center">Miqdor</TableHead>
                 <TableHead className="w-32">Model</TableHead>
                 <TableHead className="w-32">Submodel</TableHead>
+                <TableHead className="w-28 text-center">Tarif</TableHead>
                 <TableHead className="w-24 text-center">Yil</TableHead>
                 <TableHead className="w-24 text-center">Mavsum</TableHead>
                 <TableHead className="w-32 text-center">Holati</TableHead>
                 <TableHead className="w-32 text-center">Ko'rish</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
-              {filteredOrders.map((order) => (
-                <motion.tr
-                  key={order.id}
-                  variants={item}
-                  whileHover={{ scale: 1.01 }}
-                  className="border-b hover:bg-gray-50 transition-all duration-100 ease-in-out"
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Tag size={16} className="text-gray-500" />
-                      <span className="font-bold">#{order.id}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div
-                      className={`p-2 rounded border-l-4 ${statuses[order.status]?.border} bg-gradient-to-r from-gray-50 to-white`}
-                    >
-                      <span className="font-medium text-gray-800">
-                        {order.name}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div
-                      className={`flex items-center justify-center gap-1 ${statuses[order.status]?.secondaryBg} px-3 py-1.5 rounded-full`}
-                    >
-                      <Package
-                        size={12}
-                        className={statuses[order.status]?.textColor}
-                      />
-                      <span
-                        className={`font-bold ${statuses[order.status]?.textColor}`}
+              {filteredOrders.map((order) => {
+                const hasTarifications =
+                  order?.order_model?.submodels?.[0]?.has_tarifications;
+
+                return (
+                  <motion.tr
+                    key={order.id}
+                    variants={item}
+                    whileHover={{ scale: 1.01 }}
+                    className="border-b hover:bg-gray-50 transition-all duration-100 ease-in-out"
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Tag size={16} className="text-gray-500" />
+                        <span className="font-bold">#{order.id}</span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div
+                        className={`p-2 rounded border-l-4 ${statuses[order.status]?.border} bg-gradient-to-r from-gray-50 to-white`}
                       >
-                        {order.quantity}
-                      </span>
-                      <span className={statuses[order.status]?.textColor}>
-                        ta
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 w-fit whitespace-nowrap">
-                      <Box size={12} className="text-gray-500" />
-                      {order.order_model?.model?.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {order.order_model?.submodels
-                        ?.slice(0, 2)
-                        .map((submodel) => (
-                          <div
-                            key={submodel.id}
-                            className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 text-xs whitespace-nowrap"
-                          >
-                            <Box size={12} className="text-gray-500" />
-                            {submodel?.submodel?.name}
+                        <span className="font-medium text-gray-800">
+                          {order.name}
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <div
+                        className={`flex items-center justify-center gap-1 ${statuses[order.status]?.secondaryBg} px-3 py-1.5 rounded-full`}
+                      >
+                        <Package
+                          size={12}
+                          className={statuses[order.status]?.textColor}
+                        />
+                        <span
+                          className={`font-bold ${statuses[order.status]?.textColor}`}
+                        >
+                          {order.quantity}
+                        </span>
+                        <span className={statuses[order.status]?.textColor}>
+                          ta
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 w-fit whitespace-nowrap">
+                        <Box size={12} className="text-gray-500" />
+                        {order.order_model?.model?.name}
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {order.order_model?.submodels
+                          ?.slice(0, 2)
+                          .map((submodel) => (
+                            <div
+                              key={submodel.id}
+                              className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 text-xs whitespace-nowrap"
+                            >
+                              <Box size={12} className="text-gray-500" />
+                              {submodel?.submodel?.name}
+                            </div>
+                          ))}
+                        {order.order_model?.submodels?.length > 2 && (
+                          <div className="border border-gray-300 px-2 py-1 rounded text-xs text-gray-600 whitespace-nowrap">
+                            +{order.order_model.submodels.length - 2}
                           </div>
-                        ))}
-                      {order.order_model?.submodels?.length > 2 && (
-                        <div className="border border-gray-300 px-2 py-1 rounded text-xs text-gray-600 whitespace-nowrap">
-                          +{order.order_model.submodels.length - 2}
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      {hasTarifications === true ? (
+                        <div className="inline-flex items-center justify-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-3 py-1 font-medium whitespace-nowrap">
+                          <CheckCircle2 size={14} />
+                          Tarif bor
+                        </div>
+                      ) : hasTarifications === false ? (
+                        <div className="inline-flex items-center justify-center gap-1 rounded-full bg-red-100 text-red-700 px-3 py-1 font-medium whitespace-nowrap">
+                          <XCircle size={14} />
+                          Tarif yo'q
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-500 px-3 py-1 font-medium whitespace-nowrap">
+                          -
                         </div>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Calendar size={12} className="text-gray-500" />
-                      <span className="font-medium text-gray-700">
-                        {order.season_year}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div
-                      className={`px-2 py-1 rounded text-sm font-medium flex items-center justify-center gap-1 ${
-                        order.season_type === "winter"
-                          ? "bg-blue-100 text-blue-700"
-                          : order.season_type === "summer"
-                            ? "bg-orange-100 text-orange-700"
-                            : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {order.season_type === "winter" ? (
-                        <>
-                          <Snowflake size={14} className="text-blue-500" /> Qish
-                        </>
-                      ) : order.season_type === "summer" ? (
-                        <>
-                          <Sun size={14} className="text-orange-500" /> Bahor
-                        </>
-                      ) : (
-                        "-"
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div
-                      className={`${getStatusColor(
-                        order.status,
-                      )} px-3 py-1 font-medium rounded-full shadow-sm cursor-pointer hover:opacity-80 inline-block text-white whitespace-nowrap`}
-                    >
-                      {statuses[order.status]?.text || "Noma'lum"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Button size="icon" variant="ghost" asChild>
-                      <Link to={`/technologist/orders/${order.id}`}>
-                        <Eye size={12} className="text-blue-500" />
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </motion.tr>
-              ))}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Calendar size={12} className="text-gray-500" />
+                        <span className="font-medium text-gray-700">
+                          {order.season_year}
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <div
+                        className={`px-2 py-1 rounded text-sm font-medium flex items-center justify-center gap-1 ${
+                          order.season_type === "winter"
+                            ? "bg-blue-100 text-blue-700"
+                            : order.season_type === "summer"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {order.season_type === "winter" ? (
+                          <>
+                            <Snowflake size={14} className="text-blue-500" />{" "}
+                            Qish
+                          </>
+                        ) : order.season_type === "summer" ? (
+                          <>
+                            <Sun size={14} className="text-orange-500" /> Bahor
+                          </>
+                        ) : (
+                          "-"
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <div
+                        className={`${getStatusColor(
+                          order.status,
+                        )} px-3 py-1 font-medium rounded-full shadow-sm cursor-pointer hover:opacity-80 inline-block text-white whitespace-nowrap`}
+                      >
+                        {statuses[order.status]?.text || "Noma'lum"}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <Button size="icon" variant="ghost" asChild>
+                        <Link to={`/technologist/orders/${order.id}`}>
+                          <Eye size={12} className="text-blue-500" />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </motion.tr>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
