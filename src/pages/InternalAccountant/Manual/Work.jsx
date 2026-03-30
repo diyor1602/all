@@ -1360,7 +1360,8 @@ const Work = () => {
                                   <div className="flex flex-col gap-1">
                                     {employee.name}
                                     <span className="text-xs text-muted-foreground">
-                                      {employee.group?.name}
+                                      {employee.group?.name}{" "}
+                                      {employee?.position?.name}
                                     </span>
                                   </div>
                                 </CommandItem>
