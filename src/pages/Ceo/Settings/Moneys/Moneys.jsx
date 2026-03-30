@@ -100,119 +100,190 @@ const Moneys = () => {
   };
 
   return (
-    <div>
-      {loading ? (
-        <div>Yuklanmoqda...</div>
-      ) : (
-        <div>
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => changeMonthBy(-1)}
-              >
-                <ArrowLeft />
-              </Button>
-              <Input
-                type="month"
-                className="w-fit bg-white"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => changeMonthBy(1)}
-              >
-                <ArrowRight />
-              </Button>
+    <div className="space-y-3">
+      <div className="rounded-xl border bg-white px-3 py-3 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <div className="text-[11px] font-medium text-gray-900">
+              Oylik xarajatlar
             </div>
+            <div className="text-[10px] text-gray-500">
+              Bo'lim va guruh bo'yicha filtrlash
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-gray-500">Jami</div>
+            <div className="text-xs font-semibold text-gray-900">
+              {formatNumber(
+                data?.data?.reduce(
+                  (acc, item) => acc + (item?.grand_total || 0),
+                  0,
+                ),
+                0,
+              )}{" "}
+              so'm
+            </div>
+          </div>
+        </div>
 
-            <select
-              className="h-9 rounded border border-gray-300 bg-white px-2 text-xs"
-              value={selectedDepartment}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSelectedDepartment(value);
-                setSelectedGroup("");
-              }}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 rounded-lg border bg-white p-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => changeMonthBy(-1)}
             >
-              <option value="">Bo'lim (hammasi)</option>
-              {departmentOptions.map((dep) => (
-                <option key={dep.id} value={dep.id}>
-                  {dep.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="h-9 rounded border border-gray-300 bg-white px-2 text-xs"
-              value={selectedGroup}
-              onChange={(e) => setSelectedGroup(e.target.value)}
-              disabled={!selectedDepartment}
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <Input
+              type="month"
+              className="h-8 w-fit border-0 bg-white px-2 text-xs focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => changeMonthBy(1)}
             >
-              <option value="">Guruh (hammasi)</option>
-              {groupOptions
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-            </select>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
 
-          <div className="w-full overflow-auto">
-            <table className="w-full whitespace-nowrap border-collapse border border-gray-300 text-xs bg-white">
-              <thead>
-                <tr>
-                  <th className="border border-gray-300 p-2">Xodim</th>
-                  <th className="border border-gray-300 p-2">Guruh</th>
-                  <th className="border border-gray-300 p-2">Lavozim</th>
-                  <th className="border border-gray-300 p-2">Summa</th>
+          <select
+            className="h-9 min-w-[180px] rounded-lg border border-gray-200 bg-white px-2 text-[11px] text-gray-900 shadow-sm outline-none focus:border-gray-300"
+            value={selectedDepartment}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedDepartment(value);
+              setSelectedGroup("");
+            }}
+          >
+            <option value="">Bo'lim (hammasi)</option>
+            {departmentOptions.map((dep) => (
+              <option key={dep.id} value={dep.id}>
+                {dep.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="h-9 min-w-[180px] rounded-lg border border-gray-200 bg-white px-2 text-[11px] text-gray-900 shadow-sm outline-none focus:border-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
+            value={selectedGroup}
+            onChange={(e) => setSelectedGroup(e.target.value)}
+            disabled={!selectedDepartment}
+          >
+            <option value="">Guruh (hammasi)</option>
+            {groupOptions
+              .slice()
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-white shadow-sm">
+        {loading ? (
+          <div className="flex items-center justify-center px-3 py-10">
+            <div className="text-[11px] text-gray-500">Yuklanmoqda...</div>
+          </div>
+        ) : (data?.data?.length || 0) === 0 ? (
+          <div className="flex items-center justify-center px-3 py-10">
+            <div className="text-[11px] text-gray-500">Ma'lumot topilmadi</div>
+          </div>
+        ) : (
+          <div className="w-full overflow-auto rounded-xl">
+            <table className="w-full min-w-[720px] border-separate border-spacing-0 text-[11px]">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-gray-50 text-gray-600">
+                  <th className="border-b px-3 py-2 text-left font-medium">
+                    Xodim
+                  </th>
+                  <th className="border-b px-3 py-2 text-left font-medium">
+                    Bo'lim / Guruh
+                  </th>
+                  <th className="border-b px-3 py-2 text-left font-medium">
+                    Lavozim
+                  </th>
+                  <th className="border-b px-3 py-2 text-right font-medium">
+                    Summa
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {data?.data?.map((item, index) => (
-                  <tr key={index}>
-                    <td className="border border-gray-300 p-2">
+                  <tr
+                    key={index}
+                    className={
+                      index % 2 === 0
+                        ? "bg-white hover:bg-gray-50"
+                        : "bg-gray-50/40 hover:bg-gray-50"
+                    }
+                  >
+                    <td className="border-b px-3 py-2 align-middle">
                       <div className="flex items-center gap-2">
-                        {item?.img && (
-                          <img
-                            src={item.img}
-                            className="w-10 h-10 object-cover shrink-0 rounded-full"
+                        {item?.img ? (
+                          <button
+                            type="button"
+                            className="group h-9 w-9 shrink-0 overflow-hidden rounded-full ring-1 ring-gray-200"
                             onClick={() => {
                               setSelectedEmployee(item);
                               setImgDialogOpen(true);
                             }}
-                          />
+                          >
+                            <img
+                              src={item.img}
+                              alt={item?.employee_name}
+                              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                            />
+                          </button>
+                        ) : (
+                          <div className="h-9 w-9 shrink-0 rounded-full bg-gray-100 ring-1 ring-gray-200" />
                         )}
-                        {item?.employee_name}
+                        <div className="leading-4">
+                          <div className="text-[11px] font-medium text-gray-900">
+                            {item?.employee_name}
+                          </div>
+                        </div>
                       </div>
                     </td>
-                    <td className="border border-gray-300 p-2">
-                      {item?.department_name} <br />
-                      {item?.group_name}
+                    <td className="border-b px-3 py-2 text-gray-700">
+                      <div className="leading-4">
+                        <div className="text-[11px] font-medium text-gray-900">
+                          {item?.department_name}
+                        </div>
+                        <div className="text-[10px] text-gray-500">
+                          {item?.group_name}
+                        </div>
+                      </div>
                     </td>
-                    <td className="border border-gray-300 p-2">
+                    <td className="border-b px-3 py-2 text-gray-700">
                       {item?.position_name}
                     </td>
-                    <td className="border border-gray-300 p-2 text-center">
+                    <td className="border-b px-3 py-2 text-right font-semibold text-gray-900">
                       {formatNumber(item?.grand_total, 0)} so'm
                     </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr>
-                  <th className="border border-gray-300 p-2" colSpan={3}>
+                <tr className="bg-gray-50">
+                  <th
+                    className="border-t px-3 py-2 text-left text-[11px] font-semibold text-gray-700"
+                    colSpan={3}
+                  >
                     Jami
                   </th>
-                  <th className="border border-gray-300 p-2">
+                  <th className="border-t px-3 py-2 text-right text-xs font-semibold text-gray-900">
                     {formatNumber(
                       data?.data?.reduce(
-                        (acc, item) => acc + item?.grand_total,
+                        (acc, item) => acc + (item?.grand_total || 0),
                         0,
                       ),
                       0,
@@ -223,19 +294,27 @@ const Moneys = () => {
               </tfoot>
             </table>
           </div>
+        )}
+      </div>
 
-          <Dialog open={imgDialogOpen} onOpenChange={setImgDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
+      <Dialog open={imgDialogOpen} onOpenChange={setImgDialogOpen}>
+        <DialogContent className="max-w-[520px]">
+          <DialogHeader>
+            <div className="space-y-2">
+              <div className="text-[11px] font-medium text-gray-900">
+                {selectedEmployee?.employee_name}
+              </div>
+              <div className="overflow-hidden rounded-lg border bg-gray-50">
                 <img
                   src={selectedEmployee?.img}
                   alt={selectedEmployee?.employee_name}
+                  className="w-full object-contain"
                 />
-              </DialogHeader>
-            </DialogContent>
-          </Dialog>
-        </div>
-      )}
+              </div>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
