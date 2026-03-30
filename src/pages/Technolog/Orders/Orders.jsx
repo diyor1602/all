@@ -1,496 +1,997 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Search,
-  Package,
-  AlertCircle,
-  Tag,
-  Box,
-  Calendar,
-  Eye,
-  Snowflake,
-  Sun,
-  CheckCircle2,
-  XCircle,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
-import { statuses } from "@/lib/status";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import formatNumber from "@/utils/formatNumber";
+import {
+  Search,
+  RotateCcw,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import { statuses } from "@/lib/status";
+import { Link } from "react-router-dom";
 
-const item = {
-  hidden: { y: 20, opacity: 0 },
-  show: { y: 0, opacity: 1 },
-};
+const months = [
+  "Yanvar",
+  "Fevral",
+  "Mart",
+  "Aprel",
+  "May",
+  "Iyun",
+  "Iyul",
+  "Avgust",
+  "Sentabr",
+  "Oktabr",
+  "Noyabr",
+  "Dekabr",
+];
 
-const getStatusColor = (status) => {
-  return statuses[status]?.color || "bg-gray-100 text-gray-800 border-gray-300";
-};
-
-const Orders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(
-    localStorage.getItem("searchTerm") || "",
-  );
-  const [statusFilter, setStatusFilter] = useState(
-    localStorage.getItem("statusFilter") || "all",
-  );
-  const [sortBy, setSortBy] = useState(
-    localStorage.getItem("sortBy") || "newest",
-  );
-  const [seasonYear, setSeasonYear] = useState(
-    localStorage.getItem("seasonYear") || String(new Date().getFullYear()),
-  );
-  const [seasonType, setSeasonType] = useState(
-    localStorage.getItem("seasonType") || "all",
-  );
-  const [tariffFilter, setTariffFilter] = useState(
-    localStorage.getItem("tariffFilter") || "all",
-  );
-
-  const [availableYears, setAvailableYears] = useState([]);
-
-  const { toast } = useToast();
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/technologist/orders");
-      const years = response.data.map((order) => order.season_year);
-      const uniqueYears = Array.from(new Set(years));
-      setAvailableYears(uniqueYears);
-      setOrders(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Buyurtmalar ro'yxati olishda xatolik",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+const Badge = ({ children, variant = "default" }) => {
+  const variants = {
+    default: "bg-slate-100 text-slate-700 border-slate-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    yellow: "bg-amber-50 text-amber-700 border-amber-200",
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    gray: "bg-gray-100 text-gray-700 border-gray-200",
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium ${variants[variant]}`}
+    >
+      {children}
+    </span>
+  );
+};
 
-  const filteredOrders = orders
-    .filter((order) => {
-      const firstSubmodelHasTarifications =
-        order?.order_model?.submodels?.[0]?.has_tarifications;
+const AlertMessage = ({ message }) => {
+  return <Badge variant="red">{message}</Badge>;
+};
 
-      const matchesSearch =
-        searchTerm === "" ||
-        order?.id?.toString().includes(searchTerm) ||
-        order?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order?.quantity?.toString().includes(searchTerm) ||
-        order?.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order?.order_model?.model?.name || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
+const getMonthLabel = (monthValue) => {
+  if (!monthValue) return "";
+  const date = new Date(monthValue);
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${monthName}, ${year}`;
+};
 
-      const matchesStatus =
-        statusFilter === "all" || order.status === statusFilter;
+const getMonthValue = (monthValue) => {
+  if (!monthValue) return "";
+  const date = new Date(monthValue);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+};
 
-      const matchesSeasonYear =
-        seasonYear === "all" || String(order.season_year) === seasonYear;
-
-      const matchesSeasonType =
-        seasonType === "all" || order.season_type === seasonType;
-
-      const matchesTariff =
-        tariffFilter === "all" ||
-        (tariffFilter === "has" && firstSubmodelHasTarifications === true) ||
-        (tariffFilter === "no" && firstSubmodelHasTarifications === false);
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesSeasonYear &&
-        matchesSeasonType &&
-        matchesTariff
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === "newest") return b.id - a.id;
-      if (sortBy === "oldest") return a.id - b.id;
-      if (sortBy === "quantity-high") return b.quantity - a.quantity;
-      if (sortBy === "quantity-low") return a.quantity - b.quantity;
-      return 0;
-    });
-
-  if (loading) {
-    return (
-      <div className="p-6 space-y-4">
-        <div className="flex justify-between">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="space-y-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="p-4 bg-white rounded-lg shadow-sm">
-              <div className="grid grid-cols-10 gap-4">
-                <Skeleton className="h-6 w-16" />
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-6 w-20 mx-auto" />
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-6 w-20 mx-auto" />
-                <Skeleton className="h-6 w-16 mx-auto" />
-                <Skeleton className="h-6 w-16 mx-auto" />
-                <Skeleton className="h-6 w-20 mx-auto" />
-                <Skeleton className="h-6 w-20 mx-auto" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+const SortIcon = ({ field, sortConfig }) => {
+  if (sortConfig.key !== field) {
+    return <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" />;
   }
 
+  return sortConfig.direction === "asc" ? (
+    <ArrowUp className="h-3.5 w-3.5 text-blue-600" />
+  ) : (
+    <ArrowDown className="h-3.5 w-3.5 text-blue-600" />
+  );
+};
+
+const Analysis = () => {
+  const { toast } = useToast();
+
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [filters, setFilters] = useState({
+    name: "",
+    group: "",
+    month: "",
+    status: "",
+    seasonType: "",
+    seasonYear: "",
+    technologistStatus: "",
+    limitStatus: "",
+    sewingOutputCompare: "",
+    exceededStatus: "",
+    recipeStatus: "",
+  });
+
+  const [sortConfig, setSortConfig] = useState({
+    key: "",
+    direction: "asc",
+  });
+
+  useEffect(() => {
+    setLoading(true);
+    api
+      .get("/technologist/new/orders")
+      .then((res) => {
+        setData(res.data);
+      })
+      .catch(() => {
+        toast({
+          title: "Xatolik",
+          description: "Xatolik yuz berdi",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [toast]);
+
+  const normalizedData = useMemo(() => {
+    return (data?.data || []).map((item, index) => {
+      const orderId = item?.order?.id || "";
+      const orderName = item?.order?.name || "";
+      const submodelName = item?.submodels?.[0]?.submodel?.submodel_name || "";
+      const quantity = item?.order?.quantity || 0;
+      const sewingOutputQuantity =
+        item?.submodels?.[0]?.sewing_output_quantity || 0;
+      const groups = item?.groups?.length
+        ? item.groups.map((g) => g.name).join(", ")
+        : "";
+      const selectedMonths = item?.selected_months || [];
+      const monthsText = selectedMonths.length
+        ? selectedMonths.map((m) => getMonthLabel(m.month)).join(", ")
+        : "";
+      const monthValues = selectedMonths.map((m) => getMonthValue(m.month));
+      const tarificationSum = item?.submodels?.[0]?.tarification_sum || 0;
+      const groupLimit = item?.group_limit || 0;
+      const exceededCount =
+        item?.submodels?.[0]?.exceeded_tarifications?.length || 0;
+      const hasRecipe = !!item?.has_recipe;
+
+      return {
+        raw: item,
+        index: index + 1,
+        orderId: String(orderId),
+        orderName,
+        submodelName,
+        quantity,
+        sewingOutputQuantity,
+        groups,
+        monthsText,
+        monthValues,
+        tarificationSum,
+        groupLimit,
+        difference: tarificationSum - groupLimit,
+        exceededCount,
+        hasRecipe,
+        technologistStatus: tarificationSum > 0 ? "Bor" : "Yoq",
+        groupStatus: groups ? "Bor" : "Yoq",
+        monthStatus: monthsText ? "Bor" : "Yoq",
+        exceededStatus: exceededCount > 0 ? "Bor" : "Joyida",
+        recipeStatus: hasRecipe ? "Bor" : "Yoq",
+      };
+    });
+  }, [data]);
+
+  const uniqueGroups = useMemo(() => {
+    const groupSet = new Set();
+    normalizedData.forEach((item) => {
+      if (item.groups) {
+        item.groups.split(", ").forEach((g) => groupSet.add(g));
+      }
+    });
+    const sortedGroups = [...groupSet].sort();
+    return [...sortedGroups, "Guruhsiz"];
+  }, [normalizedData]);
+
+  const filteredData = useMemo(() => {
+    let result = normalizedData.filter((item) => {
+      const fullName = `${item.orderName} ${item.submodelName}`.toLowerCase();
+      const global = globalSearch.toLowerCase();
+
+      const matchesGlobal =
+        !global ||
+        item.orderId.toLowerCase().includes(global) ||
+        fullName.includes(global) ||
+        item.groups.toLowerCase().includes(global) ||
+        item.monthsText.toLowerCase().includes(global);
+
+      const matchesName =
+        !filters.name || fullName.includes(filters.name.toLowerCase());
+
+      const matchesGroup =
+        !filters.group ||
+        (filters.group === "Guruhsiz" && !item.groups) ||
+        (filters.group !== "Guruhsiz" &&
+          item.groups.toLowerCase().includes(filters.group.toLowerCase()));
+
+      const matchesMonth =
+        !filters.month || item.monthValues.includes(filters.month);
+
+      const matchesStatus =
+        !filters.status ||
+        (item.raw?.order?.status && item.raw.order.status === filters.status);
+
+      const matchesSeasonType =
+        !filters.seasonType ||
+        (item.raw?.order?.season_type &&
+          item.raw.order.season_type === filters.seasonType);
+
+      const matchesSeasonYear =
+        !filters.seasonYear ||
+        (item.raw?.order?.season_year &&
+          String(item.raw.order.season_year) === filters.seasonYear);
+
+      const matchesTechnologist =
+        !filters.technologistStatus ||
+        item.technologistStatus === filters.technologistStatus;
+
+      const matchesLimit =
+        !filters.limitStatus ||
+        (filters.limitStatus === "Oshgan" &&
+          item.tarificationSum > item.groupLimit) ||
+        (filters.limitStatus === "Joyida" &&
+          item.tarificationSum <= item.groupLimit);
+
+      const matchesSewingOutput =
+        !filters.sewingOutputCompare ||
+        (filters.sewingOutputCompare === "greater" &&
+          item.sewingOutputQuantity > item.quantity) ||
+        (filters.sewingOutputCompare === "not_greater" &&
+          item.sewingOutputQuantity <= item.quantity);
+
+      const matchesExceeded =
+        !filters.exceededStatus ||
+        (filters.exceededStatus === "Bor" && item.exceededCount > 0) ||
+        (filters.exceededStatus === "Joyida" && item.exceededCount === 0);
+
+      const matchesRecipe =
+        !filters.recipeStatus || item.recipeStatus === filters.recipeStatus;
+
+      return (
+        matchesGlobal &&
+        matchesName &&
+        matchesGroup &&
+        matchesMonth &&
+        matchesStatus &&
+        matchesSeasonType &&
+        matchesSeasonYear &&
+        matchesTechnologist &&
+        matchesLimit &&
+        matchesSewingOutput &&
+        matchesExceeded &&
+        matchesRecipe
+      );
+    });
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        if (sortConfig.key === "name") {
+          aValue = `${a.orderName} ${a.submodelName}`.toLowerCase();
+          bValue = `${b.orderName} ${b.submodelName}`.toLowerCase();
+        }
+
+        if (sortConfig.key === "month") {
+          aValue = a.monthValues?.[0] || "";
+          bValue = b.monthValues?.[0] || "";
+        }
+
+        if (typeof aValue === "string") aValue = aValue.toLowerCase();
+        if (typeof bValue === "string") bValue = bValue.toLowerCase();
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return result;
+  }, [normalizedData, globalSearch, filters, sortConfig]);
+
+  const resetFilters = () => {
+    setGlobalSearch("");
+    setFilters({
+      name: "",
+      group: "",
+      month: "",
+      status: "",
+      seasonType: "",
+      seasonYear: "",
+      technologistStatus: "",
+      limitStatus: "",
+      sewingOutputCompare: "",
+      exceededStatus: "",
+      recipeStatus: "",
+    });
+    setSortConfig({
+      key: "",
+      direction: "asc",
+    });
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return {
+        key,
+        direction: "asc",
+      };
+    });
+  };
+
+  const stickyBase =
+    "sticky bg-inherit backdrop-blur supports-[backdrop-filter]:bg-white/95";
+  const stickyHeader =
+    "sticky top-0 z-30 bg-slate-100 supports-[backdrop-filter]:bg-slate-100/95";
+  const stickyFilterRow =
+    "sticky top-[33px] z-20 bg-white supports-[backdrop-filter]:bg-white/95";
+
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="mb-6">
-        <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-          <div className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <div>Buyurtmalar</div>
-            <Badge className="text-sm">
-              <div className="flex items-center gap-1">
-                <span>{filteredOrders.length}</span>
-                <span>ta</span>
-                <span>
-                  {formatNumber(
-                    filteredOrders?.reduce(
-                      (acc, order) => acc + Number(order.quantity || 0),
-                      0,
-                    ),
-                    0,
-                  )}
+    <div className="space-y-4">
+      <div className="border border-slate-200 bg-white p-2 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-xs font-semibold text-slate-800">
+              Buyurtmalar tahlili
+            </h1>
+            <p className="mt-1 text-xs text-slate-500">
+              Jami{" "}
+              <span className="font-semibold text-slate-800">
+                {filteredData.length}
+                {filteredData?.reduce(
+                  (sum, item) => sum + (item.quantity || 0),
+                  0,
+                ) > 0
+                  ? ` (${formatNumber(
+                      filteredData?.reduce(
+                        (sum, item) => sum + (item.quantity || 0),
+                        0,
+                      ),
+                    )})`
+                  : ""}
+              </span>{" "}
+              ta buyurtma
+              {data?.count ? (
+                <span className="text-slate-400">
+                  {" "}
+                  / umumiy {data.count} ta
                 </span>
-              </div>
-            </Badge>
+              ) : null}
+            </p>
           </div>
 
-          <div className="flex flex-col gap-2 w-full md:flex-row md:w-auto flex-wrap">
-            <div className="relative">
-              <Search
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-              <Input
-                placeholder="Qidiruv..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  localStorage.setItem("searchTerm", e.target.value);
-                }}
-                className="pl-8 w-full md:w-64 bg-white"
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-[320px]">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Qidirish..."
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                className="h-8 w-full rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs outline-none transition focus:border-blue-400 focus:bg-white"
               />
             </div>
 
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => {
-                setStatusFilter(value);
-                localStorage.setItem("statusFilter", value);
-              }}
+            <button
+              onClick={resetFilters}
+              className="inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
             >
-              <SelectTrigger className="w-full md:w-40 bg-white">
-                <SelectValue placeholder="Holati" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
-                {Object.entries(statuses).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>
-                    {value.text}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={sortBy}
-              onValueChange={(value) => {
-                setSortBy(value);
-                localStorage.setItem("sortBy", value);
-              }}
-            >
-              <SelectTrigger className="w-full md:w-40 bg-white">
-                <SelectValue placeholder="Saralash" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Eng yangi</SelectItem>
-                <SelectItem value="oldest">Eng eski</SelectItem>
-                <SelectItem value="quantity-high">Eng ko'p miqdorda</SelectItem>
-                <SelectItem value="quantity-low">Eng kam miqdorda</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={seasonYear}
-              onValueChange={(value) => {
-                setSeasonYear(value);
-                localStorage.setItem("seasonYear", value);
-              }}
-            >
-              <SelectTrigger className="w-full md:w-40 bg-white">
-                <SelectValue placeholder="Yil" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
-                {availableYears.map((year) => (
-                  <SelectItem key={year} value={String(year)}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={seasonType}
-              onValueChange={(value) => {
-                setSeasonType(value);
-                localStorage.setItem("seasonType", value);
-              }}
-            >
-              <SelectTrigger className="w-full md:w-40 bg-white">
-                <SelectValue placeholder="Mavsum" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
-                <SelectItem value="winter">Qish</SelectItem>
-                <SelectItem value="summer">Bahor</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={tariffFilter}
-              onValueChange={(value) => {
-                setTariffFilter(value);
-                localStorage.setItem("tariffFilter", value);
-              }}
-            >
-              <SelectTrigger className="w-full md:w-40 bg-white">
-                <SelectValue placeholder="Tarif" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tarif: Barchasi</SelectItem>
-                <SelectItem value="has">Tarif bor</SelectItem>
-                <SelectItem value="no">Tarif yo'q</SelectItem>
-              </SelectContent>
-            </Select>
+              <RotateCcw className="h-3.5 w-3.5" />
+              Tozalash
+            </button>
           </div>
         </div>
       </div>
 
-      {filteredOrders.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center p-10 bg-white rounded-lg shadow-sm"
-        >
-          <AlertCircle size={48} className="text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">
-            Buyurtmalar topilmadi
-          </h3>
-          <p className="text-gray-500">
-            Qidiruv parametrlarini o'zgartiring yoki yangi buyurtma qo'shing
-          </p>
-        </motion.div>
-      ) : (
-        <div className="space-y-4">
-          <Table className="bg-white rounded-lg shadow-sm text-xs">
-            <TableHeader>
-              <TableRow className="text-xs">
-                <TableHead className="w-20">ID</TableHead>
-                <TableHead className="w-48">Nomi</TableHead>
-                <TableHead className="w-24 text-center">Miqdor</TableHead>
-                <TableHead className="w-32">Model</TableHead>
-                <TableHead className="w-32">Submodel</TableHead>
-                <TableHead className="w-28 text-center">Tarif</TableHead>
-                <TableHead className="w-24 text-center">Yil</TableHead>
-                <TableHead className="w-24 text-center">Mavsum</TableHead>
-                <TableHead className="w-32 text-center">Holati</TableHead>
-                <TableHead className="w-32 text-center">Ko'rish</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {filteredOrders.map((order) => {
-                const hasTarifications =
-                  order?.order_model?.submodels?.[0]?.has_tarifications;
-
-                return (
-                  <motion.tr
-                    key={order.id}
-                    variants={item}
-                    whileHover={{ scale: 1.01 }}
-                    className="border-b hover:bg-gray-50 transition-all duration-100 ease-in-out"
+      <div className="overflow-hidden border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-auto max-h-[85vh]">
+          <table className="min-w-[1550px] w-full border-separate border-spacing-0 text-xs">
+            <thead>
+              <tr className="h-8 bg-slate-100 text-slate-700">
+                <th
+                  className={`${stickyHeader} ${stickyBase} left-0 z-40 border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                  style={{ width: 70, minWidth: 70 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("index")}
+                    className="flex items-center gap-1"
                   >
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Tag size={16} className="text-gray-500" />
-                        <span className="font-bold">#{order.id}</span>
-                      </div>
-                    </TableCell>
+                    №
+                    <SortIcon field="index" sortConfig={sortConfig} />
+                  </button>
+                </th>
 
-                    <TableCell>
-                      <div
-                        className={`p-2 rounded border-l-4 ${statuses[order.status]?.border} bg-gradient-to-r from-gray-50 to-white`}
-                      >
-                        <span className="font-medium text-gray-800">
-                          {order.name}
-                        </span>
-                      </div>
-                    </TableCell>
+                <th
+                  className={`${stickyHeader} ${stickyBase} left-[70px] z-40 border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                  style={{ width: 280, minWidth: 280 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("name")}
+                    className="flex items-center gap-1"
+                  >
+                    Nomi
+                    <SortIcon field="name" sortConfig={sortConfig} />
+                  </button>
+                </th>
 
-                    <TableCell className="text-center">
-                      <div
-                        className={`flex items-center justify-center gap-1 ${statuses[order.status]?.secondaryBg} px-3 py-1.5 rounded-full`}
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("quantity")}
+                    className="flex items-center gap-1"
+                  >
+                    Miqdori
+                    <SortIcon field="quantity" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("sewingOutputQuantity")}
+                    className="flex items-center gap-1"
+                  >
+                    Tikuv chiq.
+                    <SortIcon
+                      field="sewingOutputQuantity"
+                      sortConfig={sortConfig}
+                    />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("groups")}
+                    className="flex items-center gap-1"
+                  >
+                    Guruh
+                    <SortIcon field="groups" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("status")}
+                    className="flex items-center gap-1"
+                  >
+                    Holati
+                    <SortIcon field="status" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("month")}
+                    className="flex items-center gap-1"
+                  >
+                    Oy
+                    <SortIcon field="month" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("seasonYear")}
+                    className="flex items-center gap-1"
+                  >
+                    Yil
+                    <SortIcon field="seasonYear" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("seasonType")}
+                    className="flex items-center gap-1"
+                  >
+                    Fasl
+                    <SortIcon field="seasonType" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("tarificationSum")}
+                    className="flex items-center gap-1"
+                  >
+                    Texnolog
+                    <SortIcon field="tarificationSum" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("groupLimit")}
+                    className="flex items-center gap-1"
+                  >
+                    Limit
+                    <SortIcon field="groupLimit" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("difference")}
+                    className="flex items-center gap-1"
+                  >
+                    Farq
+                    <SortIcon field="difference" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("exceededCount")}
+                    className="flex items-center gap-1"
+                  >
+                    Qozixona
+                    <SortIcon field="exceededCount" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("hasRecipe")}
+                    className="flex items-center gap-1"
+                  >
+                    Detallar
+                    <SortIcon field="hasRecipe" sortConfig={sortConfig} />
+                  </button>
+                </th>
+              </tr>
+
+              <tr className="h-[40px] bg-white">
+                <th
+                  className={`${stickyFilterRow} ${stickyBase} left-0 z-30 border-b border-r border-slate-200 px-1.5 py-1.5`}
+                  style={{ width: 70, minWidth: 70 }}
+                />
+
+                <th
+                  className={`${stickyFilterRow} ${stickyBase} left-[70px] z-30 border-b border-r border-slate-200 px-1.5 py-1.5`}
+                  style={{ width: 280, minWidth: 280 }}
+                >
+                  <input
+                    value={filters.name}
+                    onChange={(e) => handleFilterChange("name", e.target.value)}
+                    placeholder="Nomi..."
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  />
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                />
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.sewingOutputCompare}
+                    onChange={(e) =>
+                      handleFilterChange("sewingOutputCompare", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="greater">Ko'p</option>
+                    <option value="not_greater">Kam/teng</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.group}
+                    onChange={(e) =>
+                      handleFilterChange("group", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    {uniqueGroups.map((group) => (
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.status}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    {Object.entries(statuses).map(([key, status]) => (
+                      <option key={key} value={key}>
+                        {status.text}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <input
+                    type="month"
+                    value={filters.month}
+                    onChange={(e) =>
+                      handleFilterChange("month", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  />
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <input
+                    type="number"
+                    placeholder="Yil..."
+                    value={filters.seasonYear}
+                    onChange={(e) =>
+                      handleFilterChange("seasonYear", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  />
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.seasonType}
+                    onChange={(e) =>
+                      handleFilterChange("seasonType", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="winter">Qish</option>
+                    <option value="summer">Bahor</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.technologistStatus}
+                    onChange={(e) =>
+                      handleFilterChange("technologistStatus", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Bor">Bor</option>
+                    <option value="Yoq">Yo'q</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.limitStatus}
+                    onChange={(e) =>
+                      handleFilterChange("limitStatus", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Oshgan">Oshgan</option>
+                    <option value="Joyida">Joyida</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                />
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.exceededStatus}
+                    onChange={(e) =>
+                      handleFilterChange("exceededStatus", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Bor">Bor</option>
+                    <option value="Joyida">Joyida</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
+                    value={filters.recipeStatus}
+                    onChange={(e) =>
+                      handleFilterChange("recipeStatus", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Bor">Bor</option>
+                    <option value="Yoq">Yo'q</option>
+                  </select>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={14}
+                    className="px-3 py-6 text-center text-xs text-slate-500"
+                  >
+                    Yuklanmoqda...
+                  </td>
+                </tr>
+              ) : filteredData.length > 0 ? (
+                filteredData.map((item, rowIndex) => {
+                  const order = item.raw;
+                  const exceeded = item.tarificationSum > item.groupLimit;
+                  const rowBg =
+                    rowIndex % 2 === 0 ? "bg-white" : "bg-slate-50/60";
+
+                  return (
+                    <tr
+                      key={`${item.orderId}-${rowIndex}`}
+                      className="hover:bg-blue-50/40 transition"
+                    >
+                      <td
+                        className={`${stickyBase} left-0 z-20 border-b border-r border-slate-200 px-2 py-2 font-medium text-slate-600 ${rowBg} text-center`}
+                        style={{ width: 70, minWidth: 70 }}
                       >
-                        <Package
-                          size={12}
-                          className={statuses[order.status]?.textColor}
-                        />
-                        <span
-                          className={`font-bold ${statuses[order.status]?.textColor}`}
+                        {rowIndex + 1}
+                      </td>
+
+                      <td
+                        className={`${stickyBase} left-[70px] z-20 border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                        style={{ width: 280, minWidth: 280 }}
+                      >
+                        <Link
+                          className="space-y-1"
+                          to={`/technologist/orders/${item.orderId}`}
                         >
-                          {order.quantity}
-                        </span>
-                        <span className={statuses[order.status]?.textColor}>
-                          ta
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 w-fit whitespace-nowrap">
-                        <Box size={12} className="text-gray-500" />
-                        {order.order_model?.model?.name}
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {order.order_model?.submodels
-                          ?.slice(0, 2)
-                          .map((submodel) => (
-                            <div
-                              key={submodel.id}
-                              className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full border border-gray-200 flex items-center gap-1 text-xs whitespace-nowrap"
-                            >
-                              <Box size={12} className="text-gray-500" />
-                              {submodel?.submodel?.name}
-                            </div>
-                          ))}
-                        {order.order_model?.submodels?.length > 2 && (
-                          <div className="border border-gray-300 px-2 py-1 rounded text-xs text-gray-600 whitespace-nowrap">
-                            +{order.order_model.submodels.length - 2}
+                          <div className="font-medium text-slate-800">
+                            <span className="text-slate-500">
+                              #{item.orderId}{" "}
+                            </span>
+                            - {item.orderName || "-"}
                           </div>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      {hasTarifications === true ? (
-                        <div className="inline-flex items-center justify-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-3 py-1 font-medium whitespace-nowrap">
-                          <CheckCircle2 size={14} />
-                          Tarif bor
-                        </div>
-                      ) : hasTarifications === false ? (
-                        <div className="inline-flex items-center justify-center gap-1 rounded-full bg-red-100 text-red-700 px-3 py-1 font-medium whitespace-nowrap">
-                          <XCircle size={14} />
-                          Tarif yo'q
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-500 px-3 py-1 font-medium whitespace-nowrap">
-                          -
-                        </div>
-                      )}
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Calendar size={12} className="text-gray-500" />
-                        <span className="font-medium text-gray-700">
-                          {order.season_year}
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <div
-                        className={`px-2 py-1 rounded text-sm font-medium flex items-center justify-center gap-1 ${
-                          order.season_type === "winter"
-                            ? "bg-blue-100 text-blue-700"
-                            : order.season_type === "summer"
-                              ? "bg-orange-100 text-orange-700"
-                              : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {order.season_type === "winter" ? (
-                          <>
-                            <Snowflake size={14} className="text-blue-500" />{" "}
-                            Qish
-                          </>
-                        ) : order.season_type === "summer" ? (
-                          <>
-                            <Sun size={14} className="text-orange-500" /> Bahor
-                          </>
-                        ) : (
-                          "-"
-                        )}
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <div
-                        className={`${getStatusColor(
-                          order.status,
-                        )} px-3 py-1 font-medium rounded-full shadow-sm cursor-pointer hover:opacity-80 inline-block text-white whitespace-nowrap`}
-                      >
-                        {statuses[order.status]?.text || "Noma'lum"}
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <Button size="icon" variant="ghost" asChild>
-                        <Link to={`/technologist/orders/${order.id}`}>
-                          <Eye size={12} className="text-blue-500" />
+                          <div className="text-xs text-slate-500">
+                            {item.submodelName || "-"}
+                          </div>
                         </Link>
-                      </Button>
-                    </TableCell>
-                  </motion.tr>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 font-medium text-slate-700 ${rowBg}`}
+                      >
+                        {formatNumber(item.quantity)}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 font-medium ${rowBg} ${item.sewingOutputQuantity > item.quantity ? "text-red-600" : ` text-slate-700`}`}
+                      >
+                        {formatNumber(item.sewingOutputQuantity)}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.groups ? (
+                          <div className="whitespace-nowrap">
+                            {item.groups.split(", ").map((group) => (
+                              <Badge key={group} variant="gray">
+                                {group}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.raw?.order?.status ? (
+                          <span
+                            className={`text-white px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                              statuses[item.raw.order.status]?.color
+                            }`}
+                          >
+                            {statuses[item.raw.order.status]?.text || "-"}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs">-</span>
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {order.selected_months?.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {order.selected_months.map((month, idx) => (
+                              <Badge key={idx} variant="blue">
+                                {getMonthLabel(month.month)}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.raw?.order?.season_year ? (
+                          <span className="font-medium text-slate-700">
+                            {item.raw.order.season_year}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs">-</span>
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.raw?.order?.season_type ? (
+                          <Badge
+                            variant={
+                              item.raw.order.season_type === "winter"
+                                ? "blue"
+                                : "green"
+                            }
+                          >
+                            {item.raw.order.season_type === "winter"
+                              ? "Qish"
+                              : "Bahor"}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-400 text-xs">-</span>
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.tarificationSum > 0 ? (
+                          <Badge variant="green">
+                            {formatNumber(item.tarificationSum)}
+                          </Badge>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 font-medium text-slate-700 ${rowBg}`}
+                      >
+                        {formatNumber(item.groupLimit)}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {exceeded ? (
+                          <AlertMessage
+                            message={formatNumber(item.difference)}
+                          />
+                        ) : (
+                          <Badge variant="green">
+                            {formatNumber(item.tarificationSum)}
+                          </Badge>
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.exceededCount > 0 ? (
+                          <AlertMessage message={item.exceededCount} />
+                        ) : (
+                          <Badge variant="green">Joyida</Badge>
+                        )}
+                      </td>
+
+                      <td
+                        className={`border-b border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.hasRecipe ? (
+                          <Badge variant="green">Bor</Badge>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={14}
+                    className="px-3 py-6 text-center text-xs text-slate-500"
+                  >
+                    Hech narsa topilmadi
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default Orders;
+export default Analysis;
