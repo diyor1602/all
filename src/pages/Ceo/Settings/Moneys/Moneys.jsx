@@ -5,6 +5,7 @@ import formatNumber from "@/utils/formatNumber";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogHeader, DialogContent } from "@/components/ui/dialog";
 
 const Moneys = () => {
   const { toast } = useToast();
@@ -18,6 +19,8 @@ const Moneys = () => {
   );
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
 
   const fetchDepartments = async () => {
     try {
@@ -39,7 +42,7 @@ const Moneys = () => {
       const response = await api.get("/ceo/monthlyMoneyLogs", {
         params: {
           month: selectedMonth,
-          deparment_id: selectedDepartment,
+          department_id: selectedDepartment,
           group_id: selectedGroup,
         },
       });
@@ -160,41 +163,77 @@ const Moneys = () => {
             </select>
           </div>
 
-          <table className="whitespace-nowrap border-collapse border border-gray-300 text-xs bg-white">
-            <thead>
-              <tr>
-                <th className="border border-gray-300 p-2">Ism</th>
-                <th className="border border-gray-300 p-2">Summa</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.data?.map((item, index) => (
-                <tr key={index}>
-                  <td className="border border-gray-300 p-2">
-                    {item?.employee_name}
-                  </td>
-                  <td className="border border-gray-300 p-2 text-center">
-                    {formatNumber(item?.grand_total, 0)} so'm
-                  </td>
+          <div className="w-full overflow-auto">
+            <table className="w-full whitespace-nowrap border-collapse border border-gray-300 text-xs bg-white">
+              <thead>
+                <tr>
+                  <th className="border border-gray-300 p-2">Xodim</th>
+                  <th className="border border-gray-300 p-2">Guruh</th>
+                  <th className="border border-gray-300 p-2">Lavozim</th>
+                  <th className="border border-gray-300 p-2">Summa</th>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <th className="border border-gray-300 p-2">Jami</th>
-                <th className="border border-gray-300 p-2">
-                  {formatNumber(
-                    data?.data?.reduce(
-                      (acc, item) => acc + item?.grand_total,
+              </thead>
+              <tbody>
+                {data?.data?.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border border-gray-300 p-2">
+                      <div className="flex items-center gap-2">
+                        {item?.img && (
+                          <img
+                            src={item.img}
+                            className="w-10 h-10 object-cover shrink-0 rounded-full"
+                            onClick={() => {
+                              setSelectedEmployee(item);
+                              setImgDialogOpen(true);
+                            }}
+                          />
+                        )}
+                        {item?.employee_name}
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {item?.department_name} <br />
+                      {item?.group_name}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {item?.position_name}
+                    </td>
+                    <td className="border border-gray-300 p-2 text-center">
+                      {formatNumber(item?.grand_total, 0)} so'm
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th className="border border-gray-300 p-2" colSpan={3}>
+                    Jami
+                  </th>
+                  <th className="border border-gray-300 p-2">
+                    {formatNumber(
+                      data?.data?.reduce(
+                        (acc, item) => acc + item?.grand_total,
+                        0,
+                      ),
                       0,
-                    ),
-                    0,
-                  )}{" "}
-                  so'm
-                </th>
-              </tr>
-            </tfoot>
-          </table>
+                    )}{" "}
+                    so'm
+                  </th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <Dialog open={imgDialogOpen} onOpenChange={setImgDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <img
+                  src={selectedEmployee?.img}
+                  alt={selectedEmployee?.employee_name}
+                />
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </div>
