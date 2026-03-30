@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import formatNumber from "@/utils/formatNumber";
 
 const item = {
   hidden: { y: 20, opacity: 0 },
@@ -180,8 +181,11 @@ const Orders = () => {
                 <span>{filteredOrders.length}</span>
                 <span>ta</span>
                 <span>
-                  {filteredOrders?.reduce(
-                    (acc, order) => acc + Number(order.quantity || 0),
+                  {formatNumber(
+                    filteredOrders?.reduce(
+                      (acc, order) => acc + Number(order.quantity || 0),
+                      0,
+                    ),
                     0,
                   )}
                 </span>
