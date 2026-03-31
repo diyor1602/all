@@ -179,7 +179,7 @@ const Overall = () => {
           <DetailCard
             loading={loading}
             label="Soatbay"
-            value={data?.costs?.aup + data?.costs?.is_not_aup}
+            value={Number(data?.costs?.aup) + Number(data?.costs?.is_not_aup)}
           />
           <DetailCard
             loading={loading}
