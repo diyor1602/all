@@ -228,6 +228,22 @@ const Overall = () => {
           <span className="text-xs font-light">dona</span>
         </span>
       </div>
+
+      {/* Additional statistics */}
+      <div>
+        <div>
+          O'rtacha xodimlar soni:{" "}
+          {formatNumber(data?.costs?.average_employee_count)}
+        </div>
+        <div>
+          1 kishi uchun transport:{" "}
+          {formatNumber(data?.costs?.transport_per_employee)}
+        </div>{" "}
+        <div>
+          1 dona mahsulot:{" "}
+          {formatNumber(data?.costs?.cost_per_unit_overall_uzs)}
+        </div>
+      </div>
     </div>
   );
 };
