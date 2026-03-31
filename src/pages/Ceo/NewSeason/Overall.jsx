@@ -457,7 +457,17 @@ const Overall = () => {
                         <span className="text-slate-500">-</span>
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                        {order?.order?.name}
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm font-medium">
+                            {order?.order?.name}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {
+                              order?.order?.order_model?.submodels[0]?.submodel
+                                ?.name
+                            }
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-center text-slate-600">
                         {formatNumber(order?.order?.quantity, 0)}
