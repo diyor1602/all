@@ -292,6 +292,12 @@ const Overall = () => {
               UZS
             </span>
           </div>
+          {!loading && data?.costs?.transport_per_employee && (
+            <div className="text-sm font-medium text-emerald-700">
+              ≈ {formatNumber(data?.costs?.transport_per_employee / 12211, 2)}{" "}
+              USD
+            </div>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 hover:shadow-md transition-shadow">
@@ -311,6 +317,13 @@ const Overall = () => {
               UZS
             </span>
           </div>
+          {!loading && data?.costs?.cost_per_unit_overall_uzs && (
+            <div className="text-sm font-medium text-purple-700">
+              ≈{" "}
+              {formatNumber(data?.costs?.cost_per_unit_overall_uzs / 12211, 2)}{" "}
+              USD
+            </div>
+          )}
         </div>
       </div>
     </div>
