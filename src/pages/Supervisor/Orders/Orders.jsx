@@ -8,7 +8,6 @@ import {
   Tag,
   Box,
   Calendar,
-  ChevronRight,
   CirclePlus,
   Eye,
   Snowflake,
