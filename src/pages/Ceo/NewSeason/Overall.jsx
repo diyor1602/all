@@ -76,40 +76,7 @@ const Overall = () => {
         ).toFixed(1)
       : 0;
 
-  const expensePercentages = {
-    rasxod_limit_uzs:
-      data?.costs?.total_fixed_cost_uzs && data?.costs?.rasxod_limit_uzs
-        ? (
-            (data.costs.rasxod_limit_uzs / data.costs.total_fixed_cost_uzs) *
-            100
-          ).toFixed(1)
-        : 0,
-    sewing_salary_total:
-      data?.costs?.total_fixed_cost_uzs && data?.costs?.sewing_salary_total
-        ? (
-            (data.costs.sewing_salary_total / data.costs.total_fixed_cost_uzs) *
-            100
-          ).toFixed(1)
-        : 0,
-    transport_attendance:
-      data?.costs?.total_fixed_cost_uzs && data?.costs?.transport_attendance
-        ? (
-            (data.costs.transport_attendance /
-              data.costs.total_fixed_cost_uzs) *
-            100
-          ).toFixed(1)
-        : 0,
-    monthly_expenses:
-      data?.costs?.total_fixed_cost_uzs && data?.costs?.monthly_expenses
-        ? (
-            (data.costs.monthly_expenses / data.costs.total_fixed_cost_uzs) *
-            100
-          ).toFixed(1)
-        : 0,
-  };
-
   const newSeasonTotal =
-    data?.costs?.warehouse_salary +
     data?.costs?.sewing_salary_total +
     data?.costs?.assistant_salary +
     data?.costs?.cutting_salary_total;
