@@ -454,7 +454,6 @@ const Overall = () => {
                         <ModelImages
                           modelCode={order?.order?.order_model?.model?.name}
                         />
-                        <span className="text-slate-500">-</span>
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-slate-900">
                         <div className="flex flex-col gap-1">
@@ -476,13 +475,33 @@ const Overall = () => {
                         {formatNumber(order?.order?.done_quantity, 0)}
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-slate-900">
-                        {formatNumber(order?.order?.price, 2)}
+                        <div className="flex flex-col gap-1">
+                          <div>{formatNumber(order?.order?.price, 2)} $</div>
+                          <div className="text-xs text-slate-500">
+                            {formatNumber(order?.order?.price * dollarRate, 0)}{" "}
+                            UZS
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-right font-medium text-slate-900">
-                        {formatNumber(
-                          order?.order?.price * order?.order?.quantity,
-                          2,
-                        )}
+                        <div className="flex flex-col gap-1">
+                          <div>
+                            {formatNumber(
+                              order?.order?.price * order?.order?.quantity,
+                              2,
+                            )}{" "}
+                            $
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {formatNumber(
+                              order?.order?.price *
+                                order?.order?.quantity *
+                                dollarRate,
+                              0,
+                            )}{" "}
+                            UZS
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-slate-600">
                         {formatNumber(costPerUnit / dollarRate, 2)}
