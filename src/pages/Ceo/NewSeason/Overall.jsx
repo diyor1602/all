@@ -4,6 +4,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
@@ -26,6 +32,9 @@ const Overall = () => {
   const [dollarRate, setDollarRate] = useState(12211);
 
   const [orders, setOrders] = useState([]);
+  const [monthlyExpenses, setMonthlyExpenses] = useState([]);
+  const [showMonthlyExpenses, setShowMonthlyExpenses] = useState(false);
+  const [expensesLoading, setExpensesLoading] = useState(false);
 
   const getData = async () => {
     setLoading(true);
@@ -59,6 +68,26 @@ const Overall = () => {
         title: "Xatolik",
         description: "Ma'lumotni yuklab bo'lmadi",
       });
+    }
+  };
+
+  const getMonthlyExpenses = async () => {
+    setExpensesLoading(true);
+    try {
+      const res = await api.get("/ceo/monthlyExpense", {
+        params: {
+          month: selectedMonth,
+        },
+      });
+      setMonthlyExpenses(res?.data?.expenses || []);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Oylik harajatlarni yuklab bo'lmadi",
+      });
+    } finally {
+      setExpensesLoading(false);
     }
   };
 
@@ -259,6 +288,11 @@ const Overall = () => {
             label="Oylik o'zgarmas"
             value={data?.costs?.monthly_expenses}
             percentage={getExpensePercentage(data?.costs?.monthly_expenses)}
+            onClick={() => {
+              setShowMonthlyExpenses(true);
+              getMonthlyExpenses();
+            }}
+            clickable={true}
           />
         </div>
       </div>
@@ -634,6 +668,101 @@ const Overall = () => {
           </div>
         </div>
       </div>
+
+      {/* Monthly Expenses Dialog */}
+      <Dialog open={showMonthlyExpenses} onOpenChange={setShowMonthlyExpenses}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-lg font-semibold">
+                Oylik o'zgarmas harajatlar
+              </DialogTitle>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {expensesLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between items-center p-3 border rounded-lg"
+                  >
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                ))}
+              </div>
+            ) : monthlyExpenses.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                Ma'lumotlar topilmadi
+              </div>
+            ) : (
+              monthlyExpenses.map((expense) => (
+                <div
+                  key={expense.id}
+                  className="flex justify-between items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="font-medium text-slate-900">
+                      {expense.name}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      {expense.type === "monthly" && "Oylik"}
+                      {expense.type === "amortization" && "Amortizatsiya"}
+                      {expense.type === "income_percentage" && "Daromad foizi"}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-slate-900">
+                      {expense.type === "income_percentage"
+                        ? `${expense.amount}%`
+                        : expense.type === "amortization"
+                          ? `${(expense.amount * 100).toFixed(1)}%`
+                          : `${formatNumber(expense.amount, 0)} UZS`}
+                    </div>
+                    {expense.type !== "income_percentage" &&
+                      expense.type !== "amortization" && (
+                        <div className="text-xs text-slate-500">
+                          ≈ {formatNumber(expense.amount / dollarRate, 2)} $
+                        </div>
+                      )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {!expensesLoading && monthlyExpenses.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-slate-200">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-slate-900">Jami:</span>
+                <div className="text-right">
+                  <div className="font-bold text-lg text-slate-900">
+                    {formatNumber(
+                      monthlyExpenses
+                        .filter((e) => e.type === "monthly")
+                        .reduce((sum, e) => sum + e.amount, 0),
+                      0,
+                    )}{" "}
+                    UZS
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    ≈{" "}
+                    {formatNumber(
+                      monthlyExpenses
+                        .filter((e) => e.type === "monthly")
+                        .reduce((sum, e) => sum + e.amount, 0) / dollarRate,
+                      2,
+                    )}{" "}
+                    $
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -679,8 +808,22 @@ const StatBlock = ({ label, value, percentage, icon, loading, dollarRate }) => (
   </div>
 );
 
-const DetailCard = ({ label, value, percentage, loading }) => (
-  <div className="flex justify-between items-center p-4 rounded-lg border border-slate-100 bg-slate-50/50 h-14">
+const DetailCard = ({
+  label,
+  value,
+  percentage,
+  loading,
+  onClick,
+  clickable,
+}) => (
+  <div
+    className={`flex justify-between items-center p-4 rounded-lg border border-slate-100 bg-slate-50/50 h-14 ${
+      clickable && !loading
+        ? "cursor-pointer hover:bg-slate-100 transition-colors"
+        : ""
+    }`}
+    onClick={onClick}
+  >
     <span className="text-sm text-slate-600">{label}</span>
 
     {loading ? (
@@ -693,6 +836,9 @@ const DetailCard = ({ label, value, percentage, loading }) => (
         <span className="text-xs text-slate-500 font-medium">
           ({percentage}%)
         </span>
+        {clickable && (
+          <span className="text-xs text-blue-600 font-medium">→</span>
+        )}
       </div>
     )}
   </div>
