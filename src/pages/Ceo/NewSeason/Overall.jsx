@@ -27,7 +27,7 @@ const Overall = () => {
     setLoading(true);
     try {
       const response = await api.get(`/ceo/calculateSeasonWithCosts`, {
-        params: { month: selectedMonth, dollar_rate: 12000 },
+        params: { month: selectedMonth, dollar_rate: 12211 },
       });
       setData(response.data);
     } catch (err) {
@@ -107,6 +107,13 @@ const Overall = () => {
           ).toFixed(1)
         : 0,
   };
+
+  const newSeasonTotal =
+    data?.costs?.warehouse_salary +
+    data?.costs?.sewing_salary_total +
+    data?.costs?.assistant_salary +
+    data?.costs?.monthly_daily_payment +
+    data?.costs?.cutting_salary_total;
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8 bg-white min-h-screen text-slate-900 relative">
@@ -195,27 +202,33 @@ const Overall = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <DetailCard
             loading={loading}
-            label="Tikuv limiti"
-            value={data?.costs?.rasxod_limit_uzs}
-            percentage={expensePercentages.rasxod_limit_uzs}
+            label="Tarifikatsiya"
+            value={data?.costs?.tarification}
           />
           <DetailCard
             loading={loading}
-            label="Ish haqi (Mavsum)"
-            value={data?.costs?.sewing_salary_total}
-            percentage={expensePercentages.sewing_salary_total}
+            label="Soatbay"
+            value={data?.costs?.aup + data?.costs?.is_not_aup}
+          />
+          <DetailCard
+            loading={loading}
+            label="Ombor"
+            value={data?.costs?.warehouse_salary}
+          />
+          <DetailCard
+            loading={loading}
+            label="Yangi mavsum"
+            value={newSeasonTotal}
           />
           <DetailCard
             loading={loading}
             label="Transport"
             value={data?.costs?.transport_attendance}
-            percentage={expensePercentages.transport_attendance}
           />
           <DetailCard
             loading={loading}
             label="Oylik o'zgarmas"
             value={data?.costs?.monthly_expenses}
-            percentage={expensePercentages.monthly_expenses}
           />
         </div>
       </div>
