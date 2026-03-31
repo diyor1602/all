@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
+import ModelImages from "@/components/ModelImages";
 
 const Overall = () => {
   const { toast } = useToast();
@@ -23,6 +24,8 @@ const Overall = () => {
   );
   const [loading, setLoading] = useState(false);
   const [dollarRate, setDollarRate] = useState(12211);
+
+  const [orders, setOrders] = useState([]);
 
   const getData = async () => {
     setLoading(true);
@@ -42,8 +45,26 @@ const Overall = () => {
     }
   };
 
+  const getOrders = async () => {
+    try {
+      const res = await api.get("ceo/monthlySelectedOrders", {
+        params: {
+          month: selectedMonth,
+        },
+      });
+      setOrders(res?.data?.selected);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Ma'lumotni yuklab bo'lmadi",
+      });
+    }
+  };
+
   useEffect(() => {
     getData();
+    getOrders();
   }, [selectedMonth]);
 
   const navigateMonth = (direction) => {
@@ -89,7 +110,7 @@ const Overall = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8 bg-white min-h-screen text-slate-900 relative">
+    <div className="p-6 space-y-8 bg-white min-h-screen text-slate-900 relative">
       <div className="flex flex-col sm:flex-row justify-between items-center border-b pb-6 gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -378,6 +399,118 @@ const Overall = () => {
                 $
               </div>
             )}
+        </div>
+      </div>
+
+      {/* Orders */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest px-1">
+          Buyurtmalar tafsiloti
+        </h3>
+
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Model
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Nomi
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Miqdori
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Tikilgan
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Narx ($)
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Jami ($)
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Xarajat/dona
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Foyda/Zarar
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {orders?.map((order, i) => {
+                  const costPerUnit =
+                    data?.costs?.cost_per_unit_overall_uzs || 0;
+                  const orderPriceUZS = order?.order?.price * dollarRate;
+                  const profitPerUnit = orderPriceUZS - costPerUnit;
+                  const totalProfit =
+                    profitPerUnit * order?.order?.done_quantity;
+
+                  return (
+                    <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 text-sm">
+                        <ModelImages
+                          modelCode={order?.order?.order_model?.model?.name}
+                        />
+                        <span className="text-slate-500">-</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                        {order?.order?.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-600">
+                        {formatNumber(order?.order?.quantity, 0)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-600">
+                        {formatNumber(order?.order?.done_quantity, 0)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right text-slate-900">
+                        {formatNumber(order?.order?.price, 2)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right font-medium text-slate-900">
+                        {formatNumber(
+                          order?.order?.price * order?.order?.quantity,
+                          2,
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right text-slate-600">
+                        {formatNumber(costPerUnit / dollarRate, 2)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`font-medium ${
+                              profitPerUnit > 0
+                                ? "text-emerald-600"
+                                : profitPerUnit < 0
+                                  ? "text-red-600"
+                                  : "text-slate-500"
+                            }`}
+                          >
+                            {profitPerUnit > 0 ? "+" : ""}
+                            {formatNumber(profitPerUnit / dollarRate, 2)} $
+                          </span>
+                          <span
+                            className={`text-xs ${
+                              totalProfit > 0
+                                ? "text-emerald-600"
+                                : totalProfit < 0
+                                  ? "text-red-600"
+                                  : "text-slate-500"
+                            }`}
+                          >
+                            {totalProfit > 0 ? "+" : ""}
+                            {formatNumber(totalProfit / dollarRate, 0)} $ jami
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
