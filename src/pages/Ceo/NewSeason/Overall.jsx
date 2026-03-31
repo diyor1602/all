@@ -46,10 +46,7 @@ const Overall = () => {
   }, [selectedMonth]);
 
   const navigateMonth = (direction) => {
-    // Split "YYYY-MM"
     const [year, month] = selectedMonth.split("-").map(Number);
-    // Date constructor: month is 0-indexed.
-    // For 'prev': month - 2 (shifts back). For 'next': month (shifts forward).
     const newDate = new Date(year, direction === "prev" ? month - 2 : month, 1);
 
     const y = newDate.getFullYear();
@@ -60,35 +57,38 @@ const Overall = () => {
     localStorage.setItem("newSeasonSelectedMonth", newMonthString);
   };
 
-  const profitMargin = data?.costs?.total_earned_uzs
-    ? ((data.costs.net_profit_uzs / data.costs.total_earned_uzs) * 100).toFixed(
+  const totalRevenue = Number(data?.costs?.total_earned_uzs) || 0;
+  const totalExpenses = Number(data?.costs?.total_fixed_cost_uzs) || 0;
+
+  const profitMargin = totalRevenue
+    ? ((Number(data?.costs?.net_profit_uzs || 0) / totalRevenue) * 100).toFixed(
         1,
       )
     : 0;
 
-  // Calculate percentages
-  const revenuePercentage = data?.costs?.total_earned_uzs ? 100 : 0;
-  const expensesPercentage =
-    data?.costs?.total_earned_uzs && data?.costs?.total_fixed_cost_uzs
-      ? (
-          (data.costs.total_fixed_cost_uzs / data.costs.total_earned_uzs) *
-          100
-        ).toFixed(1)
-      : 0;
+  const revenuePercentage = totalRevenue ? 100 : 0;
+  const expensesPercentage = totalRevenue
+    ? ((totalExpenses / totalRevenue) * 100).toFixed(1)
+    : 0;
 
   const newSeasonTotal =
-    data?.costs?.sewing_salary_total +
-    data?.costs?.assistant_salary +
-    data?.costs?.cutting_salary_total;
+    (Number(data?.costs?.sewing_salary_total) || 0) +
+    (Number(data?.costs?.assistant_salary) || 0) +
+    (Number(data?.costs?.cutting_salary_total) || 0);
 
   const additionalSalary =
-    data?.costs?.monthly_salary +
-    data?.costs?.monthly_piecework +
-    data?.costs?.monthly_daily_payment;
+    (Number(data?.costs?.monthly_salary) || 0) +
+    (Number(data?.costs?.monthly_piecework) || 0) +
+    (Number(data?.costs?.monthly_daily_payment) || 0);
+
+  const getExpensePercentage = (value) => {
+    const numericValue = Number(value) || 0;
+    if (!totalExpenses || !numericValue) return 0;
+    return ((numericValue / totalExpenses) * 100).toFixed(1);
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8 bg-white min-h-screen text-slate-900 relative">
-      {/* Header - Input is always enabled */}
       <div className="flex flex-col sm:flex-row justify-between items-center border-b pb-6 gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -109,6 +109,7 @@ const Overall = () => {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
+
           <Input
             type="month"
             value={selectedMonth}
@@ -118,6 +119,7 @@ const Overall = () => {
             }}
             className="border-none shadow-none bg-transparent font-medium text-sm focus-visible:ring-0 w-fit cursor-pointer"
           />
+
           <Button
             variant="ghost"
             size="sm"
@@ -128,22 +130,23 @@ const Overall = () => {
         </div>
       </div>
 
-      {/* Primary KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatBlock
           loading={loading}
           label="Tushum"
-          value={data?.costs?.total_earned_uzs}
+          value={totalRevenue}
           percentage={revenuePercentage}
           icon={<Activity className="text-blue-500" />}
         />
+
         <StatBlock
           loading={loading}
           label="Xarajat"
-          value={data?.costs?.total_fixed_cost_uzs}
+          value={totalExpenses}
           percentage={expensesPercentage}
           icon={<Wallet className="text-rose-500" />}
         />
+
         {loading ? (
           <Skeleton className="h-28 w-full rounded-xl" />
         ) : (
@@ -154,10 +157,12 @@ const Overall = () => {
                 Sof Foyda
               </span>
             </div>
+
             <div className="text-2xl font-bold text-emerald-700">
               {formatNumber(data?.costs?.net_profit_uzs, 0)}{" "}
               <span className="text-xs font-normal">UZS</span>
             </div>
+
             <div className="mt-2 text-xs font-medium text-emerald-600 bg-emerald-100 w-fit px-2 py-0.5 rounded">
               Rentabellik: {profitMargin}%
             </div>
@@ -165,53 +170,73 @@ const Overall = () => {
         )}
       </div>
 
-      {/* Breakdown Section */}
       <div className="space-y-4">
         <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest px-1">
           Xarajatlar tafsiloti
         </h3>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <DetailCard
             loading={loading}
             label="Tikuv uchun"
             value={data?.costs?.tarification}
+            percentage={getExpensePercentage(data?.costs?.tarification)}
           />
+
           <DetailCard
             loading={loading}
             label="Soatbay"
-            value={Number(data?.costs?.aup) + Number(data?.costs?.is_not_aup)}
+            value={
+              (Number(data?.costs?.aup) || 0) +
+              (Number(data?.costs?.is_not_aup) || 0)
+            }
+            percentage={getExpensePercentage(
+              (Number(data?.costs?.aup) || 0) +
+                (Number(data?.costs?.is_not_aup) || 0),
+            )}
           />
+
           <DetailCard
             loading={loading}
             label="Ombor"
             value={data?.costs?.warehouse_salary}
+            percentage={getExpensePercentage(data?.costs?.warehouse_salary)}
           />
+
           <DetailCard
             loading={loading}
             label="Ustidan yozilgan"
             value={additionalSalary}
+            percentage={getExpensePercentage(additionalSalary)}
           />
+
           <DetailCard
             loading={loading}
             label="Yangi mavsum"
             value={newSeasonTotal}
+            percentage={getExpensePercentage(newSeasonTotal)}
           />
+
           <DetailCard
             loading={loading}
             label="Transport"
             value={data?.costs?.transport_attendance}
+            percentage={getExpensePercentage(data?.costs?.transport_attendance)}
           />
+
           <DetailCard
             loading={loading}
             label="Oylik o'zgarmas"
             value={data?.costs?.monthly_expenses}
+            percentage={getExpensePercentage(data?.costs?.monthly_expenses)}
           />
         </div>
       </div>
 
-      {/* Production Footnote */}
       <div
-        className={`flex items-center justify-between bg-slate-900 text-white p-5 rounded-xl transition-opacity ${loading ? "opacity-50" : "opacity-100"}`}
+        className={`flex items-center justify-between bg-slate-900 text-white p-5 rounded-xl transition-opacity ${
+          loading ? "opacity-50" : "opacity-100"
+        }`}
       >
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white/10 rounded-lg">
@@ -221,6 +246,7 @@ const Overall = () => {
             Jami chiqqan mahsulotlar
           </span>
         </div>
+
         <span className="text-xl font-bold">
           {loading
             ? "..."
@@ -229,8 +255,7 @@ const Overall = () => {
         </span>
       </div>
 
-      {/* Additional statistics */}
-      <div>
+      <div className="space-y-1 text-sm text-slate-700">
         <div>
           O'rtacha xodimlar soni:{" "}
           {formatNumber(data?.costs?.average_employee_count)}
@@ -238,7 +263,7 @@ const Overall = () => {
         <div>
           1 kishi uchun transport:{" "}
           {formatNumber(data?.costs?.transport_per_employee)}
-        </div>{" "}
+        </div>
         <div>
           1 dona mahsulot:{" "}
           {formatNumber(data?.costs?.cost_per_unit_overall_uzs)}
@@ -248,7 +273,6 @@ const Overall = () => {
   );
 };
 
-// Skeleton Placeholder
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-slate-100 ${className}`} />
 );
@@ -268,10 +292,12 @@ const StatBlock = ({ label, value, percentage, icon, loading }) => (
             {label}
           </span>
         </div>
+
         <div className="text-2xl font-bold text-slate-800">
           {formatNumber(value, 0)}{" "}
           <span className="text-xs font-normal text-slate-400">UZS</span>
         </div>
+
         {percentage !== undefined && (
           <div className="text-xs font-medium text-slate-500">
             {percentage}%
@@ -285,18 +311,17 @@ const StatBlock = ({ label, value, percentage, icon, loading }) => (
 const DetailCard = ({ label, value, percentage, loading }) => (
   <div className="flex justify-between items-center p-4 rounded-lg border border-slate-100 bg-slate-50/50 h-14">
     <span className="text-sm text-slate-600">{label}</span>
+
     {loading ? (
-      <Skeleton className="h-4 w-20" />
+      <Skeleton className="h-4 w-24" />
     ) : (
       <div className="flex items-center gap-2">
         <span className="font-semibold text-slate-800 text-sm">
           {formatNumber(value, 0)}
         </span>
-        {percentage !== undefined && (
-          <span className="text-xs text-slate-500 font-medium">
-            ({percentage}%)
-          </span>
-        )}
+        <span className="text-xs text-slate-500 font-medium">
+          ({percentage}%)
+        </span>
       </div>
     )}
   </div>
