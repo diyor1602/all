@@ -168,8 +168,7 @@ const Overall = () => {
 
             {data?.costs?.net_profit_uzs && (
               <div className="text-sm font-medium text-emerald-600">
-                ≈ {formatNumber(data?.costs?.net_profit_uzs / dollarRate, 2)}{" "}
-                USD
+                ≈ {formatNumber(data?.costs?.net_profit_uzs / dollarRate, 2)} $
               </div>
             )}
 
@@ -309,7 +308,7 @@ const Overall = () => {
                 data?.costs?.transport_per_employee / dollarRate,
                 2,
               )}{" "}
-              USD
+              $
             </div>
           )}
         </div>
@@ -338,7 +337,7 @@ const Overall = () => {
                 data?.costs?.cost_per_unit_overall_uzs / dollarRate,
                 2,
               )}{" "}
-              USD
+              $
             </div>
           )}
         </div>
@@ -374,7 +373,7 @@ const StatBlock = ({ label, value, percentage, icon, loading, dollarRate }) => (
 
         {value && (
           <div className="text-xs font-medium text-slate-500">
-            ≈ {formatNumber(value / dollarRate, 2)} USD
+            ≈ {formatNumber(value / dollarRate, 2)} $
           </div>
         )}
 
