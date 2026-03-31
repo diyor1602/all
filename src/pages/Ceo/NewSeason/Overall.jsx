@@ -264,7 +264,7 @@ const Overall = () => {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-blue-500 rounded-lg">
@@ -340,6 +340,44 @@ const Overall = () => {
               $
             </div>
           )}
+        </div>
+
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-amber-500 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-amber-900">
+              1 dona mahsulot foyda
+            </span>
+          </div>
+          <div className="text-xl font-bold text-amber-900">
+            {loading
+              ? "..."
+              : data?.costs?.total_output_quantity &&
+                  data?.costs?.net_profit_uzs
+                ? formatNumber(
+                    data?.costs?.net_profit_uzs /
+                      data?.costs?.total_output_quantity,
+                    0,
+                  )
+                : "0"}
+            <span className="text-xs font-normal text-amber-700 ml-1">UZS</span>
+          </div>
+          {!loading &&
+            data?.costs?.total_output_quantity &&
+            data?.costs?.net_profit_uzs && (
+              <div className="text-sm font-medium text-amber-700">
+                ≈{" "}
+                {formatNumber(
+                  data?.costs?.net_profit_uzs /
+                    data?.costs?.total_output_quantity /
+                    dollarRate,
+                  2,
+                )}{" "}
+                $
+              </div>
+            )}
         </div>
       </div>
     </div>
