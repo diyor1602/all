@@ -112,8 +112,12 @@ const Overall = () => {
     data?.costs?.warehouse_salary +
     data?.costs?.sewing_salary_total +
     data?.costs?.assistant_salary +
-    data?.costs?.monthly_daily_payment +
     data?.costs?.cutting_salary_total;
+
+  const additionalSalary =
+    data?.costs?.monthly_salary +
+    data?.costs?.monthly_piecework +
+    data?.costs?.monthly_daily_payment;
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8 bg-white min-h-screen text-slate-900 relative">
@@ -202,7 +206,7 @@ const Overall = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <DetailCard
             loading={loading}
-            label="Tarifikatsiya"
+            label="Tikuv uchun"
             value={data?.costs?.tarification}
           />
           <DetailCard
@@ -214,6 +218,11 @@ const Overall = () => {
             loading={loading}
             label="Ombor"
             value={data?.costs?.warehouse_salary}
+          />
+          <DetailCard
+            loading={loading}
+            label="Ustidan yozilgan"
+            value={additionalSalary}
           />
           <DetailCard
             loading={loading}
