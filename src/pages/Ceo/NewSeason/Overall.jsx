@@ -400,6 +400,92 @@ const Overall = () => {
               </div>
             )}
         </div>
+
+        <div className="lg:col-span-2">
+          <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 text-white shadow-xl">
+            <div className="mb-4">
+              <h3 className="text-sm uppercase tracking-widest text-slate-400 font-semibold">
+                Xodim bo‘yicha xarajat
+              </h3>
+              <p className="text-lg font-semibold">
+                1 kishiga to‘g‘ri keladigan xarajatlar
+              </p>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Skeleton className="h-24 rounded-xl bg-white/10" />
+                <Skeleton className="h-24 rounded-xl bg-white/10" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Oylik */}
+                <div className="rounded-xl bg-white/5 border border-white/10 p-4 backdrop-blur">
+                  <p className="text-xs text-slate-400 mb-1">
+                    1 kishiga oylik xarajat
+                  </p>
+
+                  <div className="text-2xl font-bold">
+                    {formatNumber(
+                      (Number(data?.costs?.total_fixed_cost_uzs) || 0) /
+                        (Number(data?.costs?.average_employee_count) || 1),
+                      0,
+                    )}{" "}
+                    <span className="text-xs text-slate-400">UZS</span>
+                  </div>
+
+                  <div className="text-sm text-emerald-400 font-medium">
+                    ≈{" "}
+                    {formatNumber(
+                      (Number(data?.costs?.total_fixed_cost_uzs) || 0) /
+                        (Number(data?.costs?.average_employee_count) || 1) /
+                        dollarRate,
+                      2,
+                    )}{" "}
+                    $
+                  </div>
+
+                  <div className="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-[80%] h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full" />
+                  </div>
+                </div>
+
+                {/* Kunlik */}
+                <div className="rounded-xl bg-white/5 border border-white/10 p-4 backdrop-blur">
+                  <p className="text-xs text-slate-400 mb-1">
+                    1 kishiga kunlik xarajat
+                  </p>
+
+                  <div className="text-2xl font-bold">
+                    {formatNumber(
+                      (Number(data?.costs?.total_fixed_cost_uzs) || 0) /
+                        (Number(data?.costs?.average_employee_count) || 1) /
+                        25,
+                      0,
+                    )}{" "}
+                    <span className="text-xs text-slate-400">UZS</span>
+                  </div>
+
+                  <div className="text-sm text-amber-400 font-medium">
+                    ≈{" "}
+                    {formatNumber(
+                      (Number(data?.costs?.total_fixed_cost_uzs) || 0) /
+                        (Number(data?.costs?.average_employee_count) || 1) /
+                        25 /
+                        dollarRate,
+                      2,
+                    )}{" "}
+                    $
+                  </div>
+
+                  <div className="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-[55%] h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Orders */}
@@ -413,6 +499,9 @@ const Overall = () => {
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-12">
+                    #
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Model
                   </th>
@@ -450,6 +539,9 @@ const Overall = () => {
 
                   return (
                     <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-center text-slate-500">
+                        {i + 1}
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <ModelImages
                           modelCode={order?.order?.order_model?.model?.name}
