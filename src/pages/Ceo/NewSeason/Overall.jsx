@@ -163,6 +163,12 @@ const Overall = () => {
               <span className="text-xs font-normal">UZS</span>
             </div>
 
+            {data?.costs?.net_profit_uzs && (
+              <div className="text-sm font-medium text-emerald-600">
+                ≈ {formatNumber(data?.costs?.net_profit_uzs / 12211, 2)} USD
+              </div>
+            )}
+
             <div className="mt-2 text-xs font-medium text-emerald-600 bg-emerald-100 w-fit px-2 py-0.5 rounded">
               Rentabellik: {profitMargin}%
             </div>
@@ -354,6 +360,12 @@ const StatBlock = ({ label, value, percentage, icon, loading }) => (
           {formatNumber(value, 0)}{" "}
           <span className="text-xs font-normal text-slate-400">UZS</span>
         </div>
+
+        {value && (
+          <div className="text-xs font-medium text-slate-500">
+            ≈ {formatNumber(value / 12211, 2)} USD
+          </div>
+        )}
 
         {percentage !== undefined && (
           <div className="text-xs font-medium text-slate-500">
