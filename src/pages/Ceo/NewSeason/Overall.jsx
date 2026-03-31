@@ -22,12 +22,13 @@ const Overall = () => {
       new Date().toISOString().slice(0, 7),
   );
   const [loading, setLoading] = useState(false);
+  const [dollarRate, setDollarRate] = useState(12211);
 
   const getData = async () => {
     setLoading(true);
     try {
       const response = await api.get(`/ceo/calculateSeasonWithCosts`, {
-        params: { month: selectedMonth, dollar_rate: 12211 },
+        params: { month: selectedMonth, dollar_rate: dollarRate },
       });
       setData(response.data);
     } catch (err) {
@@ -137,6 +138,7 @@ const Overall = () => {
           value={totalRevenue}
           percentage={revenuePercentage}
           icon={<Activity className="text-blue-500" />}
+          dollarRate={dollarRate}
         />
 
         <StatBlock
@@ -145,6 +147,7 @@ const Overall = () => {
           value={totalExpenses}
           percentage={expensesPercentage}
           icon={<Wallet className="text-rose-500" />}
+          dollarRate={dollarRate}
         />
 
         {loading ? (
@@ -165,7 +168,8 @@ const Overall = () => {
 
             {data?.costs?.net_profit_uzs && (
               <div className="text-sm font-medium text-emerald-600">
-                ≈ {formatNumber(data?.costs?.net_profit_uzs / 12211, 2)} USD
+                ≈ {formatNumber(data?.costs?.net_profit_uzs / dollarRate, 2)}{" "}
+                USD
               </div>
             )}
 
@@ -300,7 +304,11 @@ const Overall = () => {
           </div>
           {!loading && data?.costs?.transport_per_employee && (
             <div className="text-sm font-medium text-emerald-700">
-              ≈ {formatNumber(data?.costs?.transport_per_employee / 12211, 2)}{" "}
+              ≈{" "}
+              {formatNumber(
+                data?.costs?.transport_per_employee / dollarRate,
+                2,
+              )}{" "}
               USD
             </div>
           )}
@@ -326,7 +334,10 @@ const Overall = () => {
           {!loading && data?.costs?.cost_per_unit_overall_uzs && (
             <div className="text-sm font-medium text-purple-700">
               ≈{" "}
-              {formatNumber(data?.costs?.cost_per_unit_overall_uzs / 12211, 2)}{" "}
+              {formatNumber(
+                data?.costs?.cost_per_unit_overall_uzs / dollarRate,
+                2,
+              )}{" "}
               USD
             </div>
           )}
@@ -340,7 +351,7 @@ const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-slate-100 ${className}`} />
 );
 
-const StatBlock = ({ label, value, percentage, icon, loading }) => (
+const StatBlock = ({ label, value, percentage, icon, loading, dollarRate }) => (
   <div className="p-4 rounded-xl border bg-white shadow-sm h-28 flex flex-col justify-center">
     {loading ? (
       <div className="space-y-2">
@@ -363,7 +374,7 @@ const StatBlock = ({ label, value, percentage, icon, loading }) => (
 
         {value && (
           <div className="text-xs font-medium text-slate-500">
-            ≈ {formatNumber(value / 12211, 2)} USD
+            ≈ {formatNumber(value / dollarRate, 2)} USD
           </div>
         )}
 
