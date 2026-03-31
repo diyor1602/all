@@ -255,18 +255,62 @@ const Overall = () => {
         </span>
       </div>
 
-      <div className="space-y-1 text-sm text-slate-700">
-        <div>
-          O'rtacha xodimlar soni:{" "}
-          {formatNumber(data?.costs?.average_employee_count)}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-blue-500 rounded-lg">
+              <Activity className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-blue-900">
+              O'rtacha xodimlar soni
+            </span>
+          </div>
+          <div className="text-xl font-bold text-blue-900">
+            {loading
+              ? "..."
+              : formatNumber(data?.costs?.average_employee_count)}
+            <span className="text-xs font-normal text-blue-700 ml-1">
+              kishi
+            </span>
+          </div>
         </div>
-        <div>
-          1 kishi uchun transport:{" "}
-          {formatNumber(data?.costs?.transport_per_employee)}
+
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-emerald-500 rounded-lg">
+              <Package className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-emerald-900">
+              1 kishi uchun transport
+            </span>
+          </div>
+          <div className="text-xl font-bold text-emerald-900">
+            {loading
+              ? "..."
+              : formatNumber(data?.costs?.transport_per_employee)}
+            <span className="text-xs font-normal text-emerald-700 ml-1">
+              UZS
+            </span>
+          </div>
         </div>
-        <div>
-          1 dona mahsulot:{" "}
-          {formatNumber(data?.costs?.cost_per_unit_overall_uzs)}
+
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-purple-500 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-purple-900">
+              1 dona mahsulot
+            </span>
+          </div>
+          <div className="text-xl font-bold text-purple-900">
+            {loading
+              ? "..."
+              : formatNumber(data?.costs?.cost_per_unit_overall_uzs, 0)}
+            <span className="text-xs font-normal text-purple-700 ml-1">
+              UZS
+            </span>
+          </div>
         </div>
       </div>
     </div>
