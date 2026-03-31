@@ -113,13 +113,13 @@ const Overall = () => {
 
   const profitMargin = totalRevenue
     ? ((Number(data?.costs?.net_profit_uzs || 0) / totalRevenue) * 100).toFixed(
-        1,
+        0,
       )
     : 0;
 
   const revenuePercentage = totalRevenue ? 100 : 0;
   const expensesPercentage = totalRevenue
-    ? ((totalExpenses / totalRevenue) * 100).toFixed(1)
+    ? ((totalExpenses / totalRevenue) * 100).toFixed(0)
     : 0;
 
   const newSeasonTotal =
@@ -135,7 +135,7 @@ const Overall = () => {
   const getExpensePercentage = (value) => {
     const numericValue = Number(value) || 0;
     if (!totalExpenses || !numericValue) return 0;
-    return ((numericValue / totalExpenses) * 100).toFixed(1);
+    return ((numericValue / totalExpenses) * 100).toFixed(0);
   };
 
   return (
