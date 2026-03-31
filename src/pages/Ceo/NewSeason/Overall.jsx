@@ -718,7 +718,7 @@ const Overall = () => {
                       {expense.type === "income_percentage"
                         ? `${expense.amount}%`
                         : expense.type === "amortization"
-                          ? `${(expense.amount * 100).toFixed(1)}%`
+                          ? `${(expense.amount * 100).toFixed(1)}$`
                           : `${formatNumber(expense.amount, 0)} UZS`}
                     </div>
                     {expense.type !== "income_percentage" &&
