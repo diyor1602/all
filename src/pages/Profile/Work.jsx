@@ -13,7 +13,7 @@ const formatNumber = (num) => {
   });
 };
 
-const Work = ({ userData }) => {
+const Work = ({ userData, secondChecks }) => {
   const logs = userData.employee_tarification_logs;
   const [activeTab, setActiveTab] = useState("model");
   const [expanded, setExpanded] = useState(null);
@@ -37,7 +37,7 @@ const Work = ({ userData }) => {
               "ru-RU",
               {
                 maximumFractionDigits: 0,
-              }
+              },
             )}{" "}
             so'm
           </p>
@@ -46,6 +46,16 @@ const Work = ({ userData }) => {
           </p>
         </div>
       )}
+      {/* SecondChecks */}
+      {secondChecks?.total && (
+        <div className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 rounded">
+          <p className="font-medium">
+            Ikkinchi ko'rishda topilgan jami summa:{" "}
+            {formatNumber(secondChecks?.total, 0)} so'm
+          </p>
+        </div>
+      )}
+
       <div className="mt-4">
         {/* Tabs */}
         <div className="grid grid-cols-2 gap-3 mb-4">
@@ -101,7 +111,7 @@ const Work = ({ userData }) => {
                   <div className="space-y-5">
                     {Object.entries(groupedByModel)
                       .sort((a, b) =>
-                        a[1].modelName.localeCompare(b[1].modelName)
+                        a[1].modelName.localeCompare(b[1].modelName),
                       )
                       .map(([modelId, group], index) => {
                         const isOpen = expanded === modelId;
@@ -120,14 +130,14 @@ const Work = ({ userData }) => {
                           }
                           workMap[workCode].totalQty += log.quantity;
                           workMap[workCode].totalSum += parseFloat(
-                            log.amount_earned || 0
+                            log.amount_earned || 0,
                           );
                         });
 
                         const totalSumForModel = group.logs.reduce(
                           (sum, log) =>
                             sum + parseFloat(log.amount_earned || 0),
-                          0
+                          0,
                         );
 
                         const colors = [
@@ -263,7 +273,7 @@ const Work = ({ userData }) => {
                         const totalSumForDay = dayLogs.reduce(
                           (sum, log) =>
                             sum + parseFloat(log.amount_earned || 0),
-                          0
+                          0,
                         );
 
                         const colors = [
@@ -315,8 +325,8 @@ const Work = ({ userData }) => {
                                       a.tarification?.code?.localeCompare(
                                         b.tarification?.code,
                                         undefined,
-                                        { numeric: true, sensitivity: "base" }
-                                      )
+                                        { numeric: true, sensitivity: "base" },
+                                      ),
                                     )
                                     ?.map((log, idx) => {
                                       const cardColors = [

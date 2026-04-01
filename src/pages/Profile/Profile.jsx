@@ -162,6 +162,7 @@ const Profile = () => {
     localStorage.getItem("profileMonth") ||
       new Date().toISOString().slice(0, 7),
   );
+  const [secondChecks, setSecondChecks] = useState([]);
 
   // ✅ Load activeIndex from localStorage
   const [activeIndex, setActiveIndex] = useState(() => {
@@ -173,6 +174,8 @@ const Profile = () => {
   useEffect(() => {
     localStorage.setItem("activeIndex", activeIndex);
   }, [activeIndex]);
+
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -203,7 +206,22 @@ const Profile = () => {
       }
     };
 
+    const getSecondChecks = async () => {
+      if (role !== "qualityController") return;
+      try {
+        const response = await api.get("qualityController/mySecondChecks", {
+          params: {
+            month: selectedMonth,
+          },
+        });
+        setSecondChecks(response.data);
+      } catch (e) {
+        setSecondChecks([]);
+      }
+    };
+
     fetchData();
+    getSecondChecks();
   }, [selectedMonth]);
 
   const baseCards = [
@@ -236,7 +254,7 @@ const Profile = () => {
         userData.employee_tarification_logs?.reduce(
           (sum, salary) => sum + Number.parseFloat(salary.amount_earned || 0),
           0,
-        ),
+        ) + (secondChecks?.total || 0),
       ),
       color: "bg-gradient-to-r from-emerald-500 to-green-600",
       Icon: Briefcase,
@@ -307,7 +325,7 @@ const Profile = () => {
 
   const cardComponents = {
     davomat: <Attendance userData={userData} />,
-    ish: <Work userData={userData} />,
+    ish: <Work userData={userData} secondChecks={secondChecks} />,
     avans: <Salary userData={userData} />,
     koefitsient: <Coefficient userData={userData} />,
     duty: <Duty userData={userData} />,
