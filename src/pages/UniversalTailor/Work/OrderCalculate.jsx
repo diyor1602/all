@@ -234,15 +234,6 @@ const OrderCalculate = () => {
       return;
     }
 
-    if (!quantity || Number(quantity) <= 0) {
-      toast({
-        title: "Noto'g'ri son",
-        description: "Quantity 0 dan katta bo'lishi kerak",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setSubmitting(true);
 
@@ -288,15 +279,6 @@ const OrderCalculate = () => {
       toast({
         title: "Ruxsat yo'q",
         description: "Faqat bugungi ishlarni o'zgartirish mumkin",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!editingQuantity || Number(editingQuantity) <= 0) {
-      toast({
-        title: "Noto'g'ri son",
-        description: "Miqdor 0 dan katta bo'lishi kerak",
         variant: "destructive",
       });
       return;
@@ -524,7 +506,7 @@ const OrderCalculate = () => {
                     </div>
                     <div>
                       <h2 className="font-semibold text-slate-900">
-                        Yangi ish qo‘shish
+                        Yangi ish qo'shish
                       </h2>
                       <p className="text-sm text-slate-500">
                         Formani ochib, kategoriya va tarifikatsiyani tanlang
@@ -537,7 +519,7 @@ const OrderCalculate = () => {
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     {showAddForm ? <X size={16} /> : <Plus size={16} />}
-                    {showAddForm ? "Yopish" : "Ish qo‘shish"}
+                    {showAddForm ? "Yopish" : "Ish qo'shish"}
                   </button>
                 </div>
 
@@ -614,7 +596,7 @@ const OrderCalculate = () => {
                           className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
                         >
                           <Save size={17} />
-                          {submitting ? "Saqlanmoqda..." : "Qo‘shish"}
+                          {submitting ? "Saqlanmoqda..." : "Qo'shish"}
                         </button>
                       </div>
                     </div>
