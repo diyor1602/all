@@ -313,8 +313,6 @@ const Specification = () => {
       sizes,
     };
 
-    console.log("payload:", payload);
-
     setIsSending(true);
     try {
       const response = await api.post("/packageMaster/packageStore", payload);

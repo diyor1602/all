@@ -83,7 +83,7 @@ const ResultView = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await api.get("/resultChecker/groups", {
+        const response = await api.get("/internalAccountant/groups2", {
           params: {
             department_id: id,
           },
@@ -108,7 +108,7 @@ const ResultView = () => {
     const fetchTimes = async () => {
       setLoading(true);
       try {
-        const response = await api.get("/resultChecker/times");
+        const response = await api.get("/internalAccountant/times");
         setTimes(response.data);
       } catch (error) {
         toast({
@@ -165,7 +165,7 @@ const ResultView = () => {
         quantity: Number(selectedOutput.quantity),
         comment: selectedOutput.comment || null,
       };
-      await api.post("/resultChecker/sewingOutputs", payload);
+      await api.post("/internalAccountant/sewingOutputs", payload);
 
       toast({
         title: "Muvaffaqiyatli",
@@ -178,7 +178,7 @@ const ResultView = () => {
 
       setDialogOpen(false);
       // Refresh data
-      const response = await api.get("/resultChecker/groups", {
+      const response = await api.get("/internalAccountant/groups2", {
         params: { department_id: id },
       });
       setData(response.data);

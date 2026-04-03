@@ -12,12 +12,15 @@ import {
   TreePalm,
   Lock,
   Fan,
+  AlarmClockPlus,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 import Nakladnoy from "./Nakladnoy";
 import NakladnoySkaner from "./NakladnoySkaner";
 import SalaryOrders from "./SalaryOrders";
 import TarifSearch from "./TarifSearch";
+import Result from "./Result/Result";
+import ResultView from "./Result/ResultView";
 
 const Settings = () => {
   return (
@@ -28,6 +31,8 @@ const Settings = () => {
       <Route path="nakladnoy-skaner" element={<NakladnoySkaner />} />
       <Route path="tarif-search" element={<TarifSearch />} />
       <Route path="salaryOrders" element={<SalaryOrders />} />
+      <Route path="result" element={<Result />} />
+      <Route path="result/:id" element={<ResultView />} />
     </Routes>
   );
 };
@@ -93,6 +98,12 @@ const SettingsPage = () => {
       icon: Fan,
       link: "/internalAccountant/damages",
       color: "bg-yellow-500",
+    },
+    {
+      name: "Natijalar",
+      icon: AlarmClockPlus,
+      link: "/internalAccountant/settings/result",
+      color: "bg-indigo-500",
     },
   ];
 

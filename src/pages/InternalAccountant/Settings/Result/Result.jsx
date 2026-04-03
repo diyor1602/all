@@ -33,7 +33,7 @@ const Result = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/resultChecker/departments");
+      const response = await api.get("/departments");
       setDepartments(response.data?.flatMap((item) => item?.departments));
     } catch (error) {
       toast({
@@ -86,13 +86,13 @@ const Result = () => {
             ?.sort((a, b) => b?.groups?.length - a?.groups?.length)
             .map((department, index) => (
               <Link
-                to={`/resultChecker/result/${department?.id}`}
+                to={`/internalAccountant/settings/result/${department?.id}`}
                 key={department?.id}
                 className="group relative overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full"
               >
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${getCardColor(
-                    index
+                    index,
                   )} opacity-90 group-hover:opacity-100 transition-opacity duration-300`}
                 ></div>
                 <div className="relative p-6 h-full flex flex-col">

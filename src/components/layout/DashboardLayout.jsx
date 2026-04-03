@@ -13,7 +13,6 @@ import PackageMasterLayout from "./DashboardLayouts/PackageMasterLayout";
 import InternalAccountantLayout from "./DashboardLayouts/InternalAccountantLayout";
 import SupplierLayout from "./DashboardLayouts/SupplierLayout";
 import CasherLayout from "./DashboardLayouts/CasherLayout";
-import ResultCheckerLayout from "./DashboardLayouts/ResultCheckerLayout";
 import CeoLayout from "./DashboardLayouts/CeoLayout";
 import TailorLayout from "./DashboardLayouts/TailorLayout";
 import UniversalTailorLayout from "./DashboardLayouts/UniversalTailorLayout";
@@ -35,7 +34,6 @@ const layouts = {
   internalAccountant: InternalAccountantLayout,
   supplier: SupplierLayout,
   casher: CasherLayout,
-  resultChecker: ResultCheckerLayout,
   ceo: CeoLayout,
   tailor: TailorLayout,
   universalTailor: UniversalTailorLayout,

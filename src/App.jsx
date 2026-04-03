@@ -32,7 +32,6 @@ import InternalAccountant from "./pages/InternalAccountant/InternalAccountant";
 import Supplier from "./pages/Supplier/Supplier";
 import MajorQualityController from "./pages/MajorQualityController/MajorQualityController";
 import Casher from "./pages/Casher/Casher";
-import ResultChecker from "./pages/ResultChecker/ResultChecker";
 import Ceo from "./pages/Ceo/Ceo";
 import Tailor from "./pages/Tailor/Tailor";
 import UniversalTailor from "./pages/UniversalTailor/UniversalTailor";
@@ -99,7 +98,6 @@ function App() {
             element={<MajorQualityController />}
           />
           <Route path="/casher/*" element={<Casher />} />
-          <Route path="/resultChecker/*" element={<ResultChecker />} />
           <Route path="/ceo/*" element={<Ceo />} />
           <Route path="/tailor/*" element={<Tailor />} />
           <Route path="/universalTailor/*" element={<UniversalTailor />} />
