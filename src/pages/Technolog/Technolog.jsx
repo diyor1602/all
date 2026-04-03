@@ -8,6 +8,8 @@ import NewTarif from "./Orders/NewTarif";
 import Machines from "./Machines/Machines";
 import Nakladnoy from "./Nakladnoy";
 import Videos from "./Videos/Videos";
+import Employees from "./Employees/Employees";
+import ViewEmployees from "./Employees/ViewEmployees";
 
 const Technolog = () => {
   return (
@@ -22,6 +24,8 @@ const Technolog = () => {
       <Route path="machines" element={<Machines />} />
       <Route path="nakladnoy" element={<Nakladnoy />} />
       <Route path="videos/*" element={<Videos />} />
+      <Route path="employees" element={<Employees />} />
+      <Route path="employees/view/:id" element={<ViewEmployees />} />
     </Routes>
   );
 };

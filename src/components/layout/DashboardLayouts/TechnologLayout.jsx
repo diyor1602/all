@@ -1,11 +1,17 @@
 import BaseLayout from "./BaseLayout";
-import { Box } from "lucide-react";
+import { Box, Users } from "lucide-react";
 
 const navigation = [
   {
     name: "Buyurtmalar",
     href: "/technologist/orders",
     icon: Box,
+    onMobile: true,
+  },
+  {
+    name: "Xodimlar",
+    href: "/technologist/employees",
+    icon: Users,
     onMobile: true,
   },
   // {
