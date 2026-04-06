@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Bot, FilePlus, Users, Clock, Bug } from "lucide-react";
+import { Bot, FilePlus, Users, Clock, Bug, Sprout } from "lucide-react";
 
 const navigation = [
   {
@@ -31,6 +31,12 @@ const navigation = [
     href: "/groupMaster/ownDamages",
     icon: Bug,
     onMobile: true,
+  },
+  {
+    name: "Tikuvchilar",
+    href: "/tailorRating",
+    icon: Sprout,
+    onMobile: false,
   },
 ];
 

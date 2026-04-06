@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Box, Users } from "lucide-react";
+import { Box, Sprout, Users } from "lucide-react";
 
 const navigation = [
   {
@@ -13,6 +13,12 @@ const navigation = [
     href: "/technologist/employees",
     icon: Users,
     onMobile: true,
+  },
+  {
+    name: "Tikuvchilar",
+    href: "/tailorRating",
+    icon: Sprout,
+    onMobile: false,
   },
   // {
   //   name: "Videolar",
