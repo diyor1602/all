@@ -114,7 +114,7 @@ export default function BaseLayout({ children, navigation }) {
     <div className="min-h-screen bg-gray-50 pointer-events-auto">
       {/* Sidebar trigger button for mobile */}
       {!isChatPage && (
-        <div className="lg:hidden fixed top-4 right-4 z-40">
+        <div className="lg:hidden fixed top-4 right-4 z-50">
           <Button
             variant="outline"
             size="icon"
@@ -132,7 +132,7 @@ export default function BaseLayout({ children, navigation }) {
       {/* Sidebar backdrop for mobile */}
       <div
         className={cn(
-          "fixed inset-0 z-30 lg:hidden bg-black/80 backdrop-blur-sm transition-opacity duration-200",
+          "fixed inset-0 z-50 lg:hidden bg-black/80 backdrop-blur-sm transition-opacity duration-200",
           sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={() => setSidebarOpen(false)}
@@ -141,7 +141,7 @@ export default function BaseLayout({ children, navigation }) {
       {/* Sidebar for desktop */}
       <div
         className={cn(
-          "fixed top-0 left-0 z-30 h-full w-64 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0",
+          "fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

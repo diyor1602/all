@@ -7,6 +7,7 @@ import Task from "./Task/Task";
 import Manual from "./Manual/Manual";
 import ViewEmployees from "./Employees/ViewEmployees";
 import OverCalc from "./OverCalc/OverCalc";
+import Analysis from "./Analysis";
 
 const InternalAccountant = () => {
   return (
@@ -19,6 +20,7 @@ const InternalAccountant = () => {
       <Route path="task/*" element={<Task />} />
       <Route path="manual/*" element={<Manual />} />
       <Route path="overCalc/*" element={<OverCalc />} />
+      <Route path="analysis" element={<Analysis />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
