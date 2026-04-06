@@ -1,9 +1,3 @@
-import {
-  Tooltip,
-  TooltipProvider,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
@@ -15,7 +9,6 @@ import {
   Trophy,
   Users,
   CalendarDays,
-  Clock3,
   Sparkles,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
