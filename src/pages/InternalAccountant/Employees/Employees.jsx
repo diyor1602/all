@@ -42,13 +42,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
-import payment_types from "@/lib/paymentTypes";
-
-const formatPhoneNumber = (phone) => {
-  return phone
-    .replace(/\D/g, "")
-    .replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
-};
 
 // Custom debounce hook
 const useDebounce = (value, delay) => {
@@ -135,7 +128,7 @@ const Employees = () => {
       });
 
       const res = await api.get(
-        `/internalAccountant/employees?${params.toString()}`
+        `/internalAccountant/employees?${params.toString()}`,
       );
       setEmployees(res.data);
     } catch (error) {
@@ -250,7 +243,7 @@ const Employees = () => {
         `/internalAccountant/employees/export-excel?${params.toString()}`,
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create a blob URL and trigger download
@@ -259,7 +252,7 @@ const Employees = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`
+        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -310,7 +303,7 @@ const Employees = () => {
                 <SelectItem key={dept.id} value={dept.id.toString()}>
                   {dept.name}
                 </SelectItem>
-              ))
+              )),
             )}
           </SelectContent>
         </Select>
@@ -390,8 +383,7 @@ const Employees = () => {
             <TableHead className="border">Ko'rish</TableHead>
             <TableHead className="border">Bo'lim</TableHead>
             <TableHead className="border">Lavozimi</TableHead>
-            <TableHead className="border">To'lov turi</TableHead>
-            <TableHead className="border">Maosh</TableHead>
+            <TableHead className="border">Telefon</TableHead>
             <TableHead className="border">Holati</TableHead>
           </TableRow>
         </TableHeader>
@@ -474,15 +466,20 @@ const Employees = () => {
                     <div>{employee.user?.role?.description || "-"}</div>
                   </div>
                 </TableCell>
-                <TableCell className="border">
-                  {payment_types[employee.payment_type]}
-                </TableCell>
-                <TableCell className="border">
-                  {employee.salary_visible
-                    ? Number.parseFloat(employee?.salary || 0)?.toLocaleString(
-                        "ru-RU"
-                      )
-                    : "-"}
+                <TableCell
+                  className="border cursor-pointer hover:bg-muted/50 transition"
+                  onClick={() => {
+                    if (employee?.phone) {
+                      navigator.clipboard.writeText(employee.phone);
+                      toast({
+                        title: "Nusxalandi",
+                        description: employee.phone,
+                        duration: 1000,
+                      });
+                    }
+                  }}
+                >
+                  {employee?.phone}
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}
@@ -541,7 +538,7 @@ const Employees = () => {
                 }
 
                 return null;
-              }
+              },
             )}
 
             <PaginationItem>

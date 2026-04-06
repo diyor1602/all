@@ -11,7 +11,6 @@ import {
   Siren,
   TreePalm,
   Lock,
-  Fan,
   AlarmClockPlus,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
@@ -92,12 +91,6 @@ const SettingsPage = () => {
       icon: Lock,
       link: "/internalAccountant/settings/salaryOrders",
       color: "bg-black",
-    },
-    {
-      name: "Braklar",
-      icon: Fan,
-      link: "/internalAccountant/damages",
-      color: "bg-yellow-500",
     },
     {
       name: "Natijalar",
