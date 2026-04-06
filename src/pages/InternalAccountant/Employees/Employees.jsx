@@ -1,5 +1,5 @@
 import api from "@/utils/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Select,
@@ -27,7 +27,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { RotateCcw, Search, Download, Loader2, Eye } from "lucide-react";
+import { RotateCcw, Search, Eye } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -65,7 +65,6 @@ const Employees = () => {
 
   // States
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [employees, setEmployees] = useState({
@@ -93,6 +92,7 @@ const Employees = () => {
   });
 
   const [groups, setGroups] = useState([]);
+  const searchInputRef = useRef(null);
 
   // Setup debounced values
   const debouncedSearch = useDebounce(filters.search, 500);
@@ -225,52 +225,6 @@ const Employees = () => {
       : employees.meta.total;
   };
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      // Create params without the page parameter
-      const params = new URLSearchParams();
-
-      // Add all non-empty filters to params except page
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== "" && key !== "page") {
-          params.append(key, value);
-        }
-      });
-
-      // Make the API call with the response type as blob to handle file download
-      const response = await api.get(
-        `/internalAccountant/employees/export-excel?${params.toString()}`,
-        {
-          responseType: "blob",
-        },
-      );
-
-      // Create a blob URL and trigger download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-
-      // Clean up
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Xodimlar ro'yxati yuklab olishda xatolik",
-        variant: "destructive",
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   useEffect(() => {
     fetchEmployees();
   }, [
@@ -283,6 +237,36 @@ const Employees = () => {
 
   useEffect(() => {
     fetchDepartments();
+  }, []);
+
+  // Keyboard shortcut to focus search input
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Focus on search input when 'F' key is pressed
+      if (
+        event.key === "f" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
+        // Check if the focus is not already on an input, textarea, or select
+        const activeElement = document.activeElement;
+        const isInputElement =
+          activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT";
+
+        if (!isInputElement && searchInputRef.current) {
+          event.preventDefault();
+          searchInputRef.current.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   return (
@@ -346,6 +330,7 @@ const Employees = () => {
         <div className="relative w-full">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <Input
+            ref={searchInputRef}
             placeholder="Ism, id yoki username"
             className="pl-8 bg-white w-full"
             value={filters.search}
@@ -366,13 +351,6 @@ const Employees = () => {
             xodim
           </div>
         </div>
-        <Button
-          className="text-sm bg-green-500 hover:bg-green-600  "
-          onClick={handleExport}
-          disabled={isExporting}
-        >
-          {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
-        </Button>
       </div>
 
       <Table className="bg-white border p-2 mb-2 whitespace-nowrap text-xs shadow-md">
