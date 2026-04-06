@@ -51,7 +51,7 @@ const SalaryOrders = () => {
     try {
       setLoading(true);
       const response = await api.get(
-        `/internalAccountant/monthlySelectedOrders?month=${selectedMonth}`
+        `/internalAccountant/monthlySelectedOrders?month=${selectedMonth}`,
       );
       setData(response.data);
     } catch (error) {
@@ -104,7 +104,7 @@ const SalaryOrders = () => {
   const handleMinus = async (order) => {
     if (
       !window.confirm(
-        `${order.order?.name} buyurtmani olib tashlashni tasdiqlaysizmi?`
+        `${order.order?.name} buyurtmani olib tashlashni tasdiqlaysizmi?`,
       )
     ) {
       return;
@@ -180,7 +180,7 @@ const SalaryOrders = () => {
       setFilters({ ...filters, group_id: "all" });
     } else {
       const selectedDept = departments.find(
-        (dept) => dept.id === Number.parseInt(filters.department_id)
+        (dept) => dept.id === Number.parseInt(filters.department_id),
       );
       if (selectedDept && selectedDept.groups) {
         setGroups(selectedDept.groups);
@@ -200,14 +200,14 @@ const SalaryOrders = () => {
         const hasMatchingDept = submodels.some(
           (submodel) =>
             submodel?.group?.group?.department_id ===
-            Number(filters.department_id)
+            Number(filters.department_id),
         );
         if (!hasMatchingDept) return false;
       }
 
       if (filters.group_id !== "all") {
         const hasMatchingGroup = submodels.some(
-          (submodel) => submodel?.group?.group?.id === Number(filters.group_id)
+          (submodel) => submodel?.group?.group?.id === Number(filters.group_id),
         );
         if (!hasMatchingGroup) return false;
       }
@@ -225,14 +225,14 @@ const SalaryOrders = () => {
         const hasMatchingDept = submodels.some(
           (submodel) =>
             submodel?.group?.group?.department_id ===
-            Number(filters.department_id)
+            Number(filters.department_id),
         );
         if (!hasMatchingDept) return false;
       }
 
       if (filters.group_id !== "all") {
         const hasMatchingGroup = submodels.some(
-          (submodel) => submodel?.group?.group?.id === Number(filters.group_id)
+          (submodel) => submodel?.group?.group?.id === Number(filters.group_id),
         );
         if (!hasMatchingGroup) return false;
       }
@@ -306,7 +306,7 @@ const SalaryOrders = () => {
           {filteredSelected?.length > 0
             ? `(${filteredSelected?.length} ta) ${filteredSelected?.reduce(
                 (total, item) => total + item.order?.quantity,
-                0
+                0,
               )}`
             : ""}
         </div>
@@ -318,14 +318,14 @@ const SalaryOrders = () => {
             ?.sort((a, b) => {
               if (
                 !a.order?.order_model?.submodels?.some(
-                  (submodel) => submodel?.group?.group?.name
+                  (submodel) => submodel?.group?.group?.name,
                 )
               ) {
                 return -1;
               }
               if (
                 !b.order?.order_model?.submodels?.some(
-                  (submodel) => submodel?.group?.group?.name
+                  (submodel) => submodel?.group?.group?.name,
                 )
               ) {
                 return 1;
@@ -367,6 +367,10 @@ const SalaryOrders = () => {
                                 ? "opacity-50 cursor-not-allowed"
                                 : "cursor-pointer"
                             }`}
+                            onClick={() => {
+                              if (isLockingThisOrder) return;
+                              lockOrder(item.order?.id, false);
+                            }}
                           />
                         ) : (
                           <KeyRound
@@ -418,7 +422,7 @@ const SalaryOrders = () => {
                               <Shirt size={12} className="text-gray-800" />{" "}
                               {submodel.submodel?.name}
                             </div>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
@@ -435,9 +439,9 @@ const SalaryOrders = () => {
                               (total, submodel) =>
                                 total +
                                 parseInt(
-                                  submodel.sewing_outputs_sum_quantity || 0
+                                  submodel.sewing_outputs_sum_quantity || 0,
                                 ),
-                              0
+                              0,
                             ) /
                               item.order?.quantity) *
                             100
@@ -452,9 +456,9 @@ const SalaryOrders = () => {
                             (total, submodel) =>
                               total +
                               parseInt(
-                                submodel.sewing_outputs_sum_quantity || 0
+                                submodel.sewing_outputs_sum_quantity || 0,
                               ),
-                            0
+                            0,
                           ) > 0
                             ? "text-white"
                             : ""
@@ -464,7 +468,7 @@ const SalaryOrders = () => {
                           (total, submodel) =>
                             total +
                             parseInt(submodel.sewing_outputs_sum_quantity || 0),
-                          0
+                          0,
                         )}
                         /{item.order?.quantity}
                       </div>
@@ -472,7 +476,7 @@ const SalaryOrders = () => {
 
                     <div className="text-xs text-gray-800">
                       {item?.order?.order_model?.submodels?.some(
-                        (submodel) => submodel?.group?.group?.name
+                        (submodel) => submodel?.group?.group?.name,
                       ) ? (
                         item?.order?.order_model?.submodels
                           ?.map((submodel) => submodel?.group?.group?.name)
@@ -508,7 +512,7 @@ const SalaryOrders = () => {
                 filteredRecommendations?.length
               } ta) ${filteredRecommendations?.reduce(
                 (total, item) => total + item?.quantity,
-                0
+                0,
               )}`
             : ""}
         </div>
@@ -592,9 +596,9 @@ const SalaryOrders = () => {
                             (total, submodel) =>
                               total +
                               parseInt(
-                                submodel.sewing_outputs_sum_quantity || 0
+                                submodel.sewing_outputs_sum_quantity || 0,
                               ),
-                            0
+                            0,
                           ) /
                             item?.quantity) *
                           100
@@ -609,7 +613,7 @@ const SalaryOrders = () => {
                           (total, submodel) =>
                             total +
                             parseInt(submodel.sewing_outputs_sum_quantity || 0),
-                          0
+                          0,
                         ) > 0
                           ? "text-white"
                           : ""
@@ -619,7 +623,7 @@ const SalaryOrders = () => {
                         (total, submodel) =>
                           total +
                           parseInt(submodel.sewing_outputs_sum_quantity || 0),
-                        0
+                        0,
                       )}
                       /{item?.quantity}
                     </div>
