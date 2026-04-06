@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import YesterdayAbsence from "./SuperHR/Stats/YesterdayAbsence";
 import { Input } from "@/components/ui/input";
+import ModelImages from "@/components/ModelImages";
 
 const DailyResults = () => {
   // App data states - these will only be used after authentication
@@ -455,7 +456,10 @@ const DailyResults = () => {
                         {getMedalForRank(rank)}
                       </td>
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        {output.model.name}
+                        <div className="flex items-center gap-2">
+                          {output.model.name}
+                          <ModelImages modelCode={output.model.name} />
+                        </div>
                       </td>
                       <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
                         <TooltipProvider delayDuration={100}>
