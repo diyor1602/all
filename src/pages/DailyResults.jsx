@@ -5,6 +5,7 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
 import api from "@/utils/api";
 import {
   ChartColumnIncreasing,
@@ -13,65 +14,55 @@ import {
   NotepadText,
   Trophy,
   Users,
+  CalendarDays,
+  Clock3,
+  Sparkles,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import YesterdayAbsence from "./SuperHR/Stats/YesterdayAbsence";
-import { Input } from "@/components/ui/input";
 import ModelImages from "@/components/ModelImages";
 
 const DailyResults = () => {
-  // App data states - these will only be used after authentication
   const [outputs, setOutputs] = useState([]);
   const [exampleOutputs, setExampleOutputs] = useState([]);
   const [groupEarnings, setGroupEarnings] = useState([]);
   const [employeeCount, setEmployeeCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [aupCount, setAupCount] = useState(0);
+
   const [selectedDate, setSelectedDate] = useState(() => {
-    // Try to get date from localStorage first, otherwise use current date
     const savedDate = localStorage.getItem("selectedDate");
-    if (savedDate) {
-      return savedDate;
-    }
+    if (savedDate) return savedDate;
+
     const date = new Date();
     date.setHours(date.getHours() + 5);
-    return date.toISOString()?.split("T")[0];
+    return date.toISOString().split("T")[0];
   });
 
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Always define refs at the top level
   const dataIntervalRef = useRef(null);
   const dateTimerRef = useRef(null);
 
-  // Initialize app data and timers after authentication
+  const role = localStorage.getItem("role");
+
   const initializeApp = () => {
-    // Initialize date timer
     dateTimerRef.current = setInterval(() => {
       setCurrentDateTime(new Date());
     }, 1000);
 
-    // Initial data load
     fetchData();
   };
 
-  // Set up data refresh interval
   useEffect(() => {
-    // Clear existing interval
-    if (dataIntervalRef.current) {
-      clearInterval(dataIntervalRef.current);
-    }
+    if (dataIntervalRef.current) clearInterval(dataIntervalRef.current);
 
-    // Set new interval
     dataIntervalRef.current = setInterval(fetchData, 60000);
 
-    // Cleanup
     return () => {
-      if (dataIntervalRef.current) {
-        clearInterval(dataIntervalRef.current);
-      }
+      if (dataIntervalRef.current) clearInterval(dataIntervalRef.current);
     };
   }, [selectedDate]);
 
@@ -79,7 +70,6 @@ const DailyResults = () => {
     initializeApp();
   }, []);
 
-  // Clean up all timers and resources on unmount
   useEffect(() => {
     return () => {
       if (dateTimerRef.current) clearInterval(dateTimerRef.current);
@@ -87,50 +77,45 @@ const DailyResults = () => {
     };
   }, []);
 
-  // Fetch data
-  const fetchData = async () => {
-    try {
-      const response = await api.get("/sewingOutputs", {
-        params: {
-          start_date: selectedDate,
-        },
-      });
-      const data = await response.data;
-
-      // Process the data
-      processOutputData(data.sewing_outputs);
-      processExampleOutputData(data.example_outputs);
-      setEmployeeCount(data.simple);
-      setAupCount(data.aup);
-      setGroupEarnings(data.group_earnings);
-    } catch (error) {
-      toast({
-        title: "Xatolik!",
-        description: "Data olishda xatolik",
-        variant: "destructive",
-      });
-    }
-  };
-
   useEffect(() => {
     fetchData();
   }, [selectedDate]);
 
-  // Save selectedDate to localStorage whenever it changes
   useEffect(() => {
     if (selectedDate) {
       localStorage.setItem("selectedDate", selectedDate);
     }
   }, [selectedDate]);
 
+  const fetchData = async () => {
+    try {
+      const response = await api.get("/sewingOutputs", {
+        params: { start_date: selectedDate },
+      });
+
+      const data = response.data;
+
+      processOutputData(data.sewing_outputs || []);
+      processExampleOutputData(data.example_outputs || []);
+      setEmployeeCount(data.simple || 0);
+      setAupCount(data.aup || 0);
+      setGroupEarnings(data.group_earnings || []);
+    } catch (error) {
+      toast({
+        title: "Xatolik!",
+        description: "Ma'lumotlarni olishda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleNavigate = (id) => {
-    if (localStorage.getItem("role") === "supervisor") {
+    if (role === "supervisor") {
       navigate("/supervisor/orders/" + id);
     }
   };
 
   const processOutputData = (outputsData) => {
-    // Sort by progress percentage (descending)
     const sortedOutputs = [...outputsData]
       .map((output) => {
         const progressPercentage =
@@ -138,10 +123,7 @@ const DailyResults = () => {
             ? Math.round((output.today_quantity / output.today_plan) * 100)
             : 0;
 
-        return {
-          ...output,
-          progressPercentage,
-        };
+        return { ...output, progressPercentage };
       })
       .sort((a, b) => b.progressPercentage - a.progressPercentage);
 
@@ -149,7 +131,6 @@ const DailyResults = () => {
   };
 
   const processExampleOutputData = (outputsData) => {
-    // Sort by progress percentage (descending)
     const sortedOutputs = [...outputsData]
       .map((output) => {
         const progressPercentage =
@@ -157,10 +138,7 @@ const DailyResults = () => {
             ? Math.round((output.today_quantity / output.today_plan) * 100)
             : 0;
 
-        return {
-          ...output,
-          progressPercentage,
-        };
+        return { ...output, progressPercentage };
       })
       .sort((a, b) => b.progressPercentage - a.progressPercentage);
 
@@ -173,517 +151,493 @@ const DailyResults = () => {
     second: "2-digit",
   });
 
-  // Get medal for rank
+  const formatNumber = (value) => {
+    return Number(value || 0).toLocaleString("ru-RU", {
+      maximumFractionDigits: 0,
+    });
+  };
+
+  const allOutputs = useMemo(
+    () => [...outputs, ...exampleOutputs],
+    [outputs, exampleOutputs],
+  );
+
+  const totalPlan = useMemo(
+    () =>
+      outputs.reduce((total, output) => total + (output.today_plan || 0), 0),
+    [outputs],
+  );
+
+  const totalTodayQuantity = useMemo(
+    () =>
+      outputs.reduce(
+        (total, output) => total + (output.today_quantity || 0),
+        0,
+      ),
+    [outputs],
+  );
+
+  const totalQuantity = useMemo(
+    () =>
+      outputs.reduce(
+        (total, output) => total + (output.total_quantity || 0),
+        0,
+      ),
+    [outputs],
+  );
+
+  const averageProgress = useMemo(() => {
+    if (!outputs.length) return 0;
+
+    return Math.round(
+      outputs.reduce((sum, output) => {
+        const progress =
+          output.today_plan > 0
+            ? (output.today_quantity / output.today_plan) * 100
+            : 0;
+        return sum + progress;
+      }, 0) / outputs.length,
+    );
+  }, [outputs]);
+
   const getMedalForRank = (rank) => {
     switch (rank) {
       case 1:
-        return <Trophy className="text-yellow-400" size={16} />;
+        return <Trophy className="text-yellow-500" size={16} />;
       case 2:
-        return <Medal className="text-gray-400" size={16} />;
+        return <Medal className="text-slate-400" size={16} />;
       case 3:
-        return <Medal className="text-yellow-700" size={16} />;
+        return <Medal className="text-amber-700" size={16} />;
       default:
         return (
-          <span className="font-medium text-gray-500 text-xs">{rank}</span>
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+            {rank}
+          </span>
         );
     }
   };
 
-  // Get progress bar color based on percentage
   const getProgressColor = (percentage) => {
-    if (percentage >= 100) return "bg-green-500";
-    if (percentage >= 70) return "bg-blue-500";
-    return "bg-yellow-500";
+    if (percentage >= 100) return "bg-emerald-500";
+    if (percentage >= 70) return "bg-sky-500";
+    return "bg-amber-500";
   };
 
   const getTextColor = (percentage) => {
-    if (percentage >= 100) return "text-green-600";
-    if (percentage >= 70) return "text-blue-600";
-    return "text-yellow-600";
+    if (percentage >= 100) return "text-emerald-600";
+    if (percentage >= 70) return "text-sky-600";
+    return "text-amber-600";
   };
 
   const getProgressStyle = (percentage) => {
     if (percentage >= 100) {
       return {
         bg: "from-emerald-500 to-green-600",
+        soft: "from-emerald-50 to-green-50",
         text: "text-emerald-600",
+        ring: "ring-emerald-100",
       };
     }
     if (percentage >= 70) {
       return {
-        bg: "from-blue-500 to-cyan-600",
-        text: "text-blue-600",
+        bg: "from-sky-500 to-blue-600",
+        soft: "from-sky-50 to-blue-50",
+        text: "text-sky-600",
+        ring: "ring-sky-100",
       };
     }
     return {
-      bg: "from-amber-500 to-orange-600",
+      bg: "from-amber-500 to-orange-500",
+      soft: "from-amber-50 to-orange-50",
       text: "text-amber-600",
+      ring: "ring-amber-100",
     };
   };
 
-  // Main app content
+  const progressStyle = getProgressStyle(averageProgress);
+
+  const StatCard = ({
+    title,
+    value,
+    icon,
+    iconBg,
+    subtitle,
+    valueClassName = "",
+  }) => (
+    <div className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/85 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-slate-100/40 pointer-events-none" />
+      <div className="relative flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-500">{title}</p>
+          <div
+            className={`mt-1 text-xl font-bold tracking-tight text-slate-900 ${valueClassName}`}
+          >
+            {value}
+          </div>
+          {subtitle ? (
+            <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
+          ) : null}
+        </div>
+        <div
+          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${iconBg} text-white shadow-lg`}
+        >
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+
+  const TableProgress = ({ percentage }) => (
+    <div className="flex min-w-[120px] items-center gap-3">
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <div
+          className={`${getProgressColor(percentage)} h-full rounded-full transition-all duration-700`}
+          style={{ width: `${Math.min(percentage, 100)}%` }}
+        />
+      </div>
+      <span
+        className={`min-w-[44px] text-right text-xs font-bold ${getTextColor(percentage)}`}
+      >
+        {percentage}%
+      </span>
+    </div>
+  );
+
+  const renderOutputRow = (output, index, isExample = false) => {
+    const rank = index + 1;
+
+    return (
+      <tr
+        key={`${isExample ? "example" : "main"}-${output.order_id}-${index}`}
+        className={`border-b border-slate-100 transition-colors hover:bg-slate-50/80 ${
+          output.hasChanged ? "animate-pulse" : ""
+        } ${role === "supervisor" ? "cursor-pointer" : ""}`}
+        onClick={(e) => {
+          e.preventDefault();
+          handleNavigate(output.order_id);
+        }}
+      >
+        <td className="px-4 py-4 text-center">{getMedalForRank(rank)}</td>
+
+        <td className="px-4 py-4">
+          <div className="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+            <span>{output?.model?.name}</span>
+            {!isExample && <ModelImages modelCode={output?.model?.name} />}
+          </div>
+        </td>
+
+        <td className="px-4 py-4 text-slate-700">
+          <div className="flex flex-col gap-1">
+            <p className="text-sm">{output?.group?.name}</p>
+            <p className="text-xs">{output?.responsibleUser}</p>
+          </div>
+        </td>
+
+        <td className="px-4 py-4 text-center">
+          <span className="inline-flex rounded-full bg-indigo-50 px-2 py-1 text-xs font-bold text-indigo-700">
+            {output.employee_count}
+          </span>
+        </td>
+
+        <td className="px-4 py-4 text-center font-semibold text-slate-700 text-sm">
+          {formatNumber(output.today_plan)}
+        </td>
+
+        <td
+          className={`px-4 py-4 text-center font-bold text-sm ${
+            output.today_quantity >= output.today_plan
+              ? "text-emerald-600"
+              : "text-sky-600"
+          }`}
+        >
+          {formatNumber(output.today_quantity)}
+        </td>
+
+        <td className="px-4 py-4 text-center font-bold text-violet-600 text-sm">
+          {formatNumber(output.total_quantity)}
+        </td>
+
+        <td className="px-4 py-4">
+          <TableProgress percentage={output.progressPercentage} />
+        </td>
+      </tr>
+    );
+  };
+
   return (
-    <>
-      {localStorage.getItem("role") === "superhr" && (
-        <div className="mb-4">
+    <div className="min-h-screen">
+      {role === "superhr" && (
+        <div className="mb-5">
           <YesterdayAbsence />
         </div>
       )}
 
-      <div className="mb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div>
+      <div className="mb-6 overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur-xl sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-slate-500">
+              <Sparkles size={16} className="text-indigo-500" />
+              <span className="text-xs font-medium">
+                Kunlik natijalar paneli
+              </span>
+            </div>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Reja, bajarilgan ishlar va guruhlar bo‘yicha statistikalar
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <CalendarDays size={18} className="text-slate-500" />
               <Input
                 type="date"
-                className="bg-white"
+                className="h-auto border-none bg-transparent p-0 shadow-none focus-visible:ring-0"
                 value={selectedDate}
-                onChange={(e) => {
-                  const newDate = e.target.value;
-                  setSelectedDate(newDate);
-                }}
+                onChange={(e) => setSelectedDate(e.target.value)}
               />
             </div>
-          </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-slate-800 font-mono">
+
+            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-sky-50 px-2 py-1 shadow-sm">
               {formattedTime}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col-reverse md:flex-col">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-medium">
-                  Kiritilgan reja
-                </p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {outputs.reduce(
-                    (total, output) => total + output.today_plan,
-                    0,
-                  )}
-                </p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl shadow-lg">
-                <NotepadText className="text-white" size={24} />
-              </div>
+      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <StatCard
+          title="Kiritilgan reja"
+          value={formatNumber(totalPlan)}
+          icon={<NotepadText size={24} />}
+          iconBg="from-indigo-500 to-sky-500"
+          subtitle="Bugungi umumiy reja"
+        />
+
+        <StatCard
+          title="Real natija"
+          value={formatNumber(totalTodayQuantity)}
+          icon={<ChartColumnIncreasing size={24} />}
+          iconBg={
+            totalTodayQuantity >= totalPlan
+              ? "from-emerald-500 to-green-600"
+              : "from-rose-500 to-red-600"
+          }
+          subtitle="Bugungi bajarilgan ish"
+        />
+
+        <StatCard
+          title="Jami natija"
+          value={formatNumber(totalQuantity)}
+          icon={<ChartNoAxesCombined size={24} />}
+          iconBg="from-fuchsia-500 to-violet-600"
+          subtitle="Umumiy yig‘ilgan natija"
+        />
+
+        <StatCard
+          title="Jami ishchilar"
+          value={
+            <span>
+              <span className="text-emerald-600">{employeeCount}</span>
+              <span className="mx-1 text-slate-400">/</span>
+              <span>{employeeCount + aupCount}</span>
+            </span>
+          }
+          icon={<Users size={24} />}
+          iconBg="from-violet-500 to-indigo-600"
+          subtitle="Ishchi / umumiy"
+        />
+
+        <StatCard
+          title="AUP"
+          value={formatNumber(aupCount)}
+          icon={<Users size={24} />}
+          iconBg="from-amber-500 to-orange-600"
+          subtitle="Administrativ boshqaruv xodimlari"
+        />
+
+        <div
+          className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br ${progressStyle.soft} p-5 shadow-sm ring-1 ${progressStyle.ring}`}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-medium text-slate-500">
+                Bajarilgan o‘rtacha plan
+              </p>
+              <p className={`mt-1 text-xl font-bold ${progressStyle.text}`}>
+                {averageProgress}%
+              </p>
+            </div>
+            <div
+              className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${progressStyle.bg} text-white shadow-lg`}
+            >
+              <ChartColumnIncreasing size={24} />
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-medium">
-                  Real natija
-                </p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {outputs.reduce(
-                    (total, output) => total + output.today_quantity,
-                    0,
-                  )}
-                </p>
-              </div>
-              <div
-                className={`p-3 rounded-xl shadow-lg ${
-                  outputs.reduce(
-                    (total, output) => total + output.today_quantity,
-                    0,
-                  ) >=
-                  outputs.reduce(
-                    (total, output) => total + output.today_plan,
-                    0,
-                  )
-                    ? "bg-gradient-to-r from-emerald-500 to-green-600"
-                    : "bg-gradient-to-r from-red-500 to-red-700"
-                }`}
-              >
-                <ChartColumnIncreasing className="text-white" size={24} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-medium">
-                  Jami natija
-                </p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {outputs.reduce(
-                    (total, output) => total + output.total_quantity,
-                    0,
-                  )}
-                </p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-pink-500 to-pink-700 rounded-xl shadow-lg">
-                <ChartNoAxesCombined className="text-white" size={24} />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-medium">
-                  Jami ishchilar
-                </p>
-                <p className="text-2xl font-bold text-slate-800">
-                  <span className="text-green-500">{employeeCount}</span> /{" "}
-                  {employeeCount + aupCount}
-                </p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl shadow-lg">
-                <Users className="text-white" size={24} />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-medium">AUP</p>
-                <p className="text-2xl font-bold text-slate-800">{aupCount}</p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-yellow-600 to-yellow-800 rounded-xl shadow-lg">
-                <Users className="text-white" size={24} />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-medium">
-                  Bajarilgan o'rtacha plan
-                </p>
-                {(() => {
-                  // Calculate average progress across all outputs
-                  const avgProgress =
-                    outputs.length > 0
-                      ? Math.round(
-                          outputs.reduce((sum, output) => {
-                            const progress =
-                              output.today_plan > 0
-                                ? (output.today_quantity / output.today_plan) *
-                                  100
-                                : 0;
-                            return sum + progress;
-                          }, 0) / outputs.length,
-                        )
-                      : 0;
-                  const style = getProgressStyle(avgProgress);
-                  return (
-                    <p className={`text-2xl font-bold ${style.text}`}>
-                      {avgProgress}%
-                    </p>
-                  );
-                })()}
-              </div>
-              <div
-                className={`p-3 rounded-xl shadow-lg bg-gradient-to-r ${(() => {
-                  // Use the same average progress for the background style
-                  const avgProgress =
-                    outputs.length > 0
-                      ? Math.round(
-                          outputs.reduce((sum, output) => {
-                            const progress =
-                              output.today_plan > 0
-                                ? (output.today_quantity / output.today_plan) *
-                                  100
-                                : 0;
-                            return sum + progress;
-                          }, 0) / outputs.length,
-                        )
-                      : 0;
-                  return getProgressStyle(avgProgress).bg;
-                })()}`}
-              >
-                <ChartColumnIncreasing className="text-white" size={24} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Data Table */}
-        <div className="bg-white rounded-xl shadow-md p-0 sm:p-4 md:p-6 mb-8">
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white">
-              <thead className="sticky top-0 z-10 bg-indigo-50">
-                <tr className="border-b border-indigo-100">
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    #
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Model
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-left text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Guruh
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Ishchilar
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Reja
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Natija
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Jami natija
-                  </th>
-                  <th className="py-2 px-1 sm:px-2 md:px-4 text-center text-xs sm:text-sm md:text-base font-medium text-indigo-800">
-                    Progress
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {outputs.map((output, index) => {
-                  const rank = index + 1;
-                  return (
-                    <tr
-                      key={`${index}`}
-                      className={`border-b border-gray-200 hover:bg-gray-50 ${
-                        output.hasChanged ? "animate-highlight" : ""
-                      }`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleNavigate(output.order_id);
-                      }}
-                    >
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        {getMedalForRank(rank)}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        <div className="flex items-center gap-2">
-                          {output.model.name}
-                          <ModelImages modelCode={output.model.name} />
-                        </div>
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        <TooltipProvider delayDuration={100}>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <p>{output?.group?.name}</p>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{output?.responsibleUser}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center">
-                        <span className="font-bold text-indigo-600">
-                          {output.employee_count}
-                        </span>
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
-                        {output.today_plan}
-                      </td>
-                      <td
-                        className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
-                          output.today_quantity >= output.today_plan
-                            ? "text-green-600"
-                            : "text-blue-600"
-                        }`}
-                      >
-                        {output.today_quantity}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
-                        {output.total_quantity}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4">
-                        <div className="flex items-center">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`${getProgressColor(
-                                output.progressPercentage,
-                              )} h-2 rounded-full`}
-                              style={{
-                                width: `${Math.min(
-                                  output.progressPercentage,
-                                  100,
-                                )}%`,
-                                animation: "fillProgress 1s ease-out",
-                              }}
-                            ></div>
-                          </div>
-                          <span
-                            className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
-                              output.progressPercentage,
-                            )}`}
-                          >
-                            {output.progressPercentage}%
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {exampleOutputs.map((output, index) => {
-                  const rank = index + 1;
-                  return (
-                    <tr
-                      key={`${index}`}
-                      className={`border-b border-gray-200 hover:bg-gray-50 ${
-                        output.hasChanged ? "animate-highlight" : ""
-                      }`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleNavigate(output.order_id);
-                      }}
-                    >
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        {getMedalForRank(rank)}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        {output.model.name}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base">
-                        <TooltipProvider delayDuration={100}>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <p>{output?.group?.name}</p>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{output?.responsibleUser}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center">
-                        <span className="font-bold text-indigo-600">
-                          {output.employee_count}
-                        </span>
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-gray-700">
-                        {output.today_plan}
-                      </td>
-                      <td
-                        className={`py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold ${
-                          output.today_quantity >= output.today_plan
-                            ? "text-green-600"
-                            : "text-blue-600"
-                        }`}
-                      >
-                        {output.today_quantity}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base text-center font-bold text-indigo-600">
-                        {output.total_quantity}
-                      </td>
-                      <td className="py-2 px-1 sm:px-2 md:px-4">
-                        <div className="flex items-center">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`${getProgressColor(
-                                output.progressPercentage,
-                              )} h-2 rounded-full`}
-                              style={{
-                                width: `${Math.min(
-                                  output.progressPercentage,
-                                  100,
-                                )}%`,
-                                animation: "fillProgress 1s ease-out",
-                              }}
-                            ></div>
-                          </div>
-                          <span
-                            className={`ml-1 sm:ml-2 text-xs sm:text-sm font-bold ${getTextColor(
-                              output.progressPercentage,
-                            )}`}
-                          >
-                            {output.progressPercentage}%
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/80">
+            <div
+              className={`h-full rounded-full bg-gradient-to-r ${progressStyle.bg} transition-all duration-700`}
+              style={{ width: `${Math.min(averageProgress, 100)}%` }}
+            />
           </div>
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto rounded-lg shadow-md">
-        <div className="min-w-full overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-indigo-50 dark:bg-indigo-900/30">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
+      <div className="mb-8 overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl">
+        <div className="border-b border-slate-100 px-5 py-4">
+          <h2 className="text-base font-bold text-slate-900">
+            Model natijalari
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Reyting, reja va bajarilish ko‘rsatkichlari
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
+              <tr className="border-b border-slate-100">
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  #
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Model
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
                   Guruh
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
-                  Davomat
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Ishchilar
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
-                  Qilgan ishi
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Reja
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
-                  O'rtacha summa
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Natija
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider border-b border-indigo-100">
-                  Jami topilgan
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Jami natija
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Progress
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
-              {groupEarnings
-                ?.sort(
-                  (a, b) =>
-                    parseFloat(b.per_employee_earning) -
-                    parseFloat(a.per_employee_earning),
-                )
-                ?.map((groupEarning, index) => (
-                  <tr
-                    key={index}
-                    className="hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 transition-colors"
+
+            <tbody>
+              {allOutputs.length ? (
+                <>
+                  {outputs.map((output, index) =>
+                    renderOutputRow(output, index, false),
+                  )}
+                  {exampleOutputs.map((output, index) =>
+                    renderOutputRow(output, index, true),
+                  )}
+                </>
+              ) : (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="px-4 py-14 text-center text-xs text-slate-500"
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-indigo-800">
-                      <TooltipProvider delayDuration={100}>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <p>{groupEarning.group_name}</p>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{groupEarning.responsibleUser}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
-                      {groupEarning.attendance_count || "0"}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
-                      {parseFloat(groupEarning.quantity || 0)?.toLocaleString(
-                        "ru-RU",
-                        {
-                          maximumFractionDigits: 0,
-                        },
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-bold text-indigo-600">
-                      {parseFloat(
-                        groupEarning.per_employee_earning || 0,
-                      )?.toLocaleString("ru-RU", {
-                        maximumFractionDigits: 0,
-                      })}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-semibold text-green-600 dark:text-green-400">
-                      {parseFloat(
-                        groupEarning.today_earning || 0,
-                      )?.toLocaleString("ru-RU", {
-                        maximumFractionDigits: 0,
-                      })}
-                    </td>
-                  </tr>
-                ))}
+                    Bu sana uchun ma'lumot topilmadi
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
-    </>
+
+      <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl">
+        <div className="border-b border-slate-100 px-5 py-4">
+          <h2 className="text-base font-bold text-slate-900">
+            Guruhlar bo‘yicha topilgan summa
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Har bir guruhning davomat va daromad ko‘rsatkichlari
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-slate-50">
+              <tr className="border-b border-slate-100">
+                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Guruh
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Davomat
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Qilgan ishi
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  O‘rtacha summa
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Jami topilgan
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {groupEarnings?.length ? (
+                [...groupEarnings]
+                  .sort(
+                    (a, b) =>
+                      parseFloat(b.per_employee_earning || 0) -
+                      parseFloat(a.per_employee_earning || 0),
+                  )
+                  .map((groupEarning, index) => (
+                    <tr
+                      key={index}
+                      className="border-b border-slate-100 transition-colors hover:bg-slate-50/80"
+                    >
+                      <td className="px-4 py-4 text-xs font-semibold text-slate-800">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm">
+                            {groupEarning.group_name}
+                          </div>
+                          <div className="text-xs">
+                            {groupEarning.responsibleUser}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-4 text-center text-xs font-bold text-indigo-600">
+                        {formatNumber(groupEarning.attendance_count)}
+                      </td>
+
+                      <td className="px-4 py-4 text-center text-xs font-bold text-slate-700">
+                        {formatNumber(groupEarning.quantity)}
+                      </td>
+
+                      <td className="px-4 py-4 text-center text-xs font-bold text-violet-600">
+                        {formatNumber(groupEarning.per_employee_earning)}
+                      </td>
+
+                      <td className="px-4 py-4 text-center text-xs font-bold text-emerald-600">
+                        {formatNumber(groupEarning.today_earning)}
+                      </td>
+                    </tr>
+                  ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-14 text-center text-xs text-slate-500"
+                  >
+                    Guruhlar bo‘yicha ma'lumot topilmadi
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 };
 
