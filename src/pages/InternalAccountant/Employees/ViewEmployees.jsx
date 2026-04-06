@@ -15,7 +15,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import payment_types from "@/lib/paymentTypes";
 import api from "@/utils/api";
 import {
   Briefcase,
@@ -106,7 +105,7 @@ const SalaryDetails = () => {
 
   const [filters, setFilters] = useState(initialFilters);
   const [selectedMonth, setSelectedMonth] = useState(
-    filters.start_date.substring(0, 7)
+    filters.start_date.substring(0, 7),
   );
   const [employeeData, setEmployeeData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -118,7 +117,7 @@ const SalaryDetails = () => {
 
   const getAbsenceData = (date) => {
     return employeeData?.absences?.find(
-      (absence) => absence.start_date === date
+      (absence) => absence.start_date === date,
     );
   };
 
@@ -126,7 +125,7 @@ const SalaryDetails = () => {
     return employeeData?.holidays?.find(
       (holiday) =>
         new Date(date) >= new Date(holiday.start_date) &&
-        new Date(date) <= new Date(holiday.end_date)
+        new Date(date) <= new Date(holiday.end_date),
     );
   };
 
@@ -241,7 +240,7 @@ const SalaryDetails = () => {
   const totalTarificationAmount =
     employee.employee_tarification_logs?.reduce(
       (sum, log) => sum + Number.parseFloat(log.amount_earned),
-      0
+      0,
     ) || 0;
 
   return (
@@ -291,8 +290,8 @@ const SalaryDetails = () => {
                 {employee.status === "working"
                   ? "Ishlayapti"
                   : employee.status === "kicked"
-                  ? "Ishlamayapti"
-                  : "-"}
+                    ? "Ishlamayapti"
+                    : "-"}
               </Badge>
             </div>
           </CardHeader>
@@ -349,31 +348,6 @@ const SalaryDetails = () => {
             </div>
 
             <Separator />
-
-            <div className="space-y-3">
-              {employee.salary_visible && employee.bonus && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Bonus:</span>
-                  <span className="font-medium">
-                    {Number.parseFloat(employee.bonus).toLocaleString("ru-RU")}{" "}
-                    so'm
-                  </span>
-                </div>
-              )}
-              {employee.salary_visible && totalTarificationAmount > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">
-                    Jami ishlangan mablag'lar:
-                  </span>
-                  <span className="font-medium text-blue-600">
-                    {totalTarificationAmount.toLocaleString("ru-RU", {
-                      maximumFractionDigits: 0,
-                    })}{" "}
-                    so'm
-                  </span>
-                </div>
-              )}
-            </div>
           </CardContent>
           <CardFooter className="flex flex-col items-start pt-0">
             <div className="text-xs text-muted-foreground w-full space-y-1">
@@ -402,8 +376,8 @@ const SalaryDetails = () => {
                     {employee.gender === "male"
                       ? "Erkak"
                       : employee.gender === "female"
-                      ? "Ayol"
-                      : "-"}
+                        ? "Ayol"
+                        : "-"}
                   </span>
                 </div>
               )}
@@ -420,38 +394,14 @@ const SalaryDetails = () => {
                 </div>
               )}
 
-              {employee.salary_visible && (
-                <>
-                  <div className="flex justify-between">
-                    <span>To'lov turi:</span>
-                    <span className="capitalize">
-                      {payment_types[employee.payment_type]}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Maosh:</span>
-                    <span className="capitalize">
-                      {parseFloat(employee.salary || 0).toLocaleString("ru-RU")}{" "}
-                      so'm
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>KPI:</span>
-                    <span className="capitalize">
-                      {parseFloat(employee.kpi || 0).toLocaleString("ru-RU")}{" "}
-                      so'm
-                    </span>
-                  </div>
-                </>
-              )}
               <div className="flex justify-between">
                 <span>Xodim turi:</span>
                 <span>
                   {employee.type === "aup"
                     ? "AUP"
                     : employee.type === "simple"
-                    ? "Oddiy"
-                    : "-"}
+                      ? "Oddiy"
+                      : "-"}
                 </span>
               </div>
               {employee?.comment && (
@@ -496,20 +446,6 @@ const SalaryDetails = () => {
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
                     Davomat qaydnomasi
-                    {employee?.salary_visible && (
-                      <>
-                        {" ("}
-                        {employee.attendance_salaries
-                          ?.reduce(
-                            (sum, salary) =>
-                              sum + Number.parseFloat(salary.amount || 0),
-                            0
-                          )
-                          ?.toLocaleString("ru-RU")}{" "}
-                        so'm
-                        {")"}
-                      </>
-                    )}
                   </CardTitle>
                   <CardDescription className="grid grid-cols-3 gap-4 pt-2">
                     {employee.attendances?.length > 0
@@ -520,7 +456,7 @@ const SalaryDetails = () => {
                       <span className="text-sm">
                         {
                           employee.attendances.filter(
-                            (a) => a.status === "present"
+                            (a) => a.status === "present",
                           ).length
                         }{" "}
                         kun kelgan
@@ -531,7 +467,7 @@ const SalaryDetails = () => {
                       <span className="text-sm">
                         {
                           employee.attendances.filter(
-                            (a) => a.status === "absent"
+                            (a) => a.status === "absent",
                           ).length
                         }{" "}
                         kun kelmagan
@@ -572,21 +508,6 @@ const SalaryDetails = () => {
                                     ? "Kelgan"
                                     : "Kelmagan"}
                                 </p>
-                                {employee?.attendance_salaries?.find(
-                                  (a) => a.attendance_id === attendance.id
-                                ) &&
-                                  employee.salary_visible && (
-                                    <p className="text-xs text-muted-foreground">
-                                      Topgan puli:{" "}
-                                      {parseFloat(
-                                        employee.attendance_salaries.find(
-                                          (a) =>
-                                            a.attendance_id === attendance.id
-                                        )?.amount || 0
-                                      )?.toLocaleString("ru-RU")}{" "}
-                                      so'm
-                                    </p>
-                                  )}
                               </div>
                             </div>
                             <div className="text-sm space-y-1">
@@ -596,7 +517,7 @@ const SalaryDetails = () => {
                                   <span>
                                     Keldi:{" "}
                                     {formatTime(
-                                      attendance.check_in.split(" ")[1]
+                                      attendance.check_in.split(" ")[1],
                                     )}
                                   </span>
                                   {attendance.check_in_image && (
@@ -605,7 +526,7 @@ const SalaryDetails = () => {
                                       size="icon"
                                       onClick={() => {
                                         setSelectedImage(
-                                          attendance.check_in_image
+                                          attendance.check_in_image,
                                         );
                                         setImageDialogOpen(true);
                                       }}
@@ -621,7 +542,7 @@ const SalaryDetails = () => {
                                   <span>
                                     Ketdi:{" "}
                                     {formatTime(
-                                      attendance.check_out.split(" ")[1]
+                                      attendance.check_out.split(" ")[1],
                                     )}
                                   </span>
                                   {attendance.check_out_image && (
@@ -630,7 +551,7 @@ const SalaryDetails = () => {
                                       size="icon"
                                       onClick={() => {
                                         setSelectedImage(
-                                          attendance.check_out_image
+                                          attendance.check_out_image,
                                         );
                                         setImageDialogOpen(true);
                                       }}
@@ -648,7 +569,8 @@ const SalaryDetails = () => {
                                       size="icon"
                                       onClick={() => {
                                         setSelectedImage(
-                                          getAbsenceData(attendance.date)?.image
+                                          getAbsenceData(attendance.date)
+                                            ?.image,
                                         );
                                         setImageDialogOpen(true);
                                       }}
@@ -672,7 +594,8 @@ const SalaryDetails = () => {
                                       size="icon"
                                       onClick={() => {
                                         setSelectedImage(
-                                          getHolidayData(attendance.date)?.image
+                                          getHolidayData(attendance.date)
+                                            ?.image,
                                         );
                                         setImageDialogOpen(true);
                                       }}
@@ -786,7 +709,7 @@ const SalaryDetails = () => {
                                   </span>
                                   <span className="font-medium text-green-600">
                                     {Number.parseFloat(
-                                      log.tarification.summa
+                                      log.tarification.summa,
                                     ).toLocaleString()}{" "}
                                     сўм
                                   </span>
@@ -798,7 +721,7 @@ const SalaryDetails = () => {
                                   </span>
                                   <span className="font-medium text-green-600">
                                     {Number.parseFloat(
-                                      log.amount_earned
+                                      log.amount_earned,
                                     ).toLocaleString()}{" "}
                                     сўм
                                   </span>
@@ -834,7 +757,7 @@ const SalaryDetails = () => {
                           "ru-RU",
                           {
                             maximumFractionDigits: 2,
-                          }
+                          },
                         )} so'm`
                       : "Tarifikatsiya ma'lumotlari mavjud emas"}
                   </CardDescription>
@@ -884,7 +807,7 @@ const SalaryDetails = () => {
 
                                   workMap[workCode].totalQty += log.quantity;
                                   workMap[workCode].totalSum += parseFloat(
-                                    log.amount_earned || 0
+                                    log.amount_earned || 0,
                                   );
                                 });
 
@@ -892,7 +815,7 @@ const SalaryDetails = () => {
                                 const totalSumForModel = group.logs.reduce(
                                   (sum, log) =>
                                     sum + parseFloat(log.amount_earned || 0),
-                                  0
+                                  0,
                                 );
 
                                 // Step 4: Assign a color
@@ -914,7 +837,7 @@ const SalaryDetails = () => {
                                     <div
                                       onClick={() =>
                                         setExpandedModel(
-                                          isOpen ? null : modelId
+                                          isOpen ? null : modelId,
                                         )
                                       }
                                       className={`cursor-pointer p-3 border rounded-lg ${colorClass} flex justify-between items-center`}
@@ -924,7 +847,7 @@ const SalaryDetails = () => {
                                       </div>
                                       <div className="text-green-700 font-semibold">
                                         {totalSumForModel.toLocaleString(
-                                          "ru-RU"
+                                          "ru-RU",
                                         )}{" "}
                                         so'm
                                       </div>
@@ -954,7 +877,7 @@ const SalaryDetails = () => {
                                                     Summa:{" "}
                                                     <span className="font-semibold text-green-700">
                                                       {data.totalSum.toLocaleString(
-                                                        "ru-RU"
+                                                        "ru-RU",
                                                       )}{" "}
                                                       so'm
                                                     </span>
@@ -962,13 +885,13 @@ const SalaryDetails = () => {
                                                 </div>
                                               </div>
                                             </div>
-                                          )
+                                          ),
                                         )}
                                       </div>
                                     )}
                                   </div>
                                 );
-                              }
+                              },
                             )}
                           </div>
                         );
