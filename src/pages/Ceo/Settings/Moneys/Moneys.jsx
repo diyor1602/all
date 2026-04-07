@@ -28,7 +28,6 @@ const Moneys = () => {
   const [selectedGroup, setSelectedGroup] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [imgDialogOpen, setImgDialogOpen] = useState(false);
-  const [hideZero, setHideZero] = useState(false);
 
   const fetchDepartments = async () => {
     try {
@@ -118,25 +117,14 @@ const Moneys = () => {
   }, [data]);
 
   const totalAmount = useMemo(() => {
-    const filteredRows = hideZero
-      ? rows.filter((item) => parseMoney(item?.grand_total) > 0)
-      : rows;
-    return filteredRows.reduce(
-      (acc, item) => acc + parseMoney(item?.grand_total),
-      0,
-    );
-  }, [rows, hideZero]);
+    return rows.reduce((acc, item) => acc + parseMoney(item?.grand_total), 0);
+  }, [rows]);
 
   const sortedRows = useMemo(() => {
     const cloned = [...rows];
     const dir = sortDir === "desc" ? -1 : 1;
 
-    // Filter out zero amounts if hideZero is true
-    const filtered = hideZero
-      ? cloned.filter((item) => parseMoney(item?.grand_total) > 0)
-      : cloned;
-
-    filtered.sort((a, b) => {
+    cloned.sort((a, b) => {
       if (sortBy === "grand_total") {
         const av = parseMoney(a?.grand_total);
         const bv = parseMoney(b?.grand_total);
@@ -172,7 +160,7 @@ const Moneys = () => {
       return av.localeCompare(bv, "uz") * dir;
     });
 
-    return filtered;
+    return cloned;
   }, [rows, sortBy, sortDir]);
 
   const toggleSort = (field) => {
@@ -301,16 +289,6 @@ const Moneys = () => {
                 </option>
               ))}
           </select>
-
-          <Button
-            type="button"
-            variant={hideZero ? "default" : "outline"}
-            size="sm"
-            className="h-9 text-[11px]"
-            onClick={() => setHideZero(!hideZero)}
-          >
-            {hideZero ? "0-larni ko'rsat" : "0-larni yashir"}
-          </Button>
         </div>
       </div>
 
