@@ -1678,7 +1678,7 @@ const SalaryPage = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              Ish haqi (ishbay)
+              Yangi mavsum
             </DialogTitle>
             <DialogDescription>
               <strong>{selectedEmployee?.name}</strong>
