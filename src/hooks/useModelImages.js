@@ -16,7 +16,7 @@ export default function useModelImages(modelCode) {
       try {
         // Fetch from your Laravel API endpoint
         const { data: html } = await api.get(
-          `/model-images?q=${encodeURIComponent(modelCode)}`
+          `/model-images?q=${encodeURIComponent(modelCode)}`,
         );
 
         // Parse HTML response
@@ -34,7 +34,7 @@ export default function useModelImages(modelCode) {
             return /\.(jpg|jpeg|png|webp)$/i.test(src);
           })
           .map((src) =>
-            src.startsWith("http") ? src : `https://www.nikastyle.ru${src}`
+            src.startsWith("http") ? src : `https://www.nikastyle.ru${src}`,
           );
 
         setImages([...new Set(imgs)]);
