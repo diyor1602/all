@@ -1297,6 +1297,12 @@ const SalaryPage = () => {
                       amount: e.target.value,
                     }))
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handlePayment();
+                    }
+                  }}
                   className="border-2 focus:border-blue-500"
                 />
               </div>
@@ -1315,6 +1321,12 @@ const SalaryPage = () => {
                       comment: e.target.value,
                     }))
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handlePayment();
+                    }
+                  }}
                   className="border-2 focus:border-blue-500 resize-none"
                   rows={3}
                 />
@@ -1422,6 +1434,14 @@ const SalaryPage = () => {
                   id="additional-amount"
                   value={additionalAmount}
                   onChange={(e) => setAdditionalAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleEditAdditionalMonthlySalary(
+                        selectedEmployee?.monthly_salary?.id,
+                      );
+                    }
+                  }}
                 />
                 <div>
                   <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
@@ -1430,6 +1450,14 @@ const SalaryPage = () => {
                     type="text"
                     value={additionalComment}
                     onChange={(e) => setAdditionalComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleEditAdditionalMonthlySalary(
+                          selectedEmployee?.monthly_salary?.id,
+                        );
+                      }
+                    }}
                   />
                 </div>
                 <div className="flex items-center gap-2 justify-end mt-4">
@@ -1476,6 +1504,12 @@ const SalaryPage = () => {
                   id="additional-amount"
                   value={additionalAmount}
                   onChange={(e) => setAdditionalAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSaveAdditionalMonthlySalary();
+                    }
+                  }}
                 />
                 <div>
                   <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
@@ -1484,6 +1518,12 @@ const SalaryPage = () => {
                     type="text"
                     value={additionalComment}
                     onChange={(e) => setAdditionalComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSaveAdditionalMonthlySalary();
+                      }
+                    }}
                   />
                 </div>
                 <div className="flex items-center gap-2 justify-end mt-4">
@@ -1577,6 +1617,14 @@ const SalaryPage = () => {
                   id="additional-amount"
                   value={additionalAmount}
                   onChange={(e) => setAdditionalAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleEditAdditionalPieceWork(
+                        selectedEmployee?.monthly_piecework?.id,
+                      );
+                    }
+                  }}
                 />
                 <div>
                   <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
@@ -1585,6 +1633,14 @@ const SalaryPage = () => {
                     type="text"
                     value={additionalComment}
                     onChange={(e) => setAdditionalComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleEditAdditionalPieceWork(
+                          selectedEmployee?.monthly_piecework?.id,
+                        );
+                      }
+                    }}
                   />
                 </div>
                 <div className="flex items-center gap-2 justify-end mt-4">
@@ -1631,6 +1687,12 @@ const SalaryPage = () => {
                   id="additional-amount"
                   value={additionalAmount}
                   onChange={(e) => setAdditionalAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSaveAdditionalPieceWork();
+                    }
+                  }}
                 />
                 <div>
                   <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
@@ -1639,6 +1701,12 @@ const SalaryPage = () => {
                     type="text"
                     value={additionalComment}
                     onChange={(e) => setAdditionalComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSaveAdditionalPieceWork();
+                      }
+                    }}
                   />
                 </div>
                 <div className="flex items-center gap-2 justify-end mt-4">
@@ -1735,6 +1803,14 @@ const SalaryPage = () => {
                   id="additional-amount"
                   value={additionalAmount}
                   onChange={(e) => setAdditionalAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleEditAdditionalDailyPayment(
+                        selectedEmployee?.monthly_daily_payment?.id,
+                      );
+                    }
+                  }}
                 />
                 <div>
                   <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
@@ -1743,6 +1819,14 @@ const SalaryPage = () => {
                     type="text"
                     value={additionalComment}
                     onChange={(e) => setAdditionalComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleEditAdditionalDailyPayment(
+                          selectedEmployee?.monthly_daily_payment?.id,
+                        );
+                      }
+                    }}
                   />
                 </div>
                 <div className="flex items-center gap-2 justify-end mt-4">
@@ -1790,6 +1874,12 @@ const SalaryPage = () => {
                   id="additional-amount"
                   value={additionalAmount}
                   onChange={(e) => setAdditionalAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSaveAdditionalDailyPayment();
+                    }
+                  }}
                 />
                 <div>
                   <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
@@ -1798,6 +1888,12 @@ const SalaryPage = () => {
                     type="text"
                     value={additionalComment}
                     onChange={(e) => setAdditionalComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSaveAdditionalDailyPayment();
+                      }
+                    }}
                   />
                 </div>
                 <div className="flex items-center gap-2 justify-end mt-4">
