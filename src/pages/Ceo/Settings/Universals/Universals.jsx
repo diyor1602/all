@@ -351,13 +351,7 @@ const Universals = () => {
             </div>
           )}
 
-          <Dialog
-            open={imageDialogOpen}
-            onOpenChange={(open) => {
-              setImageDialogOpen(open);
-              if (!open) setSelectedEmployeeForImage(null);
-            }}
-          >
+          <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
             <DialogContent className="max-w-[95vw] sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>
