@@ -16,6 +16,7 @@ import {
   X,
   FolderOpen,
   BadgePlus,
+  Minus,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -40,6 +41,10 @@ const OrderCalculate = () => {
   const [editingLogId, setEditingLogId] = useState(null);
   const [editingQuantity, setEditingQuantity] = useState("");
   const [updating, setUpdating] = useState(false);
+
+  const [minusLogId, setMinusLogId] = useState(null);
+  const [minusQuantity, setMinusQuantity] = useState("");
+  const [subtracting, setSubtracting] = useState(false);
 
   const getData = async () => {
     try {
@@ -266,7 +271,17 @@ const OrderCalculate = () => {
   const handleStartEdit = (log) => {
     if (log.date !== todayString) return;
     setEditingLogId(log.id);
-    setEditingQuantity(0);
+    setEditingQuantity(log.quantity);
+  };
+
+  const handleStartMinus = (log) => {
+    setMinusLogId(log.id);
+    setMinusQuantity("");
+  };
+
+  const handleCancelMinus = () => {
+    setMinusLogId(null);
+    setMinusQuantity("");
   };
 
   const handleCancelEdit = () => {
@@ -312,8 +327,46 @@ const OrderCalculate = () => {
     }
   };
 
+  const handleSubtractLog = async (log) => {
+    if (!minusQuantity || Number(minusQuantity) < 0) {
+      toast({
+        title: "Xatolik",
+        description: "Iltimos, to'g'ri miqdorni kiriting",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      setSubtracting(true);
+
+      const newQuantity = Number(minusQuantity);
+
+      await api.patch(`/tailor/tarificationLog/${log.id}`, {
+        quantity: newQuantity,
+      });
+
+      toast({
+        title: "Ayirildi",
+        description: `${minusQuantity} dona muvaffaqiyatli ayirildi`,
+      });
+
+      setMinusLogId(null);
+      setMinusQuantity("");
+      await getData();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: error?.response?.data?.message || "Ayirib bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setSubtracting(false);
+    }
+  };
+
   const renderLogCard = (log, isToday = false) => {
     const isEditing = editingLogId === log.id;
+    const isMinus = minusLogId === log.id;
 
     return (
       <div
@@ -370,6 +423,21 @@ const OrderCalculate = () => {
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 font-semibold text-slate-900 outline-none focus:border-blue-500"
                 />
               </>
+            ) : isMinus ? (
+              <>
+                <div className="mt-1 font-semibold text-slate-900">
+                  {log.quantity || 0}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max={log.quantity}
+                  value={minusQuantity}
+                  onChange={(e) => setMinusQuantity(e.target.value)}
+                  placeholder="Asl miqdori"
+                  className="mt-1 w-full rounded-lg border border-red-300 bg-white px-2 py-1.5 font-semibold text-slate-900 outline-none focus:border-red-500"
+                />
+              </>
             ) : (
               <div className="mt-1 font-semibold text-slate-900">
                 {log.quantity || 0}
@@ -385,37 +453,71 @@ const OrderCalculate = () => {
           </div>
         </div>
 
-        {isToday && (
-          <div className="mt-4 flex justify-end gap-2">
-            {isEditing ? (
-              <>
+        <div className="mt-4 flex justify-end gap-2">
+          {isToday && (
+            <>
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <X size={16} />
+                    Bekor qilish
+                  </button>
+                  <button
+                    onClick={() => handleUpdateTodayLog(log)}
+                    disabled={updating}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-60"
+                  >
+                    <Save size={16} />
+                    {updating ? "Saqlanmoqda..." : "Saqlash"}
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={handleCancelEdit}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  onClick={() => handleStartEdit(log)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
                 >
-                  <X size={16} />
-                  Bekor qilish
+                  <BadgePlus size={16} />
+                  Qo'shish
                 </button>
+              )}
+            </>
+          )}
+
+          {!isToday && (
+            <>
+              {isMinus ? (
+                <>
+                  <button
+                    onClick={handleCancelMinus}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <X size={16} />
+                    Bekor qilish
+                  </button>
+                  <button
+                    onClick={() => handleSubtractLog(log)}
+                    disabled={subtracting}
+                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-60"
+                  >
+                    <Minus size={16} />
+                    {subtracting ? "O'zgartirilmoqda..." : "O'zgartirish"}
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={() => handleUpdateTodayLog(log)}
-                  disabled={updating}
-                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-60"
+                  onClick={() => handleStartMinus(log)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
                 >
-                  <Save size={16} />
-                  {updating ? "Saqlanmoqda..." : "Saqlash"}
+                  <Minus size={16} />
+                  O'zgartirish
                 </button>
-              </>
-            ) : (
-              <button
-                onClick={() => handleStartEdit(log)}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-              >
-                <BadgePlus size={16} />
-                Qo'shish
-              </button>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </div>
     );
   };
