@@ -307,6 +307,10 @@ const Moneys = () => {
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 text-gray-600">
                   <th className="border-b px-3 py-2 text-left font-medium">
+                    <span>#</span>
+                  </th>
+
+                  <th className="border-b px-3 py-2 text-left font-medium">
                     <button
                       type="button"
                       onClick={() => toggleSort("employee_name")}
@@ -365,6 +369,10 @@ const Moneys = () => {
                         : "bg-gray-50/40 hover:bg-gray-50"
                     }
                   >
+                    <td className="border-b px-3 py-2 text-gray-600">
+                      {index + 1}
+                    </td>
+
                     <td className="border-b px-3 py-2 align-middle">
                       <div className="flex items-center gap-2">
                         {item?.img ? (
@@ -420,7 +428,7 @@ const Moneys = () => {
                 <tr className="bg-gray-50">
                   <th
                     className="border-t px-3 py-2 text-left text-[11px] font-semibold text-gray-700"
-                    colSpan={3}
+                    colSpan={4}
                   >
                     Jami
                   </th>
