@@ -10,6 +10,7 @@ import {
   Users,
   CalendarDays,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +24,7 @@ const DailyResults = () => {
   const [employeeCount, setEmployeeCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [aupCount, setAupCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const savedDate = localStorage.getItem("selectedDate");
@@ -81,6 +83,7 @@ const DailyResults = () => {
   }, [selectedDate]);
 
   const fetchData = async () => {
+    setIsLoading(true);
     try {
       const response = await api.get("/sewingOutputs", {
         params: { start_date: selectedDate },
@@ -99,6 +102,8 @@ const DailyResults = () => {
         description: "Ma'lumotlarni olishda xatolik yuz berdi",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -359,6 +364,17 @@ const DailyResults = () => {
 
   return (
     <div className="min-h-screen">
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
+            <p className="text-sm font-medium text-slate-600">
+              Ma'lumotlar yuklanmoqda...
+            </p>
+          </div>
+        </div>
+      )}
+
       {role === "superhr" && (
         <div className="mb-5">
           <YesterdayAbsence />
