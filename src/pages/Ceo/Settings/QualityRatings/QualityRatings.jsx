@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -36,6 +42,8 @@ const QualityRatings = () => {
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [allImages, setAllImages] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const [sortConfig, setSortConfig] = useState({
     key: "fail_pending",
@@ -131,10 +139,56 @@ const QualityRatings = () => {
     localStorage.setItem("qcEndDate", value);
   };
 
-  const handleImageClick = (imageSrc, title = "Rasm") => {
+  const handleImageClick = (
+    imageSrc,
+    title = "Rasm",
+    imagesList = [],
+    currentIndex = 0,
+  ) => {
     setSelectedImage({ src: imageSrc, name: title });
+    setAllImages(imagesList);
+    setCurrentImageIndex(currentIndex);
     setIsImageDialogOpen(true);
   };
+
+  const handlePreviousImage = () => {
+    if (allImages.length > 0) {
+      const newIndex =
+        currentImageIndex === 0 ? allImages.length - 1 : currentImageIndex - 1;
+      setCurrentImageIndex(newIndex);
+      setSelectedImage({
+        src: allImages[newIndex].image,
+        name: allImages[newIndex].name || `Image ${newIndex + 1}`,
+      });
+    }
+  };
+
+  const handleNextImage = () => {
+    if (allImages.length > 0) {
+      const newIndex =
+        currentImageIndex === allImages.length - 1 ? 0 : currentImageIndex + 1;
+      setCurrentImageIndex(newIndex);
+      setSelectedImage({
+        src: allImages[newIndex].image,
+        name: allImages[newIndex].name || `Image ${newIndex + 1}`,
+      });
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isImageDialogOpen) return;
+
+      if (e.key === "ArrowLeft") {
+        handlePreviousImage();
+      } else if (e.key === "ArrowRight") {
+        handleNextImage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isImageDialogOpen, currentImageIndex, allImages]);
 
   const handleEmployeeClick = (employee) => {
     setSelectedEmployee(employee);
@@ -347,9 +401,20 @@ const QualityRatings = () => {
                             className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-gray-200"
                             onClick={(e) => {
                               e.stopPropagation();
+                              const employeeImages = sortedData
+                                .filter((emp) => emp?.image)
+                                .map((emp) => ({
+                                  image: emp.image,
+                                  name: emp.employee_name,
+                                }));
+                              const currentIndex = employeeImages.findIndex(
+                                (img) => img.image === employee.image,
+                              );
                               handleImageClick(
                                 employee.image,
                                 employee.employee_name,
+                                employeeImages,
+                                currentIndex,
                               );
                             }}
                           />
@@ -452,12 +517,23 @@ const QualityRatings = () => {
                       <button
                         type="button"
                         className="block w-full"
-                        onClick={() =>
+                        onClick={() => {
+                          const qcImages = selectedEmployee.quality_controls
+                            .filter((qc) => qc?.image)
+                            .map((qc) => ({
+                              image: qc.image,
+                              name: `${selectedEmployee.employee_name} - QC #${qc.id}`,
+                            }));
+                          const currentIndex = qcImages.findIndex(
+                            (img) => img.image === qc.image,
+                          );
                           handleImageClick(
                             qc.image,
                             `${selectedEmployee.employee_name} - QC #${qc.id}`,
-                          )
-                        }
+                            qcImages,
+                            currentIndex,
+                          );
+                        }}
                       >
                         <img
                           src={qc.image}
@@ -514,7 +590,34 @@ const QualityRatings = () => {
           <DialogHeader>
             <DialogTitle>{selectedImage?.name}</DialogTitle>
           </DialogHeader>
-          <div className="flex justify-center">
+
+          {allImages.length > 1 && (
+            <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10">
+              <button
+                type="button"
+                onClick={handlePreviousImage}
+                className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            </div>
+          )}
+
+          {allImages.length > 1 && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10">
+              <button
+                type="button"
+                onClick={handleNextImage}
+                className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-center relative">
             {selectedImage && (
               <img
                 src={selectedImage.src}
@@ -523,6 +626,124 @@ const QualityRatings = () => {
               />
             )}
           </div>
+
+          {allImages.length > 1 && (
+            <div className="flex justify-center gap-1 mt-4">
+              {(() => {
+                const total = allImages.length;
+                const current = currentImageIndex;
+                const maxDots = 5;
+
+                let startIdx, endIdx;
+
+                if (total <= maxDots) {
+                  startIdx = 0;
+                  endIdx = total;
+                } else if (current < 2) {
+                  startIdx = 0;
+                  endIdx = maxDots;
+                } else if (current >= total - 2) {
+                  startIdx = total - maxDots;
+                  endIdx = total;
+                } else {
+                  startIdx = current - 2;
+                  endIdx = current + 3;
+                }
+
+                const dots = [];
+
+                if (startIdx > 0) {
+                  dots.push(
+                    <button
+                      key="first"
+                      type="button"
+                      onClick={() => {
+                        setCurrentImageIndex(0);
+                        setSelectedImage({
+                          src: allImages[0].image,
+                          name: allImages[0].name || `Image 1`,
+                        });
+                      }}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        0 === currentImageIndex
+                          ? "bg-blue-600"
+                          : "bg-gray-300 hover:bg-gray-400"
+                      }`}
+                      aria-label="Go to first image"
+                    />,
+                  );
+
+                  if (startIdx > 1) {
+                    dots.push(
+                      <span
+                        key="ellipsis-start"
+                        className="text-gray-400 text-xs px-1"
+                      >
+                        ...
+                      </span>,
+                    );
+                  }
+                }
+
+                for (let i = startIdx; i < endIdx; i++) {
+                  dots.push(
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setCurrentImageIndex(i);
+                        setSelectedImage({
+                          src: allImages[i].image,
+                          name: allImages[i].name || `Image ${i + 1}`,
+                        });
+                      }}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        i === currentImageIndex
+                          ? "bg-blue-600"
+                          : "bg-gray-300 hover:bg-gray-400"
+                      }`}
+                      aria-label={`Go to image ${i + 1}`}
+                    />,
+                  );
+                }
+
+                if (endIdx < total) {
+                  if (endIdx < total - 1) {
+                    dots.push(
+                      <span
+                        key="ellipsis-end"
+                        className="text-gray-400 text-xs px-1"
+                      >
+                        ...
+                      </span>,
+                    );
+                  }
+
+                  dots.push(
+                    <button
+                      key="last"
+                      type="button"
+                      onClick={() => {
+                        setCurrentImageIndex(total - 1);
+                        setSelectedImage({
+                          src: allImages[total - 1].image,
+                          name: allImages[total - 1].name || `Image ${total}`,
+                        });
+                      }}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        total - 1 === currentImageIndex
+                          ? "bg-blue-600"
+                          : "bg-gray-300 hover:bg-gray-400"
+                      }`}
+                      aria-label="Go to last image"
+                    />,
+                  );
+                }
+
+                return dots;
+              })()}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
