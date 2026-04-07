@@ -3,50 +3,207 @@ import api from "@/utils/api";
 
 export default function useModelImages(modelCode) {
   const [images, setImages] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!modelCode) return;
+    let isMounted = true;
+
+    if (!modelCode) {
+      setImages([]);
+      setProducts([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    const normalizeUrl = (url, fallbackDomain = "") => {
+      if (!url) return null;
+
+      const cleanUrl = String(url).trim();
+      if (!cleanUrl) return null;
+
+      if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+        return cleanUrl;
+      }
+
+      if (cleanUrl.startsWith("//")) {
+        return `https:${cleanUrl}`;
+      }
+
+      if (cleanUrl.startsWith("/")) {
+        return `${fallbackDomain}${cleanUrl}`;
+      }
+
+      return fallbackDomain ? `${fallbackDomain}/${cleanUrl}` : cleanUrl;
+    };
+
+    const isValidImage = (src) => {
+      if (!src) return false;
+
+      const lower = src.toLowerCase();
+
+      if (
+        lower.includes("empty.jpg") ||
+        lower.includes("empty.webp") ||
+        lower.includes("scale_1200.png") ||
+        lower.includes("chestniy_znak")
+      ) {
+        return false;
+      }
+
+      return (
+        lower.includes(".jpg") ||
+        lower.includes(".jpeg") ||
+        lower.includes(".png") ||
+        lower.includes(".webp") ||
+        lower.includes("@jpg") ||
+        lower.includes("@jpeg") ||
+        lower.includes("@png") ||
+        lower.includes("@webp")
+      );
+    };
+
+    const extractImageFromCard = (card, domain) => {
+      const img =
+        card.querySelector("img[data-src]") || card.querySelector("img[src]");
+
+      const source =
+        card.querySelector("source[data-srcset]") ||
+        card.querySelector("source[srcset]");
+
+      let imageUrl = null;
+
+      if (img) {
+        imageUrl = img.getAttribute("data-src") || img.getAttribute("src");
+      }
+
+      if (!imageUrl && source) {
+        imageUrl =
+          source.getAttribute("data-srcset") || source.getAttribute("srcset");
+      }
+
+      if (!imageUrl) return null;
+
+      imageUrl = imageUrl.split(",")[0]?.trim().split(" ")[0];
+
+      const normalized = normalizeUrl(imageUrl, domain);
+
+      if (!isValidImage(normalized)) return null;
+
+      return normalized;
+    };
+
+    const parseSkyLakeProducts = (doc) => {
+      const domain = "https://www.skylake.ru";
+      const productCards = Array.from(doc.querySelectorAll(".product-card"));
+
+      const parsedProducts = productCards
+        .map((card) => {
+          const linkEl =
+            card.querySelector("a.product-link") ||
+            card.querySelector('a[href*="/product/"]');
+
+          const title =
+            linkEl?.textContent?.trim() ||
+            card.querySelector("img")?.getAttribute("alt")?.trim() ||
+            "";
+
+          const href =
+            linkEl?.getAttribute("href") ||
+            card.querySelector('a[href*="/product/"]')?.getAttribute("href") ||
+            "";
+
+          const image = extractImageFromCard(card, domain);
+
+          if (!image) return null;
+
+          return {
+            title,
+            image,
+            url: normalizeUrl(href, domain),
+          };
+        })
+        .filter(Boolean);
+
+      return Array.from(
+        new Map(parsedProducts.map((item) => [item.image, item])).values(),
+      );
+    };
+
+    const parseNikaStyleProducts = (doc) => {
+      const domain = "https://www.nikastyle.ru";
+
+      const parsed = Array.from(doc.querySelectorAll("img"))
+        .map((img, index) => {
+          const rawSrc =
+            img.getAttribute("data-src") || img.getAttribute("src");
+          if (!rawSrc) return null;
+
+          if (!rawSrc.includes("/upload/")) return null;
+
+          const image = normalizeUrl(rawSrc, domain);
+          if (!isValidImage(image)) return null;
+
+          const title = img.getAttribute("alt")?.trim() || `Image ${index + 1}`;
+          const linkEl = img.closest("a");
+          const href = linkEl?.getAttribute("href") || "";
+
+          return {
+            title,
+            image,
+            url: normalizeUrl(href, domain),
+          };
+        })
+        .filter(Boolean);
+
+      return Array.from(
+        new Map(parsed.map((item) => [item.image, item])).values(),
+      );
+    };
 
     const fetchImages = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Fetch from your Laravel API endpoint
         const { data: html } = await api.get(
           `/model-images?q=${encodeURIComponent(modelCode)}`,
         );
 
-        // Parse HTML response
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, "text/html");
 
-        // Extract image URLs
-        const imgs = Array.from(doc.querySelectorAll("img"))
-          .map((img) => img.getAttribute("data-src") || img.getAttribute("src"))
-          .filter((src) => {
-            if (!src) return false;
-            if (!src.includes("/upload/")) return false;
-            if (src.includes("scale_1200.png") || src.includes("chestniy_znak"))
-              return false;
-            return /\.(jpg|jpeg|png|webp)$/i.test(src);
-          })
-          .map((src) =>
-            src.startsWith("http") ? src : `https://www.nikastyle.ru${src}`,
-          );
+        const skyLakeProducts = parseSkyLakeProducts(doc);
+        const nikaStyleProducts = parseNikaStyleProducts(doc);
 
-        setImages([...new Set(imgs)]);
+        const mergedProducts = [...skyLakeProducts, ...nikaStyleProducts];
+        const uniqueProducts = Array.from(
+          new Map(mergedProducts.map((item) => [item.image, item])).values(),
+        );
+
+        if (!isMounted) return;
+
+        setProducts(uniqueProducts);
+        setImages(uniqueProducts.map((item) => item.image));
       } catch (err) {
-        setError(err.message || "Failed to load images");
+        if (!isMounted) return;
+
+        setError(err?.message || "Failed to load model images");
+        setImages([]);
+        setProducts([]);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchImages();
+
+    return () => {
+      isMounted = false;
+    };
   }, [modelCode]);
 
-  return { images, loading, error };
+  return { images, products, loading, error };
 }
