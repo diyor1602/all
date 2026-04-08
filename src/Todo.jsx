@@ -14,6 +14,18 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+const formatDateTime = (date) => {
+  const d = new Date(date);
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+};
+
 const Todo = () => {
   const { toast } = useToast();
   const [data, setData] = useState([]);
@@ -317,10 +329,7 @@ const Todo = () => {
                       {todo.due_date && (
                         <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {new Date(todo.due_date).toLocaleString("uz-UZ", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          })}
+                          {formatDateTime(todo.due_date)}
                         </p>
                       )}
                     </div>
