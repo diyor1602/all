@@ -143,7 +143,6 @@ const ExcelAdding = () => {
       resetForm();
       window.location.reload();
     } catch (error) {
-      console.error(error);
       toast({
         title: "Xatolik",
         description: "Faylni yuklab bo'lmadi!",

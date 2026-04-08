@@ -39,6 +39,7 @@ import Truck from "./pages/Truck";
 import Coefficient from "./pages/Coefficient/Coefficient";
 import DailyPayments from "./pages/DailyPayments";
 import NewSeason from "./pages/NewSeason";
+import Todo from "./Todo";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -77,6 +78,8 @@ function App() {
           <Route path="/tailorRating" element={<TailorRating />} />
           <Route path="/damages" element={<Damages />} />
           <Route path="/newSeason" element={<NewSeason />} />
+          <Route path="/todo" element={<Todo />} />
+          {/* ROLES */}
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />
           <Route path="/cuttingMaster/*" element={<CuttingMaster />} />

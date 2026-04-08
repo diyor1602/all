@@ -14,6 +14,7 @@ import {
   CircleDollarSign,
   Glasses,
   SquareScissors,
+  ListTodo,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -106,6 +107,12 @@ export default function BaseLayout({ children, navigation }) {
       name: "Koeffitsiyent",
       href: "/coefficient",
       icon: Radical,
+      onMobile: false,
+    },
+    {
+      name: "Todo list",
+      href: "/todo",
+      icon: ListTodo,
       onMobile: false,
     },
   ];
