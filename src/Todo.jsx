@@ -169,7 +169,7 @@ const Todo = () => {
   }, [data, search, filter]);
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto">
       <h1 className="text-2xl font-semibold mb-6">Todo List</h1>
 
       {/* Form */}
@@ -317,7 +317,10 @@ const Todo = () => {
                       {todo.due_date && (
                         <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {new Date(todo.due_date).toLocaleString()}
+                          {new Date(todo.due_date).toLocaleString("uz-UZ", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
                         </p>
                       )}
                     </div>
