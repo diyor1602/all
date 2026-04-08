@@ -34,6 +34,7 @@ const Todo = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all"); // all | pending | done
   const [confirmTodo, setConfirmTodo] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -134,6 +135,19 @@ const Todo = () => {
       toast({ title: "Status o'zgartirildi" });
     } catch (error) {
       toast({ title: "Xatolik", variant: "destructive" });
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    try {
+      await api.delete(`/todos/${deleteConfirm.id}`);
+      setData((prev) => prev.filter((item) => item.id !== deleteConfirm.id));
+      setDeleteConfirm(null);
+      toast({ title: "Todo o'chirildi" });
+    } catch (error) {
+      toast({ title: "O'chirishda xatolik", variant: "destructive" });
     }
   };
 
@@ -344,8 +358,8 @@ const Todo = () => {
                     </button>
 
                     <button
-                      onClick={() => handleDelete(todo.id)}
-                      className="p-2 rounded-lg hover:bg-red-50 text-red-500"
+                      onClick={() => setDeleteConfirm(todo)}
+                      className="p-2 hover:bg-red-50 rounded-lg text-red-500"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -394,6 +408,51 @@ const Todo = () => {
                   className="px-4 py-2 bg-black text-white rounded-xl"
                 >
                   Tasdiqlash
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirm Dialog */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 w-96 shadow-lg"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <AlertCircle className="text-red-500" />
+                <h2 className="font-semibold">O'chirishni tasdiqlash</h2>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-5">
+                Siz "{deleteConfirm.title}" todoni o'chirmoqchimisiz? Bu amal
+                ortga qaytarib bo'lmaydi.
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="px-4 py-2 border rounded-xl"
+                >
+                  Bekor qilish
+                </button>
+
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-red-500 text-white rounded-xl"
+                >
+                  O'chirish
                 </button>
               </div>
             </motion.div>
