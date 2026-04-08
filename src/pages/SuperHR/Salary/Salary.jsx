@@ -145,7 +145,7 @@ const Salary = () => {
       const selectedDepartment = departments
         .flatMap((main) => main.departments)
         .find(
-          (dept) => dept.id.toString() === filters.department_id.toString()
+          (dept) => dept.id.toString() === filters.department_id.toString(),
         );
       setGroups(selectedDepartment?.groups || []);
     }
@@ -320,7 +320,7 @@ const Salary = () => {
         group_id: employees.data.find((emp) => emp.id === selectedEmployee.id)
           .group?.id,
         department_id: employees.data.find(
-          (emp) => emp.id === selectedEmployee.id
+          (emp) => emp.id === selectedEmployee.id,
         ).department?.id,
         status: employees.data.find((emp) => emp.id === selectedEmployee.id)
           .status,
@@ -399,7 +399,7 @@ const Salary = () => {
     if (employee.type === "aup") {
       if (
         !window.confirm(
-          "Xodim turini AUP dan Oddiyga o'zgartirishni tasdiqlaysizmi?"
+          "Xodim turini AUP dan Oddiyga o'zgartirishni tasdiqlaysizmi?",
         )
       )
         return;
@@ -412,7 +412,7 @@ const Salary = () => {
     } else {
       if (
         !window.confirm(
-          "Xodim turini Oddiydan AUPga o'zgartirishni tasdiqlaysizmi?"
+          "Xodim turini Oddiydan AUPga o'zgartirishni tasdiqlaysizmi?",
         )
       )
         return;
@@ -555,7 +555,7 @@ const Salary = () => {
                 <SelectItem key={dept.id} value={dept.id.toString()}>
                   {dept.name}
                 </SelectItem>
-              ))
+              )),
             )}
           </SelectContent>
         </Select>
@@ -729,14 +729,14 @@ const Salary = () => {
                 <TableCell className="border">
                   {employee.salary_visible
                     ? Number.parseFloat(employee?.salary || 0)?.toLocaleString(
-                        "ru-RU"
+                        "ru-RU",
                       )
                     : "-"}
                 </TableCell>
                 <TableCell className="border">
                   {employee.salary_visible
                     ? Number.parseFloat(employee?.bonus || 0)?.toLocaleString(
-                        "ru-RU"
+                        "ru-RU",
                       )
                     : "-"}
                 </TableCell>
@@ -833,7 +833,7 @@ const Salary = () => {
                 }
 
                 return null;
-              }
+              },
             )}
 
             <PaginationItem>
