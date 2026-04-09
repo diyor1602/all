@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import TimerDialog from "./TimerDialog";
+import formatNumber from "@/utils/formatNumber";
 
 const EditTarif = () => {
   const { id } = useParams();
@@ -57,7 +58,7 @@ const EditTarif = () => {
   const [activeTimerRowIndex, setActiveTimerRowIndex] = useState(null);
 
   const [selectedTarifLang, setSelectedTarifLang] = useState(
-    localStorage.getItem("tarifLang") || "uz"
+    localStorage.getItem("tarifLang") || "uz",
   );
 
   const fetchTarif = async () => {
@@ -282,7 +283,7 @@ const EditTarif = () => {
     if (tarif?.tarifications[index]?.id) {
       try {
         await api.delete(
-          `/technologist/tarification/${tarif?.tarifications[index]?.id}`
+          `/technologist/tarification/${tarif?.tarifications[index]?.id}`,
         );
         toast({
           title: "Muvaffaqiyatli",
@@ -342,7 +343,7 @@ const EditTarif = () => {
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
     const hasEmptyRazryad = tarif?.tarifications?.some(
-      (item) => !item?.razryad_id && !item?.razryad?.id
+      (item) => !item?.razryad_id && !item?.razryad?.id,
     );
     const hasEmptySecond = tarif?.tarifications?.some((item) => !item?.second);
     if (hasEmptyNames || hasEmptyRazryad || hasEmptySecond) {
@@ -498,7 +499,7 @@ const EditTarif = () => {
                 a.code.localeCompare(b.code, undefined, {
                   numeric: true,
                   sensitivity: "base",
-                })
+                }),
               )
               .map((item, index) => (
                 <tr key={index}>
@@ -543,8 +544,8 @@ const EditTarif = () => {
                           new Set(
                             tarif.tarifications
                               .map((t) => t.name)
-                              .filter(Boolean)
-                          )
+                              .filter(Boolean),
+                          ),
                         ).map((name, idx) => (
                           <option key={idx} value={name} data-value={name} />
                         ))}
@@ -579,13 +580,13 @@ const EditTarif = () => {
                         >
                           {item?.employee?.id
                             ? workers.find(
-                                (worker) => worker.id === item.employee.id
+                                (worker) => worker.id === item.employee.id,
                               )?.name || "Xodimni tanlang"
                             : item?.employee_id
-                            ? workers.find(
-                                (worker) => worker.id === item.employee_id
-                              )?.name || "Xodimni tanlang"
-                            : "Xodimni tanlang"}
+                              ? workers.find(
+                                  (worker) => worker.id === item.employee_id,
+                                )?.name || "Xodimni tanlang"
+                              : "Xodimni tanlang"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
@@ -613,7 +614,7 @@ const EditTarif = () => {
                                       item?.employee?.id === worker.id ||
                                         item?.employee_id === worker.id
                                         ? "opacity-100"
-                                        : "opacity-0"
+                                        : "opacity-0",
                                     )}
                                   />
                                 </CommandItem>
@@ -708,6 +709,25 @@ const EditTarif = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Total Sum Display */}
+      {tarif?.tarifications && tarif.tarifications.length > 0 && (
+        <div className="w-full flex justify-end mt-4">
+          <div className="bg-gray-100 px-4 py-2 rounded-lg">
+            <span className="font-semibold">Jami summa: </span>
+            <span className="font-bold text-lg">
+              {formatNumber(
+                tarif.tarifications.reduce(
+                  (total, tarification) =>
+                    total + (parseFloat(tarification.summa) || 0),
+                  0,
+                ),
+              )}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="w-full flex justify-end mt-6 gap-4 flex-wrap">
         <Button
           className="flex items-center gap-2 bg-green-500 hover:bg-green-600"

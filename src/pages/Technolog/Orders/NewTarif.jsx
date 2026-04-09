@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import TimerDialog from "./TimerDialog";
+import formatNumber from "@/utils/formatNumber";
 
 const STORAGE_KEY = "tarif_draft";
 
@@ -120,7 +121,7 @@ const NewTarif = () => {
   const [workers, setWorkers] = useState([]);
   const [ranks, setRanks] = useState([]);
   const [selectedTarifLang, setSelectedTarifLang] = useState(
-    localStorage.getItem("tarifLang") || "uz"
+    localStorage.getItem("tarifLang") || "uz",
   );
   const [activePopoverIndex, setActivePopoverIndex] = useState(null);
   const newRowRef = useRef(null);
@@ -383,7 +384,7 @@ const NewTarif = () => {
     // Check if any name is empty
     const hasEmptyNames = tarif?.tarifications?.some((item) => !item?.name);
     const hasEmptyRazryad = tarif?.tarifications?.some(
-      (item) => !item?.razryad?.id
+      (item) => !item?.razryad?.id,
     );
     const hasEmptySecond = tarif?.tarifications?.some((item) => !item?.second);
 
@@ -570,8 +571,8 @@ const NewTarif = () => {
                           new Set(
                             tarif.tarifications
                               .map((t) => t.name)
-                              .filter(Boolean)
-                          )
+                              .filter(Boolean),
+                          ),
                         ).map((name, idx) => (
                           <option key={idx} value={name} data-value={name} />
                         ))}
@@ -605,13 +606,13 @@ const NewTarif = () => {
                       >
                         {item?.employee?.id
                           ? workers.find(
-                              (worker) => worker.id === item.employee.id
+                              (worker) => worker.id === item.employee.id,
                             )?.name || "Xodimni tanlang"
                           : item?.employee_id
-                          ? workers.find(
-                              (worker) => worker.id === item.employee_id
-                            )?.name || "Xodimni tanlang"
-                          : "Xodimni tanlang"}
+                            ? workers.find(
+                                (worker) => worker.id === item.employee_id,
+                              )?.name || "Xodimni tanlang"
+                            : "Xodimni tanlang"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -639,7 +640,7 @@ const NewTarif = () => {
                                     item?.employee?.id === worker.id ||
                                       item?.employee_id === worker.id
                                       ? "opacity-100"
-                                      : "opacity-0"
+                                      : "opacity-0",
                                   )}
                                 />
                               </CommandItem>
@@ -729,6 +730,25 @@ const NewTarif = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Total Sum Display */}
+      {tarif?.tarifications && tarif.tarifications.length > 0 && (
+        <div className="w-full flex justify-end mt-4">
+          <div className="bg-gray-100 px-4 py-2 rounded-lg">
+            <span className="font-semibold">Jami summa: </span>
+            <span className="font-bold text-lg">
+              {formatNumber(
+                tarif.tarifications.reduce(
+                  (total, tarification) =>
+                    total + (parseFloat(tarification.summa) || 0),
+                  0,
+                ),
+              )}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="w-full flex justify-between mt-6 gap-4 flex-wrap">
         <Button
           className="flex items-center gap-2"
