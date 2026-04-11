@@ -245,7 +245,7 @@ const Explanations = () => {
 
           <div className="flex gap-2">
             <Input
-              placeholder="Employee qidirish"
+              placeholder="Xodim qidirish"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
