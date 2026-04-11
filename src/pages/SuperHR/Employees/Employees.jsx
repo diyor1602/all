@@ -505,6 +505,8 @@ const Employees = () => {
         params: {
           start_date: attendanceFilter.start_date,
           end_date: attendanceFilter.end_date,
+          department_id: filters.department_id || "",
+          group_id: filters.group_id ? filters.group_id : undefined,
         },
       });
 
