@@ -35,6 +35,7 @@ const Explanations = () => {
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const imageInputRef = useRef(null);
+  const [expandedEmployees, setExpandedEmployees] = useState(new Set());
 
   const getData = async () => {
     try {
@@ -180,21 +181,154 @@ const Explanations = () => {
                   )
                   ?.map((emp, index) => {
                     return (
-                      <div key={index} className="flex items-center gap-2">
-                        {emp?.img && (
-                          <img
-                            src={emp.img}
-                            className="w-10 h-10 object-cover rounded-full"
-                            alt={emp.name}
-                          />
-                        )}
-                        <div className="flex-1">
-                          <div>{emp.name}</div>
-                          <div>
-                            {emp.department?.name} {emp.group?.name}
+                      <div
+                        key={index}
+                        className="border rounded-lg overflow-hidden"
+                      >
+                        <div
+                          className="flex items-center gap-2 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => {
+                            const newExpanded = new Set(expandedEmployees);
+                            if (newExpanded.has(emp.id)) {
+                              newExpanded.delete(emp.id);
+                            } else {
+                              newExpanded.add(emp.id);
+                            }
+                            setExpandedEmployees(newExpanded);
+                          }}
+                        >
+                          {emp?.img && (
+                            <img
+                              src={emp.img}
+                              className="w-10 h-10 object-cover rounded-full"
+                              alt={emp.name}
+                            />
+                          )}
+                          <div className="flex-1">
+                            <div>{emp.name}</div>
+                            <div>
+                              {emp.department?.name} {emp.group?.name}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div>{emp?.explanations?.length}</div>
+                            <div
+                              className={`transform transition-transform duration-200 ${expandedEmployees.has(emp.id) ? "rotate-180" : ""}`}
+                            >
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
                           </div>
                         </div>
-                        <div>{emp?.explanations?.length}</div>
+
+                        {expandedEmployees.has(emp.id) &&
+                          emp.explanations?.length > 0 && (
+                            <div className="border-t bg-gray-50 p-4">
+                              <div className="space-y-3">
+                                {emp.explanations.map((explanation) => (
+                                  <div
+                                    key={explanation.id}
+                                    className="bg-white rounded-lg p-3 border"
+                                  >
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="text-xs text-gray-500">
+                                        {new Date(
+                                          explanation.created_at,
+                                        ).toLocaleDateString("uz-UZ")}{" "}
+                                        {new Date(
+                                          explanation.created_at,
+                                        ).toLocaleTimeString("uz-UZ", {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Yaratdi: {explanation.creator?.name}
+                                      </div>
+                                    </div>
+
+                                    {explanation.image && (
+                                      <div className="mb-2">
+                                        <img
+                                          src={explanation.image}
+                                          alt="Explanation image"
+                                          className="w-full max-w-sm h-32 object-cover rounded border"
+                                        />
+                                      </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                                      <div>
+                                        <span className="font-medium">
+                                          Metri:
+                                        </span>{" "}
+                                        {formatNumber(explanation.meter)} m
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Metrga narxi:
+                                        </span>{" "}
+                                        $
+                                        {formatNumber(
+                                          explanation.price_per_meter_usd,
+                                        )}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Jami jarima:
+                                        </span>{" "}
+                                        $
+                                        {formatNumber(
+                                          explanation.total_penalty_amount,
+                                        )}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Jarima:
+                                        </span>
+                                        <span
+                                          className={`ml-1 ${explanation.apply_penalty ? "text-red-600" : "text-green-600"}`}
+                                        >
+                                          {explanation.apply_penalty
+                                            ? "Ha"
+                                            : "Yo'q"}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {explanation.comment && (
+                                      <div>
+                                        <span className="font-medium text-xs">
+                                          Izoh:
+                                        </span>
+                                        <p className="text-xs text-gray-600 mt-1">
+                                          {explanation.comment}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                        {expandedEmployees.has(emp.id) &&
+                          (!emp.explanations ||
+                            emp.explanations.length === 0) && (
+                            <div className="border-t bg-gray-50 p-4 text-center text-gray-500 text-sm">
+                              Izohlar mavjud emas
+                            </div>
+                          )}
                       </div>
                     );
                   })}
