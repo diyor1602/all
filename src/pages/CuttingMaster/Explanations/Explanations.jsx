@@ -12,39 +12,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import formatNumber from "@/utils/formatNumber";
+import { X } from "lucide-react";
 
 const Explanations = () => {
   const { toast } = useToast();
   const [explanations, setExplanations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
-  const [addDialogOpen, setDialogOpen] = useState(false);
+  const [addDialogOpen, setDialogOpen] = useState();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
-
   const [formData, setFormData] = useState({
     employee_id: "",
     meter: "",
     price_per_meter_usd: "",
     comment: "",
     image: null,
-    apply_penalty: false,
   });
-
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const imageInputRef = useRef(null);
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
 
   const getData = async () => {
     try {
       setLoading(true);
       const response = await api.get("/cuttingMaster/employee-explanations");
-
-      setExplanations(response.data.data.data);
+      setExplanations(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -65,12 +59,11 @@ const Explanations = () => {
           status: "working",
         },
       });
-
       setSearchResults(response.data?.data);
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Employee topilmadi",
+        description: "Ma'lumotlarni olib bo'lmadi",
         variant: "destructive",
       });
     } finally {
@@ -79,10 +72,11 @@ const Explanations = () => {
   };
 
   const handleSubmit = async () => {
+    // Form validation
     if (!formData.meter || !formData.price_per_meter_usd) {
       toast({
         title: "Xatolik",
-        description: "Metr va narx majburiy",
+        description: "Metr va narx maydonlari to'ldirilishi shart",
         variant: "destructive",
       });
       return;
@@ -92,7 +86,6 @@ const Explanations = () => {
       setSubmitting(true);
 
       const formDataToSend = new FormData();
-
       formDataToSend.append("employee_id", formData.employee_id);
       formDataToSend.append("meter", formData.meter);
       formDataToSend.append(
@@ -113,30 +106,34 @@ const Explanations = () => {
       });
 
       toast({
-        title: "Success",
-        description: "Izoh qo'shildi",
+        title: "Muvaffaqiyatli",
+        description: "Izoh muvaffaqiyatli saqlandi",
       });
 
-      setDialogOpen(false);
+      // Reset form and close dialog
       setSelectedResult(null);
-      setSearchResults([]);
-      setSearchTerm("");
-      setImagePreview(null);
-
       setFormData({
         employee_id: "",
         meter: "",
         price_per_meter_usd: "",
         comment: "",
         image: null,
-        apply_penalty: false,
       });
+      setImagePreview(null);
+      setSearchResults([]);
+      setSearchTerm("");
+      setDialogOpen(false);
+      if (imageInputRef.current) {
+        imageInputRef.current.value = "";
+      }
 
+      // Refresh the data
       getData();
     } catch (error) {
       toast({
         title: "Xatolik",
-        description: "Saqlab bo'lmadi",
+        description:
+          error.response?.data?.message || "Ma'lumotlarni saqlab bo'lmadi",
         variant: "destructive",
       });
     } finally {
@@ -149,226 +146,241 @@ const Explanations = () => {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Jarimalar</h2>
-
-        <Button
-          onClick={() => {
-            setDialogOpen(true);
-          }}
-        >
-          Qo'shish
-        </Button>
-      </div>
-
-      {/* list */}
+    <div>
       {loading ? (
         <div>Loading...</div>
-      ) : explanations.length === 0 ? (
-        <div>Ma'lumot yo'q</div>
       ) : (
-        <div className="grid gap-4">
-          {explanations.map((item) => (
-            <div
-              key={item.id}
-              className="border rounded-xl p-4 shadow-sm bg-white"
+        <>
+          <div>
+            <Button
+              onClick={() => {
+                setSearchTerm("");
+                setSearchResults([]);
+                setSelectedResult(null);
+                setDialogOpen(true);
+              }}
             >
-              <div className="flex justify-between">
-                <div className="space-y-2">
-                  <div className="font-medium text-lg">
-                    {item.employee?.name}
+              Qo'shish
+            </Button>
+          </div>
+          <Dialog open={addDialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Qo'shish</DialogTitle>
+              </DialogHeader>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearch();
+                    }
+                  }}
+                  placeholder="Qidirish"
+                />
+                <Button onClick={handleSearch} disabled={searching}>
+                  {searching ? "Qidirilmoqda..." : "Qidirish"}
+                </Button>
+              </div>
+              {searchResults.length > 0 && (
+                <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
+                  {searchResults.map((result, index) => (
+                    <div
+                      key={index}
+                      onClick={() => {
+                        setSelectedResult(result);
+                        setFormData((prev) => ({
+                          ...prev,
+                          employee_id: result.id,
+                        }));
+                      }}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer group"
+                    >
+                      {result?.img ? (
+                        <img
+                          src={result.img}
+                          alt={result.name}
+                          className="w-12 h-12 object-cover rounded-full ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all duration-200"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-all duration-200">
+                          <span className="text-gray-500 text-sm font-medium group-hover:text-blue-600">
+                            {result.name?.charAt(0)?.toUpperCase() || "?"}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors duration-200 truncate">
+                          {result.name}
+                        </div>
+                        <div className="text-sm text-gray-500 group-hover:text-gray-600 transition-colors duration-200 flex flex-wrap gap-1 mt-1 items-center">
+                          {result.department?.name && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors duration-200">
+                              {result.department.name}
+                            </span>
+                          )}
+                          {result?.group?.name && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors duration-200">
+                              {result.group.name}
+                            </span>
+                          )}
+                          {result?.position && (
+                            <span className="text-xs text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
+                              {result.position}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedResult && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="meter">Metr</Label>
+                      <Input
+                        id="meter"
+                        type="number"
+                        value={formData.meter}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            meter: e.target.value,
+                          }))
+                        }
+                        placeholder="Metrni kiriting"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="price_per_meter_usd">
+                        Metrga narxi (USD)
+                      </Label>
+                      <Input
+                        id="price_per_meter_usd"
+                        type="number"
+                        step="0.01"
+                        value={formData.price_per_meter_usd}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            price_per_meter_usd: e.target.value,
+                          }))
+                        }
+                        placeholder="Metrga narxini kiriting"
+                      />
+                    </div>
                   </div>
 
-                  <div className="text-sm text-gray-500">
-                    Mas'ul: {item.creator?.name}
-                  </div>
-
-                  <div className="text-sm">
-                    Metr: {formatNumber(item.meter)}
-                  </div>
-
-                  <div className="text-sm">
-                    Narxi: {formatNumber(item.price_per_meter_usd)} $
-                  </div>
-
-                  <div className="text-sm font-semibold">
-                    Jami jarima: {formatNumber(item.total_penalty_amount)}$
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="apply_penalty"
+                      checked={formData.apply_penalty}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          apply_penalty: checked,
+                        }))
+                      }
+                    />
+                    <Label htmlFor="apply_penalty">Jarima qo'llash</Label>
                   </div>
 
                   <div>
-                    {item.apply_penalty ? (
-                      <span className="text-red-600">Jarima qo'llangan</span>
-                    ) : (
-                      <span className="text-green-600">Jarima yo'q</span>
+                    <Label htmlFor="comment">Izoh</Label>
+                    <Textarea
+                      id="comment"
+                      value={formData.comment}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          comment: e.target.value,
+                        }))
+                      }
+                      placeholder="Izohingizni yozing..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="image">Rasm</Label>
+                    <Input
+                      id="image"
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            image: file,
+                          }));
+                          setImagePreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+
+                    {imagePreview && (
+                      <div className="mt-3 relative">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full max-w-xs h-48 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImagePreview(null);
+                            setFormData((prev) => ({
+                              ...prev,
+                              image: null,
+                            }));
+                            if (imageInputRef.current) {
+                              imageInputRef.current.value = "";
+                            }
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                        >
+                          <X size={15} />
+                        </button>
+                      </div>
                     )}
                   </div>
 
-                  {item.comment && (
-                    <div className="text-sm">Izoh: {item.comment}</div>
-                  )}
-
-                  <div className="text-xs text-gray-400">
-                    {new Date(item.created_at).toLocaleString("uz-UZ", {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handleSubmit} disabled={submitting}>
+                      {submitting ? "Yuborilmoqda..." : "Saqlash"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedResult(null);
+                        setFormData({
+                          employee_id: "",
+                          meter: "",
+                          price_per_meter_usd: "",
+                          comment: "",
+                          image: null,
+                        });
+                        setImagePreview(null);
+                        if (imageInputRef.current) {
+                          imageInputRef.current.value = "";
+                        }
+                      }}
+                    >
+                      Bekor qilish
+                    </Button>
                   </div>
                 </div>
-
-                {/* image */}
-                {item.image && (
-                  <img
-                    src={`https://api.vizzano-apparel.uz/storage/${item.image}`}
-                    className="w-40 h-40 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => {
-                      setSelectedImage(
-                        `https://api.vizzano-apparel.uz/storage/${item.image}`,
-                      );
-                      setImageDialogOpen(true);
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Qo'shish</DialogTitle>
-          </DialogHeader>
-
-          <div className="flex gap-2">
-            <Input
-              placeholder="Xodim qidirish"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-
-            <Button onClick={handleSearch} disabled={searching}>
-              Qidirish
-            </Button>
-          </div>
-
-          {searchResults.map((emp) => (
-            <div
-              key={emp.id}
-              onClick={() => {
-                setSelectedResult(emp);
-                setFormData((prev) => ({
-                  ...prev,
-                  employee_id: emp.id,
-                }));
-              }}
-              className="border p-2 rounded cursor-pointer"
-            >
-              {emp.name}
-            </div>
-          ))}
-
-          {selectedResult && (
-            <div className="space-y-4">
-              <div>
-                <Label>Metr</Label>
-                <Input
-                  type="number"
-                  value={formData.meter}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      meter: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Price USD</Label>
-                <Input
-                  type="number"
-                  value={formData.price_per_meter_usd}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      price_per_meter_usd: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Checkbox
-                  checked={formData.apply_penalty}
-                  onCheckedChange={(v) =>
-                    setFormData({
-                      ...formData,
-                      apply_penalty: v,
-                    })
-                  }
-                />
-                <Label>Jarima qo'llash</Label>
-              </div>
-
-              <Textarea
-                placeholder="Comment"
-                value={formData.comment}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    comment: e.target.value,
-                  })
-                }
-              />
-
-              <Input
-                type="file"
-                ref={imageInputRef}
-                onChange={(e) => {
-                  const file = e.target.files[0];
-
-                  setFormData({
-                    ...formData,
-                    image: file,
-                  });
-
-                  setImagePreview(URL.createObjectURL(file));
-                }}
-              />
-
-              {imagePreview && (
-                <img src={imagePreview} className="w-40 rounded" />
               )}
-
-              <Button onClick={handleSubmit} disabled={submitting}>
-                Saqlash
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Image Dialog */}
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-          <DialogHeader className="p-4 pb-0">
-            <DialogTitle>Rasm</DialogTitle>
-          </DialogHeader>
-          <div className="flex items-center justify-center p-4">
-            {selectedImage && (
-              <img
-                src={selectedImage}
-                alt="Full size image"
-                className="max-w-full max-h-[70vh] object-contain rounded-lg"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 };
