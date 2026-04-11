@@ -112,6 +112,7 @@ const Explanations = () => {
       toast({
         title: "Muvaffaqiyatli",
         description: "Izoh muvaffaqiyatli saqlandi",
+        duration: 2000,
       });
 
       // Reset form and close dialog
@@ -292,7 +293,7 @@ const Explanations = () => {
                         </div>
                         {formData.price_per_meter_usd && (
                           <div className="font-semibold text-blue-600">
-                            Jami narx:
+                            Jami narx:{" "}
                             {formatNumber(
                               parseFloat(formData.width) *
                                 parseFloat(formData.height) *
