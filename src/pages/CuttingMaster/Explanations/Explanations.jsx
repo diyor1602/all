@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
 const Explanations = () => {
@@ -40,7 +40,7 @@ const Explanations = () => {
     try {
       setLoading(true);
       const response = await api.get("/cuttingMaster/employee-explanations");
-      setExplanations(response.data);
+      setExplanations(response.data?.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -154,7 +154,9 @@ const Explanations = () => {
   return (
     <div>
       {loading ? (
-        <div>Loading...</div>
+        <div className="w-full h-[90vh] flex items-center justify-center">
+          <Loader2 className="animate-spin text-primary" size={36} />
+        </div>
       ) : (
         <>
           <div>
