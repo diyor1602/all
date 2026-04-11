@@ -97,12 +97,6 @@ export default function BaseLayout({ children, navigation }) {
       dontShow: !damageRoles.includes(localStorage.getItem("role")),
       badge: damageCount > 0 ? damageCount : null,
     },
-    // {
-    //   name: "Jo'natmalar",
-    //   href: "/truck",
-    //   icon: Truck,
-    //   onMobile: false,
-    // },
     {
       name: "Koeffitsiyent",
       href: "/coefficient",

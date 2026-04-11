@@ -6,7 +6,6 @@ const allowPaths = [
   "kpi",
   "tailorRating",
   "cuttingKpi",
-  "truck",
   "coefficient",
   "dailyPayments",
   "damages",

@@ -35,7 +35,6 @@ import Casher from "./pages/Casher/Casher";
 import Ceo from "./pages/Ceo/Ceo";
 import Tailor from "./pages/Tailor/Tailor";
 import UniversalTailor from "./pages/UniversalTailor/UniversalTailor";
-import Truck from "./pages/Truck";
 import Coefficient from "./pages/Coefficient/Coefficient";
 import DailyPayments from "./pages/DailyPayments";
 import NewSeason from "./pages/NewSeason";
@@ -74,7 +73,6 @@ function App() {
           <Route path="/issue" element={<Issue />} />
           <Route path="/kpi" element={<Kpi />} />
           <Route path="/cuttingKpi" element={<CuttingKpi />} />
-          <Route path="/truck" element={<Truck />} />
           <Route path="/tailorRating" element={<TailorRating />} />
           <Route path="/damages" element={<Damages />} />
           <Route path="/newSeason" element={<NewSeason />} />
