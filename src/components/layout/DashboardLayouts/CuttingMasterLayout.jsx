@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { PackageOpen, Scissors, Users } from "lucide-react";
+import { PackageOpen, Scissors, Users, LetterText } from "lucide-react";
 
 const navigation = [
   // {
@@ -30,6 +30,12 @@ const navigation = [
     name: "Xodimlar",
     href: "/cuttingMaster/employees",
     icon: Users,
+    onMobile: true,
+  },
+  {
+    name: "Tushuntirishnomalar",
+    href: "/cuttingMaster/explanations",
+    icon: LetterText,
     onMobile: true,
   },
 ];
