@@ -171,6 +171,38 @@ const Explanations = () => {
               Qo'shish
             </Button>
           </div>
+          <div className="mt-4">
+            {explanations?.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {explanations
+                  ?.sort(
+                    (a, b) => b.explanations?.length - a.explanations?.length,
+                  )
+                  ?.map((emp, index) => {
+                    return (
+                      <div key={index} className="flex items-center gap-2">
+                        {emp?.img && (
+                          <img
+                            src={emp.img}
+                            className="w-10 h-10 object-cover rounded-full"
+                            alt={emp.name}
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div>{emp.name}</div>
+                          <div>
+                            {emp.department?.name} {emp.group?.name}
+                          </div>
+                        </div>
+                        <div>{emp?.explanations?.length}</div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div>Mavjud emas</div>
+            )}
+          </div>
           <Dialog open={addDialogOpen} onOpenChange={setDialogOpen}>
             <DialogContent>
               <DialogHeader>
