@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import ModelImages from "@/components/ModelImages";
 
 const All = () => {
   const { toast } = useToast();
-
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [openTruck, setOpenTruck] = useState(null);
 
-  // 🔹 TABLE BUILD FUNCTION
+  // 🔹 TABLE BUILD
   const buildTable = (details) => {
     const sizes = [...new Set(details.map((d) => d.size_name))];
     const colors = [...new Set(details.map((d) => d.color_name))];
@@ -32,75 +32,49 @@ const All = () => {
     return { sizes, colors, table };
   };
 
-  //  TABLE COMPONENT
+  // 🔹 TABLE UI
   const PackageTable = ({ details }) => {
-    if (!details || details.length === 0) return null;
+    if (!details?.length) return null;
 
     const { sizes, colors, table } = buildTable(details);
 
-    // Calculate sums for each color
-    const calculateSums = () => {
-      const sums = {};
-      colors.forEach((color) => {
-        sums[color] = 0;
-      });
-
-      details.forEach((d) => {
-        if (sums[d.color_name] !== undefined) {
-          sums[d.color_name] += d.qty;
-        }
-      });
-
-      return sums;
-    };
-
-    const sums = calculateSums();
-
     return (
-      <div className="overflow-x-auto mt-3">
-        <table className="border border-collapse w-full text-sm">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2 text-left">O'lcham / Rang</th>
+      <div className="overflow-x-auto mt-3 rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted sticky top-0">
+            <tr>
+              <th className="p-2 text-left">Size</th>
               {colors.map((color, i) => (
-                <th key={i} className="border p-2 text-center">
+                <th key={i} className="p-2 text-center">
                   {color}
                 </th>
               ))}
             </tr>
           </thead>
+
           <tbody>
             {sizes.map((size, i) => (
-              <tr key={i}>
-                <td className="border p-2 font-semibold">{size}</td>
+              <tr key={i} className="border-t hover:bg-gray-50">
+                <td className="p-2 font-medium">{size}</td>
                 {colors.map((color, j) => (
-                  <td key={j} className="border p-2 text-center">
+                  <td key={j} className="p-2 text-center">
                     {table[size][color] || "-"}
                   </td>
                 ))}
               </tr>
             ))}
-            {/* Sum row */}
-            <tr className="bg-blue-50 font-semibold">
-              <td className="border p-2">Jami</td>
-              {colors.map((color, i) => (
-                <td key={i} className="border p-2 text-center">
-                  {sums[color] || 0}
-                </td>
-              ))}
-            </tr>
           </tbody>
         </table>
       </div>
     );
   };
 
-  // 🔹 API CALL
+  // 🔹 API
   const getData = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/trucks");
-      setData(response.data);
+      const res = await api.get("/trucks");
+      setData(res.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -116,53 +90,93 @@ const All = () => {
     getData();
   }, []);
 
-  // 🔹 UI
-  return loading ? (
-    <div className="w-full h-[90vh] flex items-center justify-center">
-      <Loader2 className="animate-spin text-primary" size={36} />
-    </div>
-  ) : (
-    <div className="space-y-6">
-      {data?.map((truck, index) => (
-        <div key={index} className="border p-4 rounded-xl shadow-sm">
-          <div className="font-bold text-lg">{truck.number}</div>
-          <div className="text-gray-500 mb-3">{truck.comment}</div>
-          <div>{truck?.driver_name}</div>
-          <div>{truck?.driver_phone}</div>
-          <div>{truck?.vehicle_number}</div>
-          {truck?.vehicle_photo && (
-            <img
-              src={truck?.vehicle_photo}
-              className="w-20 h-20 object-cover rounded-lg"
-              alt="vehicle"
-            />
-          )}
+  if (loading) {
+    return (
+      <div className="w-full h-[90vh] flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={36} />
+      </div>
+    );
+  }
 
-          <div className="space-y-4">
-            {truck?.items
-              ?.sort((a, b) => a.group_key.localeCompare(b.group_key))
-              ?.map((item, index) => (
-                <div key={index} className="border p-3 rounded-lg bg-gray-50">
-                  <div className="font-semibold">{item.order?.name}</div>
-                  <ModelImages
-                    modelCode={item.order?.order_model?.model?.name}
-                  />
+  return (
+    <div className="space-y-4">
+      {data?.map((truck, index) => {
+        const isOpen = openTruck === index;
 
-                  <div className="text-sm text-gray-600">
-                    {formatNumber(item.shipped_qty)} ta
-                  </div>
-
-                  <div className="text-sm mb-2">
-                    {item.order?.order_model?.submodels[0]?.submodel?.name}
-                  </div>
-
-                  {/* 🔥 TABLE HERE */}
-                  <PackageTable details={item.package_details} />
+        return (
+          <div
+            key={index}
+            className="border rounded-xl shadow-sm overflow-hidden"
+          >
+            {/* 🔹 HEADER */}
+            <div
+              onClick={() => setOpenTruck(isOpen ? null : index)}
+              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+            >
+              <div>
+                <div className="font-bold text-lg">🚚 {truck.number}</div>
+                <div className="text-sm text-gray-500">
+                  {truck.driver_name} • {truck.vehicle_number}
                 </div>
-              ))}
+              </div>
+
+              <ChevronDown
+                className={`transition ${isOpen ? "rotate-180" : ""}`}
+              />
+            </div>
+
+            {/* 🔹 BODY */}
+            {isOpen && (
+              <div className="p-4 border-t space-y-4 bg-gray-50">
+                {/* INFO */}
+                <div className="flex gap-4 items-center">
+                  {truck.vehicle_photo && (
+                    <img
+                      src={truck.vehicle_photo}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="text-sm space-y-1">
+                    <div>{truck.comment}</div>
+                    <div>{truck.driver_phone}</div>
+                  </div>
+                </div>
+
+                {/* ITEMS */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  {truck?.items
+                    ?.sort((a, b) => a.group_key.localeCompare(b.group_key))
+                    ?.map((item, i) => (
+                      <div
+                        key={i}
+                        className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition"
+                      >
+                        <div className="font-semibold">{item.order?.name}</div>
+
+                        <ModelImages
+                          modelCode={item.order?.order_model?.model?.name}
+                        />
+
+                        <div className="text-sm text-gray-600">
+                          {formatNumber(item.shipped_qty)} ta
+                        </div>
+
+                        <div className="text-xs text-gray-500 mb-2">
+                          {
+                            item.order?.order_model?.submodels[0]?.submodel
+                              ?.name
+                          }
+                        </div>
+
+                        <PackageTable details={item.package_details} />
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
