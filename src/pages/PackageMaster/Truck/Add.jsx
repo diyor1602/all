@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Plus, Snowflake, TreePalm, Search } from "lucide-react";
+import { Loader2, Plus, Snowflake, TreePalm, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { statuses } from "@/lib/status";
@@ -135,6 +135,13 @@ const Add = () => {
             <div key={index}>
               <div>{item.name}</div>
               <div>{item.quantity}</div>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setItems(items.filter((_, i) => i !== index))}
+              >
+                <X />
+              </Button>
             </div>
           ))}
         </div>
