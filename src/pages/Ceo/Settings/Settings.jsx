@@ -12,6 +12,7 @@ import {
   ChartArea,
   Pizza,
   Coins,
+  Truck,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -21,6 +22,7 @@ import GroupHistory from "./History/GroupHistory";
 import QualityRatings from "./QualityRatings/QualityRatings";
 import Universals from "./Universals/Universals";
 import Moneys from "./Moneys/Moneys";
+import Shipments from "./Shipments/Shipments";
 
 const Settings = () => {
   return (
@@ -33,6 +35,7 @@ const Settings = () => {
       <Route path="qualityratings" element={<QualityRatings />} />
       <Route path="universals" element={<Universals />} />
       <Route path="moneys" element={<Moneys />} />
+      <Route path="shipments" element={<Shipments />} />
     </Routes>
   );
 };
@@ -104,6 +107,12 @@ const SettingsPage = () => {
       icon: Coins,
       link: "/ceo/settings/moneys",
       color: "bg-amber-500",
+    },
+    {
+      name: "Jo'natmalar",
+      icon: Truck,
+      link: "/ceo/settings/shipments",
+      color: "bg-violet-500",
     },
   ];
 
