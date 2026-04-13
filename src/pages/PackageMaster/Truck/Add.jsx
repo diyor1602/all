@@ -129,6 +129,15 @@ const Add = () => {
             </Button>
           </div>
         </div>
+
+        <div className="space-y-2">
+          {items?.map((item, index) => (
+            <div key={index}>
+              <div>{item.name}</div>
+              <div>{item.quantity}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Dialog */}
@@ -166,8 +175,17 @@ const Add = () => {
               return (
                 <div
                   key={order.id}
-                  onClick={() => handleSelect(order)}
-                  className="cursor-pointer border rounded-xl p-3 hover:shadow-md hover:border-primary transition"
+                  onClick={() => {
+                    if (!items.some((item) => item.id === order.id)) {
+                      handleSelect(order);
+                    }
+                  }}
+                  disabled={items.some((item) => item.id === order.id)}
+                  className={`cursor-pointer border rounded-xl p-3 hover:shadow-md hover:border-primary transition ${
+                    items.some((item) => item.id === order.id)
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
