@@ -132,16 +132,42 @@ const Add = () => {
 
         <div className="space-y-2">
           {items?.map((item, index) => (
-            <div key={index}>
-              <div>{item.name}</div>
-              <div>{item.quantity}</div>
+            <div key={index} className="bg-white shadow-md relative p-2">
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => setItems(items.filter((_, i) => i !== index))}
+                className="absolute top-2 right-2"
               >
                 <X />
               </Button>
+              <div className="space-y-1">
+                <div className="font-medium text-sm">{item?.name}</div>
+
+                <div className="text-xs text-gray-500">
+                  {item?.quantity} ta •{" "}
+                  {item?.order_model?.submodels[0]?.submodel?.name}
+                </div>
+
+                <div
+                  className={`${statuses[item.status]?.color} text-white text-[10px] px-2 py-1 rounded-full w-fit`}
+                >
+                  {statuses[item.status]?.text}
+                </div>
+                <div className="text-xs">
+                  {item?.season_type === "winter" ? (
+                    <div className="text-blue-500 flex items-center gap-1">
+                      <Snowflake size={12} />
+                      {item?.season_year}
+                    </div>
+                  ) : (
+                    <div className="text-green-500 flex items-center gap-1">
+                      <TreePalm size={12} />
+                      {item?.season_year}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
