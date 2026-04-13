@@ -195,6 +195,21 @@ const Add = () => {
     }));
   };
 
+  const calculateMatrixTotal = (itemId) => {
+    const matrix = matrices[itemId];
+    if (!matrix) return 0;
+
+    return matrix.sizes.reduce((total, size) => {
+      return (
+        total +
+        matrix.colors.reduce((rowTotal, color) => {
+          const key = `${size.id}-${color.id}`;
+          return rowTotal + Number(matrix.quantities[key] || 0);
+        }, 0)
+      );
+    }, 0);
+  };
+
   // Generate consistent color for group keys
   const getGroupColor = (groupKey) => {
     if (!groupKey) return "bg-white";
@@ -273,15 +288,15 @@ const Add = () => {
   };
 
   const handleSubmit = async () => {
-    // check shipped_quantity
+    // check shipped_quantity based on matrix total
     const hasInvalidQuantity = items.some(
-      (item) => item.shipped_quantity > item.quantity,
+      (item) => calculateMatrixTotal(item.id) > item.quantity,
     );
     if (hasInvalidQuantity) {
       toast({
         title: "Xatolik",
         description:
-          "Yetkazilgan soni buyurtma sonidan katta bo'lishi mumkin emas!",
+          "Jadvaldagi jami son buyurtma sonidan katta bo'lishi mumkin emas!",
         variant: "destructive",
         duration: 1500,
       });
@@ -331,7 +346,7 @@ const Add = () => {
           return {
             order_id: item.id,
             planned_qty: item.quantity,
-            shipped_qty: item.shipped_quantity,
+            shipped_qty: calculateMatrixTotal(item.id),
             group_key: item.group_key || null,
             packages: packages.length > 0 ? packages : undefined,
           };
@@ -463,21 +478,12 @@ const Add = () => {
                     type="number"
                     min="0"
                     max={item.quantity}
-                    value={item.shipped_quantity || ""}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) || 0;
-                      setItems((prev) =>
-                        prev.map((i, iIndex) =>
-                          iIndex === index
-                            ? { ...i, shipped_quantity: value }
-                            : i,
-                        ),
-                      );
-                    }}
-                    className="w-20 h-6 text-xs bg-white"
+                    value={calculateMatrixTotal(item.id)}
+                    disabled
+                    className="w-20 h-6 text-xs bg-gray-100"
                   />
                   <span className="text-xs text-gray-500">
-                    / {item.quantity} ta
+                    / {item.quantity} ta (Jadvaldan avtomatik hisoblanadi)
                   </span>
                 </div>
 
