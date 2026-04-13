@@ -9,6 +9,7 @@ import {
   Search,
   X,
   CheckCheck,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,164 @@ const Add = () => {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  // Matrix state for size and color management
+  const [matrices, setMatrices] = useState({}); // Store matrix for each item
+
+  // Matrix helper functions
+  const uid = () => Math.random().toString(36).slice(2, 9);
+
+  const initializeMatrix = (itemId) => {
+    setMatrices((prev) => ({
+      ...prev,
+      [itemId]: {
+        sizes: [],
+        colors: [],
+        quantities: {},
+      },
+    }));
+  };
+
+  const addSize = (itemId) => {
+    setMatrices((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        sizes: [...prev[itemId].sizes, { id: uid(), name: "" }],
+      },
+    }));
+  };
+
+  const addColor = (itemId) => {
+    setMatrices((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        colors: [...prev[itemId].colors, { id: uid(), name: "" }],
+      },
+    }));
+  };
+
+  const updateQty = (itemId, sizeId, colorId, value) => {
+    const key = `${sizeId}-${colorId}`;
+    setMatrices((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        quantities: {
+          ...prev[itemId].quantities,
+          [key]: value,
+        },
+      },
+    }));
+  };
+
+  const deleteSize = (itemId, sizeId) => {
+    setMatrices((prev) => {
+      const matrix = prev[itemId];
+      const sizes = matrix.sizes.filter((s) => s.id !== sizeId);
+      const quantities = { ...matrix.quantities };
+
+      Object.keys(quantities).forEach((key) => {
+        if (key.startsWith(sizeId + "-")) {
+          delete quantities[key];
+        }
+      });
+
+      return {
+        ...prev,
+        [itemId]: { ...matrix, sizes, quantities },
+      };
+    });
+  };
+
+  const deleteColor = (itemId, colorId) => {
+    setMatrices((prev) => {
+      const matrix = prev[itemId];
+      const colors = matrix.colors.filter((c) => c.id !== colorId);
+      const quantities = { ...matrix.quantities };
+
+      Object.keys(quantities).forEach((key) => {
+        if (key.endsWith("-" + colorId)) {
+          delete quantities[key];
+        }
+      });
+
+      return {
+        ...prev,
+        [itemId]: { ...matrix, colors, quantities },
+      };
+    });
+  };
+
+  const updateSizeName = (itemId, sizeId, name) => {
+    setMatrices((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        sizes: prev[itemId].sizes.map((s) =>
+          s.id === sizeId ? { ...s, name } : s,
+        ),
+      },
+    }));
+  };
+
+  const updateColorName = (itemId, colorId, name) => {
+    setMatrices((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        colors: prev[itemId].colors.map((c) =>
+          c.id === colorId ? { ...c, name } : c,
+        ),
+      },
+    }));
+  };
+
+  const initializeMatrixFromOrder = (order) => {
+    if (!order?.order_model?.sizes) {
+      initializeMatrix(order.id);
+      return;
+    }
+
+    // Extract unique sizes and colors from order sizes
+    const uniqueSizes = [
+      ...new Map(
+        order.order_model.sizes.map((s) => [
+          s.size_name,
+          { id: uid(), name: s.size_name },
+        ]),
+      ).values(),
+    ];
+    const uniqueColors = [
+      ...new Map(
+        order.order_model.sizes.map((s) => [
+          s.color_name,
+          { id: uid(), name: s.color_name },
+        ]),
+      ).values(),
+    ];
+
+    // Build quantities matrix
+    const quantities = {};
+    order.order_model.sizes.forEach((size) => {
+      const sizeObj = uniqueSizes.find((s) => s.name === size.size_name);
+      const colorObj = uniqueColors.find((c) => c.name === size.color_name);
+      if (sizeObj && colorObj) {
+        const key = `${sizeObj.id}-${colorObj.id}`;
+        quantities[key] = size.quantity;
+      }
+    });
+
+    setMatrices((prev) => ({
+      ...prev,
+      [order.id]: {
+        sizes: uniqueSizes,
+        colors: uniqueColors,
+        quantities: quantities,
+      },
+    }));
+  };
 
   // Generate consistent color for group keys
   const getGroupColor = (groupKey) => {
@@ -107,10 +266,9 @@ const Add = () => {
   }, [orders, searchText]);
 
   const handleSelect = (order) => {
-    setItems((prev) => [
-      ...prev,
-      { ...order, shipped_quantity: order.quantity },
-    ]);
+    const newItem = { ...order, shipped_quantity: order.quantity };
+    setItems((prev) => [...prev, newItem]);
+    initializeMatrixFromOrder(order);
     setOpen(false);
   };
 
@@ -144,22 +302,49 @@ const Add = () => {
 
     setSubmitting(true);
     try {
-      await api.post("trucks", {
+      const payload = {
         ...form,
         items: items.map((item) => {
+          const matrix = matrices[item.id] || {
+            sizes: [],
+            colors: [],
+            quantities: {},
+          };
+          const packages = [];
+
+          matrix.sizes.forEach((size) => {
+            matrix.colors.forEach((color) => {
+              const key = `${size.id}-${color.id}`;
+              const qty = Number(matrix.quantities[key] || 0);
+
+              if (size.name && color.name && qty > 0) {
+                packages.push({
+                  color_name: color.name,
+                  size_name: size.name,
+                  qty: qty,
+                  capacity: Math.ceil(qty / 10), // Default capacity calculation
+                });
+              }
+            });
+          });
+
           return {
             order_id: item.id,
             planned_qty: item.quantity,
             shipped_qty: item.shipped_quantity,
             group_key: item.group_key || null,
+            packages: packages.length > 0 ? packages : undefined,
           };
         }),
-      });
+      };
+
+      await api.post("trucks", payload);
       toast({
         title: "Muvaffaqiyat",
         description: "Truck muvaffaqiyatli qo'shildi!",
       });
       setItems([]);
+      setMatrices({});
       setForm({
         vehicle_number: "",
         driver_name: "",
@@ -313,6 +498,197 @@ const Add = () => {
                     className="w-32 h-6 text-xs bg-white"
                   />
                 </div>
+
+                {/* Size and Color Matrix */}
+                {matrices[item.id] && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex gap-2 mb-3">
+                      <Button
+                        size="sm"
+                        onClick={() => addSize(item.id)}
+                        className="text-xs bg-blue-500 hover:bg-blue-600"
+                      >
+                        <Plus className="w-3 h-3 mr-1" /> O'lcham
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => addColor(item.id)}
+                        className="text-xs bg-orange-500 hover:bg-orange-600"
+                      >
+                        <Plus className="w-3 h-3 mr-1" /> Rang
+                      </Button>
+                    </div>
+
+                    {matrices[item.id].sizes.length > 0 &&
+                      matrices[item.id].colors.length > 0 && (
+                        <div className="overflow-auto rounded border border-gray-200">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="bg-gray-100">
+                                <th className="border p-2 font-semibold">
+                                  O'lcham/Rang
+                                </th>
+                                {matrices[item.id].colors.map((color) => (
+                                  <th key={color.id} className="border p-1">
+                                    <div className="flex gap-1">
+                                      <Input
+                                        value={color.name}
+                                        placeholder="Rang"
+                                        className="w-16 h-5 text-xs"
+                                        onChange={(e) =>
+                                          updateColorName(
+                                            item.id,
+                                            color.id,
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() =>
+                                          deleteColor(item.id, color.id)
+                                        }
+                                        className="w-5 h-5 text-red-500"
+                                      >
+                                        <Trash2 size={10} />
+                                      </Button>
+                                    </div>
+                                  </th>
+                                ))}
+                                <th className="border p-1 bg-blue-50 font-bold">
+                                  Jami
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {matrices[item.id].sizes.map((size) => {
+                                const rowTotal = matrices[
+                                  item.id
+                                ].colors.reduce((sum, color) => {
+                                  const key = `${size.id}-${color.id}`;
+                                  return (
+                                    sum +
+                                    Number(
+                                      matrices[item.id].quantities[key] || 0,
+                                    )
+                                  );
+                                }, 0);
+
+                                return (
+                                  <tr key={size.id}>
+                                    <td className="border p-1">
+                                      <div className="flex gap-1">
+                                        <Input
+                                          value={size.name}
+                                          placeholder="O'lcham"
+                                          className="w-16 h-5 text-xs"
+                                          onChange={(e) =>
+                                            updateSizeName(
+                                              item.id,
+                                              size.id,
+                                              e.target.value,
+                                            )
+                                          }
+                                        />
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          onClick={() =>
+                                            deleteSize(item.id, size.id)
+                                          }
+                                          className="w-5 h-5"
+                                        >
+                                          <Trash2 size={10} />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                    {matrices[item.id].colors.map((color) => {
+                                      const key = `${size.id}-${color.id}`;
+                                      return (
+                                        <td
+                                          key={color.id}
+                                          className="border p-1"
+                                        >
+                                          <Input
+                                            type="number"
+                                            className="w-12 h-5 text-xs"
+                                            value={
+                                              matrices[item.id].quantities[
+                                                key
+                                              ] || ""
+                                            }
+                                            onChange={(e) =>
+                                              updateQty(
+                                                item.id,
+                                                size.id,
+                                                color.id,
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </td>
+                                      );
+                                    })}
+                                    <td className="border p-1 bg-blue-50 font-bold text-center">
+                                      {rowTotal}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                              <tr>
+                                <td className="border p-1 bg-gray-100 font-bold text-center">
+                                  Jami
+                                </td>
+                                {matrices[item.id].colors.map((color) => {
+                                  const columnTotal = matrices[
+                                    item.id
+                                  ].sizes.reduce((sum, size) => {
+                                    const key = `${size.id}-${color.id}`;
+                                    return (
+                                      sum +
+                                      Number(
+                                        matrices[item.id].quantities[key] || 0,
+                                      )
+                                    );
+                                  }, 0);
+                                  return (
+                                    <td
+                                      key={color.id}
+                                      className="border p-1 bg-gray-100 font-bold text-center"
+                                    >
+                                      {columnTotal}
+                                    </td>
+                                  );
+                                })}
+                                <td className="border p-1 bg-gray-200 font-bold text-center">
+                                  {matrices[item.id].sizes.reduce(
+                                    (grandTotal, size) =>
+                                      grandTotal +
+                                      matrices[item.id].colors.reduce(
+                                        (rowTotal, color) => {
+                                          const key = `${size.id}-${color.id}`;
+                                          return (
+                                            rowTotal +
+                                            Number(
+                                              matrices[item.id].quantities[
+                                                key
+                                              ] || 0,
+                                            )
+                                          );
+                                        },
+                                        0,
+                                      ),
+                                    0,
+                                  )}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                  </div>
+                )}
 
                 <div
                   className={`${statuses[item.status]?.color} text-white text-[10px] px-2 py-1 rounded-full w-fit`}
