@@ -35,6 +35,33 @@ const Add = () => {
   const [open, setOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
 
+  // Generate consistent color for group keys
+  const getGroupColor = (groupKey) => {
+    if (!groupKey) return "bg-white";
+
+    const colors = [
+      "bg-red-100",
+      "bg-blue-100",
+      "bg-green-100",
+      "bg-yellow-100",
+      "bg-purple-100",
+      "bg-pink-100",
+      "bg-indigo-100",
+      "bg-orange-100",
+      "bg-teal-100",
+      "bg-cyan-100",
+    ];
+
+    // Generate hash from group key to get consistent color
+    let hash = 0;
+    for (let i = 0; i < groupKey.length; i++) {
+      hash = groupKey.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const colorIndex = Math.abs(hash) % colors.length;
+    return colors[colorIndex];
+  };
+
   const getOrders = async () => {
     setLoading(true);
     try {
@@ -195,7 +222,10 @@ const Add = () => {
 
         <div className="space-y-2">
           {items?.map((item, index) => (
-            <div key={index} className="bg-white shadow-md relative p-2">
+            <div
+              key={index}
+              className={`shadow-md relative p-2 ${getGroupColor(item.group_key)}`}
+            >
               <Button
                 size="icon"
                 variant="ghost"
@@ -231,7 +261,7 @@ const Add = () => {
                         ),
                       );
                     }}
-                    className="w-20 h-6 text-xs"
+                    className="w-20 h-6 text-xs bg-white"
                   />
                   <span className="text-xs text-gray-500">
                     / {item.quantity} ta
@@ -252,7 +282,7 @@ const Add = () => {
                         ),
                       );
                     }}
-                    className="w-32 h-6 text-xs"
+                    className="w-32 h-6 text-xs bg-white"
                   />
                 </div>
 
