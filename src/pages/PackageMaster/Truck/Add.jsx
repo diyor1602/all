@@ -534,7 +534,7 @@ const Add = () => {
                                       <Input
                                         value={color.name}
                                         placeholder="Rang"
-                                        className="w-16 h-5 text-xs"
+                                        className="w-fit h-5 text-xs"
                                         onChange={(e) =>
                                           updateColorName(
                                             item.id,
@@ -582,7 +582,7 @@ const Add = () => {
                                         <Input
                                           value={size.name}
                                           placeholder="O'lcham"
-                                          className="w-16 h-5 text-xs"
+                                          className="w-fit h-5 text-xs"
                                           onChange={(e) =>
                                             updateSizeName(
                                               item.id,
@@ -612,7 +612,7 @@ const Add = () => {
                                         >
                                           <Input
                                             type="number"
-                                            className="w-12 h-5 text-xs"
+                                            className="w-fit h-5 text-xs"
                                             value={
                                               matrices[item.id].quantities[
                                                 key
