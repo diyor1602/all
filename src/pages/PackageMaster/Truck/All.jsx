@@ -161,23 +161,30 @@ const All = () => {
                         key={i}
                         className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition"
                       >
-                        <div className="font-semibold">{item.order?.name}</div>
+                        <div className="flex gap-2 justify-between">
+                          <div>
+                            <div className="font-semibold">
+                              {item.order?.name}
+                            </div>
 
-                        <ModelImages
-                          modelCode={item.order?.order_model?.model?.name}
-                        />
+                            <div className="text-sm text-gray-600">
+                              {formatNumber(item.shipped_qty)} ta
+                            </div>
 
-                        <div className="text-sm text-gray-600">
-                          {formatNumber(item.shipped_qty)} ta
+                            <div className="text-xs text-gray-500 mb-2">
+                              {
+                                item.order?.order_model?.submodels[0]?.submodel
+                                  ?.name
+                              }
+                            </div>
+                          </div>
+
+                          <div className="min-w-[50px]">
+                            <ModelImages
+                              modelCode={item.order?.order_model?.model?.name}
+                            />
+                          </div>
                         </div>
-
-                        <div className="text-xs text-gray-500 mb-2">
-                          {
-                            item.order?.order_model?.submodels[0]?.submodel
-                              ?.name
-                          }
-                        </div>
-
                         <PackageTable details={item.package_details} />
                       </div>
                     ))}
