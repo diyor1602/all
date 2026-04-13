@@ -103,6 +103,13 @@ const All = () => {
       {data?.map((truck, index) => {
         const isOpen = openTruck === index;
 
+        // Calculate total quantity for this truck
+        const totalQty =
+          truck?.items?.reduce(
+            (sum, item) => sum + (item.shipped_qty || 0),
+            0,
+          ) || 0;
+
         return (
           <div
             key={index}
@@ -117,6 +124,9 @@ const All = () => {
                 <div className="font-bold text-lg">🚚 {truck.number}</div>
                 <div className="text-sm text-gray-500">
                   {truck.driver_name} • {truck.vehicle_number}
+                </div>
+                <div className="text-sm font-medium text-primary">
+                  Jami: {formatNumber(totalQty)} ta
                 </div>
               </div>
 
