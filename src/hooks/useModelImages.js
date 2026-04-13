@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
 
+const CACHE_TTL = 1000 * 60 * 60 * 24; // 1 kun
+
 export default function useModelImages(modelCode) {
   const [images, setImages] = useState([]);
   const [products, setProducts] = useState([]);
@@ -16,6 +18,28 @@ export default function useModelImages(modelCode) {
       setError(null);
       setLoading(false);
       return;
+    }
+
+    const cacheKey = `model-images-${modelCode}`;
+
+    // 🔥 CACHE NI TEKSHIRISH
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+
+        const isExpired = Date.now() - parsed.timestamp > CACHE_TTL;
+
+        if (!isExpired) {
+          setImages(parsed.images || []);
+          setProducts(parsed.products || []);
+          return; // 🚀 API chaqirilmaydi
+        } else {
+          localStorage.removeItem(cacheKey);
+        }
+      } catch (e) {
+        localStorage.removeItem(cacheKey);
+      }
     }
 
     const normalizeUrl = (url, fallbackDomain = "") => {
@@ -185,8 +209,20 @@ export default function useModelImages(modelCode) {
 
         if (!isMounted) return;
 
+        const finalImages = uniqueProducts.map((item) => item.image);
+
         setProducts(uniqueProducts);
-        setImages(uniqueProducts.map((item) => item.image));
+        setImages(finalImages);
+
+        // 🔥 CACHE GA YOZISH
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            images: finalImages,
+            products: uniqueProducts,
+            timestamp: Date.now(),
+          }),
+        );
       } catch (err) {
         if (!isMounted) return;
 
