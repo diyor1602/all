@@ -111,6 +111,7 @@ const Add = () => {
             order_id: item.id,
             planned_qty: item.quantity,
             shipped_qty: item.shipped_quantity,
+            group_key: item.group_key || null,
           };
         }),
       });
@@ -235,6 +236,24 @@ const Add = () => {
                   <span className="text-xs text-gray-500">
                     / {item.quantity} ta
                   </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-600">Group kaliti:</label>
+                  <Input
+                    placeholder="Kalit"
+                    value={item.group_key || ""}
+                    onChange={(e) => {
+                      setItems((prev) =>
+                        prev.map((i, iIndex) =>
+                          iIndex === index
+                            ? { ...i, group_key: e.target.value }
+                            : i,
+                        ),
+                      );
+                    }}
+                    className="w-32 h-6 text-xs"
+                  />
                 </div>
 
                 <div
