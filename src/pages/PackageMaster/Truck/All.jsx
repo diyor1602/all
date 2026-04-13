@@ -61,7 +61,7 @@ const All = () => {
         <table className="border border-collapse w-full text-sm">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border p-2 text-left">Size / Color</th>
+              <th className="border p-2 text-left">O'lcham / Rang</th>
               {colors.map((color, i) => (
                 <th key={i} className="border p-2 text-center">
                   {color}
@@ -127,6 +127,16 @@ const All = () => {
         <div key={index} className="border p-4 rounded-xl shadow-sm">
           <div className="font-bold text-lg">{truck.number}</div>
           <div className="text-gray-500 mb-3">{truck.comment}</div>
+          <div>{truck?.driver_name}</div>
+          <div>{truck?.driver_phone}</div>
+          <div>{truck?.vehicle_number}</div>
+          {truck?.vehicle_photo && (
+            <img
+              src={truck?.vehicle_photo}
+              className="w-20 h-20 object-cover rounded-lg"
+              alt="vehicle"
+            />
+          )}
 
           <div className="space-y-4">
             {truck?.items
