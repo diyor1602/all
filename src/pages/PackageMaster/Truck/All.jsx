@@ -17,6 +17,8 @@ const All = () => {
     const colors = [...new Set(details.map((d) => d.color_name))];
 
     const table = {};
+    const colorSums = {};
+    let grandTotal = 0;
 
     sizes.forEach((size) => {
       table[size] = {};
@@ -25,18 +27,24 @@ const All = () => {
       });
     });
 
-    details.forEach((d) => {
-      table[d.size_name][d.color_name] = `${d.qty} (${d.capacity})`;
+    colors.forEach((color) => {
+      colorSums[color] = 0;
     });
 
-    return { sizes, colors, table };
+    details.forEach((d) => {
+      table[d.size_name][d.color_name] = `${d.qty} (${d.capacity})`;
+      colorSums[d.color_name] += d.qty || 0;
+      grandTotal += d.qty || 0;
+    });
+
+    return { sizes, colors, table, colorSums, grandTotal };
   };
 
   // 🔹 TABLE UI
   const PackageTable = ({ details }) => {
     if (!details?.length) return null;
 
-    const { sizes, colors, table } = buildTable(details);
+    const { sizes, colors, table, colorSums, grandTotal } = buildTable(details);
 
     return (
       <div className="overflow-x-auto mt-3 rounded-lg border">
@@ -63,6 +71,14 @@ const All = () => {
                 ))}
               </tr>
             ))}
+            <tr className="border-t-2 bg-primary/10 font-semibold">
+              <td className="p-2">Jami</td>
+              {colors.map((color, j) => (
+                <td key={j} className="p-2 text-center">
+                  {formatNumber(colorSums[color])}
+                </td>
+              ))}
+            </tr>
           </tbody>
         </table>
       </div>
