@@ -130,6 +130,18 @@ const Add = () => {
       return;
     }
 
+    // check driver details
+    if (!form.driver_name || !form.driver_phone || !form.vehicle_number) {
+      toast({
+        title: "Xatolik",
+        description:
+          "Driver ismi, telefon raqami va mashina raqamini kiriting!",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       await api.post("trucks", {
