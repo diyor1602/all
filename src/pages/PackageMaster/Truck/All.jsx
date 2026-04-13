@@ -4,6 +4,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, ChevronDown } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import ModelImages from "@/components/ModelImages";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const All = () => {
   const { toast } = useToast();
@@ -116,6 +118,13 @@ const All = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-2 justify-between">
+        <div className="text-lg font-semibold">Jo'natmalar</div>
+        <Button asChild>
+          <Link to="/packageMaster/truck/add">Qo'shish</Link>
+        </Button>
+      </div>
+
       {data?.map((truck, index) => {
         const isOpen = openTruck === index;
 
