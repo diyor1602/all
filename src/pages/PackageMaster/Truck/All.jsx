@@ -165,12 +165,6 @@ const All = () => {
               <div className="p-4 border-t space-y-4 bg-gray-50">
                 {/* INFO */}
                 <div className="flex gap-4 items-center">
-                  {truck.vehicle_photo && (
-                    <img
-                      src={truck.vehicle_photo}
-                      className="w-20 h-20 rounded-lg object-cover"
-                    />
-                  )}
                   <div className="text-sm space-y-1">
                     <div>{truck.comment}</div>
                     <div>{truck.driver_phone}</div>
