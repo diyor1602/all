@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import formatNumber from "@/utils/formatNumber";
 
 const Add = () => {
   const { toast } = useToast();
@@ -213,11 +214,26 @@ const Add = () => {
         {/* Orders */}
         <div className="bg-white p-4 rounded-2xl shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <div className="font-semibold text-lg">📦 Buyurtmalar</div>
+            <div className="font-semibold text-lg">&#128233; Buyurtmalar</div>
             <Button onClick={() => setOpen(true)}>
               <Plus size={16} /> Qo'shish
             </Button>
           </div>
+
+          {items.length > 0 && (
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="text-sm font-medium text-blue-900">
+                Jami soni:{" "}
+                {formatNumber(
+                  items.reduce(
+                    (sum, item) => sum + (item.shipped_quantity || 0),
+                    0,
+                  ),
+                )}{" "}
+                ta
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
