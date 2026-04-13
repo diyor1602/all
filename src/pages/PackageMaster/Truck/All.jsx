@@ -113,7 +113,7 @@ const All = () => {
         return (
           <div
             key={index}
-            className="border rounded-xl shadow-sm overflow-hidden"
+            className="border rounded-xl shadow-sm overflow-hidden bg-white"
           >
             {/* 🔹 HEADER */}
             <div
