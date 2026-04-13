@@ -88,7 +88,13 @@ const Add = () => {
     try {
       const res = await api.post("trucks", {
         ...form,
-        items: items.map((item) => item.id),
+        items: items.map((item) => {
+          return {
+            order_id: item.id,
+            planned_qty: item.quantity,
+            shipped_qty: item.quantity,
+          };
+        }),
       });
       toast({
         title: "Muvaffaqiyat",
