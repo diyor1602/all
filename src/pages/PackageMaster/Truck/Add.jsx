@@ -1,7 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Plus, Snowflake, TreePalm, Search, X } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Snowflake,
+  TreePalm,
+  Search,
+  X,
+  CheckCheck,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { statuses } from "@/lib/status";
@@ -16,6 +24,7 @@ const Add = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     vehicle_number: "",
     driver_name: "",
@@ -45,7 +54,6 @@ const Add = () => {
     getOrders();
   }, []);
 
-  // 🔍 Kuchli filter
   const filteredOrders = useMemo(() => {
     const text = searchText.toLowerCase();
 
@@ -73,6 +81,34 @@ const Add = () => {
   const handleSelect = (order) => {
     setItems((prev) => [...prev, order]);
     setOpen(false);
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const res = await api.post("trucks", {
+        ...form,
+        items: items.map((item) => item.id),
+      });
+      toast({
+        title: "Muvaffaqiyat",
+        description: "Truck muvaffaqiyatli qo'shildi!",
+      });
+      setItems([]);
+      setForm({
+        vehicle_number: "",
+        driver_name: "",
+        driver_phone: "",
+        comment: "",
+      });
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Truck qo'shishda xatolik yuz berdi!",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -141,7 +177,7 @@ const Add = () => {
               >
                 <X />
               </Button>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="font-medium text-sm">{item?.name}</div>
 
                 <div className="text-xs text-gray-500">
@@ -170,6 +206,21 @@ const Add = () => {
               </div>
             </div>
           ))}
+
+          {items?.length > 0 && (
+            <Button
+              className="mt-4"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <CheckCheck />
+              )}{" "}
+              Saqlash
+            </Button>
+          )}
         </div>
       </div>
 
