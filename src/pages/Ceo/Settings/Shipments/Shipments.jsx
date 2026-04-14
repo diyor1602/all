@@ -297,6 +297,27 @@ const Shipments = () => {
           </CardContent>
         </Card>
       </div>
+
+      <div className="mt-6">
+        <table>
+          <thead>
+            <tr>
+              <th>№</th>
+              <th>Ism</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.employees
+              ?.sort((a, b) => a.name.localeCompare(b.name))
+              .map((employee, index) => (
+                <tr key={index}>
+                  <td>{index + 1}</td>
+                  <td>{employee?.name}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
