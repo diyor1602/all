@@ -3,6 +3,7 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import formatNumber from "@/utils/formatNumber";
 
 const Shipments = () => {
   const { toast } = useToast();
@@ -15,6 +16,7 @@ const Shipments = () => {
   );
 
   const getData = async () => {
+    setLoading(true);
     try {
       const res = await api.get("monthly/trucks", {
         params: {
@@ -28,6 +30,8 @@ const Shipments = () => {
         description: "Ma'lumotlarni olib bo'lmadi",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -53,7 +57,73 @@ const Shipments = () => {
         </div>
       ) : (
         <div>
-          <h1>Shipments</h1>
+          {/* Cost breakdown */}
+          <div>Narxlar</div>
+          <div>
+            Yordamchilar:{" "}
+            {formatNumber(data?.costs_breakdown?.assistant_salary_total)} so'm
+          </div>
+          <div>
+            Davomat uchun:{" "}
+            {formatNumber(data?.costs_breakdown?.attendance_salary_total)} so'm
+          </div>{" "}
+          <div>
+            Kroy uchun:{" "}
+            {formatNumber(data?.costs_breakdown?.cutting_salary_total)} so'm
+          </div>{" "}
+          <div>
+            Jami: {formatNumber(data?.costs_breakdown?.grand_total)} so'm
+          </div>{" "}
+          <div>
+            Bonus: {formatNumber(data?.costs_breakdown?.money_logs_total)} so'm
+          </div>{" "}
+          <div>
+            Yangi mavsum ustidan yozilgan:{" "}
+            {formatNumber(
+              data?.costs_breakdown?.monthly_daily_payment_override_total,
+            )}{" "}
+            so'm
+          </div>{" "}
+          <div>
+            O'zgarmas xarajatlar:{" "}
+            {formatNumber(
+              data?.costs_breakdown?.monthly_expense_allocated_total,
+            )}{" "}
+            so'm
+          </div>{" "}
+          <div>
+            Ishbay ustidan yozilgan:{" "}
+            {formatNumber(
+              data?.costs_breakdown?.monthly_piecework_override_total,
+            )}{" "}
+            so'm
+          </div>
+          <div>
+            Oylik ustidan yozilgan:{" "}
+            {formatNumber(data?.costs_breakdown?.monthly_salary_override_total)}{" "}
+            so'm
+          </div>{" "}
+          <div>
+            Yangi mavsum:{" "}
+            {formatNumber(data?.costs_breakdown?.sewing_salary_total)} so'm
+          </div>{" "}
+          <div>
+            Tarifikatsiyalar:{" "}
+            {formatNumber(data?.costs_breakdown?.tarification_total)} so'm
+          </div>{" "}
+          <div>
+            Fura ichidagi tarifikatsiyalar:{" "}
+            {formatNumber(data?.costs_breakdown?.tarification_truck_only)} so'm
+          </div>{" "}
+          <div>
+            Transport:{" "}
+            {formatNumber(data?.costs_breakdown?.transport_allocated_total)}{" "}
+            so'm
+          </div>{" "}
+          <div>
+            Ombor: {formatNumber(data?.costs_breakdown?.warehouse_salary_total)}{" "}
+            so'm
+          </div>{" "}
         </div>
       )}
     </div>
