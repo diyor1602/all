@@ -168,6 +168,23 @@ const Shipments = () => {
               Transport: {formatNumber(data?.summary?.transport_total_uzs)} so'm
             </div>{" "}
           </div>
+          {/* Truck breakdown */}
+          <div className="space-y-2">
+            <div>Furalar</div>
+            {data?.trucks?.map((truck, index) => (
+              <div key={index}>
+                <div>Raqami: {truck?.number}</div>
+                <div>Dollar kursi: {truck?.exchange_rate}</div>
+                <div>Miqdor: {formatNumber(truck?.shipped_qty)}</div>
+                <div>Foiz: {formatNumber(truck?.proportion_percent)}</div>
+                <div>Tushum: {formatNumber(truck?.revenue_uzs)}</div>
+                <div>GAP: {formatNumber(truck?.gap_uzs)}</div>
+                <div>
+                  FAIR SHARE COST: {formatNumber(truck?.fair_share_cost_uzs)}
+                </div>
+              </div>
+            ))}
+          </div>
         </>
       )}
     </div>
