@@ -61,7 +61,6 @@ const Shipments = () => {
     getData();
   }, [selectedMonth]);
 
-  // Modern Metric Card Component
   const MetricTile = ({
     icon: Icon,
     title,
