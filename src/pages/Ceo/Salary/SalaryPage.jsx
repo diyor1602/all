@@ -54,17 +54,15 @@ const formatDate = (dateString) => {
 };
 
 const calculateNewSeasonSalary = (emp) => {
-  return (
-    emp?.daily_payment_salary ||
-    0 + emp?.warehouse_salary ||
-    0 + emp?.master_salary ||
-    0 + emp?.cutting_salary_minute ||
-    0 + emp?.master_salary_current ||
-    0 + emp?.sewing_output_salary ||
-    0 + emp?.warehouse_salary_minute ||
-    0 + emp?.assistant_salary ||
-    0
-  );
+  return [
+    emp?.daily_payment_salary,
+    emp?.warehouse_salary,
+    emp?.cutting_salary_minute,
+    emp?.master_salary_current,
+    emp?.sewing_output_salary,
+    emp?.warehouse_salary_minute,
+    emp?.assistant_salary,
+  ].reduce((sum, val) => sum + Number(val || 0), 0);
 };
 
 const SalaryPage = () => {
