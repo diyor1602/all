@@ -29,7 +29,7 @@ const Overall = () => {
       new Date().toISOString().slice(0, 7),
   );
   const [loading, setLoading] = useState(false);
-  const [dollarRate, setDollarRate] = useState(12211);
+  const [dollarRate, setDollarRate] = useState(12141);
 
   const [orders, setOrders] = useState([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
