@@ -145,7 +145,19 @@ const Shipments = () => {
       {/* Top Level KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricTile
-          title="Umumiy Tushum"
+          title="Umumiy tushum"
+          value={`${formatNumber(data?.monthly_company_summary?.total_earned_uzs)} UZS`}
+          icon={Truck}
+          colorClass="bg-indigo-500"
+        />
+        <MetricTile
+          title="Umumiy xarajat"
+          value={`${formatNumber(data?.costs_breakdown?.factory_grand_total_uzs)} UZS`}
+          icon={Truck}
+          colorClass="bg-indigo-500"
+        />
+        <MetricTile
+          title="Fura Tushum"
           value={`${formatNumber(data?.summary?.total_revenue_uzs)} UZS`}
           icon={Wallet}
           colorClass="bg-emerald-500"
@@ -159,14 +171,13 @@ const Shipments = () => {
         <MetricTile
           title="Yuborilgan Yuk"
           value={`${formatNumber(data?.summary?.total_shipped_qty)} dona`}
-          subtext={`Eksport ulushi: ${data?.summary?.export_ratio_percent?.toFixed(1)}%`}
+          subtext={`Chiqqan son: ${formatNumber(data?.monthly_company_summary?.total_output_quantity)} dona`}
           icon={Package}
           colorClass="bg-orange-500"
         />
         <MetricTile
           title="Yuk Mashinalari"
           value={data?.trucks?.length}
-          subtext="Faol reyslar soni"
           icon={Truck}
           colorClass="bg-indigo-500"
         />
