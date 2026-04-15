@@ -12,6 +12,8 @@ import {
   ArrowUpRight,
   Factory,
   Briefcase,
+  DollarSign,
+  TrendingDown,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import {
@@ -153,38 +155,49 @@ const Shipments = () => {
       </header>
 
       {/* Top Level KPIs */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricTile
           title="Umumiy tushum"
           value={`${formatNumber(data?.monthly_company_summary?.total_earned_uzs)} UZS`}
-          icon={Truck}
-          colorClass="bg-indigo-500"
+          icon={DollarSign}
+          colorClass="bg-green-500"
         />
+
         <MetricTile
           title="Umumiy xarajat"
           value={`${formatNumber(data?.costs_breakdown?.factory_grand_total_uzs)} UZS`}
-          icon={Truck}
-          colorClass="bg-indigo-500"
+          icon={TrendingDown}
+          colorClass="bg-red-500"
         />
+
         <MetricTile
           title="Fura Tushum"
           value={`${formatNumber(data?.summary?.total_revenue_uzs)} UZS`}
           icon={Wallet}
           colorClass="bg-emerald-500"
         />
+
         <MetricTile
           title="Sof Foyda"
-          value={`${formatNumber(data?.monthly_company_summary?.total_earned_uzs - data?.costs_breakdown?.factory_grand_total_uzs)} UZS`}
+          value={`${formatNumber(
+            data?.monthly_company_summary?.total_earned_uzs -
+              data?.costs_breakdown?.factory_grand_total_uzs,
+          )} UZS`}
           icon={TrendingUp}
           colorClass="bg-blue-500"
         />
+
         <MetricTile
           title="Yuborilgan Yuk"
           value={`${formatNumber(data?.summary?.total_shipped_qty)} dona`}
-          subtext={`Chiqqan son: ${formatNumber(data?.monthly_company_summary?.total_output_quantity)} dona`}
+          subtext={`Chiqqan son: ${formatNumber(
+            data?.monthly_company_summary?.total_output_quantity,
+          )} dona`}
           icon={Package}
-          colorClass="bg-orange-500"
+          colorClass="bg-amber-500"
         />
+
         <MetricTile
           title="Yuk Mashinalari"
           value={data?.trucks?.length}
