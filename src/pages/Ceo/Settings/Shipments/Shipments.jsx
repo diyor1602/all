@@ -372,9 +372,9 @@ const Shipments = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {data?.trucks?.map((truck) => (
+              {data?.trucks?.map((truck, index) => (
                 <div
-                  key={truck.truck_id}
+                  key={index}
                   className="mb-6 p-4 border border-gray-200 rounded-lg"
                 >
                   <div className="flex justify-between items-center mb-4">
@@ -422,9 +422,9 @@ const Shipments = () => {
                       Buyurtmalar
                     </h4>
                     <div className="space-y-2">
-                      {truck.orders?.map((order) => (
+                      {truck.orders?.map((order, index) => (
                         <div
-                          key={order.order_id}
+                          key={index}
                           className="flex justify-between items-center p-2 bg-gray-50 rounded"
                         >
                           <span className="text-sm text-gray-600">
@@ -481,7 +481,7 @@ const Shipments = () => {
                     ?.sort((a, b) => a.name.localeCompare(b.name))
                     .map((employee, index) => (
                       <tr
-                        key={employee.employee_id || index}
+                        key={index}
                         className="border-b border-gray-100 hover:bg-gray-50"
                       >
                         <td className="p-3 text-gray-900">{index + 1}</td>
