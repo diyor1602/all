@@ -87,7 +87,7 @@ const Daily = () => {
   const [daily, setDaily] = useState({});
   const [selectedDate, setSelectedDate] = useState(
     localStorage.getItem("dailySelectedDate") ||
-      new Date().toISOString().split("T")[0]
+      new Date().toISOString().split("T")[0],
   );
   const [monthlyExpenses, setMonthlyExpenses] = useState({});
   const [showExpenses, setShowExpenses] = useState(false);
@@ -102,7 +102,7 @@ const Daily = () => {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [dollarRate, setDollarRate] = useState(
-    localStorage.getItem("dollarRate") || 12100
+    localStorage.getItem("dollarRate") || 12100,
   );
   const [dollarDialogOpen, setDollarDialogOpen] = useState(false);
   const [newDollarRate, setNewDollarRate] = useState(dollarRate);
@@ -121,12 +121,12 @@ const Daily = () => {
   const getDollarRate = async () => {
     try {
       const response = await axios.get(
-        "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
+        "https://cbu.uz/uz/arkhiv-kursov-valyut/json/",
       );
       setDollarRate(response.data.find((item) => item.Ccy === "USD").Rate);
       localStorage.setItem(
         "dollarRate",
-        response.data.find((item) => item.Ccy === "USD").Rate
+        response.data.find((item) => item.Ccy === "USD").Rate,
       );
       fetchDaily();
     } catch (error) {
@@ -153,7 +153,7 @@ const Daily = () => {
         params: {
           start_date: selectedDate,
           end_date: selectedDate,
-          dollar_rate: dollarRate,
+          dollar_rate: await getDollarRate(),
         },
         responseType: "blob",
       });
@@ -171,7 +171,7 @@ const Daily = () => {
 
       link.setAttribute(
         "download",
-        `${selectedDate}.${fileType === "excel" ? "xlsx" : "pdf"}`
+        `${selectedDate}.${fileType === "excel" ? "xlsx" : "pdf"}`,
       );
       document.body.appendChild(link);
       link.click();
@@ -231,7 +231,7 @@ const Daily = () => {
     setSelectedDate(currentDate.toISOString().split("T")[0]);
     localStorage.setItem(
       "dailySelectedDate",
-      currentDate.toISOString().split("T")[0]
+      currentDate.toISOString().split("T")[0],
     );
   };
 
@@ -241,7 +241,7 @@ const Daily = () => {
       const response = await api.get("/ceo/dailyReport", {
         params: {
           date: selectedDate,
-          dollar_rate: dollarRate,
+          dollar_rate: await getDollarRate(),
         },
       });
       setDaily(response.data);
@@ -495,14 +495,14 @@ const Daily = () => {
                 parseFloat(daily.kpi) +
                 parseFloat(daily.daily_expenses) +
                 parseFloat(daily.tarification) +
-                parseFloat(daily.transport_attendance)
+                parseFloat(daily.transport_attendance),
             )} so'm`
           : `${formatNumber(daily.total_fixed_cost_uzs)} so'm`,
       percentage:
         daily.orders?.length === 0
           ? 0
           : parseFloat(
-              (daily.total_fixed_cost_uzs / daily.total_earned_uzs) * 100
+              (daily.total_fixed_cost_uzs / daily.total_earned_uzs) * 100,
             )?.toLocaleString("ru-RU", {
               maximumFractionDigits: 0,
             }),
@@ -519,14 +519,14 @@ const Daily = () => {
                 parseFloat(daily.kpi) +
                 parseFloat(daily.daily_expenses) +
                 parseFloat(daily.tarification) +
-                parseFloat(daily.transport_attendance)
+                parseFloat(daily.transport_attendance),
             )} so'm`
           : `${formatNumber(daily.net_profit_uzs)} so'm`,
       percentage:
         daily.orders?.length === 0
           ? 0
           : parseFloat(
-              (daily.net_profit_uzs / daily.total_earned_uzs) * 100
+              (daily.net_profit_uzs / daily.total_earned_uzs) * 100,
             )?.toLocaleString("ru-RU", {
               maximumFractionDigits: 0,
             }),
@@ -547,9 +547,9 @@ const Daily = () => {
     {
       title: "Bir donasi narxi",
       value: `${formatNumber(
-        daily.cost_per_unit_overall_uzs
+        daily.cost_per_unit_overall_uzs,
       )} so'm / ${parseFloat(
-        daily.cost_per_unit_overall_uzs / dollarRate
+        daily.cost_per_unit_overall_uzs / dollarRate,
       ).toLocaleString("ru-RU", {
         maximumFractionDigits: 2,
       })} dollar`,
@@ -606,7 +606,7 @@ const Daily = () => {
       label: "Tikuv uchun",
       value: daily.orders?.reduce(
         (acc, order) => acc + order.rasxod_limit_uzs,
-        0
+        0,
       ),
       bg: "bg-purple-300",
       dollar: true,
@@ -688,7 +688,7 @@ const Daily = () => {
             imgX,
             imgY,
             canvas.width * ratio,
-            canvas.height * ratio
+            canvas.height * ratio,
           );
 
           position += pageHeight;
@@ -700,7 +700,7 @@ const Daily = () => {
           imgX,
           imgY,
           imgWidth * ratio,
-          imgHeight * ratio
+          imgHeight * ratio,
         );
       }
 
@@ -754,7 +754,7 @@ const Daily = () => {
       <div
         className={cn(
           "min-h-screen bg-gradient-to-br from-slate-50 to-slate-100",
-          loading && "opacity-50 cursor-not-allowed"
+          loading && "opacity-50 cursor-not-allowed",
         )}
       >
         <div className="space-y-6">
@@ -767,7 +767,7 @@ const Daily = () => {
                 key={index}
                 className={cn(
                   "border-0 shadow-md hover:shadow-lg transition-shadow",
-                  metric.bg
+                  metric.bg,
                 )}
               >
                 <CardContent className="p-6">
@@ -799,7 +799,7 @@ const Daily = () => {
                 key={index}
                 className={cn(
                   "border-0 shadow-md hover:shadow-lg transition-shadow",
-                  metric.bg
+                  metric.bg,
                 )}
               >
                 <CardContent className="p-6">
@@ -860,7 +860,7 @@ const Daily = () => {
                     className={cn(
                       "flex justify-between items-center p-3 bg-50 rounded-lg flex-wrap",
                       metric.bg,
-                      metric.dialogData && "cursor-pointer"
+                      metric.dialogData && "cursor-pointer",
                     )}
                     onClick={() => {
                       if (!metric.dialogData) return;
@@ -956,7 +956,7 @@ const Daily = () => {
 
                     // Sort by percentage (descending)
                     const sortedMetrics = metricsArray.sort(
-                      (a, b) => b[1].percent - a[1].percent
+                      (a, b) => b[1].percent - a[1].percent,
                     );
 
                     const radius = 70;
@@ -1081,7 +1081,7 @@ const Daily = () => {
                                   <SelectItem key={key} value={key}>
                                     {value}
                                   </SelectItem>
-                                )
+                                ),
                               )}
                             </SelectContent>
                           </Select>
@@ -1267,7 +1267,7 @@ const Daily = () => {
                               "ru-RU",
                               {
                                 maximumFractionDigits: 2,
-                              }
+                              },
                             )}{" "}
                             {monthly_expence_currency[expense.type]}
                           </TableCell>
@@ -1322,7 +1322,7 @@ const Daily = () => {
                             <SelectItem key={key} value={key}>
                               {value}
                             </SelectItem>
-                          )
+                          ),
                         )}
                       </SelectContent>
                     </Select>
@@ -1458,7 +1458,7 @@ const Daily = () => {
                           className={cn(
                             order.net_profit_uzs > 0
                               ? "bg-green-100 hover:bg-green-200"
-                              : "bg-red-100 hover:bg-red-200"
+                              : "bg-red-100 hover:bg-red-200",
                           )}
                           onClick={() => handleExpenceDialog(order)}
                         >
@@ -1513,7 +1513,7 @@ const Daily = () => {
                               </div>
                               <div className="font-mono">
                                 {parseFloat(order?.price_usd)?.toLocaleString(
-                                  "ru-RU"
+                                  "ru-RU",
                                 )}{" "}
                                 $
                               </div>
@@ -1541,7 +1541,7 @@ const Daily = () => {
                                       <div>
                                         {" "}
                                         {formatNumber(
-                                          order?.costs_uzs?.allocatedAup
+                                          order?.costs_uzs?.allocatedAup,
                                         )}{" "}
                                         so'm
                                       </div>
@@ -1558,7 +1558,7 @@ const Daily = () => {
                                       <div>
                                         {formatNumber(
                                           order?.costs_uzs
-                                            ?.allocatedMonthlyExpenseMonthly
+                                            ?.allocatedMonthlyExpenseMonthly,
                                         )}{" "}
                                         so'm
                                       </div>
@@ -1567,7 +1567,7 @@ const Daily = () => {
                                       <div> Transport: </div>
                                       <div>
                                         {formatNumber(
-                                          order?.costs_uzs?.allocatedTransport
+                                          order?.costs_uzs?.allocatedTransport,
                                         )}{" "}
                                         so'm
                                       </div>
@@ -1576,7 +1576,7 @@ const Daily = () => {
                                       <div> Amortizatsiya: </div>
                                       <div>
                                         {formatNumber(
-                                          order?.costs_uzs?.amortizationExpense
+                                          order?.costs_uzs?.amortizationExpense,
                                         )}{" "}
                                         so'm
                                       </div>
@@ -1586,7 +1586,7 @@ const Daily = () => {
                                       <div>
                                         {formatNumber(
                                           order?.costs_uzs
-                                            ?.incomePercentageExpense
+                                            ?.incomePercentageExpense,
                                         )}{" "}
                                         so'm
                                       </div>
@@ -1595,7 +1595,7 @@ const Daily = () => {
                                       <div> Tikuv uchun: </div>
                                       <div>
                                         {formatNumber(
-                                          order?.costs_uzs?.remainder
+                                          order?.costs_uzs?.remainder,
                                         )}{" "}
                                         so'm
                                       </div>
@@ -1604,7 +1604,7 @@ const Daily = () => {
                                       <div> Tikuvchilar: </div>
                                       <div>
                                         {formatNumber(
-                                          order?.costs_uzs?.tarification
+                                          order?.costs_uzs?.tarification,
                                         )}{" "}
                                         so'm
                                       </div>
@@ -1632,7 +1632,7 @@ const Daily = () => {
                                 "font-bold font-mono",
                                 order.net_profit_uzs > 0
                                   ? "text-green-500"
-                                  : "text-red-500"
+                                  : "text-red-500",
                               )}
                             >
                               {formatNumber(order.net_profit_uzs)} so'm
@@ -1743,7 +1743,7 @@ const Daily = () => {
                 </div>
                 <div className="font-mono font-bold text-2xl text-slate-900">
                   {Number.parseFloat(expenseOrder?.price_usd)?.toLocaleString(
-                    "ru-RU"
+                    "ru-RU",
                   )}{" "}
                   <span className="text-lg text-slate-600">$</span>
                 </div>
@@ -1864,7 +1864,7 @@ const Daily = () => {
                     value: expenseOrder?.costs_uzs?.allocatedAup,
                     percentage: calculatePercentage(
                       expenseOrder?.costs_uzs?.allocatedAup,
-                      calculateTotal(expenseOrder)
+                      calculateTotal(expenseOrder),
                     ),
                     icon: Building2,
                     color: "blue",
@@ -1874,7 +1874,7 @@ const Daily = () => {
                     value: expenseOrder?.costs_uzs?.bonus,
                     percentage: calculatePercentage(
                       expenseOrder?.costs_uzs?.bonus,
-                      calculateTotal(expenseOrder)
+                      calculateTotal(expenseOrder),
                     ),
                     icon: UserCheck,
                     color: "green",
@@ -1885,7 +1885,7 @@ const Daily = () => {
                       expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly,
                     percentage: calculatePercentage(
                       expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly,
-                      calculateTotal(expenseOrder)
+                      calculateTotal(expenseOrder),
                     ),
                     icon: Calculator,
                     color: "purple",
@@ -1895,7 +1895,7 @@ const Daily = () => {
                     value: expenseOrder?.costs_uzs?.allocatedTransport,
                     percentage: calculatePercentage(
                       expenseOrder?.costs_uzs?.allocatedTransport,
-                      calculateTotal(expenseOrder)
+                      calculateTotal(expenseOrder),
                     ),
                     icon: Car,
                     color: "orange",
@@ -1905,7 +1905,7 @@ const Daily = () => {
                     value: expenseOrder?.costs_uzs?.amortizationExpense,
                     percentage: calculatePercentage(
                       expenseOrder?.costs_uzs?.amortizationExpense,
-                      calculateTotal(expenseOrder)
+                      calculateTotal(expenseOrder),
                     ),
                     icon: Wrench,
                     color: "cyan",
@@ -1915,7 +1915,7 @@ const Daily = () => {
                     value: expenseOrder?.costs_uzs?.incomePercentageExpense,
                     percentage: calculatePercentage(
                       expenseOrder?.costs_uzs?.incomePercentageExpense,
-                      calculateTotal(expenseOrder)
+                      calculateTotal(expenseOrder),
                     ),
                     icon: Receipt,
                     color: "red",
@@ -1925,7 +1925,7 @@ const Daily = () => {
                     value: expenseOrder?.costs_uzs?.remainder,
                     percentage: calculatePercentage(
                       expenseOrder?.costs_uzs?.remainder,
-                      calculateTotal(expenseOrder)
+                      calculateTotal(expenseOrder),
                     ),
                     icon: Scissors,
                     color: "pink",
@@ -1935,7 +1935,7 @@ const Daily = () => {
                     value: expenseOrder?.costs_uzs?.tarification,
                     percentage: calculatePercentage(
                       expenseOrder?.costs_uzs?.tarification,
-                      calculateTotal(expenseOrder)
+                      calculateTotal(expenseOrder),
                     ),
                     icon: Users,
                     color: "indigo",
@@ -1957,7 +1957,7 @@ const Daily = () => {
                             color === "cyan" && "bg-cyan-100",
                             color === "red" && "bg-red-100",
                             color === "pink" && "bg-pink-100",
-                            color === "indigo" && "bg-indigo-100"
+                            color === "indigo" && "bg-indigo-100",
                           )}
                         >
                           <Icon
@@ -1970,7 +1970,7 @@ const Daily = () => {
                               color === "cyan" && "text-cyan-600",
                               color === "red" && "text-red-600",
                               color === "pink" && "text-pink-600",
-                              color === "indigo" && "text-indigo-600"
+                              color === "indigo" && "text-indigo-600",
                             )}
                           />
                         </div>
@@ -1983,7 +1983,7 @@ const Daily = () => {
                         %
                       </span>
                     </div>
-                  )
+                  ),
                 )}
               </div>
 
@@ -2009,7 +2009,7 @@ const Daily = () => {
                         (expenseOrder?.costs_uzs?.incomePercentageExpense ||
                           0) +
                         (expenseOrder?.costs_uzs?.remainder || 0) +
-                        (expenseOrder?.costs_uzs?.tarification || 0)
+                        (expenseOrder?.costs_uzs?.tarification || 0),
                     )}{" "}
                     <span className="text-base text-slate-500">so'm</span>
                   </span>
@@ -2024,7 +2024,7 @@ const Daily = () => {
                   "inline-flex items-center gap-3 px-8 py-6 rounded-2xl font-bold text-2xl sm:text-3xl font-mono border-2",
                   expenseOrder?.net_profit_uzs > 0
                     ? "bg-green-50 text-green-700 border-green-200"
-                    : "bg-red-50 text-red-700 border-red-200"
+                    : "bg-red-50 text-red-700 border-red-200",
                 )}
               >
                 <div
@@ -2032,7 +2032,7 @@ const Daily = () => {
                     "w-10 h-10 rounded-xl flex items-center justify-center",
                     expenseOrder?.net_profit_uzs > 0
                       ? "bg-green-100"
-                      : "bg-red-100"
+                      : "bg-red-100",
                   )}
                 >
                   <TrendingUp
@@ -2040,7 +2040,7 @@ const Daily = () => {
                       "w-5 h-5",
                       expenseOrder?.net_profit_uzs > 0
                         ? "text-green-600"
-                        : "text-red-600"
+                        : "text-red-600",
                     )}
                   />
                 </div>

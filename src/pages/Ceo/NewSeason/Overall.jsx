@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import ModelImages from "@/components/ModelImages";
+import getDollarRate from "@/hooks/getDollarRate";
 
 const Overall = () => {
   const { toast } = useToast();
@@ -29,7 +30,7 @@ const Overall = () => {
       new Date().toISOString().slice(0, 7),
   );
   const [loading, setLoading] = useState(false);
-  const [dollarRate, setDollarRate] = useState(12141);
+  const [dollarRate, setDollarRate] = useState(null);
 
   const [orders, setOrders] = useState([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
@@ -40,7 +41,7 @@ const Overall = () => {
     setLoading(true);
     try {
       const response = await api.get(`/ceo/calculateSeasonWithCosts`, {
-        params: { month: selectedMonth, dollar_rate: dollarRate },
+        params: { month: selectedMonth, dollar_rate: await getDollarRate() },
       });
       setData(response.data);
     } catch (err) {
@@ -53,6 +54,15 @@ const Overall = () => {
       setLoading(false);
     }
   };
+
+  const applyDollarRate = async () => {
+    const rate = await getDollarRate();
+    setDollarRate(rate);
+  };
+
+  useEffect(() => {
+    applyDollarRate();
+  }, []);
 
   const getOrders = async () => {
     try {
