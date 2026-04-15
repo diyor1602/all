@@ -11,8 +11,9 @@ const Shipments = () => {
 
   const [data, setData] = useState({
     trucks: [],
-    summary: {},
     costs_breakdown: {},
+    monthly_company_summary: {},
+    summary: {},
   });
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(
@@ -29,139 +30,8 @@ const Shipments = () => {
         },
       });
 
-      // Handle the new response structure
       const responseData = res.data;
-
-      // If response is an array of trucks, process it
-      if (Array.isArray(responseData)) {
-        const trucks = responseData;
-
-        // Calculate summary from all trucks
-        const summary = {
-          total_revenue_uzs: trucks.reduce(
-            (sum, truck) => sum + (truck.revenue_uzs || 0),
-            0,
-          ),
-          total_fixed_cost_uzs: trucks.reduce(
-            (sum, truck) => sum + (truck.allocated_cost_uzs || 0),
-            0,
-          ),
-          company_net_profit_uzs: trucks.reduce(
-            (sum, truck) => sum + (truck.profit_uzs || 0),
-            0,
-          ),
-          company_total_fixed_cost_uzs: trucks.reduce(
-            (sum, truck) => sum + (truck.allocated_cost_uzs || 0),
-            0,
-          ),
-          total_shipped_qty: trucks.reduce(
-            (sum, truck) => sum + (truck.shipped_qty || 0),
-            0,
-          ),
-          company_total_output_qty: trucks.reduce(
-            (sum, truck) => sum + (truck.shipped_qty || 0),
-            0,
-          ),
-          export_ratio_percent: 100, // This would need to be calculated based on production data
-          company_cost_per_unit_uzs:
-            trucks.reduce(
-              (sum, truck) => sum + (truck.allocated_cost_uzs || 0),
-              0,
-            ) /
-            trucks.reduce((sum, truck) => sum + (truck.shipped_qty || 0), 1),
-        };
-
-        // Extract costs breakdown from first truck's employees or calculate
-        const costs_breakdown = {
-          assistant_salary_total: trucks.reduce(
-            (sum, truck) =>
-              sum +
-              (truck.employees?.reduce(
-                (empSum, emp) => empSum + (emp.assistant_salary || 0),
-                0,
-              ) || 0),
-            0,
-          ),
-          attendance_salary_total: trucks.reduce(
-            (sum, truck) =>
-              sum +
-              (truck.employees?.reduce(
-                (empSum, emp) => empSum + (emp.attendance_salary || 0),
-                0,
-              ) || 0),
-            0,
-          ),
-          cutting_salary_total: trucks.reduce(
-            (sum, truck) =>
-              sum +
-              (truck.employees?.reduce(
-                (empSum, emp) => empSum + (emp.cutting_salary || 0),
-                0,
-              ) || 0),
-            0,
-          ),
-          money_logs_total: trucks.reduce(
-            (sum, truck) =>
-              sum +
-              (truck.employees?.reduce(
-                (empSum, emp) => empSum + (emp.money_logs || 0),
-                0,
-              ) || 0),
-            0,
-          ),
-          sewing_salary_total: trucks.reduce(
-            (sum, truck) =>
-              sum +
-              (truck.employees?.reduce(
-                (empSum, emp) => empSum + (emp.sewing_salary || 0),
-                0,
-              ) || 0),
-            0,
-          ),
-          tarification_total: trucks.reduce(
-            (sum, truck) =>
-              sum +
-              (truck.employees?.reduce(
-                (empSum, emp) => empSum + (emp.tarification || 0),
-                0,
-              ) || 0),
-            0,
-          ),
-          transport_attendance_total: trucks.reduce(
-            (sum, truck) =>
-              sum +
-              (truck.employees?.reduce(
-                (empSum, emp) => empSum + (emp.attendance_salary || 0),
-                0,
-              ) || 0),
-            0,
-          ),
-          warehouse_salary_total: trucks.reduce(
-            (sum, truck) =>
-              sum +
-              (truck.employees?.reduce(
-                (empSum, emp) => empSum + (emp.warehouse_salary || 0),
-                0,
-              ) || 0),
-            0,
-          ),
-          monthly_expenses_total: 0, // This would need to be provided by the API
-          grand_total: trucks.reduce(
-            (sum, truck) => sum + (truck.allocated_cost_uzs || 0),
-            0,
-          ),
-        };
-
-        setData({
-          trucks,
-          summary,
-          costs_breakdown,
-          employees: trucks.flatMap((truck) => truck.employees || []),
-        });
-      } else {
-        // Handle old structure or other formats
-        setData(responseData);
-      }
+      setData(responseData);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -231,13 +101,6 @@ const Shipments = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Yordamchilar</span>
-              <span className="font-semibold text-gray-900">
-                {formatNumber(data?.costs_breakdown?.assistant_salary_total)}{" "}
-                so'm
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
               <span className="text-gray-600">Davomat uchun</span>
               <span className="font-semibold text-gray-900">
                 {formatNumber(data?.costs_breakdown?.attendance_salary_total)}{" "}
@@ -245,118 +108,197 @@ const Shipments = () => {
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Kroy uchun</span>
+              <span className="text-gray-600">Mavsumiy maosh</span>
               <span className="font-semibold text-gray-900">
-                {formatNumber(data?.costs_breakdown?.cutting_salary_total)} so'm
+                {formatNumber(data?.costs_breakdown?.season_salary_total)} so'm
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Bonus</span>
+              <span className="text-gray-600">Pul yozuvlar</span>
               <span className="font-semibold text-gray-900">
                 {formatNumber(data?.costs_breakdown?.money_logs_total)} so'm
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Yangi mavsum</span>
-              <span className="font-semibold text-gray-900">
-                {formatNumber(data?.costs_breakdown?.sewing_salary_total)} so'm
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Tarifikatsiyalar</span>
+              <span className="text-gray-600">Tarifikatsiya</span>
               <span className="font-semibold text-gray-900">
                 {formatNumber(data?.costs_breakdown?.tarification_total)} so'm
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Transport 1 kishi</span>
+              <span className="text-gray-600">Transport davomat</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(data?.costs_breakdown?.transport_attendance)} so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Transport xodimlari soni</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(data?.costs_breakdown?.transport_employees_count)}{" "}
+                kishi
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Bir xodimga to'lov</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(data?.costs_breakdown?.transport_per_employee)}{" "}
+                so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Oylik xarajatlar</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(data?.costs_breakdown?.monthly_expenses)} so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Daromad foizi</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(data?.costs_breakdown?.income_percentage_total)}{" "}
+                so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Amortizatsiya</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(data?.costs_breakdown?.amortization_total)} so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Zavod oylik maoshi</span>
               <span className="font-semibold text-gray-900">
                 {formatNumber(
-                  data?.costs_breakdown?.transport_attendance_total,
+                  data?.costs_breakdown?.factory_monthly_salary_uzs,
                 )}{" "}
                 so'm
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Ombor</span>
+              <span className="text-gray-600">
+                Zavod qo'shimcha xarajatlari
+              </span>
               <span className="font-semibold text-gray-900">
-                {formatNumber(data?.costs_breakdown?.warehouse_salary_total)}{" "}
+                {formatNumber(data?.costs_breakdown?.factory_extra_costs_uzs)}{" "}
                 so'm
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">O'zgarmas xarajatlar</span>
+              <span className="text-gray-600">Zavod jami xarajatlari</span>
               <span className="font-semibold text-gray-900">
-                {formatNumber(data?.costs_breakdown?.monthly_expenses_total)}{" "}
+                {formatNumber(data?.costs_breakdown?.factory_grand_total_uzs)}{" "}
                 so'm
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 font-bold text-lg border-t-2 border-gray-200">
-              <span className="text-gray-900">Jami</span>
-              <span className="text-blue-600">
-                {formatNumber(data?.costs_breakdown?.grand_total)} so'm
               </span>
             </div>
           </CardContent>
         </Card>
 
-        {/* Summary Card */}
+        {/* Factory Summary Card */}
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Calculator className="w-5 h-5 text-purple-600" />
-              <span>Summary</span>
+              <span>Zavod ma'lumotlari</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Tushum</span>
+              <span className="text-gray-600">Jami chiqim miqdori</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(
+                  data?.monthly_company_summary?.total_output_quantity,
+                )}{" "}
+                dona
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Jami tushum</span>
+              <span className="font-semibold text-green-600">
+                {formatNumber(data?.monthly_company_summary?.total_earned_uzs)}{" "}
+                so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Toza foyda</span>
+              <span className="font-semibold text-blue-600">
+                {formatNumber(data?.monthly_company_summary?.net_profit_uzs)}{" "}
+                so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Bitta mahsulotga xarajat</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(
+                  data?.monthly_company_summary?.cost_per_unit_overall_uzs,
+                )}{" "}
+                so'm
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Company Summary Card */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Package className="w-5 h-5 text-orange-600" />
+              <span>Kompaniya ma'lumotlari</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Jami tushum</span>
               <span className="font-semibold text-green-600">
                 {formatNumber(data?.summary?.total_revenue_uzs)} so'm
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Umumiy maosh</span>
+              <span className="text-gray-600">Eksport xarajatlari</span>
               <span className="font-semibold text-gray-900">
-                {formatNumber(data?.summary?.total_fixed_cost_uzs)} so'm
+                {formatNumber(data?.summary?.total_exported_cost_uzs)} so'm
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Foyda</span>
+              <span className="text-gray-600">Eksport foydasi</span>
               <span className="font-semibold text-blue-600">
-                {formatNumber(data?.summary?.company_net_profit_uzs)} so'm
+                {formatNumber(data?.summary?.total_export_profit_uzs)} so'm
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Chiqimlar</span>
-              <span className="font-semibold text-red-600">
-                {formatNumber(data?.summary?.company_total_fixed_cost_uzs)} so'm
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Sotilgan mahsulotlar soni</span>
+              <span className="text-gray-600">Yuborilgan mahsulotlar</span>
               <span className="font-semibold text-gray-900">
                 {formatNumber(data?.summary?.total_shipped_qty)} dona
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
               <span className="text-gray-600">
-                Ishlab chiqarilgan mahsulotlar soni
+                Ishlab chiqarilgan mahsulotlar
               </span>
               <span className="font-semibold text-gray-900">
-                {formatNumber(data?.summary?.company_total_output_qty)} dona
+                {formatNumber(data?.summary?.total_produced_qty)} dona
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Chiqarish foizi</span>
+              <span className="text-gray-600">Eksport foizi</span>
               <span className="font-semibold text-gray-900">
                 {data?.summary?.export_ratio_percent?.toFixed(2)}%
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Bitta mahsulotga xarajat</span>
+              <span className="text-gray-600">Kompaniya maoshi</span>
               <span className="font-semibold text-gray-900">
-                {formatNumber(data?.summary?.company_cost_per_unit_uzs)} so'm
+                {formatNumber(data?.summary?.company_total_salary_uzs)} so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Qo'shimcha xarajatlar</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(data?.summary?.company_total_extra_cost_uzs)} so'm
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-gray-600">Umumiy xarajatlar</span>
+              <span className="font-semibold text-red-600">
+                {formatNumber(data?.summary?.company_total_fixed_cost_uzs)} so'm
               </span>
             </div>
           </CardContent>
@@ -442,69 +384,6 @@ const Shipments = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      <div className="mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>Ishchilar ro'yxati</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left p-3 font-semibold text-gray-900">
-                      No
-                    </th>
-                    <th className="text-left p-3 font-semibold text-gray-900">
-                      Ism
-                    </th>
-                    <th className="text-right p-3 font-semibold text-gray-900">
-                      Jami daromad
-                    </th>
-                    <th className="text-right p-3 font-semibold text-gray-900">
-                      Davomat maoshi
-                    </th>
-                    <th className="text-right p-3 font-semibold text-gray-900">
-                      Tikuv maoshi
-                    </th>
-                    <th className="text-right p-3 font-semibold text-gray-900">
-                      Tarifikatsiya
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data?.employees
-                    ?.sort((a, b) => a.name.localeCompare(b.name))
-                    .map((employee, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-gray-100 hover:bg-gray-50"
-                      >
-                        <td className="p-3 text-gray-900">{index + 1}</td>
-                        <td className="p-3 text-gray-900">{employee?.name}</td>
-                        <td className="p-3 text-right text-gray-900">
-                          {formatNumber(employee?.total_earned)} so'm
-                        </td>
-                        <td className="p-3 text-right text-gray-900">
-                          {formatNumber(employee?.attendance_salary)} so'm
-                        </td>
-                        <td className="p-3 text-right text-gray-900">
-                          {formatNumber(employee?.sewing_salary)} so'm
-                        </td>
-                        <td className="p-3 text-right text-gray-900">
-                          {formatNumber(employee?.tarification)} so'm
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
