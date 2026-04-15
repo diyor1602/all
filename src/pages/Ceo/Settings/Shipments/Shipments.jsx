@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Truck, DollarSign, Package, Calculator } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import getDollarRate from "@/hooks/getDollarRate";
 
 const Shipments = () => {
   const { toast } = useToast();
@@ -27,7 +28,7 @@ const Shipments = () => {
       const res = await api.get("monthly/trucks", {
         params: {
           month: selectedMonth,
-          dollar_rate: 12141,
+          dollar_rate: await getDollarRate(),
         },
       });
 
