@@ -221,7 +221,10 @@ const Shipments = () => {
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
               <span className="text-gray-600">Toza foyda</span>
               <span className="font-semibold text-blue-600">
-                {formatNumber(data?.monthly_company_summary?.net_profit_uzs)}{" "}
+                {formatNumber(
+                  data?.monthly_company_summary?.total_earned_uzs -
+                    data?.costs_breakdown?.factory_grand_total_uzs,
+                )}{" "}
                 so'm
               </span>
             </div>
@@ -229,7 +232,8 @@ const Shipments = () => {
               <span className="text-gray-600">Bitta mahsulotga xarajat</span>
               <span className="font-semibold text-gray-900">
                 {formatNumber(
-                  data?.monthly_company_summary?.cost_per_unit_overall_uzs,
+                  data?.costs_breakdown?.factory_grand_total_uzs /
+                    data?.monthly_company_summary?.total_output_quantity,
                 )}{" "}
                 so'm
               </span>
