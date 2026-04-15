@@ -27,6 +27,7 @@ const Shipments = () => {
       const res = await api.get("monthly/trucks", {
         params: {
           month: selectedMonth,
+          dollar_rate: 12211,
         },
       });
 
