@@ -174,7 +174,7 @@ const All = () => {
                 {/* ITEMS */}
                 <div className="grid md:grid-cols-2 gap-4">
                   {truck?.items
-                    ?.sort((a, b) => a.group_key.localeCompare(b.group_key))
+                    ?.sort((a, b) => a.group_key?.localeCompare(b.group_key))
                     ?.map((item, i) => (
                       <div
                         key={i}
