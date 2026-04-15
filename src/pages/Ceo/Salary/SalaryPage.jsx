@@ -55,8 +55,6 @@ const formatDate = (dateString) => {
 
 const calculateNewSeasonSalary = (emp) => {
   return [
-    emp?.daily_payment_salary,
-    emp?.warehouse_salary,
     emp?.cutting_salary_minute,
     emp?.master_salary_current,
     emp?.sewing_output_salary,
