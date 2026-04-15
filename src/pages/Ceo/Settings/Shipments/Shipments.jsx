@@ -24,6 +24,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import getDollarRate from "@/hooks/getDollarRate";
+import ModelImages from "@/components/ModelImages";
 
 const Shipments = () => {
   const { toast } = useToast();
@@ -303,12 +304,13 @@ const Shipments = () => {
                     {truck.orders?.map((order, i) => (
                       <div
                         key={i}
-                        className="flex justify-between text-sm bg-gray-50 p-2 rounded"
+                        className="flex items-center gap-4 text-sm bg-gray-50 p-2 rounded"
                       >
                         <span className="text-gray-600">
                           {order.order_name}
                         </span>
-                        <span className="font-medium">
+                        <ModelImages modelCode={order?.model_name} />
+                        <span className="font-medium ml-auto">
                           {order.shipped_qty} dona
                         </span>
                       </div>
