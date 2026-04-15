@@ -253,18 +253,6 @@ const Shipments = () => {
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Eksport xarajatlari</span>
-              <span className="font-semibold text-gray-900">
-                {formatNumber(data?.summary?.total_exported_cost_uzs)} so'm
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Eksport foydasi</span>
-              <span className="font-semibold text-blue-600">
-                {formatNumber(data?.summary?.total_export_profit_uzs)} so'm
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
               <span className="text-gray-600">Yuborilgan mahsulotlar</span>
               <span className="font-semibold text-gray-900">
                 {formatNumber(data?.summary?.total_shipped_qty)} dona
