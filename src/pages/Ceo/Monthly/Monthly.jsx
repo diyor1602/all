@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
-import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,13 +47,13 @@ import {
   Loader2,
   FileText,
   TriangleAlert,
-  Landmark,
   Snowflake,
   Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import getDollarRate from "@/hooks/getDollarRate";
 
 const formatNumber = (number, maximumFractionDigits = 0) => {
   return Number.parseFloat(number || 0).toLocaleString("ru-RU", {
@@ -77,11 +76,7 @@ const Monthly = () => {
   );
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [dollarRate, setDollarRate] = useState(
-    localStorage.getItem("dollarRate") || 12100,
-  );
-  const [dollarDialogOpen, setDollarDialogOpen] = useState(false);
-  const [newDollarRate, setNewDollarRate] = useState(dollarRate);
+
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
   const [expenseOrder, setExpenseOrder] = useState(null);
   const pdfContentRef = useRef(null);
@@ -94,28 +89,10 @@ const Monthly = () => {
     pdf: false,
   });
 
-  const getDollarRate = async () => {
-    try {
-      const response = await axios.get(
-        "https://cbu.uz/uz/arkhiv-kursov-valyut/json/",
-      );
-      setDollarRate(response.data.find((item) => item.Ccy === "USD").Rate);
-      localStorage.setItem(
-        "dollarRate",
-        response.data.find((item) => item.Ccy === "USD").Rate,
-      );
-      fetchMonthly();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Dollar kursini olishda xatolik",
-      });
-    }
-  };
+  const [dollarRate, setDollarRate] = useState(null);
 
   useEffect(() => {
-    getDollarRate();
+    getDollarRate().then((rate) => setDollarRate(rate));
   }, []);
 
   const handleDownload = async (fileType = "excel") => {
@@ -218,15 +195,9 @@ const Monthly = () => {
     }
   };
 
-  const updateDollarRate = async () => {
-    localStorage.setItem("dollarRate", newDollarRate);
-    setDollarRate(newDollarRate);
-    setDollarDialogOpen(false);
-  };
-
   useEffect(() => {
     fetchMonthly();
-  }, [startDate, endDate, dollarRate]);
+  }, [startDate, endDate]);
 
   const metrics = [
     {
@@ -598,26 +569,13 @@ const Monthly = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div
-                  className="flex items-center p-3 bg-50 rounded-lg cursor-pointer bg-sky-300"
-                  onClick={() => setDollarDialogOpen(true)}
-                >
+                <div className="flex items-center p-3 bg-50 rounded-lg bg-sky-300">
                   <span className="text-sm font-medium text-slate-600 mr-auto">
                     Dollar kursi:
                   </span>
                   <Badge variant="ghost" className="font-mono border-none">
                     {formatNumber(dollarRate)} so'm
                   </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      getDollarRate();
-                    }}
-                  >
-                    <Landmark className="h-4 w-4" />
-                  </Button>
                 </div>
                 {additionalMetrics.map((metric, index) => (
                   <div
@@ -647,29 +605,6 @@ const Monthly = () => {
               </div>
             </CardContent>
           </Card>
-
-          <Dialog open={dollarDialogOpen} onOpenChange={setDollarDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Dollar kursini o'zgartirish</DialogTitle>
-              </DialogHeader>
-              <Input
-                type="number"
-                value={newDollarRate}
-                onChange={(e) => setNewDollarRate(e.target.value)}
-                className="w-full"
-              />
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setDollarDialogOpen(false)}
-                >
-                  Bekor qilish
-                </Button>
-                <Button onClick={updateDollarRate}>Saqlash</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
 
           <Dialog
             open={additionalMetricsDialogOpen}
