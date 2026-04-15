@@ -61,6 +61,15 @@ const Shipments = () => {
     getData();
   }, [selectedMonth]);
 
+  const calculateTotalSalary = () => {
+    return formatNumber(
+      Number(data?.costs_breakdown?.attendance_salary_total) +
+        Number(data?.costs_breakdown?.money_logs_total) +
+        Number(data?.costs_breakdown?.season_salary_total) +
+        Number(data?.costs_breakdown?.tarification_total),
+    );
+  };
+
   const MetricTile = ({
     icon: Icon,
     title,
@@ -197,20 +206,13 @@ const Shipments = () => {
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
                 Ish haqi va Maosh
               </h4>
+              <RowItem label="Maosh" value={`${calculateTotalSalary()} UZS`} />
               <RowItem
-                label="Davomat maoshi"
-                value={`${formatNumber(data?.costs_breakdown?.attendance_salary_total)}`}
+                label="Transport uchun"
+                value={`${formatNumber(data?.costs_breakdown?.transport_attendance)} UZS`}
               />
               <RowItem
-                label="Mavsumiy maosh"
-                value={`${formatNumber(data?.costs_breakdown?.season_salary_total)}`}
-              />
-              <RowItem
-                label="Zavod oylik maoshi"
-                value={`${formatNumber(data?.costs_breakdown?.factory_monthly_salary_uzs)}`}
-              />
-              <RowItem
-                label="Transport xodimlari"
+                label="Xodimlar"
                 value={`${formatNumber(data?.costs_breakdown?.transport_employees_count)} kishi`}
                 subValue={`${formatNumber(data?.costs_breakdown?.transport_per_employee)} / kishi`}
               />
@@ -220,20 +222,16 @@ const Shipments = () => {
                 Operatsion
               </h4>
               <RowItem
-                label="Pul yozuvlari"
-                value={`${formatNumber(data?.costs_breakdown?.money_logs_total)}`}
-              />
-              <RowItem
-                label="Tarifikatsiya"
-                value={`${formatNumber(data?.costs_breakdown?.tarification_total)}`}
-              />
-              <RowItem
                 label="Amortizatsiya"
                 value={`${formatNumber(data?.costs_breakdown?.amortization_total)}`}
               />
               <RowItem
                 label="Oylik xarajatlar"
                 value={`${formatNumber(data?.costs_breakdown?.monthly_expenses)}`}
+              />
+              <RowItem
+                label="Bitta mahsulot tannarxi"
+                value={`${formatNumber(data?.costs_breakdown?.factory_grand_total_uzs / data?.monthly_company_summary?.total_output_quantity)} UZS`}
               />
             </div>
             <div className="md:col-span-2 mt-4 bg-slate-50 p-4 rounded-xl">
@@ -256,39 +254,8 @@ const Shipments = () => {
             </CardHeader>
             <CardContent className="space-y-1">
               <RowItem
-                label="Chiqim miqdori"
-                value={`${formatNumber(data?.monthly_company_summary?.total_output_quantity)} dona`}
-              />
-              <RowItem
                 label="Bitta mahsulot tannarxi"
                 value={`${formatNumber(data?.costs_breakdown?.factory_grand_total_uzs / data?.monthly_company_summary?.total_output_quantity)} UZS`}
-              />
-              <RowItem
-                label="Jami tushum"
-                value={`${formatNumber(data?.monthly_company_summary?.total_earned_uzs)} UZS`}
-              />
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border-l-4 border-l-blue-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-md flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-blue-500" /> Kompaniya Umumiy
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              <RowItem
-                label="Ishlab chiqarildi"
-                value={`${formatNumber(data?.summary?.total_produced_qty)} dona`}
-              />
-              <RowItem
-                label="Qo'shimcha xarajatlar"
-                value={`${formatNumber(data?.summary?.company_total_extra_cost_uzs)} UZS`}
-              />
-              <RowItem
-                label="Umumiy xarajatlar"
-                value={`${formatNumber(data?.summary?.company_total_fixed_cost_uzs)} UZS`}
-                isTotal
               />
             </CardContent>
           </Card>
