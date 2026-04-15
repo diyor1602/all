@@ -143,7 +143,7 @@ const Shipments = () => {
       </header>
 
       {/* Top Level KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricTile
           title="Umumiy Tushum"
           value={`${formatNumber(data?.summary?.total_revenue_uzs)} UZS`}
@@ -180,7 +180,6 @@ const Shipments = () => {
               <Calculator className="w-5 h-5 text-gray-400" />
               Xarajatlar Tafsiloti
             </CardTitle>
-            <CardDescription>Oylik barcha operatsion chiqimlar</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
             <div className="space-y-1">
