@@ -192,9 +192,9 @@ const Shipments = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="space-y-12">
         {/* Detailed Costs - Left Column */}
-        <Card className="lg:col-span-7 shadow-sm">
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Calculator className="w-5 h-5 text-gray-400" />
@@ -243,23 +243,6 @@ const Shipments = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Company & Factory Summary - Right Column */}
-        <div className="lg:col-span-5 space-y-6">
-          <Card className="shadow-sm border-l-4 border-l-purple-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-md flex items-center gap-2">
-                <Factory className="w-5 h-5 text-purple-500" /> Zavod Xulosasi
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              <RowItem
-                label="Bitta mahsulot tannarxi"
-                value={`${formatNumber(data?.costs_breakdown?.factory_grand_total_uzs / data?.monthly_company_summary?.total_output_quantity)} UZS`}
-              />
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Trucks Section - Full Width */}
         <div className="lg:col-span-12">
