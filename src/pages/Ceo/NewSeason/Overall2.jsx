@@ -33,6 +33,7 @@ import {
   SquareArrowOutUpRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import getDollarRate from "@/hooks/getDollarRate";
 
 const Overall2 = () => {
   const { toast } = useToast();
@@ -40,10 +41,6 @@ const Overall2 = () => {
   const [loading, setLoading] = useState(false);
 
   // States with initializers to avoid hydration/sync issues
-  const [dollarRate, setDollarRate] = useState(
-    () => localStorage.getItem("newSeasonDollarRate") || 12269,
-  );
-  const [tempDollarRate, setTempDollarRate] = useState(dollarRate);
   const [selectedYear, setSelectedYear] = useState(
     () =>
       localStorage.getItem("newSeasonSelectedYear") || new Date().getFullYear(),
@@ -52,12 +49,6 @@ const Overall2 = () => {
     () => localStorage.getItem("newSeasonSelectedType") || "winter",
   );
 
-  const applyDollarRate = () => {
-    setDollarRate(tempDollarRate);
-    localStorage.setItem("newSeasonDollarRate", tempDollarRate);
-    getData();
-  };
-
   const getData = async () => {
     setLoading(true);
     try {
@@ -65,12 +56,11 @@ const Overall2 = () => {
         params: {
           season_year: selectedYear,
           season_type: selectedType,
-          dollar_rate: dollarRate,
+          dollar_rate: await getDollarRate(),
         },
       });
       setData(res.data);
       // Persist choices
-      localStorage.setItem("newSeasonDollarRate", dollarRate);
       localStorage.setItem("newSeasonSelectedYear", selectedYear);
       localStorage.setItem("newSeasonSelectedType", selectedType);
     } catch (err) {
@@ -87,6 +77,17 @@ const Overall2 = () => {
   useEffect(() => {
     getData();
   }, [selectedYear, selectedType]);
+
+  const [dollarRate, setDollarRate] = useState(null);
+
+  const applyDollarRate = async () => {
+    const rate = await getDollarRate();
+    setDollarRate(rate);
+  };
+
+  useEffect(() => {
+    applyDollarRate();
+  }, []);
 
   const finance = data?.finance || {};
   const orders = data?.orders || [];
@@ -659,20 +660,7 @@ const Overall2 = () => {
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">
                     Valyuta Kursi ($)
                   </p>
-                  <div className="flex gap-2">
-                    <Input
-                      className="h-5 text-[10px] font-bold px-2 py-1 bg-white border-slate-200"
-                      value={tempDollarRate}
-                      onChange={(e) => setTempDollarRate(e.target.value)}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={applyDollarRate}
-                      className="h-5 px-2 text-xs bg-indigo-600 hover:bg-indigo-700"
-                    >
-                      Qo'llash
-                    </Button>
-                  </div>
+                  <div className="flex gap-2">{dollarRate}</div>
                 </div>
               </CardContent>
             </Card>
