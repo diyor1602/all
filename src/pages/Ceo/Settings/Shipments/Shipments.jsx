@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import {
   Loader2,
   Truck,
-  DollarSign,
   Package,
   Calculator,
   TrendingUp,
@@ -125,29 +124,23 @@ const Shipments = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
+    <div className="mx-auto space-y-8">
       {/* Header Section */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
-            Logistika Paneli
+            Hisobot
           </h1>
-          <p className="text-muted-foreground">
-            Oylik yuk tashish va moliyaviy hisobotlar
-          </p>
         </div>
-        <div className="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border">
-          <span className="text-sm font-medium text-gray-500 ml-2">Davr:</span>
-          <Input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => {
-              localStorage.setItem("shipmentsSelectedMonth", e.target.value);
-              setSelectedMonth(e.target.value);
-            }}
-            className="w-[180px] border-none focus-visible:ring-0 shadow-none font-semibold cursor-pointer"
-          />
-        </div>
+        <Input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => {
+            localStorage.setItem("shipmentsSelectedMonth", e.target.value);
+            setSelectedMonth(e.target.value);
+          }}
+          className="bg-white w-fit"
+        />
       </header>
 
       {/* Top Level KPIs */}
@@ -328,9 +321,11 @@ const Shipments = () => {
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div>
                       <p className="text-[10px] uppercase font-bold text-gray-400">
-                        Hajm
+                        Miqdor
                       </p>
-                      <p className="font-semibold">{truck.shipped_qty} dona</p>
+                      <p className="font-semibold">
+                        {formatNumber(truck.shipped_qty)} dona
+                      </p>
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-bold text-gray-400">
@@ -338,22 +333,6 @@ const Shipments = () => {
                       </p>
                       <p className="font-semibold text-emerald-600">
                         {formatNumber(truck.revenue_uzs)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-gray-400">
-                        Xarajat
-                      </p>
-                      <p className="font-semibold text-red-500">
-                        {formatNumber(truck.allocated_cost_uzs)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-gray-400">
-                        Foyda
-                      </p>
-                      <p className="font-semibold text-blue-600">
-                        {formatNumber(truck.profit_uzs)}
                       </p>
                     </div>
                   </div>
