@@ -19,9 +19,78 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import getDollarRate from "@/hooks/getDollarRate";
 import ModelImages from "@/components/ModelImages";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 const Shipments = () => {
   const { toast } = useToast();
+
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#8884D8",
+    "#82CA9D",
+    "#FFC658",
+    "#FF7C7C",
+    "#8DD1E1",
+    "#D084D0",
+  ];
+
+  const preparePieChartData = (costsBreakdown) => {
+    const data = [];
+
+    const costLabels = {
+      bonus: "Bonus",
+      remainder: "Qolgan",
+      tarification: "Tariflashtirish",
+      allocatedTransport: "Transport",
+      allocatedAup: "AUP",
+      allocatedIsNotAup: "AUP bo'lmagan",
+      daily_payments: "Kunlik to'lovlar",
+      warehouse_salary: "Ombor maoshi",
+      assistant_salary: "Yordamchi maoshi",
+      cutting_salary: "Kesish maoshi",
+      master_salary: "Usta maoshi",
+      allocatedMonthlyExpense: "Oylik xarajatlar",
+      incomePercentageExpense: "Daromad foizi xarajatlari",
+      amortizationExpense: "Amortizatsiya xarajatlari",
+    };
+
+    Object.entries(costsBreakdown).forEach(([key, value]) => {
+      if (value > 0 && costLabels[key]) {
+        data.push({
+          name: costLabels[key],
+          value: value,
+          key: key,
+        });
+      }
+    });
+
+    return data.sort((a, b) => b.value - a.value);
+  };
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-2 border border-gray-200 rounded shadow-lg">
+          <p className="text-sm font-medium">{payload[0].name}</p>
+          <p className="text-sm text-gray-600">
+            {formatNumber(payload[0].value)} UZS
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   const [data, setData] = useState({
     trucks: [],
     costs_breakdown: {},
@@ -306,20 +375,112 @@ const Shipments = () => {
                     <p className="text-xs font-bold text-gray-500 uppercase">
                       Buyurtmalar
                     </p>
-                    {truck.orders?.map((order, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-4 text-sm bg-gray-50 p-2 rounded"
-                      >
-                        <span className="text-gray-600">
-                          {order.order_name}
-                        </span>
-                        <ModelImages modelCode={order?.model_name} />
-                        <span className="font-medium ml-auto">
-                          {order.shipped_qty} dona
-                        </span>
-                      </div>
-                    ))}
+                    {truck.orders?.map((order, i) => {
+                      const pieChartData = preparePieChartData(
+                        order.costs_breakdown || {},
+                      );
+                      return (
+                        <div key={i} className="space-y-3">
+                          <div className="flex items-center gap-4 text-sm bg-gray-50 p-2 rounded">
+                            <span className="text-gray-600">
+                              {order.order_name}
+                            </span>
+                            <ModelImages modelCode={order?.model_name} />
+                            <span className="font-medium ml-auto">
+                              {order.shipped_qty} dona
+                            </span>
+                          </div>
+                          {pieChartData.length > 0 && (
+                            <div className="bg-white p-4 rounded border border-gray-100">
+                              <p className="text-xs font-bold text-gray-500 uppercase mb-4">
+                                Xarajatlar Tafsiloti
+                              </p>
+                              <ResponsiveContainer width="100%" height={300}>
+                                <PieChart>
+                                  <Pie
+                                    data={pieChartData}
+                                    cx="50%"
+                                    cy="40%"
+                                    labelLine={false}
+                                    outerRadius={100}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                  >
+                                    {pieChartData.map((entry, index) => (
+                                      <Cell
+                                        key={`cell-${index}`}
+                                        fill={COLORS[index % COLORS.length]}
+                                      />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip content={<CustomTooltip />} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <div className="mt-4 space-y-2">
+                                <p className="text-xs font-semibold text-gray-600 uppercase">
+                                  Xarajatlar Tafsiloti:
+                                </p>
+                                <div className="space-y-2">
+                                  {pieChartData.map((item, index) => {
+                                    const total = pieChartData.reduce(
+                                      (sum, entry) => sum + entry.value,
+                                      0,
+                                    );
+                                    const percentage = (
+                                      (item.value / total) *
+                                      100
+                                    ).toFixed(1);
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="flex items-center justify-between text-xs"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div
+                                            className="w-3 h-3 rounded-sm flex-shrink-0"
+                                            style={{
+                                              backgroundColor:
+                                                COLORS[index % COLORS.length],
+                                            }}
+                                          />
+                                          <span className="text-gray-700">
+                                            {item.name}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <span className="font-medium text-gray-900">
+                                            {formatNumber(item.value)} UZS
+                                          </span>
+                                          <span className="text-gray-500 font-medium">
+                                            {percentage}%
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="pt-2 mt-2 border-t border-gray-200">
+                                  <div className="flex items-center justify-between text-xs font-bold">
+                                    <span className="text-gray-900">
+                                      Jami Xarajatlar:
+                                    </span>
+                                    <span className="text-primary">
+                                      {formatNumber(
+                                        pieChartData.reduce(
+                                          (sum, entry) => sum + entry.value,
+                                          0,
+                                        ),
+                                      )}{" "}
+                                      UZS
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
