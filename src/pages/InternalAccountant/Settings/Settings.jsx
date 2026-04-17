@@ -12,6 +12,7 @@ import {
   TreePalm,
   Lock,
   AlarmClockPlus,
+  Wrench,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 import Nakladnoy from "./Nakladnoy";
@@ -20,6 +21,7 @@ import SalaryOrders from "./SalaryOrders";
 import TarifSearch from "./TarifSearch";
 import Result from "./Result/Result";
 import ResultView from "./Result/ResultView";
+import Damages from "./Damages/Damages";
 
 const Settings = () => {
   return (
@@ -32,6 +34,7 @@ const Settings = () => {
       <Route path="salaryOrders" element={<SalaryOrders />} />
       <Route path="result" element={<Result />} />
       <Route path="result/:id" element={<ResultView />} />
+      <Route path="damages" element={<Damages />} />
     </Routes>
   );
 };
@@ -97,6 +100,12 @@ const SettingsPage = () => {
       icon: AlarmClockPlus,
       link: "/internalAccountant/settings/result",
       color: "bg-indigo-500",
+    },
+    {
+      name: "Braklar",
+      icon: Wrench,
+      link: "/internalAccountant/settings/damages",
+      color: "bg-yellow-500",
     },
   ];
 
