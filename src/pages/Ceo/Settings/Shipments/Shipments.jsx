@@ -10,19 +10,11 @@ import {
   TrendingUp,
   Wallet,
   ArrowUpRight,
-  Factory,
-  Briefcase,
   DollarSign,
   TrendingDown,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import getDollarRate from "@/hooks/getDollarRate";

@@ -35,8 +35,6 @@ const getDollarRate = async () => {
 
     return Number(usd);
   } catch (error) {
-    console.error("Dollar rate error:", error);
-
     // fallback — cache bor bo‘lsa shuni qaytaradi
     const cachedRate = localStorage.getItem(CACHE_KEY);
     if (cachedRate) return Number(cachedRate);
