@@ -183,8 +183,7 @@ const DifferenceRu = () => {
       const uzTariff = item.submodels?.[0]?.tarification_sum?.uz?.summa;
       const ruTariff = item.submodels?.[0]?.tarification_sum?.ru?.summa;
 
-      // return rasxod && uzTariff && ruTariff && uzTariff > ruTariff;
-      return uzTariff > ruTariff;
+      return rasxod && uzTariff && ruTariff && uzTariff > ruTariff;
     });
 
     if (search) {
@@ -844,7 +843,7 @@ const DifferenceRu = () => {
                     >
                       <Th
                         col="group_limit_diff"
-                        label="Расход − RU"
+                        label="Расход − UZ"
                         hint="отклонение"
                       />
                     </th>
@@ -1059,8 +1058,8 @@ const DifferenceRu = () => {
                           }}
                         >
                           <DiffCell
-                            value={(item.group_limit || 0) - ruSum}
-                            minutes={ownMin - ruMin}
+                            value={(item.group_limit || 0) - uzSum}
+                            minutes={ownMin - uzMin}
                           />
                         </td>
 
