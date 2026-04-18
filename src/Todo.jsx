@@ -318,7 +318,7 @@ const Todo = () => {
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setConfirmTodo(todo)}
-                      className={`w-6 h-6 rounded-full border flex items-center justify-center ${
+                      className={`w-6 h-6 rounded-full border flex items-center justify-center whitespace-nowrap ${
                         todo.is_done
                           ? "bg-green-500 text-white border-green-500"
                           : ""
