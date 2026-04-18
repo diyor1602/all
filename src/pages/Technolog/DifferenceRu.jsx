@@ -812,10 +812,8 @@ const DifferenceRu = () => {
                         textAlign: "left",
                         width: 60,
                       }}
-                    >
-                      Изображение
-                    </th>
-                    <Th col="model" label="Модель" hint="модель · подмодель" />
+                    ></th>
+                    <Th col="model" label="Модель" hint="модель" />
                     <th
                       style={{
                         padding: "12px 14px",
