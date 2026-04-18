@@ -235,6 +235,8 @@ const DifferenceRu = () => {
               return o.season_type || "";
             case "model":
               return s.submodel?.model_name || "";
+            case "price":
+              return Number(o.price) || 0;
             case "group_limit":
               return item.group_limit || 0;
             case "uz":
@@ -823,6 +825,17 @@ const DifferenceRu = () => {
                         borderLeft: "1px solid rgba(255,255,255,0.05)",
                       }}
                     >
+                      <Th col="price" label="Цена" hint="заказа" />
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 14px",
+                        color: "#475569",
+                        fontSize: 12,
+                        textAlign: "left",
+                        borderLeft: "1px solid rgba(255,255,255,0.05)",
+                      }}
+                    >
                       <Th col="quantity" label="Кол-во" hint="шт" />
                     </th>
                     <Th col="year" label="Год" hint="сезонный год" />
@@ -950,6 +963,35 @@ const DifferenceRu = () => {
                             >
                               {sub.submodel.submodel_name}
                             </div>
+                          )}
+                        </td>
+
+                        {/* price */}
+                        <td
+                          style={{
+                            padding: "12px 14px",
+                            borderLeft: "1px solid rgba(255,255,255,0.04)",
+                          }}
+                        >
+                          {order.price ? (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 5,
+                                background: "rgba(34,197,94,0.1)",
+                                padding: "3px 9px",
+                                borderRadius: 6,
+                                fontFamily: "'JetBrains Mono', monospace",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: "#22c55e",
+                              }}
+                            >
+                              {formatNumber(order.price)}$
+                            </span>
+                          ) : (
+                            <span style={{ color: "#334155" }}>—</span>
                           )}
                         </td>
 
