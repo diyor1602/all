@@ -139,7 +139,7 @@ const Analysis = () => {
         ? selectedMonths.map((m) => getMonthLabel(m.month)).join(", ")
         : "";
       const monthValues = selectedMonths.map((m) => getMonthValue(m.month));
-      const tarificationSum = item?.submodels?.[0]?.tarification_sum || 0;
+      const tarificationSum = item?.submodels?.[0]?.tarification_sum?.uz || 0;
       const groupLimit = item?.group_limit || 0;
       const exceededCount =
         item?.submodels?.[0]?.exceeded_tarifications?.length || 0;

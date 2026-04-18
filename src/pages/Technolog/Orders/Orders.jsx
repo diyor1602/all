@@ -93,6 +93,7 @@ const Analysis = () => {
     seasonType: "",
     seasonYear: "",
     technologistStatus: "",
+    technologistStatusRu: "",
     limitStatus: "",
     sewingOutputCompare: "",
     exceededStatus: "",
@@ -139,7 +140,8 @@ const Analysis = () => {
         ? selectedMonths.map((m) => getMonthLabel(m.month)).join(", ")
         : "";
       const monthValues = selectedMonths.map((m) => getMonthValue(m.month));
-      const tarificationSum = item?.submodels?.[0]?.tarification_sum || 0;
+      const tarificationSum = item?.submodels?.[0]?.tarification_sum?.uz || 0;
+      const tarificationSumRu = item?.submodels?.[0]?.tarification_sum?.ru || 0;
       const groupLimit = item?.group_limit || 0;
       const exceededCount =
         item?.submodels?.[0]?.exceeded_tarifications?.length || 0;
@@ -157,11 +159,14 @@ const Analysis = () => {
         monthsText,
         monthValues,
         tarificationSum,
+        tarificationSumRu,
         groupLimit,
         difference: tarificationSum - groupLimit,
+        differenceRu: tarificationSumRu - groupLimit,
         exceededCount,
         hasRecipe,
         technologistStatus: tarificationSum > 0 ? "Bor" : "Yoq",
+        technologistStatusRu: tarificationSumRu > 0 ? "Bor" : "Yoq",
         groupStatus: groups ? "Bor" : "Yoq",
         monthStatus: monthsText ? "Bor" : "Yoq",
         exceededStatus: exceededCount > 0 ? "Bor" : "Joyida",
@@ -223,6 +228,10 @@ const Analysis = () => {
         !filters.technologistStatus ||
         item.technologistStatus === filters.technologistStatus;
 
+      const matchesTechnologistRu =
+        !filters.technologistStatusRu ||
+        item.technologistStatusRu === filters.technologistStatusRu;
+
       const matchesLimit =
         !filters.limitStatus ||
         (filters.limitStatus === "Oshgan" &&
@@ -254,6 +263,7 @@ const Analysis = () => {
         matchesSeasonType &&
         matchesSeasonYear &&
         matchesTechnologist &&
+        matchesTechnologistRu &&
         matchesLimit &&
         matchesSewingOutput &&
         matchesExceeded &&
@@ -302,6 +312,7 @@ const Analysis = () => {
       seasonType: "",
       seasonYear: "",
       technologistStatus: "",
+      technologistStatusRu: "",
       limitStatus: "",
       sewingOutputCompare: "",
       exceededStatus: "",
@@ -534,8 +545,24 @@ const Analysis = () => {
                     onClick={() => handleSort("tarificationSum")}
                     className="flex items-center gap-1"
                   >
-                    Texnolog
+                    Texnolog (UZ)
                     <SortIcon field="tarificationSum" sortConfig={sortConfig} />
+                  </button>
+                </th>
+
+                <th
+                  className={`${stickyHeader} border-b border-r border-slate-200 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort("tarificationSumRu")}
+                    className="flex items-center gap-1"
+                  >
+                    Texnolog (RU)
+                    <SortIcon
+                      field="tarificationSumRu"
+                      sortConfig={sortConfig}
+                    />
                   </button>
                 </th>
 
@@ -731,6 +758,22 @@ const Analysis = () => {
                   className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
                 >
                   <select
+                    value={filters.technologistStatusRu || ""}
+                    onChange={(e) =>
+                      handleFilterChange("technologistStatusRu", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-blue-400"
+                  >
+                    <option value="">Barchasi</option>
+                    <option value="Bor">Bor</option>
+                    <option value="Yoq">Yo'q</option>
+                  </select>
+                </th>
+
+                <th
+                  className={`${stickyFilterRow} border-b border-r border-slate-200 px-1.5 py-1.5`}
+                >
+                  <select
                     value={filters.limitStatus}
                     onChange={(e) =>
                       handleFilterChange("limitStatus", e.target.value)
@@ -785,7 +828,7 @@ const Analysis = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={15}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Yuklanmoqda...
@@ -935,6 +978,18 @@ const Analysis = () => {
                       </td>
 
                       <td
+                        className={`border-b border-r border-slate-200 px-2 py-2 ${rowBg}`}
+                      >
+                        {item.tarificationSumRu > 0 ? (
+                          <Badge variant="green">
+                            {formatNumber(item.tarificationSumRu)}
+                          </Badge>
+                        ) : (
+                          <AlertMessage message="Yo'q" />
+                        )}
+                      </td>
+
+                      <td
                         className={`border-b border-r border-slate-200 px-2 py-2 font-medium text-slate-700 ${rowBg}`}
                       >
                         {formatNumber(item.groupLimit)}
@@ -979,7 +1034,7 @@ const Analysis = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={15}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     Hech narsa topilmadi
