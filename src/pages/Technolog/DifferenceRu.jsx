@@ -143,8 +143,8 @@ const DifferenceRu = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const [filterSeason, setFilterSeason] = useState("all"); // "all" | "winter" | "spring"
-  const [filterYear, setFilterYear] = useState("all");
+  const [filterSeason, setFilterSeason] = useState("winter"); // "all" | "winter" | "spring"
+  const [filterYear, setFilterYear] = useState("2026");
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
