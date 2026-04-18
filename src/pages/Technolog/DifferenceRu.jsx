@@ -72,8 +72,6 @@ const DifferenceRu = () => {
           const sub = item.submodels?.[0] || {};
 
           switch (sortConfig.key) {
-            case "name":
-              return order.name || "";
             case "quantity":
               return order.quantity || 0;
             case "year":
@@ -136,9 +134,9 @@ const DifferenceRu = () => {
                 <th className="p-3">№</th>
                 <th
                   className="p-3 cursor-pointer"
-                  onClick={() => handleSort("name")}
+                  onClick={() => handleSort("model")}
                 >
-                  Заказ <ArrowUpDown size={14} className="inline ml-1" />
+                  Модель <ArrowUpDown size={14} className="inline ml-1" />
                 </th>
                 <th
                   className="p-3 cursor-pointer"
@@ -157,12 +155,6 @@ const DifferenceRu = () => {
                   onClick={() => handleSort("season")}
                 >
                   Сезон <ArrowUpDown size={14} className="inline ml-1" />
-                </th>
-                <th
-                  className="p-3 cursor-pointer"
-                  onClick={() => handleSort("model")}
-                >
-                  Модель <ArrowUpDown size={14} className="inline ml-1" />
                 </th>
                 <th
                   className="p-3 cursor-pointer"
@@ -204,7 +196,10 @@ const DifferenceRu = () => {
                 return (
                   <tr key={index} className="border-t hover:bg-muted/40">
                     <td className="p-3">{index + 1}</td>
-                    <td className="p-3">{order.name || "-"}</td>
+                    <td className="p-3">
+                      {sub.submodel?.model_name || "-"}{" "}
+                      {sub.submodel?.submodel_name || ""}
+                    </td>
                     <td className="p-3">{order.quantity || "-"}</td>
                     <td className="p-3">{order.season_year || "-"}</td>
                     <td className="p-3">
@@ -219,10 +214,6 @@ const DifferenceRu = () => {
                       ) : (
                         <span className="text-muted-foreground text-xs">-</span>
                       )}
-                    </td>
-                    <td className="p-3">
-                      {sub.submodel?.model_name || "-"}{" "}
-                      {sub.submodel?.submodel_name || ""}
                     </td>
                     <td className="p-3">{formatNumber(item.group_limit)}</td>
                     <td className="p-3">
