@@ -27,8 +27,8 @@ const diffColor = (val) => {
 };
 
 const DiffCell = ({ value, unit = "UZS", minutes }) => {
-  const color = diffColor(value);
-  const Icon = value > 0 ? TrendingUp : value < 0 ? TrendingDown : Minus;
+  const color = diffColor(minutes);
+  const Icon = minutes > 0 ? TrendingUp : minutes < 0 ? TrendingDown : Minus;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <span
@@ -43,17 +43,17 @@ const DiffCell = ({ value, unit = "UZS", minutes }) => {
         }}
       >
         <Icon size={12} />
-        {formatNumber(value)} {unit}
+        {formatNumber(minutes)} мин
       </span>
-      {minutes !== undefined && (
+      {value !== undefined && (
         <span
           style={{
-            color: diffColor(minutes),
+            color: diffColor(value),
             fontSize: 11,
             fontFamily: "'JetBrains Mono', monospace",
           }}
         >
-          {formatNumber(minutes)} мин
+          {formatNumber(value)} {unit}
         </span>
       )}
     </div>
@@ -175,6 +175,18 @@ const DifferenceRu = () => {
 
   const processedData = useMemo(() => {
     let out = [...data];
+
+    // Filter for orders with all 3 tariffs: rasxod, uz, and ru
+    // and where UZ tariff > RU tariff AND UZ tariff > Rasxod
+    out = out.filter((item) => {
+      const rasxod = item.group_limit;
+      const uzTariff = item.submodels?.[0]?.tarification_sum?.uz?.summa;
+      const ruTariff = item.submodels?.[0]?.tarification_sum?.ru?.summa;
+
+      // return rasxod && uzTariff && ruTariff && uzTariff > ruTariff;
+      return uzTariff > ruTariff;
+    });
+
     if (search) {
       const q = search.toLowerCase();
       out = out.filter((item) => {
@@ -813,7 +825,7 @@ const DifferenceRu = () => {
                         background: "rgba(245,158,11,0.02)",
                       }}
                     >
-                      <Th col="uz" label="Тариф UZ" hint="Узбекистан" />
+                      <Th col="ru" label="Тариф RU" hint="Россия" />
                     </th>
                     <th
                       style={{
@@ -821,7 +833,7 @@ const DifferenceRu = () => {
                         background: "rgba(245,158,11,0.02)",
                       }}
                     >
-                      <Th col="ru" label="Тариф RU" hint="Россия" />
+                      <Th col="uz" label="Тариф UZ" hint="Узбекистан" />
                     </th>
                     <th
                       style={{
@@ -832,7 +844,7 @@ const DifferenceRu = () => {
                     >
                       <Th
                         col="group_limit_diff"
-                        label="Расход − UZ"
+                        label="Расход − RU"
                         hint="отклонение"
                       />
                     </th>
@@ -965,10 +977,7 @@ const DifferenceRu = () => {
                               color: "#cbd5e1",
                             }}
                           >
-                            {formatNumber(item.group_limit)}{" "}
-                            <span style={{ color: "#475569", fontSize: 10 }}>
-                              UZS
-                            </span>
+                            {formatNumber(ownMin)} мин
                           </div>
                           <div
                             style={{
@@ -978,38 +987,8 @@ const DifferenceRu = () => {
                               marginTop: 2,
                             }}
                           >
-                            {formatNumber(ownMin)} мин
-                          </div>
-                        </td>
-
-                        {/* UZ */}
-                        <td
-                          style={{
-                            padding: "12px 14px",
-                            background: "rgba(245,158,11,0.015)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontFamily: "'JetBrains Mono', monospace",
-                              fontSize: 12,
-                              color: "#fbbf24",
-                            }}
-                          >
-                            {formatNumber(uzSum)}{" "}
-                            <span style={{ color: "#78716c", fontSize: 10 }}>
-                              UZS
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              fontFamily: "'JetBrains Mono', monospace",
-                              fontSize: 11,
-                              color: "#57534e",
-                              marginTop: 2,
-                            }}
-                          >
-                            {formatNumber(uzMin)} мин
+                            {formatNumber(item.group_limit)}{" "}
+                            <span style={{ fontSize: 10 }}>UZS</span>
                           </div>
                         </td>
 
@@ -1027,10 +1006,7 @@ const DifferenceRu = () => {
                               color: "#93c5fd",
                             }}
                           >
-                            {formatNumber(ruSum)}{" "}
-                            <span style={{ color: "#374a6a", fontSize: 10 }}>
-                              UZS
-                            </span>
+                            {formatNumber(ruMin)} мин
                           </div>
                           <div
                             style={{
@@ -1040,11 +1016,41 @@ const DifferenceRu = () => {
                               marginTop: 2,
                             }}
                           >
-                            {formatNumber(ruMin)} мин
+                            {formatNumber(ruSum)}{" "}
+                            <span style={{ fontSize: 10 }}>UZS</span>
                           </div>
                         </td>
 
-                        {/* Расход − UZ */}
+                        {/* UZ */}
+                        <td
+                          style={{
+                            padding: "12px 14px",
+                            background: "rgba(245,158,11,0.015)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              fontSize: 12,
+                              color: "#fbbf24",
+                            }}
+                          >
+                            {formatNumber(uzMin)} мин
+                          </div>
+                          <div
+                            style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              fontSize: 11,
+                              color: "#57534e",
+                              marginTop: 2,
+                            }}
+                          >
+                            {formatNumber(uzSum)}{" "}
+                            <span style={{ fontSize: 10 }}>UZS</span>
+                          </div>
+                        </td>
+
+                        {/* Расход − RU */}
                         <td
                           style={{
                             padding: "12px 14px",
@@ -1053,8 +1059,8 @@ const DifferenceRu = () => {
                           }}
                         >
                           <DiffCell
-                            value={(item.group_limit || 0) - uzSum}
-                            minutes={ownMin - uzMin}
+                            value={(item.group_limit || 0) - ruSum}
+                            minutes={ownMin - ruMin}
                           />
                         </td>
 
