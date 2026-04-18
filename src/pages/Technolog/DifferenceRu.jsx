@@ -1115,7 +1115,18 @@ const DifferenceRu = () => {
                   </span>{" "}
                   из{" "}
                   <span style={{ color: "#94a3b8", fontWeight: 600 }}>
-                    {data.length}
+                    {
+                      data.filter((item) => {
+                        const rasxod = item.group_limit;
+                        const uzTariff =
+                          item.submodels?.[0]?.tarification_sum?.uz?.summa;
+                        const ruTariff =
+                          item.submodels?.[0]?.tarification_sum?.ru?.summa;
+                        return (
+                          rasxod && uzTariff && ruTariff && uzTariff > ruTariff
+                        );
+                      }).length
+                    }
                   </span>{" "}
                   заказов
                 </span>
