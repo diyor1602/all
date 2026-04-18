@@ -732,7 +732,7 @@ const DifferenceRu = () => {
                   {/* group header row */}
                   <tr style={{ background: "rgba(0,0,0,0.3)" }}>
                     <th
-                      colSpan={3}
+                      colSpan={4}
                       style={{
                         padding: "8px 14px",
                         color: "#475569",
@@ -824,7 +824,6 @@ const DifferenceRu = () => {
                         color: "#475569",
                         fontSize: 12,
                         textAlign: "left",
-                        borderLeft: "1px solid rgba(255,255,255,0.05)",
                       }}
                     >
                       <Th col="price" label="Цена" hint="заказа" />
@@ -974,7 +973,6 @@ const DifferenceRu = () => {
                         <td
                           style={{
                             padding: "12px 14px",
-                            borderLeft: "1px solid rgba(255,255,255,0.04)",
                           }}
                         >
                           {order.price ? (
