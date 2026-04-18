@@ -13,6 +13,7 @@ import {
   Pizza,
   Coins,
   Truck,
+  Earth,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -23,6 +24,7 @@ import QualityRatings from "./QualityRatings/QualityRatings";
 import Universals from "./Universals/Universals";
 import Moneys from "./Moneys/Moneys";
 import Shipments from "./Shipments/Shipments";
+import DifferenceRu from "./Difference/DifferenceRu";
 
 const Settings = () => {
   return (
@@ -36,6 +38,7 @@ const Settings = () => {
       <Route path="universals" element={<Universals />} />
       <Route path="moneys" element={<Moneys />} />
       <Route path="shipments" element={<Shipments />} />
+      <Route path="difference-ru" element={<DifferenceRu />} />
     </Routes>
   );
 };
@@ -113,6 +116,12 @@ const SettingsPage = () => {
       icon: Truck,
       link: "/ceo/settings/shipments",
       color: "bg-violet-500",
+    },
+    {
+      name: "Farq",
+      icon: Earth,
+      link: "/ceo/settings/difference-ru",
+      color: "bg-indigo-500",
     },
   ];
 
