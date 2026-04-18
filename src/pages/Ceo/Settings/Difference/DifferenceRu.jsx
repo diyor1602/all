@@ -192,7 +192,8 @@ const DifferenceRu = () => {
     // Filter for orders with all 3 tariffs: rasxod, uz, and ru
     // and where UZ tariff > RU tariff AND UZ tariff > Rasxod
     out = out.filter((item) => {
-      const rasxod = item.group_limit;
+      const order = item.order || {};
+      const rasxod = (Number(order.price) / 0.07) * 250 || 0;
       const uzTariff = item.submodels?.[0]?.tarification_sum?.uz?.summa;
       const ruTariff = item.submodels?.[0]?.tarification_sum?.ru?.summa;
 
@@ -238,14 +239,15 @@ const DifferenceRu = () => {
             case "price":
               return Number(o.price) || 0;
             case "group_limit":
-              return item.group_limit || 0;
+              return (Number(o.price) / 0.07) * 250 || 0;
             case "uz":
               return s.tarification_sum?.uz?.summa || 0;
             case "ru":
               return s.tarification_sum?.ru?.summa || 0;
             case "group_limit_diff":
               return (
-                (item.group_limit || 0) - (s.tarification_sum?.uz?.summa || 0)
+                ((Number(o.price) / 0.07) * 250 || 0) -
+                (s.tarification_sum?.uz?.summa || 0)
               );
             case "ru_uz_diff":
               return (
@@ -912,7 +914,9 @@ const DifferenceRu = () => {
                     const ruSum = sub.tarification_sum?.ru?.summa || 0;
                     const uzMin = (sub.tarification_sum?.uz?.seconds || 0) / 60;
                     const ruMin = (sub.tarification_sum?.ru?.seconds || 0) / 60;
-                    const ownMin = sub.submodel?.minute || 0;
+                    const ownMin = Number(order.price) / 0.07 || 0;
+                    const calculatedGroupLimit =
+                      (Number(order.price) / 0.07) * 250 || 0;
 
                     return (
                       <tr
@@ -1066,7 +1070,7 @@ const DifferenceRu = () => {
                               marginTop: 2,
                             }}
                           >
-                            {formatNumber(item.group_limit)}{" "}
+                            {formatNumber(calculatedGroupLimit)}{" "}
                             <span style={{ fontSize: 10 }}>UZS</span>
                           </div>
                         </td>
@@ -1138,12 +1142,11 @@ const DifferenceRu = () => {
                           }}
                         >
                           <DiffCell
-                            value={(item.group_limit || 0) - ruSum}
+                            value={calculatedGroupLimit - ruSum}
                             minutes={ownMin - ruMin}
                             percentage={
                               ruSum !== 0
-                                ? (((item.group_limit || 0) - ruSum) / ruSum) *
-                                  100
+                                ? ((calculatedGroupLimit - ruSum) / ruSum) * 100
                                 : 0
                             }
                           />
@@ -1157,12 +1160,11 @@ const DifferenceRu = () => {
                           }}
                         >
                           <DiffCell
-                            value={(item.group_limit || 0) - uzSum}
+                            value={calculatedGroupLimit - uzSum}
                             minutes={ownMin - uzMin}
                             percentage={
                               uzSum !== 0
-                                ? (((item.group_limit || 0) - uzSum) / uzSum) *
-                                  100
+                                ? ((calculatedGroupLimit - uzSum) / uzSum) * 100
                                 : 0
                             }
                           />
@@ -1226,7 +1228,8 @@ const DifferenceRu = () => {
                   <span style={{ color: "#94a3b8", fontWeight: 600 }}>
                     {
                       data.filter((item) => {
-                        const rasxod = item.group_limit;
+                        const order = item.order || {};
+                        const rasxod = (Number(order.price) / 0.07) * 250 || 0;
                         const uzTariff =
                           item.submodels?.[0]?.tarification_sum?.uz?.summa;
                         const ruTariff =
