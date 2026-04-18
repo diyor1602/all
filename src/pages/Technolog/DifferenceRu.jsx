@@ -217,24 +217,47 @@ const DifferenceRu = () => {
                         <span className="text-muted-foreground text-xs">-</span>
                       )}
                     </td>
-                    <td className="p-3">{formatNumber(item.group_limit)}</td>
                     <td className="p-3">
-                      {formatNumber(sub.tarification_sum?.uz?.summa)}
+                      {formatNumber(item.group_limit)} UZS <br />{" "}
+                      {formatNumber(sub?.submodel?.minute)} минут
                     </td>
                     <td className="p-3">
-                      {formatNumber(sub.tarification_sum?.ru?.summa)}
+                      {formatNumber(sub.tarification_sum?.uz?.summa)} UZS <br />
+                      {formatNumber(
+                        sub?.tarification_sum?.uz?.seconds / 60,
+                      )}{" "}
+                      минут
+                    </td>
+                    <td className="p-3">
+                      {formatNumber(sub.tarification_sum?.ru?.summa)} UZS <br />
+                      {formatNumber(
+                        sub?.tarification_sum?.ru?.seconds / 60,
+                      )}{" "}
+                      минут
                     </td>
                     <td className="p-3">
                       {formatNumber(
                         (item.group_limit || 0) -
                           (sub.tarification_sum?.uz?.summa || 0),
-                      )}
+                      )}{" "}
+                      UZS <br />
+                      {formatNumber(
+                        (sub?.submodel?.minute || 0) -
+                          (sub?.tarification_sum?.uz?.seconds / 60 || 0),
+                      )}{" "}
+                      минут
                     </td>
                     <td className="p-3">
                       {formatNumber(
                         (sub.tarification_sum?.ru?.summa || 0) -
                           (sub.tarification_sum?.uz?.summa || 0),
-                      )}
+                      )}{" "}
+                      UZS <br />
+                      {formatNumber(
+                        (sub?.tarification_sum?.ru?.seconds / 60 || 0) -
+                          (sub?.tarification_sum?.uz?.seconds / 60 || 0),
+                      )}{" "}
+                      минут
                     </td>
                   </tr>
                 );
