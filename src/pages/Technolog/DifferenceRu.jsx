@@ -82,11 +82,15 @@ const DifferenceRu = () => {
               return order.season_type || "";
             case "model":
               return sub.submodel?.model_name || "";
+            case "group_limit":
+              return item.group_limit || 0;
             case "uz":
               return sub.tarification_sum?.uz || 0;
             case "ru":
               return sub.tarification_sum?.ru || 0;
-            case "difference":
+            case "group_limit_diff":
+              return (item.group_limit || 0) - (sub.tarification_sum?.uz || 0);
+            case "ru_uz_diff":
               return (
                 (sub.tarification_sum?.ru || 0) -
                 (sub.tarification_sum?.uz || 0)
@@ -162,6 +166,12 @@ const DifferenceRu = () => {
                 </th>
                 <th
                   className="p-3 cursor-pointer"
+                  onClick={() => handleSort("group_limit")}
+                >
+                  Расход <ArrowUpDown size={14} className="inline ml-1" />
+                </th>
+                <th
+                  className="p-3 cursor-pointer"
                   onClick={() => handleSort("uz")}
                 >
                   UZ <ArrowUpDown size={14} className="inline ml-1" />
@@ -174,9 +184,15 @@ const DifferenceRu = () => {
                 </th>
                 <th
                   className="p-3 cursor-pointer"
-                  onClick={() => handleSort("difference")}
+                  onClick={() => handleSort("group_limit_diff")}
                 >
-                  Difference <ArrowUpDown size={14} className="inline ml-1" />
+                  Расход - UZ <ArrowUpDown size={14} className="inline ml-1" />
+                </th>
+                <th
+                  className="p-3 cursor-pointer"
+                  onClick={() => handleSort("ru_uz_diff")}
+                >
+                  RU - UZ <ArrowUpDown size={14} className="inline ml-1" />
                 </th>
               </tr>
             </thead>
@@ -208,11 +224,18 @@ const DifferenceRu = () => {
                       {sub.submodel?.model_name || "-"}{" "}
                       {sub.submodel?.submodel_name || ""}
                     </td>
+                    <td className="p-3">{formatNumber(item.group_limit)}</td>
                     <td className="p-3">
                       {formatNumber(sub.tarification_sum?.uz)}
                     </td>
                     <td className="p-3">
                       {formatNumber(sub.tarification_sum?.ru)}
+                    </td>
+                    <td className="p-3">
+                      {formatNumber(
+                        (item.group_limit || 0) -
+                          (sub.tarification_sum?.uz || 0),
+                      )}
                     </td>
                     <td className="p-3">
                       {formatNumber(
