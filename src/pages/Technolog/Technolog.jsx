@@ -10,22 +10,24 @@ import Nakladnoy from "./Nakladnoy";
 import Videos from "./Videos/Videos";
 import Employees from "./Employees/Employees";
 import ViewEmployees from "./Employees/ViewEmployees";
+import DifferenceRu from "./DifferenceRu";
 
 const Technolog = () => {
   return (
     <Routes>
+      <Route path="*" element={<Navigate to="/home" replace />} />
       <Route path="orders" element={<Orders />} />
       <Route path="orders/:id" element={<OrderView />} />
       <Route path="edit-spec/:id" element={<EditSpec />} />
       <Route path="edit-tarif/:id" element={<EditTarif />} />
       <Route path="new-spec/:id" element={<NewSpec />} />
-      <Route path="*" element={<Navigate to="/home" replace />} />
       <Route path="new-tarif/:id" element={<NewTarif />} />
       <Route path="machines" element={<Machines />} />
       <Route path="nakladnoy" element={<Nakladnoy />} />
       <Route path="videos/*" element={<Videos />} />
       <Route path="employees" element={<Employees />} />
       <Route path="employees/view/:id" element={<ViewEmployees />} />
+      <Route path="difference-ru" element={<DifferenceRu />} />
     </Routes>
   );
 };
