@@ -458,7 +458,12 @@ const OrderView = () => {
                 ...new Set(
                   order.order_model.sizes.map((size) => size.size_name),
                 ),
-              ].sort((a, b) => a.localeCompare(b));
+              ].sort((a, b) => {
+                // Extract the first number before the dash for numerical sorting
+                const aNum = parseInt(a.split("-")[0]);
+                const bNum = parseInt(b.split("-")[0]);
+                return aNum - bNum;
+              });
               const colors = [
                 ...new Set(
                   order.order_model.sizes.map((size) => size.color_name),
