@@ -26,7 +26,7 @@ const diffColor = (val) => {
   return "#94a3b8";
 };
 
-const DiffCell = ({ value, unit = "UZS", minutes }) => {
+const DiffCell = ({ value, unit = "UZS", minutes, percentage }) => {
   const color = diffColor(minutes);
   const Icon = minutes > 0 ? TrendingUp : minutes < 0 ? TrendingDown : Minus;
   return (
@@ -54,6 +54,19 @@ const DiffCell = ({ value, unit = "UZS", minutes }) => {
           }}
         >
           {formatNumber(value)} {unit}
+        </span>
+      )}
+      {percentage !== undefined && (
+        <span
+          style={{
+            color: diffColor(percentage),
+            fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace",
+            fontWeight: 500,
+          }}
+        >
+          ({percentage > 0 ? "+" : ""}
+          {percentage.toFixed(1)}%)
         </span>
       )}
     </div>
@@ -757,7 +770,7 @@ const DifferenceRu = () => {
                       Тарифы
                     </th>
                     <th
-                      colSpan={2}
+                      colSpan={3}
                       style={{
                         padding: "8px 14px",
                         color: "#22c55e",
@@ -849,9 +862,21 @@ const DifferenceRu = () => {
                       }}
                     >
                       <Th
+                        col="Прайс_ru_diff"
+                        label="Прайс-RU"
+                        hint="отклонение с %"
+                      />
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 14px",
+                        background: "rgba(34,197,94,0.02)",
+                      }}
+                    >
+                      <Th
                         col="group_limit_diff"
-                        label="Прайс − UZ"
-                        hint="отклонение"
+                        label="Прайс-UZ"
+                        hint="отклонение с %"
                       />
                     </th>
                     <th
@@ -863,7 +888,7 @@ const DifferenceRu = () => {
                       <Th
                         col="ru_uz_diff"
                         label="RU − UZ"
-                        hint="разрыв тарифов"
+                        hint="разрыв тарифов с %"
                       />
                     </th>
                   </tr>
@@ -1064,7 +1089,7 @@ const DifferenceRu = () => {
                           </div>
                         </td>
 
-                        {/* Прайс − RU */}
+                        {/* Прайс - RU */}
                         <td
                           style={{
                             padding: "12px 14px",
@@ -1073,8 +1098,33 @@ const DifferenceRu = () => {
                           }}
                         >
                           <DiffCell
+                            value={(item.group_limit || 0) - ruSum}
+                            minutes={ownMin - ruMin}
+                            percentage={
+                              ruSum !== 0
+                                ? (((item.group_limit || 0) - ruSum) / ruSum) *
+                                  100
+                                : 0
+                            }
+                          />
+                        </td>
+
+                        {/* Прайс − UZ */}
+                        <td
+                          style={{
+                            padding: "12px 14px",
+                            background: "rgba(34,197,94,0.015)",
+                          }}
+                        >
+                          <DiffCell
                             value={(item.group_limit || 0) - uzSum}
                             minutes={ownMin - uzMin}
+                            percentage={
+                              uzSum !== 0
+                                ? (((item.group_limit || 0) - uzSum) / uzSum) *
+                                  100
+                                : 0
+                            }
                           />
                         </td>
 
@@ -1088,6 +1138,9 @@ const DifferenceRu = () => {
                           <DiffCell
                             value={ruSum - uzSum}
                             minutes={ruMin - uzMin}
+                            percentage={
+                              uzSum !== 0 ? ((ruSum - uzSum) / uzSum) * 100 : 0
+                            }
                           />
                         </td>
                       </tr>
