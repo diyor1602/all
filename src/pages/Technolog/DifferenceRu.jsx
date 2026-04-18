@@ -83,15 +83,17 @@ const DifferenceRu = () => {
             case "group_limit":
               return item.group_limit || 0;
             case "uz":
-              return sub.tarification_sum?.uz || 0;
+              return sub.tarification_sum?.uz?.summa || 0;
             case "ru":
-              return sub.tarification_sum?.ru || 0;
+              return sub.tarification_sum?.ru?.summa || 0;
             case "group_limit_diff":
-              return (item.group_limit || 0) - (sub.tarification_sum?.uz || 0);
+              return (
+                (item.group_limit || 0) - (sub.tarification_sum?.uz?.summa || 0)
+              );
             case "ru_uz_diff":
               return (
-                (sub.tarification_sum?.ru || 0) -
-                (sub.tarification_sum?.uz || 0)
+                (sub.tarification_sum?.ru?.summa || 0) -
+                (sub.tarification_sum?.uz?.summa || 0)
               );
             default:
               return "";
@@ -217,21 +219,21 @@ const DifferenceRu = () => {
                     </td>
                     <td className="p-3">{formatNumber(item.group_limit)}</td>
                     <td className="p-3">
-                      {formatNumber(sub.tarification_sum?.uz)}
+                      {formatNumber(sub.tarification_sum?.uz?.summa)}
                     </td>
                     <td className="p-3">
-                      {formatNumber(sub.tarification_sum?.ru)}
+                      {formatNumber(sub.tarification_sum?.ru?.summa)}
                     </td>
                     <td className="p-3">
                       {formatNumber(
                         (item.group_limit || 0) -
-                          (sub.tarification_sum?.uz || 0),
+                          (sub.tarification_sum?.uz?.summa || 0),
                       )}
                     </td>
                     <td className="p-3">
                       {formatNumber(
-                        (sub.tarification_sum?.ru || 0) -
-                          (sub.tarification_sum?.uz || 0),
+                        (sub.tarification_sum?.ru?.summa || 0) -
+                          (sub.tarification_sum?.uz?.summa || 0),
                       )}
                     </td>
                   </tr>
