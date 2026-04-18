@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
+import ModelImages from "@/components/ModelImages";
 
 /* ─── tiny helpers ─────────────────────────────────────────── */
 const diffColor = (val) => {
@@ -714,7 +715,7 @@ const DifferenceRu = () => {
                   {/* group header row */}
                   <tr style={{ background: "rgba(0,0,0,0.3)" }}>
                     <th
-                      colSpan={2}
+                      colSpan={3}
                       style={{
                         padding: "8px 14px",
                         color: "#475569",
@@ -789,6 +790,17 @@ const DifferenceRu = () => {
                       }}
                     >
                       №
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 14px",
+                        color: "#475569",
+                        fontSize: 12,
+                        textAlign: "left",
+                        width: 60,
+                      }}
+                    >
+                      Изображение
                     </th>
                     <Th col="model" label="Модель" hint="модель · подмодель" />
                     <th
@@ -884,6 +896,14 @@ const DifferenceRu = () => {
                           }}
                         >
                           {String(idx + 1).padStart(2, "0")}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 14px",
+                            textAlign: "center",
+                          }}
+                        >
+                          <ModelImages modelCode={sub.submodel?.model_name} />
                         </td>
 
                         {/* model */}
