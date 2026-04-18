@@ -373,7 +373,7 @@ const DifferenceRu = () => {
                 </h1>
               </div>
               <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>
-                UZ · RU · Расход — сводка по заказам и моделям
+                UZ · RU · Прайс — сводка по заказам и моделям
               </p>
             </div>
 
@@ -811,11 +811,7 @@ const DifferenceRu = () => {
                         background: "rgba(245,158,11,0.02)",
                       }}
                     >
-                      <Th
-                        col="group_limit"
-                        label="Расход"
-                        hint="лимит группы"
-                      />
+                      <Th col="group_limit" label="Прайс" />
                     </th>
                     <th
                       style={{
@@ -842,7 +838,7 @@ const DifferenceRu = () => {
                     >
                       <Th
                         col="group_limit_diff"
-                        label="Расход − UZ"
+                        label="Прайс − UZ"
                         hint="отклонение"
                       />
                     </th>
@@ -960,7 +956,7 @@ const DifferenceRu = () => {
                           )}
                         </td>
 
-                        {/* расход */}
+                        {/* Прайс */}
                         <td
                           style={{
                             padding: "12px 14px",
@@ -1048,7 +1044,7 @@ const DifferenceRu = () => {
                           </div>
                         </td>
 
-                        {/* Расход − RU */}
+                        {/* Прайс − RU */}
                         <td
                           style={{
                             padding: "12px 14px",
