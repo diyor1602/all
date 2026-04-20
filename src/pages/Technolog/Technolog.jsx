@@ -11,6 +11,7 @@ import Videos from "./Videos/Videos";
 import Employees from "./Employees/Employees";
 import ViewEmployees from "./Employees/ViewEmployees";
 import DifferenceRu from "./DifferenceRu";
+import RuDuplicates from "./RuDuplicates";
 
 const Technolog = () => {
   return (
@@ -28,6 +29,7 @@ const Technolog = () => {
       <Route path="employees" element={<Employees />} />
       <Route path="employees/view/:id" element={<ViewEmployees />} />
       <Route path="difference-ru" element={<DifferenceRu />} />
+      <Route path="ru-duplicates" element={<RuDuplicates />} />
     </Routes>
   );
 };

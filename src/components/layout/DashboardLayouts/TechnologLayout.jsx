@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Box, Earth, Sprout, Users } from "lucide-react";
+import { Box, Earth, Sprout, Users, FileText } from "lucide-react";
 
 const navigation = [
   {
@@ -18,6 +18,12 @@ const navigation = [
     name: "Farq",
     href: "/technologist/difference-ru",
     icon: Earth,
+    onMobile: false,
+  },
+  {
+    name: "RU dublikatlar",
+    href: "/technologist/ru-duplicates",
+    icon: FileText,
     onMobile: false,
   },
   {
