@@ -117,9 +117,11 @@ const RuDuplicates = () => {
                         key={item.id}
                         className={`flex items-center justify-between p-3 rounded-xl border 
                       ${
-                        isSame
-                          ? "bg-green-50 border-green-200"
-                          : "bg-red-50 border-red-200"
+                        item.model_name === "7з1123"
+                          ? "bg-yellow-100 border-yellow-300"
+                          : isSame
+                            ? "bg-green-50 border-green-200"
+                            : "bg-red-50 border-red-200"
                       }`}
                       >
                         <div className="flex flex-col">
