@@ -15,7 +15,7 @@ const RuDuplicates = () => {
     setLoading(true);
     try {
       const response = await api.get("technologist/tarifications/duplicate");
-      setData(response.data?.data);
+      setData(response.data);
     } catch (error) {
       toast({
         title: "Ошибка",
@@ -129,6 +129,11 @@ const RuDuplicates = () => {
                           <span className="font-medium text-lg">
                             {item.second}
                           </span>
+                          {item.model_name && (
+                            <span className="text-sm text-gray-600">
+                              Модель: {item.model_name}
+                            </span>
+                          )}
                         </div>
 
                         <div
