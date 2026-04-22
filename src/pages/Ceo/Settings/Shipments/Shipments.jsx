@@ -19,14 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import getDollarRate from "@/hooks/getDollarRate";
 import ModelImages from "@/components/ModelImages";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 const Shipments = () => {
   const { toast } = useToast();
