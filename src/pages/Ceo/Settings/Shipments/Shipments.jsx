@@ -12,6 +12,8 @@ import {
   ArrowUpRight,
   DollarSign,
   TrendingDown,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -89,6 +91,8 @@ const Shipments = () => {
     costs_breakdown: {},
     monthly_company_summary: {},
     summary: {},
+    unshipped_orders: [],
+    unshipped_orders_summary: {},
   });
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(
@@ -480,6 +484,183 @@ const Shipments = () => {
             ))}
           </div>
         </div>
+
+        {/* Unshipped Orders Section */}
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5 text-orange-500" />
+              Yuborilmagan Buyurtmalar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Summary Metrics */}
+            {data?.unshipped_orders_summary && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <p className="text-xs font-medium text-orange-600 uppercase tracking-wider">
+                    Buyurtmalar Soni
+                  </p>
+                  <p className="text-2xl font-bold text-orange-900 mt-1">
+                    {formatNumber(data.unshipped_orders_summary.orders_count)}
+                  </p>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-xs font-medium text-blue-600 uppercase tracking-wider">
+                    Ishlab Chiqarilgan
+                  </p>
+                  <p className="text-2xl font-bold text-blue-900 mt-1">
+                    {formatNumber(
+                      data.unshipped_orders_summary.total_produced_qty,
+                    )}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    /{" "}
+                    {formatNumber(
+                      data.unshipped_orders_summary.total_planned_qty,
+                    )}{" "}
+                    reja
+                  </p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <p className="text-xs font-medium text-green-600 uppercase tracking-wider">
+                    Qiymat (USD)
+                  </p>
+                  <p className="text-2xl font-bold text-green-900 mt-1">
+                    $
+                    {formatNumber(
+                      data.unshipped_orders_summary.total_value_usd,
+                    )}
+                  </p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <p className="text-xs font-medium text-purple-600 uppercase tracking-wider">
+                    Qiymat (UZS)
+                  </p>
+                  <p className="text-2xl font-bold text-purple-900 mt-1">
+                    {formatNumber(
+                      data.unshipped_orders_summary.total_value_uzs,
+                    )}{" "}
+                    UZS
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Orders List */}
+            {data?.unshipped_orders?.length > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-4">
+                  <AlertCircle className="w-4 h-4 text-orange-500" />
+                  <p className="text-sm font-medium text-gray-600">
+                    Yuborilishi kutilayotgan buyurtmalar ro'yxati
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">
+                          Buyurtma
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">
+                          Model
+                        </th>
+                        <th className="text-center py-3 px-4 font-medium text-gray-700">
+                          Holati
+                        </th>
+                        <th className="text-center py-3 px-4 font-medium text-gray-700">
+                          Reja/Chiqqan
+                        </th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-700">
+                          Narx (USD)
+                        </th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-700">
+                          Qiymat (UZS)
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.unshipped_orders.map((order, index) => (
+                        <tr
+                          key={order.order_id}
+                          className="border-b border-gray-50 hover:bg-gray-50"
+                        >
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-900">
+                                {order.order_name}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                #{order.order_id}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-700">
+                                {order.model_name}
+                              </span>
+                              <ModelImages modelCode={order.model_name} />
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge
+                              variant={
+                                order.order_status === "checking"
+                                  ? "default"
+                                  : "outline"
+                              }
+                              className={
+                                order.order_status === "checking"
+                                  ? "bg-blue-500 hover:bg-blue-600"
+                                  : "bg-orange-100 text-orange-800 hover:bg-orange-200"
+                              }
+                            >
+                              {order.order_status === "checking"
+                                ? "Tekshirilmoqda"
+                                : "Tikilgan"}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <span className="font-medium text-gray-900">
+                                {formatNumber(order.produced_qty)}
+                              </span>
+                              <span className="text-gray-400">/</span>
+                              <span className="text-gray-600">
+                                {formatNumber(order.planned_qty)}
+                              </span>
+                            </div>
+                            {order.produced_qty < order.planned_qty && (
+                              <div className="text-xs text-orange-600 mt-1">
+                                {formatNumber(
+                                  order.planned_qty - order.produced_qty,
+                                )}{" "}
+                                qolgan
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-right font-medium">
+                            ${formatNumber(order.price_usd)}
+                          </td>
+                          <td className="py-3 px-4 text-right font-medium text-green-600">
+                            {formatNumber(order.value_uzs)} UZS
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">Yuborilmagan buyurtmalar yo'q</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
