@@ -29,48 +29,86 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const PIE_COLORS = [
-  "#0088FE", "#00C49F", "#FFBB28", "#FF8042",
-  "#8884D8", "#82CA9D", "#FFC658", "#FF7C7C",
-  "#8DD1E1", "#D084D0",
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884D8",
+  "#82CA9D",
+  "#FFC658",
+  "#FF7C7C",
+  "#8DD1E1",
+  "#D084D0",
 ];
 
 // Gradient strings for KPI tiles — written as full static strings for Tailwind JIT
 const METRIC_GRADIENTS = {
-  green:   "from-green-500 to-emerald-600",
-  red:     "from-red-500 to-rose-600",
+  green: "from-green-500 to-emerald-600",
+  red: "from-red-500 to-rose-600",
   emerald: "from-emerald-400 to-teal-600",
-  blue:    "from-blue-500 to-indigo-600",
-  amber:   "from-amber-400 to-orange-500",
-  indigo:  "from-indigo-500 to-violet-600",
+  blue: "from-blue-500 to-indigo-600",
+  amber: "from-amber-400 to-orange-500",
+  indigo: "from-indigo-500 to-violet-600",
 };
 
 // One accent palette per truck — cycles if there are more than 8 trucks
 const TRUCK_PALETTES = [
-  { border: "border-l-blue-500",    headerBg: "from-blue-50 to-sky-50",       dot: "bg-blue-500"    },
-  { border: "border-l-violet-500",  headerBg: "from-violet-50 to-purple-50",  dot: "bg-violet-500"  },
-  { border: "border-l-emerald-500", headerBg: "from-emerald-50 to-teal-50",   dot: "bg-emerald-500" },
-  { border: "border-l-amber-500",   headerBg: "from-amber-50 to-yellow-50",   dot: "bg-amber-500"   },
-  { border: "border-l-rose-500",    headerBg: "from-rose-50 to-pink-50",      dot: "bg-rose-500"    },
-  { border: "border-l-cyan-500",    headerBg: "from-cyan-50 to-sky-50",       dot: "bg-cyan-500"    },
-  { border: "border-l-orange-500",  headerBg: "from-orange-50 to-amber-50",   dot: "bg-orange-500"  },
-  { border: "border-l-indigo-500",  headerBg: "from-indigo-50 to-blue-50",    dot: "bg-indigo-500"  },
+  {
+    border: "border-l-blue-500",
+    headerBg: "from-blue-50 to-sky-50",
+    dot: "bg-blue-500",
+  },
+  {
+    border: "border-l-violet-500",
+    headerBg: "from-violet-50 to-purple-50",
+    dot: "bg-violet-500",
+  },
+  {
+    border: "border-l-emerald-500",
+    headerBg: "from-emerald-50 to-teal-50",
+    dot: "bg-emerald-500",
+  },
+  {
+    border: "border-l-amber-500",
+    headerBg: "from-amber-50 to-yellow-50",
+    dot: "bg-amber-500",
+  },
+  {
+    border: "border-l-rose-500",
+    headerBg: "from-rose-50 to-pink-50",
+    dot: "bg-rose-500",
+  },
+  {
+    border: "border-l-cyan-500",
+    headerBg: "from-cyan-50 to-sky-50",
+    dot: "bg-cyan-500",
+  },
+  {
+    border: "border-l-orange-500",
+    headerBg: "from-orange-50 to-amber-50",
+    dot: "bg-orange-500",
+  },
+  {
+    border: "border-l-indigo-500",
+    headerBg: "from-indigo-50 to-blue-50",
+    dot: "bg-indigo-500",
+  },
 ];
 
 const COST_LABELS = {
-  bonus:                   "Bonus",
-  remainder:               "Qolgan",
-  tarification:            "Tariflashtirish",
-  allocatedTransport:      "Transport",
-  allocatedAup:            "AUP",
-  allocatedIsNotAup:       "AUP bo'lmagan",
-  daily_payments:          "Kunlik to'lovlar",
-  warehouse_salary:        "Ombor maoshi",
-  assistant_salary:        "Yordamchi maoshi",
-  cutting_salary:          "Kesish maoshi",
-  master_salary:           "Usta maoshi",
+  bonus: "Bonus",
+  remainder: "Tikuv uchun",
+  allocatedTransport: "Transport",
+  allocatedAup: "AUP",
+  allocatedIsNotAup: "AUP bo'lmagan",
+  daily_payments: "Kunlik to'lovlar",
+  warehouse_salary: "Ombor maoshi",
+  assistant_salary: "Yordamchi maoshi",
+  cutting_salary: "Kesish maoshi",
+  master_salary: "Usta maoshi",
   allocatedMonthlyExpense: "Oylik xarajatlar",
   incomePercentageExpense: "Daromad foizi xarajatlari",
-  amortizationExpense:     "Amortizatsiya xarajatlari",
+  amortizationExpense: "Amortizatsiya xarajatlari",
 };
 
 // ── Pure helpers ───────────────────────────────────────────────────────────────
@@ -88,7 +126,9 @@ const CustomTooltip = ({ active, payload }) => {
   return (
     <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
       <p className="text-sm font-semibold text-gray-800">{payload[0].name}</p>
-      <p className="text-sm text-gray-500 mt-0.5">{formatNumber(payload[0].value)} UZS</p>
+      <p className="text-sm text-gray-500 mt-0.5">
+        {formatNumber(payload[0].value)} UZS
+      </p>
     </div>
   );
 };
@@ -97,14 +137,20 @@ const CustomTooltip = ({ active, payload }) => {
 const MetricTile = ({ icon: Icon, title, value, subtext, color = "blue" }) => {
   const grad = METRIC_GRADIENTS[color] ?? METRIC_GRADIENTS.blue;
   return (
-    <div className={`bg-gradient-to-br ${grad} rounded-2xl p-5 text-white relative overflow-hidden shadow-md hover:shadow-lg transition-shadow`}>
+    <div
+      className={`bg-gradient-to-br ${grad} rounded-2xl p-5 text-white relative overflow-hidden shadow-md hover:shadow-lg transition-shadow`}
+    >
       {/* decorative circles */}
       <div className="absolute -right-5 -top-5 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
       <div className="absolute right-4 -bottom-6 w-16 h-16 rounded-full bg-white/5 pointer-events-none" />
       <div className="relative flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-white/70">{title}</p>
-          <h3 className="text-xl font-black mt-1.5 leading-snug break-words">{value}</h3>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-white/70">
+            {title}
+          </p>
+          <h3 className="text-xl font-black mt-1.5 leading-snug break-words">
+            {value}
+          </h3>
           {subtext && <p className="text-xs text-white/65 mt-1">{subtext}</p>}
         </div>
         <div className="p-2.5 rounded-xl bg-white/20 flex-shrink-0">
@@ -116,11 +162,23 @@ const MetricTile = ({ icon: Icon, title, value, subtext, color = "blue" }) => {
 };
 
 const RowItem = ({ label, value, subValue, isTotal }) => (
-  <div className={`flex justify-between items-center py-2.5 ${isTotal ? "pt-3 border-t border-gray-200" : "border-b border-gray-100"}`}>
-    <span className={`text-sm ${isTotal ? "font-bold text-gray-900" : "text-gray-500"}`}>{label}</span>
+  <div
+    className={`flex justify-between items-center py-2.5 ${isTotal ? "pt-3 border-t border-gray-200" : "border-b border-gray-100"}`}
+  >
+    <span
+      className={`text-sm ${isTotal ? "font-bold text-gray-900" : "text-gray-500"}`}
+    >
+      {label}
+    </span>
     <div className="text-right">
-      <span className={`text-sm font-semibold ${isTotal ? "text-primary" : "text-gray-900"}`}>{value}</span>
-      {subValue && <div className="text-[10px] text-gray-400 mt-0.5">{subValue}</div>}
+      <span
+        className={`text-sm font-semibold ${isTotal ? "text-primary" : "text-gray-900"}`}
+      >
+        {value}
+      </span>
+      {subValue && (
+        <div className="text-[10px] text-gray-400 mt-0.5">{subValue}</div>
+      )}
     </div>
   </div>
 );
@@ -135,9 +193,19 @@ const CostsPieChart = ({ data: chartData }) => {
       </p>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
-          <Pie data={chartData} cx="50%" cy="50%" labelLine={false} outerRadius={85} dataKey="value">
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            outerRadius={85}
+            dataKey="value"
+          >
             {chartData.map((_, idx) => (
-              <Cell key={`cell-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+              <Cell
+                key={`cell-${idx}`}
+                fill={PIE_COLORS[idx % PIE_COLORS.length]}
+              />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
@@ -154,7 +222,9 @@ const CostsPieChart = ({ data: chartData }) => {
               <span className="text-gray-600">{item.name}</span>
             </div>
             <div className="flex items-center gap-2 ml-4">
-              <span className="font-medium text-gray-900 tabular-nums">{formatNumber(item.value)} UZS</span>
+              <span className="font-medium text-gray-900 tabular-nums">
+                {formatNumber(item.value)} UZS
+              </span>
               <span className="text-gray-400 tabular-nums w-10 text-right">
                 {((item.value / total) * 100).toFixed(1)}%
               </span>
@@ -163,7 +233,9 @@ const CostsPieChart = ({ data: chartData }) => {
         ))}
         <div className="pt-2 mt-1 border-t border-gray-200 flex justify-between text-xs font-bold">
           <span className="text-gray-700">Jami:</span>
-          <span className="text-primary tabular-nums">{formatNumber(total)} UZS</span>
+          <span className="text-primary tabular-nums">
+            {formatNumber(total)} UZS
+          </span>
         </div>
       </div>
     </div>
@@ -179,22 +251,31 @@ const OrderCard = ({ order }) => {
   const months = order.production_months ?? [];
 
   return (
-    <div className={`border rounded-xl overflow-hidden ${isLoss ? "border-red-200" : "border-gray-100"}`}>
+    <div
+      className={`border rounded-xl overflow-hidden ${isLoss ? "border-red-200" : "border-gray-100"}`}
+    >
       {/* Order header */}
-      <div className={`flex items-center gap-3 px-4 py-3 ${isLoss ? "bg-red-50" : "bg-gray-50"}`}>
+      <div
+        className={`flex items-center gap-3 px-4 py-3 ${isLoss ? "bg-red-50" : "bg-gray-50"}`}
+      >
         <ModelImages modelCode={order.model_name} />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm truncate">{order.order_name}</p>
+          <p className="font-semibold text-gray-900 text-sm truncate">
+            {order.order_name}
+          </p>
           <p className="text-xs text-gray-400">{order.model_name}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {isLoss && (
             <Badge className="bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold px-2 hover:bg-red-100">
-              <ArrowDownRight className="w-3 h-3 mr-0.5" />Zarar
+              <ArrowDownRight className="w-3 h-3 mr-0.5" />
+              Zarar
             </Badge>
           )}
           <div className="text-right">
-            <p className="text-[10px] font-bold text-gray-400 uppercase">Yuborilgan</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase">
+              Yuborilgan
+            </p>
             <p className="font-semibold text-gray-800 text-sm tabular-nums">
               {formatNumber(order.shipped_qty)} dona
             </p>
@@ -205,39 +286,63 @@ const OrderCard = ({ order }) => {
       {/* 4-column metrics grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-gray-100">
         <div className="bg-white px-3 py-2.5">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Tushum</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">
+            Tushum
+          </p>
           <p className="text-sm font-bold text-gray-900 tabular-nums mt-0.5">
             {formatNumber(order.revenue_uzs)}
           </p>
           <p className="text-[10px] text-gray-400">UZS</p>
         </div>
         <div className="bg-white px-3 py-2.5">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Xarajat</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+            Xarajat
+          </p>
           <p className="text-sm font-bold text-gray-900 tabular-nums mt-0.5">
             {formatNumber(order.allocated_cost_uzs)}
           </p>
           <p className="text-[10px] text-gray-400">UZS</p>
         </div>
-        <div className={`px-3 py-2.5 ${isLoss ? "bg-red-50" : "bg-emerald-50"}`}>
-          <p className={`text-[10px] font-bold uppercase tracking-wide ${isLoss ? "text-red-600" : "text-emerald-600"}`}>
+        <div
+          className={`px-3 py-2.5 ${isLoss ? "bg-red-50" : "bg-emerald-50"}`}
+        >
+          <p
+            className={`text-[10px] font-bold uppercase tracking-wide ${isLoss ? "text-red-600" : "text-emerald-600"}`}
+          >
             {isLoss ? "Zarar" : "Foyda"}
           </p>
-          <p className={`text-sm font-bold tabular-nums mt-0.5 ${isLoss ? "text-red-700" : "text-emerald-700"}`}>
-            {isLoss ? "−" : "+"}{formatNumber(Math.abs(profitUzs))}
+          <p
+            className={`text-sm font-bold tabular-nums mt-0.5 ${isLoss ? "text-red-700" : "text-emerald-700"}`}
+          >
+            {isLoss ? "−" : "+"}
+            {formatNumber(Math.abs(profitUzs))}
           </p>
-          <p className={`text-[10px] ${isLoss ? "text-red-400" : "text-emerald-400"}`}>UZS</p>
+          <p
+            className={`text-[10px] ${isLoss ? "text-red-400" : "text-emerald-400"}`}
+          >
+            UZS
+          </p>
         </div>
         <div className={`px-3 py-2.5 ${isLoss ? "bg-red-50/60" : "bg-white"}`}>
-          <p className={`text-[10px] font-bold uppercase tracking-wide ${isLoss ? "text-red-500" : "text-blue-500"}`}>
+          <p
+            className={`text-[10px] font-bold uppercase tracking-wide ${isLoss ? "text-red-500" : "text-blue-500"}`}
+          >
             Margin
           </p>
-          <p className={`text-sm font-bold tabular-nums mt-0.5 ${isLoss ? "text-red-700" : "text-blue-700"}`}>
-            {marginPct > 0 ? "+" : ""}{marginPct.toFixed(2)}%
+          <p
+            className={`text-sm font-bold tabular-nums mt-0.5 ${isLoss ? "text-red-700" : "text-blue-700"}`}
+          >
+            {marginPct > 0 ? "+" : ""}
+            {marginPct.toFixed(2)}%
           </p>
-          <div className={`text-[10px] flex items-center gap-0.5 mt-0.5 ${isLoss ? "text-red-400" : "text-blue-400"}`}>
-            {isLoss
-              ? <ArrowDownRight className="w-2.5 h-2.5" />
-              : <ArrowUpRight className="w-2.5 h-2.5" />}
+          <div
+            className={`text-[10px] flex items-center gap-0.5 mt-0.5 ${isLoss ? "text-red-400" : "text-blue-400"}`}
+          >
+            {isLoss ? (
+              <ArrowDownRight className="w-2.5 h-2.5" />
+            ) : (
+              <ArrowUpRight className="w-2.5 h-2.5" />
+            )}
             {order.ship_ratio_of_order_percent}% yuborilgan
           </div>
         </div>
@@ -247,7 +352,9 @@ const OrderCard = ({ order }) => {
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 bg-white border-t border-gray-100 px-4 py-2.5">
         <div className="flex items-center gap-1.5 text-xs text-gray-500">
           <DollarSign className="w-3 h-3 text-gray-400" />
-          <span className="tabular-nums font-medium">${formatNumber(order.price_usd)}</span>
+          <span className="tabular-nums font-medium">
+            ${formatNumber(order.price_usd)}
+          </span>
           <span className="text-gray-300">·</span>
           <span className="text-gray-400 tabular-nums">
             {formatNumber(order.exchange_rate)} UZS/USD
@@ -258,12 +365,18 @@ const OrderCard = ({ order }) => {
             <Calendar className="w-3 h-3 text-gray-400" />
             {months.map((m) => {
               const [y, mo] = m.split("-");
-              const label = new Date(Number(y), Number(mo) - 1).toLocaleString("uz-UZ", {
-                month: "short",
-                year: "2-digit",
-              });
+              const label = new Date(Number(y), Number(mo) - 1).toLocaleString(
+                "uz-UZ",
+                {
+                  month: "short",
+                  year: "2-digit",
+                },
+              );
               return (
-                <span key={m} className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                <span
+                  key={m}
+                  className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                >
                   {label}
                 </span>
               );
@@ -305,7 +418,9 @@ const TruckCard = ({ truck, index, isOpen, onToggle }) => {
         className={`w-full bg-gradient-to-r ${palette.headerBg} px-5 py-4 flex items-center justify-between gap-3 text-left`}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${palette.dot}`} />
+          <div
+            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${palette.dot}`}
+          />
           <span className="font-mono font-bold text-lg tracking-wide text-gray-800">
             {truck.number}
           </span>
@@ -324,24 +439,35 @@ const TruckCard = ({ truck, index, isOpen, onToggle }) => {
         <div className="flex items-center gap-4 flex-shrink-0">
           {/* Stats visible on sm+ */}
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] uppercase font-bold text-gray-400">Miqdor</p>
+            <p className="text-[10px] uppercase font-bold text-gray-400">
+              Miqdor
+            </p>
             <p className="text-sm font-bold text-gray-800 tabular-nums">
               {formatNumber(truck.shipped_qty)} dona
             </p>
           </div>
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] uppercase font-bold text-emerald-600">Tushum</p>
+            <p className="text-[10px] uppercase font-bold text-emerald-600">
+              Tushum
+            </p>
             <p className="text-sm font-bold text-emerald-700 tabular-nums">
               {formatNumber(truck.revenue_uzs)} UZS
             </p>
           </div>
           {/* Truck-level profit/loss badge */}
-          <div className={`hidden sm:flex flex-col items-end px-3 py-1.5 rounded-lg ${truckIsLoss ? "bg-red-100" : "bg-emerald-100"}`}>
-            <p className={`text-[10px] uppercase font-bold ${truckIsLoss ? "text-red-600" : "text-emerald-600"}`}>
+          <div
+            className={`hidden sm:flex flex-col items-end px-3 py-1.5 rounded-lg ${truckIsLoss ? "bg-red-100" : "bg-emerald-100"}`}
+          >
+            <p
+              className={`text-[10px] uppercase font-bold ${truckIsLoss ? "text-red-600" : "text-emerald-600"}`}
+            >
               {truckIsLoss ? "Zarar" : "Foyda"}
             </p>
-            <p className={`text-sm font-bold tabular-nums ${truckIsLoss ? "text-red-700" : "text-emerald-700"}`}>
-              {truckIsLoss ? "−" : "+"}{formatNumber(Math.abs(truckProfit))}
+            <p
+              className={`text-sm font-bold tabular-nums ${truckIsLoss ? "text-red-700" : "text-emerald-700"}`}
+            >
+              {truckIsLoss ? "−" : "+"}
+              {formatNumber(Math.abs(truckProfit))}
             </p>
           </div>
           <ChevronDown
@@ -359,23 +485,34 @@ const TruckCard = ({ truck, index, isOpen, onToggle }) => {
             {/* Mobile summary (hidden on sm+) */}
             <div className="grid grid-cols-3 gap-2 sm:hidden">
               <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Miqdor</p>
+                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  Miqdor
+                </p>
                 <p className="font-semibold text-gray-900 text-sm tabular-nums">
                   {formatNumber(truck.shipped_qty)} dona
                 </p>
               </div>
               <div className="bg-emerald-50 p-3 rounded-lg">
-                <p className="text-[10px] uppercase font-bold text-emerald-600 mb-1">Tushum</p>
+                <p className="text-[10px] uppercase font-bold text-emerald-600 mb-1">
+                  Tushum
+                </p>
                 <p className="font-semibold text-emerald-700 text-sm tabular-nums">
                   {formatNumber(truck.revenue_uzs)}
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${truckIsLoss ? "bg-red-50" : "bg-emerald-50"}`}>
-                <p className={`text-[10px] uppercase font-bold mb-1 ${truckIsLoss ? "text-red-600" : "text-emerald-600"}`}>
+              <div
+                className={`p-3 rounded-lg ${truckIsLoss ? "bg-red-50" : "bg-emerald-50"}`}
+              >
+                <p
+                  className={`text-[10px] uppercase font-bold mb-1 ${truckIsLoss ? "text-red-600" : "text-emerald-600"}`}
+                >
                   {truckIsLoss ? "Zarar" : "Foyda"}
                 </p>
-                <p className={`font-semibold text-sm tabular-nums ${truckIsLoss ? "text-red-700" : "text-emerald-700"}`}>
-                  {truckIsLoss ? "−" : "+"}{formatNumber(Math.abs(truckProfit))}
+                <p
+                  className={`font-semibold text-sm tabular-nums ${truckIsLoss ? "text-red-700" : "text-emerald-700"}`}
+                >
+                  {truckIsLoss ? "−" : "+"}
+                  {formatNumber(Math.abs(truckProfit))}
                 </p>
               </div>
             </div>
@@ -442,7 +579,9 @@ const Shipments = () => {
     }
   };
 
-  useEffect(() => { getData(); }, [selectedMonth]);
+  useEffect(() => {
+    getData();
+  }, [selectedMonth]);
 
   const toggleTruck = (index) => {
     setOpenTrucks((prev) => {
@@ -453,36 +592,39 @@ const Shipments = () => {
   };
 
   // Derived values with safe fallbacks
-  const cb  = data?.costs_breakdown         ?? {};
-  const mcs = data?.monthly_company_summary  ?? {};
+  const cb = data?.costs_breakdown ?? {};
+  const mcs = data?.monthly_company_summary ?? {};
 
   const totalSalary =
     (Number(cb.attendance_salary_total) || 0) +
-    (Number(cb.money_logs_total)        || 0) +
-    (Number(cb.season_salary_total)     || 0) +
-    (Number(cb.tarification_total)      || 0);
+    (Number(cb.money_logs_total) || 0) +
+    (Number(cb.season_salary_total) || 0) +
+    (Number(cb.tarification_total) || 0);
 
-  const grandTotalUzs  = Number(cb.factory_grand_total_uzs) || 0;
-  const totalEarnedUzs = Number(mcs.total_earned_uzs)       || 0;
-  const outputQty      = Number(mcs.total_output_quantity)   || 0;
-  const unitCost       = outputQty > 0 ? grandTotalUzs / outputQty : 0;
+  const grandTotalUzs = Number(cb.factory_grand_total_uzs) || 0;
+  const totalEarnedUzs = Number(mcs.total_earned_uzs) || 0;
+  const outputQty = Number(mcs.total_output_quantity) || 0;
+  const unitCost = outputQty > 0 ? grandTotalUzs / outputQty : 0;
 
   if (loading) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center gap-4">
         <Loader2 className="text-primary animate-spin" size={48} />
-        <p className="text-muted-foreground animate-pulse">Ma'lumotlar yuklanmoqda...</p>
+        <p className="text-muted-foreground animate-pulse">
+          Ma'lumotlar yuklanmoqda...
+        </p>
       </div>
     );
   }
 
   return (
     <div className="mx-auto space-y-8">
-
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Hisobot</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+            Hisobot
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Oylik jo'natmalar va moliyaviy tahlil
           </p>
@@ -504,12 +646,43 @@ const Shipments = () => {
           Asosiy Ko'rsatkichlar
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <MetricTile title="Umumiy Tushum"  value={`${formatNumber(totalEarnedUzs)} UZS`}                                                                    icon={DollarSign}  color="green"   />
-          <MetricTile title="Umumiy Xarajat" value={`${formatNumber(grandTotalUzs)} UZS`}                                                                     icon={TrendingDown} color="red"    />
-          <MetricTile title="Sof Foyda"      value={`${formatNumber(totalEarnedUzs - grandTotalUzs)} UZS`}                                                    icon={TrendingUp}  color="blue"    />
-          <MetricTile title="Fura Tushumi"   value={`${formatNumber(data?.summary?.total_revenue_uzs)} UZS`}                                                  icon={Wallet}      color="emerald" />
-          <MetricTile title="Yuborilgan Yuk" value={`${formatNumber(data?.summary?.total_shipped_qty)} dona`} subtext={`Ishlab chiqarilgan: ${formatNumber(outputQty)} dona`} icon={Package} color="amber" />
-          <MetricTile title="Fura Soni"      value={`${data?.trucks?.length ?? 0} ta`}                                                                        icon={Truck}       color="indigo"  />
+          <MetricTile
+            title="Umumiy Tushum"
+            value={`${formatNumber(totalEarnedUzs)} UZS`}
+            icon={DollarSign}
+            color="green"
+          />
+          <MetricTile
+            title="Umumiy Xarajat"
+            value={`${formatNumber(grandTotalUzs)} UZS`}
+            icon={TrendingDown}
+            color="red"
+          />
+          <MetricTile
+            title="Sof Foyda"
+            value={`${formatNumber(totalEarnedUzs - grandTotalUzs)} UZS`}
+            icon={TrendingUp}
+            color="blue"
+          />
+          <MetricTile
+            title="Fura Tushumi"
+            value={`${formatNumber(data?.summary?.total_revenue_uzs)} UZS`}
+            icon={Wallet}
+            color="emerald"
+          />
+          <MetricTile
+            title="Yuborilgan Yuk"
+            value={`${formatNumber(data?.summary?.total_shipped_qty)} dona`}
+            subtext={`Ishlab chiqarilgan: ${formatNumber(outputQty)} dona`}
+            icon={Package}
+            color="amber"
+          />
+          <MetricTile
+            title="Fura Soni"
+            value={`${data?.trucks?.length ?? 0} ta`}
+            icon={Truck}
+            color="indigo"
+          />
         </div>
       </section>
 
@@ -531,8 +704,14 @@ const Shipments = () => {
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-blue-600 mb-3">
                 Ish Haqi va Maosh
               </h4>
-              <RowItem label="Jami Maosh"      value={`${formatNumber(totalSalary)} UZS`} />
-              <RowItem label="Transport uchun" value={`${formatNumber(cb.transport_attendance)} UZS`} />
+              <RowItem
+                label="Jami Maosh"
+                value={`${formatNumber(totalSalary)} UZS`}
+              />
+              <RowItem
+                label="Transport uchun"
+                value={`${formatNumber(cb.transport_attendance)} UZS`}
+              />
               <RowItem
                 label="Xodimlar Soni"
                 value={`${formatNumber(cb.transport_employees_count)} kishi`}
@@ -543,8 +722,14 @@ const Shipments = () => {
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-purple-600 mb-3">
                 Operatsion Xarajatlar
               </h4>
-              <RowItem label="Amortizatsiya"    value={`${formatNumber(cb.amortization_total)} UZS`} />
-              <RowItem label="Oylik Xarajatlar" value={`${formatNumber(cb.monthly_expenses)} UZS`} />
+              <RowItem
+                label="Amortizatsiya"
+                value={`${formatNumber(cb.amortization_total)} UZS`}
+              />
+              <RowItem
+                label="Oylik Xarajatlar"
+                value={`${formatNumber(cb.monthly_expenses)} UZS`}
+              />
               <RowItem
                 label="Birlik Tannarxi"
                 value={unitCost > 0 ? `${formatNumber(unitCost)} UZS` : "—"}
@@ -626,10 +811,16 @@ const Shipments = () => {
                     Ishlab Chiqarilgan
                   </p>
                   <p className="text-2xl font-bold text-blue-900 mt-1">
-                    {formatNumber(data.unshipped_orders_summary.total_produced_qty)}
+                    {formatNumber(
+                      data.unshipped_orders_summary.total_produced_qty,
+                    )}
                   </p>
                   <p className="text-xs text-blue-400 mt-0.5">
-                    / {formatNumber(data.unshipped_orders_summary.total_planned_qty)} reja
+                    /{" "}
+                    {formatNumber(
+                      data.unshipped_orders_summary.total_planned_qty,
+                    )}{" "}
+                    reja
                   </p>
                 </div>
                 <div className="bg-green-50 border border-green-100 p-4 rounded-xl">
@@ -637,7 +828,10 @@ const Shipments = () => {
                     Qiymat (USD)
                   </p>
                   <p className="text-2xl font-bold text-green-900 mt-1">
-                    ${formatNumber(data.unshipped_orders_summary.total_value_usd)}
+                    $
+                    {formatNumber(
+                      data.unshipped_orders_summary.total_value_usd,
+                    )}
                   </p>
                 </div>
                 <div className="bg-purple-50 border border-purple-100 p-4 rounded-xl">
@@ -645,7 +839,9 @@ const Shipments = () => {
                     Qiymat (UZS)
                   </p>
                   <p className="text-2xl font-bold text-purple-900 mt-1 break-words leading-tight">
-                    {formatNumber(data.unshipped_orders_summary.total_value_uzs)}
+                    {formatNumber(
+                      data.unshipped_orders_summary.total_value_uzs,
+                    )}
                   </p>
                   <p className="text-xs text-purple-400 mt-0.5">UZS</p>
                 </div>
@@ -664,12 +860,24 @@ const Shipments = () => {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b border-gray-100">
                       <tr>
-                        <th className="text-left py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Buyurtma</th>
-                        <th className="text-left py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Model</th>
-                        <th className="text-center py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Holat</th>
-                        <th className="text-center py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Bajarilishi</th>
-                        <th className="text-right py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Narx (USD)</th>
-                        <th className="text-right py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Qiymat (UZS)</th>
+                        <th className="text-left py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                          Buyurtma
+                        </th>
+                        <th className="text-left py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                          Model
+                        </th>
+                        <th className="text-center py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                          Holat
+                        </th>
+                        <th className="text-center py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                          Bajarilishi
+                        </th>
+                        <th className="text-right py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                          Narx (USD)
+                        </th>
+                        <th className="text-right py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                          Qiymat (UZS)
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -687,25 +895,37 @@ const Shipments = () => {
                             className="hover:bg-orange-50/30 transition-colors"
                           >
                             <td className="py-3 px-4">
-                              <p className="font-semibold text-gray-900">{order.order_name}</p>
-                              <p className="text-xs text-gray-400">#{order.order_id}</p>
+                              <p className="font-semibold text-gray-900">
+                                {order.order_name}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                #{order.order_id}
+                              </p>
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
                                 <ModelImages modelCode={order.model_name} />
-                                <span className="text-gray-700">{order.model_name}</span>
+                                <span className="text-gray-700">
+                                  {order.model_name}
+                                </span>
                               </div>
                             </td>
                             <td className="py-3 px-4 text-center">
                               <Badge
-                                variant={order.order_status === "checking" ? "default" : "outline"}
+                                variant={
+                                  order.order_status === "checking"
+                                    ? "default"
+                                    : "outline"
+                                }
                                 className={
                                   order.order_status === "checking"
                                     ? "bg-blue-500 hover:bg-blue-600 text-white"
                                     : "bg-orange-50 text-orange-800 border-orange-200"
                                 }
                               >
-                                {order.order_status === "checking" ? "Tekshirilmoqda" : "Tikilgan"}
+                                {order.order_status === "checking"
+                                  ? "Tekshirilmoqda"
+                                  : "Tikilgan"}
                               </Badge>
                             </td>
                             <td className="py-3 px-4 min-w-[140px]">
@@ -732,7 +952,10 @@ const Shipments = () => {
                               </div>
                               {order.produced_qty < order.planned_qty && (
                                 <p className="text-[10px] text-orange-500 mt-1 text-center">
-                                  {formatNumber(order.planned_qty - order.produced_qty)} qolgan
+                                  {formatNumber(
+                                    order.planned_qty - order.produced_qty,
+                                  )}{" "}
+                                  qolgan
                                 </p>
                               )}
                             </td>
@@ -754,14 +977,17 @@ const Shipments = () => {
                 <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-3">
                   <Clock className="w-7 h-7 text-orange-300" />
                 </div>
-                <p className="text-gray-500 font-medium">Yuborilmagan buyurtmalar yo'q</p>
-                <p className="text-xs text-gray-400 mt-1">Barcha buyurtmalar jo'natilgan</p>
+                <p className="text-gray-500 font-medium">
+                  Yuborilmagan buyurtmalar yo'q
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Barcha buyurtmalar jo'natilgan
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
       </section>
-
     </div>
   );
 };
