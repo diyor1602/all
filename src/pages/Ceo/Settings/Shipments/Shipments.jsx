@@ -14,6 +14,9 @@ import {
   Clock,
   AlertCircle,
   ChevronDown,
+  Calendar,
+  ArrowDownRight,
+  ArrowUpRight,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import { Card, CardContent } from "@/components/ui/card";
@@ -167,12 +170,129 @@ const CostsPieChart = ({ data: chartData }) => {
   );
 };
 
+/** Single order card inside a truck — shows full financial breakdown */
+const OrderCard = ({ order }) => {
+  const isLoss = order.profit_label === "loss" || Number(order.profit_uzs) < 0;
+  const profitUzs = Number(order.profit_uzs) || 0;
+  const marginPct = Number(order.margin_pct) || 0;
+  const pieData = preparePieChartData(order.costs_breakdown || {});
+  const months = order.production_months ?? [];
+
+  return (
+    <div className={`border rounded-xl overflow-hidden ${isLoss ? "border-red-200" : "border-gray-100"}`}>
+      {/* Order header */}
+      <div className={`flex items-center gap-3 px-4 py-3 ${isLoss ? "bg-red-50" : "bg-gray-50"}`}>
+        <ModelImages modelCode={order.model_name} />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-gray-900 text-sm truncate">{order.order_name}</p>
+          <p className="text-xs text-gray-400">{order.model_name}</p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isLoss && (
+            <Badge className="bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold px-2 hover:bg-red-100">
+              <ArrowDownRight className="w-3 h-3 mr-0.5" />Zarar
+            </Badge>
+          )}
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-gray-400 uppercase">Yuborilgan</p>
+            <p className="font-semibold text-gray-800 text-sm tabular-nums">
+              {formatNumber(order.shipped_qty)} dona
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 4-column metrics grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-gray-100">
+        <div className="bg-white px-3 py-2.5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Tushum</p>
+          <p className="text-sm font-bold text-gray-900 tabular-nums mt-0.5">
+            {formatNumber(order.revenue_uzs)}
+          </p>
+          <p className="text-[10px] text-gray-400">UZS</p>
+        </div>
+        <div className="bg-white px-3 py-2.5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Xarajat</p>
+          <p className="text-sm font-bold text-gray-900 tabular-nums mt-0.5">
+            {formatNumber(order.allocated_cost_uzs)}
+          </p>
+          <p className="text-[10px] text-gray-400">UZS</p>
+        </div>
+        <div className={`px-3 py-2.5 ${isLoss ? "bg-red-50" : "bg-emerald-50"}`}>
+          <p className={`text-[10px] font-bold uppercase tracking-wide ${isLoss ? "text-red-600" : "text-emerald-600"}`}>
+            {isLoss ? "Zarar" : "Foyda"}
+          </p>
+          <p className={`text-sm font-bold tabular-nums mt-0.5 ${isLoss ? "text-red-700" : "text-emerald-700"}`}>
+            {isLoss ? "−" : "+"}{formatNumber(Math.abs(profitUzs))}
+          </p>
+          <p className={`text-[10px] ${isLoss ? "text-red-400" : "text-emerald-400"}`}>UZS</p>
+        </div>
+        <div className={`px-3 py-2.5 ${isLoss ? "bg-red-50/60" : "bg-white"}`}>
+          <p className={`text-[10px] font-bold uppercase tracking-wide ${isLoss ? "text-red-500" : "text-blue-500"}`}>
+            Margin
+          </p>
+          <p className={`text-sm font-bold tabular-nums mt-0.5 ${isLoss ? "text-red-700" : "text-blue-700"}`}>
+            {marginPct > 0 ? "+" : ""}{marginPct.toFixed(2)}%
+          </p>
+          <div className={`text-[10px] flex items-center gap-0.5 mt-0.5 ${isLoss ? "text-red-400" : "text-blue-400"}`}>
+            {isLoss
+              ? <ArrowDownRight className="w-2.5 h-2.5" />
+              : <ArrowUpRight className="w-2.5 h-2.5" />}
+            {order.ship_ratio_of_order_percent}% yuborilgan
+          </div>
+        </div>
+      </div>
+
+      {/* Info bar — price, exchange rate, production months */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 bg-white border-t border-gray-100 px-4 py-2.5">
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <DollarSign className="w-3 h-3 text-gray-400" />
+          <span className="tabular-nums font-medium">${formatNumber(order.price_usd)}</span>
+          <span className="text-gray-300">·</span>
+          <span className="text-gray-400 tabular-nums">
+            {formatNumber(order.exchange_rate)} UZS/USD
+          </span>
+        </div>
+        {months.length > 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <Calendar className="w-3 h-3 text-gray-400" />
+            {months.map((m) => {
+              const [y, mo] = m.split("-");
+              const label = new Date(Number(y), Number(mo) - 1).toLocaleString("uz-UZ", {
+                month: "short",
+                year: "2-digit",
+              });
+              return (
+                <span key={m} className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                  {label}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Costs pie chart */}
+      {pieData.length > 0 && (
+        <div className="p-3 border-t border-gray-100">
+          <CostsPieChart data={pieData} />
+        </div>
+      )}
+    </div>
+  );
+};
+
 /**
  * Collapsible truck card.
  * Uses the CSS grid-rows trick for a smooth height transition without JS measurement.
  */
 const TruckCard = ({ truck, index, isOpen, onToggle }) => {
   const palette = TRUCK_PALETTES[index % TRUCK_PALETTES.length];
+  const truckProfit = (truck.orders ?? []).reduce(
+    (sum, o) => sum + (Number(o.profit_uzs) || 0),
+    0,
+  );
+  const truckIsLoss = truckProfit < 0;
 
   return (
     <div
@@ -201,7 +321,7 @@ const TruckCard = ({ truck, index, isOpen, onToggle }) => {
           </Badge>
         </div>
 
-        <div className="flex items-center gap-5 flex-shrink-0">
+        <div className="flex items-center gap-4 flex-shrink-0">
           {/* Stats visible on sm+ */}
           <div className="text-right hidden sm:block">
             <p className="text-[10px] uppercase font-bold text-gray-400">Miqdor</p>
@@ -213,6 +333,15 @@ const TruckCard = ({ truck, index, isOpen, onToggle }) => {
             <p className="text-[10px] uppercase font-bold text-emerald-600">Tushum</p>
             <p className="text-sm font-bold text-emerald-700 tabular-nums">
               {formatNumber(truck.revenue_uzs)} UZS
+            </p>
+          </div>
+          {/* Truck-level profit/loss badge */}
+          <div className={`hidden sm:flex flex-col items-end px-3 py-1.5 rounded-lg ${truckIsLoss ? "bg-red-100" : "bg-emerald-100"}`}>
+            <p className={`text-[10px] uppercase font-bold ${truckIsLoss ? "text-red-600" : "text-emerald-600"}`}>
+              {truckIsLoss ? "Zarar" : "Foyda"}
+            </p>
+            <p className={`text-sm font-bold tabular-nums ${truckIsLoss ? "text-red-700" : "text-emerald-700"}`}>
+              {truckIsLoss ? "−" : "+"}{formatNumber(Math.abs(truckProfit))}
             </p>
           </div>
           <ChevronDown
@@ -227,15 +356,27 @@ const TruckCard = ({ truck, index, isOpen, onToggle }) => {
       >
         <div className="overflow-hidden">
           <div className="p-5 space-y-4 bg-white">
-            {/* Mobile stats (hidden on sm+) */}
-            <div className="grid grid-cols-2 gap-3 sm:hidden">
+            {/* Mobile summary (hidden on sm+) */}
+            <div className="grid grid-cols-3 gap-2 sm:hidden">
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Miqdor</p>
-                <p className="font-semibold text-gray-900">{formatNumber(truck.shipped_qty)} dona</p>
+                <p className="font-semibold text-gray-900 text-sm tabular-nums">
+                  {formatNumber(truck.shipped_qty)} dona
+                </p>
               </div>
               <div className="bg-emerald-50 p-3 rounded-lg">
                 <p className="text-[10px] uppercase font-bold text-emerald-600 mb-1">Tushum</p>
-                <p className="font-semibold text-emerald-700">{formatNumber(truck.revenue_uzs)} UZS</p>
+                <p className="font-semibold text-emerald-700 text-sm tabular-nums">
+                  {formatNumber(truck.revenue_uzs)}
+                </p>
+              </div>
+              <div className={`p-3 rounded-lg ${truckIsLoss ? "bg-red-50" : "bg-emerald-50"}`}>
+                <p className={`text-[10px] uppercase font-bold mb-1 ${truckIsLoss ? "text-red-600" : "text-emerald-600"}`}>
+                  {truckIsLoss ? "Zarar" : "Foyda"}
+                </p>
+                <p className={`font-semibold text-sm tabular-nums ${truckIsLoss ? "text-red-700" : "text-emerald-700"}`}>
+                  {truckIsLoss ? "−" : "+"}{formatNumber(Math.abs(truckProfit))}
+                </p>
               </div>
             </div>
 
@@ -249,31 +390,10 @@ const TruckCard = ({ truck, index, isOpen, onToggle }) => {
                   ({truck.orders?.length ?? 0} ta)
                 </span>
               </p>
-              <div className="space-y-3">
-                {truck.orders?.map((order, i) => {
-                  const pieData = preparePieChartData(order.costs_breakdown || {});
-                  return (
-                    <div key={i} className="border border-gray-100 rounded-lg overflow-hidden">
-                      <div className="flex items-center gap-3 bg-gray-50 px-3 py-2.5">
-                        <ModelImages modelCode={order?.model_name} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 text-sm truncate">
-                            {order.order_name}
-                          </p>
-                          <p className="text-xs text-gray-400">{order.model_name}</p>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700 flex-shrink-0">
-                          {formatNumber(order.shipped_qty)} dona
-                        </span>
-                      </div>
-                      {pieData.length > 0 && (
-                        <div className="p-3">
-                          <CostsPieChart data={pieData} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="space-y-4">
+                {truck.orders?.map((order, i) => (
+                  <OrderCard key={i} order={order} />
+                ))}
               </div>
             </div>
           </div>
