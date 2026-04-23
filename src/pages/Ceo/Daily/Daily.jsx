@@ -308,7 +308,10 @@ const Daily = () => {
   const { toast } = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState("2026-04-22");
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const savedDate = localStorage.getItem("selectedDate");
+    return savedDate || new Date().toISOString().split("T")[0];
+  });
 
   const getData = async () => {
     setLoading(true);
@@ -349,7 +352,10 @@ const Daily = () => {
         <input
           type="date"
           value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
+          onChange={(e) => {
+            setSelectedDate(e.target.value);
+            localStorage.setItem("selectedDate", e.target.value);
+          }}
           className="rounded-xl px-4 py-2.5 text-sm font-semibold border-0 outline-none focus:ring-2 focus:ring-indigo-400"
           style={{
             background: "#ffffff14",
