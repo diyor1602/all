@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -32,35 +32,77 @@ import {
   History,
   Clock,
   Download,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import ExcelAdding from "./ExcelAdding";
 
-const formatNumber = (num) => {
-  return Number.parseFloat(num)?.toLocaleString("ru-RU", {
-    maximumFractionDigits: 0,
-  });
-};
+const formatNumber = (num) =>
+  Number.parseFloat(num)?.toLocaleString("ru-RU", { maximumFractionDigits: 0 });
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("ru-RU", {
+  return new Date(dateString).toLocaleDateString("ru-RU", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
 };
 
-const calculateNewSeasonSalary = (emp) => {
-  return [
+const calculateNewSeasonSalary = (emp) =>
+  [
     emp?.cutting_salary_minute,
     emp?.master_salary_current,
     emp?.sewing_output_salary,
     emp?.warehouse_salary_minute,
     emp?.assistant_salary,
   ].reduce((sum, val) => sum + Number(val || 0), 0);
+
+const getEmployeeTotalEarned = (emp) => {
+  const newSeason = calculateNewSeasonSalary(emp);
+  return (
+    parseFloat(
+      emp?.monthly_salary?.amount >= 0
+        ? emp?.monthly_salary?.amount
+        : emp?.attendance_salary || 0,
+    ) +
+    parseFloat(
+      emp?.monthly_piecework?.amount >= 0
+        ? emp?.monthly_piecework?.amount
+        : emp?.tarification_salary || 0,
+    ) +
+    parseFloat(
+      emp?.monthly_daily_payment?.amount >= 0
+        ? emp?.monthly_daily_payment?.amount
+        : newSeason,
+    )
+  );
+};
+
+const SALARY_TYPE_CONFIG = {
+  monthly: {
+    apiPost: "ceo/employeeMonthlySalary",
+    apiPatch: (id) => `ceo/employeeMonthlySalary/${id}`,
+    getRecord: (emp) => emp?.monthly_salary,
+    getBase: (emp) => emp?.attendance_salary,
+    title: "Ish haqi (oylik)",
+  },
+  piecework: {
+    apiPost: "ceo/employeeMonthlyPiecework",
+    apiPatch: (id) => `ceo/employeeMonthlyPiecework/${id}`,
+    getRecord: (emp) => emp?.monthly_piecework,
+    getBase: (emp) => emp?.tarification_salary,
+    title: "Ish haqi (ishbay)",
+  },
+  newSeason: {
+    apiPost: "ceo/employeeMonthlyDailyPayment",
+    apiPatch: (id) => `ceo/employeeMonthlyDailyPayment/${id}`,
+    getRecord: (emp) => emp?.monthly_daily_payment,
+    getBase: (emp) => calculateNewSeasonSalary(emp),
+    title: "Yangi mavsum",
+  },
 };
 
 const SalaryPage = () => {
@@ -81,10 +123,7 @@ const SalaryPage = () => {
     employee: null,
     type: null,
   });
-  const [paymentForm, setPaymentForm] = useState({
-    amount: "",
-    comment: "",
-  });
+  const [paymentForm, setPaymentForm] = useState({ amount: "", comment: "" });
 
   const [filters, setFilters] = useState({
     department_id: "",
@@ -94,275 +133,130 @@ const SalaryPage = () => {
     type: "",
   });
   const [searchText, setSearchText] = useState("");
+
+  // Advanced client-side filters
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem("salary2-advanced-filters");
+      return saved ? JSON.parse(saved) : { minPerDay: "", maxPerDay: "", minTotal: "", maxTotal: "", paymentStatus: "all", showDailyColumn: true };
+    } catch {
+      return { minPerDay: "", maxPerDay: "", minTotal: "", maxTotal: "", paymentStatus: "all", showDailyColumn: true };
+    }
+  });
+
+  // Unified additional salary dialog
+  const [additionalDialogType, setAdditionalDialogType] = useState(null); // "monthly"|"piecework"|"newSeason"|null
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [monthlyDialogOpen, setMonthlyDialogOpen] = useState(false);
-  const [pieceworkDialogOpen, setPieceworkDialogOpen] = useState(false);
-  const [newSeasonDialogOpen, setNewSeasonDialogOpen] = useState(false);
   const [additionalAmount, setAdditionalAmount] = useState("");
   const [additionalComment, setAdditionalComment] = useState("");
   const [sending, setSending] = useState(false);
 
   const handleAdditionalDialog = (employee, type) => {
+    const config = SALARY_TYPE_CONFIG[type];
+    const record = config.getRecord(employee);
     setSelectedEmployee(employee);
-    setAdditionalAmount(
-      type === "monthly"
-        ? String(employee.monthly_salary?.amount || "")
-        : type === "newSeason"
-          ? String(employee.monthly_daily_payment?.amount || "")
-          : String(employee.monthly_piecework?.amount || ""),
+    setAdditionalAmount(String(record?.amount ?? ""));
+    setAdditionalComment(String(record?.comment ?? ""));
+    setAdditionalDialogType(type);
+  };
+
+  const closeAdditionalDialog = () => {
+    setAdditionalDialogType(null);
+    setAdditionalAmount("");
+    setAdditionalComment("");
+  };
+
+  const handleSaveAdditional = async () => {
+    if (Number(additionalAmount) < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, ijobiy miqdor kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    const config = SALARY_TYPE_CONFIG[additionalDialogType];
+    setSending(true);
+    try {
+      await api.post(config.apiPost, {
+        amount: additionalAmount,
+        employee_id: selectedEmployee.id,
+        comment: additionalComment,
+        month: `${selectedMonth}-01`,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Oylik maosh muvaffaqiyatli yangilandi",
+        duration: 1500,
+      });
+      closeAdditionalDialog();
+      fetchSalaryData(filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Maoshni yangilashda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleEditAdditional = async (id) => {
+    if (Number(additionalAmount) < 0) {
+      toast({
+        title: "Diqqat",
+        description: "Iltimos, ijobiy miqdor kiriting",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+    const config = SALARY_TYPE_CONFIG[additionalDialogType];
+    setSending(true);
+    try {
+      await api.patch(config.apiPatch(id), {
+        amount: additionalAmount,
+        employee_id: selectedEmployee.id,
+        comment: additionalComment,
+        month: `${selectedMonth}-01`,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Oylik maosh muvaffaqiyatli yangilandi",
+        duration: 1500,
+      });
+      closeAdditionalDialog();
+      fetchSalaryData(filters);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Maoshni yangilashda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const calculatePaymentTotals = (paidAmounts) => {
+    if (!paidAmounts) return { advanceTotal: 0, salaryTotal: 0 };
+    const advanceTotal = (paidAmounts.advance || []).reduce(
+      (sum, p) => sum + Number.parseFloat(p.amount || 0),
+      0,
     );
-    setAdditionalComment(
-      type === "monthly"
-        ? String(employee.monthly_salary?.comment || "")
-        : type === "newSeason"
-          ? String(employee.monthly_daily_payment?.comment || "")
-          : String(employee.monthly_piecework?.comment || ""),
+    const salaryTotal = (paidAmounts.salary || []).reduce(
+      (sum, p) => sum + Number.parseFloat(p.amount || 0),
+      0,
     );
-    type === "monthly"
-      ? setMonthlyDialogOpen(true)
-      : type === "newSeason"
-        ? setNewSeasonDialogOpen(true)
-        : setPieceworkDialogOpen(true);
+    return { advanceTotal, salaryTotal };
   };
-
-  const handleSaveAdditionalMonthlySalary = async () => {
-    if (additionalAmount < 0) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, ijobiy miqdor kiriting",
-        variant: "destructive",
-        duration: 1500,
-      });
-      return;
-    }
-    setSending(true);
-    try {
-      await api.post("ceo/employeeMonthlySalary", {
-        amount: additionalAmount,
-        employee_id: selectedEmployee.id,
-        comment: additionalComment,
-        month: `${selectedMonth}-01`,
-      });
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Oylik maosh muvaffaqiyatli yangilandi",
-        duration: 1500,
-      });
-      setMonthlyDialogOpen(false);
-      setAdditionalAmount(0);
-      fetchSalaryData(filters);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description:
-          error.response?.data?.message || "Maoshni yangilashda xatolik",
-        variant: "destructive",
-        duration: 1500,
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleEditAdditionalMonthlySalary = async (id) => {
-    if (additionalAmount < 0) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, ijobiy miqdor kiriting",
-        variant: "destructive",
-        duration: 1500,
-      });
-      return;
-    }
-    setSending(true);
-    try {
-      await api.patch(`ceo/employeeMonthlySalary/${id}`, {
-        amount: additionalAmount,
-        employee_id: selectedEmployee.id,
-        comment: additionalComment,
-        month: `${selectedMonth}-01`,
-      });
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Oylik maosh muvaffaqiyatli yangilandi",
-        duration: 1500,
-      });
-      setMonthlyDialogOpen(false);
-      setAdditionalAmount(0);
-      fetchSalaryData(filters);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description:
-          error.response?.data?.message || "Maoshni yangilashda xatolik",
-        variant: "destructive",
-        duration: 1500,
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleSaveAdditionalPieceWork = async () => {
-    if (additionalAmount < 0) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, ijobiy miqdor kiriting",
-        variant: "destructive",
-        duration: 1500,
-      });
-      return;
-    }
-    setSending(true);
-    try {
-      await api.post("ceo/employeeMonthlyPiecework", {
-        amount: additionalAmount,
-        employee_id: selectedEmployee.id,
-        comment: additionalComment,
-        month: `${selectedMonth}-01`,
-      });
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Oylik maosh muvaffaqiyatli yangilandi",
-        duration: 1500,
-      });
-      setPieceworkDialogOpen(false);
-      setAdditionalAmount(0);
-      fetchSalaryData(filters);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description:
-          error.response?.data?.message || "Maoshni yangilashda xatolik",
-        variant: "destructive",
-        duration: 1500,
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleEditAdditionalPieceWork = async (id) => {
-    if (additionalAmount < 0) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, ijobiy miqdor kiriting",
-        variant: "destructive",
-        duration: 1500,
-      });
-      return;
-    }
-    setSending(true);
-    try {
-      await api.patch(`ceo/employeeMonthlyPiecework/${id}`, {
-        amount: additionalAmount,
-        employee_id: selectedEmployee.id,
-        comment: additionalComment,
-        month: `${selectedMonth}-01`,
-      });
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Oylik maosh muvaffaqiyatli yangilandi",
-        duration: 1500,
-      });
-      setPieceworkDialogOpen(false);
-      setAdditionalAmount(0);
-      fetchSalaryData(filters);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description:
-          error.response?.data?.message || "Maoshni yangilashda xatolik",
-        variant: "destructive",
-        duration: 1500,
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleSaveAdditionalDailyPayment = async () => {
-    if (additionalAmount < 0) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, ijobiy miqdor kiriting",
-        variant: "destructive",
-        duration: 1500,
-      });
-      return;
-    }
-    setSending(true);
-    try {
-      await api.post("ceo/employeeMonthlyDailyPayment", {
-        amount: additionalAmount,
-        employee_id: selectedEmployee.id,
-        comment: additionalComment,
-        month: `${selectedMonth}-01`,
-      });
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Oylik maosh muvaffaqiyatli yangilandi",
-        duration: 1500,
-      });
-      setNewSeasonDialogOpen(false);
-      setAdditionalAmount(0);
-      fetchSalaryData(filters);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description:
-          error.response?.data?.message || "Maoshni yangilashda xatolik",
-        variant: "destructive",
-        duration: 1500,
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleEditAdditionalDailyPayment = async (id) => {
-    if (additionalAmount < 0) {
-      toast({
-        title: "Diqqat",
-        description: "Iltimos, ijobiy miqdor kiriting",
-        variant: "destructive",
-        duration: 1500,
-      });
-      return;
-    }
-    setSending(true);
-    try {
-      await api.patch(`ceo/employeeMonthlyDailyPayment/${id}`, {
-        amount: additionalAmount,
-        employee_id: selectedEmployee.id,
-        comment: additionalComment,
-        month: `${selectedMonth}-01`,
-      });
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Oylik maosh muvaffaqiyatli yangilandi",
-        duration: 1500,
-      });
-      setNewSeasonDialogOpen(false);
-      setAdditionalAmount(0);
-      fetchSalaryData(filters);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description:
-          error.response?.data?.message || "Maoshni yangilashda xatolik",
-        variant: "destructive",
-        duration: 1500,
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  // Filter employees based on search text
-  const filteredEmployees = employees.filter((employee) =>
-    employee.name.toLowerCase().includes(searchText.toLowerCase()),
-  );
 
   const formatDateLocal = (date) => {
     const year = date.getFullYear();
@@ -374,7 +268,6 @@ const SalaryPage = () => {
   const handleDownload = async () => {
     try {
       setDownloading(true);
-
       const params = {
         department_id:
           filters.department_id === "all" ? "" : filters.department_id,
@@ -382,15 +275,12 @@ const SalaryPage = () => {
         month: filters.start_date.substring(0, 7),
         type: filters.type === "all" ? "" : filters.type,
       };
-
-      // Make sure your backend endpoint generates Excel instead of PDF
       const response = await api.post(`/ceo/groups2/excel`, params, {
-        responseType: "blob", // still needed for binary files
+        responseType: "blob",
       });
-
       const link = document.createElement("a");
       link.href = URL.createObjectURL(response.data);
-      link.download = `Xodimlar oylik-${selectedMonth}.xlsx`; // Excel extension
+      link.download = `Xodimlar oylik-${selectedMonth}.xlsx`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -414,27 +304,22 @@ const SalaryPage = () => {
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const value = `${year}-${month}`;
-
       const firstDay = `${value}-01`;
-      const lastDayDate = new Date(year, Number.parseInt(month), 0);
-      const lastDay = formatDateLocal(lastDayDate);
-
+      const lastDay = formatDateLocal(
+        new Date(year, Number.parseInt(month), 0),
+      );
       parsedFilters = {
         department_id: parsedFilters.department_id || "",
         group_id: parsedFilters.group_id || "",
         start_date: firstDay,
         end_date: lastDay,
       };
-
       setSelectedMonth(value);
     } else {
       setSelectedMonth(parsedFilters.start_date.substring(0, 7));
     }
 
-    // if type is empty, set it to "all"
-    if (!parsedFilters.type) {
-      parsedFilters.type = "all";
-    }
+    if (!parsedFilters.type) parsedFilters.type = "all";
 
     setFilters(parsedFilters);
     localStorage.setItem("salary2-filters", JSON.stringify(parsedFilters));
@@ -446,12 +331,9 @@ const SalaryPage = () => {
       const response = await api.get("/ceo/departments");
       const rawData = response.data || [];
       setRawDepartmentData(rawData);
-
       const flatDepartments =
         rawData.flatMap((item) => item?.departments) || [];
-
       setDepartments([{ id: "all", name: "Barchasi" }, ...flatDepartments]);
-
       return { rawData, flatDepartments };
     } catch (error) {
       toast({
@@ -468,11 +350,9 @@ const SalaryPage = () => {
     const department = rawData
       .flatMap((mainDept) => mainDept.departments || [])
       .find((dept) => dept.id.toString() === departmentId);
-
     const groups = department
       ? [{ id: "all", name: "Barchasi" }, ...(department.groups || [])]
       : [{ id: "all", name: "Barchasi" }];
-
     setGroups(groups);
     return groups;
   };
@@ -482,10 +362,8 @@ const SalaryPage = () => {
       !filtersToUse.department_id ||
       !filtersToUse.start_date ||
       !filtersToUse.end_date
-    ) {
+    )
       return;
-    }
-
     try {
       setLoading(true);
       const response = await api.post("/ceo/groups2", {
@@ -510,53 +388,15 @@ const SalaryPage = () => {
     }
   };
 
-  // Calculate payment totals from the new format
-  const calculatePaymentTotals = (paidAmounts) => {
-    if (!paidAmounts) return { advanceTotal: 0, salaryTotal: 0 };
-
-    const advanceTotal = (paidAmounts.advance || []).reduce(
-      (sum, payment) => sum + Number.parseFloat(payment.amount || 0),
-      0,
-    );
-    const salaryTotal = (paidAmounts.salary || []).reduce(
-      (sum, payment) => sum + Number.parseFloat(payment.amount || 0),
-      0,
-    );
-
-    return { advanceTotal, salaryTotal };
-  };
-
-  // Fixed maximum amount calculation - allows redistributing existing payments
-  const calculateMaxAmount = (employee, paymentType) => {
-    const totalEarned =
-      Number.parseFloat(employee?.tarification_salary || 0) +
-      Number.parseFloat(employee?.attendance_salary || 0);
-    const { advanceTotal, salaryTotal } = calculatePaymentTotals(
-      employee?.paid_amounts,
-    );
-
-    // The maximum should be the total earned amount minus the OTHER type of payment
-    // This allows redistributing between advance and salary
-    if (paymentType === "advance") {
-      // For advance: total_earned - current_salary_payments
-      return Math.max(0, totalEarned - salaryTotal);
-    } else {
-      // For salary: total_earned - current_advance_payments
-      return Math.max(0, totalEarned - advanceTotal);
-    }
-  };
-
   useEffect(() => {
     const initializeComponent = async () => {
       const initialFilters = initializeFilters();
       const { rawData, flatDepartments } = await fetchDepartments();
-
       let finalFilters = { ...initialFilters };
 
       if (!initialFilters.department_id && flatDepartments.length > 0) {
         const firstDepartmentId = flatDepartments[0].id.toString();
         const groups = loadGroupsForDepartment(firstDepartmentId, rawData);
-
         finalFilters = {
           ...initialFilters,
           department_id: firstDepartmentId,
@@ -567,7 +407,6 @@ const SalaryPage = () => {
           initialFilters.department_id,
           rawData,
         );
-
         if (groups.length === 1 && !initialFilters.group_id) {
           finalFilters = {
             ...initialFilters,
@@ -584,20 +423,20 @@ const SalaryPage = () => {
       await fetchSalaryData(finalFilters);
       setIsInitialized(true);
     };
-
     initializeComponent();
   }, []);
 
   useEffect(() => {
-    const employees = salary.flatMap((s) => s.employees || []);
-    setEmployees(employees);
+    setEmployees(salary.flatMap((s) => s.employees || []));
   }, [salary]);
 
   useEffect(() => {
-    if (isInitialized) {
-      fetchSalaryData(filters);
-    }
+    if (isInitialized) fetchSalaryData(filters);
   }, [filters, isInitialized]);
+
+  useEffect(() => {
+    localStorage.setItem("salary2-advanced-filters", JSON.stringify(advancedFilters));
+  }, [advancedFilters]);
 
   const updateFilters = (newFilters) => {
     setFilters(newFilters);
@@ -607,77 +446,35 @@ const SalaryPage = () => {
   const handleMonthChange = (e) => {
     const value = e.target.value;
     setSelectedMonth(value);
-
     const [year, month] = value.split("-");
     const firstDay = `${value}-01`;
-    const lastDayDate = new Date(
-      Number.parseInt(year),
-      Number.parseInt(month),
-      0,
+    const lastDay = formatDateLocal(
+      new Date(Number.parseInt(year), Number.parseInt(month), 0),
     );
-    const lastDay = formatDateLocal(lastDayDate);
-
-    const newFilters = {
-      ...filters,
-      start_date: firstDay,
-      end_date: lastDay,
-    };
-
-    updateFilters(newFilters);
+    updateFilters({ ...filters, start_date: firstDay, end_date: lastDay });
   };
 
   const handleDepartmentChange = (departmentId) => {
     const groups = loadGroupsForDepartment(departmentId, rawDepartmentData);
-
-    const newFilters = {
+    updateFilters({
       ...filters,
       department_id: departmentId,
       group_id: groups.length === 1 ? groups[0].id.toString() : "",
-    };
-
-    updateFilters(newFilters);
+    });
   };
 
-  const handleGroupChange = (groupId) => {
-    const newFilters = {
-      ...filters,
-      group_id: groupId,
-    };
-
-    updateFilters(newFilters);
-  };
-
-  const handleTypeChange = (type) => {
-    const newFilters = {
-      ...filters,
-      type,
-    };
-
-    updateFilters(newFilters);
-  };
+  const handleGroupChange = (groupId) =>
+    updateFilters({ ...filters, group_id: groupId });
+  const handleTypeChange = (type) => updateFilters({ ...filters, type });
 
   const openPaymentDialog = (employee, type) => {
-    setPaymentDialog({
-      open: true,
-      employee,
-      type,
-    });
-    setPaymentForm({
-      amount: "",
-      comment: "",
-    });
+    setPaymentDialog({ open: true, employee, type });
+    setPaymentForm({ amount: "", comment: "" });
   };
 
   const closePaymentDialog = () => {
-    setPaymentDialog({
-      open: false,
-      employee: null,
-      type: null,
-    });
-    setPaymentForm({
-      amount: "",
-      comment: "",
-    });
+    setPaymentDialog({ open: false, employee: null, type: null });
+    setPaymentForm({ amount: "", comment: "" });
   };
 
   const handlePayment = async () => {
@@ -694,10 +491,8 @@ const SalaryPage = () => {
     }
 
     const loadingKey = `${employee.id}_${type}`;
-
     try {
       setPaymentLoading((prev) => ({ ...prev, [loadingKey]: true }));
-
       await api.post("/ceo/salaries", {
         employee_id: employee.id,
         type,
@@ -705,18 +500,12 @@ const SalaryPage = () => {
         comment,
         month: selectedMonth,
       });
-
       toast({
         title: "Muvaffaqiyatli",
         description: `${type === "advance" ? "Avans" : "Oylik"} to'landi`,
-        style: {
-          backgroundColor: "green",
-          color: "white",
-        },
+        style: { backgroundColor: "green", color: "white" },
         duration: 1500,
       });
-
-      // Refresh data
       await fetchSalaryData(filters);
       closePaymentDialog();
     } catch (error) {
@@ -730,31 +519,97 @@ const SalaryPage = () => {
     }
   };
 
-  // Get payment history for the current type
-  const getPaymentHistory = (employee, type) => {
-    if (!employee?.paid_amounts || !employee.paid_amounts[type]) {
-      return [];
-    }
-    return employee.paid_amounts[type] || [];
-  };
+  const getPaymentHistory = (employee, type) =>
+    employee?.paid_amounts?.[type] || [];
+
+  // Derived: selected department name for tikuv check
+  const selectedDepartmentName = useMemo(
+    () =>
+      departments
+        .find((d) => d.id.toString() === filters.department_id)
+        ?.name?.toLowerCase() || "",
+    [departments, filters.department_id],
+  );
+  const containsTikuv =
+    selectedDepartmentName.includes("tikuv") ||
+    selectedDepartmentName.includes("тикув");
+
+  // All client-side filtering
+  const filteredEmployees = useMemo(() => {
+    const { minPerDay, maxPerDay, minTotal, maxTotal, paymentStatus } =
+      advancedFilters;
+    return employees
+      .filter((emp) =>
+        emp.name.toLowerCase().includes(searchText.toLowerCase()),
+      )
+      .filter((emp) => {
+        const total = getEmployeeTotalEarned(emp);
+        const days = emp?.attendance_days || 0;
+        const perDay = days > 0 ? total / days : 0;
+        const remaining = total - Number(emp?.total_paid || 0);
+        if (minPerDay && perDay < Number(minPerDay)) return false;
+        if (maxPerDay && perDay > Number(maxPerDay)) return false;
+        if (minTotal && total < Number(minTotal)) return false;
+        if (maxTotal && total > Number(maxTotal)) return false;
+        if (paymentStatus === "paid" && remaining > 0) return false;
+        if (paymentStatus === "unpaid" && remaining <= 0) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const aHighlight = a.group === "N/A" && containsTikuv;
+        const bHighlight = b.group === "N/A" && containsTikuv;
+        if (aHighlight && !bHighlight) return -1;
+        if (!aHighlight && bHighlight) return 1;
+        return a.name.localeCompare(b.name);
+      });
+  }, [employees, searchText, advancedFilters, containsTikuv]);
+
+  const hasAdvancedFiltersActive =
+    advancedFilters.minPerDay ||
+    advancedFilters.maxPerDay ||
+    advancedFilters.minTotal ||
+    advancedFilters.maxTotal ||
+    advancedFilters.paymentStatus !== "all" ||
+    advancedFilters.showDailyColumn === false;
+
+  const resetAdvancedFilters = () =>
+    setAdvancedFilters({
+      minPerDay: "",
+      maxPerDay: "",
+      minTotal: "",
+      maxTotal: "",
+      paymentStatus: "all",
+      showDailyColumn: true,
+    });
+
+  // Active additional dialog config
+  const activeConfig = additionalDialogType
+    ? SALARY_TYPE_CONFIG[additionalDialogType]
+    : null;
+  const activeRecord =
+    activeConfig && selectedEmployee
+      ? activeConfig.getRecord(selectedEmployee)
+      : null;
+  const activeBase =
+    activeConfig && selectedEmployee
+      ? activeConfig.getBase(selectedEmployee)
+      : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4 flex-wrap">
+    <div className="space-y-4">
+      {/* Primary filters */}
+      <div className="flex items-center gap-3 flex-wrap">
         <Input
           type="month"
           value={selectedMonth}
           onChange={handleMonthChange}
-          className={`
-            ${
-              selectedMonth ==
-              new Date().toISOString().split("-")[0] +
-                "-" +
-                new Date().toISOString().split("-")[1]
-                ? "bg-purple-500"
-                : "bg-rose-500"
-            }
-            w-fit text-white`}
+          className={cn(
+            "w-fit text-white",
+            selectedMonth ===
+              `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`
+              ? "bg-purple-500"
+              : "bg-rose-500",
+          )}
         />
 
         <Select
@@ -765,9 +620,9 @@ const SalaryPage = () => {
             <SelectValue placeholder="Bo'lim tanlang" />
           </SelectTrigger>
           <SelectContent>
-            {departments.map((department) => (
-              <SelectItem key={department.id} value={department.id.toString()}>
-                {department.name}
+            {departments.map((d) => (
+              <SelectItem key={d.id} value={d.id.toString()}>
+                {d.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -784,9 +639,9 @@ const SalaryPage = () => {
           <SelectContent>
             {groups
               .sort((a, b) => a.name.localeCompare(b.name))
-              .map((group) => (
-                <SelectItem key={group.id} value={group.id.toString()}>
-                  {group.name}
+              .map((g) => (
+                <SelectItem key={g.id} value={g.id.toString()}>
+                  {g.name}
                 </SelectItem>
               ))}
           </SelectContent>
@@ -810,6 +665,25 @@ const SalaryPage = () => {
           placeholder="Xodim qidirish"
           className="bg-white w-fit"
         />
+
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "gap-2",
+            hasAdvancedFiltersActive && "border-blue-500 text-blue-600",
+          )}
+          onClick={() => setShowAdvancedFilters((v) => !v)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filtrlar
+          {hasAdvancedFiltersActive && (
+            <span className="bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+              !
+            </span>
+          )}
+        </Button>
+
         <ExcelAdding />
         <Button
           variant="ghost"
@@ -821,6 +695,156 @@ const SalaryPage = () => {
           {downloading ? <Loader2 className="animate-spin" /> : <Download />}
         </Button>
       </div>
+
+      {/* Advanced filters panel */}
+      {showAdvancedFilters && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-blue-800">
+              Qo'shimcha filtrlar
+            </h3>
+            {hasAdvancedFiltersActive && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-600 h-auto py-1 gap-1"
+                onClick={resetAdvancedFilters}
+              >
+                <X className="h-3 w-3" /> Tozalash
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs text-blue-700">
+                Min kunlik daromad (so'm)
+              </Label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={advancedFilters.minPerDay}
+                onChange={(e) =>
+                  setAdvancedFilters((p) => ({
+                    ...p,
+                    minPerDay: e.target.value,
+                  }))
+                }
+                className="bg-white h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-blue-700">
+                Max kunlik daromad (so'm)
+              </Label>
+              <Input
+                type="number"
+                placeholder="∞"
+                value={advancedFilters.maxPerDay}
+                onChange={(e) =>
+                  setAdvancedFilters((p) => ({
+                    ...p,
+                    maxPerDay: e.target.value,
+                  }))
+                }
+                className="bg-white h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-blue-700">
+                Min oylik jami (so'm)
+              </Label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={advancedFilters.minTotal}
+                onChange={(e) =>
+                  setAdvancedFilters((p) => ({
+                    ...p,
+                    minTotal: e.target.value,
+                  }))
+                }
+                className="bg-white h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-blue-700">
+                Max oylik jami (so'm)
+              </Label>
+              <Input
+                type="number"
+                placeholder="∞"
+                value={advancedFilters.maxTotal}
+                onChange={(e) =>
+                  setAdvancedFilters((p) => ({
+                    ...p,
+                    maxTotal: e.target.value,
+                  }))
+                }
+                className="bg-white h-8 text-sm"
+              />
+            </div>
+          </div>
+          <div className="mt-3">
+            <Label className="text-xs text-blue-700 block mb-1">
+              To'lov holati
+            </Label>
+            <div className="flex gap-2">
+              {[
+                { value: "all", label: "Barchasi" },
+                { value: "unpaid", label: "Qoldig'i bor" },
+                { value: "paid", label: "To'liq to'langan" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() =>
+                    setAdvancedFilters((p) => ({
+                      ...p,
+                      paymentStatus: opt.value,
+                    }))
+                  }
+                  className={cn(
+                    "px-3 py-1 rounded-full text-xs border transition-colors",
+                    advancedFilters.paymentStatus === opt.value
+                      ? "bg-blue-500 text-white border-blue-500"
+                      : "bg-white text-gray-600 border-gray-300 hover:border-blue-300",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3">
+            <Label className="text-xs text-blue-700 block mb-1">Ustunlar</Label>
+            <div className="flex gap-2">
+              <button
+                onClick={() =>
+                  setAdvancedFilters((p) => ({
+                    ...p,
+                    showDailyColumn: !p.showDailyColumn,
+                  }))
+                }
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs border transition-colors",
+                  advancedFilters.showDailyColumn
+                    ? "bg-blue-500 text-white border-blue-500"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-blue-300",
+                )}
+              >
+                Kunlik ustuni
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Results summary when advanced filters are active */}
+      {hasAdvancedFiltersActive && (
+        <p className="text-sm text-blue-600">
+          Filtr natijalari: <strong>{filteredEmployees.length}</strong> ta xodim
+          / jami {employees.length} ta
+        </p>
+      )}
 
       {/* Employee Table */}
       <div className="overflow-x-auto">
@@ -836,14 +860,19 @@ const SalaryPage = () => {
               <th className="border border-gray-200 p-1 text-center font-semibold">
                 Ish kunlari
               </th>
+              {advancedFilters.showDailyColumn && (
+                <th className="border border-gray-200 p-1 text-center font-semibold">
+                  Kunlik
+                </th>
+              )}
               <th className="border border-gray-200 p-1 text-center font-semibold">
-                Yangi <br /> mavsum
+                Yangi mavsum
               </th>
               <th className="border border-gray-200 p-1 text-center font-semibold whitespace-normal">
-                Ish haqi <br /> (oylik)
+                Ish haqi (oylik)
               </th>
               <th className="border border-gray-200 p-1 text-center font-semibold whitespace-normal">
-                Ish haqi <br /> (ishbay)
+                Ish haqi (ishbay)
               </th>
               <th className="border border-gray-200 p-1 text-center font-semibold">
                 Topgan pul
@@ -851,221 +880,147 @@ const SalaryPage = () => {
               <th className="border border-gray-200 p-1 text-center font-semibold">
                 Avans
               </th>
-
               <th className="border border-gray-200 p-1 text-center font-semibold">
                 Qoldiq
               </th>
             </tr>
           </thead>
           <tbody className={cn("", loading && "cursor-not-allowed opacity-50")}>
-            {filteredEmployees
-              ?.sort((a, b) => {
-                const selectedDepartmentName =
-                  departments
-                    .find((d) => d.id.toString() === filters.department_id)
-                    ?.name?.toLowerCase() || "";
+            {filteredEmployees.map((employee, index) => {
+              const { advanceTotal } = calculatePaymentTotals(
+                employee?.paid_amounts,
+              );
+              const newSeason = calculateNewSeasonSalary(employee);
+              const totalEarned = getEmployeeTotalEarned(employee);
+              const days = employee?.attendance_days || 0;
+              const perDay = days > 0 ? totalEarned / days : 0;
+              const highlight = employee.group === "N/A" && containsTikuv;
+              const isLowEarner = perDay > 0 && perDay <= 100000;
 
-                const containsTikuv =
-                  selectedDepartmentName.includes("tikuv") ||
-                  selectedDepartmentName.includes("тикув");
-
-                const aHighlight = a.group === "N/A" && containsTikuv;
-                const bHighlight = b.group === "N/A" && containsTikuv;
-
-                if (aHighlight && !bHighlight) return -1;
-                if (!aHighlight && bHighlight) return 1;
-
-                return a.name.localeCompare(b.name);
-              })
-              .map((employee, index) => {
-                const { advanceTotal, salaryTotal } = calculatePaymentTotals(
-                  employee?.paid_amounts,
-                );
-
-                const selectedDepartmentName =
-                  departments
-                    .find((d) => d.id.toString() === filters.department_id)
-                    ?.name?.toLowerCase() || "";
-
-                const containsTikuv =
-                  selectedDepartmentName.includes("tikuv") ||
-                  selectedDepartmentName.includes("тикув");
-
-                const newSeason = calculateNewSeasonSalary(employee);
-
-                const totalEarned =
-                  parseFloat(
-                    employee?.monthly_salary?.amount >= 0
-                      ? employee?.monthly_salary?.amount
-                      : employee?.attendance_salary,
-                  ) +
-                  parseFloat(
-                    employee?.monthly_piecework?.amount >= 0
-                      ? employee?.monthly_piecework?.amount
-                      : employee?.tarification_salary,
-                  ) +
-                  parseFloat(
-                    employee?.monthly_daily_payment?.amount >= 0
-                      ? employee?.monthly_daily_payment?.amount
-                      : newSeason,
-                  );
-
-                const isEarningWell =
-                  totalEarned / employee?.attendance_days <= 100000;
-
-                const highlight = employee.group === "N/A" && containsTikuv;
-                return (
-                  <tr
-                    key={employee.id}
-                    className={cn(
-                      "hover:bg-gray-50 transition-colors",
-                      highlight && "bg-red-200 hover:bg-red-100",
-                      isEarningWell && "bg-yellow-200 hover:bg-yellow-100",
-                    )}
+              return (
+                <tr
+                  key={employee.id}
+                  className={cn(
+                    "hover:bg-gray-50 transition-colors",
+                    highlight && "bg-red-200 hover:bg-red-100",
+                    isLowEarner && "bg-yellow-200 hover:bg-yellow-100",
+                  )}
+                >
+                  <td className="border border-gray-200 p-1 text-center">
+                    {index + 1}
+                  </td>
+                  <td className="border border-gray-200 p-1">
+                    <Link
+                      to={`/ceo/salary/${employee.id}`}
+                      className="text-gray-900"
+                    >
+                      {employee?.name}
+                    </Link>
+                  </td>
+                  <td className="border border-gray-200 p-1 text-center">
+                    {days}
+                  </td>
+                  {advancedFilters.showDailyColumn && (
+                    <td className="border border-gray-200 p-1 text-center text-gray-500">
+                      {days > 0 ? formatNumber(Math.round(perDay)) : "-"}
+                    </td>
+                  )}
+                  <td
+                    className="border border-gray-200 p-1 text-center cursor-pointer"
+                    onClick={() =>
+                      handleAdditionalDialog(employee, "newSeason")
+                    }
                   >
-                    <td className="border border-gray-200 p-1 text-center">
-                      {index + 1}
-                    </td>
-                    <td className="border border-gray-200 p-1">
-                      <Link
-                        to={`/ceo/salary/${employee.id}`}
-                        className="text-gray-900"
-                      >
-                        {employee?.name}
-                      </Link>
-                    </td>
-                    <td className="border border-gray-200 p-1 text-center">
-                      {employee?.attendance_days}
-                    </td>
-                    <td
-                      className="border border-gray-200 p-1 text-center cursor-pointer"
-                      onClick={() =>
-                        handleAdditionalDialog(employee, "newSeason")
-                      }
+                    <div
+                      className={cn(
+                        "cursor-pointer",
+                        employee?.monthly_daily_payment?.amount == newSeason
+                          ? "bg-green-400"
+                          : employee?.monthly_daily_payment?.amount >= 0
+                            ? "bg-orange-400"
+                            : "",
+                      )}
                     >
-                      <div
-                        className={`cursor-pointer ${
-                          employee?.monthly_daily_payment?.amount == newSeason
-                            ? "bg-green-400"
-                            : employee?.monthly_daily_payment?.amount >= 0
-                              ? "bg-orange-400"
-                              : ""
-                        }`}
-                      >
-                        {formatNumber(
-                          employee?.monthly_daily_payment?.amount >= 0
-                            ? employee?.monthly_daily_payment?.amount
-                            : newSeason,
-                        )}
-                      </div>
-                    </td>
-                    <td
-                      className="border border-gray-200 p-1 text-center cursor-pointer"
-                      onClick={() =>
-                        handleAdditionalDialog(employee, "monthly")
-                      }
-                    >
-                      <div
-                        className={`cursor-pointer ${
-                          employee?.monthly_salary?.amount ==
+                      {formatNumber(
+                        employee?.monthly_daily_payment?.amount >= 0
+                          ? employee?.monthly_daily_payment?.amount
+                          : newSeason,
+                      )}
+                    </div>
+                  </td>
+                  <td
+                    className="border border-gray-200 p-1 text-center cursor-pointer"
+                    onClick={() => handleAdditionalDialog(employee, "monthly")}
+                  >
+                    <div
+                      className={cn(
+                        "cursor-pointer",
+                        employee?.monthly_salary?.amount ==
                           employee?.attendance_salary
-                            ? "bg-green-400"
-                            : employee?.monthly_salary?.amount >= 0
-                              ? "bg-orange-400"
-                              : ""
-                        }`}
-                      >
-                        {formatNumber(
-                          employee?.monthly_salary?.amount >= 0
-                            ? employee?.monthly_salary?.amount
-                            : employee?.attendance_salary,
-                        )}
-                      </div>
-                    </td>
-                    <td
-                      className="border border-gray-200 p-1 text-center"
-                      onClick={() =>
-                        handleAdditionalDialog(employee, "piecework")
-                      }
+                          ? "bg-green-400"
+                          : employee?.monthly_salary?.amount >= 0
+                            ? "bg-orange-400"
+                            : "",
+                      )}
                     >
-                      <div
-                        className={`cursor-pointer ${
-                          employee?.monthly_piecework?.amount ==
+                      {formatNumber(
+                        employee?.monthly_salary?.amount >= 0
+                          ? employee?.monthly_salary?.amount
+                          : employee?.attendance_salary,
+                      )}
+                    </div>
+                  </td>
+                  <td
+                    className="border border-gray-200 p-1 text-center cursor-pointer"
+                    onClick={() =>
+                      handleAdditionalDialog(employee, "piecework")
+                    }
+                  >
+                    <div
+                      className={cn(
+                        "cursor-pointer",
+                        employee?.monthly_piecework?.amount ==
                           employee?.tarification_salary
-                            ? "bg-green-400"
-                            : employee?.monthly_piecework?.amount >= 0
-                              ? "bg-orange-400"
-                              : ""
-                        }`}
-                      >
-                        {formatNumber(
-                          employee?.monthly_piecework?.amount >= 0
-                            ? employee?.monthly_piecework?.amount
-                            : employee?.tarification_salary,
-                        )}
-                      </div>
-                    </td>
-                    <td className="border border-gray-200 p-1 text-center">
-                      {formatNumber(
-                        parseFloat(
-                          employee?.monthly_salary?.amount >= 0
-                            ? employee?.monthly_salary?.amount
-                            : employee?.attendance_salary,
-                        ) +
-                          parseFloat(
-                            employee?.monthly_piecework?.amount >= 0
-                              ? employee?.monthly_piecework?.amount
-                              : employee?.tarification_salary,
-                          ) +
-                          parseFloat(
-                            employee?.monthly_daily_payment?.amount >= 0
-                              ? employee?.monthly_daily_payment?.amount
-                              : calculateNewSeasonSalary(employee),
-                          ),
+                          ? "bg-green-400"
+                          : employee?.monthly_piecework?.amount >= 0
+                            ? "bg-orange-400"
+                            : "",
                       )}
-                    </td>
-                    <td className="border border-gray-200 p-1 text-center">
-                      <div className="w-full flex items-center justify-center">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openPaymentDialog(employee, "advance")}
-                          disabled={paymentLoading[`${employee.id}_advance`]}
-                          className="h-auto text-orange-600 hover:text-orange-700 hover:bg-orange-50 flex flex-col items-center gap-1 text-xs font-normal"
-                        >
-                          {paymentLoading[`${employee.id}_advance`] ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            formatNumber(advanceTotal)
-                          )}
-                        </Button>
-                      </div>
-                    </td>
-                    <td className="border border-gray-200 p-1 text-center">
+                    >
                       {formatNumber(
-                        parseFloat(
-                          employee?.monthly_salary?.amount >= 0
-                            ? employee?.monthly_salary?.amount
-                            : employee?.attendance_salary,
-                        ) +
-                          parseFloat(
-                            employee?.monthly_piecework?.amount >= 0
-                              ? employee?.monthly_piecework?.amount
-                              : employee?.tarification_salary,
-                          ) +
-                          parseFloat(
-                            employee?.monthly_daily_payment?.amount >= 0
-                              ? employee?.monthly_daily_payment?.amount
-                              : calculateNewSeasonSalary(employee),
-                          ) -
-                          parseFloat(employee?.total_paid),
+                        employee?.monthly_piecework?.amount >= 0
+                          ? employee?.monthly_piecework?.amount
+                          : employee?.tarification_salary,
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
+                    </div>
+                  </td>
+                  <td className="border border-gray-200 p-1 text-center">
+                    {formatNumber(totalEarned)}
+                  </td>
+                  <td className="border border-gray-200 p-1 text-center">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openPaymentDialog(employee, "advance")}
+                      disabled={paymentLoading[`${employee.id}_advance`]}
+                      className="h-auto text-orange-600 hover:text-orange-700 hover:bg-orange-50 flex flex-col items-center gap-1 text-xs font-normal mx-auto"
+                    >
+                      {paymentLoading[`${employee.id}_advance`] ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        formatNumber(advanceTotal)
+                      )}
+                    </Button>
+                  </td>
+                  <td className="border border-gray-200 p-1 text-center">
+                    {formatNumber(
+                      totalEarned - parseFloat(employee?.total_paid || 0),
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
 
-            {/* Jami (Total) Row */}
             {filteredEmployees.length > 0 && (
               <tr className="bg-gray-50 font-semibold">
                 <td className="border border-gray-200 p-1 text-center">Jami</td>
@@ -1078,6 +1033,9 @@ const SalaryPage = () => {
                     0,
                   )}
                 </td>
+                {advancedFilters.showDailyColumn && (
+                  <td className="border border-gray-200 p-1 text-center">—</td>
+                )}
                 <td className="border border-gray-200 p-1 text-center">
                   {formatNumber(
                     filteredEmployees.reduce(
@@ -1121,23 +1079,7 @@ const SalaryPage = () => {
                 <td className="border border-gray-200 p-1 text-center">
                   {formatNumber(
                     filteredEmployees.reduce(
-                      (sum, emp) =>
-                        sum +
-                        ((Number(
-                          emp?.monthly_salary?.amount >= 0
-                            ? emp?.monthly_salary?.amount
-                            : emp?.attendance_salary,
-                        ) || 0) +
-                          (Number(
-                            emp?.monthly_piecework?.amount >= 0
-                              ? emp?.monthly_piecework?.amount
-                              : emp?.tarification_salary,
-                          ) || 0) +
-                          (Number(
-                            emp?.monthly_daily_payment?.amount >= 0
-                              ? emp?.monthly_daily_payment?.amount
-                              : calculateNewSeasonSalary(emp),
-                          ) || 0)),
+                      (sum, emp) => sum + getEmployeeTotalEarned(emp),
                       0,
                     ),
                   )}
@@ -1154,26 +1096,13 @@ const SalaryPage = () => {
                 </td>
                 <td className="border border-gray-200 p-1 text-center">
                   {formatNumber(
-                    filteredEmployees.reduce((sum, emp) => {
-                      const totalEarned =
-                        (Number(
-                          emp?.monthly_salary?.amount >= 0
-                            ? emp?.monthly_salary?.amount
-                            : emp?.attendance_salary,
-                        ) || 0) +
-                        (Number(
-                          emp?.monthly_piecework?.amount >= 0
-                            ? emp?.monthly_piecework?.amount
-                            : emp?.tarification_salary,
-                        ) || 0) +
-                        (Number(
-                          emp?.monthly_daily_payment?.amount >= 0
-                            ? emp?.monthly_daily_payment?.amount
-                            : calculateNewSeasonSalary(emp),
-                        ) || 0);
-                      const totalPaid = Number(emp?.total_paid || 0);
-                      return sum + (totalEarned - totalPaid);
-                    }, 0),
+                    filteredEmployees.reduce(
+                      (sum, emp) =>
+                        sum +
+                        (getEmployeeTotalEarned(emp) -
+                          Number(emp?.total_paid || 0)),
+                      0,
+                    ),
                   )}
                 </td>
               </tr>
@@ -1197,7 +1126,7 @@ const SalaryPage = () => {
         )}
       </div>
 
-      {/* Enhanced Payment Dialog */}
+      {/* Payment Dialog */}
       <Dialog open={paymentDialog.open} onOpenChange={closePaymentDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -1213,12 +1142,10 @@ const SalaryPage = () => {
               <strong>{paymentDialog.employee?.name}</strong> uchun{" "}
               {paymentDialog.type === "advance" ? "avans" : "oylik"} miqdorini
               o'zgartirish
-              <br />
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Payment History */}
             {paymentDialog.employee && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -1228,7 +1155,6 @@ const SalaryPage = () => {
                     tarixi
                   </h4>
                 </div>
-
                 <div className="max-h-40 overflow-y-auto border rounded-lg">
                   {getPaymentHistory(paymentDialog.employee, paymentDialog.type)
                     .length > 0 ? (
@@ -1272,13 +1198,11 @@ const SalaryPage = () => {
 
             <Separator />
 
-            {/* New Payment Form */}
             <div className="space-y-4">
               <h4 className="font-medium text-gray-900 flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 To'lovni o'zgartirish
               </h4>
-
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Miqdor: {formatNumber(paymentForm.amount)}
@@ -1302,7 +1226,6 @@ const SalaryPage = () => {
                   className="border-2 focus:border-blue-500"
                 />
               </div>
-
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
@@ -1369,556 +1292,120 @@ const SalaryPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Additional Payment Dialog */}
+      {/* Unified Additional Salary Dialog */}
       <Dialog
-        open={monthlyDialogOpen}
-        onOpenChange={() => setMonthlyDialogOpen(false)}
+        open={!!additionalDialogType}
+        onOpenChange={closeAdditionalDialog}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              Ish haqi (oylik)
-            </DialogTitle>
+            <DialogTitle>{activeConfig?.title}</DialogTitle>
             <DialogDescription>
               <strong>{selectedEmployee?.name}</strong>
             </DialogDescription>
           </DialogHeader>
-          <div>
-            {selectedEmployee?.monthly_salary ? (
-              <div className="flex flex-col gap-2">
+
+          <div className="flex flex-col gap-2">
+            {activeRecord ? (
+              <>
                 <p className="text-sm text-gray-600">
                   Yangi miqdor:{" "}
                   <span className="font-medium">
-                    {formatNumber(selectedEmployee.monthly_salary?.amount)} so'm
+                    {formatNumber(activeRecord.amount)} so'm
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">
                   Asl miqdor:{" "}
                   <span className="font-medium">
-                    {formatNumber(selectedEmployee.attendance_salary)} so'm
+                    {formatNumber(activeBase)} so'm
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">
                   Farqi:{" "}
                   <span
-                    className={`font-medium ${
-                      selectedEmployee.monthly_salary?.amount -
-                        selectedEmployee.attendance_salary >=
-                      0
+                    className={cn(
+                      "font-medium",
+                      activeRecord.amount - activeBase >= 0
                         ? "text-green-600"
-                        : "text-red-600"
-                    }`}
+                        : "text-red-600",
+                    )}
                   >
-                    {formatNumber(
-                      selectedEmployee.monthly_salary?.amount -
-                        selectedEmployee.attendance_salary,
-                    )}{" "}
-                    so'm
+                    {formatNumber(activeRecord.amount - activeBase)} so'm
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">
                   Izoh:{" "}
                   <span className="font-medium">
-                    {selectedEmployee.monthly_salary?.comment || "-"}
+                    {activeRecord.comment || "-"}
                   </span>
                 </p>
-                <Label htmlFor="additional-amount">
-                  Yangi miqdorni kiriting: ({" "}
-                  {additionalAmount && formatNumber(additionalAmount)} so'm)
-                </Label>
-                <Input
-                  id="additional-amount"
-                  value={additionalAmount}
-                  onChange={(e) => setAdditionalAmount(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleEditAdditionalMonthlySalary(
-                        selectedEmployee?.monthly_salary?.id,
-                      );
-                    }
-                  }}
-                />
-                <div>
-                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
-                  <Input
-                    id="additional-comment"
-                    type="text"
-                    value={additionalComment}
-                    onChange={(e) => setAdditionalComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleEditAdditionalMonthlySalary(
-                          selectedEmployee?.monthly_salary?.id,
-                        );
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 justify-end mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setMonthlyDialogOpen(false);
-                      setAdditionalAmount("");
-                      setAdditionalComment("");
-                    }}
-                  >
-                    Bekor qilish
-                  </Button>
-                  <Button
-                    onClick={() =>
-                      handleEditAdditionalMonthlySalary(
-                        selectedEmployee?.monthly_salary?.id,
-                      )
-                    }
-                    disabled={!additionalAmount || sending}
-                  >
-                    {sending ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        O'zgartirilmoqda
-                      </>
-                    ) : (
-                      "O'zgartirish"
-                    )}
-                  </Button>
-                </div>
-              </div>
+              </>
             ) : (
               <div>
-                <div>
-                  <span className="text-gray-600 text-sm">Asl miqdor:</span>{" "}
-                  {formatNumber(selectedEmployee?.attendance_salary)} so'm
-                </div>
-                <Label htmlFor="additional-amount">
-                  Yangi miqdorni kiriting: ({" "}
-                  {additionalAmount && formatNumber(additionalAmount)} so'm)
-                </Label>
-                <Input
-                  id="additional-amount"
-                  value={additionalAmount}
-                  onChange={(e) => setAdditionalAmount(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleSaveAdditionalMonthlySalary();
-                    }
-                  }}
-                />
-                <div>
-                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
-                  <Input
-                    id="additional-comment"
-                    type="text"
-                    value={additionalComment}
-                    onChange={(e) => setAdditionalComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleSaveAdditionalMonthlySalary();
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 justify-end mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setMonthlyDialogOpen(false);
-                      setAdditionalAmount("");
-                      setAdditionalComment("");
-                    }}
-                  >
-                    Bekor qilish
-                  </Button>
-                  <Button
-                    onClick={handleSaveAdditionalMonthlySalary}
-                    disabled={!additionalAmount || sending}
-                  >
-                    {sending ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        Saqlanmoqda{" "}
-                      </>
-                    ) : (
-                      "Saqlash"
-                    )}
-                  </Button>
-                </div>
+                <span className="text-gray-600 text-sm">Asl miqdor:</span>{" "}
+                {formatNumber(activeBase)} so'm
               </div>
             )}
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={pieceworkDialogOpen}
-        onOpenChange={() => setPieceworkDialogOpen(false)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              Ish haqi (ishbay)
-            </DialogTitle>
-            <DialogDescription>
-              <strong>{selectedEmployee?.name}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <div>
-            {selectedEmployee?.monthly_piecework ? (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-gray-600">
-                  Yangi miqdor:{" "}
-                  <span className="font-medium">
-                    {formatNumber(selectedEmployee.monthly_piecework?.amount)}{" "}
-                    so'm
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Asl miqdor:{" "}
-                  <span className="font-medium">
-                    {formatNumber(selectedEmployee.tarification_salary)} so'm
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Farqi:{" "}
-                  <span
-                    className={`font-medium ${
-                      selectedEmployee.monthly_piecework?.amount -
-                        selectedEmployee.tarification_salary >=
-                      0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatNumber(
-                      selectedEmployee.monthly_piecework?.amount -
-                        selectedEmployee.tarification_salary,
-                    )}{" "}
-                    so'm
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Izoh:{" "}
-                  <span className="font-medium">
-                    {selectedEmployee.monthly_piecework?.comment || "-"}
-                  </span>
-                </p>
-                <Label htmlFor="additional-amount">
-                  Yangi miqdorni kiriting: ({" "}
-                  {additionalAmount && formatNumber(additionalAmount)} so'm)
-                </Label>
-                <Input
-                  id="additional-amount"
-                  value={additionalAmount}
-                  onChange={(e) => setAdditionalAmount(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleEditAdditionalPieceWork(
-                        selectedEmployee?.monthly_piecework?.id,
-                      );
-                    }
-                  }}
-                />
-                <div>
-                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
-                  <Input
-                    id="additional-comment"
-                    type="text"
-                    value={additionalComment}
-                    onChange={(e) => setAdditionalComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleEditAdditionalPieceWork(
-                          selectedEmployee?.monthly_piecework?.id,
-                        );
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 justify-end mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setPieceworkDialogOpen(false);
-                      setAdditionalAmount("");
-                      setAdditionalComment("");
-                    }}
-                  >
-                    Bekor qilish
-                  </Button>
-                  <Button
-                    onClick={() =>
-                      handleEditAdditionalPieceWork(
-                        selectedEmployee?.monthly_piecework?.id,
-                      )
-                    }
-                    disabled={!additionalAmount || sending}
-                  >
-                    {sending ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        O'zgartirilmoqda...
-                      </>
-                    ) : (
-                      "O'zgartirish"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div>
-                  <span className="text-gray-600 text-sm">Asl miqdor:</span>{" "}
-                  {formatNumber(selectedEmployee?.tarification_salary)} so'm
-                </div>
-                <Label htmlFor="additional-amount">
-                  Yangi miqdorni kiriting: ({" "}
-                  {additionalAmount && formatNumber(additionalAmount)} so'm)
-                </Label>
-                <Input
-                  id="additional-amount"
-                  value={additionalAmount}
-                  onChange={(e) => setAdditionalAmount(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleSaveAdditionalPieceWork();
-                    }
-                  }}
-                />
-                <div>
-                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
-                  <Input
-                    id="additional-comment"
-                    type="text"
-                    value={additionalComment}
-                    onChange={(e) => setAdditionalComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleSaveAdditionalPieceWork();
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 justify-end mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setPieceworkDialogOpen(false);
-                      setAdditionalAmount("");
-                      setAdditionalComment("");
-                    }}
-                  >
-                    Bekor qilish
-                  </Button>
-                  <Button
-                    onClick={handleSaveAdditionalPieceWork}
-                    disabled={!additionalAmount || sending}
-                  >
-                    {sending ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        Saqlanmoqda...
-                      </>
-                    ) : (
-                      "Saqlash"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={newSeasonDialogOpen}
-        onOpenChange={() => setNewSeasonDialogOpen(false)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              Yangi mavsum
-            </DialogTitle>
-            <DialogDescription>
-              <strong>{selectedEmployee?.name}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <div>
-            {selectedEmployee?.monthly_daily_payment ? (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-gray-600">
-                  Yangi miqdor:{" "}
-                  <span className="font-medium">
-                    {formatNumber(
-                      selectedEmployee.monthly_daily_payment?.amount,
-                    )}{" "}
-                    so'm
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Asl miqdor:{" "}
-                  <span className="font-medium">
-                    {formatNumber(calculateNewSeasonSalary(selectedEmployee))}{" "}
-                    so'm
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Farqi:{" "}
-                  <span
-                    className={`font-medium ${
-                      selectedEmployee.monthly_daily_payment?.amount -
-                        calculateNewSeasonSalary(selectedEmployee) >=
-                      0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatNumber(
-                      selectedEmployee.monthly_daily_payment?.amount -
-                        calculateNewSeasonSalary(selectedEmployee),
-                    )}{" "}
-                    so'm
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Izoh:{" "}
-                  <span className="font-medium">
-                    {selectedEmployee.monthly_daily_payment?.comment || "-"}
-                  </span>
-                </p>
-                <Label htmlFor="additional-amount">
-                  Yangi miqdorni kiriting: ({" "}
-                  {additionalAmount && formatNumber(additionalAmount)} so'm)
-                </Label>
-                <Input
-                  id="additional-amount"
-                  value={additionalAmount}
-                  onChange={(e) => setAdditionalAmount(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleEditAdditionalDailyPayment(
-                        selectedEmployee?.monthly_daily_payment?.id,
-                      );
-                    }
-                  }}
-                />
-                <div>
-                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
-                  <Input
-                    id="additional-comment"
-                    type="text"
-                    value={additionalComment}
-                    onChange={(e) => setAdditionalComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleEditAdditionalDailyPayment(
-                          selectedEmployee?.monthly_daily_payment?.id,
-                        );
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 justify-end mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setNewSeasonDialogOpen(false);
-                      setAdditionalAmount("");
-                      setAdditionalComment("");
-                    }}
-                  >
-                    Bekor qilish
-                  </Button>
-                  <Button
-                    onClick={() =>
-                      handleEditAdditionalDailyPayment(
-                        selectedEmployee?.monthly_daily_payment?.id,
-                      )
-                    }
-                    disabled={!additionalAmount || sending}
-                  >
-                    {sending ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        O'zgartirilmoqda...
-                      </>
-                    ) : (
-                      "O'zgartirish"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div>
-                  <span className="text-gray-600 text-sm">Asl miqdor:</span>{" "}
-                  {formatNumber(calculateNewSeasonSalary(selectedEmployee))}{" "}
-                  so'm
-                </div>
-                <Label htmlFor="additional-amount">
-                  Yangi miqdorni kiriting: ({" "}
-                  {additionalAmount && formatNumber(additionalAmount)} so'm)
-                </Label>
-                <Input
-                  id="additional-amount"
-                  value={additionalAmount}
-                  onChange={(e) => setAdditionalAmount(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleSaveAdditionalDailyPayment();
-                    }
-                  }}
-                />
-                <div>
-                  <Label htmlFor="additional-comment">Izoh (ixtiyoriy):</Label>
-                  <Input
-                    id="additional-comment"
-                    type="text"
-                    value={additionalComment}
-                    onChange={(e) => setAdditionalComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleSaveAdditionalDailyPayment();
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 justify-end mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setNewSeasonDialogOpen(false);
-                      setAdditionalAmount("");
-                      setAdditionalComment("");
-                    }}
-                  >
-                    Bekor qilish
-                  </Button>
-                  <Button
-                    onClick={handleSaveAdditionalDailyPayment}
-                    disabled={!additionalAmount || sending}
-                  >
-                    {sending ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        Saqlanmoqda...
-                      </>
-                    ) : (
-                      "Saqlash"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
+
+            <Label htmlFor="add-amount">
+              Yangi miqdorni kiriting: (
+              {additionalAmount && formatNumber(additionalAmount)} so'm)
+            </Label>
+            <Input
+              id="add-amount"
+              type="number"
+              value={additionalAmount}
+              onChange={(e) => setAdditionalAmount(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  activeRecord
+                    ? handleEditAdditional(activeRecord.id)
+                    : handleSaveAdditional();
+                }
+              }}
+            />
+
+            <Label htmlFor="add-comment">Izoh (ixtiyoriy):</Label>
+            <Input
+              id="add-comment"
+              type="text"
+              value={additionalComment}
+              onChange={(e) => setAdditionalComment(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  activeRecord
+                    ? handleEditAdditional(activeRecord.id)
+                    : handleSaveAdditional();
+                }
+              }}
+            />
+
+            <div className="flex items-center gap-2 justify-end mt-4">
+              <Button variant="outline" onClick={closeAdditionalDialog}>
+                Bekor qilish
+              </Button>
+              <Button
+                disabled={!additionalAmount || sending}
+                onClick={() =>
+                  activeRecord
+                    ? handleEditAdditional(activeRecord.id)
+                    : handleSaveAdditional()
+                }
+              >
+                {sending ? (
+                  <>
+                    <Loader2 className="animate-spin" />{" "}
+                    {activeRecord ? "O'zgartirilmoqda" : "Saqlanmoqda"}
+                  </>
+                ) : activeRecord ? (
+                  "O'zgartirish"
+                ) : (
+                  "Saqlash"
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
