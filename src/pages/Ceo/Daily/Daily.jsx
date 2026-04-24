@@ -428,23 +428,36 @@ const Daily = () => {
                   data.total_attendance_salary +
                   data.today_season_salary +
                   data.rasxod;
+                const totalCost = data.total_cost || 1; // Avoid division by zero
+
+                const monthlyExpensePercentage =
+                  totalCost > 0
+                    ? (data.today_monthly_expense / totalCost) * 100
+                    : 0;
+                const salaryPercentage =
+                  totalCost > 0 ? (totalSalary / totalCost) * 100 : 0;
+                const transportPercentage =
+                  totalCost > 0
+                    ? (data.total_transport_salary / totalCost) * 100
+                    : 0;
+
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <SalaryBand
                       label="Oylik harajatlar (bugun)"
-                      value={`${fmtUsd(toUsd(data.today_monthly_expense, data.dollar_rate))} · ${fmt(data.today_monthly_expense)} so'm`}
+                      value={`${fmtUsd(toUsd(data.today_monthly_expense, data.dollar_rate))} · ${fmt(data.today_monthly_expense)} so'm (${monthlyExpensePercentage.toFixed(1)}%)`}
                       icon={BarChart3}
                       color="#6366f1"
                     />
                     <SalaryBand
                       label="Maosh"
-                      value={`${fmtUsd(toUsd(totalSalary, data.dollar_rate))} · ${fmt(totalSalary)} so'm`}
+                      value={`${fmtUsd(toUsd(totalSalary, data.dollar_rate))} · ${fmt(totalSalary)} so'm (${salaryPercentage.toFixed(1)}%)`}
                       icon={Users}
                       color="#10b981"
                     />
                     <SalaryBand
                       label="Transport maoshi"
-                      value={`${fmtUsd(toUsd(data.total_transport_salary, data.dollar_rate))} · ${fmt(data.total_transport_salary)} so'm`}
+                      value={`${fmtUsd(toUsd(data.total_transport_salary, data.dollar_rate))} · ${fmt(data.total_transport_salary)} so'm (${transportPercentage.toFixed(1)}%)`}
                       icon={Truck}
                       color="#f59e0b"
                     />
