@@ -288,6 +288,7 @@ const Daily = () => {
     return savedDate || new Date().toISOString().split("T")[0];
   });
   const [activeTab, setActiveTab] = useState("expenses");
+  const [ordersView, setOrdersView] = useState("cards");
 
   const getData = async () => {
     setLoading(true);
@@ -592,21 +593,249 @@ const Daily = () => {
             {/* Today sewed orders */}
             {data.today_sewed_orders?.length > 0 && (
               <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <Scissors size={14} className="text-slate-400" />
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                    Bugungi buyurtmalar ({data.today_sewed_orders.length} ta)
-                  </p>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Scissors size={14} className="text-slate-400" />
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                      Bugungi buyurtmalar ({data.today_sewed_orders.length} ta)
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setOrdersView("cards")}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                        ordersView === "cards"
+                          ? "bg-white text-gray-900 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Kartalar
+                    </button>
+                    <button
+                      onClick={() => setOrdersView("table")}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                        ordersView === "table"
+                          ? "bg-white text-gray-900 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Jadval
+                    </button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {data.today_sewed_orders.map((order) => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      dollarRate={data.dollar_rate}
-                    />
-                  ))}
-                </div>
+
+                {ordersView === "cards" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {data.today_sewed_orders.map((order) => (
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        dollarRate={data.dollar_rate}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {ordersView === "table" && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Model
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Holati
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Daromad
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Xarajat
+                            </th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Bajarilish
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Daromad-Xarajat
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Narxi
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {data.today_sewed_orders.map((order) => {
+                            const status = statuses[order.status] || {
+                              secondaryBg: "bg-gray-50",
+                              textColor: "text-gray-500",
+                              text: order.status,
+                            };
+                            const progress = Math.min(
+                              100,
+                              Math.round(
+                                (order.sewed_quantity / order.quantity) * 100,
+                              ),
+                            );
+
+                            return (
+                              <tr
+                                key={order.id}
+                                className="hover:bg-gray-50 transition-colors"
+                              >
+                                <td className="px-4 py-3">
+                                  <div className="flex items-start gap-3">
+                                    <div className="shrink-0">
+                                      <ModelImages
+                                        modelCode={order.model_name}
+                                      />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-semibold text-gray-900">
+                                        {order.model_name}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {order.submodel_name} · {order.name}
+                                      </p>
+                                      {order.price && (
+                                        <p className="text-xs font-semibold text-green-600 mt-1">
+                                          {fmtUsd(order.price)}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span
+                                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${status.secondaryBg} ${status.textColor}`}
+                                  >
+                                    {status.text}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <div>
+                                    <p className="text-sm font-bold text-indigo-700">
+                                      {fmtUsd(order.todayRevenue_usd)}
+                                    </p>
+                                    <p className="text-xs text-indigo-300">
+                                      {fmt(order.todayRevenue_uzs)} so'm
+                                    </p>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <div>
+                                    <p className="text-sm font-bold text-amber-600">
+                                      {fmtUsd(
+                                        toUsd(
+                                          order.total_cost,
+                                          data.dollar_rate,
+                                        ),
+                                      )}
+                                    </p>
+                                    <p className="text-xs text-amber-300">
+                                      {fmt(order.total_cost)} so'm
+                                    </p>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <div className="text-right">
+                                      <p className="text-xs font-bold text-gray-700">
+                                        {fmt(order.sewed_quantity)} /{" "}
+                                        {fmt(order.quantity)}
+                                      </p>
+                                      <p className="text-xs text-gray-400">
+                                        ({progress}%)
+                                      </p>
+                                    </div>
+                                    <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-indigo-500 rounded-full"
+                                        style={{ width: progress + "%" }}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {(() => {
+                                    const profit =
+                                      order.todayRevenue_uzs - order.total_cost;
+                                    const profitPercentage =
+                                      order.todayRevenue_uzs > 0
+                                        ? (profit / order.todayRevenue_uzs) *
+                                          100
+                                        : 0;
+                                    const isPositive = profit >= 0;
+
+                                    return (
+                                      <div>
+                                        <p
+                                          className={`text-sm font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}
+                                        >
+                                          {fmtUsd(
+                                            toUsd(profit, data.dollar_rate),
+                                          )}
+                                        </p>
+                                        <p
+                                          className={`text-xs ${isPositive ? "text-green-500" : "text-red-500"}`}
+                                        >
+                                          {fmt(profit)} so'm
+                                        </p>
+                                        <p
+                                          className={`text-xs font-semibold mt-1 ${isPositive ? "text-green-500" : "text-red-500"}`}
+                                        >
+                                          {isPositive ? "+" : ""}
+                                          {profitPercentage.toFixed(1)}%
+                                        </p>
+                                      </div>
+                                    );
+                                  })()}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <div className="space-y-1">
+                                    {[
+                                      {
+                                        k: "Tikuv",
+                                        v: order.cost_breakdown.rasxod,
+                                      },
+                                      {
+                                        k: "Maosh",
+                                        v:
+                                          order.cost_breakdown.season_salary +
+                                          order.cost_breakdown.attendance,
+                                      },
+                                      {
+                                        k: "Transport",
+                                        v: order.cost_breakdown.transport,
+                                      },
+                                      {
+                                        k: "Kunlik xarajat",
+                                        v: order.cost_breakdown.monthly_expense,
+                                      },
+                                    ].map(({ k, v }) => (
+                                      <div
+                                        key={k}
+                                        className="flex justify-between gap-2"
+                                      >
+                                        <span className="text-xs text-gray-500">
+                                          {k}:
+                                        </span>
+                                        <span className="text-xs font-bold text-gray-700">
+                                          {fmtUsd(toUsd(v, data.dollar_rate))}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </section>
             )}
           </>
