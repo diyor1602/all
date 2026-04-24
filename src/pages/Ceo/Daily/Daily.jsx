@@ -6,8 +6,6 @@ import {
   DollarSign,
   Package,
   Wallet,
-  Banknote,
-  Clock,
   Users,
   BarChart3,
   ArrowUpRight,
