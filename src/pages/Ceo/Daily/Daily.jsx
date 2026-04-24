@@ -28,7 +28,7 @@ const toUsd = (uzs, rate) => (rate ? uzs / rate : 0);
 // Cards that show dual currency
 const CARDS = (d) => [
   {
-    label: "Daromad",
+    label: "Xizmat",
     primary: fmtUsd(d.today_revenue_usd),
     secondary: fmt(d.today_revenue_uzs) + " so'm",
     icon: DollarSign,
@@ -57,16 +57,6 @@ const CARDS = (d) => [
     light: "#fffbeb",
     text: "#92400e",
   },
-  {
-    label: "Rasxod",
-    primary: fmtUsd(toUsd(d.rasxod, d.dollar_rate)),
-    secondary: fmt(d.rasxod) + " so'm",
-    icon: Banknote,
-    from: "#ef4444",
-    to: "#f87171",
-    light: "#fef2f2",
-    text: "#991b1b",
-  },
 ];
 
 const CARDS2 = (d) => [
@@ -81,16 +71,6 @@ const CARDS2 = (d) => [
     text: "#5b21b6",
   },
   {
-    label: "Daqiqaga narx",
-    primary: fmtUsd(toUsd(d.cost_per_minute, d.dollar_rate)),
-    secondary: fmt(d.cost_per_minute) + " so'm",
-    icon: Clock,
-    from: "#06b6d4",
-    to: "#22d3ee",
-    light: "#ecfeff",
-    text: "#164e63",
-  },
-  {
     label: "Tikilgan buyurtmalar",
     primary: fmt(d.today_total_sewed_orders) + " ta",
     secondary: null,
@@ -99,16 +79,6 @@ const CARDS2 = (d) => [
     to: "#fb923c",
     light: "#fff7ed",
     text: "#9a3412",
-  },
-  {
-    label: "Buyurtma narxi",
-    primary: fmtUsd(toUsd(d.order_cost, d.dollar_rate)),
-    secondary: fmt(d.order_cost) + " so'm",
-    icon: BarChart3,
-    from: "#0ea5e9",
-    to: "#38bdf8",
-    light: "#f0f9ff",
-    text: "#0c4a6e",
   },
 ];
 
@@ -230,6 +200,11 @@ const OrderCard = ({ order, dollarRate }) => {
             <p className="text-xs text-gray-400 mt-0.5 truncate">
               {order.submodel_name} · {order.name}
             </p>
+            {order.price && (
+              <p className="text-xs font-semibold text-green-600 mt-1">
+                {fmtUsd(order.price)}
+              </p>
+            )}
           </div>
         </div>
         <span
@@ -312,6 +287,7 @@ const Daily = () => {
     const savedDate = localStorage.getItem("selectedDate");
     return savedDate || new Date().toISOString().split("T")[0];
   });
+  const [activeTab, setActiveTab] = useState("expenses");
 
   const getData = async () => {
     setLoading(true);
@@ -384,7 +360,7 @@ const Daily = () => {
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
                 Asosiy ko'rsatkichlar
               </p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 {CARDS(data).map((c) => (
                   <MetricCard key={c.label} {...c} />
                 ))}
@@ -396,7 +372,7 @@ const Daily = () => {
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
                 Ishlab chiqarish
               </p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 {CARDS2(data).map((c) => (
                   <MetricCard key={c.label} {...c} />
                 ))}
@@ -408,26 +384,34 @@ const Daily = () => {
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
                 Maoshlar
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <SalaryBand
-                  label="Oylik harajatlar (bugun)"
-                  value={`${fmtUsd(toUsd(data.today_monthly_expense, data.dollar_rate))} · ${fmt(data.today_monthly_expense)} so'm`}
-                  icon={BarChart3}
-                  color="#6366f1"
-                />
-                <SalaryBand
-                  label="Davomat maoshi"
-                  value={`${fmtUsd(toUsd(data.total_attendance_salary, data.dollar_rate))} · ${fmt(data.total_attendance_salary)} so'm`}
-                  icon={Users}
-                  color="#10b981"
-                />
-                <SalaryBand
-                  label="Transport maoshi"
-                  value={`${fmtUsd(toUsd(data.total_transport_salary, data.dollar_rate))} · ${fmt(data.total_transport_salary)} so'm`}
-                  icon={Truck}
-                  color="#f59e0b"
-                />
-              </div>
+              {(() => {
+                const totalSalary =
+                  data.total_attendance_salary +
+                  data.today_season_salary +
+                  data.rasxod;
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <SalaryBand
+                      label="Oylik harajatlar (bugun)"
+                      value={`${fmtUsd(toUsd(data.today_monthly_expense, data.dollar_rate))} · ${fmt(data.today_monthly_expense)} so'm`}
+                      icon={BarChart3}
+                      color="#6366f1"
+                    />
+                    <SalaryBand
+                      label="Maosh"
+                      value={`${fmtUsd(toUsd(totalSalary, data.dollar_rate))} · ${fmt(totalSalary)} so'm`}
+                      icon={Users}
+                      color="#10b981"
+                    />
+                    <SalaryBand
+                      label="Transport maoshi"
+                      value={`${fmtUsd(toUsd(data.total_transport_salary, data.dollar_rate))} · ${fmt(data.total_transport_salary)} so'm`}
+                      icon={Truck}
+                      color="#f59e0b"
+                    />
+                  </div>
+                );
+              })()}
             </section>
 
             {/* Monthly expenses */}
@@ -436,63 +420,171 @@ const Daily = () => {
                 Oylik harajatlar
               </p>
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {/* Tabs */}
+                <div className="flex border-b border-gray-100">
+                  <button
+                    onClick={() => setActiveTab("expenses")}
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                      activeTab === "expenses"
+                        ? "text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    Oylik harajatlar
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("breakdown")}
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                      activeTab === "breakdown"
+                        ? "text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    Kunlik bo'linma
+                  </button>
+                </div>
+
+                {/* Tab content */}
                 <div className="grid grid-cols-1 divide-y divide-gray-50">
-                  {data.monthly_expenses.map((exp, i) => {
-                    const colors = TYPE_COLORS[exp.type] || {
-                      bg: "#f8fafc",
-                      text: "#475569",
-                    };
-                    const isPercent = exp.type === "income_percentage";
-                    const isAmort = exp.type === "amortization";
-                    return (
-                      <div
-                        key={exp.id}
-                        className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                            style={{
-                              background: colors.bg,
-                              color: colors.text,
-                            }}
-                          >
-                            {i + 1}
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-gray-800">
-                              {exp.name}
-                            </p>
+                  {activeTab === "expenses" &&
+                    data.monthly_expenses?.map((exp, i) => {
+                      const colors = TYPE_COLORS[exp.type] || {
+                        bg: "#f8fafc",
+                        text: "#475569",
+                      };
+                      const isPercent = exp.type === "income_percentage";
+                      const isAmort = exp.type === "amortization";
+                      return (
+                        <div
+                          key={exp.id}
+                          className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
                             <span
-                              className="text-xs font-medium px-2 py-0.5 rounded-full"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
                               style={{
                                 background: colors.bg,
                                 color: colors.text,
                               }}
                             >
-                              {TYPE_LABELS[exp.type] || exp.type}
+                              {i + 1}
                             </span>
-                          </div>
-                        </div>
-                        <p className="text-sm font-bold text-gray-800 text-right">
-                          {isPercent ? (
-                            Number(exp.amount) + "%"
-                          ) : isAmort ? (
-                            Number(exp.amount)
-                          ) : (
-                            <span>
-                              {fmtUsd(
-                                toUsd(Number(exp.amount), data.dollar_rate),
-                              )}
-                              <span className="block text-xs font-medium text-gray-400">
-                                {fmt(exp.amount)} so'm
+                            <div>
+                              <p className="text-sm font-semibold text-gray-800">
+                                {exp.name}
+                              </p>
+                              <span
+                                className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                style={{
+                                  background: colors.bg,
+                                  color: colors.text,
+                                }}
+                              >
+                                {TYPE_LABELS[exp.type] || exp.type}
                               </span>
+                            </div>
+                          </div>
+                          <p className="text-sm font-bold text-gray-800 text-right">
+                            {isPercent ? (
+                              Number(exp.amount) + "%"
+                            ) : isAmort ? (
+                              Number(exp.amount)
+                            ) : (
+                              <span>
+                                {fmtUsd(
+                                  toUsd(Number(exp.amount), data.dollar_rate),
+                                )}
+                                <span className="block text-xs font-medium text-gray-400">
+                                  {fmt(exp.amount)} so'm
+                                </span>
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      );
+                    })}
+
+                  {activeTab === "breakdown" &&
+                    data.monthly_expense_breakdown?.map((exp, i) => {
+                      const colors = TYPE_COLORS[exp.type] || {
+                        bg: "#f8fafc",
+                        text: "#475569",
+                      };
+                      const isPercent = exp.type === "income_percentage";
+                      const isAmort = exp.type === "amortization";
+                      return (
+                        <div
+                          key={exp.id}
+                          className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                              style={{
+                                background: colors.bg,
+                                color: colors.text,
+                              }}
+                            >
+                              {i + 1}
                             </span>
-                          )}
-                        </p>
-                      </div>
-                    );
-                  })}
+                            <div>
+                              <p className="text-sm font-semibold text-gray-800">
+                                {exp.name}
+                              </p>
+                              <span
+                                className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                style={{
+                                  background: colors.bg,
+                                  color: colors.text,
+                                }}
+                              >
+                                {TYPE_LABELS[exp.type] || exp.type}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm font-bold text-gray-800 text-right">
+                            {isPercent ? (
+                              <span>
+                                {fmtUsd(
+                                  toUsd(
+                                    Number(exp.calculated_today),
+                                    data.dollar_rate,
+                                  ),
+                                )}
+                                <span className="block text-xs font-medium text-gray-400">
+                                  {fmt(exp.calculated_today)} so'm (
+                                  {exp.original_amount}%)
+                                </span>
+                              </span>
+                            ) : isAmort ? (
+                              <span>
+                                {fmtUsd(
+                                  toUsd(
+                                    Number(exp.calculated_today),
+                                    data.dollar_rate,
+                                  ),
+                                )}
+                                <span className="block text-xs font-medium text-gray-400">
+                                  {fmt(exp.calculated_today)} so'm
+                                </span>
+                              </span>
+                            ) : (
+                              <span>
+                                {fmtUsd(
+                                  toUsd(
+                                    Number(exp.calculated_today),
+                                    data.dollar_rate,
+                                  ),
+                                )}
+                                <span className="block text-xs font-medium text-gray-400">
+                                  {fmt(exp.calculated_today)} so'm
+                                </span>
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </section>
