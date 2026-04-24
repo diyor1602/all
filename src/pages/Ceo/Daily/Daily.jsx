@@ -209,6 +209,21 @@ const OrderCard = ({ order, dollarRate }) => {
                 {fmtUsd(order.price)}
               </p>
             )}
+            {order.summa && (
+              <div className="mt-1">
+                <p className="text-xs font-semibold text-blue-600">
+                  Jami: {fmtUsd(toUsd(order.summa, dollarRate))}
+                </p>
+                {order.price && (
+                  <p className="text-xs font-semibold text-blue-500">
+                    {((order.summa / (order.price * dollarRate)) * 100).toFixed(
+                      1,
+                    )}
+                    %
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <span
@@ -712,6 +727,9 @@ const Daily = () => {
                               Xizmat-Xarajat
                             </th>
                             <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Jami
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Narxi
                             </th>
                           </tr>
@@ -844,6 +862,31 @@ const Daily = () => {
                                   })()}
                                 </td>
                                 <td className="px-4 py-3 text-right">
+                                  {order.summa && (
+                                    <div>
+                                      <p className="text-sm font-bold text-blue-600">
+                                        {fmtUsd(
+                                          toUsd(order.summa, data.dollar_rate),
+                                        )}
+                                      </p>
+                                      <p className="text-xs text-blue-300">
+                                        {fmt(order.summa)} so'm
+                                      </p>
+                                      {order.price && (
+                                        <p className="text-xs font-semibold text-blue-500 mt-1">
+                                          {(
+                                            (order.summa /
+                                              (order.price *
+                                                data.dollar_rate)) *
+                                            100
+                                          ).toFixed(1)}
+                                          %
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-right">
                                   <div className="space-y-1">
                                     {[
                                       {
@@ -864,19 +907,32 @@ const Daily = () => {
                                         k: "Kunlik xarajat",
                                         v: order.cost_breakdown.monthly_expense,
                                       },
-                                    ].map(({ k, v }) => (
-                                      <div
-                                        key={k}
-                                        className="flex justify-between gap-2"
-                                      >
-                                        <span className="text-xs text-gray-500">
-                                          {k}:
-                                        </span>
-                                        <span className="text-xs font-bold text-gray-700">
-                                          {fmtUsd(toUsd(v, data.dollar_rate))}
-                                        </span>
-                                      </div>
-                                    ))}
+                                    ].map(({ k, v }) => {
+                                      const percentage =
+                                        order.total_cost > 0
+                                          ? (v / order.total_cost) * 100
+                                          : 0;
+                                      return (
+                                        <div
+                                          key={k}
+                                          className="flex justify-between items-center gap-2"
+                                        >
+                                          <span className="text-xs text-gray-500">
+                                            {k}:
+                                          </span>
+                                          <div className="text-right">
+                                            <span className="text-xs font-bold text-gray-700">
+                                              {fmtUsd(
+                                                toUsd(v, data.dollar_rate),
+                                              )}
+                                            </span>
+                                            <span className="text-xs text-gray-400 ml-1">
+                                              ({percentage.toFixed(1)}%)
+                                            </span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </td>
                               </tr>
