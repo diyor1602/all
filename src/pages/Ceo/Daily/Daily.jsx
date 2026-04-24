@@ -40,7 +40,11 @@ const CARDS = (d) => [
   {
     label: "Foyda",
     primary: fmtUsd(toUsd(d.profit, d.dollar_rate)),
-    secondary: fmt(d.profit) + " so'm",
+    secondary: (() => {
+      const profitPercentage =
+        d.today_revenue_uzs > 0 ? (d.profit / d.today_revenue_uzs) * 100 : 0;
+      return `${fmt(d.profit)} so'm (${profitPercentage.toFixed(1)}%)`;
+    })(),
     icon: TrendingUp,
     from: "#10b981",
     to: "#34d399",
@@ -218,7 +222,7 @@ const OrderCard = ({ order, dollarRate }) => {
       <div className="border-t border-gray-100 grid grid-cols-2 divide-x divide-gray-100">
         <div className="px-5 py-4">
           <p className="text-xs text-gray-400 font-medium mb-1">
-            Bugungi daromad
+            Bugungi xizmat
           </p>
           <p className="text-lg font-extrabold text-indigo-700">
             {fmtUsd(order.todayRevenue_usd)}
@@ -257,6 +261,40 @@ const OrderCard = ({ order, dollarRate }) => {
             style={{ width: progress + "%", background: progressColor }}
           />
         </div>
+      </div>
+
+      {/* xizmat-xarajat */}
+      <div className="border-t border-gray-100 px-5 py-4">
+        {(() => {
+          const profit = order.todayRevenue_uzs - order.total_cost;
+          const profitPercentage =
+            order.todayRevenue_uzs > 0
+              ? (profit / order.todayRevenue_uzs) * 100
+              : 0;
+          const isPositive = profit >= 0;
+
+          return (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400 font-medium">
+                Xizmat-Xarajat
+              </p>
+              <div className="text-right">
+                <p
+                  className={`text-lg font-extrabold ${isPositive ? "text-green-600" : "text-red-600"}`}
+                >
+                  {isPositive ? "+" : ""}
+                  {fmtUsd(toUsd(profit, dollarRate))}
+                </p>
+                <p
+                  className={`text-xs font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}
+                >
+                  {isPositive ? "+" : ""}
+                  {fmt(profit)} so'm ({profitPercentage.toFixed(1)}%)
+                </p>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* cost breakdown */}
@@ -649,7 +687,7 @@ const Daily = () => {
                               Holati
                             </th>
                             <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                              Daromad
+                              Xizmat
                             </th>
                             <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Xarajat
@@ -658,7 +696,7 @@ const Daily = () => {
                               Bajarilish
                             </th>
                             <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                              Daromad-Xarajat
+                              Xizmat-Xarajat
                             </th>
                             <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Narxi
