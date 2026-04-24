@@ -287,25 +287,44 @@ const OrderCard = ({ order, dollarRate }) => {
               ? (profit / order.todayRevenue_uzs) * 100
               : 0;
           const isPositive = profit >= 0;
+          const costPerUnit =
+            order.sewed_quantity > 0
+              ? order.total_cost / order.sewed_quantity
+              : 0;
 
           return (
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-400 font-medium">
-                Xizmat-Xarajat
-              </p>
-              <div className="text-right">
-                <p
-                  className={`text-lg font-extrabold ${isPositive ? "text-green-600" : "text-red-600"}`}
-                >
-                  {isPositive ? "+" : ""}
-                  {fmtUsd(toUsd(profit, dollarRate))}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400 font-medium">
+                  Xizmat-Xarajat
                 </p>
-                <p
-                  className={`text-xs font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}
-                >
-                  {isPositive ? "+" : ""}
-                  {fmt(profit)} so'm ({profitPercentage.toFixed(1)}%)
+                <div className="text-right">
+                  <p
+                    className={`text-lg font-extrabold ${isPositive ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {isPositive ? "+" : ""}
+                    {fmtUsd(toUsd(profit, dollarRate))}
+                  </p>
+                  <p
+                    className={`text-xs font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}
+                  >
+                    {isPositive ? "+" : ""}
+                    {fmt(profit)} so'm ({profitPercentage.toFixed(1)}%)
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400 font-medium">
+                  Xarajat / dona
                 </p>
+                <div className="text-right">
+                  <p className="text-lg font-extrabold text-amber-600">
+                    {fmtUsd(toUsd(costPerUnit, dollarRate))}
+                  </p>
+                  <p className="text-xs font-medium text-amber-300">
+                    {fmt(costPerUnit)} so'm
+                  </p>
+                </div>
               </div>
             </div>
           );
@@ -705,7 +724,7 @@ const Daily = () => {
                 {ordersView === "table" && (
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      <table className="w-full whitespace-nowrap">
                         <thead className="bg-gray-50 border-b border-gray-200">
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -719,6 +738,9 @@ const Daily = () => {
                             </th>
                             <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Xarajat
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Xarajat / dona
                             </th>
                             <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Bajarilish
@@ -806,6 +828,30 @@ const Daily = () => {
                                       {fmt(order.total_cost)} so'm
                                     </p>
                                   </div>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {(() => {
+                                    const costPerUnit =
+                                      order.sewed_quantity > 0
+                                        ? order.total_cost /
+                                          order.sewed_quantity
+                                        : 0;
+                                    return (
+                                      <div>
+                                        <p className="text-sm font-bold text-amber-600">
+                                          {fmtUsd(
+                                            toUsd(
+                                              costPerUnit,
+                                              data.dollar_rate,
+                                            ),
+                                          )}
+                                        </p>
+                                        <p className="text-xs text-amber-300">
+                                          {fmt(costPerUnit)} so'm
+                                        </p>
+                                      </div>
+                                    );
+                                  })()}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <div className="flex items-center justify-center gap-2">
