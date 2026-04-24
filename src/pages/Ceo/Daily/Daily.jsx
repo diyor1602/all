@@ -302,7 +302,7 @@ const OrderCard = ({ order, dollarRate }) => {
         {[
           { k: "Tikuv (rasxod)", v: order.cost_breakdown.rasxod },
           { k: "Maosh", v: order.cost_breakdown.season_salary },
-          { k: "Davomat", v: order.cost_breakdown.attendance },
+          { k: "Transport", v: order.cost_breakdown.transport },
           { k: "Oylik xarajat", v: order.cost_breakdown.monthly_expense },
         ].map(({ k, v }) => (
           <div key={k} className="flex items-center justify-between">
