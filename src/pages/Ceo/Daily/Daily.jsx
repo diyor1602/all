@@ -150,11 +150,11 @@ const SalaryBand = ({ label, value, icon: Icon, color }) => (
     >
       <Icon size={18} style={{ color }} />
     </div>
-    <div className="flex-1 min-w-0">
+    <div className="flex-1 min-w-0 flex flex-col">
       <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
         {label}
       </p>
-      <p className="text-base font-bold text-gray-800 truncate">{value}</p>
+      <p className="text-base font-bold text-gray-800 break-words">{value}</p>
     </div>
   </div>
 );
@@ -399,7 +399,7 @@ const Daily = () => {
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
                 Asosiy ko'rsatkichlar
               </p>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {CARDS(data).map((c) => (
                   <MetricCard key={c.label} {...c} />
                 ))}
@@ -411,7 +411,7 @@ const Daily = () => {
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
                 Ishlab chiqarish
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {CARDS2(data).map((c) => (
                   <MetricCard key={c.label} {...c} />
                 ))}
