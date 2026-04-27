@@ -208,7 +208,7 @@ const Monthly = () => {
       bg: "bg-orange-300",
     },
     {
-      title: "Harajat",
+      title: "Xarajat",
       value:
         monthly.orders?.length === 0
           ? `-${formatNumber(
@@ -272,13 +272,13 @@ const Monthly = () => {
 
   const additionalMetrics = [
     {
-      label: "Jami harajatlar",
+      label: "Jami xarajatlar",
       value: monthly.total_fixed_cost_uzs,
       bg: "bg-red-300",
       dollar: true,
     },
     {
-      label: "Oylik o'zgarmas harajatlar",
+      label: "Oylik o'zgarmas xarajatlar",
       value: monthly.monthly_expenses,
       bg: "bg-green-300",
       dollar: true,
@@ -357,7 +357,7 @@ const Monthly = () => {
       dollar: true,
     },
     {
-      label: "1 kishi uchun harajat",
+      label: "1 kishi uchun xarajat",
       value: monthly.per_employee_cost_uzs?.total,
       bg: "bg-orange-300",
       dollar: true,
@@ -449,7 +449,7 @@ const Monthly = () => {
         );
       }
 
-      const fileName = `Harajat_${expenseOrder?.order?.id}_${
+      const fileName = `Xarajat_${expenseOrder?.order?.id}_${
         expenseOrder?.order?.name
       }_${new Date().toISOString().split("T")[0]}.pdf`;
       pdf.save(fileName);
@@ -799,10 +799,10 @@ const Monthly = () => {
                         Topgan puli
                       </TableHead>
                       <TableHead className="border border-slate-200">
-                        Harajat
+                        Xarajat
                       </TableHead>
                       <TableHead className="border border-slate-200">
-                        1 tasi harajat
+                        1 tasi xarajat
                       </TableHead>
                       <TableHead className="border border-slate-200">
                         1 tasi foyda
@@ -940,7 +940,7 @@ const Monthly = () => {
                                       </div>
                                     </div>
                                     <div className="w-full flex justify-between gap-2">
-                                      <div> O'zgarmas harajat: </div>
+                                      <div> O'zgarmas xarajat: </div>
                                       <div>
                                         {formatNumber(
                                           order?.costs_uzs
@@ -1080,7 +1080,7 @@ const Monthly = () => {
           >
             <div className="print:block mb-8 text-center border-b pb-4">
               <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                Harajatlar hisoboti
+                Xarajatlar hisoboti
               </h1>
               <p className="text-slate-600">
                 {expenseOrder?.order?.id} – {expenseOrder?.order?.name} -{" "}
@@ -1176,7 +1176,7 @@ const Monthly = () => {
                     <Target className="w-4 h-4 text-cyan-600" />
                   </div>
                   <div className="text-sm font-medium text-slate-500">
-                    1 ta siga harajat
+                    1 ta siga xarajat
                   </div>
                 </div>
                 <div className="font-mono font-bold text-xl text-slate-900">
@@ -1270,7 +1270,7 @@ const Monthly = () => {
                     color: "green",
                   },
                   {
-                    label: "O'zgarmas harajat",
+                    label: "O'zgarmas xarajat",
                     value:
                       expenseOrder?.costs_uzs?.allocatedMonthlyExpenseMonthly,
                     percentage: calculatePercentage(
@@ -1375,7 +1375,7 @@ const Monthly = () => {
                       <Calculator className="w-3 h-3 text-slate-600" />
                     </div>
                     <span className="font-bold text-slate-900">
-                      Jami harajat:
+                      Jami xarajat:
                     </span>
                   </div>
                   <span className="font-mono font-bold text-lg text-slate-900">

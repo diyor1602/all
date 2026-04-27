@@ -94,7 +94,7 @@ const Overall = () => {
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description: "Oylik harajatlarni yuklab bo'lmadi",
+        description: "Oylik xarajatlarni yuklab bo'lmadi",
       });
     } finally {
       setExpensesLoading(false);
@@ -685,7 +685,7 @@ const Overall = () => {
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg font-semibold">
-                Oylik o'zgarmas harajatlar
+                Oylik o'zgarmas xarajatlar
               </DialogTitle>
             </div>
           </DialogHeader>

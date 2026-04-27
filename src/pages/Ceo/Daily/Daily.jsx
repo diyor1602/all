@@ -450,10 +450,10 @@ const Daily = () => {
               </div>
             </section>
 
-            {/* Salary bands */}
+            {/* Cost bands */}
             <section>
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-                Maoshlar
+                Xarajatlar
               </p>
               {(() => {
                 const totalSalary =
@@ -476,7 +476,7 @@ const Daily = () => {
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <SalaryBand
-                      label="Oylik harajatlar (bugun)"
+                      label="Oylik xarajatlar (bugun)"
                       value={`${fmtUsd(toUsd(data.today_monthly_expense, data.dollar_rate))} · ${fmt(data.today_monthly_expense)} so'm (${monthlyExpensePercentage.toFixed(1)}%)`}
                       icon={BarChart3}
                       color="#6366f1"
@@ -501,7 +501,7 @@ const Daily = () => {
             {/* Monthly expenses */}
             <section>
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-                Oylik harajatlar
+                Oylik xarajatlar
               </p>
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 {/* Tabs */}
@@ -514,7 +514,7 @@ const Daily = () => {
                         : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    Oylik harajatlar
+                    Oylik xarajatlar
                   </button>
                   <button
                     onClick={() => setActiveTab("breakdown")}
