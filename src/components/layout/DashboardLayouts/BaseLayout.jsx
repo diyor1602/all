@@ -22,9 +22,6 @@ import api from "@/utils/api";
 
 const damageRoles = ["universalTailor", "tailor"];
 
-const sidebarGradient =
-  "linear-gradient(135deg, rgb(10, 14, 26) 0%, rgb(13, 17, 23) 50%, rgb(10, 15, 30) 100%)";
-
 export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { logout } = useAuth();
@@ -39,22 +36,23 @@ export default function BaseLayout({ children, navigation }) {
 
   const getDamageCount = async () => {
     if (!damageRoles.includes(localStorage.getItem("role"))) return;
-
     try {
       const res = await api.get("/pendingFailCount");
       setDamageCount(res.data?.count || 0);
     } catch (error) {
-      // ignore
+      // skip the error
     }
   };
 
   useEffect(() => {
     getDamageCount();
 
+    // Set up interval to fetch damage count every minute
     const interval = setInterval(() => {
       getDamageCount();
-    }, 60000);
+    }, 60000); // 60000ms = 1 minute
 
+    // Clean up interval on component unmount
     return () => clearInterval(interval);
   }, []);
 
@@ -69,19 +67,14 @@ export default function BaseLayout({ children, navigation }) {
   };
 
   const forAllUsers = [
-    {
-      name: "Asosiy",
-      href: "/home",
-      icon: Home,
-      onMobile: true,
-    },
+    { name: "Asosiy", href: "/home", icon: Home, onMobile: true },
     {
       name: "Yangi mavsum",
       href: "/newSeason",
       icon: CircleDollarSign,
       onMobile: false,
       dontShow: !localStorage.getItem("employee_sum")?.length,
-      customColor: "text-emerald-300 hover:text-emerald-200",
+      customColor: "text-green-500 hover:bg-green-50",
     },
     {
       name: "Tikuv KPI",
@@ -119,21 +112,14 @@ export default function BaseLayout({ children, navigation }) {
   ];
 
   return (
-    <div
-      className="min-h-screen pointer-events-auto"
-      style={{ backgroundColor: "#EEF2FA" }}
-    >
-      {/* Mobile Sidebar Toggle */}
+    <div className="min-h-screen bg-gray-50 pointer-events-auto">
+      {/* Sidebar trigger button for mobile */}
       {!isChatPage && (
         <div className="lg:hidden fixed top-4 right-4 z-50">
           <Button
+            variant="outline"
             size="icon"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            style={{
-              background: sidebarGradient,
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#F8FAFC",
-            }}
           >
             {sidebarOpen ? (
               <X className="h-4 w-4" />
@@ -144,40 +130,31 @@ export default function BaseLayout({ children, navigation }) {
         </div>
       )}
 
-      {/* Mobile Backdrop */}
+      {/* Sidebar backdrop for mobile */}
       <div
         className={cn(
-          "fixed inset-0 z-50 lg:hidden bg-black/70 backdrop-blur-sm transition-opacity duration-200",
+          "fixed inset-0 z-50 lg:hidden bg-black/80 backdrop-blur-sm transition-opacity duration-200",
           sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={() => setSidebarOpen(false)}
       />
 
-      {/* Sidebar */}
+      {/* Sidebar for desktop */}
       <div
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 shadow-2xl transition-transform duration-300 lg:translate-x-0",
+          "fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
-        style={{
-          background: sidebarGradient,
-        }}
       >
         <div className="flex h-full flex-col">
-          {/* Logo */}
+          {/* Logo section */}
           <Link
             to="/chat"
-            className="flex h-16 shrink-0 items-center justify-center gap-2 border-b px-6"
-            style={{
-              borderColor: "rgba(255,255,255,0.08)",
-            }}
+            className="flex h-16 shrink-0 items-center justify-center border-b px-6 gap-2"
             onClick={() => setSidebarOpen(false)}
           >
-            <span className="text-xl font-semibold tracking-wide text-slate-50">
-              Vizzano
-            </span>
-
-            <MessageSquareMore size={20} className="text-sky-300" />
+            <span className="text-xl font-semibold">Vizzano</span>
+            <MessageSquareMore size={20} />
           </Link>
 
           {/* Navigation */}
@@ -185,7 +162,6 @@ export default function BaseLayout({ children, navigation }) {
             <nav className="space-y-1 px-3 py-4">
               {forAllUsers.map((item, index) => {
                 const isActive = location.pathname === item.href;
-
                 if (item.dontShow) return null;
 
                 return (
@@ -193,48 +169,28 @@ export default function BaseLayout({ children, navigation }) {
                     key={index}
                     to={item.href}
                     className={cn(
-                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
-                        ? "text-white shadow-md"
-                        : item.customColor || "text-slate-300 hover:text-white",
+                        ? "bg-primary/10 text-primary"
+                        : item.customColor || "text-gray-700 hover:bg-gray-100",
                     )}
-                    style={{
-                      backgroundColor: isActive
-                        ? "rgba(255,255,255,0.10)"
-                        : undefined,
-                      backdropFilter: isActive ? "blur(10px)" : undefined,
-                      border: isActive
-                        ? "1px solid rgba(255,255,255,0.08)"
-                        : "1px solid transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor =
-                          "rgba(255,255,255,0.05)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = "";
-                      }
-                    }}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <div className="relative flex items-center">
                       <item.icon
                         className={cn(
                           "h-5 w-5",
-                          isActive ? "text-white" : "text-slate-400",
+                          isActive
+                            ? "text-primary"
+                            : "text-gray-500" + item.customColor,
                         )}
                       />
-
                       {item.badge && (
-                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white shadow-lg ring-2 ring-black/40 animate-pulse">
+                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white shadow-lg ring-2 ring-white animate-pulse">
                           {item.badge > 99 ? "99+" : item.badge}
                         </span>
                       )}
                     </div>
-
                     {item.name}
                   </Link>
                 );
@@ -242,105 +198,62 @@ export default function BaseLayout({ children, navigation }) {
             </nav>
           </div>
 
-          {/* Footer User Section */}
-          <div
-            className="border-t p-4"
-            style={{
-              borderColor: "rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.03)",
-              backdropFilter: "blur(12px)",
-            }}
-          >
+          {/* User section */}
+          <div className="border-t bg-gray-50 p-4">
             <Link
               to="/profile"
-              className="mb-4 flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-200"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  "rgba(255,255,255,0.05)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "";
-              }}
+              className="flex items-center gap-3 mb-4 px-2"
               onClick={() => setSidebarOpen(false)}
             >
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.06)",
-                  borderColor: "rgba(255,255,255,0.08)",
-                }}
-              >
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
                 {hasValidImage ? (
                   <img
                     src={imageUrl}
                     alt=""
-                    className="h-full w-full object-cover"
+                    className="h-8 w-8 rounded-full object-cover"
                   />
                 ) : (
-                  <Users className="h-4 w-4 text-slate-300" />
+                  <Users className="h-4 w-4 text-primary" />
                 )}
               </div>
-
               <div>
-                <p className="text-sm font-semibold text-slate-100">
+                <p className="text-sm font-medium text-gray-700">
                   {localStorage.getItem("username")}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-gray-500">
                   {localStorage.getItem("name")}
                 </p>
               </div>
             </Link>
-
             <Button
               asChild
               variant="ghost"
-              className="mb-1 w-full justify-start gap-3 text-slate-300 hover:text-white"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  "rgba(255,255,255,0.05)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "";
-              }}
+              className="w-full justify-start gap-3 text-gray-700 hover:bg-gray-200/60 mb-2"
               onClick={() => setSidebarOpen(false)}
             >
               <Link to="/issue">
-                <MessageCircleMore className="h-4 w-4 text-slate-400" />
+                <MessageCircleMore className="h-4 w-4" />
                 Muammo bildirish
               </Link>
             </Button>
-
-            <hr
-              className="my-2"
-              style={{
-                borderColor: "rgba(255,255,255,0.08)",
-              }}
-            />
-
+            <hr className="my-2" />
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 text-slate-300 hover:text-white"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  "rgba(255,255,255,0.05)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "";
-              }}
+              className="w-full justify-start gap-3 text-gray-700 hover:bg-gray-200/60"
               onClick={handleLogout}
             >
-              <LogOut className="h-4 w-4 text-slate-400" />
+              <LogOut className="h-4 w-4" />
               Chiqish
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main content */}
       <div className={cn("lg:pl-64 pb-16 lg:pb-0", isChatPage ? "pb-0" : "")}>
         <main
           className={cn(
-            "min-h-screen px-4 py-8 sm:px-6 lg:px-8",
+            "min-h-screen py-8 px-4 sm:px-6 lg:px-8",
             isChatPage ? "p-0" : "",
           )}
         >
@@ -348,21 +261,16 @@ export default function BaseLayout({ children, navigation }) {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Bottom navigation for mobile */}
       <nav
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-20 border-t lg:hidden",
+          "fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden z-20",
           isChatPage ? "hidden" : "",
         )}
-        style={{
-          background: sidebarGradient,
-          borderColor: "rgba(255,255,255,0.08)",
-        }}
       >
         <ul className="flex justify-around">
           {forAllUsers.map((item) => {
             const isActive = location.pathname === item.href;
-
             return (
               item.onMobile &&
               !item.dontShow && (
@@ -370,35 +278,21 @@ export default function BaseLayout({ children, navigation }) {
                   <Link
                     to={item.href}
                     className={cn(
-                      "flex flex-col items-center px-3 py-2 transition-all duration-200",
+                      "flex flex-col items-center py-2 px-3",
                       isActive
-                        ? "text-white"
-                        : "text-slate-400 hover:text-white",
+                        ? "text-primary"
+                        : item.customColor || "text-gray-500",
                     )}
                   >
                     <div className="relative">
-                      <item.icon
-                        className="h-6 w-6"
-                        style={{
-                          color: isActive ? "#FFFFFF" : "#94A3B8",
-                        }}
-                      />
-
+                      <item.icon className={"h-6 w-6 " + item.customColor} />
                       {item.badge && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white shadow-lg ring-2 ring-black/40 animate-pulse">
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white shadow-lg ring-2 ring-white animate-pulse">
                           {item.badge > 99 ? "99+" : item.badge}
                         </span>
                       )}
                     </div>
-
-                    <span
-                      className="mt-1 text-xs"
-                      style={{
-                        color: isActive ? "#FFFFFF" : "#94A3B8",
-                      }}
-                    >
-                      {item.name}
-                    </span>
+                    <span className="text-xs mt-1">{item.name}</span>
                   </Link>
                 </li>
               )

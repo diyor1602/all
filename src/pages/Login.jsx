@@ -246,13 +246,13 @@ export default function Login() {
 
   return (
     <>
-      <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4">
-        <div className="w-full max-w-md rounded-2xl border border-gray-700 bg-gray-800 p-8 shadow-lg">
+      <div className="flex min-h-screen items-center justify-center bg-white px-4">
+        <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-lg">
           <h1 className="mb-2 text-center text-3xl font-semibold text-[#884DEE]">
             Vizzano
           </h1>
 
-          <p className="mb-8 text-center text-sm text-gray-400">
+          <p className="mb-8 text-center text-sm text-gray-500">
             Tizimga kirish uchun ma'lumotlaringizni kiriting
           </p>
 
@@ -263,7 +263,7 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full rounded-xl border border-transparent bg-gray-700 px-4 py-3 text-white outline-none transition focus:border-[#884DEE]/30 focus:ring-2 focus:ring-[#884DEE] placeholder-gray-400"
+              className="w-full rounded-xl border border-transparent bg-[#F8F9FA] px-4 py-3 outline-none transition focus:border-[#884DEE]/30 focus:ring-2 focus:ring-[#884DEE]"
             />
 
             <div className="relative">
@@ -275,13 +275,13 @@ export default function Login() {
                 onKeyDown={handlePasswordKeyDown}
                 onPaste={handlePasswordPaste}
                 required
-                className="w-full rounded-xl border border-transparent bg-gray-700 px-4 py-3 pr-12 text-white outline-none transition focus:border-[#884DEE]/30 focus:ring-2 focus:ring-[#884DEE] placeholder-gray-400"
+                className="w-full rounded-xl border border-transparent bg-[#F8F9FA] px-4 py-3 pr-12 outline-none transition focus:border-[#884DEE]/30 focus:ring-2 focus:ring-[#884DEE]"
               />
 
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-200"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition hover:text-gray-700"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
