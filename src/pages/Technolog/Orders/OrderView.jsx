@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import ExcelJS from "exceljs";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,11 +11,9 @@ import {
   Plus,
   ArrowLeft,
   Loader2,
-  BoxIcon,
   MessageSquareIcon,
   CalendarCheckIcon,
   CalendarIcon,
-  TagIcon,
   BarChartIcon,
   RulerIcon,
   Coins,
@@ -93,6 +91,9 @@ const OrderView = () => {
   // Spoiler states for time displays
   const [showUZTime, setShowUZTime] = useState(false);
   const [showRUTime, setShowRUTime] = useState(false);
+  const [showLimit, setShowLimit] = useState(false);
+  const [showUZCost, setShowUZCost] = useState(false);
+  const [showRUCost, setShowRUCost] = useState(false);
 
   const deleteTarif = (id) => {
     setDeleteId(id);
@@ -834,92 +835,131 @@ const OrderView = () => {
               </div>
             </div>
 
-            {/* Material Information */}
+            {/* Financial Information */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-700">Material haqida</h4>
+              <h4 className="font-medium text-gray-700">
+                Moliyaviy ma'lumotlar
+              </h4>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <BoxIcon className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">
-                    Material: {order?.order_model?.material?.name || "N/A"}
-                  </span>
-                </div>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setShowLimit(!showLimit)}
+                  className="w-full flex gap-2 items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex gap-2 items-center">
+                    <BarChartIcon
+                      className={cn(
+                        "h-4 w-4",
+                        order?.order_model?.status
+                          ? "text-green-500"
+                          : "text-red-500",
+                      )}
+                    />
+                    <span className="text-sm font-medium">Limit</span>
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform ${
+                      showLimit ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {showLimit && (
+                  <div className="p-3 bg-white border-t border-gray-200">
+                    <span
+                      className={cn(
+                        "text-sm font-bold cursor-pointer",
+                        order?.order_model?.status
+                          ? "text-green-500"
+                          : "text-red-500",
+                      )}
+                      onClick={() => setLimitDialogOpen(true)}
+                    >
+                      {formatNumber(order?.order_model?.rasxod)} so'm
+                      <span className="text-sm ml-1">
+                        {order?.order_model?.status
+                          ? "(Tasdiqlangan)"
+                          : "(Tasdiqlanmagan)"}
+                      </span>{" "}
+                      / {formatNumber(order?.order_model?.minute)} minut
+                    </span>
+                  </div>
+                )}
+              </div>
 
-                <div className="flex items-center gap-2">
-                  <TagIcon className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">
-                    Material kodi: {order?.order_model?.material?.code || "N/A"}
-                  </span>
-                </div>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setShowUZCost(!showUZCost)}
+                  className="w-full flex gap-2 items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex gap-2 items-center">
+                    <Bitcoin
+                      className={cn(
+                        "h-4 w-4",
+                        totalSpendSummaUZ > order?.order_model?.rasxod
+                          ? "text-red-500"
+                          : "text-black",
+                      )}
+                    />
+                    <span className="text-sm font-medium">Jami UZ</span>
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform ${
+                      showUZCost ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {showUZCost && (
+                  <div className="p-3 bg-white border-t border-gray-200">
+                    <span
+                      className={cn(
+                        "font-bold",
+                        totalSpendSummaUZ > order?.order_model?.rasxod
+                          ? "text-red-500 text-xl"
+                          : "text-sm",
+                      )}
+                    >
+                      {formatNumber(totalSpendSummaUZ)} so'm
+                    </span>
+                  </div>
+                )}
+              </div>
 
-                <div className="flex items-center gap-2">
-                  <BarChartIcon
-                    className={cn(
-                      "h-4 w-4",
-                      order?.order_model?.status
-                        ? "text-green-500"
-                        : "text-red-500",
-                    )}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setShowRUCost(!showRUCost)}
+                  className="w-full flex gap-2 items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex gap-2 items-center">
+                    <Bitcoin
+                      className={cn(
+                        "h-4 w-4",
+                        totalSpendSummaRU > order?.order_model?.rasxod
+                          ? "text-red-500"
+                          : "text-black",
+                      )}
+                    />
+                    <span className="text-sm font-medium">Jami RU</span>
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform ${
+                      showRUCost ? "rotate-180" : ""
+                    }`}
                   />
-                  <span
-                    className={cn(
-                      "text-sm font-bold cursor-pointer",
-                      order?.order_model?.status
-                        ? "text-green-500"
-                        : "text-red-500",
-                    )}
-                    onClick={() => setLimitDialogOpen(true)}
-                  >
-                    Limit: {formatNumber(order?.order_model?.rasxod)} so'm
-                    <span className="text-sm ml-1">
-                      {order?.order_model?.status
-                        ? "(Tasdiqlangan)"
-                        : "(Tasdiqlanmagan)"}
-                    </span>{" "}
-                    / {formatNumber(order?.order_model?.minute)} minut
-                  </span>
-                </div>
-                <div className="flex gap-2 items-center">
-                  <Bitcoin
-                    className={cn(
-                      "h-4 w-4",
-                      totalSpendSummaUZ > order?.order_model?.rasxod
-                        ? "text-red-500"
-                        : "text-black",
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "font-bold",
-                      totalSpendSummaUZ > order?.order_model?.rasxod
-                        ? "text-red-500 text-xl"
-                        : "text-sm",
-                    )}
-                  >
-                    Jami UZ: {formatNumber(totalSpendSummaUZ)} so'm
-                  </span>
-                </div>
-                <div className="flex gap-2 items-center">
-                  <Bitcoin
-                    className={cn(
-                      "h-4 w-4",
-                      totalSpendSummaRU > order?.order_model?.rasxod
-                        ? "text-red-500"
-                        : "text-black",
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "font-bold",
-                      totalSpendSummaRU > order?.order_model?.rasxod
-                        ? "text-red-500 text-xl"
-                        : "text-sm",
-                    )}
-                  >
-                    Jami RU: {formatNumber(totalSpendSummaRU)} so'm
-                  </span>
-                </div>
+                </button>
+                {showRUCost && (
+                  <div className="p-3 bg-white border-t border-gray-200">
+                    <span
+                      className={cn(
+                        "font-bold",
+                        totalSpendSummaRU > order?.order_model?.rasxod
+                          ? "text-red-500 text-xl"
+                          : "text-sm",
+                      )}
+                    >
+                      {formatNumber(totalSpendSummaRU)} so'm
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
