@@ -262,7 +262,7 @@ const DailyResults = () => {
     subtitle,
     valueClassName = "",
   }) => (
-    <div className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/85 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+    <div className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/85 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 hover:shadow-xl">
       <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-slate-100/40 pointer-events-none" />
       <div className="relative flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -364,17 +364,6 @@ const DailyResults = () => {
 
   return (
     <div className="min-h-screen">
-      {isLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
-            <p className="text-sm font-medium text-slate-600">
-              Ma'lumotlar yuklanmoqda...
-            </p>
-          </div>
-        </div>
-      )}
-
       {role === "superhr" && (
         <div className="mb-5">
           <YesterdayAbsence />
@@ -414,238 +403,251 @@ const DailyResults = () => {
         </div>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <StatCard
-          title="Kiritilgan reja"
-          value={formatNumber(totalPlan)}
-          icon={<NotepadText size={24} />}
-          iconBg="from-indigo-500 to-sky-500"
-          subtitle="Bugungi umumiy reja"
-        />
-
-        <StatCard
-          title="Real natija"
-          value={formatNumber(totalTodayQuantity)}
-          icon={<ChartColumnIncreasing size={24} />}
-          iconBg={
-            totalTodayQuantity >= totalPlan
-              ? "from-emerald-500 to-green-600"
-              : "from-rose-500 to-red-600"
-          }
-          subtitle="Bugungi bajarilgan ish"
-        />
-
-        <StatCard
-          title="Jami natija"
-          value={formatNumber(totalQuantity)}
-          icon={<ChartNoAxesCombined size={24} />}
-          iconBg="from-fuchsia-500 to-violet-600"
-          subtitle="Umumiy yig‘ilgan natija"
-        />
-
-        <StatCard
-          title="Jami ishchilar"
-          value={
-            <span>
-              <span className="text-emerald-600">{employeeCount}</span>
-              <span className="mx-1 text-slate-400">/</span>
-              <span>{employeeCount + aupCount}</span>
-            </span>
-          }
-          icon={<Users size={24} />}
-          iconBg="from-violet-500 to-indigo-600"
-          subtitle="Ishchi / umumiy"
-        />
-
-        <StatCard
-          title="AUP"
-          value={formatNumber(aupCount)}
-          icon={<Users size={24} />}
-          iconBg="from-amber-500 to-orange-600"
-          subtitle="Administrativ boshqaruv xodimlari"
-        />
-
-        <div
-          className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br ${progressStyle.soft} p-5 shadow-sm ring-1 ${progressStyle.ring}`}
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-medium text-slate-500">
-                Bajarilgan o‘rtacha plan
-              </p>
-              <p className={`mt-1 text-xl font-bold ${progressStyle.text}`}>
-                {averageProgress}%
-              </p>
-            </div>
-            <div
-              className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${progressStyle.bg} text-white shadow-lg`}
-            >
-              <ChartColumnIncreasing size={24} />
-            </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-[85vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
+            <p className="text-sm font-medium text-slate-600">
+              Ma'lumotlar yuklanmoqda...
+            </p>
           </div>
-
-          <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/80">
-            <div
-              className={`h-full rounded-full bg-gradient-to-r ${progressStyle.bg} transition-all duration-700`}
-              style={{ width: `${Math.min(averageProgress, 100)}%` }}
+        </div>
+      ) : (
+        <>
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <StatCard
+              title="Kiritilgan reja"
+              value={formatNumber(totalPlan)}
+              icon={<NotepadText size={24} />}
+              iconBg="from-indigo-500 to-sky-500"
+              subtitle="Bugungi umumiy reja"
             />
+
+            <StatCard
+              title="Real natija"
+              value={formatNumber(totalTodayQuantity)}
+              icon={<ChartColumnIncreasing size={24} />}
+              iconBg={
+                totalTodayQuantity >= totalPlan
+                  ? "from-emerald-500 to-green-600"
+                  : "from-rose-500 to-red-600"
+              }
+              subtitle="Bugungi bajarilgan ish"
+            />
+
+            <StatCard
+              title="Jami natija"
+              value={formatNumber(totalQuantity)}
+              icon={<ChartNoAxesCombined size={24} />}
+              iconBg="from-fuchsia-500 to-violet-600"
+              subtitle="Umumiy yig‘ilgan natija"
+            />
+
+            <StatCard
+              title="Jami ishchilar"
+              value={
+                <span>
+                  <span className="text-emerald-600">{employeeCount}</span>
+                  <span className="mx-1 text-slate-400">/</span>
+                  <span>{employeeCount + aupCount}</span>
+                </span>
+              }
+              icon={<Users size={24} />}
+              iconBg="from-violet-500 to-indigo-600"
+              subtitle="Ishchi / umumiy"
+            />
+
+            <StatCard
+              title="AUP"
+              value={formatNumber(aupCount)}
+              icon={<Users size={24} />}
+              iconBg="from-amber-500 to-orange-600"
+              subtitle="Administrativ boshqaruv xodimlari"
+            />
+
+            <div
+              className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br ${progressStyle.soft} p-5 shadow-sm ring-1 ${progressStyle.ring}`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-medium text-slate-500">
+                    Bajarilgan o‘rtacha plan
+                  </p>
+                  <p className={`mt-1 text-xl font-bold ${progressStyle.text}`}>
+                    {averageProgress}%
+                  </p>
+                </div>
+                <div
+                  className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${progressStyle.bg} text-white shadow-lg`}
+                >
+                  <ChartColumnIncreasing size={24} />
+                </div>
+              </div>
+
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/80">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r ${progressStyle.bg} transition-all duration-700`}
+                  style={{ width: `${Math.min(averageProgress, 100)}%` }}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="mb-8 overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-base font-bold text-slate-900">
-            Model natijalari
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Reyting, reja va bajarilish ko‘rsatkichlari
-          </p>
-        </div>
+          <div className="mb-8 overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl">
+            <div className="border-b border-slate-100 px-5 py-4">
+              <h2 className="text-base font-bold text-slate-900">
+                Model natijalari
+              </h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Reyting, reja va bajarilish ko‘rsatkichlari
+              </p>
+            </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
-              <tr className="border-b border-slate-100">
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Model
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Guruh
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Ishchilar
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Reja
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Natija
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Jami natija
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Progress
-                </th>
-              </tr>
-            </thead>
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
+                  <tr className="border-b border-slate-100">
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      #
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Model
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Guruh
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Ishchilar
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Reja
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Natija
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Jami natija
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Progress
+                    </th>
+                  </tr>
+                </thead>
 
-            <tbody>
-              {allOutputs.length ? (
-                <>
-                  {outputs.map((output, index) =>
-                    renderOutputRow(output, index, false),
-                  )}
-                  {exampleOutputs.map((output, index) =>
-                    renderOutputRow(output, index, true),
-                  )}
-                </>
-              ) : (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-14 text-center text-xs text-slate-500"
-                  >
-                    Bu sana uchun ma'lumot topilmadi
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="text-base font-bold text-slate-900">
-            Guruhlar bo‘yicha topilgan summa
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Har bir guruhning davomat va daromad ko‘rsatkichlari
-          </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-slate-50">
-              <tr className="border-b border-slate-100">
-                <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Guruh
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Davomat
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Qilgan ishi
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  O‘rtacha summa
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Jami topilgan
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {groupEarnings?.length ? (
-                [...groupEarnings]
-                  .sort(
-                    (a, b) =>
-                      parseFloat(b.per_employee_earning || 0) -
-                      parseFloat(a.per_employee_earning || 0),
-                  )
-                  .map((groupEarning, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-slate-100 transition-colors hover:bg-slate-50/80"
-                    >
-                      <td className="px-4 py-4 text-xs font-semibold text-slate-800">
-                        <div className="flex flex-col gap-1">
-                          <div className="text-sm">
-                            {groupEarning.group_name}
-                          </div>
-                          <div className="text-xs">
-                            {groupEarning.responsibleUser}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-4 text-center text-xs font-bold text-indigo-600">
-                        {formatNumber(groupEarning.attendance_count)}
-                      </td>
-
-                      <td className="px-4 py-4 text-center text-xs font-bold text-slate-700">
-                        {formatNumber(groupEarning.quantity)}
-                      </td>
-
-                      <td className="px-4 py-4 text-center text-xs font-bold text-violet-600">
-                        {formatNumber(groupEarning.per_employee_earning)}
-                      </td>
-
-                      <td className="px-4 py-4 text-center text-xs font-bold text-emerald-600">
-                        {formatNumber(groupEarning.today_earning)}
+                <tbody>
+                  {allOutputs.length ? (
+                    <>
+                      {outputs.map((output, index) =>
+                        renderOutputRow(output, index, false),
+                      )}
+                      {exampleOutputs.map((output, index) =>
+                        renderOutputRow(output, index, true),
+                      )}
+                    </>
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="px-4 py-14 text-center text-xs text-slate-500"
+                      >
+                        Bu sana uchun ma'lumot topilmadi
                       </td>
                     </tr>
-                  ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-14 text-center text-xs text-slate-500"
-                  >
-                    Guruhlar bo‘yicha ma'lumot topilmadi
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl">
+            <div className="border-b border-slate-100 px-5 py-4">
+              <h2 className="text-base font-bold text-slate-900">
+                Guruhlar bo‘yicha topilgan summa
+              </h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Har bir guruhning davomat va daromad ko‘rsatkichlari
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-slate-50">
+                  <tr className="border-b border-slate-100">
+                    <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Guruh
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Davomat
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Qilgan ishi
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      O‘rtacha summa
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Jami topilgan
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {groupEarnings?.length ? (
+                    [...groupEarnings]
+                      .sort(
+                        (a, b) =>
+                          parseFloat(b.per_employee_earning || 0) -
+                          parseFloat(a.per_employee_earning || 0),
+                      )
+                      .map((groupEarning, index) => (
+                        <tr
+                          key={index}
+                          className="border-b border-slate-100 transition-colors hover:bg-slate-50/80"
+                        >
+                          <td className="px-4 py-4 text-xs font-semibold text-slate-800">
+                            <div className="flex flex-col gap-1">
+                              <div className="text-sm">
+                                {groupEarning.group_name}
+                              </div>
+                              <div className="text-xs">
+                                {groupEarning.responsibleUser}
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-4 text-center text-xs font-bold text-indigo-600">
+                            {formatNumber(groupEarning.attendance_count)}
+                          </td>
+
+                          <td className="px-4 py-4 text-center text-xs font-bold text-slate-700">
+                            {formatNumber(groupEarning.quantity)}
+                          </td>
+
+                          <td className="px-4 py-4 text-center text-xs font-bold text-violet-600">
+                            {formatNumber(groupEarning.per_employee_earning)}
+                          </td>
+
+                          <td className="px-4 py-4 text-center text-xs font-bold text-emerald-600">
+                            {formatNumber(groupEarning.today_earning)}
+                          </td>
+                        </tr>
+                      ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-4 py-14 text-center text-xs text-slate-500"
+                      >
+                        Guruhlar bo‘yicha ma'lumot topilmadi
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
