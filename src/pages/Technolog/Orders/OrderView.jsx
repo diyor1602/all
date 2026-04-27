@@ -30,6 +30,7 @@ import {
   Image,
   Trash2,
   DownloadCloud,
+  ChevronDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +89,10 @@ const OrderView = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Spoiler states for time displays
+  const [showUZTime, setShowUZTime] = useState(false);
+  const [showRUTime, setShowRUTime] = useState(false);
 
   const deleteTarif = (id) => {
     setDeleteId(id);
@@ -757,34 +762,65 @@ const OrderView = () => {
                   </div>
                 )}
 
-                <div className="flex gap-2 items-center">
-                  <Timer className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">
-                    Jami UZ:{" "}
-                    <span className="font-bold">
-                      {" "}
-                      {formatNumber(totalSpends)}
-                    </span>{" "}
-                    sekund /{" "}
-                    <span className="font-bold">
-                      {formatNumber(totalSpends / 60)}
-                    </span>{" "}
-                    minut
-                  </span>
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setShowUZTime(!showUZTime)}
+                    className="w-full flex gap-2 items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex gap-2 items-center">
+                      <Timer className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium">Jami UZ vaqti</span>
+                    </div>
+                    <ChevronDown
+                      className={`h-4 w-4 text-gray-500 transition-transform ${
+                        showUZTime ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  {showUZTime && (
+                    <div className="p-3 bg-white border-t border-gray-200">
+                      <span className="text-sm">
+                        <span className="font-bold">
+                          {formatNumber(totalSpends)}
+                        </span>{" "}
+                        sekund /{" "}
+                        <span className="font-bold">
+                          {formatNumber(totalSpends / 60)}
+                        </span>{" "}
+                        minut
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-2 items-center">
-                  <Timer className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">
-                    Jami RU:{" "}
-                    <span className="font-bold">
-                      {formatNumber(totalSpendsRU)}
-                    </span>{" "}
-                    sekund /{" "}
-                    <span className="font-bold">
-                      {formatNumber(totalSpendsRU / 60)}
-                    </span>{" "}
-                    minut
-                  </span>
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setShowRUTime(!showRUTime)}
+                    className="w-full flex gap-2 items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex gap-2 items-center">
+                      <Timer className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium">Jami RU vaqti</span>
+                    </div>
+                    <ChevronDown
+                      className={`h-4 w-4 text-gray-500 transition-transform ${
+                        showRUTime ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  {showRUTime && (
+                    <div className="p-3 bg-white border-t border-gray-200">
+                      <span className="text-sm">
+                        <span className="font-bold">
+                          {formatNumber(totalSpendsRU)}
+                        </span>{" "}
+                        sekund /{" "}
+                        <span className="font-bold">
+                          {formatNumber(totalSpendsRU / 60)}
+                        </span>{" "}
+                        minut
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2 items-center">
                   <Users className="h-4 w-4 text-gray-500" />
