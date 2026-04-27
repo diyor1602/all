@@ -262,7 +262,7 @@ const DailyResults = () => {
     subtitle,
     valueClassName = "",
   }) => (
-    <div className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/85 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 hover:shadow-xl">
+    <div className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/85 p-5 shadow-sm backdrop-blur-xl">
       <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-slate-100/40 pointer-events-none" />
       <div className="relative flex items-start justify-between gap-4">
         <div className="min-w-0">
