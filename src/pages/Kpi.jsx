@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert } from "@/components/ui/alert";
@@ -75,7 +76,7 @@ const analyzeProgress = (plan, month) => {
 
   // Sort daily outputs
   const sortedOutputs = [...plan.daily_outputs].sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
+    (a, b) => new Date(a.date) - new Date(b.date),
   );
   const lastOutputDate = new Date(sortedOutputs[sortedOutputs.length - 1].date);
   const lastOutputDay = lastOutputDate.getDate();
@@ -87,7 +88,7 @@ const analyzeProgress = (plan, month) => {
   // Calculate working days
   const workingDaysPassed = getWorkingDays(
     startOfMonth,
-    new Date(selectedYear, selectedMonth - 1, lastOutputDay)
+    new Date(selectedYear, selectedMonth - 1, lastOutputDay),
   );
   const workingDaysTotal = getWorkingDays(startOfMonth, endOfMonth);
   let workingDaysRemaining;
@@ -103,7 +104,7 @@ const analyzeProgress = (plan, month) => {
       workingDaysTotal -
       getWorkingDays(
         startOfMonth,
-        new Date(selectedYear, selectedMonth - 1, lastOutputDay)
+        new Date(selectedYear, selectedMonth - 1, lastOutputDay),
       );
   }
 
@@ -220,7 +221,7 @@ const calculateTotalProgress = (groupPlans, month) => {
     const currentDay = today.getDate();
     workingDaysPassed = getWorkingDays(
       startOfMonth,
-      new Date(selectedYear, selectedMonth - 1, currentDay)
+      new Date(selectedYear, selectedMonth - 1, currentDay),
     );
     workingDaysRemaining = totalWorkingDays - workingDaysPassed;
   } else if (today > endOfMonth) {
@@ -239,7 +240,7 @@ const calculateTotalProgress = (groupPlans, month) => {
       acc.totalTarget += parseFloat(plan.quantity);
       return acc;
     },
-    { totalCompleted: 0, totalTarget: 0 }
+    { totalCompleted: 0, totalTarget: 0 },
   );
 
   const remaining = Math.max(0, totals.totalTarget - totals.totalCompleted);
@@ -247,7 +248,7 @@ const calculateTotalProgress = (groupPlans, month) => {
     totals.totalTarget > 0
       ? Math.min(
           100,
-          Math.round((totals.totalCompleted / totals.totalTarget) * 100)
+          Math.round((totals.totalCompleted / totals.totalTarget) * 100),
         )
       : 0;
 
@@ -464,7 +465,7 @@ const Kpi = () => {
                 Jami tikilgan:{" "}
                 <span className="font-bold">
                   {groupPlans?.find(
-                    (plan) => plan.group_id === selectedGroup?.id
+                    (plan) => plan.group_id === selectedGroup?.id,
                   )?.monthly_total || 0}
                 </span>{" "}
                 ta
@@ -473,57 +474,107 @@ const Kpi = () => {
                 Jami plan:{" "}
                 <span className="font-bold">
                   {groupPlans?.find(
-                    (plan) => plan.group_id === selectedGroup?.id
+                    (plan) => plan.group_id === selectedGroup?.id,
                   )?.quantity || 0}
                 </span>{" "}
                 ta
               </div>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col space-y-2 max-h-[400px] overflow-y-auto">
-            {(() => {
-              const selectedPlan = groupPlans?.find(
-                (plan) => plan.group_id === selectedGroup?.id
-              );
-              if (!selectedPlan) return null;
+          <Tabs defaultValue="daily" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="daily">Kunlik hisobot</TabsTrigger>
+              <TabsTrigger value="orders">Buyurtmalar</TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value="daily"
+              className="max-h-[400px] overflow-y-auto"
+            >
+              <div className="flex flex-col space-y-2">
+                {(() => {
+                  const selectedPlan = groupPlans?.find(
+                    (plan) => plan.group_id === selectedGroup?.id,
+                  );
+                  if (!selectedPlan) return null;
 
-              const monthlyPlan = selectedPlan.quantity;
-              const year = new Date(month + "-01").getFullYear();
-              const monthNumber = new Date(month + "-01").getMonth() + 1;
+                  const monthlyPlan = selectedPlan.quantity;
+                  const year = new Date(month + "-01").getFullYear();
+                  const monthNumber = new Date(month + "-01").getMonth() + 1;
 
-              const dailyData = calculatePreviousPlan(
-                monthNumber,
-                year,
-                monthlyPlan,
-                selectedPlan.daily_outputs || []
-              );
+                  const dailyData = calculatePreviousPlan(
+                    monthNumber,
+                    year,
+                    monthlyPlan,
+                    selectedPlan.daily_outputs || [],
+                  );
 
-              return dailyData.map((day, index) => (
-                <div
-                  key={index}
-                  className={`flex justify-between items-center p-2 rounded ${day.color} border`}
-                >
-                  <div className="flex-1">
-                    <div className="font-medium">
-                      {day.date?.split("-").reverse().join(".")}
+                  return dailyData.map((day, index) => (
+                    <div
+                      key={index}
+                      className={`flex justify-between items-center p-2 rounded ${day.color} border`}
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium">
+                          {day.date?.split("-").reverse().join(".")}
+                        </div>
+                        <div className="text-xs opacity-75 flex items-center gap-1">
+                          {day.icon} {day.status}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold">
+                          {day.total_count} /{" "}
+                          <span className="text-xs opacity-50">
+                            {day.dailyTarget}
+                          </span>
+                        </div>
+                        <div className="text-xs">{day.percentage}%</div>
+                      </div>
                     </div>
-                    <div className="text-xs opacity-75 flex items-center gap-1">
-                      {day.icon} {day.status}
+                  ));
+                })()}
+              </div>
+            </TabsContent>
+            <TabsContent
+              value="orders"
+              className="max-h-[400px] overflow-y-auto"
+            >
+              <div className="flex flex-col space-y-2">
+                {(() => {
+                  const selectedPlan = groupPlans?.find(
+                    (plan) => plan.group_id === selectedGroup?.id,
+                  );
+                  if (
+                    !selectedPlan?.orders ||
+                    selectedPlan.orders.length === 0
+                  ) {
+                    return (
+                      <div className="text-center py-8 text-gray-500">
+                        Buyurtmalar mavjud emas
+                      </div>
+                    );
+                  }
+
+                  return selectedPlan.orders.map((order, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-3 rounded bg-gray-50 border"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium">{order.order_name}</div>
+                        <div className="text-xs opacity-75">
+                          ID: {order.order_id}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold">{order.total_count} ta</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold">
-                      {day.total_count} /{" "}
-                      <span className="text-xs opacity-50">
-                        {day.dailyTarget}
-                      </span>
-                    </div>
-                    <div className="text-xs">{day.percentage}%</div>
-                  </div>
-                </div>
-              ));
-            })()}
-          </div>
+                  ));
+                })()}
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
@@ -589,7 +640,7 @@ const Kpi = () => {
                   <span className="font-bold">
                     {calculateTotalProgress(
                       groupPlans,
-                      month
+                      month,
                     )?.totalCompleted.toLocaleString() || 0}
                   </span>{" "}
                   ta
@@ -599,7 +650,7 @@ const Kpi = () => {
                   <span className="font-bold">
                     {calculateTotalProgress(
                       groupPlans,
-                      month
+                      month,
                     )?.totalTarget.toLocaleString() || 0}
                   </span>{" "}
                   ta
@@ -620,7 +671,7 @@ const Kpi = () => {
                         .flatMap((dept) => dept.groups)
                         .find((g) => g.id === plan.group_id)?.name ||
                       "Noma'lum",
-                  }))
+                  })),
                 );
 
               // Group by date
@@ -649,13 +700,13 @@ const Kpi = () => {
                 new Date(
                   new Date(month + "-01").getFullYear(),
                   new Date(month + "-01").getMonth(),
-                  1
+                  1,
                 ),
                 new Date(
                   new Date(month + "-01").getFullYear(),
                   new Date(month + "-01").getMonth() + 1,
-                  0
-                )
+                  0,
+                ),
               );
 
               const dailyTarget = totalPlan / workingDaysInMonth;
@@ -735,7 +786,7 @@ const Kpi = () => {
                       <div className="text-xs text-gray-600">
                         {day.groups
                           ?.sort?.((a, b) =>
-                            a.group_name.localeCompare(b.group_name)
+                            a.group_name.localeCompare(b.group_name),
                           )
                           ?.map((group, i) => (
                             <div key={i} className="flex justify-between">
@@ -877,7 +928,7 @@ const Kpi = () => {
                         Rejaga yetish uchun har bir ish kunida kamida{" "}
                         <span className="font-bold">
                           {Math.ceil(
-                            totalProgress.requiredDailyOutput
+                            totalProgress.requiredDailyOutput,
                           ).toLocaleString()}
                         </span>{" "}
                         ta tikish kerak.
@@ -904,8 +955,8 @@ const Kpi = () => {
               (dept) =>
                 dept?.groups?.length > 0 &&
                 keywords.some((keyword) =>
-                  dept?.name?.toLowerCase().includes(keyword.toLowerCase())
-                )
+                  dept?.name?.toLowerCase().includes(keyword.toLowerCase()),
+                ),
             )
             ?.sort((a, b) => b?.groups?.length - a?.groups?.length)
             .map((department) => (
@@ -933,14 +984,14 @@ const Kpi = () => {
                           (a, b) =>
                             parseFloat(
                               groupPlans?.find(
-                                (plan) => plan.group_id === b?.id
-                              )?.quantity || 0
+                                (plan) => plan.group_id === b?.id,
+                              )?.quantity || 0,
                             ) -
                             parseFloat(
                               groupPlans?.find(
-                                (plan) => plan.group_id === a?.id
-                              )?.quantity || 0
-                            )
+                                (plan) => plan.group_id === a?.id,
+                              )?.quantity || 0,
+                            ),
                         )
                         .map((group) => (
                           <div
@@ -967,7 +1018,7 @@ const Kpi = () => {
                                   onClick={() => {
                                     setImageDialogOpen(true);
                                     setImage(
-                                      group.responsible_user?.employee?.img
+                                      group.responsible_user?.employee?.img,
                                     );
                                   }}
                                 />
@@ -983,7 +1034,7 @@ const Kpi = () => {
                                       group?.responsible_user?.employee?.img &&
                                         setImageDialogOpen(true);
                                       setImage(
-                                        group.responsible_user?.employee?.img
+                                        group.responsible_user?.employee?.img,
                                       );
                                     }}
                                   >
@@ -1002,7 +1053,7 @@ const Kpi = () => {
                                 onClick={() => {
                                   if (localStorage.getItem("role") === "ceo") {
                                     const plan = groupPlans?.find(
-                                      (plan) => plan.group_id === group.id
+                                      (plan) => plan.group_id === group.id,
                                     );
 
                                     if (plan) {
@@ -1034,8 +1085,8 @@ const Kpi = () => {
                                   <span className="font-bold text-lg text-blue-600">
                                     {parseFloat(
                                       groupPlans?.find(
-                                        (plan) => plan.group_id === group.id
-                                      )?.quantity || 0
+                                        (plan) => plan.group_id === group.id,
+                                      )?.quantity || 0,
                                     ).toLocaleString("ru-RU")}
                                   </span>
                                   <span className="text-sm text-gray-500">
@@ -1060,8 +1111,8 @@ const Kpi = () => {
                                   <span className="font-bold text-lg text-blue-600">
                                     {parseFloat(
                                       groupPlans?.find(
-                                        (plan) => plan.group_id === group.id
-                                      )?.monthly_total || 0
+                                        (plan) => plan.group_id === group.id,
+                                      )?.monthly_total || 0,
                                     ).toLocaleString("ru-RU")}
                                   </span>
                                   <span className="text-sm text-gray-500">
@@ -1073,7 +1124,7 @@ const Kpi = () => {
                               {/* Daily Output Analysis */}
                               {(() => {
                                 const plan = groupPlans?.find(
-                                  (p) => p.group_id === group.id
+                                  (p) => p.group_id === group.id,
                                 );
                                 // Don't show if no plan, no daily outputs, or plan quantity is 0/not set
                                 if (
@@ -1133,8 +1184,8 @@ const Kpi = () => {
                                               ? "Planni bajardi ✅"
                                               : "Planni bajarmadi ❌"
                                             : analysis.onTrack
-                                            ? "Planni bajara oladi"
-                                            : "Planni bajarish uchun harakat qilish kerak"}
+                                              ? "Planni bajara oladi"
+                                              : "Planni bajarish uchun harakat qilish kerak"}
                                         </p>
 
                                         <p className="text-xs mt-0.5">
@@ -1142,7 +1193,7 @@ const Kpi = () => {
                                             `Rejada: ~${Math.round(
                                               analysis.avgDailyOutput *
                                                 analysis.workingDaysRemaining +
-                                                analysis.completed
+                                                analysis.completed,
                                             ).toLocaleString()} / ${analysis.target.toLocaleString()}`
                                           ) : analysis.workingDaysRemaining >
                                             0 ? (
