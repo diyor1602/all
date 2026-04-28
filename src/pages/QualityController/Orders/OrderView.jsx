@@ -21,7 +21,6 @@ import {
   Palette,
   RotateCcw,
   BadgeCheck,
-  Wallet,
   Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

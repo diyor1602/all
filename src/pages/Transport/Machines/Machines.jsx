@@ -11,8 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Eye, Pencil, PlusCircle, Search } from "lucide-react";
+import { Eye, Loader2, Pencil, PlusCircle, Search, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -25,6 +24,13 @@ import { Routes, Route, Link } from "react-router-dom";
 import Add from "./Add";
 import Edit from "./Edit";
 import Show from "./Show";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const formatPhoneNumber = (phone) =>
   phone
@@ -49,7 +55,6 @@ const MachineWrapper = () => {
   const [filteredTransports, setFilteredTransports] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Load filters from localStorage
   const savedFilters = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   const [searchTerm, setSearchTerm] = useState(savedFilters.searchTerm || "");
   const [statusFilter, setStatusFilter] = useState(
@@ -57,13 +62,19 @@ const MachineWrapper = () => {
   );
 
   const { toast } = useToast();
+  const [driverDialogOpen, setDriverDialogOpen] = useState(false);
+  const [searchDriver, setSearchDriver] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedEmp, setSelectedEmp] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [selectedTransport, setSelectedTransport] = useState(null);
 
-  // Fetch transports
   const fetchTransports = async () => {
     setLoading(true);
     try {
       const response = await api.get("/transport/transports");
-      setTransports(response.data); // ✅ only set raw data
+      setTransports(response.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -79,7 +90,6 @@ const MachineWrapper = () => {
     fetchTransports();
   }, []);
 
-  // Save filters to localStorage when changed
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
@@ -87,7 +97,34 @@ const MachineWrapper = () => {
     );
   }, [searchTerm, statusFilter]);
 
-  // Apply filters
+  const debouncedSearchTerm = useDebounce(searchDriver, 500);
+
+  const getEmployees = async () => {
+    if (debouncedSearchTerm.length < 2) return;
+    try {
+      setIsSearching(true);
+      const res = await api.get("/transport/employees", {
+        params: {
+          search: debouncedSearchTerm,
+          status: "working",
+        },
+      });
+      setSearchResults(res.data?.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Xodimlarni qidirishda xatolik yuz berdi",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    getEmployees();
+  }, [debouncedSearchTerm]);
+
   useEffect(() => {
     let filtered = [...transports];
 
@@ -112,7 +149,33 @@ const MachineWrapper = () => {
     setFilteredTransports(filtered);
   }, [searchTerm, statusFilter, transports]);
 
-  // Totals
+  const handleSubmit = async () => {
+    if (!selectedEmp || !selectedTransport) return;
+    try {
+      setIsSending(true);
+      await api.patch(`transport/transports/${selectedTransport.id}/driver`, {
+        employee_id: selectedEmp.id,
+      });
+      toast({
+        title: "Muvaffaqiyat",
+        description: "Xodim muvaffaqiyatli biriktirildi",
+      });
+      setSelectedEmp(null);
+      setSelectedTransport(null);
+      setSearchDriver("");
+      setDriverDialogOpen(false);
+      fetchTransports();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Xodimni transportga biriktirishda xatolik yuz berdi",
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const totalCapacity = filteredTransports.reduce(
     (sum, t) => sum + (t.capacity || 0),
     0,
@@ -142,7 +205,6 @@ const MachineWrapper = () => {
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -169,7 +231,6 @@ const MachineWrapper = () => {
         </div>
       </div>
 
-      {/* Table */}
       {loading ? (
         <div className="flex justify-center my-8">Yuklanmoqda...</div>
       ) : (
@@ -224,7 +285,16 @@ const MachineWrapper = () => {
                       {t.state_number}
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      {t.driver_full_name}
+                      <Button
+                        onClick={() => {
+                          setDriverDialogOpen(true);
+                          setSelectedTransport(t);
+                          setSelectedEmp(null);
+                        }}
+                        variant="ghost"
+                      >
+                        {t.employee?.name}
+                      </Button>
                     </TableCell>
                     <TableCell className="text-xs border-2">
                       {parseFloat(t.salary).toLocaleString("ru-RU", {
@@ -294,6 +364,84 @@ const MachineWrapper = () => {
           </Table>
         </div>
       )}
+
+      <Dialog open={driverDialogOpen} onOpenChange={setDriverDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Driver</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={searchDriver}
+            onChange={(e) => setSearchDriver(e.target.value)}
+          />
+          {isSearching ? (
+            <div className="flex items-center justify-center gap-2 bg-primary-foreground p-2 rounded">
+              <Loader2 className="animate-spin text-primary" />
+              Qidirilmoqda...
+            </div>
+          ) : selectedEmp ? (
+            <>
+              <div className="flex items-center gap-2 bg-blue-200 p-2 rounded">
+                {selectedEmp?.img && (
+                  <img
+                    src={selectedEmp.img}
+                    alt={selectedEmp.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                )}
+                <div className="flex-1">
+                  <div>{selectedEmp.name}</div>
+                  <div>
+                    {selectedEmp.department?.name} {selectedEmp.position}{" "}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setSelectedEmp(null)}
+                >
+                  Bekor qilish
+                </Button>
+                <Button
+                  className="flex-1"
+                  disabled={isSending}
+                  onClick={handleSubmit}
+                >
+                  Tasdiqlash
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
+              {searchResults?.map((employee, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 bg-gray-200 p-2 rounded cursor-pointer hover:bg-gray-300 transition-colors"
+                  onClick={() => {
+                    setSelectedEmp(employee);
+                  }}
+                >
+                  {employee?.img && (
+                    <img
+                      src={employee.img}
+                      alt={employee.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <div>{employee.name}</div>
+                    <div>
+                      {employee.department?.name} {employee.position}{" "}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
