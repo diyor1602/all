@@ -245,9 +245,13 @@ const MachineWrapper = () => {
                       {t.region_id?.name}
                     </TableCell>
                     <TableCell className="text-xs border-2">
-                      <Badge variant={t.is_active ? "success" : "destructive"}>
-                        {t.is_active ? "Faol" : "Faol emas"}
-                      </Badge>
+                      <div className="flex items-center justify-center">
+                        {t.is_active ? (
+                          <div className="w-5 h-5 rounded-full bg-green-500"></div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-red-500"></div>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
