@@ -47,7 +47,8 @@ const formatPhoneNumber = (phone) => {
   if (!phone) return null;
   const digits = phone.toString().replace(/\D/g, "");
   const match = digits.match(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
-  if (match) return `+${match[1]} ${match[2]} ${match[3]} ${match[4]} ${match[5]}`;
+  if (match)
+    return `+${match[1]} ${match[2]} ${match[3]} ${match[4]} ${match[5]}`;
   return phone;
 };
 
@@ -283,7 +284,9 @@ const MachineWrapper = () => {
                   <TableHead className="text-xs">Telefon</TableHead>
                   <TableHead className="text-xs text-right">Maoshi</TableHead>
                   <TableHead className="text-xs text-center">Sig'imi</TableHead>
-                  <TableHead className="text-xs text-center">Xodimlar</TableHead>
+                  <TableHead className="text-xs text-center">
+                    Xodimlar
+                  </TableHead>
                   <TableHead className="text-xs">Yo'nalish</TableHead>
                   <TableHead className="text-xs text-center">Holati</TableHead>
                   <TableHead className="text-xs text-center">Amallar</TableHead>
@@ -317,7 +320,15 @@ const MachineWrapper = () => {
                           title="Haydovchi o'zgartirish"
                         >
                           <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                            <UserCog className="h-3 w-3 text-indigo-600 group-hover:text-indigo-800" />
+                            {t.employee?.img ? (
+                              <img
+                                src={t.employee.img}
+                                alt={t.employee.name}
+                                className="h-6 w-6 rounded-full"
+                              />
+                            ) : (
+                              <UserCog className="h-3 w-3 text-indigo-600 group-hover:text-indigo-800" />
+                            )}
                           </div>
                           <span className="group-hover:text-indigo-700 transition-colors">
                             {t.employee?.name || (
@@ -416,10 +427,7 @@ const MachineWrapper = () => {
               </TableBody>
               <TableFooter className="bg-muted/40 sticky bottom-0">
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-xs font-semibold py-3"
-                  >
+                  <TableCell colSpan={6} className="text-xs font-semibold py-3">
                     Jami ({filteredTransports.length} ta):
                   </TableCell>
                   <TableCell className="text-xs font-semibold text-right py-3">
@@ -492,9 +500,7 @@ const MachineWrapper = () => {
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {selectedEmp.department?.name}
-                      {selectedEmp.position
-                        ? ` · ${selectedEmp.position}`
-                        : ""}
+                      {selectedEmp.position ? ` · ${selectedEmp.position}` : ""}
                     </p>
                   </div>
                 </div>
