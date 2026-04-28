@@ -53,7 +53,7 @@ const MachineWrapper = () => {
   const savedFilters = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   const [searchTerm, setSearchTerm] = useState(savedFilters.searchTerm || "");
   const [statusFilter, setStatusFilter] = useState(
-    savedFilters.statusFilter || "active"
+    savedFilters.statusFilter || "active",
   );
 
   const { toast } = useToast();
@@ -83,7 +83,7 @@ const MachineWrapper = () => {
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ searchTerm, statusFilter })
+      JSON.stringify({ searchTerm, statusFilter }),
     );
   }, [searchTerm, statusFilter]);
 
@@ -105,7 +105,7 @@ const MachineWrapper = () => {
           t.driver_full_name.toLowerCase().includes(lowerSearch) ||
           (t.region_id?.name &&
             t.region_id.name.toLowerCase().includes(lowerSearch)) ||
-          t.id.toString().includes(lowerSearch)
+          t.id.toString().includes(lowerSearch),
       );
     }
 
@@ -115,18 +115,18 @@ const MachineWrapper = () => {
   // Totals
   const totalCapacity = filteredTransports.reduce(
     (sum, t) => sum + (t.capacity || 0),
-    0
+    0,
   );
   const totalSalary = filteredTransports.reduce(
     (sum, t) => sum + (parseFloat(t.salary) || 0),
-    0
+    0,
   );
   const totalActiveTransports = filteredTransports.filter(
-    (t) => t.is_active
+    (t) => t.is_active,
   ).length;
   const totalEmployees = filteredTransports.reduce(
     (sum, t) => sum + (t.employees?.length || 0),
-    0
+    0,
   );
 
   return (
@@ -173,7 +173,7 @@ const MachineWrapper = () => {
       {loading ? (
         <div className="flex justify-center my-8">Yuklanmoqda...</div>
       ) : (
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-[80vh] overflow-y-auto">
           <Table className="bg-white shadow-lg whitespace-nowrap">
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
