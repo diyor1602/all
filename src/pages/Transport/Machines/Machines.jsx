@@ -12,6 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Eye,
   Loader2,
   Pencil,
@@ -84,6 +87,32 @@ const MachineWrapper = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [selectedTransport, setSelectedTransport] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+
+  const handleSort = (key) => {
+    setSortConfig((prev) =>
+      prev.key === key
+        ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { key, direction: "asc" },
+    );
+  };
+
+  const getSortValue = (t, key) => {
+    switch (key) {
+      case "id": return t.id;
+      case "name": return t.name?.toLowerCase() ?? "";
+      case "state_number": return t.state_number?.toLowerCase() ?? "";
+      case "driver": return t.employee?.name?.toLowerCase() ?? "";
+      case "phone": return t.phone ?? "";
+      case "salary": return parseFloat(t.salary) || 0;
+      case "capacity": return t.capacity || 0;
+      case "employees": return t.employees?.length || 0;
+      case "region": return t.region_id?.name?.toLowerCase() ?? "";
+      case "is_active": return t.is_active ? 1 : 0;
+      default: return "";
+    }
+  };
+
 
   const fetchTransports = async () => {
     setLoading(true);
@@ -204,6 +233,15 @@ const MachineWrapper = () => {
     }
   };
 
+  const sortedTransports = [...filteredTransports].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    const aVal = getSortValue(a, sortConfig.key);
+    const bVal = getSortValue(b, sortConfig.key);
+    if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
+
   const totalCapacity = filteredTransports.reduce(
     (sum, t) => sum + (t.capacity || 0),
     0,
@@ -277,24 +315,22 @@ const MachineWrapper = () => {
               <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
                 <TableRow>
                   <TableHead className="text-xs w-10 text-center">#</TableHead>
-                  <TableHead className="text-xs w-14 text-center">ID</TableHead>
-                  <TableHead className="text-xs">Nomi</TableHead>
-                  <TableHead className="text-xs">Davlat raqami</TableHead>
-                  <TableHead className="text-xs">Haydovchi</TableHead>
-                  <TableHead className="text-xs">Telefon</TableHead>
-                  <TableHead className="text-xs text-right">Maoshi</TableHead>
-                  <TableHead className="text-xs text-center">Sig'imi</TableHead>
-                  <TableHead className="text-xs text-center">
-                    Xodimlar
-                  </TableHead>
-                  <TableHead className="text-xs">Yo'nalish</TableHead>
-                  <TableHead className="text-xs text-center">Holati</TableHead>
+                  <SortableHead colKey="id" label="ID" sortConfig={sortConfig} onSort={handleSort} className="w-14 text-center" />
+                  <SortableHead colKey="name" label="Nomi" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortableHead colKey="state_number" label="Davlat raqami" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortableHead colKey="driver" label="Haydovchi" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortableHead colKey="phone" label="Telefon" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortableHead colKey="salary" label="Maoshi" sortConfig={sortConfig} onSort={handleSort} className="text-right" />
+                  <SortableHead colKey="capacity" label="Sig'imi" sortConfig={sortConfig} onSort={handleSort} className="text-center" />
+                  <SortableHead colKey="employees" label="Xodimlar" sortConfig={sortConfig} onSort={handleSort} className="text-center" />
+                  <SortableHead colKey="region" label="Yo'nalish" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortableHead colKey="is_active" label="Holati" sortConfig={sortConfig} onSort={handleSort} className="text-center" />
                   <TableHead className="text-xs text-center">Amallar</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransports.length > 0 ? (
-                  filteredTransports.map((t, index) => (
+                {sortedTransports.length > 0 ? (
+                  sortedTransports.map((t, index) => (
                     <TableRow
                       key={t.id}
                       className="hover:bg-muted/30 transition-colors"
@@ -577,6 +613,29 @@ const MachineWrapper = () => {
         </DialogContent>
       </Dialog>
     </>
+  );
+};
+
+const SortableHead = ({ colKey, label, sortConfig, onSort, className = "" }) => {
+  const active = sortConfig.key === colKey;
+  return (
+    <TableHead
+      className={`text-xs cursor-pointer select-none hover:bg-muted/60 transition-colors ${className}`}
+      onClick={() => onSort(colKey)}
+    >
+      <div className="flex items-center gap-1">
+        {label}
+        {active ? (
+          sortConfig.direction === "asc" ? (
+            <ArrowUp className="h-3 w-3 shrink-0" />
+          ) : (
+            <ArrowDown className="h-3 w-3 shrink-0" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3 w-3 shrink-0 opacity-35" />
+        )}
+      </div>
+    </TableHead>
   );
 };
 
