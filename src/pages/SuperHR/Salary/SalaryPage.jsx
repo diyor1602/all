@@ -1021,8 +1021,7 @@ const SalaryPage = () => {
             </DialogTitle>
             <DialogDescription>
               <strong>{paymentDialog.employee?.name}</strong> uchun{" "}
-              {paymentDialog.type === "advance" ? "avans" : "oylik"} miqdorini
-              o'zgartirish
+              {paymentDialog.type === "advance" ? "avans" : "oylik"} miqdori
             </DialogDescription>
           </DialogHeader>
 
