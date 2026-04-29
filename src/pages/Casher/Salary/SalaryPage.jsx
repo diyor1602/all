@@ -132,7 +132,9 @@ const SalaryPage = () => {
     end_date: "",
     type: "",
   });
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(
+    localStorage.getItem("salarySearchText") || "",
+  );
 
   // Advanced client-side filters
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -680,7 +682,10 @@ const SalaryPage = () => {
         <Input
           type="text"
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={(e) => {
+            setSearchText(e.target.value);
+            localStorage.setItem("salarySearchText", e.target.value);
+          }}
           placeholder="Xodim qidirish"
           className="bg-white w-fit"
         />

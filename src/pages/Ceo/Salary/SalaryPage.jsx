@@ -132,16 +132,34 @@ const SalaryPage = () => {
     end_date: "",
     type: "",
   });
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(
+    localStorage.getItem("salarySearchText") || "",
+  );
 
   // Advanced client-side filters
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState(() => {
     try {
       const saved = localStorage.getItem("salary2-advanced-filters");
-      return saved ? JSON.parse(saved) : { minPerDay: "", maxPerDay: "", minTotal: "", maxTotal: "", paymentStatus: "all", showDailyColumn: true };
+      return saved
+        ? JSON.parse(saved)
+        : {
+            minPerDay: "",
+            maxPerDay: "",
+            minTotal: "",
+            maxTotal: "",
+            paymentStatus: "all",
+            showDailyColumn: true,
+          };
     } catch {
-      return { minPerDay: "", maxPerDay: "", minTotal: "", maxTotal: "", paymentStatus: "all", showDailyColumn: true };
+      return {
+        minPerDay: "",
+        maxPerDay: "",
+        minTotal: "",
+        maxTotal: "",
+        paymentStatus: "all",
+        showDailyColumn: true,
+      };
     }
   });
 
@@ -435,7 +453,10 @@ const SalaryPage = () => {
   }, [filters, isInitialized]);
 
   useEffect(() => {
-    localStorage.setItem("salary2-advanced-filters", JSON.stringify(advancedFilters));
+    localStorage.setItem(
+      "salary2-advanced-filters",
+      JSON.stringify(advancedFilters),
+    );
   }, [advancedFilters]);
 
   const updateFilters = (newFilters) => {
@@ -661,7 +682,10 @@ const SalaryPage = () => {
         <Input
           type="text"
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={(e) => {
+            setSearchText(e.target.value);
+            localStorage.setItem("salarySearchText", e.target.value);
+          }}
           placeholder="Xodim qidirish"
           className="bg-white w-fit"
         />
