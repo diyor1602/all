@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dialog";
 
 import payment_types from "@/lib/paymentTypes";
+import formatNumber from "@/utils/formatNumber";
 
 // Custom debounce hook
 const useDebounce = (value, delay) => {
@@ -727,18 +728,10 @@ const Salary = () => {
                   {payment_types[employee?.payment_type] || "-"}
                 </TableCell>
                 <TableCell className="border">
-                  {employee.salary_visible
-                    ? Number.parseFloat(employee?.salary || 0)?.toLocaleString(
-                        "ru-RU",
-                      )
-                    : "-"}
+                  {formatNumber(employee?.salary)}
                 </TableCell>
                 <TableCell className="border">
-                  {employee.salary_visible
-                    ? Number.parseFloat(employee?.bonus || 0)?.toLocaleString(
-                        "ru-RU",
-                      )
-                    : "-"}
+                  {formatNumber(employee?.bonus)}
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}
@@ -756,7 +749,6 @@ const Salary = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    disabled={!employee.salary_visible}
                     onClick={() => handleEditClick(employee)}
                   >
                     <Pencil className="h-4 w-4" />

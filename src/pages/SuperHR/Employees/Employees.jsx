@@ -852,28 +852,19 @@ const Employees = () => {
                 </TableCell>
                 <TableCell className="text-right border">
                   <div className="flex items-center gap-2">
-                    <Link
-                      to={`/superhr/new-attendance/${employee.id}`}
-                      target="_blank"
-                    >
+                    <Link to={`/superhr/new-attendance/${employee.id}`}>
                       <AlarmClockCheck
                         size={16}
                         className="text-gray-500 hover:text-gray-600 hover:scale-110 transition-all duration-200 cursor-pointer"
                       />
                     </Link>
-                    <Link
-                      to={`/superhr/employees/view/${employee.id}`}
-                      target="_blank"
-                    >
+                    <Link to={`/superhr/employees/view/${employee.id}`}>
                       <Eye
                         size={16}
                         className="text-blue-500 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer"
                       />
                     </Link>
-                    <Link
-                      to={`/superhr/employees/edit/${employee.id}`}
-                      target="_blank"
-                    >
+                    <Link to={`/superhr/employees/edit/${employee.id}`}>
                       <Pencil
                         size={16}
                         className="text-amber-500 hover:text-amber-600 hover:scale-110 transition-all duration-200 cursor-pointer"
