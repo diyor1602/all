@@ -6,6 +6,7 @@ import {
   ChartColumnDecreasing,
   Swords,
   CircleDollarSign,
+  Gem,
 } from "lucide-react";
 
 const navigation = [
@@ -35,9 +36,15 @@ const navigation = [
     onMobile: true,
   },
   {
-    name: "Oylik",
+    name: "Oylik belgilash",
     href: "/superhr/salary",
     icon: CircleDollarSign,
+    onMobile: false,
+  },
+  {
+    name: "Oylik jadval",
+    href: "/superhr/salary-page",
+    icon: Gem,
     onMobile: false,
   },
 ];
