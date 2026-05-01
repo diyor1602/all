@@ -131,7 +131,13 @@ const CoefStat = () => {
                     ?.map((item, index) => (
                       <TableRow
                         key={index}
-                        className="hover:bg-blue-50/50 transition-colors border-b border-slate-200"
+                        className={`hover:bg-blue-50/50 transition-colors border-b border-slate-200 ${
+                          (item.total_produced_minutes * 100) /
+                            item.expected_minutes <
+                          100
+                            ? "bg-red-50 hover:bg-red-100"
+                            : ""
+                        }`}
                       >
                         <TableCell className="font-medium text-slate-900 border-r border-slate-200">
                           {item.group_name}
