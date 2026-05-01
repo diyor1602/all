@@ -68,7 +68,7 @@ const Coefficient = () => {
 
   const days = useMemo(
     () => getDaysBetween(filters.start_date, filters.end_date),
-    [filters.start_date, filters.end_date]
+    [filters.start_date, filters.end_date],
   );
 
   const fetchData = async () => {
@@ -134,6 +134,7 @@ const Coefficient = () => {
 
       return (
         item.days.length > 0 &&
+        item.attended_days > 0 &&
         matchesSearch &&
         matchesDepartment &&
         matchesGroup
@@ -254,7 +255,7 @@ const Coefficient = () => {
                   b.days.reduce((s, d) => s + d.efficiency_percent, 0) /
                     b.attended_days -
                   a.days.reduce((s, d) => s + d.efficiency_percent, 0) /
-                    a.attended_days
+                    a.attended_days,
               )
               .map((item, index) => {
                 const empAvg =
@@ -281,7 +282,7 @@ const Coefficient = () => {
                     <td className="border border-gray-200 p-2">
                       <div
                         className={`${getPercentageColor(
-                          empAvg
+                          empAvg,
                         )} font-medium text-center`}
                       >
                         {formatPercent(empAvg)}%
@@ -320,7 +321,7 @@ const Coefficient = () => {
               <td className="border border-gray-200 p-2 text-right">
                 <div
                   className={`${getPercentageColor(
-                    overallAverage
+                    overallAverage,
                   )} text-center`}
                 >
                   {formatPercent(overallAverage)}%
@@ -330,7 +331,7 @@ const Coefficient = () => {
                 const values = filteredData
                   .map(
                     (item) =>
-                      item.days.find((d) => d.date === day)?.efficiency_percent
+                      item.days.find((d) => d.date === day)?.efficiency_percent,
                   )
                   .filter((v) => v !== undefined && v !== null);
 
@@ -431,7 +432,7 @@ const Coefficient = () => {
                     "ru-RU",
                     {
                       maximumFractionDigits: 0,
-                    }
+                    },
                   )}{" "}
                   kun
                 </div>
@@ -444,7 +445,7 @@ const Coefficient = () => {
                     "ru-RU",
                     {
                       maximumFractionDigits: 0,
-                    }
+                    },
                   )}{" "}
                   so'm
                 </div>
@@ -456,7 +457,7 @@ const Coefficient = () => {
                 </div>
                 <div className="text-lg font-semibold text-emerald-600">
                   {parseFloat(
-                    selectedEmployee?.tarification_earned
+                    selectedEmployee?.tarification_earned,
                   ).toLocaleString("ru-RU", { maximumFractionDigits: 0 })}{" "}
                   so'm
                 </div>
@@ -469,7 +470,7 @@ const Coefficient = () => {
                     "ru-RU",
                     {
                       maximumFractionDigits: 0,
-                    }
+                    },
                   )}{" "}
                   so'm
                 </div>
