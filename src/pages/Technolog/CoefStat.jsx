@@ -11,6 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, BarChart3 } from "lucide-react";
@@ -60,7 +61,6 @@ const CoefStat = () => {
               </CardTitle>
             </div>
             <div className="flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2">
-              <Calendar className="w-5 h-5" />
               <Input
                 type="month"
                 value={selectedMonth}
@@ -100,28 +100,28 @@ const CoefStat = () => {
                       Guruh
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 border-r border-slate-200 text-center">
-                      Davomat
+                      Davomat <br /> (kun)
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 border-r border-slate-200 text-center">
-                      Tikilgan maxsulot
+                      Tikilgan maxsulot <br /> (dona)
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 border-r border-slate-200 text-center">
-                      Tikilgan vaqt
+                      Tikilgan vaqt <br /> (daqiqa)
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 border-r border-slate-200 text-center">
-                      Model vaqti
+                      Model vaqti <br /> (daqiqa)
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 border-r border-slate-200 text-center">
-                      Vaqt farqi
+                      Vaqt farqi <br /> (daqiqa)
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 border-r border-slate-200 text-center">
-                      1 kunda har bir ishchi vaqt farqi
+                      1 kunlik farq <br /> (daqiqa)
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 border-r border-slate-200 text-center">
-                      Koeffitsienti
+                      Koeffitsienti <br /> (foiz)
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 text-center">
-                      Kishi boshiga
+                      Kishi boshiga <br /> (dona)
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -180,6 +180,97 @@ const CoefStat = () => {
                       </TableRow>
                     ))}
                 </TableBody>
+                <TableFooter className="bg-slate-100 font-semibold">
+                  <TableRow className="border-t-2 border-slate-300">
+                    <TableCell className="border-r border-slate-200 text-slate-900">
+                      Jami
+                    </TableCell>
+                    <TableCell className="border-r border-slate-200 text-slate-900">
+                      {formatNumber(
+                        data?.reduce(
+                          (sum, item) => sum + item.total_present_days,
+                          0,
+                        ),
+                      )}
+                    </TableCell>
+                    <TableCell className="border-r border-slate-200 text-slate-900">
+                      {formatNumber(
+                        data?.reduce(
+                          (sum, item) => sum + item.total_quantity,
+                          0,
+                        ),
+                      )}
+                    </TableCell>
+                    <TableCell className="border-r border-slate-200 text-slate-900">
+                      {formatNumber(
+                        data?.reduce(
+                          (sum, item) => sum + item.total_produced_minutes,
+                          0,
+                        ),
+                        0,
+                      )}
+                    </TableCell>
+                    <TableCell className="border-r border-slate-200 text-slate-900">
+                      {formatNumber(
+                        data?.reduce(
+                          (sum, item) => sum + item.expected_minutes,
+                          0,
+                        ),
+                        0,
+                      )}
+                    </TableCell>
+                    <TableCell className="border-r border-slate-200 text-slate-900">
+                      {formatNumber(
+                        data?.reduce(
+                          (sum, item) =>
+                            sum +
+                            (item.total_produced_minutes -
+                              item.expected_minutes),
+                          0,
+                        ),
+                        0,
+                      )}
+                    </TableCell>
+                    <TableCell className="border-r border-slate-200 text-slate-900">
+                      {formatNumber(
+                        data?.reduce(
+                          (sum, item) =>
+                            sum +
+                            (item.total_produced_minutes -
+                              item.expected_minutes),
+                          0,
+                        ) /
+                          data?.reduce(
+                            (sum, item) => sum + item.total_present_days,
+                            0,
+                          ),
+                        0,
+                      )}
+                    </TableCell>
+                    <TableCell className="border-r border-slate-200 text-slate-900">
+                      {formatNumber(
+                        (data?.reduce(
+                          (sum, item) => sum + item.total_produced_minutes,
+                          0,
+                        ) *
+                          100) /
+                          data?.reduce(
+                            (sum, item) => sum + item.expected_minutes,
+                            0,
+                          ),
+                      )}
+                    </TableCell>
+                    <TableCell className="text-slate-900">
+                      {formatNumber(
+                        data?.reduce(
+                          (sum, item) =>
+                            sum + item.avg_production_per_person_day,
+                          0,
+                        ) / data?.length,
+                      )}
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
               </Table>
             </div>
           )}
