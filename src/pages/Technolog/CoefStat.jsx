@@ -50,10 +50,10 @@ const CoefStat = () => {
   }, [selectedMonth]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen">
       <Card className="max-w-7xl mx-auto shadow-lg">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-xl">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <BarChart3 className="w-8 h-8" />
               <CardTitle className="text-2xl">
