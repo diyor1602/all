@@ -12,6 +12,7 @@ import Employees from "./Employees/Employees";
 import ViewEmployees from "./Employees/ViewEmployees";
 import DifferenceRu from "./DifferenceRu";
 import RuDuplicates from "./RuDuplicates";
+import CoefStat from "./CoefStat";
 
 const Technolog = () => {
   return (
@@ -30,6 +31,7 @@ const Technolog = () => {
       <Route path="employees/view/:id" element={<ViewEmployees />} />
       <Route path="difference-ru" element={<DifferenceRu />} />
       <Route path="ru-duplicates" element={<RuDuplicates />} />
+      <Route path="coef-stat" element={<CoefStat />} />
     </Routes>
   );
 };

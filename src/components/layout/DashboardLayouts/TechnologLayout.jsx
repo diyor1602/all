@@ -1,5 +1,12 @@
 import BaseLayout from "./BaseLayout";
-import { Box, Earth, Sprout, Users, FileText } from "lucide-react";
+import {
+  Box,
+  Earth,
+  Sprout,
+  Users,
+  FileText,
+  CalendarSync,
+} from "lucide-react";
 
 const navigation = [
   {
@@ -24,6 +31,12 @@ const navigation = [
     name: "RU dublikatlar",
     href: "/technologist/ru-duplicates",
     icon: FileText,
+    onMobile: false,
+  },
+  {
+    name: "Oylik xulosalar",
+    href: "/technologist/coef-stat",
+    icon: CalendarSync,
     onMobile: false,
   },
   {
