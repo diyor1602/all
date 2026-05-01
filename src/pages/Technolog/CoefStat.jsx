@@ -235,15 +235,14 @@ const CoefStat = () => {
                       {formatNumber(
                         data?.reduce(
                           (sum, item) =>
-                            sum +
-                            (item.total_produced_minutes -
-                              item.expected_minutes),
+                            item.total_present_days === 0
+                              ? sum
+                              : sum +
+                                (item.total_produced_minutes -
+                                  item.expected_minutes) /
+                                  item.total_present_days,
                           0,
-                        ) /
-                          data?.reduce(
-                            (sum, item) => sum + item.total_present_days,
-                            0,
-                          ),
+                        ),
                         0,
                       )}
                     </TableCell>
