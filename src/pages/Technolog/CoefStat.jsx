@@ -14,7 +14,7 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 
 const CoefStat = () => {
   const { toast } = useToast();
@@ -60,17 +60,15 @@ const CoefStat = () => {
                 Tikuv Guruhlari Tahlili
               </CardTitle>
             </div>
-            <div className="flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2">
-              <Input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => {
-                  setSelectedMonth(e.target.value);
-                  localStorage.setItem("selectedMonth", e.target.value);
-                }}
-                className="w-fit bg-transparent border-0 text-white placeholder:text-white/70 focus-visible:ring-0 p-0 h-auto"
-              />
-            </div>
+            <Input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                localStorage.setItem("selectedMonth", e.target.value);
+              }}
+              className="w-fit bg-white border-0 text-slate-900 placeholder:text-slate-900/70"
+            />
           </div>
         </CardHeader>
         <CardContent className="p-6">
