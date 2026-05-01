@@ -135,7 +135,7 @@ const CoefStat = () => {
                           (item.total_produced_minutes * 100) /
                             item.expected_minutes <
                           100
-                            ? "bg-red-50 hover:bg-red-100"
+                            ? "bg-red-200 hover:bg-red-300"
                             : ""
                         }`}
                       >
