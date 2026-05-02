@@ -14,6 +14,7 @@ import {
   Coins,
   Truck,
   Earth,
+  CalendarSync,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -25,6 +26,7 @@ import Universals from "./Universals/Universals";
 import Moneys from "./Moneys/Moneys";
 import Shipments from "./Shipments/Shipments";
 import DifferenceRu from "./Difference/DifferenceRu";
+import CoefStat from "./CoefStat";
 
 const Settings = () => {
   return (
@@ -39,6 +41,7 @@ const Settings = () => {
       <Route path="moneys" element={<Moneys />} />
       <Route path="shipments" element={<Shipments />} />
       <Route path="difference-ru" element={<DifferenceRu />} />
+      <Route path="coef-stat" element={<CoefStat />} />
     </Routes>
   );
 };
@@ -122,6 +125,12 @@ const SettingsPage = () => {
       icon: Earth,
       link: "/ceo/settings/difference-ru",
       color: "bg-indigo-500",
+    },
+    {
+      name: "Ko'rsatkichlar",
+      icon: CalendarSync,
+      link: "/ceo/settings/coef-stat",
+      color: "bg-cyan-500",
     },
   ];
 
