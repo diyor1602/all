@@ -326,7 +326,7 @@ const AddRequisition = () => {
           <div className="space-y-2">
             {items.map((item, idx) => (
               <div
-                key={item.itemId}
+                key={idx}
                 className="flex gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50 group"
               >
                 <div className="text-xs text-gray-400 w-5 pt-1 flex-shrink-0 font-medium">
@@ -356,7 +356,9 @@ const AddRequisition = () => {
                     </p>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {item.code && <ItemBadge>{item.code}</ItemBadge>}
-                      {item.unitLabel && <ItemBadge>{item.unitLabel}</ItemBadge>}
+                      {item.unitLabel && (
+                        <ItemBadge>{item.unitLabel}</ItemBadge>
+                      )}
                       {item.color?.name && (
                         <ItemBadge>
                           {item.color.hex && (
@@ -556,11 +558,11 @@ const AddRequisition = () => {
               </div>
             ) : searchResults.length > 0 ? (
               <div className="space-y-0.5">
-                {searchResults.map((item) => {
+                {searchResults.map((item, index) => {
                   const alreadyAdded = items.some((i) => i.itemId === item.id);
                   return (
                     <button
-                      key={item.id}
+                      key={index}
                       onClick={() => addItem(item)}
                       className={`w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-colors ${
                         alreadyAdded
@@ -585,13 +587,17 @@ const AddRequisition = () => {
                         </p>
                         <div className="flex flex-wrap gap-1 mt-0.5">
                           {item.code && <ItemBadge>{item.code}</ItemBadge>}
-                          {item.unit?.name && <ItemBadge>{item.unit.name}</ItemBadge>}
+                          {item.unit?.name && (
+                            <ItemBadge>{item.unit.name}</ItemBadge>
+                          )}
                           {item.color?.name && (
                             <ItemBadge>
                               {item.color.hex && (
                                 <span
                                   className="w-2 h-2 rounded-full inline-block flex-shrink-0"
-                                  style={{ backgroundColor: `#${item.color.hex}` }}
+                                  style={{
+                                    backgroundColor: `#${item.color.hex}`,
+                                  }}
                                 />
                               )}
                               {item.color.name}
@@ -599,10 +605,13 @@ const AddRequisition = () => {
                           )}
                           {item.price > 0 && (
                             <ItemBadge>
-                              {item.price.toLocaleString()} {item.currency?.name}
+                              {item.price.toLocaleString()}{" "}
+                              {item.currency?.name}
                             </ItemBadge>
                           )}
-                          {item.lot > 0 && <ItemBadge>Lot: {item.lot}</ItemBadge>}
+                          {item.lot > 0 && (
+                            <ItemBadge>Lot: {item.lot}</ItemBadge>
+                          )}
                         </div>
                       </div>
                       {alreadyAdded && (
