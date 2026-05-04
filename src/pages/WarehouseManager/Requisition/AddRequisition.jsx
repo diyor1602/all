@@ -130,13 +130,12 @@ const AddRequisition = () => {
       formData.append("WarehouseId", selectedWarehouse);
       formData.append("Comment", comment);
 
-      const itemsPayload = items.map(({ itemId, comment: itemComment, requestedQuantity, unitLabel }) => ({
-        itemId,
-        comment: itemComment,
-        requestedQuantity,
-        unitLabel,
-      }));
-      formData.append("Items", JSON.stringify(itemsPayload));
+      items.forEach(({ itemId, comment: itemComment, requestedQuantity, unitLabel }, i) => {
+        formData.append(`Items[${i}][itemId]`, itemId);
+        formData.append(`Items[${i}][requestedQuantity]`, requestedQuantity);
+        formData.append(`Items[${i}][unitLabel]`, unitLabel);
+        formData.append(`Items[${i}][comment]`, itemComment);
+      });
 
       attachments.forEach((file) => formData.append("Attachments", file));
 
