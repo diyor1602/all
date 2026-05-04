@@ -3,6 +3,7 @@ import Income from "./Income/Income";
 import Outcome from "./Outcome/Outcome";
 import CompleteOrders from "./CompleteOrders/CompleteOrders";
 import Settings from "./Settings";
+import Requisitions from "./Requisition/Requisitions";
 
 const WarehouseManager = () => {
   return (
@@ -11,6 +12,7 @@ const WarehouseManager = () => {
       <Route path="outcome/*" element={<Outcome />} />
       <Route path="settings/*" element={<Settings />} />
       <Route path="completeOrders/*" element={<CompleteOrders />} />
+      <Route path="requisitions/*" element={<Requisitions />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
