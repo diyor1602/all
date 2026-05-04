@@ -17,7 +17,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2, Search, Paperclip, X, Package } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  Search,
+  Paperclip,
+  X,
+  Package,
+} from "lucide-react";
 
 const AddRequisition = () => {
   const { toast } = useToast();
@@ -29,6 +37,9 @@ const AddRequisition = () => {
   const [items, setItems] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const [previewImage, setPreviewImage] = useState(null);
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [types, setTypes] = useState([]);
@@ -47,7 +58,11 @@ const AddRequisition = () => {
       const res = await api.get("/warehouseManager/warehouse");
       setWarehouses(res.data);
     } catch {
-      toast({ title: "Xatolik", description: "Omborlarni olib bo'lmadi", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Omborlarni olib bo'lmadi",
+        variant: "destructive",
+      });
     }
   };
 
@@ -56,22 +71,31 @@ const AddRequisition = () => {
       const res = await api.get("/warehouseManager/itemType");
       setTypes(res.data);
     } catch {
-      toast({ title: "Xatolik", description: "Turlarni olib bo'lmadi", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Turlarni olib bo'lmadi",
+        variant: "destructive",
+      });
     }
   };
 
-  const searchItems = async () => {
+  const searchItems = async (typeOverride) => {
     setSearching(true);
+    const type = typeOverride !== undefined ? typeOverride : selectedType;
     try {
       const res = await api.get("/warehouseManager/item", {
         params: {
           search: searchText || undefined,
-          type: selectedType && selectedType !== "all" ? selectedType : undefined,
+          typeId: type && type !== "all" ? type : undefined,
         },
       });
       setSearchResults(res.data?.data || []);
     } catch {
-      toast({ title: "Xatolik", description: "Mahsulotlarni topib bo'lmadi", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Mahsulotlarni topib bo'lmadi",
+        variant: "destructive",
+      });
     } finally {
       setSearching(false);
     }
@@ -82,8 +106,10 @@ const AddRequisition = () => {
     if (exists) {
       setItems((prev) =>
         prev.map((i) =>
-          i.itemId === item.id ? { ...i, requestedQuantity: i.requestedQuantity + 1 } : i
-        )
+          i.itemId === item.id
+            ? { ...i, requestedQuantity: i.requestedQuantity + 1 }
+            : i,
+        ),
       );
     } else {
       setItems((prev) => [
@@ -102,25 +128,46 @@ const AddRequisition = () => {
     setOpenDialog(false);
   };
 
-  const removeItem = (itemId) => setItems((prev) => prev.filter((i) => i.itemId !== itemId));
+  const removeItem = (itemId) =>
+    setItems((prev) => prev.filter((i) => i.itemId !== itemId));
 
   const updateItem = (itemId, field, value) =>
-    setItems((prev) => prev.map((i) => (i.itemId === itemId ? { ...i, [field]: value } : i)));
+    setItems((prev) =>
+      prev.map((i) => (i.itemId === itemId ? { ...i, [field]: value } : i)),
+    );
 
   const handleFiles = (e) => {
     setAttachments((prev) => [...prev, ...Array.from(e.target.files)]);
     e.target.value = "";
   };
 
-  const removeFile = (index) => setAttachments((prev) => prev.filter((_, i) => i !== index));
+  const removeFile = (index) =>
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async () => {
     if (!selectedWarehouse) {
-      toast({ title: "Xatolik", description: "Ombor tanlanmagan", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Ombor tanlanmagan",
+        variant: "destructive",
+      });
       return;
     }
     if (items.length === 0) {
-      toast({ title: "Xatolik", description: "Kamida bitta mahsulot qo'shing", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Kamida bitta mahsulot qo'shing",
+        variant: "destructive",
+      });
+      return;
+    }
+    const invalidItem = items.find((i) => !i.requestedQuantity || Number(i.requestedQuantity) < 1);
+    if (invalidItem) {
+      toast({
+        title: "Xatolik",
+        description: `"${invalidItem.name}" uchun miqdor kiritilmagan`,
+        variant: "destructive",
+      });
       return;
     }
 
@@ -130,12 +177,14 @@ const AddRequisition = () => {
       formData.append("WarehouseId", selectedWarehouse);
       formData.append("Comment", comment);
 
-      items.forEach(({ itemId, comment: itemComment, requestedQuantity, unitLabel }, i) => {
-        formData.append(`Items[${i}][itemId]`, itemId);
-        formData.append(`Items[${i}][requestedQuantity]`, requestedQuantity);
-        formData.append(`Items[${i}][unitLabel]`, unitLabel);
-        formData.append(`Items[${i}][comment]`, itemComment);
-      });
+      items.forEach(
+        ({ itemId, comment: itemComment, requestedQuantity, unitLabel }, i) => {
+          formData.append(`Items[${i}][itemId]`, itemId);
+          formData.append(`Items[${i}][requestedQuantity]`, Number(requestedQuantity));
+          formData.append(`Items[${i}][unitLabel]`, unitLabel);
+          formData.append(`Items[${i}][comment]`, itemComment);
+        },
+      );
 
       attachments.forEach((file) => formData.append("Attachments", file));
 
@@ -149,7 +198,11 @@ const AddRequisition = () => {
       setItems([]);
       setAttachments([]);
     } catch {
-      toast({ title: "Xatolik", description: "Saqlashda xatolik yuz berdi", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Saqlashda xatolik yuz berdi",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -157,15 +210,20 @@ const AddRequisition = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-5">
-      <h1 className="text-2xl font-semibold text-gray-900">Yangi Requisitsiya</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">Yangi Talabnoma</h1>
 
       {/* Main info */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Asosiy ma'lumotlar</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          Asosiy ma'lumotlar
+        </p>
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">Ombor</label>
-          <Select value={selectedWarehouse} onValueChange={setSelectedWarehouse}>
+          <Select
+            value={selectedWarehouse}
+            onValueChange={setSelectedWarehouse}
+          >
             <SelectTrigger className="bg-white">
               <SelectValue placeholder="Omborni tanlang" />
             </SelectTrigger>
@@ -185,7 +243,7 @@ const AddRequisition = () => {
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">Izoh</label>
           <Textarea
-            placeholder="Requisitsiya haqida izoh..."
+            placeholder="Talabnoma haqida izoh..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             className="bg-white resize-none"
@@ -198,9 +256,16 @@ const AddRequisition = () => {
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Mahsulotlar {items.length > 0 && <span className="text-primary">({items.length})</span>}
+            Mahsulotlar{" "}
+            {items.length > 0 && (
+              <span className="text-primary">({items.length})</span>
+            )}
           </p>
-          <Button size="sm" onClick={() => setOpenDialog(true)} className="gap-1.5 h-8">
+          <Button
+            size="sm"
+            onClick={() => setOpenDialog(true)}
+            className="gap-1.5 h-8"
+          >
             <Plus className="w-3.5 h-3.5" />
             Qo'shish
           </Button>
@@ -214,14 +279,23 @@ const AddRequisition = () => {
         ) : (
           <div className="space-y-2">
             {items.map((item, idx) => (
-              <div key={item.itemId} className="flex gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50 group">
-                <div className="text-xs text-gray-400 w-5 pt-1 flex-shrink-0 font-medium">{idx + 1}</div>
+              <div
+                key={item.itemId}
+                className="flex gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50 group"
+              >
+                <div className="text-xs text-gray-400 w-5 pt-1 flex-shrink-0 font-medium">
+                  {idx + 1}
+                </div>
 
                 {item.image ? (
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                    onClick={() => {
+                      setPreviewImage(item.image);
+                      setImgDialogOpen(true);
+                    }}
+                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0 cursor-zoom-in"
                   />
                 ) : (
                   <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
@@ -231,7 +305,9 @@ const AddRequisition = () => {
 
                 <div className="flex-1 min-w-0 space-y-2">
                   <div>
-                    <p className="font-medium text-sm text-gray-900 truncate">{item.name}</p>
+                    <p className="font-medium text-sm text-gray-900 truncate">
+                      {item.name}
+                    </p>
                     <p className="text-xs text-gray-400">
                       {item.code} {item.unitLabel && `· ${item.unitLabel}`}
                     </p>
@@ -243,19 +319,27 @@ const AddRequisition = () => {
                         min={1}
                         value={item.requestedQuantity}
                         onChange={(e) =>
-                          updateItem(item.itemId, "requestedQuantity", Math.max(1, Number(e.target.value)))
+                          updateItem(
+                            item.itemId,
+                            "requestedQuantity",
+                            e.target.value,
+                          )
                         }
                         className="w-20 h-8 text-sm bg-white"
                       />
                       {item.unitLabel && (
-                        <span className="text-xs text-gray-500 whitespace-nowrap">{item.unitLabel}</span>
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                          {item.unitLabel}
+                        </span>
                       )}
                     </div>
                     <Input
                       type="text"
                       placeholder="Izoh..."
                       value={item.comment}
-                      onChange={(e) => updateItem(item.itemId, "comment", e.target.value)}
+                      onChange={(e) =>
+                        updateItem(item.itemId, "comment", e.target.value)
+                      }
                       className="flex-1 h-8 text-sm bg-white"
                     />
                   </div>
@@ -276,7 +360,9 @@ const AddRequisition = () => {
       {/* Attachments */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Fayllar</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Fayllar
+          </p>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
@@ -284,11 +370,19 @@ const AddRequisition = () => {
             <Paperclip className="w-3.5 h-3.5" />
             Biriktirish
           </button>
-          <input ref={fileInputRef} type="file" multiple hidden onChange={handleFiles} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            hidden
+            onChange={handleFiles}
+          />
         </div>
 
         {attachments.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">Fayllar biriktirilmagan</p>
+          <p className="text-sm text-gray-400 text-center py-4">
+            Fayllar biriktirilmagan
+          </p>
         ) : (
           <div className="space-y-1.5">
             {attachments.map((file, i) => (
@@ -297,7 +391,9 @@ const AddRequisition = () => {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100"
               >
                 <Paperclip className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                <span className="text-sm text-gray-700 truncate flex-1">{file.name}</span>
+                <span className="text-sm text-gray-700 truncate flex-1">
+                  {file.name}
+                </span>
                 <span className="text-xs text-gray-400 flex-shrink-0">
                   {file.size < 1024 * 1024
                     ? `${(file.size / 1024).toFixed(1)} KB`
@@ -315,7 +411,11 @@ const AddRequisition = () => {
         )}
       </div>
 
-      <Button onClick={handleSubmit} disabled={submitting} className="w-full h-11 text-base">
+      <Button
+        onClick={handleSubmit}
+        disabled={submitting}
+        className="w-full h-11 text-base"
+      >
         {submitting ? (
           <>
             <Loader2 className="animate-spin w-4 h-4 mr-2" />
@@ -344,7 +444,13 @@ const AddRequisition = () => {
           </DialogHeader>
 
           <div className="flex gap-2">
-            <Select value={selectedType} onValueChange={setSelectedType}>
+            <Select
+              value={selectedType}
+              onValueChange={(v) => {
+                setSelectedType(v);
+                searchItems(v);
+              }}
+            >
               <SelectTrigger className="bg-white w-36 flex-shrink-0">
                 <SelectValue placeholder="Turi" />
               </SelectTrigger>
@@ -408,13 +514,17 @@ const AddRequisition = () => {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {item.name}
+                        </p>
                         <p className="text-xs text-gray-400">
                           {item.code} {item.unit?.name && `· ${item.unit.name}`}
                         </p>
                       </div>
                       {alreadyAdded && (
-                        <span className="text-xs text-primary font-semibold flex-shrink-0">Qo'shilgan</span>
+                        <span className="text-xs text-primary font-semibold flex-shrink-0">
+                          Qo'shilgan
+                        </span>
                       )}
                     </button>
                   );
@@ -427,6 +537,17 @@ const AddRequisition = () => {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image preview dialog */}
+      <Dialog open={imgDialogOpen} onOpenChange={setImgDialogOpen}>
+        <DialogContent>
+          <img
+            src={previewImage}
+            alt="preview"
+            className="w-full max-h-[80vh] object-contain rounded-lg"
+          />
         </DialogContent>
       </Dialog>
     </div>
