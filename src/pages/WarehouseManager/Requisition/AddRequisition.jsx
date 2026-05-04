@@ -27,6 +27,12 @@ import {
   Package,
 } from "lucide-react";
 
+const ItemBadge = ({ children }) => (
+  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+    {children}
+  </span>
+);
+
 const AddRequisition = () => {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
@@ -96,7 +102,9 @@ const AddRequisition = () => {
         },
       });
       const newData = res.data?.data || [];
-      setSearchResults((prev) => (pageNum === 1 ? newData : [...prev, ...newData]));
+      setSearchResults((prev) =>
+        pageNum === 1 ? newData : [...prev, ...newData],
+      );
       setPage(pageNum);
       setTotalPages(res.data?.totalPages ?? 1);
     } catch {
@@ -115,7 +123,12 @@ const AddRequisition = () => {
     if (!sentinelRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loadingMore && !searching && page < totalPages) {
+        if (
+          entries[0].isIntersecting &&
+          !loadingMore &&
+          !searching &&
+          page < totalPages
+        ) {
           searchItems(undefined, page + 1);
         }
       },
@@ -144,6 +157,10 @@ const AddRequisition = () => {
           code: item.code,
           image: item.image,
           unitLabel: item.unit?.name || "",
+          color: item.color || null,
+          price: item.price || null,
+          currencyName: item.currency?.name || "",
+          lot: item.lot || null,
           requestedQuantity: 1,
           comment: "",
         },
@@ -185,7 +202,9 @@ const AddRequisition = () => {
       });
       return;
     }
-    const invalidItem = items.find((i) => !i.requestedQuantity || Number(i.requestedQuantity) < 1);
+    const invalidItem = items.find(
+      (i) => !i.requestedQuantity || Number(i.requestedQuantity) < 1,
+    );
     if (invalidItem) {
       toast({
         title: "Xatolik",
@@ -204,7 +223,10 @@ const AddRequisition = () => {
       items.forEach(
         ({ itemId, comment: itemComment, requestedQuantity, unitLabel }, i) => {
           formData.append(`Items[${i}][itemId]`, itemId);
-          formData.append(`Items[${i}][requestedQuantity]`, Number(requestedQuantity));
+          formData.append(
+            `Items[${i}][requestedQuantity]`,
+            Number(requestedQuantity),
+          );
           formData.append(`Items[${i}][unitLabel]`, unitLabel);
           formData.append(`Items[${i}][comment]`, itemComment);
         },
@@ -332,9 +354,27 @@ const AddRequisition = () => {
                     <p className="font-medium text-sm text-gray-900 truncate">
                       {item.name}
                     </p>
-                    <p className="text-xs text-gray-400">
-                      {item.code} {item.unitLabel && `· ${item.unitLabel}`}
-                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {item.code && <ItemBadge>{item.code}</ItemBadge>}
+                      {item.unitLabel && <ItemBadge>{item.unitLabel}</ItemBadge>}
+                      {item.color?.name && (
+                        <ItemBadge>
+                          {item.color.hex && (
+                            <span
+                              className="w-2 h-2 rounded-full inline-block flex-shrink-0"
+                              style={{ backgroundColor: `#${item.color.hex}` }}
+                            />
+                          )}
+                          {item.color.name}
+                        </ItemBadge>
+                      )}
+                      {item.price > 0 && (
+                        <ItemBadge>
+                          {item.price.toLocaleString()} {item.currencyName}
+                        </ItemBadge>
+                      )}
+                      {item.lot > 0 && <ItemBadge>Lot: {item.lot}</ItemBadge>}
+                    </div>
                   </div>
                   <div className="flex gap-2 items-center">
                     <div className="flex items-center gap-1.5">
@@ -543,9 +583,27 @@ const AddRequisition = () => {
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {item.name}
                         </p>
-                        <p className="text-xs text-gray-400">
-                          {item.code} {item.unit?.name && `· ${item.unit.name}`}
-                        </p>
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {item.code && <ItemBadge>{item.code}</ItemBadge>}
+                          {item.unit?.name && <ItemBadge>{item.unit.name}</ItemBadge>}
+                          {item.color?.name && (
+                            <ItemBadge>
+                              {item.color.hex && (
+                                <span
+                                  className="w-2 h-2 rounded-full inline-block flex-shrink-0"
+                                  style={{ backgroundColor: `#${item.color.hex}` }}
+                                />
+                              )}
+                              {item.color.name}
+                            </ItemBadge>
+                          )}
+                          {item.price > 0 && (
+                            <ItemBadge>
+                              {item.price.toLocaleString()} {item.currency?.name}
+                            </ItemBadge>
+                          )}
+                          {item.lot > 0 && <ItemBadge>Lot: {item.lot}</ItemBadge>}
+                        </div>
                       </div>
                       {alreadyAdded && (
                         <span className="text-xs text-primary font-semibold flex-shrink-0">
