@@ -46,7 +46,11 @@ const AddRequisition = () => {
   const [selectedType, setSelectedType] = useState("");
   const [searchText, setSearchText] = useState("");
   const [searching, setSearching] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const sentinelRef = useRef(null);
 
   useEffect(() => {
     getWarehouses();
@@ -79,17 +83,22 @@ const AddRequisition = () => {
     }
   };
 
-  const searchItems = async (typeOverride) => {
-    setSearching(true);
+  const searchItems = async (typeOverride, pageNum = 1) => {
     const type = typeOverride !== undefined ? typeOverride : selectedType;
+    if (pageNum === 1) setSearching(true);
+    else setLoadingMore(true);
     try {
       const res = await api.get("/warehouseManager/item", {
         params: {
           search: searchText || undefined,
           typeId: type && type !== "all" ? type : undefined,
+          page: pageNum,
         },
       });
-      setSearchResults(res.data?.data || []);
+      const newData = res.data?.data || [];
+      setSearchResults((prev) => (pageNum === 1 ? newData : [...prev, ...newData]));
+      setPage(pageNum);
+      setTotalPages(res.data?.totalPages ?? 1);
     } catch {
       toast({
         title: "Xatolik",
@@ -97,9 +106,24 @@ const AddRequisition = () => {
         variant: "destructive",
       });
     } finally {
-      setSearching(false);
+      if (pageNum === 1) setSearching(false);
+      else setLoadingMore(false);
     }
   };
+
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore && !searching && page < totalPages) {
+          searchItems(undefined, page + 1);
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [page, totalPages, loadingMore, searching]);
 
   const addItem = (item) => {
     const exists = items.find((i) => i.itemId === item.id);
@@ -435,6 +459,8 @@ const AddRequisition = () => {
             setSearchText("");
             setSelectedType("");
             setSearchResults([]);
+            setPage(1);
+            setTotalPages(1);
           }
         }}
       >
@@ -529,6 +555,13 @@ const AddRequisition = () => {
                     </button>
                   );
                 })}
+                <div ref={sentinelRef} className="py-1">
+                  {loadingMore && (
+                    <div className="flex justify-center py-2">
+                      <Loader2 className="animate-spin w-4 h-4 text-gray-400" />
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-48 text-gray-300 gap-2">
