@@ -21,16 +21,23 @@ const CoefStat = () => {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(
-    localStorage.getItem("selectedMonth") ||
-      new Date().toISOString().slice(0, 7),
+  const [startDate, setStartDate] = useState(
+    localStorage.getItem("coefStartDate") ||
+      new Date().toISOString().slice(0, 10),
+  );
+  const [endDate, setEndDate] = useState(
+    localStorage.getItem("coefEndDate") ||
+      new Date().toISOString().slice(0, 10),
   );
 
   const getData = async () => {
     setLoading(true);
     try {
       const response = await api.get("ceo/sewing-groups-analysis", {
-        params: { month: selectedMonth },
+        params: {
+          start_date: startDate,
+          end_date: endDate,
+        },
       });
       setData(response.data);
     } catch (error) {
@@ -47,25 +54,34 @@ const CoefStat = () => {
 
   useEffect(() => {
     getData();
-  }, [selectedMonth]);
+  }, [startDate, endDate]);
 
   return (
     <div className="min-h-screen">
       <Card className="max-w-7xl mx-auto shadow-lg">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-xl">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap gap-4">
+            <div className="flex items-center gap-3 mr-auto">
               <BarChart3 className="w-8 h-8" />
               <CardTitle className="text-2xl">
                 Tikuv Guruhlari Tahlili
               </CardTitle>
             </div>
             <Input
-              type="month"
-              value={selectedMonth}
+              type="date"
+              value={startDate}
               onChange={(e) => {
-                setSelectedMonth(e.target.value);
-                localStorage.setItem("selectedMonth", e.target.value);
+                setStartDate(e.target.value);
+                localStorage.setItem("coefStartDate", e.target.value);
+              }}
+              className="w-fit bg-white border-0 text-slate-900 placeholder:text-slate-900/70"
+            />
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                localStorage.setItem("coefEndDate", e.target.value);
               }}
               className="w-fit bg-white border-0 text-slate-900 placeholder:text-slate-900/70"
             />
