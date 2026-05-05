@@ -10,6 +10,7 @@ import {
   MessageSquare,
   ChevronDown,
   FileText,
+  CheckCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -19,16 +20,16 @@ const STATUS_MAP = {
     label: "Kutilmoqda",
     className: "bg-amber-50 text-amber-600 border-amber-200",
   },
-  approved: {
-    label: "Tasdiqlangan",
+  given: {
+    label: "Berilgan",
     className: "bg-green-50 text-green-600 border-green-200",
   },
-  rejected: {
-    label: "Rad etilgan",
+  partialGiven: {
+    label: "Qisman berilgan",
     className: "bg-red-50 text-red-600 border-red-200",
   },
-  closed: {
-    label: "Yopilgan",
+  forwarded: {
+    label: "Yopilmagan",
     className: "bg-gray-100 text-gray-500 border-gray-200",
   },
 };
@@ -156,6 +157,14 @@ const AllRequisitions = () => {
                           {req.requisitionNumber}
                         </span>
                         <StatusBadge status={req.status} />
+                        {req.status === "pending" && (
+                          <Link
+                            to={`/warehouseManager/requisitions/approve/${req.id}`}
+                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                          >
+                            <CheckCheck className="w-3.5 h-3.5" /> Tasdiqlash
+                          </Link>
+                        )}
                         <span className="text-xs text-gray-400 ml-auto">
                           {formatDate(req.createdAt)}
                         </span>

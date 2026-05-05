@@ -238,7 +238,7 @@ const AddRequisition = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      toast({ title: "Muvaffaqiyatli", description: "Requisitsiya yaratildi" });
+      toast({ title: "Muvaffaqiyatli", description: "Talabnoma yaratildi" });
       setSelectedWarehouse("");
       setComment("");
       setItems([]);
