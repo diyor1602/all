@@ -291,12 +291,13 @@ const AllRequisitions = () => {
                         <div className="flex flex-wrap gap-2">
                           {req.attachments.map((att) =>
                             isImage(att.fileType) ? (
-                              <a
+                              <button
                                 key={att.id}
-                                href={att.filePath}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedImage(att.filePath);
+                                  setDialogOpen(true);
+                                }}
                                 className="group relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
                               >
                                 <img
@@ -304,7 +305,7 @@ const AllRequisitions = () => {
                                   alt={att.fileName}
                                   className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
                                 />
-                              </a>
+                              </button>
                             ) : (
                               <a
                                 key={att.id}
@@ -356,11 +357,13 @@ const AllRequisitions = () => {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <img
-            src={selectedImage}
-            alt="Image"
-            className="w-full h-full object-cover"
-          />
+          <div className="w-full h-[80vh] overflow-auto flex items-center justify-center">
+            <img
+              src={selectedImage}
+              alt="Image"
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
