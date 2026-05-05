@@ -238,8 +238,7 @@ const ApproveRequisition = () => {
     } catch (err) {
       toast({
         title: "Xatolik",
-        description:
-          err.response?.data?.message || "Saqlashda xatolik yuz berdi",
+        description: err.response?.data?.error || "Saqlashda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
