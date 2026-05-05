@@ -16,7 +16,6 @@ import {
   FileText,
   Loader2,
   Package,
-  Plus,
   Trash2,
   ArrowLeft,
   MessageSquare,
@@ -164,21 +163,6 @@ const ApproveRequisition = () => {
       }),
     );
   };
-
-  const addEmptyRoll = (reqItemId) =>
-    setGiveItems((prev) =>
-      prev.map((i) =>
-        i.requisitionItemId !== reqItemId
-          ? i
-          : {
-              ...i,
-              rolls: [
-                ...i.rolls,
-                { _stockId: null, rollNumber: "", length: "", quantity: "" },
-              ],
-            },
-      ),
-    );
 
   const updateRoll = (reqItemId, rollIdx, field, value) =>
     setGiveItems((prev) =>
@@ -463,18 +447,9 @@ const ApproveRequisition = () => {
                 {/* Rolls section */}
                 {showRolls ? (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        Rulonlar
-                      </p>
-                      <button
-                        onClick={() => addEmptyRoll(giveItem.requisitionItemId)}
-                        className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Qo'shish
-                      </button>
-                    </div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Rulonlar
+                    </p>
 
                     {/* Available stock rolls as chips */}
                     {rollsInStock.length > 0 && (
@@ -591,15 +566,7 @@ const ApproveRequisition = () => {
                       </div>
                     )}
                   </div>
-                ) : (
-                  <button
-                    onClick={() => addEmptyRoll(giveItem.requisitionItemId)}
-                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-primary transition-colors"
-                  >
-                    <Plus className="w-3 h-3" />
-                    Rulon qo'shish
-                  </button>
-                )}
+                ) : null}
               </div>
             </div>
           );
