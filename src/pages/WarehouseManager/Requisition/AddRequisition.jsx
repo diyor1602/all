@@ -37,8 +37,6 @@ const AddRequisition = () => {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
 
-  const [warehouses, setWarehouses] = useState([]);
-  const [selectedWarehouse, setSelectedWarehouse] = useState("");
   const [comment, setComment] = useState("");
   const [items, setItems] = useState([]);
   const [attachments, setAttachments] = useState([]);
@@ -59,22 +57,8 @@ const AddRequisition = () => {
   const sentinelRef = useRef(null);
 
   useEffect(() => {
-    getWarehouses();
     getTypes();
   }, []);
-
-  const getWarehouses = async () => {
-    try {
-      const res = await api.get("/warehouseManager/warehouse");
-      setWarehouses(res.data);
-    } catch {
-      toast({
-        title: "Xatolik",
-        description: "Omborlarni olib bo'lmadi",
-        variant: "destructive",
-      });
-    }
-  };
 
   const getTypes = async () => {
     try {
@@ -186,14 +170,6 @@ const AddRequisition = () => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async () => {
-    if (!selectedWarehouse) {
-      toast({
-        title: "Xatolik",
-        description: "Ombor tanlanmagan",
-        variant: "destructive",
-      });
-      return;
-    }
     if (items.length === 0) {
       toast({
         title: "Xatolik",
@@ -217,7 +193,6 @@ const AddRequisition = () => {
     setSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append("WarehouseId", selectedWarehouse);
       formData.append("Comment", comment);
 
       items.forEach(
@@ -239,7 +214,6 @@ const AddRequisition = () => {
       });
 
       toast({ title: "Muvaffaqiyatli", description: "Talabnoma yaratildi" });
-      setSelectedWarehouse("");
       setComment("");
       setItems([]);
       setAttachments([]);
@@ -263,28 +237,6 @@ const AddRequisition = () => {
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Asosiy ma'lumotlar
         </p>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Ombor</label>
-          <Select
-            value={selectedWarehouse}
-            onValueChange={setSelectedWarehouse}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Omborni tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              {warehouses
-                .slice()
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((w) => (
-                  <SelectItem key={w.id} value={String(w.id)}>
-                    {w.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">Izoh</label>
