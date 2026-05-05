@@ -96,7 +96,7 @@ const Employees = () => {
     if (!id) return;
     try {
       setLoading(true);
-      const response = await api.get("/warehouseManager/calculateSeason", {
+      const response = await api.get("/v1/warehouseManager/calculateSeason", {
         params: {
           department_id: id,
           month: selectedMonth,
@@ -121,7 +121,7 @@ const Employees = () => {
   const handleSubmit = async () => {
     setSending(true);
     try {
-      await api.post("/warehouseManager/employeeSums", {
+      await api.post("/v1/warehouseManager/employeeSums", {
         month: selectedMonth,
         employee_id: selectedEmployee?.employee?.id,
         sum: editingValue,

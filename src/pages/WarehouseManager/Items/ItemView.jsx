@@ -79,7 +79,7 @@ const ItemView = () => {
         params.append("type_id", selectedTypeId);
 
       const response = await api.get(
-        `/warehouseManager/items?${params.toString()}`,
+        `/v1/warehouseManager/items?${params.toString()}`,
       );
 
       setTotalItems(response.data.total);
@@ -126,7 +126,7 @@ const ItemView = () => {
 
   const fetchTypes = async () => {
     try {
-      const response = await api.get("/warehouseManager/types");
+      const response = await api.get("/v1/warehouseManager/types");
       setTypes(response.data);
     } catch {
       toast({
@@ -151,7 +151,7 @@ const ItemView = () => {
   const handleDownload = async () => {
     try {
       setDownloading(true);
-      const response = await api.get("/warehouseManager/items-export");
+      const response = await api.get("/v1/warehouseManager/items-export");
       if (response.data.fileUrl) {
         const link = document.createElement("a");
         link.href = response.data.fileUrl;

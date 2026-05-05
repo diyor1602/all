@@ -133,7 +133,7 @@ const ViewEmployee = () => {
       setLoading(true);
       try {
         const response = await api.get(
-          `/warehouseManager/employees/casher/${id}`,
+          `/v1/warehouseManager/employees/casher/${id}`,
           {
             params: {
               start_date: filters.start_date,

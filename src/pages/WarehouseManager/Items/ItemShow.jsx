@@ -49,7 +49,7 @@ const ItemShow = () => {
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        const response = await api.get(`/warehouseManager/items/${id}`);
+        const response = await api.get(`/v1/warehouseManager/items/${id}`);
         setItem(response.data);
       } catch (error) {
         toast({
@@ -127,7 +127,7 @@ const ItemShow = () => {
 
   const totalStock = stock_balances.reduce(
     (sum, balance) => sum + parseFloat(balance.quantity),
-    0
+    0,
   );
 
   return (
@@ -362,7 +362,7 @@ const ItemShow = () => {
                           <TableCell>
                             <div
                               className={`flex items-center gap-1 font-medium ${getTransactionTypeColor(
-                                entry.type
+                                entry.type,
                               )}`}
                             >
                               {getTransactionTypeIcon(entry.type)}

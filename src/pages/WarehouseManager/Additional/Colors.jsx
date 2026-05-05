@@ -40,7 +40,7 @@ const Colors = () => {
   const fetchColors = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/warehouseManager/colors");
+      const response = await api.get("/v1/warehouseManager/colors");
       setColors(response.data);
     } catch (error) {
       toast({
@@ -68,7 +68,7 @@ const Colors = () => {
     }
     setIsAdding(true);
     try {
-      await api.post("/warehouseManager/colors", colorData);
+      await api.post("/v1/warehouseManager/colors", colorData);
       toast({
         title: "Muvaffaqiyatli",
         description: "Rang muvaffaqiyatli qo'shildi",
@@ -111,7 +111,7 @@ const Colors = () => {
     }
     setIsEditing(true);
     try {
-      await api.patch(`/warehouseManager/colors/${editColor.id}`, colorData);
+      await api.patch(`/v1/warehouseManager/colors/${editColor.id}`, colorData);
       toast({
         title: "Muvaffaqiyatli",
         description: "Rang muvaffaqiyatli tahrirlandi",

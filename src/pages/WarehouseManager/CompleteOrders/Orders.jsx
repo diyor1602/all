@@ -37,10 +37,10 @@ const Orders = () => {
 
   const [data, setData] = useState([]);
   const [search, setSearch] = useState(
-    () => localStorage.getItem("orders-search") || ""
+    () => localStorage.getItem("orders-search") || "",
   );
   const [status, setStatus] = useState(
-    () => localStorage.getItem("orders-status") || "all"
+    () => localStorage.getItem("orders-status") || "all",
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -50,7 +50,7 @@ const Orders = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/warehouseManager/orders");
+      const response = await api.get("/v1/warehouseManager/orders");
       setData(response.data);
     } catch (error) {
       toast({
@@ -72,7 +72,7 @@ const Orders = () => {
   const handleCompleteOrder = async () => {
     setSubmitting(true);
     try {
-      await api.post("/warehouseManager/completeOrders", {
+      await api.post("/v1/warehouseManager/completeOrders", {
         order_id: selectedItem?.id,
       });
       toast({
@@ -130,7 +130,7 @@ const Orders = () => {
       <div className="font-bold mb-2">
         Buyurtmalar ({filteredData?.length}) (
         {formatNumber(
-          filteredData?.reduce((acc, item) => acc + item?.quantity, 0)
+          filteredData?.reduce((acc, item) => acc + item?.quantity, 0),
         )}{" "}
         ta)
       </div>
@@ -179,7 +179,7 @@ const Orders = () => {
                     "border rounded-lg p-4 transition-all duration-200 hover:shadow-sm",
                     complete
                       ? "bg-green-50 border-green-200"
-                      : "bg-red-50 border-red-200"
+                      : "bg-red-50 border-red-200",
                   )}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -200,7 +200,7 @@ const Orders = () => {
                         "transition-colors",
                         complete
                           ? "hover:bg-red-100 hover:border-red-300"
-                          : "hover:bg-green-100 hover:border-green-300"
+                          : "hover:bg-green-100 hover:border-green-300",
                       )}
                     >
                       {complete ? <X size={16} /> : <Check size={16} />}
@@ -233,7 +233,7 @@ const Orders = () => {
                       <span
                         className={cn(
                           "font-medium",
-                          complete ? "text-green-700" : "text-red-700"
+                          complete ? "text-green-700" : "text-red-700",
                         )}
                       >
                         {complete ? "Bajarildi" : "Bajarilmadi"}
@@ -244,7 +244,7 @@ const Orders = () => {
                       <div className="pt-2 border-t border-gray-200">
                         <div className="text-xs text-gray-500">
                           {formatTime(
-                            item?.warehouse_complete_order?.created_at
+                            item?.warehouse_complete_order?.created_at,
                           )}
                         </div>
                       </div>

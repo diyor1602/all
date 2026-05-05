@@ -43,7 +43,7 @@ const Edit = () => {
 
   const fetchUnits = async () => {
     try {
-      const response = await api.get("/warehouseManager/units");
+      const response = await api.get("/v1/warehouseManager/units");
       setUnits(response.data);
     } catch (error) {
       toast({
@@ -56,7 +56,7 @@ const Edit = () => {
 
   const fetchColors = async () => {
     try {
-      const response = await api.get("/warehouseManager/colors");
+      const response = await api.get("/v1/warehouseManager/colors");
       setColors(response.data);
     } catch (error) {
       toast({
@@ -69,7 +69,7 @@ const Edit = () => {
 
   const fetchTypes = async () => {
     try {
-      const response = await api.get("/warehouseManager/types");
+      const response = await api.get("/v1/warehouseManager/types");
       setTypes(response.data);
     } catch (error) {
       toast({
@@ -82,7 +82,7 @@ const Edit = () => {
 
   const fetchCurrencies = async () => {
     try {
-      const response = await api.get("/warehouseManager/currencies");
+      const response = await api.get("/v1/warehouseManager/currencies");
       setCurrencies(response.data);
     } catch (error) {
       toast({
@@ -95,7 +95,7 @@ const Edit = () => {
 
   const fetchItem = async (id) => {
     try {
-      const response = await api.get(`/warehouseManager/items/${id}`);
+      const response = await api.get(`/v1/warehouseManager/items/${id}`);
 
       // Set form data from fetched item, handling nested objects
       setFormData({
@@ -265,7 +265,7 @@ const Edit = () => {
       }
 
       // Use PATHC method for updating an existing item
-      await api.post(`/warehouseManager/items/${id}`, formPayload, {
+      await api.post(`/v1/warehouseManager/items/${id}`, formPayload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

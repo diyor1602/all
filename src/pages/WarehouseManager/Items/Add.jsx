@@ -41,7 +41,7 @@ const Add = () => {
 
   const fetchUnits = async () => {
     try {
-      const response = await api.get("/warehouseManager/units");
+      const response = await api.get("/v1/warehouseManager/units");
       setUnits(response.data);
     } catch (error) {
       toast({
@@ -54,7 +54,7 @@ const Add = () => {
 
   const fetchColors = async () => {
     try {
-      const response = await api.get("/warehouseManager/colors");
+      const response = await api.get("/v1/warehouseManager/colors");
       setColors(response.data);
     } catch (error) {
       toast({
@@ -67,7 +67,7 @@ const Add = () => {
 
   const fetchTypes = async () => {
     try {
-      const response = await api.get("/warehouseManager/types");
+      const response = await api.get("/v1/warehouseManager/types");
       setTypes(response.data);
     } catch (error) {
       toast({
@@ -80,7 +80,7 @@ const Add = () => {
 
   const fetchCurrencies = async () => {
     try {
-      const response = await api.get("/warehouseManager/currencies");
+      const response = await api.get("/v1/warehouseManager/currencies");
       setCurrencies(response.data);
     } catch (error) {
       toast({
@@ -191,7 +191,7 @@ const Add = () => {
         formPayload.append("image", formData.image);
       }
 
-      await api.post("/warehouseManager/items", formPayload, {
+      await api.post("/v1/warehouseManager/items", formPayload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
