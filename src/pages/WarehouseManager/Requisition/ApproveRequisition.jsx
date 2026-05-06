@@ -156,7 +156,6 @@ const ApproveRequisition = () => {
               _stockId: stockItem.id,
               rollNumber: String(stockItem.rollNumber),
               length: stockItem.length != null ? String(stockItem.length) : "",
-              quantity: "",
             },
           ],
         };
@@ -186,10 +185,27 @@ const ApproveRequisition = () => {
       ),
     );
 
+  const calcGivenQty = (item) =>
+    item.rolls.length > 0
+      ? item.rolls.reduce((sum, r) => sum + (Number(r.length) || 0), 0)
+      : Number(item.givenQuantity) || 0;
+
   const handleSubmit = async () => {
-    const filledItems = giveItems.filter(
-      (i) => i.givenQuantity && Number(i.givenQuantity) > 0,
-    );
+    // Validate rolls: every added roll must have a length > 0
+    for (const item of giveItems) {
+      for (const roll of item.rolls) {
+        if (!roll.length || Number(roll.length) <= 0) {
+          toast({
+            title: "Xatolik",
+            description: `"${item.itemInfo?.name ?? item.itemId}" — barcha rulonlar uchun uzunlik kiriting`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
+    const filledItems = giveItems.filter((i) => calcGivenQty(i) > 0);
     if (filledItems.length === 0) {
       toast({
         title: "Xatolik",
@@ -204,15 +220,12 @@ const ApproveRequisition = () => {
       await api.post(`/warehouseManager/Requisition/${id}/give`, {
         items: filledItems.map((i) => ({
           requisitionItemId: i.requisitionItemId,
-          givenQuantity: Number(i.givenQuantity),
+          givenQuantity: calcGivenQty(i),
           warehouseId: i.warehouseId ? Number(i.warehouseId) : undefined,
-          rolls: i.rolls
-            .filter((r) => r.rollNumber && r.quantity)
-            .map((r) => ({
-              rollNumber: Number(r.rollNumber),
-              length: r.length !== "" ? Number(r.length) : null,
-              quantity: Number(r.quantity),
-            })),
+          rolls: i.rolls.map((r) => ({
+            rollNumber: Number(r.rollNumber),
+            length: r.length !== "" ? Number(r.length) : null,
+          })),
         })),
         comment: comment || null,
       });
@@ -427,7 +440,12 @@ const ApproveRequisition = () => {
                     type="number"
                     min={0}
                     placeholder="0"
-                    value={giveItem.givenQuantity}
+                    value={
+                      giveItem.rolls.length > 0
+                        ? calcGivenQty(giveItem)
+                        : giveItem.givenQuantity
+                    }
+                    disabled={giveItem.rolls.length > 0}
                     onChange={(e) =>
                       updateGiveItem(
                         giveItem.requisitionItemId,
@@ -435,7 +453,7 @@ const ApproveRequisition = () => {
                         e.target.value,
                       )
                     }
-                    className="w-28 h-8 text-sm bg-white"
+                    className="w-28 h-8 text-sm bg-white disabled:bg-gray-50 disabled:text-gray-500"
                   />
                   {giveItem.unitLabel && (
                     <span className="text-sm text-gray-500">
@@ -459,14 +477,16 @@ const ApproveRequisition = () => {
                           return (
                             <button
                               key={s.id}
-                              disabled={isAdded}
+                              disabled={isAdded || s.length <= 0}
                               onClick={() =>
                                 addRollFromStock(giveItem.requisitionItemId, s)
                               }
                               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors ${
                                 isAdded
                                   ? "bg-primary/10 border-primary/30 text-primary cursor-default"
-                                  : "bg-gray-50 border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
+                                  : s.length <= 0
+                                    ? "bg-red-50 border-red-200 text-red-600 cursor-not-allowed"
+                                    : "bg-gray-50 border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
                               }`}
                             >
                               <span className="font-medium">
@@ -503,14 +523,7 @@ const ApproveRequisition = () => {
                                   type="text"
                                   placeholder="1"
                                   value={roll.rollNumber}
-                                  onChange={(e) =>
-                                    updateRoll(
-                                      giveItem.requisitionItemId,
-                                      rollIdx,
-                                      "rollNumber",
-                                      e.target.value,
-                                    )
-                                  }
+                                  disabled
                                   className="w-16 h-7 text-xs bg-white"
                                 />
                               </div>
@@ -527,25 +540,6 @@ const ApproveRequisition = () => {
                                       giveItem.requisitionItemId,
                                       rollIdx,
                                       "length",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-20 h-7 text-xs bg-white"
-                                />
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs text-gray-400 w-14 flex-shrink-0">
-                                  Miqdor
-                                </span>
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  value={roll.quantity}
-                                  onChange={(e) =>
-                                    updateRoll(
-                                      giveItem.requisitionItemId,
-                                      rollIdx,
-                                      "quantity",
                                       e.target.value,
                                     )
                                   }
