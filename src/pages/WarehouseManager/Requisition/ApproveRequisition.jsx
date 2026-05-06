@@ -44,6 +44,7 @@ const ApproveRequisition = () => {
   const [comment, setComment] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     loadWarehouses();
@@ -190,8 +191,7 @@ const ApproveRequisition = () => {
       ? item.rolls.reduce((sum, r) => sum + (Number(r.length) || 0), 0)
       : Number(item.givenQuantity) || 0;
 
-  const handleSubmit = async () => {
-    // Validate rolls: every added roll must have a length > 0
+  const handleConfirm = () => {
     for (const item of giveItems) {
       for (const roll of item.rolls) {
         if (!roll.length || Number(roll.length) <= 0) {
@@ -215,6 +215,12 @@ const ApproveRequisition = () => {
       return;
     }
 
+    setConfirmOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    setConfirmOpen(false);
+    const filledItems = giveItems.filter((i) => calcGivenQty(i) > 0);
     setSubmitting(true);
     try {
       await api.post(`/warehouseManager/Requisition/${id}/give`, {
@@ -583,7 +589,7 @@ const ApproveRequisition = () => {
 
       {/* Submit */}
       <Button
-        onClick={handleSubmit}
+        onClick={handleConfirm}
         disabled={submitting}
         className="w-full h-11 text-base"
       >
@@ -596,6 +602,98 @@ const ApproveRequisition = () => {
           "Tasdiqlash"
         )}
       </Button>
+
+      {/* Confirm dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">
+                Chiqimni tasdiqlang
+              </h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Quyidagi mahsulotlarni berishni tasdiqlaysizmi?
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {giveItems
+                .filter((i) => calcGivenQty(i) > 0)
+                .map((item) => {
+                  const given = calcGivenQty(item);
+                  const requested = item.requestedQuantity;
+                  const isShort = given < requested;
+                  const isOver = given > requested;
+
+                  const styles = isShort
+                    ? {
+                        wrap: "bg-red-50 border-red-200",
+                        name: "text-red-800",
+                        given: "text-red-600 font-semibold",
+                        sep: "text-red-300",
+                        requested: "text-red-400",
+                      }
+                    : isOver
+                      ? {
+                          wrap: "bg-green-50 border-green-200",
+                          name: "text-green-800",
+                          given: "text-green-600 font-semibold",
+                          sep: "text-green-300",
+                          requested: "text-green-400",
+                        }
+                      : {
+                          wrap: "bg-blue-50 border-blue-200",
+                          name: "text-blue-800",
+                          given: "text-blue-600 font-semibold",
+                          sep: "text-blue-300",
+                          requested: "text-blue-400",
+                        };
+
+                  return (
+                    <div
+                      key={item.requisitionItemId}
+                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg border ${styles.wrap}`}
+                    >
+                      <span className={`text-sm font-medium truncate flex-1 min-w-0 mr-3 ${styles.name}`}>
+                        {item.itemInfo?.name ?? `#${item.itemId}`}
+                      </span>
+                      <span className="flex-shrink-0 font-mono text-xs flex items-center gap-1">
+                        <span className={styles.given}>{given}</span>
+                        <span className={styles.sep}>/</span>
+                        <span className={styles.requested}>{requested}</span>
+                        {item.unitLabel && (
+                          <span className="text-gray-400 ml-0.5">{item.unitLabel}</span>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {giveItems.some(
+              (i) =>
+                calcGivenQty(i) > 0 && calcGivenQty(i) < i.requestedQuantity,
+            ) && (
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                Bir yoki bir nechta mahsulot talab qilinganidan kam berilmoqda.
+              </p>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setConfirmOpen(false)}
+              >
+                Bekor qilish
+              </Button>
+              <Button className="flex-1" onClick={handleSubmit}>
+                Ha, tasdiqlash
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
