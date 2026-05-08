@@ -215,6 +215,18 @@ const ApproveRequisition = () => {
       return;
     }
 
+    // Validate warehouse selection for items with given quantity
+    for (const item of filledItems) {
+      if (!item.warehouseId) {
+        toast({
+          title: "Xatolik",
+          description: `"${item.itemInfo?.name ?? item.itemId}" — omborni tanlang`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setConfirmOpen(true);
   };
 
@@ -654,7 +666,9 @@ const ApproveRequisition = () => {
                       key={item.requisitionItemId}
                       className={`flex items-center justify-between px-3 py-2.5 rounded-lg border ${styles.wrap}`}
                     >
-                      <span className={`text-sm font-medium truncate flex-1 min-w-0 mr-3 ${styles.name}`}>
+                      <span
+                        className={`text-sm font-medium truncate flex-1 min-w-0 mr-3 ${styles.name}`}
+                      >
                         {item.itemInfo?.name ?? `#${item.itemId}`}
                       </span>
                       <span className="flex-shrink-0 font-mono text-xs flex items-center gap-1">
@@ -662,7 +676,9 @@ const ApproveRequisition = () => {
                         <span className={styles.sep}>/</span>
                         <span className={styles.requested}>{requested}</span>
                         {item.unitLabel && (
-                          <span className="text-gray-400 ml-0.5">{item.unitLabel}</span>
+                          <span className="text-gray-400 ml-0.5">
+                            {item.unitLabel}
+                          </span>
                         )}
                       </span>
                     </div>
