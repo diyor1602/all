@@ -261,7 +261,10 @@ const AddRequisition = () => {
           </p>
           <Button
             size="sm"
-            onClick={() => setOpenDialog(true)}
+            onClick={() => {
+              setOpenDialog(true);
+              searchItems();
+            }}
             className="gap-1.5 h-8"
           >
             <Plus className="w-3.5 h-3.5" />
