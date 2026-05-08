@@ -186,6 +186,15 @@ const SalaryPage = () => {
   };
 
   const handleSaveAdditional = async () => {
+    if (localStorage.getItem("user_id") !== 618) {
+      toast({
+        title: "Diqqat",
+        description: "Sizda bu amalni bajarish huquqi yo'q",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
     if (Number(additionalAmount) < 0) {
       toast({
         title: "Diqqat",
@@ -225,6 +234,16 @@ const SalaryPage = () => {
   };
 
   const handleEditAdditional = async (id) => {
+    if (localStorage.getItem("user_id") !== 618) {
+      toast({
+        title: "Diqqat",
+        description: "Sizda bu amalni bajarish huquqi yo'q",
+        variant: "destructive",
+        duration: 1500,
+      });
+      return;
+    }
+
     if (Number(additionalAmount) < 0) {
       toast({
         title: "Diqqat",
