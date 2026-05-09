@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import formatNumber from "@/utils/formatNumber";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Download } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Download,
+} from "lucide-react";
 import ExcelJS from "exceljs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,7 +172,7 @@ const Moneys = () => {
 
   const downloadExcel = async () => {
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Oylik xarajatlar");
+    const sheet = workbook.addWorksheet("Oylik bonuslar");
 
     sheet.columns = [
       { header: "#", key: "index", width: 6 },
@@ -207,7 +213,7 @@ const Moneys = () => {
     });
     totalRow.font = { bold: true };
 
-    sheet.getColumn("grand_total").numFmt = '#,##0';
+    sheet.getColumn("grand_total").numFmt = "#,##0";
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
@@ -216,7 +222,7 @@ const Moneys = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `oylik-xarajatlar-${selectedMonth}.xlsx`;
+    a.download = `oylik-bonuslar-${selectedMonth}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -265,7 +271,7 @@ const Moneys = () => {
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <div className="text-[11px] font-medium text-gray-900">
-              Oylik xarajatlar
+              Oylik bonuslar
             </div>
             <div className="text-[10px] text-gray-500">
               Bo'lim va guruh bo'yicha filtrlash
