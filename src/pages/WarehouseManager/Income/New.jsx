@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import ExcelJS from "exceljs";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -214,7 +213,7 @@ const New = () => {
           image: item.image,
           unitLabel: item.unit?.name || "",
           color: item.color || null,
-          lots: [{ _stockId: null, rollNumber: "", length: "", quantity: "" }],
+          lots: [{ _stockId: null, rollNumber: "", length: "" }],
         },
       ]);
       loadStockBalance(item.id);
@@ -232,10 +231,7 @@ const New = () => {
           ? i
           : {
               ...i,
-              lots: [
-                ...i.lots,
-                { _stockId: null, rollNumber: "", length: "", quantity: "" },
-              ],
+              lots: [...i.lots, { _stockId: null, rollNumber: "", length: "" }],
             },
       ),
     );
@@ -253,7 +249,6 @@ const New = () => {
               _stockId: stockItem.id,
               rollNumber: String(stockItem.rollNumber),
               length: stockItem.length != null ? String(stockItem.length) : "",
-              quantity: "",
             },
           ],
         };
@@ -364,17 +359,6 @@ const New = () => {
         });
         return;
       }
-      const emptyLot = item.lots.find(
-        (l) => !l.quantity || Number(l.quantity) <= 0,
-      );
-      if (emptyLot) {
-        toast({
-          title: "Xatolik",
-          description: `"${item.name}" — barcha lotlar uchun miqdor kiriting`,
-          variant: "destructive",
-        });
-        return;
-      }
     }
 
     setSubmitting(true);
@@ -389,7 +373,6 @@ const New = () => {
         items: items.flatMap((i) =>
           i.lots.map((lot) => ({
             itemId: i.itemId,
-            quantity: Number(lot.quantity),
             rollNumber: lot.rollNumber ? Number(lot.rollNumber) : null,
             length: lot.length ? Number(lot.length) : null,
           })),
@@ -633,7 +616,7 @@ const New = () => {
                   {/* Stock chips */}
                   {(stockBalances[item.itemId] ?? []).length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-xs text-gray-400">Mavjud lotlar</p>
+                      <p className="text-xs text-gray-400">Mavjud rulonlar</p>
                       <div className="flex flex-wrap gap-1.5">
                         {stockBalances[item.itemId].map((s) => {
                           const isAdded = item.lots.some(
@@ -643,9 +626,7 @@ const New = () => {
                             <button
                               key={s.id}
                               disabled={isAdded}
-                              onClick={() =>
-                                addLotFromStock(item.itemId, s)
-                              }
+                              onClick={() => addLotFromStock(item.itemId, s)}
                               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors ${
                                 isAdded
                                   ? "bg-primary/10 border-primary/30 text-primary cursor-default"
@@ -716,31 +697,6 @@ const New = () => {
                               }
                               className="w-20 h-7 text-xs bg-white"
                             />
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-400 w-10 flex-shrink-0">
-                              Miqdor
-                            </span>
-                            <Input
-                              type="number"
-                              min={0}
-                              placeholder="0"
-                              value={lot.quantity}
-                              onChange={(e) =>
-                                updateLot(
-                                  item.itemId,
-                                  lotIdx,
-                                  "quantity",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-20 h-7 text-xs bg-white"
-                            />
-                            {item.unitLabel && (
-                              <span className="text-xs text-gray-400">
-                                {item.unitLabel}
-                              </span>
-                            )}
                           </div>
                         </div>
                         <button
