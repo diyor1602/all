@@ -86,6 +86,8 @@ const New = () => {
   const [empTotalPages, setEmpTotalPages] = useState(1);
   const empSentinelRef = useRef(null);
 
+  const [stockBalances, setStockBalances] = useState({});
+
   const [previewImage, setPreviewImage] = useState(null);
   const [imgDialogOpen, setImgDialogOpen] = useState(false);
 
@@ -189,6 +191,18 @@ const New = () => {
     return () => observer.disconnect();
   }, [itemPage, itemTotalPages, loadingMoreItems, searchingItems]);
 
+  const loadStockBalance = async (itemId) => {
+    try {
+      const res = await api.get("/warehouseManager/stockBalance", {
+        params: { ItemId: itemId, PageSize: 100 },
+      });
+      const data = res.data?.data ?? res.data ?? [];
+      setStockBalances((prev) => ({ ...prev, [itemId]: data }));
+    } catch {
+      // silently fail — stock info is supplementary
+    }
+  };
+
   const addItem = (item) => {
     if (!items.find((i) => i.itemId === item.id)) {
       setItems((prev) => [
@@ -200,11 +214,10 @@ const New = () => {
           image: item.image,
           unitLabel: item.unit?.name || "",
           color: item.color || null,
-          quantity: "",
-          rollNumber: "",
-          length: "",
+          lots: [{ _stockId: null, rollNumber: "", length: "", quantity: "" }],
         },
       ]);
+      loadStockBalance(item.id);
     }
     setOpenItemDialog(false);
   };
@@ -212,9 +225,61 @@ const New = () => {
   const removeItem = (itemId) =>
     setItems((prev) => prev.filter((i) => i.itemId !== itemId));
 
-  const updateItem = (itemId, field, value) =>
+  const addEmptyLot = (itemId) =>
     setItems((prev) =>
-      prev.map((i) => (i.itemId === itemId ? { ...i, [field]: value } : i)),
+      prev.map((i) =>
+        i.itemId !== itemId
+          ? i
+          : {
+              ...i,
+              lots: [
+                ...i.lots,
+                { _stockId: null, rollNumber: "", length: "", quantity: "" },
+              ],
+            },
+      ),
+    );
+
+  const addLotFromStock = (itemId, stockItem) =>
+    setItems((prev) =>
+      prev.map((i) => {
+        if (i.itemId !== itemId) return i;
+        if (i.lots.some((l) => l._stockId === stockItem.id)) return i;
+        return {
+          ...i,
+          lots: [
+            ...i.lots,
+            {
+              _stockId: stockItem.id,
+              rollNumber: String(stockItem.rollNumber),
+              length: stockItem.length != null ? String(stockItem.length) : "",
+              quantity: "",
+            },
+          ],
+        };
+      }),
+    );
+
+  const updateLot = (itemId, lotIdx, field, value) =>
+    setItems((prev) =>
+      prev.map((i) => {
+        if (i.itemId !== itemId) return i;
+        return {
+          ...i,
+          lots: i.lots.map((l, idx) =>
+            idx === lotIdx ? { ...l, [field]: value } : l,
+          ),
+        };
+      }),
+    );
+
+  const removeLot = (itemId, lotIdx) =>
+    setItems((prev) =>
+      prev.map((i) =>
+        i.itemId !== itemId
+          ? i
+          : { ...i, lots: i.lots.filter((_, idx) => idx !== lotIdx) },
+      ),
     );
 
   // --- Employee search ---
@@ -290,16 +355,26 @@ const New = () => {
       });
       return;
     }
-    const invalidItem = items.find(
-      (i) => !i.quantity || Number(i.quantity) <= 0,
-    );
-    if (invalidItem) {
-      toast({
-        title: "Xatolik",
-        description: `"${invalidItem.name}" uchun miqdor kiritilmagan`,
-        variant: "destructive",
-      });
-      return;
+    for (const item of items) {
+      if (item.lots.length === 0) {
+        toast({
+          title: "Xatolik",
+          description: `"${item.name}" uchun kamida bitta lot qo'shing`,
+          variant: "destructive",
+        });
+        return;
+      }
+      const emptyLot = item.lots.find(
+        (l) => !l.quantity || Number(l.quantity) <= 0,
+      );
+      if (emptyLot) {
+        toast({
+          title: "Xatolik",
+          description: `"${item.name}" — barcha lotlar uchun miqdor kiriting`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -311,12 +386,14 @@ const New = () => {
         orderId: selectedOrder ? selectedOrder.id : null,
         sourceId: sourceId ? Number(sourceId) : null,
         userId: selectedEmployee ? selectedEmployee.user.id : null,
-        items: items.map((i) => ({
-          itemId: i.itemId,
-          quantity: Number(i.quantity),
-          rollNumber: i.rollNumber ? Number(i.rollNumber) : null,
-          length: i.length ? Number(i.length) : null,
-        })),
+        items: items.flatMap((i) =>
+          i.lots.map((lot) => ({
+            itemId: i.itemId,
+            quantity: Number(lot.quantity),
+            rollNumber: lot.rollNumber ? Number(lot.rollNumber) : null,
+            length: lot.length ? Number(lot.length) : null,
+          })),
+        ),
       });
 
       toast({ title: "Muvaffaqiyatli", description: "Kirim saqlandi" });
@@ -326,6 +403,7 @@ const New = () => {
       setSelectedEmployee(null);
       setComment("");
       setItems([]);
+      setStockBalances({});
     } catch (err) {
       toast({
         title: "Xatolik",
@@ -528,7 +606,7 @@ const New = () => {
                   </div>
                 )}
 
-                <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex-1 min-w-0 space-y-3">
                   <div>
                     <p className="font-medium text-sm text-gray-900 truncate">
                       {item.name}
@@ -552,58 +630,137 @@ const New = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-500 whitespace-nowrap">
-                        Miqdor
-                      </span>
-                      <Input
-                        type="number"
-                        min={0}
-                        placeholder="0"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateItem(item.itemId, "quantity", e.target.value)
-                        }
-                        className="w-24 h-8 text-sm bg-white"
-                      />
-                      {item.unitLabel && (
-                        <span className="text-xs text-gray-500 whitespace-nowrap">
-                          {item.unitLabel}
-                        </span>
-                      )}
+                  {/* Stock chips */}
+                  {(stockBalances[item.itemId] ?? []).length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-400">Mavjud lotlar</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {stockBalances[item.itemId].map((s) => {
+                          const isAdded = item.lots.some(
+                            (l) => l._stockId === s.id,
+                          );
+                          return (
+                            <button
+                              key={s.id}
+                              disabled={isAdded}
+                              onClick={() =>
+                                addLotFromStock(item.itemId, s)
+                              }
+                              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors ${
+                                isAdded
+                                  ? "bg-primary/10 border-primary/30 text-primary cursor-default"
+                                  : "bg-gray-50 border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
+                              }`}
+                            >
+                              <span className="font-medium">
+                                R{s.rollNumber}
+                              </span>
+                              {s.length != null && (
+                                <span className="text-gray-400">
+                                  · {s.length}m
+                                </span>
+                              )}
+                              <span className="text-gray-400">
+                                · {s.quantity}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-500 whitespace-nowrap">
-                        Rulon#
-                      </span>
-                      <Input
-                        type="number"
-                        min={0}
-                        placeholder="—"
-                        value={item.rollNumber}
-                        onChange={(e) =>
-                          updateItem(item.itemId, "rollNumber", e.target.value)
-                        }
-                        className="w-20 h-8 text-sm bg-white"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-500 whitespace-nowrap">
-                        Uzunlik
-                      </span>
-                      <Input
-                        type="number"
-                        min={0}
-                        placeholder="—"
-                        value={item.length}
-                        onChange={(e) =>
-                          updateItem(item.itemId, "length", e.target.value)
-                        }
-                        className="w-20 h-8 text-sm bg-white"
-                      />
-                    </div>
+                  )}
+
+                  {/* Lot rows */}
+                  <div className="space-y-1.5">
+                    {item.lots.map((lot, lotIdx) => (
+                      <div
+                        key={lotIdx}
+                        className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-100"
+                      >
+                        <div className="flex flex-wrap items-center gap-2 flex-1">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-400 w-10 flex-shrink-0">
+                              Rulon#
+                            </span>
+                            <Input
+                              type="number"
+                              placeholder="—"
+                              value={lot.rollNumber}
+                              disabled={lot._stockId !== null}
+                              onChange={(e) =>
+                                updateLot(
+                                  item.itemId,
+                                  lotIdx,
+                                  "rollNumber",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-16 h-7 text-xs bg-white disabled:bg-gray-50"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-400 w-14 flex-shrink-0">
+                              Uzunlik
+                            </span>
+                            <Input
+                              type="number"
+                              placeholder="—"
+                              value={lot.length}
+                              onChange={(e) =>
+                                updateLot(
+                                  item.itemId,
+                                  lotIdx,
+                                  "length",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-20 h-7 text-xs bg-white"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-400 w-10 flex-shrink-0">
+                              Miqdor
+                            </span>
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder="0"
+                              value={lot.quantity}
+                              onChange={(e) =>
+                                updateLot(
+                                  item.itemId,
+                                  lotIdx,
+                                  "quantity",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-20 h-7 text-xs bg-white"
+                            />
+                            {item.unitLabel && (
+                              <span className="text-xs text-gray-400">
+                                {item.unitLabel}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeLot(item.itemId, lotIdx)}
+                          className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
+
+                  {/* Add lot button */}
+                  <button
+                    onClick={() => addEmptyLot(item.itemId)}
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-primary transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Lot qo'shish
+                  </button>
                 </div>
 
                 <button
