@@ -342,6 +342,23 @@ const New = () => {
       });
       return;
     }
+    if (!sourceId) {
+      toast({
+        title: "Xatolik",
+        description: "Manbani tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!comment.trim()) {
+      toast({
+        title: "Xatolik",
+        description: "Izoh kiriting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (items.length === 0) {
       toast({
         title: "Xatolik",
@@ -359,6 +376,22 @@ const New = () => {
         });
         return;
       }
+    }
+
+    const allRollNumbers = items
+      .flatMap((i) => i.lots.map((l) => l.rollNumber))
+      .filter(Boolean);
+    const seen = new Set();
+    for (const rn of allRollNumbers) {
+      if (seen.has(rn)) {
+        toast({
+          title: "Xatolik",
+          description: `Rulon raqami takrorlanmoqda: ${rn}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      seen.add(rn);
     }
 
     setSubmitting(true);
@@ -467,7 +500,9 @@ const New = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Manba</label>
+            <label className="text-sm font-medium text-gray-700">
+              Manba <span className="text-red-500">*</span>
+            </label>
             <Select value={sourceId} onValueChange={setSourceId}>
               <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Manbani tanlang" />
@@ -524,7 +559,9 @@ const New = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Izoh</label>
+          <label className="text-sm font-medium text-gray-700">
+            Izoh <span className="text-red-500">*</span>
+          </label>
           <Textarea
             placeholder="Kirim haqida izoh..."
             value={comment}
