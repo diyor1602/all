@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import formatNumber from "@/utils/formatNumber";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Download } from "lucide-react";
+import ExcelJS from "exceljs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -163,6 +164,63 @@ const Moneys = () => {
     return cloned;
   }, [rows, sortBy, sortDir]);
 
+  const downloadExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Oylik xarajatlar");
+
+    sheet.columns = [
+      { header: "#", key: "index", width: 6 },
+      { header: "Xodim", key: "employee_name", width: 30 },
+      { header: "Bo'lim", key: "department_name", width: 25 },
+      { header: "Guruh", key: "group_name", width: 20 },
+      { header: "Lavozim", key: "position_name", width: 25 },
+      { header: "Summa (so'm)", key: "grand_total", width: 18 },
+    ];
+
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF3F4F6" },
+    };
+    headerRow.alignment = { vertical: "middle", horizontal: "center" };
+
+    sortedRows.forEach((item, i) => {
+      sheet.addRow({
+        index: i + 1,
+        employee_name: item?.employee_name || "-",
+        department_name: item?.department_name || "-",
+        group_name: item?.group_name || "-",
+        position_name: item?.position_name || "-",
+        grand_total: parseMoney(item?.grand_total),
+      });
+    });
+
+    const totalRow = sheet.addRow({
+      index: "",
+      employee_name: "",
+      department_name: "",
+      group_name: "",
+      position_name: "Jami:",
+      grand_total: totalAmount,
+    });
+    totalRow.font = { bold: true };
+
+    sheet.getColumn("grand_total").numFmt = '#,##0';
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `oylik-xarajatlar-${selectedMonth}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const toggleSort = (field) => {
     if (sortBy === field) {
       setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -214,11 +272,25 @@ const Moneys = () => {
             </div>
           </div>
 
-          <div className="text-right">
-            <div className="text-[10px] text-gray-500">Jami</div>
-            <div className="text-xs font-semibold text-gray-900">
-              {formatNumber(totalAmount, 0)} so'm
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <div className="text-[10px] text-gray-500">Jami</div>
+              <div className="text-xs font-semibold text-gray-900">
+                {formatNumber(totalAmount, 0)} so'm
+              </div>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-[11px]"
+              onClick={downloadExcel}
+              disabled={sortedRows.length === 0}
+            >
+              <Download className="h-3.5 w-3.5" />
+              Excel
+            </Button>
           </div>
         </div>
 
