@@ -213,7 +213,8 @@ const New = () => {
           image: item.image,
           unitLabel: item.unit?.name || "",
           color: item.color || null,
-          lots: [{ _stockId: null, rollNumber: "", length: "" }],
+          quantity: "",
+          lots: [],
         },
       ]);
       loadStockBalance(item.id);
@@ -223,6 +224,11 @@ const New = () => {
 
   const removeItem = (itemId) =>
     setItems((prev) => prev.filter((i) => i.itemId !== itemId));
+
+  const updateItemQuantity = (itemId, value) =>
+    setItems((prev) =>
+      prev.map((i) => (i.itemId === itemId ? { ...i, quantity: value } : i)),
+    );
 
   const addEmptyLot = (itemId) =>
     setItems((prev) =>
@@ -358,6 +364,14 @@ const New = () => {
       });
       return;
     }
+    if (!selectedEmployee) {
+      toast({
+        title: "Xatolik",
+        description: "Xodimni tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (items.length === 0) {
       toast({
@@ -368,10 +382,13 @@ const New = () => {
       return;
     }
     for (const item of items) {
-      if (item.lots.length === 0) {
+      if (
+        item.lots.length === 0 &&
+        (!item.quantity || Number(item.quantity) <= 0)
+      ) {
         toast({
           title: "Xatolik",
-          description: `"${item.name}" uchun kamida bitta lot qo'shing`,
+          description: `"${item.name}" uchun miqdor kiriting`,
           variant: "destructive",
         });
         return;
@@ -404,11 +421,13 @@ const New = () => {
         sourceId: sourceId ? Number(sourceId) : null,
         userId: selectedEmployee ? selectedEmployee.user.id : null,
         items: items.flatMap((i) =>
-          i.lots.map((lot) => ({
-            itemId: i.itemId,
-            rollNumber: lot.rollNumber ? Number(lot.rollNumber) : null,
-            length: lot.length ? Number(lot.length) : null,
-          })),
+          i.lots.length > 0
+            ? i.lots.map((lot) => ({
+                itemId: i.itemId,
+                rollNumber: lot.rollNumber ? Number(lot.rollNumber) : null,
+                length: lot.length ? Number(lot.length) : null,
+              }))
+            : [{ itemId: i.itemId, quantity: Number(i.quantity) }],
         ),
       });
 
@@ -518,7 +537,9 @@ const New = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Xodim</label>
+            <label className="text-sm font-medium text-gray-700">
+              Xodim <span className="text-red-500">*</span>
+            </label>
             {selectedEmployee ? (
               <div className="flex items-center gap-2 px-3 h-10 rounded-md border border-input bg-white text-sm">
                 {selectedEmployee.img ? (
@@ -678,9 +699,6 @@ const New = () => {
                                   · {s.length}m
                                 </span>
                               )}
-                              <span className="text-gray-400">
-                                · {s.quantity}
-                              </span>
                             </button>
                           );
                         })}
@@ -688,71 +706,95 @@ const New = () => {
                     </div>
                   )}
 
-                  {/* Lot rows */}
-                  <div className="space-y-1.5">
-                    {item.lots.map((lot, lotIdx) => (
-                      <div
-                        key={lotIdx}
-                        className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-100"
-                      >
-                        <div className="flex flex-wrap items-center gap-2 flex-1">
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-400 w-10 flex-shrink-0">
-                              Rulon#
-                            </span>
-                            <Input
-                              type="number"
-                              placeholder="—"
-                              value={lot.rollNumber}
-                              disabled={lot._stockId !== null}
-                              onChange={(e) =>
-                                updateLot(
-                                  item.itemId,
-                                  lotIdx,
-                                  "rollNumber",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-16 h-7 text-xs bg-white disabled:bg-gray-50"
-                            />
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-400 w-14 flex-shrink-0">
-                              Uzunlik
-                            </span>
-                            <Input
-                              type="number"
-                              placeholder="—"
-                              value={lot.length}
-                              onChange={(e) =>
-                                updateLot(
-                                  item.itemId,
-                                  lotIdx,
-                                  "length",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-20 h-7 text-xs bg-white"
-                            />
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => removeLot(item.itemId, lotIdx)}
-                          className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                  {item.lots.length === 0 ? (
+                    /* No rolls — simple quantity input */
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-gray-500 whitespace-nowrap">
+                        Miqdor
+                      </span>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateItemQuantity(item.itemId, e.target.value)
+                        }
+                        className="w-24 h-8 text-sm bg-white"
+                      />
+                      {item.unitLabel && (
+                        <span className="text-xs text-gray-500">
+                          {item.unitLabel}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    /* Lot rows */
+                    <div className="space-y-1.5">
+                      {item.lots.map((lot, lotIdx) => (
+                        <div
+                          key={lotIdx}
+                          className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-100"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                          <div className="flex flex-wrap items-center gap-2 flex-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-gray-400 w-10 flex-shrink-0">
+                                Rulon#
+                              </span>
+                              <Input
+                                type="number"
+                                placeholder="—"
+                                value={lot.rollNumber}
+                                disabled={lot._stockId !== null}
+                                onChange={(e) =>
+                                  updateLot(
+                                    item.itemId,
+                                    lotIdx,
+                                    "rollNumber",
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-16 h-7 text-xs bg-white disabled:bg-gray-50"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-gray-400 w-14 flex-shrink-0">
+                                Uzunlik
+                              </span>
+                              <Input
+                                type="number"
+                                placeholder="—"
+                                value={lot.length}
+                                onChange={(e) =>
+                                  updateLot(
+                                    item.itemId,
+                                    lotIdx,
+                                    "length",
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-20 h-7 text-xs bg-white"
+                              />
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeLot(item.itemId, lotIdx)}
+                            className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  {/* Add lot button */}
+                  {/* Add roll button */}
                   <button
                     onClick={() => addEmptyLot(item.itemId)}
                     className="flex items-center gap-1 text-xs text-gray-400 hover:text-primary transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    Lot qo'shish
+                    Rulon qo'shish
                   </button>
                 </div>
 
