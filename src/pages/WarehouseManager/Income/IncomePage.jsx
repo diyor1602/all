@@ -13,14 +13,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Table,
   TableBody,
   TableCell,
@@ -36,14 +28,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  CirclePlus,
+  Plus,
   Search,
   Package,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   ChevronRight,
-  Loader2,
+  Warehouse,
+  Tag,
+  CalendarDays,
+  User,
+  X,
+  Inbox,
 } from "lucide-react";
 import { statuses } from "@/lib/status";
 
@@ -61,27 +58,21 @@ const IncomePage = () => {
     src: null,
     name: null,
   });
+
   const FILTERS_KEY = "income_filters";
+  const defaultFilters = {
+    search: "",
+    warehouse_id: "",
+    source_id: "",
+    start_date: "",
+    end_date: "",
+  };
   const [filters, setFilters] = useState(() => {
     try {
       const saved = localStorage.getItem(FILTERS_KEY);
-      return saved
-        ? JSON.parse(saved)
-        : {
-            search: "",
-            warehouse_id: "",
-            source_id: "",
-            start_date: "",
-            end_date: "",
-          };
+      return saved ? JSON.parse(saved) : defaultFilters;
     } catch {
-      return {
-        search: "",
-        warehouse_id: "",
-        source_id: "",
-        start_date: "",
-        end_date: "",
-      };
+      return defaultFilters;
     }
   });
 
@@ -127,8 +118,8 @@ const IncomePage = () => {
     try {
       const response = await api.get("/warehouseManager/warehouse");
       setWarehouses(response.data);
-    } catch {
-      // silently fail — filter will just be empty
+    } catch (_) {
+      /* filter stays empty */
     }
   };
 
@@ -136,22 +127,23 @@ const IncomePage = () => {
     try {
       const response = await api.get("/warehouseManager/source");
       setSources(response.data);
-    } catch {
-      // silently fail — filter will just be empty
+    } catch (_) {
+      /* filter stays empty */
     }
   };
 
   useEffect(() => {
-    fetchIncomes(1);
+    fetchIncomes(1, filters);
     fetchWarehouses();
     fetchSources();
   }, []);
 
   const debouncedFetch = useCallback((page, filterParams) => {
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      fetchIncomes(page, filterParams);
-    }, 400);
+    debounceRef.current = setTimeout(
+      () => fetchIncomes(page, filterParams),
+      400,
+    );
   }, []);
 
   const handleFilterChange = (key, value) => {
@@ -168,14 +160,7 @@ const IncomePage = () => {
   };
 
   const resetFilters = () => {
-    const empty = {
-      search: "",
-      warehouse_id: "",
-      source_id: "",
-      start_date: "",
-      end_date: "",
-    };
-    saveFilters(empty);
+    saveFilters(defaultFilters);
     fetchIncomes(1, {});
   };
 
@@ -199,6 +184,10 @@ const IncomePage = () => {
     }).format(new Date(dateString));
   };
 
+  const activeFilterCount = Object.values(filters).filter(
+    (v) => v !== "",
+  ).length;
+
   const renderPagination = () => {
     if (!incomesData || incomesData.totalPages <= 1) return null;
     const current_page = incomesData.page;
@@ -220,237 +209,277 @@ const IncomePage = () => {
       pages.push(last_page);
     }
 
+    const from = (current_page - 1) * (incomesData.pageSize ?? 20) + 1;
+    const to = Math.min(
+      current_page * (incomesData.pageSize ?? 20),
+      incomesData.total ?? 0,
+    );
+
     return (
-      <div className="flex items-center justify-center gap-1 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={current_page === 1}
-          onClick={() => handlePageChange(current_page - 1)}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
-        {pages.map((p, i) =>
-          p === "..." ? (
-            <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">
-              ...
-            </span>
-          ) : (
-            <Button
-              key={p}
-              variant={p === current_page ? "default" : "outline"}
-              size="sm"
-              onClick={() => p !== current_page && handlePageChange(p)}
-              className="min-w-[36px]"
-            >
-              {p}
-            </Button>
-          ),
-        )}
-
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={current_page === last_page}
-          onClick={() => handlePageChange(current_page + 1)}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+        <span className="text-sm text-muted-foreground">
+          {from}–{to} / {incomesData.total ?? 0} ta
+        </span>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={current_page === 1}
+            onClick={() => handlePageChange(current_page - 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          {pages.map((p, i) =>
+            p === "..." ? (
+              <span
+                key={`e-${i}`}
+                className="px-1 text-muted-foreground text-sm"
+              >
+                …
+              </span>
+            ) : (
+              <Button
+                key={p}
+                variant={p === current_page ? "default" : "outline"}
+                size="sm"
+                className="min-w-[36px]"
+                onClick={() => p !== current_page && handlePageChange(p)}
+              >
+                {p}
+              </Button>
+            ),
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={current_page === last_page}
+            onClick={() => handlePageChange(current_page + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     );
   };
 
-  const hasActiveFilters = Object.values(filters).some((v) => v !== "");
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-5">
+      {/* ── Page header ── */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Kirimlar</h1>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Kirimlar</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {incomesData
+              ? `Jami ${incomesData.total ?? 0} ta yozuv`
+              : "Yuklanmoqda…"}
+          </p>
+        </div>
         <Button onClick={() => navigate("/warehouseManager/income/new")}>
-          <CirclePlus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-1.5" />
           Yangi kirim qilish
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Filtrlash</CardTitle>
-          <CardDescription>
-            Kerakli parametrlar bo'yicha qidiring
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {/* Search */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Qidirish</label>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Qidirish..."
-                  className="pl-8"
-                  value={filters.search}
-                  onChange={handleSearchChange}
-                />
-              </div>
-            </div>
-
-            {/* Source */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Manba</label>
-              <Select
-                value={filters.source_id || "all"}
-                onValueChange={(v) => handleFilterChange("source_id", v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Barcha manbalar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Barcha manbalar</SelectItem>
-                  {sources.map((s) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Warehouse */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Ombor</label>
-              <Select
-                value={filters.warehouse_id || "all"}
-                onValueChange={(v) => handleFilterChange("warehouse_id", v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Barcha omborlar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Barcha omborlar</SelectItem>
-                  {warehouses.map((w) => (
-                    <SelectItem key={w.id} value={w.id.toString()}>
-                      {w.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Start date */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Boshlanish sana</label>
-              <Input
-                type="date"
-                value={filters.start_date}
-                onChange={(e) =>
-                  handleFilterChange("start_date", e.target.value)
-                }
-              />
-            </div>
-
-            {/* End date */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tugash sana</label>
-              <Input
-                type="date"
-                min={filters.start_date}
-                value={filters.end_date}
-                onChange={(e) => handleFilterChange("end_date", e.target.value)}
-              />
-            </div>
+      {/* ── Filter toolbar ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="flex flex-wrap gap-3 p-4">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Qidirish…"
+              className="pl-8 h-9"
+              value={filters.search}
+              onChange={handleSearchChange}
+            />
           </div>
-        </CardContent>
-        {hasActiveFilters && (
-          <CardFooter>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetFilters}
-              className="ml-auto"
-            >
-              Filtrlarni tozalash
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
 
-      {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Kirimlar ro'yxati</CardTitle>
-          <CardDescription>
-            {incomesData
-              ? `Jami: ${incomesData.total ?? incomesData.data?.length ?? 0} ta kirim`
-              : "Yuklanmoqda..."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="w-full h-14" />
+          {/* Source */}
+          <Select
+            value={filters.source_id || "all"}
+            onValueChange={(v) => handleFilterChange("source_id", v)}
+          >
+            <SelectTrigger className="h-9 w-[170px]">
+              <Tag className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Manba" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha manbalar</SelectItem>
+              {sources.map((s) => (
+                <SelectItem key={s.id} value={s.id.toString()}>
+                  {s.name}
+                </SelectItem>
               ))}
-            </div>
-          ) : incomesData?.data?.length > 0 ? (
+            </SelectContent>
+          </Select>
+
+          {/* Warehouse */}
+          <Select
+            value={filters.warehouse_id || "all"}
+            onValueChange={(v) => handleFilterChange("warehouse_id", v)}
+          >
+            <SelectTrigger className="h-9 w-[170px]">
+              <Warehouse className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Ombor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha omborlar</SelectItem>
+              {warehouses.map((w) => (
+                <SelectItem key={w.id} value={w.id.toString()}>
+                  {w.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Date range */}
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              className="h-9 w-[155px]"
+              value={filters.start_date}
+              onChange={(e) => handleFilterChange("start_date", e.target.value)}
+            />
+            <span className="text-muted-foreground text-sm">—</span>
+            <Input
+              type="date"
+              className="h-9 w-[145px]"
+              min={filters.start_date}
+              value={filters.end_date}
+              onChange={(e) => handleFilterChange("end_date", e.target.value)}
+            />
+          </div>
+
+          {/* Clear */}
+          {activeFilterCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 text-muted-foreground hover:text-foreground"
+              onClick={resetFilters}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Tozalash
+              <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
+                {activeFilterCount}
+              </Badge>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Data table ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-4 space-y-2">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : incomesData?.data?.length > 0 ? (
+          <>
             <div className="overflow-x-auto">
               <Table className="text-sm whitespace-nowrap">
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">ID</TableHead>
-                    <TableHead>Ombor</TableHead>
-                    <TableHead>Manba</TableHead>
-                    <TableHead>Izoh</TableHead>
-                    <TableHead>Mahsulotlar</TableHead>
-                    <TableHead>Buyurtma</TableHead>
-                    <TableHead>Mas'ul xodim</TableHead>
-                    <TableHead>Sana</TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="w-14 text-xs font-semibold text-muted-foreground">
+                      #
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Ombor
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Manba
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Izoh
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Mahsulotlar
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Buyurtma
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Mas'ul xodim
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Sana
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {incomesData.data.map((item) => (
                     <React.Fragment key={item.id}>
                       <TableRow
-                        className="cursor-pointer hover:bg-muted/50"
+                        className="cursor-pointer hover:bg-muted/30 transition-colors"
                         onClick={() => toggleRow(item.id)}
                       >
-                        <TableCell className="font-medium">{item.id}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="font-normal">
-                            {item.warehouse?.name || "-"}
-                          </Badge>
+                        {/* ID */}
+                        <TableCell className="text-xs text-muted-foreground font-mono">
+                          {item.id}
                         </TableCell>
+
+                        {/* Warehouse */}
                         <TableCell>
-                          {item.source ? (
-                            <Badge variant="secondary" className="font-normal">
-                              {item.source.name}
-                            </Badge>
-                          ) : (
-                            "-"
-                          )}
-                        </TableCell>
-                        <TableCell className="max-w-[160px] truncate">
-                          {item.comment || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Badge>{item.items?.length ?? 0} ta</Badge>
-                            {expandedRows[item.id] ? (
-                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            )}
+                          <div className="flex items-center gap-1.5">
+                            <Warehouse className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                            <span className="font-medium">
+                              {item.warehouse?.name || "—"}
+                            </span>
                           </div>
                         </TableCell>
+
+                        {/* Source */}
+                        <TableCell>
+                          {item.source ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 text-xs font-medium">
+                              <Tag className="h-3 w-3" />
+                              {item.source.name}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+
+                        {/* Comment */}
+                        <TableCell className="max-w-[160px]">
+                          <span className="block truncate text-muted-foreground">
+                            {item.comment || "—"}
+                          </span>
+                        </TableCell>
+
+                        {/* Items count */}
+                        <TableCell>
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold hover:bg-primary/20 transition-colors"
+                          >
+                            <Package className="h-3 w-3" />
+                            {item.items?.length ?? 0} ta
+                            {expandedRows[item.id] ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            )}
+                          </button>
+                        </TableCell>
+
+                        {/* Order */}
                         <TableCell>
                           {item.order ? (
-                            <span className="text-xs flex items-center gap-1 flex-wrap">
-                              #{item.order.id} {item.order.name}{" "}
-                              {item.order.quantity &&
-                                `(${item.order.quantity})`}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs text-muted-foreground font-mono">
+                                #{item.order.id}
+                              </span>
+                              <span className="text-xs font-medium">
+                                {item.order.name}
+                              </span>
+                              {item.order.quantity && (
+                                <span className="text-xs text-muted-foreground">
+                                  ({item.order.quantity})
+                                </span>
+                              )}
                               {item.order.status &&
                                 statuses[item.order.status] &&
                                 (() => {
@@ -463,115 +492,169 @@ const IncomePage = () => {
                                     </span>
                                   );
                                 })()}
-                            </span>
+                            </div>
                           ) : (
-                            "-"
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
+
+                        {/* Employee */}
                         <TableCell>
                           {item.user?.employee?.name ||
-                            item.responsibleUser?.employee?.name ||
-                            "-"}
+                          item.responsibleUser?.employee?.name ? (
+                            <div className="flex items-center gap-1.5">
+                              <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                              </div>
+                              <span className="text-sm">
+                                {item.user?.employee?.name ||
+                                  item.responsibleUser?.employee?.name}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </TableCell>
-                        <TableCell>{formatDate(item.createdAt)}</TableCell>
+
+                        {/* Date */}
+                        <TableCell>
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <CalendarDays className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span>{formatDate(item.createdAt)}</span>
+                          </div>
+                        </TableCell>
                       </TableRow>
 
-                      {/* Expanded items */}
-                      {expandedRows[item.id] &&
-                        item.items &&
-                        item.items.length > 0 && (
-                          <TableRow className="bg-muted/30">
-                            <TableCell colSpan={8} className="py-2 px-4">
-                              <div className="rounded-md border border-border">
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Mahsulot</TableHead>
-                                      <TableHead>Kod</TableHead>
-                                      <TableHead>Miqdor</TableHead>
-                                      <TableHead>Narx</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {item.items.map((entry) => (
-                                      <TableRow key={entry.id}>
-                                        <TableCell className="flex items-center gap-2">
-                                          {entry.item?.image ? (
-                                            <button
-                                              type="button"
-                                              className="w-8 h-8 rounded overflow-hidden cursor-zoom-in flex-shrink-0"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setImageDialog({
-                                                  open: true,
-                                                  src: entry.item.image,
-                                                  name: entry.item.name,
-                                                });
-                                              }}
-                                            >
-                                              <img
-                                                src={entry.item.image}
-                                                alt={entry.item.name}
-                                                className="w-full h-full object-cover"
-                                              />
-                                            </button>
-                                          ) : (
-                                            <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
-                                              <Package className="w-4 h-4" />
-                                            </div>
-                                          )}
-                                          <span>{entry.item?.name}</span>
-                                          {entry.roll_number && (
-                                            <span className="text-xs text-muted-foreground">
-                                              Roll: {entry.roll_number}
-                                            </span>
-                                          )}
-                                          {entry.length && (
-                                            <span className="text-xs text-muted-foreground">
-                                              Lot: {entry.length}
-                                            </span>
-                                          )}
-                                        </TableCell>
-                                        <TableCell>
-                                          {entry.item?.code || "-"}
-                                        </TableCell>
-                                        <TableCell>
-                                          {entry.quantity}{" "}
+                      {/* ── Expanded items ── */}
+                      {expandedRows[item.id] && item.items?.length > 0 && (
+                        <TableRow className="hover:bg-transparent">
+                          <TableCell
+                            colSpan={8}
+                            className="p-0 border-b border-border"
+                          >
+                            <div className="bg-muted/20 px-6 py-3 border-t border-dashed border-border">
+                              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                Mahsulotlar ro'yxati
+                              </p>
+                              <div className="grid grid-cols-1 gap-2">
+                                {item.items.map((entry) => (
+                                  <div
+                                    key={entry.id}
+                                    className="flex items-center gap-3 rounded-lg bg-background border border-border px-3 py-2.5"
+                                  >
+                                    {/* Image */}
+                                    {entry.item?.image ? (
+                                      <button
+                                        type="button"
+                                        className="w-10 h-10 rounded-md overflow-hidden cursor-zoom-in flex-shrink-0 ring-1 ring-border"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setImageDialog({
+                                            open: true,
+                                            src: entry.item.image,
+                                            name: entry.item.name,
+                                          });
+                                        }}
+                                      >
+                                        <img
+                                          src={entry.item.image}
+                                          alt={entry.item.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </button>
+                                    ) : (
+                                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                                        <Package className="w-4 h-4 text-muted-foreground" />
+                                      </div>
+                                    )}
+
+                                    {/* Name + meta */}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm truncate">
+                                        {entry.item?.name}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        {entry.item?.code && (
+                                          <span className="text-xs text-muted-foreground font-mono">
+                                            {entry.item.code}
+                                          </span>
+                                        )}
+                                        {entry.roll_number && (
+                                          <span className="text-xs text-muted-foreground">
+                                            Roll: {entry.roll_number}
+                                          </span>
+                                        )}
+                                        {entry.length && (
+                                          <span className="text-xs text-muted-foreground">
+                                            Lot: {entry.length}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Quantity */}
+                                    <div className="text-right flex-shrink-0">
+                                      <p className="text-sm font-semibold">
+                                        {entry.quantity}{" "}
+                                        <span className="font-normal text-muted-foreground">
                                           {entry.item?.unit?.name}
-                                        </TableCell>
-                                        <TableCell>
-                                          {entry.price}{" "}
-                                          {entry.currency?.name || ""}
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
+                                        </span>
+                                      </p>
+                                      {entry.price && (
+                                        <p className="text-xs text-muted-foreground">
+                                          {entry.price} {entry.currency?.name}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
             </div>
-          ) : (
-            <div className="py-12 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <Package className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium">Kirimlar topilmadi</h3>
-              <p className="text-muted-foreground mt-2">
-                Yangi kirim qo'shish uchun yuqoridagi tugmani bosing
-              </p>
+            {renderPagination()}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <Inbox className="h-8 w-8 text-muted-foreground" />
             </div>
-          )}
-        </CardContent>
+            <h3 className="text-base font-semibold">Kirimlar topilmadi</h3>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+              {activeFilterCount > 0
+                ? "Filtrlarni tozalab qayta urinib ko'ring"
+                : "Hali hech qanday kirim qo'shilmagan"}
+            </p>
+            {activeFilterCount > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={resetFilters}
+              >
+                Filtrlarni tozalash
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="mt-4"
+                onClick={() => navigate("/warehouseManager/income/new")}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Yangi kirim qilish
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
-        {renderPagination()}
-      </Card>
-
+      {/* ── Image dialog ── */}
       <Dialog
         open={imageDialog.open}
         onOpenChange={(open) => setImageDialog((prev) => ({ ...prev, open }))}
@@ -587,7 +670,7 @@ const IncomePage = () => {
               <img
                 src={imageDialog.src}
                 alt={imageDialog.name || "item-image"}
-                className="max-h-full max-w-full object-contain rounded-md"
+                className="max-h-full max-w-full object-contain rounded-lg"
                 loading="lazy"
               />
             )}
