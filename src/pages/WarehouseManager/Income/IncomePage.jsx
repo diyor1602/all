@@ -44,6 +44,10 @@ import {
 } from "lucide-react";
 import { statuses } from "@/lib/status";
 
+// Constants
+const DEBOUNCE_DELAY = 400;
+const DEFAULT_PAGE_SIZE = 20;
+
 const IncomePage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -83,43 +87,51 @@ const IncomePage = () => {
 
   const debounceRef = React.useRef(null);
 
-  const fetchIncomes = async (page = 1, filterParams = {}) => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      params.append("type", "income");
-      params.append("page", page);
-      if (filterParams.search) params.append("search", filterParams.search);
-      if (filterParams.warehouse_id)
-        params.append("warehouseId", filterParams.warehouse_id);
-      if (filterParams.source_id)
-        params.append("sourceId", filterParams.source_id);
-      if (filterParams.start_date)
-        params.append("startDate", filterParams.start_date);
-      if (filterParams.end_date)
-        params.append("endDate", filterParams.end_date);
+  const fetchIncomes = useCallback(
+    async (page = 1, filterParams = {}) => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        params.append("type", "income");
+        params.append("page", page);
+        if (filterParams.search) params.append("search", filterParams.search);
+        if (filterParams.warehouse_id)
+          params.append("warehouseId", filterParams.warehouse_id);
+        if (filterParams.source_id)
+          params.append("sourceId", filterParams.source_id);
+        if (filterParams.start_date)
+          params.append("startDate", filterParams.start_date);
+        if (filterParams.end_date)
+          params.append("endDate", filterParams.end_date);
 
-      const response = await api.get(
-        `/warehouseManager/StockEntry?${params.toString()}`,
-      );
-      setIncomesData(response.data);
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Xatolik!",
-        description: "Kirimlarni olishda xatolik yuz berdi!",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+        const response = await api.get(
+          `/warehouseManager/StockEntry?${params.toString()}`,
+        );
+        setIncomesData(response.data);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Kirimlarni olishda xatolik yuz berdi!",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast],
+  );
 
   const fetchWarehouses = async () => {
     try {
       const response = await api.get("/warehouseManager/warehouse");
       setWarehouses(response.data);
-    } catch (_) {
-      /* filter stays empty */
+    } catch (error) {
+      console.error("Failed to fetch warehouses:", error);
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Omborlarni yuklashda xatolik yuz berdi!",
+      });
     }
   };
 
@@ -127,8 +139,13 @@ const IncomePage = () => {
     try {
       const response = await api.get("/warehouseManager/source");
       setSources(response.data);
-    } catch (_) {
-      /* filter stays empty */
+    } catch (error) {
+      console.error("Failed to fetch sources:", error);
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Manbalarni yuklashda xatolik yuz berdi!",
+      });
     }
   };
 
@@ -136,43 +153,91 @@ const IncomePage = () => {
     fetchIncomes(1, filters);
     fetchWarehouses();
     fetchSources();
-  }, []);
 
-  const debouncedFetch = useCallback((page, filterParams) => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(
-      () => fetchIncomes(page, filterParams),
-      400,
-    );
-  }, []);
+    return () => {
+      clearTimeout(debounceRef.current);
+    };
+  }, [filters]);
 
-  const handleFilterChange = (key, value) => {
-    const apiValue = value === "all" ? "" : value;
-    const newFilters = { ...filters, [key]: apiValue };
-    saveFilters(newFilters);
-    debouncedFetch(1, newFilters);
-  };
+  const debouncedFetch = useCallback(
+    (page, filterParams) => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(
+        () => fetchIncomes(page, filterParams),
+        DEBOUNCE_DELAY,
+      );
+    },
+    [fetchIncomes],
+  );
 
-  const handleSearchChange = (e) => {
-    const newFilters = { ...filters, search: e.target.value };
-    saveFilters(newFilters);
-    debouncedFetch(1, newFilters);
-  };
+  const handleFilterChange = useCallback(
+    (key, value) => {
+      const apiValue = value === "all" ? "" : value;
+      let newFilters = { ...filters, [key]: apiValue };
 
-  const resetFilters = () => {
+      // Validate date range
+      if (
+        key === "start_date" &&
+        filters.end_date &&
+        apiValue > filters.end_date
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description:
+            "Boshlanish sanasi tugash sanasidan oldin bo'lishi kerak!",
+        });
+        return;
+      }
+
+      if (
+        key === "end_date" &&
+        filters.start_date &&
+        apiValue < filters.start_date
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description:
+            "Tugash sanasi boshlanish sanasidan keyin bo'lishi kerak!",
+        });
+        return;
+      }
+
+      saveFilters(newFilters);
+      debouncedFetch(1, newFilters);
+    },
+    [filters, saveFilters, debouncedFetch, toast],
+  );
+
+  const handleSearchChange = useCallback(
+    (e) => {
+      const newFilters = { ...filters, search: e.target.value };
+      saveFilters(newFilters);
+      debouncedFetch(1, newFilters);
+    },
+    [filters, saveFilters, debouncedFetch],
+  );
+
+  const resetFilters = useCallback(() => {
     saveFilters(defaultFilters);
-    fetchIncomes(1, {});
-  };
+    fetchIncomes(1, defaultFilters);
+  }, [saveFilters, fetchIncomes, defaultFilters]);
 
-  const handlePageChange = (page) => {
-    fetchIncomes(page, filters);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const handlePageChange = useCallback(
+    (page) => {
+      fetchIncomes(page, filters);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [fetchIncomes, filters],
+  );
 
-  const toggleRow = (id) =>
-    setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleRow = useCallback(
+    (id) => setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] })),
+    [],
+  );
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return "-";
     return new Intl.DateTimeFormat("ru-RU", {
       year: "numeric",
@@ -182,7 +247,7 @@ const IncomePage = () => {
       minute: "2-digit",
       timeZone: "Asia/Tashkent",
     }).format(new Date(dateString));
-  };
+  }, []);
 
   const activeFilterCount = Object.values(filters).filter(
     (v) => v !== "",
@@ -209,9 +274,10 @@ const IncomePage = () => {
       pages.push(last_page);
     }
 
-    const from = (current_page - 1) * (incomesData.pageSize ?? 20) + 1;
+    const from =
+      (current_page - 1) * (incomesData.pageSize ?? DEFAULT_PAGE_SIZE) + 1;
     const to = Math.min(
-      current_page * (incomesData.pageSize ?? 20),
+      current_page * (incomesData.pageSize ?? DEFAULT_PAGE_SIZE),
       incomesData.total ?? 0,
     );
 
