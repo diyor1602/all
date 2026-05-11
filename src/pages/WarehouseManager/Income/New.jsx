@@ -214,6 +214,7 @@ const New = () => {
           unitLabel: item.unit?.name || "",
           color: item.color || null,
           quantity: "",
+          price: "",
           lots: [],
         },
       ]);
@@ -225,9 +226,9 @@ const New = () => {
   const removeItem = (itemId) =>
     setItems((prev) => prev.filter((i) => i.itemId !== itemId));
 
-  const updateItemQuantity = (itemId, value) =>
+  const updateItem = (itemId, field, value) =>
     setItems((prev) =>
-      prev.map((i) => (i.itemId === itemId ? { ...i, quantity: value } : i)),
+      prev.map((i) => (i.itemId === itemId ? { ...i, [field]: value } : i)),
     );
 
   const addEmptyLot = (itemId) =>
@@ -424,10 +425,17 @@ const New = () => {
           i.lots.length > 0
             ? i.lots.map((lot) => ({
                 itemId: i.itemId,
+                price: i.price ? Number(i.price) : null,
                 rollNumber: lot.rollNumber ? Number(lot.rollNumber) : null,
                 length: lot.length ? Number(lot.length) : null,
               }))
-            : [{ itemId: i.itemId, quantity: Number(i.quantity) }],
+            : [
+                {
+                  itemId: i.itemId,
+                  price: i.price ? Number(i.price) : null,
+                  quantity: Number(i.quantity),
+                },
+              ],
         ),
       });
 
@@ -706,10 +714,43 @@ const New = () => {
                     </div>
                   )}
 
+                  {/* Price — always visible */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                      Bir donasi uchun narxi
+                    </span>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      value={item.price}
+                      onChange={(e) =>
+                        updateItem(item.itemId, "price", e.target.value)
+                      }
+                      className="w-28 h-8 text-sm bg-white"
+                    />
+                    {(() => {
+                      const price = Number(item.price) || 0;
+                      const total =
+                        item.lots.length > 0
+                          ? price *
+                            item.lots.reduce(
+                              (s, l) => s + (Number(l.length) || 0),
+                              0,
+                            )
+                          : price * (Number(item.quantity) || 0);
+                      return total > 0 ? (
+                        <span className="text-xs font-medium text-gray-700">
+                          = {total.toLocaleString()}
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
+
                   {item.lots.length === 0 ? (
                     /* No rolls — simple quantity input */
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-500 whitespace-nowrap">
+                      <span className="text-xs text-gray-500 whitespace-nowrap w-10">
                         Miqdor
                       </span>
                       <Input
@@ -718,7 +759,7 @@ const New = () => {
                         placeholder="0"
                         value={item.quantity}
                         onChange={(e) =>
-                          updateItemQuantity(item.itemId, e.target.value)
+                          updateItem(item.itemId, "quantity", e.target.value)
                         }
                         className="w-24 h-8 text-sm bg-white"
                       />
@@ -809,6 +850,25 @@ const New = () => {
           </div>
         )}
       </div>
+
+      {items.length > 0 && (() => {
+        const grandTotal = items.reduce((sum, i) => {
+          const price = Number(i.price) || 0;
+          const qty =
+            i.lots.length > 0
+              ? i.lots.reduce((s, l) => s + (Number(l.length) || 0), 0)
+              : Number(i.quantity) || 0;
+          return sum + price * qty;
+        }, 0);
+        return grandTotal > 0 ? (
+          <div className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-gray-200">
+            <span className="text-sm text-gray-500">Jami summa</span>
+            <span className="text-base font-semibold text-gray-900">
+              {grandTotal.toLocaleString()}
+            </span>
+          </div>
+        ) : null;
+      })()}
 
       <Button
         onClick={handleSubmit}
