@@ -48,6 +48,7 @@ const New = () => {
   const [departments, setDepartments] = useState([]);
   const [sources, setSources] = useState([]);
   const [types, setTypes] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
 
   const [warehouseId, setWarehouseId] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -96,19 +97,27 @@ const New = () => {
 
   const getStaticData = async () => {
     try {
-      const [warehousesRes, ordersRes, deptsRes, sourcesRes, typesRes] =
-        await Promise.all([
-          api.get("/warehouseManager/warehouse"),
-          api.get("/warehouseManager/order"),
-          api.get("/warehouseManager/department"),
-          api.get("/warehouseManager/source"),
-          api.get("/warehouseManager/itemType"),
-        ]);
+      const [
+        warehousesRes,
+        ordersRes,
+        deptsRes,
+        sourcesRes,
+        typesRes,
+        currenciesRes,
+      ] = await Promise.all([
+        api.get("/warehouseManager/warehouse"),
+        api.get("/warehouseManager/order"),
+        api.get("/warehouseManager/department"),
+        api.get("/warehouseManager/source"),
+        api.get("/warehouseManager/itemType"),
+        api.get("/warehouseManager/Currency"),
+      ]);
       setWarehouses(warehousesRes.data);
       setAllOrders(ordersRes.data?.data || ordersRes.data || []);
       setDepartments(deptsRes.data || []);
       setSources(sourcesRes.data);
       setTypes(typesRes.data);
+      setCurrencies(currenciesRes.data ?? []);
     } catch {
       toast({
         title: "Xatolik",
@@ -215,6 +224,7 @@ const New = () => {
           color: item.color || null,
           quantity: "",
           price: "",
+          currencyId: "",
           lots: [],
         },
       ]);
@@ -394,6 +404,14 @@ const New = () => {
         });
         return;
       }
+      if (!item.currencyId) {
+        toast({
+          title: "Xatolik",
+          description: `"${item.name}" uchun valyutani tanlang`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     const allRollNumbers = items
@@ -426,6 +444,7 @@ const New = () => {
             ? i.lots.map((lot) => ({
                 itemId: i.itemId,
                 price: i.price ? Number(i.price) : null,
+                currencyId: i.currencyId ? Number(i.currencyId) : null,
                 rollNumber: lot.rollNumber ? Number(lot.rollNumber) : null,
                 length: lot.length ? Number(lot.length) : null,
               }))
@@ -433,6 +452,7 @@ const New = () => {
                 {
                   itemId: i.itemId,
                   price: i.price ? Number(i.price) : null,
+                  currencyId: i.currencyId ? Number(i.currencyId) : null,
                   quantity: Number(i.quantity),
                 },
               ],
@@ -729,6 +749,23 @@ const New = () => {
                       }
                       className="w-28 h-8 text-sm bg-white"
                     />
+                    <Select
+                      value={item.currencyId}
+                      onValueChange={(v) =>
+                        updateItem(item.itemId, "currencyId", v)
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs bg-white w-24">
+                        <SelectValue placeholder="Valyuta" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currencies.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {(() => {
                       const price = Number(item.price) || 0;
                       const total =
@@ -851,24 +888,50 @@ const New = () => {
         )}
       </div>
 
-      {items.length > 0 && (() => {
-        const grandTotal = items.reduce((sum, i) => {
-          const price = Number(i.price) || 0;
-          const qty =
-            i.lots.length > 0
-              ? i.lots.reduce((s, l) => s + (Number(l.length) || 0), 0)
-              : Number(i.quantity) || 0;
-          return sum + price * qty;
-        }, 0);
-        return grandTotal > 0 ? (
-          <div className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-gray-200">
-            <span className="text-sm text-gray-500">Jami summa</span>
-            <span className="text-base font-semibold text-gray-900">
-              {grandTotal.toLocaleString()}
-            </span>
-          </div>
-        ) : null;
-      })()}
+      {items.length > 0 &&
+        (() => {
+          const totals = {};
+          for (const i of items) {
+            const price = Number(i.price) || 0;
+            if (!price) continue;
+            const qty =
+              i.lots.length > 0
+                ? i.lots.reduce((s, l) => s + (Number(l.length) || 0), 0)
+                : Number(i.quantity) || 0;
+            const key = i.currencyId || "__none__";
+            totals[key] = (totals[key] || 0) + price * qty;
+          }
+          const entries = Object.entries(totals).filter(([, v]) => v > 0);
+          if (entries.length === 0) return null;
+          return (
+            <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 space-y-1.5">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Jami summa
+              </span>
+              {entries.map(([currencyId, total]) => {
+                const currency = currencies.find(
+                  (c) => String(c.id) === currencyId,
+                );
+                return (
+                  <div
+                    key={currencyId}
+                    className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium text-gray-600">
+                        {currency?.name ?? "Valyutasiz"}
+                      </span>
+                      <span className="text-gray-400">•</span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {total.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
       <Button
         onClick={handleSubmit}
