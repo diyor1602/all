@@ -47,6 +47,8 @@ const New = () => {
   const [itemTotalPages, setItemTotalPages] = useState(1);
   const itemSentinelRef = useRef(null);
 
+  const [stockBalances, setStockBalances] = useState({});
+
   const [previewImage, setPreviewImage] = useState(null);
   const [imgDialogOpen, setImgDialogOpen] = useState(false);
 
@@ -106,6 +108,18 @@ const New = () => {
     return () => observer.disconnect();
   }, [itemPage, itemTotalPages, loadingMoreItems, searchingItems]);
 
+  const loadStockBalance = async (itemId) => {
+    try {
+      const res = await api.get("/warehouseManager/stockBalance", {
+        params: { ItemId: itemId, PageSize: 100 },
+      });
+      const data = res.data?.data ?? res.data ?? [];
+      setStockBalances((prev) => ({ ...prev, [itemId]: data }));
+    } catch {
+      // silently fail — stock info is supplementary
+    }
+  };
+
   const addItem = (item) => {
     if (!items.find((i) => i.itemId === item.id)) {
       setItems((prev) => [
@@ -121,6 +135,7 @@ const New = () => {
           comment: "",
         },
       ]);
+      loadStockBalance(item.id);
     }
     setOpenItemDialog(false);
   };
@@ -170,6 +185,7 @@ const New = () => {
       setDeadlineTime("");
       setComment("");
       setItems([]);
+      setStockBalances({});
     } catch (err) {
       toast({
         title: "Xatolik",
@@ -254,7 +270,14 @@ const New = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {items.map((item, idx) => (
+            {items.map((item, idx) => {
+              const stockRegular = (stockBalances[item.itemId] ?? []).filter(
+                (s) => !s.rollNumber,
+              );
+              const stockRolls = (stockBalances[item.itemId] ?? []).filter(
+                (s) => s.rollNumber,
+              );
+              return (
               <div
                 key={item.itemId}
                 className="rounded-xl border border-gray-200 bg-white overflow-hidden"
@@ -312,6 +335,50 @@ const New = () => {
                   </button>
                 </div>
 
+                {/* Stock balance */}
+                {(stockRegular.length > 0 || stockRolls.length > 0) && (
+                  <div className="px-4 py-2.5 border-b border-gray-100 bg-blue-50/40 space-y-2">
+                    <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+                      Ombordagi qoldiq
+                    </p>
+
+                    {stockRegular.length > 0 && (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {stockRegular.map((s) => (
+                          <span key={s.id} className="text-xs text-gray-700">
+                            <span className="font-medium text-gray-500">
+                              {s.warehouse?.name}:
+                            </span>{" "}
+                            <span className="font-semibold text-gray-800">
+                              {s.quantity || s.length} {item.unitLabel}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {stockRolls.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-400">Rulonlar:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {stockRolls.map((s) => (
+                            <div
+                              key={s.id}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border font-medium bg-white border-gray-200 text-gray-700"
+                            >
+                              <span>R{s.rollNumber}</span>
+                              <span className="text-gray-400">·</span>
+                              <span>
+                                {s.length} {item.unitLabel}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Inputs */}
                 <div className="px-4 py-3 space-y-3">
                   <div className="flex items-center gap-3">
@@ -357,7 +424,8 @@ const New = () => {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
