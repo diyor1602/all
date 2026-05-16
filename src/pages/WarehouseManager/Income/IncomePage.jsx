@@ -43,6 +43,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { statuses } from "@/lib/status";
+import formatNumber from "@/utils/formatNumber";
 
 // Constants
 const DEBOUNCE_DELAY = 400;
@@ -668,7 +669,8 @@ const IncomePage = () => {
                                       </p>
                                       {entry.price && (
                                         <p className="text-xs text-muted-foreground">
-                                          {entry.price} {entry.currency?.name}
+                                          {formatNumber(entry.price)}{" "}
+                                          {entry.currency?.name}
                                         </p>
                                       )}
                                     </div>
