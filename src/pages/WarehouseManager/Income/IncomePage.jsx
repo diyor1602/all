@@ -679,6 +679,47 @@ const IncomePage = () => {
                                   </div>
                                 ))}
                               </div>
+
+                              {/* ── Totals by currency ── */}
+                              {(() => {
+                                const totals = {};
+                                for (const entry of item.items) {
+                                  const price = Number(entry.price) || 0;
+                                  if (!price) continue;
+                                  const qty =
+                                    entry.quantity || entry.length || 0;
+                                  const key = entry.currency?.id ?? "__none__";
+                                  if (!totals[key]) {
+                                    totals[key] = {
+                                      name:
+                                        entry.currency?.name ?? "Valyutasiz",
+                                      total: 0,
+                                    };
+                                  }
+                                  totals[key].total += price * qty;
+                                }
+                                const entries = Object.values(totals).filter(
+                                  (t) => t.total > 0,
+                                );
+                                if (entries.length === 0) return null;
+                                return (
+                                  <div className="mt-2 flex flex-wrap justify-end gap-2">
+                                    {entries.map((t) => (
+                                      <div
+                                        key={t.name}
+                                        className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5"
+                                      >
+                                        <span className="text-xs text-muted-foreground">
+                                          Jami ({t.name}):
+                                        </span>
+                                        <span className="text-sm font-bold text-foreground">
+                                          {formatNumber(t.total)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </TableCell>
                         </TableRow>
