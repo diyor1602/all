@@ -662,7 +662,9 @@ const IncomePage = () => {
                                     {/* Quantity */}
                                     <div className="text-right flex-shrink-0">
                                       <p className="text-sm font-semibold">
-                                        {entry.quantity}{" "}
+                                        {entry?.quantity
+                                          ? formatNumber(entry.quantity)
+                                          : formatNumber(entry.length)}{" "}
                                         <span className="font-normal text-muted-foreground">
                                           {entry.item?.unit?.name}
                                         </span>
