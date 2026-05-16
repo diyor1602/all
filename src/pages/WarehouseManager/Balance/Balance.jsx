@@ -1,18 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/utils/api";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -22,562 +20,425 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Search,
-  RefreshCw,
-  Filter,
+  Package,
   Warehouse,
-  ChevronDown,
-  ChevronRight,
+  X,
+  Inbox,
+  Layers,
+  AlertTriangle,
   Loader2,
-  Download,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { statuses } from "@/lib/status";
-import React from "react";
+import formatNumber from "@/utils/formatNumber";
 
-// Add debounce hook
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+const DEBOUNCE_DELAY = 400;
+const PAGE_SIZE = 20;
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
+const FILTERS_KEY = "balance_filters";
+const defaultFilters = {
+  search: "",
+  warehouseId: "",
+  hasRoll: "",
 };
 
 const Balance = () => {
   const { toast } = useToast();
 
-  const [groupedItems, setGroupedItems] = useState([]);
-  const [warehouses, setWarehouses] = useState([]);
-  const [selectedWarehouse, setSelectedWarehouse] = useState("all");
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [expandedItems, setExpandedItems] = useState({});
-  const [totalQuantity, setTotalQuantity] = useState(0);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [warehouses, setWarehouses] = useState([]);
+  const [imageDialog, setImageDialog] = useState({ open: false, src: null, name: null });
 
-  // Add debounced search query
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const [filters, setFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FILTERS_KEY);
+      return saved ? JSON.parse(saved) : defaultFilters;
+    } catch {
+      return defaultFilters;
+    }
+  });
+
+  const debounceRef = useRef(null);
+  const sentinelRef = useRef(null);
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+
+  const fetchPage = useCallback(
+    async (pageNum, filterParams, replace) => {
+      if (replace) setLoading(true);
+      else setLoadingMore(true);
+      try {
+        const params = new URLSearchParams();
+        params.append("Page", pageNum);
+        params.append("PageSize", PAGE_SIZE);
+        if (filterParams.search) params.append("Search", filterParams.search);
+        if (filterParams.warehouseId) params.append("WarehouseId", filterParams.warehouseId);
+        if (filterParams.hasRoll !== "") params.append("HasRoll", filterParams.hasRoll);
+
+        const { data } = await api.get(`/warehouseManager/StockBalance?${params.toString()}`);
+        const incoming = data.data ?? [];
+        setRows((prev) => (replace ? incoming : [...prev, ...incoming]));
+        setTotal(data.total ?? 0);
+        setPage(data.page ?? pageNum);
+        setTotalPages(data.totalPages ?? 1);
+      } catch {
+        toast({ variant: "destructive", title: "Xatolik!", description: "Balansni olishda xatolik yuz berdi!" });
+      } finally {
+        if (replace) setLoading(false);
+        else setLoadingMore(false);
+      }
+    },
+    [toast],
+  );
 
   const fetchWarehouses = async () => {
     try {
-      setLoading(true);
-      const response = await api.get("/warehouseManager/warehouses");
-      setWarehouses(response.data);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Omborlar olishda xatolik",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchBalances = async (page = 1, append = false) => {
-    try {
-      if (page === 1) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
-      const response = await api.get("/warehouseManager/balances", {
-        params: {
-          warehouse_id: selectedWarehouse === "all" ? "" : selectedWarehouse,
-          page,
-          search: debouncedSearchQuery,
-        },
-      });
-
-      // Group balances by item ID while maintaining order
-      const grouped = [];
-      const itemMap = new Map();
-
-      response.data.data.data.forEach((balance) => {
-        const itemId = balance.item.id;
-        let groupIndex = itemMap.get(itemId);
-
-        if (groupIndex === undefined) {
-          groupIndex = grouped.length;
-          itemMap.set(itemId, groupIndex);
-          grouped.push({
-            item: balance.item,
-            totalQuantity: 0,
-            balances: [],
-          });
-        }
-
-        grouped[groupIndex].totalQuantity += parseFloat(balance.quantity);
-        grouped[groupIndex].balances.push(balance);
-      });
-
-      setTotalQuantity(response.data.total_quantity);
-
-      setGroupedItems((prev) => {
-        if (append) {
-          // Merge new items while maintaining order
-          const mergedGroups = [...prev];
-          const existingItemMap = new Map(
-            prev.map((group, index) => [group.item.id, index])
-          );
-
-          grouped.forEach((newGroup) => {
-            const existingIndex = existingItemMap.get(newGroup.item.id);
-            if (existingIndex !== undefined) {
-              // Update existing group
-              mergedGroups[existingIndex].totalQuantity +=
-                newGroup.totalQuantity;
-              mergedGroups[existingIndex].balances.push(...newGroup.balances);
-            } else {
-              // Add new group
-              mergedGroups.push(newGroup);
-            }
-          });
-
-          return mergedGroups;
-        }
-        return grouped;
-      });
-
-      setHasMore(page < response.data.data.last_page);
-      setCurrentPage(page);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description: "Balanslar olishda xatolik",
-      });
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      const { data } = await api.get("/warehouseManager/warehouse");
+      setWarehouses(data);
+    } catch {
+      // non-critical
     }
   };
 
   useEffect(() => {
+    fetchPage(1, filters, true);
     fetchWarehouses();
-    fetchBalances();
+    return () => clearTimeout(debounceRef.current);
   }, []);
 
+  // Infinite scroll observer
   useEffect(() => {
-    setCurrentPage(1);
-    setHasMore(true);
-    fetchBalances(1);
-  }, [selectedWarehouse, debouncedSearchQuery]);
-
-  // Intersection Observer setup
-  const observer = useRef();
-  const lastItemRef = useCallback(
-    (node) => {
-      if (loading || loadingMore) return;
-      if (observer.current) observer.current.disconnect();
-
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          fetchBalances(currentPage + 1, true);
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !loadingMore && !loading && page < totalPages) {
+          fetchPage(page + 1, filtersRef.current, false);
         }
-      });
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [loading, loadingMore, page, totalPages, fetchPage]);
 
-      if (node) observer.current.observe(node);
+  const saveFilters = (newFilters) => {
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(newFilters));
+    setFilters(newFilters);
+  };
+
+  const applyFilters = useCallback(
+    (newFilters) => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => fetchPage(1, newFilters, true), DEBOUNCE_DELAY);
     },
-    [loading, loadingMore, hasMore, currentPage]
+    [fetchPage],
   );
 
-  // Get low stock count
-  const lowStockCount = groupedItems.filter(
-    (group) => group.totalQuantity <= parseFloat(group.item.min_quantity)
-  ).length;
+  const handleFilterChange = useCallback(
+    (key, value) => {
+      const v = value === "all" ? "" : value;
+      const newFilters = { ...filters, [key]: v };
+      saveFilters(newFilters);
+      applyFilters(newFilters);
+    },
+    [filters, applyFilters],
+  );
 
-  const handleRefresh = () => {
-    setCurrentPage(1);
-    setHasMore(true);
-    fetchBalances(1);
-  };
+  const handleSearchChange = useCallback(
+    (e) => {
+      const newFilters = { ...filters, search: e.target.value };
+      saveFilters(newFilters);
+      applyFilters(newFilters);
+    },
+    [filters, applyFilters],
+  );
 
-  const toggleExpand = (itemId) => {
-    setExpandedItems((prev) => ({
-      ...prev,
-      [itemId]: !prev[itemId],
-    }));
-  };
+  const resetFilters = useCallback(() => {
+    saveFilters(defaultFilters);
+    fetchPage(1, defaultFilters, true);
+  }, [fetchPage]);
 
-  const handleDownlod = () => {
-    setIsDownloading(true);
-    api
-      .get("/warehouseManager/balances/pdf", {
-        responseType: "blob",
-      })
-      .then((response) => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        const now = new Date();
-        const formattedDate = `${now.getDate().toString().padStart(2, "0")}-${(
-          now.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}-${now.getFullYear()}_${now
-          .getHours()
-          .toString()
-          .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
-        link.setAttribute("download", `balanslar_${formattedDate}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        toast({
-          title: "Fayl yuklab olindi",
-          description: "Balanslar muvaffaqiyatli yuklab olindi",
-        });
-      })
-      .catch((error) => {
-        toast({
-          variant: "destructive",
-          title: "Xatolik",
-          description: "Faylni yuklab olishda xatolik",
-        });
-      })
-      .finally(() => {
-        setIsDownloading(false);
-      });
-  };
+  const activeFilterCount = Object.values(filters).filter((v) => v !== "").length;
 
   return (
-    <div className="flex flex-col gap-6 p-0 bg-slate-50">
-      <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-primary to-primary/60 text-white rounded-t-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Warehouse size={28} />
-              <CardTitle className="text-2xl font-bold">
-                Omborlar holati
-              </CardTitle>
-            </div>
+    <div className="space-y-5">
+      {/* ── Page header ── */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Balans</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {total !== null ? `Jami ${total} ta yozuv` : "Yuklanmoqda…"}
+          </p>
+        </div>
+      </div>
 
-            {lowStockCount > 0 && (
-              <Badge variant="destructive" className="text-sm px-3 py-1">
-                {lowStockCount} mahsulot kam qoldi
+      {/* ── Filter toolbar ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="flex flex-wrap gap-3 p-4">
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Mahsulot nomi yoki kodi…"
+              className="pl-8 h-9"
+              value={filters.search}
+              onChange={handleSearchChange}
+            />
+          </div>
+
+          <Select
+            value={filters.warehouseId || "all"}
+            onValueChange={(v) => handleFilterChange("warehouseId", v)}
+          >
+            <SelectTrigger className="h-9 w-[180px]">
+              <Warehouse className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Ombor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha omborlar</SelectItem>
+              {warehouses.map((w) => (
+                <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.hasRoll === "" ? "all" : filters.hasRoll}
+            onValueChange={(v) => handleFilterChange("hasRoll", v === "all" ? "" : v)}
+          >
+            <SelectTrigger className="h-9 w-[160px]">
+              <Layers className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Turi" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barchasi</SelectItem>
+              <SelectItem value="true">Faqat rulonlar</SelectItem>
+              <SelectItem value="false">Rulonsiz</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {activeFilterCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 text-muted-foreground hover:text-foreground"
+              onClick={resetFilters}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Tozalash
+              <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
+                {activeFilterCount}
               </Badge>
-            )}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Data table ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-4 space-y-2">
+            {[...Array(8)].map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full rounded-lg" />
+            ))}
           </div>
-        </CardHeader>
+        ) : rows.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table className="text-sm whitespace-nowrap">
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="w-14 text-xs font-semibold text-muted-foreground">#</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">Mahsulot</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">Turi</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">Rang</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">Ombor</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">Rulon #</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">Miqdor</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">Min miqdor</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">Narxi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((entry) => {
+                  const isRoll = entry.rollNumber != null;
+                  const qty = isRoll ? entry.length : entry.quantity;
+                  const unit = entry.item?.unit?.name;
+                  const minQty = entry.item?.minQuantity;
+                  const belowMin = minQty != null && qty != null && qty < minQty;
 
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-wrap w-full gap-4 items-center">
-              <div className="relative">
-                <Select
-                  value={selectedWarehouse}
-                  onValueChange={setSelectedWarehouse}
-                >
-                  <SelectTrigger className="bg-white shadow-sm border-slate-200">
-                    <div className="flex items-center gap-2">
-                      <Filter size={18} className="text-slate-500" />
-                      <SelectValue placeholder="Ombor tanlang" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Barcha omborlar</SelectItem>
-                    {warehouses.map((warehouse) => (
-                      <SelectItem key={warehouse.id} value={warehouse.id}>
-                        {warehouse.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  return (
+                    <TableRow
+                      key={entry.id}
+                      className={`transition-colors ${belowMin ? "bg-red-50/60 hover:bg-red-50" : "hover:bg-muted/30"}`}
+                    >
+                      <TableCell className="text-xs text-muted-foreground font-mono">{entry.id}</TableCell>
 
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search size={18} className="text-slate-500" />
-                </div>
-                <Input
-                  type="text"
-                  placeholder="Qidirish..."
-                  className="pl-10 bg-white shadow-sm border-slate-200 md:min-w-[400px]"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Button
-                  variant="outline"
-                  className="w-full md:w-auto bg-white shadow-sm border-slate-200 hover:bg-slate-200 transition-all"
-                  onClick={handleRefresh}
-                  disabled={loading}
-                >
-                  <RefreshCw
-                    size={18}
-                    className={`mr-2 ${loading ? "animate-spin" : ""}`}
-                  />
-                  Yangilash
-                </Button>
-              </div>
-              <div>
-                <Button
-                  variant="outline"
-                  className="w-full md:w-auto bg-white shadow-sm border-slate-200 hover:bg-slate-200 transition-all"
-                  onClick={handleDownlod}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Download size={18} />
-                  )}
-                  Yuklab olish
-                </Button>
-              </div>
-              <div className="text-sm text-slate-500 ml-auto">
-                Jami: {parseFloat(totalQuantity).toLocaleString()}
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full bg-slate-200" />
-                ))}
-              </div>
-            ) : groupedItems.length > 0 ? (
-              <>
-                <div className="rounded-lg border border-slate-200 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader className="bg-slate-100">
-                        <TableRow>
-                          <TableHead className="w-8"></TableHead>
-                          <TableHead className="font-medium text-slate-700">
-                            Mahsulot
-                          </TableHead>
-                          <TableHead className="font-medium text-slate-700">
-                            Kodi
-                          </TableHead>
-                          <TableHead className="font-medium text-slate-700">
-                            Rangi
-                          </TableHead>
-                          <TableHead className="font-medium text-slate-700 text-center">
-                            Jami miqdor
-                          </TableHead>
-                          <TableHead className="font-medium text-slate-700 text-center">
-                            Min. miqdor
-                          </TableHead>
-                          <TableHead className="font-medium text-slate-700 text-center">
-                            Birlik
-                          </TableHead>
-                          <TableHead className="font-medium text-slate-700">
-                            Buyurtmalar
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {groupedItems.map((group, index, array) => {
-                          const isLowStock =
-                            group.totalQuantity <=
-                            parseFloat(group.item.min_quantity);
-                          const isExpanded = expandedItems[group.item.id];
-                          const isLastItem = index === array.length - 1;
-
-                          // Count orders
-                          const orderCount = group.balances.filter(
-                            (b) => b.order
-                          ).length;
-
-                          return (
-                            <React.Fragment key={group.item.id}>
-                              <TableRow
-                                ref={isLastItem ? lastItemRef : null}
-                                className={cn(
-                                  {
-                                    "bg-red-300": isLowStock,
-                                    "hover:bg-slate-50": !isLowStock,
-                                    "border-b-0": isExpanded,
-                                  },
-                                  "cursor-pointer"
-                                )}
-                                onClick={() => toggleExpand(group.item.id)}
-                              >
-                                <TableCell className="w-8 p-2">
-                                  {isExpanded ? (
-                                    <ChevronDown
-                                      size={18}
-                                      className="text-slate-600"
-                                    />
-                                  ) : (
-                                    <ChevronRight
-                                      size={18}
-                                      className="text-slate-600"
-                                    />
-                                  )}
-                                </TableCell>
-                                <TableCell className="font-medium">
-                                  {group.item.name}
-                                </TableCell>
-                                <TableCell>{group.item.code}</TableCell>
-                                <TableCell>
-                                  {group.item.color?.name}
-                                  {group.item.lot && ` lot: ${group.item.lot}`}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Badge
-                                    variant={
-                                      isLowStock ? "destructive" : "outline"
-                                    }
-                                    className={cn(
-                                      "px-3 py-1",
-                                      isLowStock
-                                        ? "bg-red-50 text-red-700 hover:bg-red-100"
-                                        : ""
-                                    )}
-                                  >
-                                    {group.totalQuantity}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {group.item.min_quantity}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {group.item.unit.name}
-                                </TableCell>
-                                <TableCell>
-                                  {orderCount > 0 ? (
-                                    <Badge className="font-normal">
-                                      {orderCount} ta buyurtma
-                                    </Badge>
-                                  ) : (
-                                    <span>-</span>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-
-                              {isExpanded && (
-                                <TableRow className="bg-slate-50">
-                                  <TableCell colSpan={8} className="p-0">
-                                    <div className="p-4">
-                                      <div className="text-sm font-medium mb-2 text-slate-700">
-                                        Barcha {group.item.name} balanslari:
-                                      </div>
-                                      <Table>
-                                        <TableHeader className="bg-slate-200">
-                                          <TableRow>
-                                            <TableHead className="font-medium text-slate-700">
-                                              Ombor
-                                            </TableHead>
-                                            <TableHead className="font-medium text-slate-700 text-center">
-                                              Miqdor
-                                            </TableHead>
-                                            <TableHead className="font-medium text-slate-700">
-                                              Buyurtma
-                                            </TableHead>
-                                            <TableHead className="font-medium text-slate-700">
-                                              Buyurtma holati
-                                            </TableHead>
-                                          </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                          {group.balances.map((balance) => (
-                                            <TableRow key={balance.id}>
-                                              <TableCell className="max-w-10">
-                                                {balance.warehouse.name}
-                                              </TableCell>
-                                              <TableCell className="text-center">
-                                                {balance.quantity}{" "}
-                                                {group.item.unit.name}
-                                              </TableCell>
-                                              <TableCell>
-                                                {balance.order ? (
-                                                  <div className="text-sm">
-                                                    <div className="font-medium">
-                                                      {balance.order.name}
-                                                    </div>
-                                                    <div className="text-slate-500">
-                                                      ID: {balance.order.id}{" "}
-                                                      Miqdor:{" "}
-                                                      {balance.order.quantity ||
-                                                        0}
-                                                    </div>
-                                                  </div>
-                                                ) : (
-                                                  <span className="text-slate-500">
-                                                    Buyurtmasiz
-                                                  </span>
-                                                )}
-                                              </TableCell>
-                                              <TableCell>
-                                                {balance.order && (
-                                                  <Badge
-                                                    variant="outline"
-                                                    className={cn(
-                                                      "capitalize",
-                                                      statuses[
-                                                        balance.order.status
-                                                      ]?.secondaryBg,
-                                                      statuses[
-                                                        balance.order.status
-                                                      ]?.textColor,
-                                                      statuses[
-                                                        balance.order.status
-                                                      ]?.border
-                                                    )}
-                                                  >
-                                                    {
-                                                      statuses[
-                                                        balance.order.status
-                                                      ]?.text
-                                                    }
-                                                  </Badge>
-                                                )}
-                                              </TableCell>
-                                            </TableRow>
-                                          ))}
-                                        </TableBody>
-                                      </Table>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
-                        {loadingMore && (
-                          <div className="flex justify-center py-4 w-full">
-                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          {entry.item?.image ? (
+                            <button
+                              type="button"
+                              className="w-9 h-9 rounded-md overflow-hidden cursor-zoom-in flex-shrink-0 ring-1 ring-border"
+                              onClick={() => setImageDialog({ open: true, src: entry.item.image, name: entry.item.name })}
+                            >
+                              <img src={entry.item.image} alt={entry.item.name} className="w-full h-full object-cover" />
+                            </button>
+                          ) : (
+                            <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                              <Package className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-sm">{entry.item?.name}</p>
+                            {entry.item?.code && (
+                              <p className="text-xs text-muted-foreground font-mono">{entry.item.code}</p>
+                            )}
                           </div>
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        {entry.item?.type?.name ? (
+                          <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                            {entry.item.type.name}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
                         )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-10 border border-dashed border-slate-300 rounded-lg bg-slate-50">
-                <div className="text-slate-400 mb-2">
-                  <Warehouse size={48} strokeWidth={1} />
-                </div>
-                <p className="text-slate-600 font-medium">
-                  Balanslar mavjud emas
-                </p>
-                <p className="text-sm text-slate-500 mt-1">
-                  {searchQuery
-                    ? "Qidiruv bo'yicha natija topilmadi"
-                    : "Hech qanday mahsulot mavjud emas"}
-                </p>
-              </div>
+                      </TableCell>
+
+                      <TableCell>
+                        {entry.item?.color?.name ? (
+                          <div className="flex items-center gap-1.5">
+                            {entry.item.color.hex && (
+                              <span
+                                className="w-3 h-3 rounded-full border border-border flex-shrink-0"
+                                style={{ backgroundColor: `#${entry.item.color.hex}` }}
+                              />
+                            )}
+                            <span className="text-sm">{entry.item.color.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <Warehouse className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          <div>
+                            <p className="font-medium text-sm">{entry.warehouse?.name}</p>
+                            {entry.warehouse?.branch?.name && (
+                              <p className="text-xs text-muted-foreground">{entry.warehouse.branch.name}</p>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        {isRoll ? (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold">
+                            R{entry.rollNumber}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {belowMin && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
+                          <span className={`font-semibold ${belowMin ? "text-red-600" : ""}`}>
+                            {formatNumber(qty)}
+                          </span>
+                          <span className="text-muted-foreground text-xs">{unit}</span>
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        {minQty != null ? (
+                          <span className={`font-medium ${belowMin ? "text-red-500" : "text-muted-foreground"}`}>
+                            {formatNumber(minQty)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        {entry.item?.price ? (
+                          <div>
+                            <p className="font-medium">{formatNumber(entry.item.price)}</p>
+                            <p className="text-xs text-muted-foreground">{entry.item.currency?.name}</p>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="flex justify-center py-4">
+              {loadingMore && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <Inbox className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-base font-semibold">Ma'lumot topilmadi</h3>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+              {activeFilterCount > 0
+                ? "Filtrlarni tozalab qayta urinib ko'ring"
+                : "Hali hech qanday balans ma'lumoti yo'q"}
+            </p>
+            {activeFilterCount > 0 && (
+              <Button variant="outline" size="sm" className="mt-4" onClick={resetFilters}>
+                Filtrlarni tozalash
+              </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      {/* ── Image dialog ── */}
+      <Dialog
+        open={imageDialog.open}
+        onOpenChange={(open) => setImageDialog((prev) => ({ ...prev, open }))}
+      >
+        <DialogContent className="max-w-3xl w-full p-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b border-border">
+            <DialogTitle className="text-base font-semibold">
+              {imageDialog.name || "Rasm"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center bg-muted/30 w-full h-[70vh] p-4">
+            {imageDialog.src && (
+              <img
+                src={imageDialog.src}
+                alt={imageDialog.name || "item-image"}
+                className="max-h-full max-w-full object-contain rounded-lg"
+                loading="lazy"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
