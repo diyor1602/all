@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
 import api from "@/utils/api";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
@@ -11,320 +8,173 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
+import { Loader2, Plus, Trash2, Search, Package } from "lucide-react";
 
-import { ImageOff, Plus, Trash } from "lucide-react";
+const ItemBadge = ({ children }) => (
+  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+    {children}
+  </span>
+);
 
-const CreateOrder = () => {
+const New = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [submitting, setSubmitting] = useState(false);
-  const [suppliers, setSuppliers] = useState([]);
-  const [items, setItems] = useState([]);
-  const [itemSearches, setItemSearches] = useState([""]);
-  const [showItemResults, setShowItemResults] = useState([false]);
-  const itemRefs = useRef([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [imgDialogOpen, setImgDialogOpen] = useState(false);
+
   const [types, setTypes] = useState([]);
 
-  const [formData, setFormData] = useState({
-    supplier_id: "",
-    comment: "",
-    deadline: "",
-    items: [
-      {
-        type_id: "",
-        item_id: "",
-        item_name: "",
-        quantity: "",
-        code: "",
-        color: "",
-        lot: "",
-      },
-    ],
-  });
+  const [deadline, setDeadline] = useState("");
+  const [deadlineTime, setDeadlineTime] = useState("");
+  const [comment, setComment] = useState("");
+  const [items, setItems] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  const fetchSuppliers = async () => {
-    try {
-      const response = await api.get("/warehouseManager/suppliers");
-      setSuppliers(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Ma'lumotlarni olishda xatolik yuz berdi.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Item search dialog
+  const [openItemDialog, setOpenItemDialog] = useState(false);
+  const [selectedType, setSelectedType] = useState("");
+  const [itemSearchText, setItemSearchText] = useState("");
+  const [searchingItems, setSearchingItems] = useState(false);
+  const [loadingMoreItems, setLoadingMoreItems] = useState(false);
+  const [itemResults, setItemResults] = useState([]);
+  const [itemPage, setItemPage] = useState(1);
+  const [itemTotalPages, setItemTotalPages] = useState(1);
+  const itemSentinelRef = useRef(null);
 
-  const fetchItems = async (searchTerm = "", typeId) => {
+  const [previewImage, setPreviewImage] = useState(null);
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
+
+  useEffect(() => {
+    api
+      .get("/warehouseManager/itemType")
+      .then((res) => setTypes(res.data))
+      .catch(() => {});
+  }, []);
+
+  const searchItems = async (typeOverride, pageNum = 1) => {
+    const type = typeOverride !== undefined ? typeOverride : selectedType;
+    if (pageNum === 1) setSearchingItems(true);
+    else setLoadingMoreItems(true);
     try {
-      const response = await api.get("/warehouseManager/items/search", {
+      const res = await api.get("/warehouseManager/item", {
         params: {
-          search: searchTerm,
-          type_id: typeId,
+          search: itemSearchText || undefined,
+          typeId: type && type !== "all" ? type : undefined,
+          page: pageNum,
         },
       });
-
-      const selectedItemIds = formData.items
-        .filter((item) => item.item_id)
-        .map((item) => item.item_id);
-
-      const filteredItems = response.data.filter(
-        (item) => !selectedItemIds.includes(item.id.toString()),
+      const newData = res.data?.data || [];
+      setItemResults((prev) =>
+        pageNum === 1 ? newData : [...prev, ...newData],
       );
-
-      setItems(filteredItems);
-    } catch (error) {
+      setItemPage(pageNum);
+      setItemTotalPages(res.data?.totalPages ?? 1);
+    } catch {
       toast({
         title: "Xatolik",
-        description: "Ma'lumotlarni olishda xatolik yuz berdi.",
+        description: "Mahsulotlarni topib bo'lmadi",
         variant: "destructive",
       });
-    }
-  };
-
-  const fetchTypes = async () => {
-    try {
-      const response = await api.get("/warehouseManager/types");
-      setTypes(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Ma'lumotlarni olishda xatolik yuz berdi.",
-        variant: "destructive",
-      });
+    } finally {
+      if (pageNum === 1) setSearchingItems(false);
+      else setLoadingMoreItems(false);
     }
   };
 
   useEffect(() => {
-    fetchSuppliers();
-    fetchTypes();
-  }, []);
-
-  useEffect(() => {
-    if (suppliers.length === 1) {
-      setFormData((prev) => ({
-        ...prev,
-        supplier_id: suppliers[0].id.toString(),
-      }));
-    }
-  }, [suppliers]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      itemRefs.current.forEach((ref, index) => {
-        if (ref && !ref.contains(event.target)) {
-          setShowItemResults((prev) => {
-            const newState = [...prev];
-            newState[index] = false;
-            return newState;
-          });
+    if (!itemSentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          !loadingMoreItems &&
+          !searchingItems &&
+          itemPage < itemTotalPages
+        ) {
+          searchItems(undefined, itemPage + 1);
         }
-      });
-    };
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(itemSentinelRef.current);
+    return () => observer.disconnect();
+  }, [itemPage, itemTotalPages, loadingMoreItems, searchingItems]);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSelectChange = (value, name) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleItemChange = (index, field, value) => {
-    setFormData((prev) => {
-      const newItems = [...prev.items];
-      newItems[index] = {
-        ...newItems[index],
-        [field]: value,
-      };
-      return {
+  const addItem = (item) => {
+    if (!items.find((i) => i.itemId === item.id)) {
+      setItems((prev) => [
         ...prev,
-        items: newItems,
-      };
-    });
-  };
-
-  const handleItemSelect = (index, item) => {
-    setFormData((prev) => {
-      const newItems = [...prev.items];
-      newItems[index] = {
-        ...newItems[index],
-        item_id: item.id.toString(),
-        item_name: item.name,
-        code: item.code,
-        color: item.color?.name || "",
-        lot: item.lot || "",
-        image: item.image || null,
-      };
-      return {
-        ...prev,
-        items: newItems,
-      };
-    });
-
-    const newSearches = [...itemSearches];
-    newSearches[index] = item.name;
-    setItemSearches(newSearches);
-
-    const newShowResults = [...showItemResults];
-    newShowResults[index] = false;
-    setShowItemResults(newShowResults);
-  };
-
-  const handleItemSearchChange = (value, index) => {
-    const typeId = formData.items?.[index]?.type_id;
-    if (!typeId) {
-      toast({
-        title: "Diqqat!",
-        description: "Avval turini tanlang",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newSearches = [...itemSearches];
-    newSearches[index] = value;
-    setItemSearches(newSearches);
-
-    const newShowResults = [...showItemResults];
-    newShowResults[index] = true;
-    setShowItemResults(newShowResults);
-
-    fetchItems(value, typeId);
-  };
-
-  const handleItemTypeChange = (index, value) => {
-    setFormData((prev) => {
-      const newItems = [...prev.items];
-      newItems[index] = {
-        ...newItems[index],
-        type_id: value,
-        item_id: "",
-        item_name: "",
-        code: "",
-        color: "",
-        lot: "",
-        image: null,
-      };
-      return {
-        ...prev,
-        items: newItems,
-      };
-    });
-
-    setItems([]);
-
-    setItemSearches((prev) => {
-      const next = [...prev];
-      next[index] = "";
-      return next;
-    });
-
-    setShowItemResults((prev) => {
-      const next = [...prev];
-      next[index] = false;
-      return next;
-    });
-  };
-
-  const addItem = () => {
-    setFormData((prev) => ({
-      ...prev,
-      items: [
-        ...prev.items,
         {
-          type_id: "",
-          item_id: "",
-          item_name: "",
-          quantity: "",
+          itemId: item.id,
+          name: item.name,
+          code: item.code,
+          image: item.image,
+          unitLabel: item.unit?.name || "",
+          color: item.color || null,
+          requestedQuantity: "",
+          comment: "",
         },
-      ],
-    }));
-
-    setItemSearches([...itemSearches, ""]);
-    setShowItemResults([...showItemResults, false]);
-    itemRefs.current = [...itemRefs.current, null];
+      ]);
+    }
+    setOpenItemDialog(false);
   };
 
-  const removeItem = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index),
-    }));
+  const removeItem = (itemId) =>
+    setItems((prev) => prev.filter((i) => i.itemId !== itemId));
 
-    const newSearches = [...itemSearches];
-    newSearches.splice(index, 1);
-    setItemSearches(newSearches);
+  const updateItem = (itemId, field, value) =>
+    setItems((prev) =>
+      prev.map((i) => (i.itemId === itemId ? { ...i, [field]: value } : i)),
+    );
 
-    const newShowResults = [...showItemResults];
-    newShowResults.splice(index, 1);
-    setShowItemResults(newShowResults);
-
-    itemRefs.current.splice(index, 1);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!formData.supplier_id || !formData.deadline || !formData.items.length) {
+  const handleSubmit = async () => {
+    if (items.length === 0) {
       toast({
-        title: "Diqqat!",
-        description: "Barcha majburiy maydonlarni to'ldiring",
+        title: "Xatolik",
+        description: "Kamida bitta mahsulot qo'shing",
         variant: "destructive",
       });
       return;
     }
-
-    const hasItemId = formData.items.every((item) => item.item_id);
-    const hasQuantity = formData.items.every((item) => item.quantity);
-
-    if (!hasItemId || !hasQuantity) {
-      toast({
-        title: "Diqqat!",
-        description: "Barcha maxsulotlar uchun miqdorni kiriting",
-        variant: "destructive",
-      });
-      return;
+    for (const item of items) {
+      if (!item.requestedQuantity || Number(item.requestedQuantity) <= 0) {
+        toast({
+          title: "Xatolik",
+          description: `"${item.name}" uchun miqdor kiriting`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-      await api.post("/warehouseManager/supplierOrders", formData);
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Buyurtma muvaffaqiyatli yaratildi",
-        style: {
-          background: "green",
-          color: "white",
-        },
+      await api.post("/warehouseManager/purchaseOrder", {
+        deadline: deadline ? `${deadline}${deadlineTime ? `T${deadlineTime}` : ""}` : null,
+        comments: comment || null,
+        items: items.map((i) => ({
+          itemId: i.itemId,
+          requestedQuantity: Number(i.requestedQuantity),
+          comment: i.comment || null,
+        })),
       });
-      navigate("/warehouseManager/settings/supplier/");
-    } catch (error) {
+
+      toast({ title: "Muvaffaqiyatli", description: "Buyurtma saqlandi" });
+      setDeadline("");
+      setDeadlineTime("");
+      setComment("");
+      setItems([]);
+    } catch (err) {
       toast({
-        title: "Xatolik!",
-        description: "Buyurtma yaratishda xatolik",
+        title: "Xatolik",
+        description:
+          err.response?.data?.message || "Saqlashda xatolik yuz berdi",
         variant: "destructive",
       });
     } finally {
@@ -333,261 +183,351 @@ const CreateOrder = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md mb-20">
-      <h1 className="text-2xl font-bold mb-6">
-        Ta'minotchi uchun yangi buyurtma
-      </h1>
+    <div className="max-w-3xl mx-auto p-6 space-y-5">
+      <h1 className="text-2xl font-semibold text-gray-900">Yangi buyurtma</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Ta'minotchi</label>
-            <Select
-              value={formData.supplier_id}
-              onValueChange={(value) =>
-                handleSelectChange(value, "supplier_id")
-              }
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Ta'minotchi tanlash" />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers.map((supplier) => (
-                  <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                    {supplier.employee?.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Main info */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          Asosiy ma'lumotlar
+        </p>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Qachongacha?</label>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Muddat</label>
             <Input
-              type="datetime-local"
-              name="deadline"
-              min={new Date().toISOString().slice(0, 16)}
-              value={formData.deadline}
-              onChange={handleInputChange}
+              type="date"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="bg-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Vaqt</label>
+            <Input
+              type="time"
+              value={deadlineTime}
+              onChange={(e) => setDeadlineTime(e.target.value)}
               className="bg-white"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Izoh</label>
-          <Input
-            type="text"
-            name="comment"
-            value={formData.comment}
-            onChange={handleInputChange}
-            placeholder="Izoh yozing"
-            className="bg-white"
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-700">Izoh</label>
+          <Textarea
+            placeholder="Ta'minotchiga izoh..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="bg-white resize-none"
+            rows={3}
           />
         </div>
+      </div>
 
-        <div className="space-y-4 rounded-lg border bg-muted/10 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Maxsulotlar</h2>
+      {/* Items */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Mahsulotlar{" "}
+            {items.length > 0 && (
+              <span className="text-primary">({items.length})</span>
+            )}
+          </p>
+          <Button
+            size="sm"
+            onClick={() => {
+              setOpenItemDialog(true);
+              searchItems();
+            }}
+            className="gap-1.5 h-8"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Qo'shish
+          </Button>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-gray-300 gap-2">
+            <Package className="w-10 h-10" />
+            <p className="text-sm text-gray-400">Mahsulotlar qo'shilmagan</p>
           </div>
-
-          {formData.items.map((item, index) => (
-            <div
-              key={index}
-              className="grid grid-cols-1 md:grid-cols-12 gap-4 rounded-lg border bg-white p-4 shadow-sm"
-            >
+        ) : (
+          <div className="space-y-3">
+            {items.map((item, idx) => (
               <div
-                className="relative md:col-span-8"
-                ref={(el) => (itemRefs.current[index] = el)}
+                key={item.itemId}
+                className="rounded-xl border border-gray-200 bg-white overflow-hidden"
               >
-                <div className="grid grid-cols-2 gap-2">
-                  <Select
-                    value={item.type_id || ""}
-                    onValueChange={(value) =>
-                      handleItemTypeChange(index, value)
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Turini tanlang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {types.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Input
-                    type="text"
-                    placeholder="Maxsulotlar qidirish..."
-                    value={itemSearches[index]}
-                    disabled={!item.type_id}
-                    onChange={(e) =>
-                      handleItemSearchChange(e.target.value, index)
-                    }
-                    className="bg-white"
-                  />
-                </div>
-                {showItemResults[index] && items.length > 0 && (
-                  <div className="absolute z-20 w-full mt-2 overflow-hidden rounded-lg border bg-white shadow-xl">
-                    <div className="max-h-56 overflow-auto">
-                      {items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="group flex gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/60"
-                          onClick={() => handleItemSelect(index, item)}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium truncate">
-                              {item.name}
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 gap-x-3 gap-y-0.5">
-                              <div className="truncate">
-                                Turi: {item.type?.name}
-                              </div>
-                              <div className="truncate">Kod: {item.code}</div>
-                              <div className="truncate">
-                                Rang: {item.color?.name || "-"}
-                              </div>
-                              <div className="truncate">Lot: {item.lot}</div>
-                            </div>
-                          </div>
-
-                          {item.image ? (
-                            <div className="h-14 w-14 overflow-hidden rounded-md border bg-muted/20">
-                              <img
-                                src={item.image}
-                                alt=""
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="h-14 w-14 overflow-hidden rounded-md border bg-muted/20 flex items-center justify-center">
-                              <ImageOff className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                {/* Item header */}
+                <div className="flex gap-3 p-3 bg-gray-50 border-b border-gray-100">
+                  <div className="text-xs text-gray-400 w-5 pt-0.5 flex-shrink-0 font-medium">
+                    {idx + 1}
                   </div>
-                )}
-                {item.item_id && (
-                  <div className="mt-3 rounded-lg border bg-muted/20 p-3">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="grid grid-cols-1 gap-1.5 text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">Kod:</span>
-                          <span className="text-muted-foreground truncate">
-                            {item.code}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">Rang:</span>
-                          <span className="text-muted-foreground truncate">
-                            {item.color || "-"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">Lot:</span>
-                          <span className="text-muted-foreground truncate">
-                            {item.lot || "-"}
-                          </span>
-                        </div>
-                      </div>
 
-                      {item.image ? (
-                        <button
-                          type="button"
-                          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-white shadow-sm transition hover:shadow-md"
-                          onClick={() => {
-                            setSelectedItem(item);
-                            setImgDialogOpen(true);
-                          }}
-                        >
-                          <img
-                            src={item.image}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        </button>
-                      ) : (
-                        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted/10">
-                          <div className="flex flex-col items-center gap-1">
-                            <ImageOff className="h-5 w-5 text-muted-foreground" />
-                            <span className="text-[10px] text-muted-foreground">
-                              Rasm yo'q
-                            </span>
-                          </div>
-                        </div>
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      onClick={() => {
+                        setPreviewImage(item.image);
+                        setImgDialogOpen(true);
+                      }}
+                      className="w-10 h-10 rounded-lg object-cover flex-shrink-0 cursor-zoom-in"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <Package className="w-4 h-4 text-gray-400" />
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-gray-900 truncate">
+                      {item.name}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {item.code && <ItemBadge>{item.code}</ItemBadge>}
+                      {item.unitLabel && (
+                        <ItemBadge>{item.unitLabel}</ItemBadge>
+                      )}
+                      {item.color?.name && (
+                        <ItemBadge>
+                          {item.color.hex && (
+                            <span
+                              className="w-2 h-2 rounded-full inline-block flex-shrink-0"
+                              style={{ backgroundColor: `#${item.color.hex}` }}
+                            />
+                          )}
+                          {item.color.name}
+                        </ItemBadge>
                       )}
                     </div>
                   </div>
-                )}
+
+                  <button
+                    onClick={() => removeItem(item.itemId)}
+                    className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 self-start"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Inputs */}
+                <div className="px-4 py-3 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 whitespace-nowrap">
+                        Miqdor
+                      </span>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        value={item.requestedQuantity}
+                        onChange={(e) =>
+                          updateItem(
+                            item.itemId,
+                            "requestedQuantity",
+                            e.target.value,
+                          )
+                        }
+                        className="w-28 h-8 text-sm bg-white"
+                      />
+                      {item.unitLabel && (
+                        <span className="text-sm text-gray-500">
+                          {item.unitLabel}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                      Izoh
+                    </span>
+                    <Input
+                      type="text"
+                      placeholder="—"
+                      value={item.comment}
+                      onChange={(e) =>
+                        updateItem(item.itemId, "comment", e.target.value)
+                      }
+                      className="flex-1 h-8 text-sm bg-white"
+                    />
+                  </div>
+                </div>
               </div>
-
-              <Input
-                type="number"
-                placeholder="Miqdor"
-                value={item.quantity}
-                onChange={(e) =>
-                  handleItemChange(index, "quantity", e.target.value)
-                }
-                className="bg-white md:col-span-3"
-              />
-
-              <div className="flex items-start justify-end md:col-span-1">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => removeItem(index)}
-                  className="h-9 w-9 p-0"
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-
-          <div className="pt-1">
-            <Button
-              type="button"
-              onClick={addItem}
-              variant="outline"
-              className="w-full"
-            >
-              <Plus /> Maxsulot qo'shish
-            </Button>
+            ))}
           </div>
-        </div>
+        )}
+      </div>
 
-        <div className="flex justify-end items-center gap-2 flex-wrap">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/warehouseManager/settings/supplier/")}
-          >
-            Bekor qilish
-          </Button>
-          <Button type="submit" disabled={submitting}>
-            {submitting ? "Yaratilmoqda..." : "Buyurtma yaratish"}
-          </Button>
-        </div>
-      </form>
+      <Button
+        onClick={handleSubmit}
+        disabled={submitting}
+        className="w-full h-11 text-base"
+      >
+        {submitting ? (
+          <>
+            <Loader2 className="animate-spin w-4 h-4 mr-2" />
+            Saqlanmoqda...
+          </>
+        ) : (
+          "Saqlash"
+        )}
+      </Button>
+
+      {/* Item search dialog */}
+      <Dialog
+        open={openItemDialog}
+        onOpenChange={(v) => {
+          setOpenItemDialog(v);
+          if (!v) {
+            setItemSearchText("");
+            setSelectedType("");
+            setItemResults([]);
+            setItemPage(1);
+            setItemTotalPages(1);
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Mahsulot tanlash</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex gap-2">
+            <Select
+              value={selectedType}
+              onValueChange={(v) => {
+                setSelectedType(v);
+                searchItems(v);
+              }}
+            >
+              <SelectTrigger className="bg-white w-36 flex-shrink-0">
+                <SelectValue placeholder="Turi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barchasi</SelectItem>
+                {types.map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder="Qidirish..."
+                value={itemSearchText}
+                onChange={(e) => setItemSearchText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && searchItems()}
+                className="bg-white pr-9"
+              />
+              <button
+                onClick={() => searchItems()}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="min-h-48 max-h-96 overflow-y-auto -mx-1 px-1">
+            {searchingItems ? (
+              <div className="flex items-center justify-center h-48 gap-2 text-gray-400">
+                <Loader2 className="animate-spin w-5 h-5" />
+                <span className="text-sm">Qidirilmoqda...</span>
+              </div>
+            ) : itemResults.length > 0 ? (
+              <div className="space-y-0.5">
+                {itemResults.map((item, index) => {
+                  const alreadyAdded = items.some((i) => i.itemId === item.id);
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => addItem(item)}
+                      className={`w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-colors ${
+                        alreadyAdded
+                          ? "bg-primary/5 border border-primary/20"
+                          : "hover:bg-gray-50 border border-transparent"
+                      }`}
+                    >
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <Package className="w-5 h-5 text-gray-300" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {item.name}
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {item.code && <ItemBadge>{item.code}</ItemBadge>}
+                          {item.unit?.name && (
+                            <ItemBadge>{item.unit.name}</ItemBadge>
+                          )}
+                          {item.color?.name && (
+                            <ItemBadge>
+                              {item.color.hex && (
+                                <span
+                                  className="w-2 h-2 rounded-full inline-block flex-shrink-0"
+                                  style={{
+                                    backgroundColor: `#${item.color.hex}`,
+                                  }}
+                                />
+                              )}
+                              {item.color.name}
+                            </ItemBadge>
+                          )}
+                        </div>
+                      </div>
+                      {alreadyAdded && (
+                        <span className="text-xs text-primary font-semibold flex-shrink-0">
+                          Qo'shilgan
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+                <div ref={itemSentinelRef} className="py-1">
+                  {loadingMoreItems && (
+                    <div className="flex justify-center py-2">
+                      <Loader2 className="animate-spin w-4 h-4 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48 text-gray-300 gap-2">
+                <Search className="w-8 h-8" />
+                <p className="text-sm text-gray-400">Mahsulotni qidiring</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image preview dialog */}
       <Dialog open={imgDialogOpen} onOpenChange={setImgDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{selectedItem?.item_name}</DialogTitle>
-            <DialogDescription>{selectedItem?.code}</DialogDescription>
-          </DialogHeader>
-          <div className="max-w-[90vw] max-h-[90vh] overflow-auto">
-            <img src={selectedItem?.image} alt="" />
-          </div>
+          <img
+            src={previewImage}
+            alt="preview"
+            className="w-full max-h-[80vh] object-contain rounded-lg"
+          />
         </DialogContent>
       </Dialog>
     </div>
   );
 };
 
-export default CreateOrder;
+export default New;
