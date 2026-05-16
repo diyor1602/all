@@ -97,27 +97,19 @@ const New = () => {
 
   const getStaticData = async () => {
     try {
-      const [
-        warehousesRes,
-        ordersRes,
-        deptsRes,
-        destinationsRes,
-        typesRes,
-        currenciesRes,
-      ] = await Promise.all([
-        api.get("/warehouseManager/warehouse"),
-        api.get("/warehouseManager/order"),
-        api.get("/warehouseManager/department"),
-        api.get("/warehouseManager/destination"),
-        api.get("/warehouseManager/itemType"),
-        api.get("/warehouseManager/Currency"),
-      ]);
+      const [warehousesRes, ordersRes, deptsRes, destinationsRes, typesRes] =
+        await Promise.all([
+          api.get("/warehouseManager/warehouse"),
+          api.get("/warehouseManager/order"),
+          api.get("/warehouseManager/department"),
+          api.get("/warehouseManager/destination"),
+          api.get("/warehouseManager/itemType"),
+        ]);
       setWarehouses(warehousesRes.data);
       setAllOrders(ordersRes.data?.data || ordersRes.data || []);
       setDepartments(deptsRes.data || []);
       setDestinations(destinationsRes.data);
       setTypes(typesRes.data);
-      setCurrencies(currenciesRes.data ?? []);
     } catch {
       toast({
         title: "Xatolik",
@@ -223,8 +215,6 @@ const New = () => {
           unitLabel: item.unit?.name || "",
           color: item.color || null,
           quantity: "",
-          price: "",
-          currencyId: "",
           lots: [],
         },
       ]);
@@ -265,7 +255,7 @@ const New = () => {
             {
               _stockId: stockItem.id,
               rollNumber: String(stockItem.rollNumber),
-              length: stockItem.length != null ? String(stockItem.length) : "",
+              length: "",
             },
           ],
         };
@@ -404,14 +394,6 @@ const New = () => {
         });
         return;
       }
-      if (!item.currencyId) {
-        toast({
-          title: "Xatolik",
-          description: `"${item.name}" uchun valyutani tanlang`,
-          variant: "destructive",
-        });
-        return;
-      }
     }
 
     const allRollNumbers = items
@@ -443,16 +425,12 @@ const New = () => {
           i.lots.length > 0
             ? i.lots.map((lot) => ({
                 itemId: i.itemId,
-                price: i.price ? Number(i.price) : null,
-                currencyId: i.currencyId ? Number(i.currencyId) : null,
                 rollNumber: lot.rollNumber ? Number(lot.rollNumber) : null,
                 length: lot.length ? Number(lot.length) : null,
               }))
             : [
                 {
                   itemId: i.itemId,
-                  price: i.price ? Number(i.price) : null,
-                  currencyId: i.currencyId ? Number(i.currencyId) : null,
                   quantity: Number(i.quantity),
                 },
               ],
@@ -699,90 +677,69 @@ const New = () => {
                     </div>
                   </div>
 
+                  {/* Actual quantity */}
+                  {(stockBalances[item.itemId] ?? []).length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-400">Miqdori</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {stockBalances[item.itemId]
+                          .filter(
+                            (s) =>
+                              !s.rollNumber &&
+                              (!warehouseId ||
+                                s.warehouse?.id === Number(warehouseId)),
+                          )
+                          .map((s) => {
+                            return (
+                              <div key={s.id} className="font-medium">
+                                {s.warehouse?.name} /{" "}
+                                {s.quantity ? s.quantity : s.length}{" "}
+                                {item.unitLabel}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Stock chips */}
                   {(stockBalances[item.itemId] ?? []).length > 0 && (
                     <div className="space-y-1">
                       <p className="text-xs text-gray-400">Mavjud rulonlar</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {stockBalances[item.itemId].map((s) => {
-                          const isAdded = item.lots.some(
-                            (l) => l._stockId === s.id,
-                          );
-                          return (
-                            <button
-                              key={s.id}
-                              disabled={isAdded}
-                              onClick={() => addLotFromStock(item.itemId, s)}
-                              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors ${
-                                isAdded
-                                  ? "bg-primary/10 border-primary/30 text-primary cursor-default"
-                                  : "bg-gray-50 border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
-                              }`}
-                            >
-                              <span className="font-medium">
-                                R{s.rollNumber}
-                              </span>
-                              {s.length != null && (
-                                <span className="text-gray-400">
-                                  · {s.length}m
+                        {stockBalances[item.itemId]
+                          .filter(
+                            (s) =>
+                              s.rollNumber &&
+                              (!warehouseId ||
+                                s.warehouse?.id === Number(warehouseId)),
+                          )
+                          .map((s) => {
+                            const isAdded = item.lots.some(
+                              (l) => l._stockId === s.id,
+                            );
+                            return (
+                              <button
+                                key={s.id}
+                                disabled={isAdded}
+                                onClick={() => addLotFromStock(item.itemId, s)}
+                                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors ${
+                                  isAdded
+                                    ? "bg-primary/10 border-primary/30 text-primary cursor-default"
+                                    : "bg-gray-50 border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
+                                }`}
+                              >
+                                <span className="font-medium">
+                                  R{s.rollNumber} / {s.warehouse?.name} /{" "}
+                                  {s.quantity ? s.quantity : s.length}{" "}
+                                  {item.unitLabel}
                                 </span>
-                              )}
-                            </button>
-                          );
-                        })}
+                              </button>
+                            );
+                          })}
                       </div>
                     </div>
                   )}
-
-                  {/* Price — always visible */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs text-gray-500 whitespace-nowrap">
-                      Bir donasi uchun narxi
-                    </span>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      value={item.price}
-                      onChange={(e) =>
-                        updateItem(item.itemId, "price", e.target.value)
-                      }
-                      className="w-28 h-8 text-sm bg-white"
-                    />
-                    <Select
-                      value={item.currencyId}
-                      onValueChange={(v) =>
-                        updateItem(item.itemId, "currencyId", v)
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs bg-white w-24">
-                        <SelectValue placeholder="Valyuta" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {currencies.map((c) => (
-                          <SelectItem key={c.id} value={String(c.id)}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {(() => {
-                      const price = Number(item.price) || 0;
-                      const total =
-                        item.lots.length > 0
-                          ? price *
-                            item.lots.reduce(
-                              (s, l) => s + (Number(l.length) || 0),
-                              0,
-                            )
-                          : price * (Number(item.quantity) || 0);
-                      return total > 0 ? (
-                        <span className="text-xs font-medium text-gray-700">
-                          = {total.toLocaleString()}
-                        </span>
-                      ) : null;
-                    })()}
-                  </div>
 
                   {item.lots.length === 0 ? (
                     /* No rolls — simple quantity input */
@@ -887,51 +844,6 @@ const New = () => {
           </div>
         )}
       </div>
-
-      {items.length > 0 &&
-        (() => {
-          const totals = {};
-          for (const i of items) {
-            const price = Number(i.price) || 0;
-            if (!price) continue;
-            const qty =
-              i.lots.length > 0
-                ? i.lots.reduce((s, l) => s + (Number(l.length) || 0), 0)
-                : Number(i.quantity) || 0;
-            const key = i.currencyId || "__none__";
-            totals[key] = (totals[key] || 0) + price * qty;
-          }
-          const entries = Object.entries(totals).filter(([, v]) => v > 0);
-          if (entries.length === 0) return null;
-          return (
-            <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 space-y-1.5">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Jami summa
-              </span>
-              {entries.map(([currencyId, total]) => {
-                const currency = currencies.find(
-                  (c) => String(c.id) === currencyId,
-                );
-                return (
-                  <div
-                    key={currencyId}
-                    className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        {currency?.name ?? "Valyutasiz"}
-                      </span>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {total.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
 
       <Button
         onClick={handleSubmit}
@@ -1052,14 +964,6 @@ const New = () => {
                                 {order.quantity?.toLocaleString()}
                               </span>
                             </span>
-                            {order.price > 0 && (
-                              <span className="text-xs text-gray-500">
-                                Narx:{" "}
-                                <span className="text-gray-700 font-medium">
-                                  {order.price?.toLocaleString()}
-                                </span>
-                              </span>
-                            )}
                             {order.seasonYear && (
                               <span className="text-xs text-gray-500">
                                 Mavsum:{" "}

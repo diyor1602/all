@@ -265,7 +265,7 @@ const New = () => {
             {
               _stockId: stockItem.id,
               rollNumber: String(stockItem.rollNumber),
-              length: stockItem.length != null ? String(stockItem.length) : "",
+              length: "",
             },
           ],
         };
@@ -704,32 +704,39 @@ const New = () => {
                     <div className="space-y-1">
                       <p className="text-xs text-gray-400">Mavjud rulonlar</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {stockBalances[item.itemId].map((s) => {
-                          const isAdded = item.lots.some(
-                            (l) => l._stockId === s.id,
-                          );
-                          return (
-                            <button
-                              key={s.id}
-                              disabled={isAdded}
-                              onClick={() => addLotFromStock(item.itemId, s)}
-                              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors ${
-                                isAdded
-                                  ? "bg-primary/10 border-primary/30 text-primary cursor-default"
-                                  : "bg-gray-50 border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
-                              }`}
-                            >
-                              <span className="font-medium">
-                                R{s.rollNumber}
-                              </span>
-                              {s.length != null && (
-                                <span className="text-gray-400">
-                                  · {s.length}m
+                        {stockBalances[item.itemId]
+                          .filter(
+                            (s) =>
+                              s.rollNumber &&
+                              (!warehouseId ||
+                                s.warehouse?.id === Number(warehouseId)),
+                          )
+                          .map((s) => {
+                            const isAdded = item.lots.some(
+                              (l) => l._stockId === s.id,
+                            );
+                            return (
+                              <button
+                                key={s.id}
+                                disabled={isAdded}
+                                onClick={() => addLotFromStock(item.itemId, s)}
+                                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors ${
+                                  isAdded
+                                    ? "bg-primary/10 border-primary/30 text-primary cursor-default"
+                                    : "bg-gray-50 border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
+                                }`}
+                              >
+                                <span className="font-medium">
+                                  R{s.rollNumber} / {s.warehouse?.name}
                                 </span>
-                              )}
-                            </button>
-                          );
-                        })}
+                                {s.length != null && (
+                                  <span className="text-gray-400">
+                                    · {s.length}m
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
                       </div>
                     </div>
                   )}
@@ -1052,14 +1059,6 @@ const New = () => {
                                 {order.quantity?.toLocaleString()}
                               </span>
                             </span>
-                            {order.price > 0 && (
-                              <span className="text-xs text-gray-500">
-                                Narx:{" "}
-                                <span className="text-gray-700 font-medium">
-                                  {order.price?.toLocaleString()}
-                                </span>
-                              </span>
-                            )}
                             {order.seasonYear && (
                               <span className="text-xs text-gray-500">
                                 Mavsum:{" "}
