@@ -150,15 +150,27 @@ const New = () => {
 
   const handleSubmit = async () => {
     if (!deadline) {
-      toast({ title: "Xatolik", description: "Muddatni kiriting", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Muddatni kiriting",
+        variant: "destructive",
+      });
       return;
     }
     if (!deadlineTime) {
-      toast({ title: "Xatolik", description: "Vaqtni kiriting", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Vaqtni kiriting",
+        variant: "destructive",
+      });
       return;
     }
     if (!comment.trim()) {
-      toast({ title: "Xatolik", description: "Izoh kiriting", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Izoh kiriting",
+        variant: "destructive",
+      });
       return;
     }
     if (items.length === 0) {
@@ -183,7 +195,9 @@ const New = () => {
     setSubmitting(true);
     try {
       await api.post("/warehouseManager/purchaseOrder", {
-        deadline: deadline ? `${deadline}${deadlineTime ? `T${deadlineTime}` : ""}` : null,
+        deadline: deadline
+          ? `${deadline}${deadlineTime ? `T${deadlineTime}` : ""}`
+          : null,
         comments: comment || null,
         items: items.map((i) => ({
           itemId: i.itemId,
@@ -222,16 +236,21 @@ const New = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Muddat <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium text-gray-700">
+              Muddat <span className="text-red-500">*</span>
+            </label>
             <Input
               type="date"
+              min={new Date().toISOString().split("T")[0]}
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
               className="bg-white"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Vaqt <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium text-gray-700">
+              Vaqt <span className="text-red-500">*</span>
+            </label>
             <Input
               type="time"
               value={deadlineTime}
@@ -242,7 +261,9 @@ const New = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Izoh <span className="text-red-500">*</span></label>
+          <label className="text-sm font-medium text-gray-700">
+            Izoh <span className="text-red-500">*</span>
+          </label>
           <Textarea
             placeholder="Ta'minotchiga izoh..."
             value={comment}
@@ -290,152 +311,154 @@ const New = () => {
                 (s) => s.rollNumber,
               );
               return (
-              <div
-                key={item.itemId}
-                className="rounded-xl border border-gray-200 bg-white overflow-hidden"
-              >
-                {/* Item header */}
-                <div className="flex gap-3 p-3 bg-gray-50 border-b border-gray-100">
-                  <div className="text-xs text-gray-400 w-5 pt-0.5 flex-shrink-0 font-medium">
-                    {idx + 1}
+                <div
+                  key={item.itemId}
+                  className="rounded-xl border border-gray-200 bg-white overflow-hidden"
+                >
+                  {/* Item header */}
+                  <div className="flex gap-3 p-3 bg-gray-50 border-b border-gray-100">
+                    <div className="text-xs text-gray-400 w-5 pt-0.5 flex-shrink-0 font-medium">
+                      {idx + 1}
+                    </div>
+
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        onClick={() => {
+                          setPreviewImage(item.image);
+                          setImgDialogOpen(true);
+                        }}
+                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0 cursor-zoom-in"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <Package className="w-4 h-4 text-gray-400" />
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-gray-900 truncate">
+                        {item.name}
+                      </p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {item.code && <ItemBadge>{item.code}</ItemBadge>}
+                        {item.unitLabel && (
+                          <ItemBadge>{item.unitLabel}</ItemBadge>
+                        )}
+                        {item.color?.name && (
+                          <ItemBadge>
+                            {item.color.hex && (
+                              <span
+                                className="w-2 h-2 rounded-full inline-block flex-shrink-0"
+                                style={{
+                                  backgroundColor: `#${item.color.hex}`,
+                                }}
+                              />
+                            )}
+                            {item.color.name}
+                          </ItemBadge>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => removeItem(item.itemId)}
+                      className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 self-start"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
 
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      onClick={() => {
-                        setPreviewImage(item.image);
-                        setImgDialogOpen(true);
-                      }}
-                      className="w-10 h-10 rounded-lg object-cover flex-shrink-0 cursor-zoom-in"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <Package className="w-4 h-4 text-gray-400" />
+                  {/* Stock balance */}
+                  {(stockRegular.length > 0 || stockRolls.length > 0) && (
+                    <div className="px-4 py-2.5 border-b border-gray-100 bg-blue-50/40 space-y-2">
+                      <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+                        Ombordagi qoldiq
+                      </p>
+
+                      {stockRegular.length > 0 && (
+                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                          {stockRegular.map((s) => (
+                            <span key={s.id} className="text-xs text-gray-700">
+                              <span className="font-medium text-gray-500">
+                                {s.warehouse?.name}:
+                              </span>{" "}
+                              <span className="font-semibold text-gray-800">
+                                {s.quantity || s.length} {item.unitLabel}
+                              </span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {stockRolls.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-xs text-gray-400">Rulonlar:</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {stockRolls.map((s) => (
+                              <div
+                                key={s.id}
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border font-medium bg-white border-gray-200 text-gray-700"
+                              >
+                                <span>R{s.rollNumber}</span>
+                                <span className="text-gray-400">·</span>
+                                <span>
+                                  {s.length} {item.unitLabel}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-gray-900 truncate">
-                      {item.name}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {item.code && <ItemBadge>{item.code}</ItemBadge>}
-                      {item.unitLabel && (
-                        <ItemBadge>{item.unitLabel}</ItemBadge>
-                      )}
-                      {item.color?.name && (
-                        <ItemBadge>
-                          {item.color.hex && (
-                            <span
-                              className="w-2 h-2 rounded-full inline-block flex-shrink-0"
-                              style={{ backgroundColor: `#${item.color.hex}` }}
-                            />
-                          )}
-                          {item.color.name}
-                        </ItemBadge>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => removeItem(item.itemId)}
-                    className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 self-start"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Stock balance */}
-                {(stockRegular.length > 0 || stockRolls.length > 0) && (
-                  <div className="px-4 py-2.5 border-b border-gray-100 bg-blue-50/40 space-y-2">
-                    <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
-                      Ombordagi qoldiq
-                    </p>
-
-                    {stockRegular.length > 0 && (
-                      <div className="flex flex-wrap gap-x-4 gap-y-1">
-                        {stockRegular.map((s) => (
-                          <span key={s.id} className="text-xs text-gray-700">
-                            <span className="font-medium text-gray-500">
-                              {s.warehouse?.name}:
-                            </span>{" "}
-                            <span className="font-semibold text-gray-800">
-                              {s.quantity || s.length} {item.unitLabel}
-                            </span>
+                  {/* Inputs */}
+                  <div className="px-4 py-3 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                          Miqdor
+                        </span>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          value={item.requestedQuantity}
+                          onChange={(e) =>
+                            updateItem(
+                              item.itemId,
+                              "requestedQuantity",
+                              e.target.value,
+                            )
+                          }
+                          className="w-28 h-8 text-sm bg-white"
+                        />
+                        {item.unitLabel && (
+                          <span className="text-sm text-gray-500">
+                            {item.unitLabel}
                           </span>
-                        ))}
+                        )}
                       </div>
-                    )}
+                    </div>
 
-                    {stockRolls.length > 0 && (
-                      <div className="space-y-1">
-                        <p className="text-xs text-gray-400">Rulonlar:</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {stockRolls.map((s) => (
-                            <div
-                              key={s.id}
-                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border font-medium bg-white border-gray-200 text-gray-700"
-                            >
-                              <span>R{s.rollNumber}</span>
-                              <span className="text-gray-400">·</span>
-                              <span>
-                                {s.length} {item.unitLabel}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Inputs */}
-                <div className="px-4 py-3 space-y-3">
-                  <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500 whitespace-nowrap">
-                        Miqdor
+                        Izoh
                       </span>
                       <Input
-                        type="number"
-                        min={0}
-                        placeholder="0"
-                        value={item.requestedQuantity}
+                        type="text"
+                        placeholder="—"
+                        value={item.comment}
                         onChange={(e) =>
-                          updateItem(
-                            item.itemId,
-                            "requestedQuantity",
-                            e.target.value,
-                          )
+                          updateItem(item.itemId, "comment", e.target.value)
                         }
-                        className="w-28 h-8 text-sm bg-white"
+                        className="flex-1 h-8 text-sm bg-white"
                       />
-                      {item.unitLabel && (
-                        <span className="text-sm text-gray-500">
-                          {item.unitLabel}
-                        </span>
-                      )}
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 whitespace-nowrap">
-                      Izoh
-                    </span>
-                    <Input
-                      type="text"
-                      placeholder="—"
-                      value={item.comment}
-                      onChange={(e) =>
-                        updateItem(item.itemId, "comment", e.target.value)
-                      }
-                      className="flex-1 h-8 text-sm bg-white"
-                    />
-                  </div>
                 </div>
-              </div>
               );
             })}
           </div>
