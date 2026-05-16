@@ -127,7 +127,6 @@ const IncomePage = () => {
       const response = await api.get("/warehouseManager/warehouse");
       setWarehouses(response.data);
     } catch (error) {
-      console.error("Failed to fetch warehouses:", error);
       toast({
         variant: "destructive",
         title: "Xatolik!",
@@ -141,7 +140,6 @@ const IncomePage = () => {
       const response = await api.get("/warehouseManager/source");
       setSources(response.data);
     } catch (error) {
-      console.error("Failed to fetch sources:", error);
       toast({
         variant: "destructive",
         title: "Xatolik!",
