@@ -1,11 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Box, ChartPie, Palette, Star, Truck } from "lucide-react";
+import { Box, ChartPie, Palette, Truck } from "lucide-react";
 import Item from "./Items/Item";
 import Balance from "./Balance/Balance";
-import Orders from "./Orders/Orders";
-import OrderView from "./Orders/OrderView";
 import Colors from "./Additional/Colors";
 import Supplier from "./Supplier/Supplier";
 import CreateOrder from "./Supplier/Order/CreateOrder";
@@ -16,8 +14,6 @@ const Settings = () => {
       <Route path="*" element={<SettingsPage />} />
       <Route path="items/*" element={<Item />} />
       <Route path="balance/*" element={<Balance />} />
-      <Route path="orders/" element={<Orders />} />
-      <Route path="orders/:id" element={<OrderView />} />
       <Route path="colors/" element={<Colors />} />
       <Route path="supplier/" element={<Supplier />} />
       <Route path="supplier/create-order/" element={<CreateOrder />} />
@@ -38,12 +34,6 @@ const SettingsPage = () => {
       icon: Box,
       link: "/warehouseManager/settings/items",
       color: "bg-blue-500",
-    },
-    {
-      name: "Buyurtmalar",
-      icon: Star,
-      link: "/warehouseManager/settings/orders",
-      color: "bg-yellow-500",
     },
     {
       name: "Ranglar",
