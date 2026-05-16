@@ -1,34 +1,17 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/utils/api";
-import { Button } from "@/components/ui/button";
-import {
-  CirclePlus,
-  Search,
-  ChevronDown,
-  ChevronUp,
-  Package,
-  Download,
-  Loader2,
-} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -38,594 +21,726 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Badge } from "@/components/ui/badge";
-import { statuses } from "@/lib/status";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Plus,
+  Search,
+  Package,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Warehouse,
+  Tag,
+  CalendarDays,
+  User,
+  X,
+  Inbox,
+} from "lucide-react";
+import { statuses } from "@/lib/status";
+import formatNumber from "@/utils/formatNumber";
+
+// Constants
+const DEBOUNCE_DELAY = 400;
+const DEFAULT_PAGE_SIZE = 20;
 
 const OutcomePage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+
   const [outcomesData, setOutcomesData] = useState(null);
-  const [destinations, setDestinations] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
+  const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [downloadingIds, setDownloadingIds] = useState([]);
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [filters, setFilters] = useState({
+  const [expandedRows, setExpandedRows] = useState({});
+  const [imageDialog, setImageDialog] = useState({
+    open: false,
+    src: null,
+    name: null,
+  });
+
+  const FILTERS_KEY = "outcome_filters";
+  const defaultFilters = {
     search: "",
     warehouse_id: "",
-    destination_id: "",
+    source_id: "",
     start_date: "",
     end_date: "",
+  };
+  const [filters, setFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FILTERS_KEY);
+      return saved ? JSON.parse(saved) : defaultFilters;
+    } catch {
+      return defaultFilters;
+    }
   });
-  const [expandedRows, setExpandedRows] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const observer = useRef();
-  const lastOutcomeElementRef = useCallback(
-    (node) => {
-      if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setCurrentPage((prevPage) => prevPage + 1);
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [loading, hasMore],
-  );
 
-  const debouncedFetchOutcomes = useCallback(
-    (() => {
-      let timeout;
-      return (page = 1, filterParams = {}) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          fetchOutcomes(page, filterParams);
-        }, 500); // 500ms delay
-      };
-    })(),
-    [],
-  );
+  const saveFilters = (newFilters) => {
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(newFilters));
+    setFilters(newFilters);
+  };
 
-  const fetchOutcomes = async (page = 1, filterParams = {}) => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      params.append("page", page);
+  const debounceRef = React.useRef(null);
 
-      // Add filter params if they exist
-      if (filterParams.search) params.append("search", filterParams.search);
-      if (filterParams.warehouse_id)
-        params.append("warehouse_id", filterParams.warehouse_id);
-      if (filterParams.destination_id)
-        params.append("destination_id", filterParams.destination_id);
-      if (filterParams.start_date)
-        params.append("start_date", filterParams.start_date);
-      if (filterParams.end_date)
-        params.append("end_date", filterParams.end_date);
+  const fetchOutcomes = useCallback(
+    async (page = 1, filterParams = {}) => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        params.append("type", "outcome");
+        params.append("page", page);
+        if (filterParams.search) params.append("search", filterParams.search);
+        if (filterParams.warehouse_id)
+          params.append("warehouseId", filterParams.warehouse_id);
+        if (filterParams.source_id)
+          params.append("sourceId", filterParams.source_id);
+        if (filterParams.start_date)
+          params.append("startDate", filterParams.start_date);
+        if (filterParams.end_date)
+          params.append("endDate", filterParams.end_date);
 
-      const response = await api.get(
-        `/warehouseManager/outcome?${params.toString()}`,
-      );
-
-      if (page === 1) {
+        const response = await api.get(
+          `/warehouseManager/StockEntry?${params.toString()}`,
+        );
         setOutcomesData(response.data);
-      } else {
-        setOutcomesData((prevData) => ({
-          ...response.data,
-          data: [...prevData.data, ...response.data.data],
-        }));
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Chiqimlarni olishda xatolik yuz berdi!",
+        });
+      } finally {
+        setLoading(false);
       }
-
-      setHasMore(response.data.current_page < response.data.last_page);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Chiqimlar olishda xatolik yuz berdi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDestinations = async () => {
-    try {
-      const response = await api.get("/warehouseManager/destinations");
-      setDestinations(response.data);
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Ishlab chiqarish joylarini olishda xatolik",
-        variant: "destructive",
-      });
-    }
-  };
+    },
+    [toast],
+  );
 
   const fetchWarehouses = async () => {
     try {
-      const response = await api.get("/warehouseManager/warehouses");
+      const response = await api.get("/warehouseManager/warehouse");
       setWarehouses(response.data);
     } catch (error) {
+      console.error("Failed to fetch warehouses:", error);
       toast({
-        title: "Xatolik",
-        description: "Omborlar olishda xatolik",
         variant: "destructive",
+        title: "Xatolik!",
+        description: "Omborlarni yuklashda xatolik yuz berdi!",
       });
     }
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    fetchOutcomes(page, filters);
-  };
-
-  const handleFilterChange = (key, value) => {
-    // Convert 'all' value to empty string for API requests
-    const apiValue = value === "all" ? "" : value;
-    const newFilters = { ...filters, [key]: apiValue };
-    setFilters(newFilters);
-    setCurrentPage(1); // Reset to first page when filters change
-    debouncedFetchOutcomes(1, newFilters);
-  };
-
-  const handleSearchChange = (e) => {
-    const newValue = e.target.value;
-    setFilters({ ...filters, search: newValue });
-    setCurrentPage(1); // Reset to first page when search changes
-    debouncedFetchOutcomes(1, { ...filters, search: newValue });
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      search: "",
-      warehouse_id: "",
-      destination_id: "",
-      start_date: "",
-      end_date: "",
-    });
-    setCurrentPage(1); // Reset to first page when filters are reset
-    fetchOutcomes(1, {});
-  };
-
-  const toggleRowExpansion = (id) => {
-    setExpandedRows((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id],
-    }));
-  };
-
-  const openImageDialog = (e, item) => {
-    e.stopPropagation();
-    if (!item?.item?.image) return;
-    setSelectedImage({
-      src: item.item.image,
-      name: item.item.name,
-    });
-    setImageDialogOpen(true);
-  };
-
-  const handleDownload = async (id) => {
+  const fetchSources = async () => {
     try {
-      setDownloadingIds((prev) => [...prev, id]);
-
-      const response = await api.get(`/warehouseManager/stockEntry/${id}`, {
-        responseType: "blob",
-      });
-
-      const url = window.URL.createObjectURL(
-        new Blob([response.data], { type: "application/pdf" }),
-      );
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `chiqim_${id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Fayl yuklab olindi",
-      });
+      const response = await api.get("/warehouseManager/source");
+      setSources(response.data);
     } catch (error) {
+      console.error("Failed to fetch sources:", error);
       toast({
-        title: "Xatolik",
-        description: "Chiqimlar export qilishda xatolik",
         variant: "destructive",
+        title: "Xatolik!",
+        description: "Manbalarni yuklashda xatolik yuz berdi!",
       });
-    } finally {
-      setDownloadingIds((prev) => prev.filter((item) => item !== id));
     }
   };
 
   useEffect(() => {
-    if (currentPage > 1) {
-      fetchOutcomes(currentPage, filters);
-    }
-  }, [currentPage]);
-
-  useEffect(() => {
-    fetchOutcomes(1);
-    fetchDestinations();
+    fetchOutcomes(1, filters);
     fetchWarehouses();
-  }, []);
+    fetchSources();
 
-  const formatDate = (dateString) => {
+    return () => {
+      clearTimeout(debounceRef.current);
+    };
+  }, [filters]);
+
+  const debouncedFetch = useCallback(
+    (page, filterParams) => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(
+        () => fetchOutcomes(page, filterParams),
+        DEBOUNCE_DELAY,
+      );
+    },
+    [fetchOutcomes],
+  );
+
+  const handleFilterChange = useCallback(
+    (key, value) => {
+      const apiValue = value === "all" ? "" : value;
+      let newFilters = { ...filters, [key]: apiValue };
+
+      // Validate date range
+      if (
+        key === "start_date" &&
+        filters.end_date &&
+        apiValue > filters.end_date
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description:
+            "Boshlanish sanasi tugash sanasidan oldin bo'lishi kerak!",
+        });
+        return;
+      }
+
+      if (
+        key === "end_date" &&
+        filters.start_date &&
+        apiValue < filters.start_date
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description:
+            "Tugash sanasi boshlanish sanasidan keyin bo'lishi kerak!",
+        });
+        return;
+      }
+
+      saveFilters(newFilters);
+      debouncedFetch(1, newFilters);
+    },
+    [filters, saveFilters, debouncedFetch, toast],
+  );
+
+  const handleSearchChange = useCallback(
+    (e) => {
+      const newFilters = { ...filters, search: e.target.value };
+      saveFilters(newFilters);
+      debouncedFetch(1, newFilters);
+    },
+    [filters, saveFilters, debouncedFetch],
+  );
+
+  const resetFilters = useCallback(() => {
+    saveFilters(defaultFilters);
+    fetchOutcomes(1, defaultFilters);
+  }, [saveFilters, fetchOutcomes, defaultFilters]);
+
+  const handlePageChange = useCallback(
+    (page) => {
+      fetchOutcomes(page, filters);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [fetchOutcomes, filters],
+  );
+
+  const toggleRow = useCallback(
+    (id) => setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] })),
+    [],
+  );
+
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
     return new Intl.DateTimeFormat("ru-RU", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(date);
-  };
+      timeZone: "Asia/Tashkent",
+    }).format(new Date(dateString));
+  }, []);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Chiqimlar</h1>
-        <Button
-          variant="default"
-          onClick={() => navigate("/warehouseManager/outcome/new")}
-        >
-          <CirclePlus className="h-4 w-4 mr-2" /> Yangi chiqim qo'shish
-        </Button>
-      </div>
+  const activeFilterCount = Object.values(filters).filter(
+    (v) => v !== "",
+  ).length;
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Filtrlash</CardTitle>
-          <CardDescription>
-            Kerakli parametrlar bo'yicha qidiring
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-            <div className="space-y-2">
-              <label htmlFor="search" className="text-sm font-medium">
-                Qidirish
-              </label>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Qidirish..."
-                  className="pl-8"
-                  value={filters.search}
-                  onChange={handleSearchChange}
-                />
-              </div>
-            </div>
+  const renderPagination = () => {
+    if (!outcomesData || outcomesData.totalPages <= 1) return null;
+    const current_page = outcomesData.page;
+    const last_page = outcomesData.totalPages;
+    const pages = [];
 
-            <div className="space-y-2">
-              <label htmlFor="warehouse" className="text-sm font-medium">
-                Ombor
-              </label>
-              <Select
-                value={filters.warehouse_id || "all"}
-                onValueChange={(value) =>
-                  handleFilterChange("warehouse_id", value)
-                }
-              >
-                <SelectTrigger id="warehouse">
-                  <SelectValue placeholder="Barcha omborlar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Barcha omborlar</SelectItem>
-                  {warehouses.map((warehouse) => (
-                    <SelectItem
-                      key={warehouse.id}
-                      value={warehouse.id.toString()}
-                    >
-                      {warehouse.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    if (last_page <= 7) {
+      for (let i = 1; i <= last_page; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (current_page > 3) pages.push("...");
+      for (
+        let i = Math.max(2, current_page - 1);
+        i <= Math.min(last_page - 1, current_page + 1);
+        i++
+      )
+        pages.push(i);
+      if (current_page < last_page - 2) pages.push("...");
+      pages.push(last_page);
+    }
 
-            <div className="space-y-2">
-              <label htmlFor="destination" className="text-sm font-medium">
-                Chiqim turi
-              </label>
-              <Select
-                value={filters.destination_id || "all"}
-                onValueChange={(value) =>
-                  handleFilterChange("destination_id", value)
-                }
-              >
-                <SelectTrigger id="destination">
-                  <SelectValue placeholder="Barcha chiqim turi" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Barcha chiqim turi</SelectItem>
-                  {destinations.map((destination) => (
-                    <SelectItem
-                      key={destination.id}
-                      value={destination.id.toString()}
-                    >
-                      {destination.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    const from =
+      (current_page - 1) * (outcomesData.pageSize ?? DEFAULT_PAGE_SIZE) + 1;
+    const to = Math.min(
+      current_page * (outcomesData.pageSize ?? DEFAULT_PAGE_SIZE),
+      outcomesData.total ?? 0,
+    );
 
-            <div className="space-y-2">
-              <label htmlFor="start_date" className="text-sm font-medium">
-                Boshlanish sana
-              </label>
-              <Input
-                id="start_date"
-                type="date"
-                value={filters.start_date}
-                onChange={(e) =>
-                  handleFilterChange("start_date", e.target.value)
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="end_date" className="text-sm font-medium">
-                Tugash sana
-              </label>
-              <Input
-                id="end_date"
-                type="date"
-                value={filters.end_date}
-                onChange={(e) => handleFilterChange("end_date", e.target.value)}
-              />
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter>
+    return (
+      <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+        <span className="text-sm text-muted-foreground">
+          {from}–{to} / {outcomesData.total ?? 0} ta
+        </span>
+        <div className="flex items-center gap-1">
           <Button
             variant="outline"
             size="sm"
-            onClick={resetFilters}
-            className="ml-auto"
+            disabled={current_page === 1}
+            onClick={() => handlePageChange(current_page - 1)}
           >
-            Tozalash
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-        </CardFooter>
-      </Card>
+          {pages.map((p, i) =>
+            p === "..." ? (
+              <span
+                key={`e-${i}`}
+                className="px-1 text-muted-foreground text-sm"
+              >
+                …
+              </span>
+            ) : (
+              <Button
+                key={p}
+                variant={p === current_page ? "default" : "outline"}
+                size="sm"
+                className="min-w-[36px]"
+                onClick={() => p !== current_page && handlePageChange(p)}
+              >
+                {p}
+              </Button>
+            ),
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={current_page === last_page}
+            onClick={() => handlePageChange(current_page + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Chiqimlar ro'yxati</CardTitle>
-          <CardDescription>
-            {outcomesData && `Jami: ${outcomesData.total} ta chiqim`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading && currentPage === 1 ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="w-full h-16" />
+  return (
+    <div className="space-y-5">
+      {/* ── Page header ── */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Chiqimlar</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {outcomesData
+              ? `Jami ${outcomesData.total ?? 0} ta yozuv`
+              : "Yuklanmoqda…"}
+          </p>
+        </div>
+        <Button onClick={() => navigate("/warehouseManager/outcome/new")}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Yangi chiqim qilish
+        </Button>
+      </div>
+
+      {/* ── Filter toolbar ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="flex flex-wrap gap-3 p-4">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Qidirish…"
+              className="pl-8 h-9"
+              value={filters.search}
+              onChange={handleSearchChange}
+            />
+          </div>
+
+          {/* Source */}
+          <Select
+            value={filters.source_id || "all"}
+            onValueChange={(v) => handleFilterChange("source_id", v)}
+          >
+            <SelectTrigger className="h-9 w-[170px]">
+              <Tag className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Manba" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha manbalar</SelectItem>
+              {sources.map((s) => (
+                <SelectItem key={s.id} value={s.id.toString()}>
+                  {s.name}
+                </SelectItem>
               ))}
-            </div>
-          ) : outcomesData && outcomesData.data?.length > 0 ? (
+            </SelectContent>
+          </Select>
+
+          {/* Warehouse */}
+          <Select
+            value={filters.warehouse_id || "all"}
+            onValueChange={(v) => handleFilterChange("warehouse_id", v)}
+          >
+            <SelectTrigger className="h-9 w-[170px]">
+              <Warehouse className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Ombor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha omborlar</SelectItem>
+              {warehouses.map((w) => (
+                <SelectItem key={w.id} value={w.id.toString()}>
+                  {w.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Date range */}
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              className="h-9 w-[155px]"
+              value={filters.start_date}
+              onChange={(e) => handleFilterChange("start_date", e.target.value)}
+            />
+            <span className="text-muted-foreground text-sm">—</span>
+            <Input
+              type="date"
+              className="h-9 w-[145px]"
+              min={filters.start_date}
+              value={filters.end_date}
+              onChange={(e) => handleFilterChange("end_date", e.target.value)}
+            />
+          </div>
+
+          {/* Clear */}
+          {activeFilterCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 text-muted-foreground hover:text-foreground"
+              onClick={resetFilters}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Tozalash
+              <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
+                {activeFilterCount}
+              </Badge>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Data table ── */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-4 space-y-2">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : outcomesData?.data?.length > 0 ? (
+          <>
             <div className="overflow-x-auto">
               <Table className="text-sm whitespace-nowrap">
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">ID</TableHead>
-                    <TableHead>Ombor</TableHead>
-                    <TableHead>Chiqim turi</TableHead>
-                    <TableHead>Izoh</TableHead>
-                    <TableHead>Mahsulotlar</TableHead>
-                    <TableHead>Sana</TableHead>
-                    <TableHead>Buyurtma</TableHead>
-                    <TableHead>Mas'ul Xodim</TableHead>
-                    <TableHead className="text-right">Yuklab olish</TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="w-14 text-xs font-semibold text-muted-foreground">
+                      #
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Ombor
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Manba
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Izoh
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Mahsulotlar
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Buyurtma
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Mas'ul xodim
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">
+                      Sana
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {outcomesData.data.map((outcome, index) => (
-                    <React.Fragment key={index}>
+                  {outcomesData.data.map((item) => (
+                    <React.Fragment key={item.id}>
                       <TableRow
-                        ref={
-                          index === outcomesData.data.length - 1
-                            ? lastOutcomeElementRef
-                            : null
-                        }
-                        key={outcome.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => toggleRowExpansion(outcome.id)}
+                        className="cursor-pointer hover:bg-muted/30 transition-colors"
+                        onClick={() => toggleRow(item.id)}
                       >
-                        <TableCell className="font-medium">
-                          {outcome.id}
+                        {/* ID */}
+                        <TableCell className="text-xs text-muted-foreground font-mono">
+                          {item.id}
                         </TableCell>
+
+                        {/* Warehouse */}
                         <TableCell>
-                          <Badge variant="outline" className="font-normal">
-                            {outcome.warehouse?.name || "-"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {outcome.destination ? (
-                            <Badge variant="secondary" className="font-normal">
-                              {outcome.destination.name}
-                            </Badge>
-                          ) : (
-                            "-"
-                          )}
-                        </TableCell>
-                        <TableCell>{outcome.comment || "-"}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Badge>{outcome.items?.length || 0} ta</Badge>
-                            {expandedRows[outcome.id] ? (
-                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            )}
+                          <div className="flex items-center gap-1.5">
+                            <Warehouse className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                            <span className="font-medium">
+                              {item.warehouse?.name || "—"}
+                            </span>
                           </div>
                         </TableCell>
-                        <TableCell>{formatDate(outcome.created_at)}</TableCell>
+
+                        {/* Source */}
                         <TableCell>
-                          {outcome.order ? (
-                            <span className="text-xs">
-                              {outcome.order?.id} {outcome.order?.name}{" "}
-                              {outcome.order?.quantity} (
-                              {statuses[outcome.order?.status]?.text})
+                          {item.source ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 text-xs font-medium">
+                              <Tag className="h-3 w-3" />
+                              {item.source.name}
                             </span>
                           ) : (
-                            "-"
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
+
+                        {/* Comment */}
+                        <TableCell className="max-w-[160px]">
+                          <span className="block truncate text-muted-foreground">
+                            {item.comment || "—"}
+                          </span>
+                        </TableCell>
+
+                        {/* Items count */}
                         <TableCell>
-                          {outcome?.responsible_user?.employee ? (
-                            <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold hover:bg-primary/20 transition-colors"
+                          >
+                            <Package className="h-3 w-3" />
+                            {item.items?.length ?? 0} ta
+                            {expandedRows[item.id] ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            )}
+                          </button>
+                        </TableCell>
+
+                        {/* Order */}
+                        <TableCell>
+                          {item.order ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs text-muted-foreground font-mono">
+                                #{item.order.id}
+                              </span>
+                              <span className="text-xs font-medium">
+                                {item.order.name}
+                              </span>
+                              {item.order.quantity && (
+                                <span className="text-xs text-muted-foreground">
+                                  ({item.order.quantity})
+                                </span>
+                              )}
+                              {item.order.status &&
+                                statuses[item.order.status] &&
+                                (() => {
+                                  const s = statuses[item.order.status];
+                                  return (
+                                    <span
+                                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${s.secondaryBg} ${s.textColor} ${s.border}`}
+                                    >
+                                      {s.text}
+                                    </span>
+                                  );
+                                })()}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+
+                        {/* Employee */}
+                        <TableCell>
+                          {item.user?.employee?.name ||
+                          item.responsibleUser?.employee?.name ? (
+                            <div className="flex items-center gap-1.5">
+                              <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                              </div>
                               <span className="text-sm">
-                                {outcome?.responsible_user?.employee?.name}
+                                {item.user?.employee?.name ||
+                                  item.responsibleUser?.employee?.name}
                               </span>
                             </div>
                           ) : (
-                            outcome?.employee?.id || "-"
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownload(outcome.id);
-                            }}
-                            disabled={downloadingIds.includes(outcome.id)}
-                          >
-                            {downloadingIds.includes(outcome.id) ? (
-                              <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
-                            ) : (
-                              <Download className="h-4 w-4 text-blue-500" />
-                            )}
-                          </Button>
+
+                        {/* Date */}
+                        <TableCell>
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <CalendarDays className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span>{formatDate(item.createdAt)}</span>
+                          </div>
                         </TableCell>
                       </TableRow>
 
-                      {/* Expanded row to show items */}
-                      {expandedRows[outcome.id] &&
-                        outcome.items &&
-                        outcome.items.length > 0 && (
-                          <TableRow className="bg-muted/30">
-                            <TableCell colSpan={10} className="py-2 px-4">
-                              <div className="rounded-md border border-border">
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Mahsulot</TableHead>
-                                      <TableHead>Kod</TableHead>
-                                      <TableHead>Miqdor</TableHead>
-                                      <TableHead>Narx</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {outcome.items.map((item) => (
-                                      <TableRow key={item.id}>
-                                        <TableCell className="flex items-center gap-2">
-                                          {item.item.image ? (
-                                            <button
-                                              type="button"
-                                              className="w-8 h-8 rounded overflow-hidden cursor-pointer"
-                                              onClick={(e) =>
-                                                openImageDialog(e, item)
-                                              }
-                                            >
-                                              <img
-                                                src={item.item.image}
-                                                alt={item.item.name}
-                                                className="w-full h-full object-cover"
-                                              />
-                                            </button>
-                                          ) : (
-                                            <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
-                                              <Package className="w-4 h-4" />
-                                            </div>
-                                          )}
-                                          <span>{item.item.name}</span>
-                                          {item?.roll_number && (
-                                            <span className="text-xs">
-                                              Roll: {item.roll_number}
-                                            </span>
-                                          )}
-                                          {item?.length && (
-                                            <span className="text-xs">
-                                              Lot: {item.length}
-                                            </span>
-                                          )}
-                                        </TableCell>
-                                        <TableCell>
-                                          {item.item.code || "-"}
-                                        </TableCell>
-                                        <TableCell>
-                                          {item.quantity}{" "}
-                                          {item.item?.unit?.name}
-                                        </TableCell>
-                                        <TableCell>
-                                          {item.price}{" "}
-                                          {item.currency?.name || ""}
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
+                      {/* ── Expanded items ── */}
+                      {expandedRows[item.id] && item.items?.length > 0 && (
+                        <TableRow className="hover:bg-transparent">
+                          <TableCell
+                            colSpan={8}
+                            className="p-0 border-b border-border"
+                          >
+                            <div className="bg-muted/20 px-6 py-3 border-t border-dashed border-border">
+                              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                Mahsulotlar ro'yxati
+                              </p>
+                              <div className="grid grid-cols-1 gap-2">
+                                {item.items.map((entry) => (
+                                  <div
+                                    key={entry.id}
+                                    className="flex items-center gap-3 rounded-lg bg-background border border-border px-3 py-2.5"
+                                  >
+                                    {/* Image */}
+                                    {entry.item?.image ? (
+                                      <button
+                                        type="button"
+                                        className="w-10 h-10 rounded-md overflow-hidden cursor-zoom-in flex-shrink-0 ring-1 ring-border"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setImageDialog({
+                                            open: true,
+                                            src: entry.item.image,
+                                            name: entry.item.name,
+                                          });
+                                        }}
+                                      >
+                                        <img
+                                          src={entry.item.image}
+                                          alt={entry.item.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </button>
+                                    ) : (
+                                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                                        <Package className="w-4 h-4 text-muted-foreground" />
+                                      </div>
+                                    )}
+
+                                    {/* Name + meta */}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm truncate">
+                                        {entry.item?.name}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        {entry.item?.code && (
+                                          <span className="text-xs text-muted-foreground font-mono">
+                                            {entry.item.code}
+                                          </span>
+                                        )}
+                                        {entry.roll_number && (
+                                          <span className="text-xs text-muted-foreground">
+                                            Roll: {entry.roll_number}
+                                          </span>
+                                        )}
+                                        {entry.length && (
+                                          <span className="text-xs text-muted-foreground">
+                                            Lot: {entry.length}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Quantity */}
+                                    <div className="text-right flex-shrink-0">
+                                      <p className="text-sm font-semibold">
+                                        {entry?.quantity
+                                          ? formatNumber(entry.quantity)
+                                          : formatNumber(entry.length)}{" "}
+                                        <span className="font-normal text-muted-foreground">
+                                          {entry.item?.unit?.name}
+                                        </span>
+                                      </p>
+                                      {entry.price && (
+                                        <p className="text-xs text-muted-foreground">
+                                          {formatNumber(entry.price)}{" "}
+                                          {entry.currency?.name}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
-              {loading && currentPage > 1 && (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              )}
             </div>
-          ) : (
-            <div className="py-12 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <Search className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium">Chiqimlar topilmadi</h3>
-              <p className="text-muted-foreground mt-2">
-                Yangi chiqim qo'shish uchun yuqoridagi "Yangi" tugmasini bosing
-              </p>
+            {renderPagination()}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <Inbox className="h-8 w-8 text-muted-foreground" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <h3 className="text-base font-semibold">Chiqimlar topilmadi</h3>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+              {activeFilterCount > 0
+                ? "Filtrlarni tozalab qayta urinib ko'ring"
+                : "Hali hech qanday chiqim qo'shilmagan"}
+            </p>
+            {activeFilterCount > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={resetFilters}
+              >
+                Filtrlarni tozalash
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="mt-4"
+                onClick={() => navigate("/warehouseManager/outcome/new")}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Yangi chiqim qilish
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+      {/* ── Image dialog ── */}
+      <Dialog
+        open={imageDialog.open}
+        onOpenChange={(open) => setImageDialog((prev) => ({ ...prev, open }))}
+      >
         <DialogContent className="max-w-3xl w-full p-0 overflow-hidden">
           <DialogHeader className="p-4 border-b border-border">
             <DialogTitle className="text-base font-semibold">
-              {selectedImage?.name || "Rasm"}
+              {imageDialog.name || "Rasm"}
             </DialogTitle>
           </DialogHeader>
           <div className="flex items-center justify-center bg-muted/30 w-full h-[70vh] p-4">
-            {selectedImage?.src && (
+            {imageDialog.src && (
               <img
-                src={selectedImage.src}
-                alt={selectedImage?.name || "item-image"}
-                className="max-h-full max-w-full object-contain rounded-md"
+                src={imageDialog.src}
+                alt={imageDialog.name || "item-image"}
+                className="max-h-full max-w-full object-contain rounded-lg"
                 loading="lazy"
               />
             )}
