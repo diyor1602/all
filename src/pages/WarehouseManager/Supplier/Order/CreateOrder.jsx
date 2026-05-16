@@ -149,6 +149,18 @@ const New = () => {
     );
 
   const handleSubmit = async () => {
+    if (!deadline) {
+      toast({ title: "Xatolik", description: "Muddatni kiriting", variant: "destructive" });
+      return;
+    }
+    if (!deadlineTime) {
+      toast({ title: "Xatolik", description: "Vaqtni kiriting", variant: "destructive" });
+      return;
+    }
+    if (!comment.trim()) {
+      toast({ title: "Xatolik", description: "Izoh kiriting", variant: "destructive" });
+      return;
+    }
     if (items.length === 0) {
       toast({
         title: "Xatolik",
@@ -210,7 +222,7 @@ const New = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Muddat</label>
+            <label className="text-sm font-medium text-gray-700">Muddat <span className="text-red-500">*</span></label>
             <Input
               type="date"
               value={deadline}
@@ -219,7 +231,7 @@ const New = () => {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Vaqt</label>
+            <label className="text-sm font-medium text-gray-700">Vaqt <span className="text-red-500">*</span></label>
             <Input
               type="time"
               value={deadlineTime}
@@ -230,7 +242,7 @@ const New = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Izoh</label>
+          <label className="text-sm font-medium text-gray-700">Izoh <span className="text-red-500">*</span></label>
           <Textarea
             placeholder="Ta'minotchiga izoh..."
             value={comment}
