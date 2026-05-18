@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import ExcelJS from "exceljs";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -148,6 +149,134 @@ const Coefficient = () => {
     return total / filteredData.length;
   }, [filteredData]);
 
+  const downloadEmployeeExcel = async (employee) => {
+    const empAvg =
+      employee.days.reduce((s, d) => s + d.efficiency_percent, 0) /
+      employee.attended_days;
+
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet("Umumiy");
+
+    const titleRow = ws.addRow([employee.employee_name]);
+    titleRow.font = { bold: true, size: 14 };
+    ws.addRow([]);
+
+    const summaryHeaders = ws.addRow(["Ko'rsatkich", "Qiymat"]);
+    summaryHeaders.font = { bold: true };
+    summaryHeaders.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2E8F0" } };
+
+    ws.addRow(["Keldi (kun)", employee.attended_days]);
+    ws.addRow(["F.I.K %", parseFloat(empAvg.toFixed(2))]);
+    ws.addRow([
+      "Kuniga o'rtacha (tarifikatsiya)",
+      parseFloat((employee.tarification_earned / employee.attended_days).toFixed(0)),
+    ]);
+    ws.addRow(["Tarifikatsiyadan topdi", parseFloat(employee.tarification_earned.toFixed(0))]);
+    ws.addRow([
+      "Jami topdi",
+      parseFloat(
+        (employee.salary_visible ? employee.total_earned : employee.tarification_earned).toFixed(0),
+      ),
+    ]);
+    if (employee.salary_visible) {
+      ws.addRow(["Kuniga o'rtacha (jami)", parseFloat(employee.avg_per_day.toFixed(0))]);
+    }
+
+    ws.addRow([]);
+    const dayHeader = ws.addRow(["Sana", "Koeffitsiyent %"]);
+    dayHeader.font = { bold: true };
+    dayHeader.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2E8F0" } };
+
+    employee.days
+      .slice()
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .forEach((d) => {
+        ws.addRow([d.date.split("-").reverse().join("."), parseFloat(d.efficiency_percent.toFixed(2))]);
+      });
+
+    ws.getColumn(1).width = 35;
+    ws.getColumn(2).width = 20;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${employee.employee_name}_${filters.start_date}_${filters.end_date}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Koeffitsiyentlar");
+
+    const sortedData = [...filteredData].sort((a, b) => {
+      const aAvg = a.days.reduce((s, d) => s + d.efficiency_percent, 0) / a.attended_days;
+      const bAvg = b.days.reduce((s, d) => s + d.efficiency_percent, 0) / b.attended_days;
+      if (sortBy === "coefficient") return bAvg - aAvg;
+      if (sortBy === "attendance") return b.attended_days - a.attended_days;
+      if (sortBy === "both") {
+        const aValid = aAvg >= 100, bValid = bAvg >= 100;
+        if (aValid && !bValid) return -1;
+        if (!aValid && bValid) return 1;
+        if (aValid && bValid) return b.attended_days - a.attended_days;
+        return bAvg - aAvg;
+      }
+      return 0;
+    });
+
+    const headers = ["№", "Xodim", "Kelgan kunlari", "F.I.K %", ...days.map((d) => d.split("-").reverse().join("."))];
+    const headerRow = worksheet.addRow(headers);
+    headerRow.font = { bold: true };
+    headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2E8F0" } };
+    headerRow.alignment = { horizontal: "center", vertical: "middle" };
+
+    sortedData.forEach((item, index) => {
+      const empAvg = item.days.reduce((s, d) => s + d.efficiency_percent, 0) / item.attended_days;
+      worksheet.addRow([
+        index + 1,
+        item.employee_name,
+        item.attended_days,
+        parseFloat(empAvg.toFixed(2)),
+        ...days.map((day) => {
+          const found = item.days.find((d) => d.date === day);
+          return found != null ? parseFloat(found.efficiency_percent.toFixed(2)) : "";
+        }),
+      ]);
+    });
+
+    const footerRow = worksheet.addRow([
+      filteredData.length,
+      "O'rtacha %",
+      filteredData.reduce((s, d) => s + d.attended_days, 0),
+      parseFloat(overallAverage.toFixed(2)),
+      ...days.map((day) => {
+        const values = filteredData
+          .map((item) => item.days.find((d) => d.date === day)?.efficiency_percent)
+          .filter((v) => v != null);
+        return values.length > 0 ? parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)) : "";
+      }),
+    ]);
+    footerRow.font = { bold: true };
+    footerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } };
+
+    worksheet.getColumn(1).width = 5;
+    worksheet.getColumn(2).width = 30;
+    worksheet.getColumn(3).width = 15;
+    worksheet.getColumn(4).width = 12;
+    days.forEach((_, i) => { worksheet.getColumn(i + 5).width = 12; });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `koeffitsiyentlar_${filters.start_date}_${filters.end_date}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex flex-col gap-2">
       {/* Date filters + Search */}
@@ -178,6 +307,9 @@ const Coefficient = () => {
 
       {/* Department Filter */}
       <div className="flex gap-2 items-center flex-wrap md:flex-nowrap">
+        <Button variant="outline" className="bg-white" onClick={downloadExcel}>
+          Excel yuklash
+        </Button>
         <Select
           value={selectedGroup}
           onValueChange={(value) => setSelectedGroup(value)}
@@ -467,7 +599,28 @@ const Coefficient = () => {
           )}
 
           {dialogActiveTab === "total" && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
+            <div className="flex flex-col gap-4 mt-4">
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => downloadEmployeeExcel(selectedEmployee)}>
+                Excel yuklash
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="p-4 rounded-2xl border shadow-sm bg-white">
+                <div className="text-sm text-gray-500">F.I.K %</div>
+                <div
+                  className={`text-lg font-bold ${getPercentageColor(
+                    selectedEmployee?.days?.reduce((s, d) => s + d.efficiency_percent, 0) /
+                      selectedEmployee?.attended_days,
+                  )}`}
+                >
+                  {formatPercent(
+                    selectedEmployee?.days?.reduce((s, d) => s + d.efficiency_percent, 0) /
+                      selectedEmployee?.attended_days,
+                  )}%
+                </div>
+              </div>
+
               <div className="p-4 rounded-2xl border shadow-sm bg-white">
                 <div className="text-sm text-gray-500">Keldi</div>
                 <div className="text-lg font-semibold text-gray-900">
@@ -538,6 +691,7 @@ const Coefficient = () => {
                   </div>
                 </div>
               ) : null}
+            </div>
             </div>
           )}
         </DialogContent>
