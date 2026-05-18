@@ -10,7 +10,7 @@ import {
   Loader2,
   Eye,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -53,7 +53,6 @@ const statuses = {
 
 const Orders = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [incomesData, setIncomesData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
