@@ -116,7 +116,7 @@ const Supplier = () => {
         params.append("deadline", filterParams.deadline);
 
       const response = await api.get(
-        `/warehouseManager/supplierOrders?${params.toString()}`,
+        `/warehouseManager/purchaseOrder?${params.toString()}`,
       );
 
       if (page === 1) {
@@ -203,7 +203,7 @@ const Supplier = () => {
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      await api.delete(`/warehouseManager/supplierOrders/${deleteId}`);
+      await api.delete(`/warehouseManager/purchaseOrder/${deleteId}`);
       toast({
         title: "Muvaffaqiyatli",
         description: "Buyurtma o'chirildi",
