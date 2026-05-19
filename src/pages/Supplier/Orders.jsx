@@ -112,6 +112,7 @@ const Orders = () => {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectId, setRejectId] = useState(null);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectComment, setRejectComment] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const [imageDialog, setImageDialog] = useState({
     open: false,
@@ -215,14 +216,22 @@ const Orders = () => {
   };
 
   const handleReject = async () => {
+    if (!rejectComment.trim()) {
+      toast({
+        title: "Xatolik",
+        description: "Izoh kiritish shart",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsRejecting(true);
     try {
-      await api.patch(`/supplier/purchaseOrder/${rejectId}/status`, {
-        status: "closed",
-        comment: null,
+      await api.patch(`/supplier/purchaseOrder/${rejectId}/close`, {
+        comment: rejectComment,
       });
       toast({ title: "Muvaffaqiyatli", description: "Buyurtma rad etildi" });
       setRejectDialogOpen(false);
+      setRejectComment("");
       fetchOrders(1, filters);
     } catch {
       toast({
@@ -737,10 +746,21 @@ const Orders = () => {
               Buyurtmani rad etmoqchimisiz? Status "Yopildi"ga o'zgaradi.
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Izoh *</label>
+            <Input
+              placeholder="Rad etish sababini yozing..."
+              value={rejectComment}
+              onChange={(e) => setRejectComment(e.target.value)}
+            />
+          </div>
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
-              onClick={() => setRejectDialogOpen(false)}
+              onClick={() => {
+                setRejectDialogOpen(false);
+                setRejectComment("");
+              }}
             >
               Bekor qilish
             </Button>
