@@ -22,7 +22,6 @@ import {
   ArrowLeft,
   Clock,
   Package,
-  MapPin,
   ChevronDown,
   ChevronUp,
   Loader2,
@@ -133,10 +132,9 @@ const OrderView = () => {
       const initial = {};
       res.data.items.forEach((item) => {
         initial[item.id] = {
-          confirmedQuantity:
-            item.confirmedQuantity ?? item.requestedQuantity ?? "",
-          unitPrice: item.unitPrice ?? "",
-          currencyId: item.currency?.id ?? "",
+          confirmedQuantity: "",
+          unitPrice: "",
+          currencyId: "",
         };
       });
       setItemForms(initial);
@@ -269,9 +267,6 @@ const OrderView = () => {
             <p className="font-mono font-bold text-base leading-none">
               {data.orderNumber}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {data.branch?.name}
-            </p>
           </div>
           <StatusBadge status={data.status} />
         </div>
@@ -280,17 +275,6 @@ const OrderView = () => {
       <div className="px-4 py-4 space-y-4">
         {/* Order meta */}
         <div className="rounded-2xl border bg-card p-4 space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="text-muted-foreground">Filial:</span>
-            <span className="font-medium">{data.branch?.name}</span>
-            {data.branch?.address && (
-              <span className="text-muted-foreground text-xs truncate">
-                · {data.branch.address}
-              </span>
-            )}
-          </div>
-
           <div className="flex items-center gap-2 text-sm">
             <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="text-muted-foreground">Muddat:</span>
@@ -382,34 +366,16 @@ const OrderView = () => {
                 </div>
 
                 {/* Quantity info */}
-                <div className="border-t px-3 py-2 grid grid-cols-2 gap-2 bg-muted/10">
-                  <div className="text-center rounded-lg bg-background border px-2 py-1.5">
-                    <p className="text-[10px] text-muted-foreground leading-none mb-1">
-                      So'ralgan
-                    </p>
-                    <p className="text-xs font-semibold">
-                      {formatNumber(item.requestedQuantity)}
-                      <span className="font-normal text-muted-foreground ml-0.5 text-[10px]">
-                        {item.item?.unit?.name}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="text-center rounded-lg bg-background border px-2 py-1.5">
-                    <p className="text-[10px] text-muted-foreground leading-none mb-1">
-                      Qabul qilingan
-                    </p>
-                    <p
-                      className={`text-xs font-semibold ${item.receivedQuantity != null ? "text-green-700" : ""}`}
-                    >
-                      {item.receivedQuantity != null ? (
-                        formatNumber(item.receivedQuantity)
-                      ) : (
-                        <span className="text-muted-foreground font-normal">
-                          —
-                        </span>
-                      )}
-                    </p>
-                  </div>
+                <div className="text-center rounded-xl bg-blue-100 border border-blue-100 border-t px-3 py-2.5 gap-2 mb-2">
+                  <p className="text-[10px] text-blue-500 font-medium leading-none mb-1.5">
+                    So'ralgan
+                  </p>
+                  <p className="text-xs font-bold text-blue-700">
+                    {formatNumber(item.requestedQuantity)}
+                    <span className="font-normal text-blue-400 ml-0.5 text-[10px]">
+                      {item.item?.unit?.name}
+                    </span>
+                  </p>
                 </div>
 
                 {/* Editable fields */}
@@ -583,7 +549,7 @@ const OrderView = () => {
             ) : (
               <>
                 <Truck className="h-4 w-4" />
-                Yetkazishni boshlash
+                Yetkazishni tasdiqlash
               </>
             )}
           </Button>
