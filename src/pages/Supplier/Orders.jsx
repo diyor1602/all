@@ -3,19 +3,19 @@ import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
 import {
-  CirclePlus,
   Search,
   ChevronDown,
   ChevronUp,
   Package,
   Loader2,
-  Trash2,
   MapPin,
   Clock,
   X,
   Send,
+  SlidersHorizontal,
+  CalendarDays,
+  CheckCircle2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -25,16 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -83,10 +73,10 @@ const StatusBadge = ({ status }) => {
   };
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${cfg.className}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${cfg.className}`}
     >
       <span
-        className={`w-1.5 h-1.5 rounded-full ${DOT_COLORS[status] || "bg-gray-400"}`}
+        className={`w-1.5 h-1.5 rounded-full shrink-0 ${DOT_COLORS[status] || "bg-gray-400"}`}
       />
       {cfg.text}
     </span>
@@ -111,11 +101,12 @@ const Orders = () => {
   const [ordersData, setOrdersData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [sendDialogOpen, setSendDialogOpen] = useState(false);
-  const [sendId, setSendId] = useState(null);
-  const [isSending, setIsSending] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmId, setConfirmId] = useState(null);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [imageDialog, setImageDialog] = useState({
     open: false,
@@ -130,9 +121,7 @@ const Orders = () => {
       if (loading) return;
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setCurrentPage((p) => p + 1);
-        }
+        if (entries[0].isIntersecting && hasMore) setCurrentPage((p) => p + 1);
       });
       if (node) observer.current.observe(node);
     },
@@ -148,9 +137,7 @@ const Orders = () => {
       if (filterParams.startDate) params.StartDate = filterParams.startDate;
       if (filterParams.endDate) params.EndDate = filterParams.endDate;
 
-      const response = await api.get("/supplier/purchaseOrder", {
-        params,
-      });
+      const response = await api.get("/supplier/purchaseOrder", { params });
 
       if (page === 1) {
         setOrdersData(response.data);
@@ -202,6 +189,7 @@ const Orders = () => {
   };
 
   const hasActiveFilters = Object.values(filters).some(Boolean);
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   useEffect(() => {
     if (currentPage > 1) fetchOrders(currentPage, filters);
@@ -211,20 +199,20 @@ const Orders = () => {
     fetchOrders(1);
   }, []);
 
-  const openSendDialog = (id) => {
-    setSendId(id);
-    setSendDialogOpen(true);
+  const openConfirmDialog = (id) => {
+    setConfirmId(id);
+    setConfirmDialogOpen(true);
   };
 
-  const handleConfirmSend = async () => {
-    setIsSending(true);
+  const handleConfirm = async () => {
+    setIsConfirming(true);
     try {
-      await api.patch(`/supplier/purchaseOrder/${sendId}/confirm`, {
+      await api.patch(`/supplier/purchaseOrder/${confirmId}/confirm`, {
         status: "supplier_confirmed",
         comment: null,
       });
       toast({ title: "Muvaffaqiyatli", description: "Buyurtma qabul qilindi" });
-      setSendDialogOpen(false);
+      setConfirmDialogOpen(false);
       fetchOrders(1, filters);
     } catch {
       toast({
@@ -233,11 +221,15 @@ const Orders = () => {
         variant: "destructive",
       });
     } finally {
-      setIsSending(false);
+      setIsConfirming(false);
     }
   };
 
-  // Count orders by status for summary bar
+  const isOverdue = (order) =>
+    new Date(order.deadline) < new Date() &&
+    order.status !== "closed" &&
+    order.status !== "received";
+
   const statusCounts =
     ordersData?.data?.reduce((acc, o) => {
       acc[o.status] = (acc[o.status] || 0) + 1;
@@ -245,75 +237,62 @@ const Orders = () => {
     }, {}) || {};
 
   return (
-    <div className="space-y-5">
-      {/* Page header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Buyurtmalar</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Xarid buyurtmalarini kuzatish va boshqarish
-          </p>
+    <div className="min-h-screen bg-background">
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div>
+            <h1 className="text-lg font-semibold leading-none">Buyurtmalar</h1>
+            {ordersData && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Jami {ordersData.total ?? 0} ta
+              </p>
+            )}
+          </div>
         </div>
-        <Button size="sm" asChild>
-          <Link to="create-order/">
-            <CirclePlus className="h-4 w-4 mr-1.5" />
-            Yangi buyurtma
-          </Link>
-        </Button>
-      </div>
 
-      {/* Status summary */}
-      {ordersData && Object.keys(statusCounts).length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(statusCounts).map(([status, count]) => (
-            <button
-              key={status}
-              onClick={() =>
-                handleFilterChange(
-                  "status",
-                  filters.status === status ? "" : status,
-                )
-              }
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                filters.status === status
-                  ? "ring-2 ring-offset-1 ring-primary"
-                  : "hover:shadow-sm"
-              } ${STATUS_CONFIG[status]?.className || "bg-gray-100 text-gray-600 border-gray-200"}`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${DOT_COLORS[status] || "bg-gray-400"}`}
-              />
-              {STATUS_CONFIG[status]?.text || status}
-              <span className="font-bold">{count}</span>
-            </button>
-          ))}
-          {ordersData.total > 0 && (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-muted-foreground">
-              Jami: <strong>{ordersData.total}</strong>
-            </span>
-          )}
+        {/* Search row */}
+        <div className="flex items-center gap-2 px-4 pb-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Qidirish..."
+              className="pl-9 h-9 bg-muted/40 border-0 focus-visible:ring-1"
+              value={filters.search}
+              onChange={handleSearchChange}
+            />
+            {filters.search && (
+              <button
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => handleFilterChange("search", "")}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <Button
+            variant={showFilters ? "default" : "outline"}
+            size="icon"
+            className="h-9 w-9 shrink-0 relative"
+            onClick={() => setShowFilters((v) => !v)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
         </div>
-      )}
 
-      {/* Filters */}
-      <Card className="shadow-none border">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex flex-wrap gap-3">
-            <div className="relative flex-1 min-w-48">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Buyurtma raqami yoki izoh..."
-                className="pl-8 h-9 text-sm"
-                value={filters.search}
-                onChange={handleSearchChange}
-              />
-            </div>
-
+        {/* Collapsible filters */}
+        {showFilters && (
+          <div className="px-4 pb-3 space-y-2 border-t pt-3 bg-muted/20">
             <Select
               value={filters.status || "all"}
               onValueChange={(v) => handleFilterChange("status", v)}
             >
-              <SelectTrigger className="w-44 h-9 text-sm">
+              <SelectTrigger className="h-9 text-sm bg-background">
                 <SelectValue placeholder="Barcha statuslar" />
               </SelectTrigger>
               <SelectContent>
@@ -325,348 +304,331 @@ const Orders = () => {
                 ))}
               </SelectContent>
             </Select>
-
-            <Input
-              type="date"
-              className="w-40 h-9 text-sm"
-              value={filters.startDate}
-              onChange={(e) => handleFilterChange("startDate", e.target.value)}
-            />
-
-            <Input
-              type="date"
-              className="w-40 h-9 text-sm"
-              value={filters.endDate}
-              onChange={(e) => handleFilterChange("endDate", e.target.value)}
-            />
-
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground px-0.5">
+                  Dan
+                </label>
+                <Input
+                  type="date"
+                  className="h-9 text-sm bg-background"
+                  value={filters.startDate}
+                  onChange={(e) =>
+                    handleFilterChange("startDate", e.target.value)
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground px-0.5">
+                  Gacha
+                </label>
+                <Input
+                  type="date"
+                  className="h-9 text-sm bg-background"
+                  value={filters.endDate}
+                  onChange={(e) =>
+                    handleFilterChange("endDate", e.target.value)
+                  }
+                />
+              </div>
+            </div>
             {hasActiveFilters && (
               <Button
                 variant="ghost"
                 size="sm"
+                className="w-full h-8 text-muted-foreground"
                 onClick={resetFilters}
-                className="h-9 gap-1.5 text-muted-foreground"
               >
-                <X className="h-3.5 w-3.5" />
-                Tozalash
+                <X className="h-3.5 w-3.5 mr-1.5" />
+                Filtrlarni tozalash
               </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Orders table */}
-      <Card className="shadow-none border">
-        <CardContent className="p-0">
-          {loading && currentPage === 1 ? (
-            <div className="p-5 space-y-2.5">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="w-full h-12 rounded-lg" />
-              ))}
-            </div>
-          ) : ordersData?.data?.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30 border-b">
-                    <TableHead className="pl-5 w-36 text-xs font-semibold">
-                      Raqam
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Status
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Muddat
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Izoh
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Mahsulotlar
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
-                      Yaratilgan
-                    </TableHead>
-                    <TableHead className="pr-5 text-right text-xs font-semibold">
-                      Amallar
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ordersData.data.map((order, index) => (
-                    <React.Fragment key={order.id}>
-                      <TableRow
-                        ref={
-                          index === ordersData.data.length - 1
-                            ? lastRowRef
-                            : null
-                        }
-                        className="cursor-pointer hover:bg-muted/20 transition-colors border-b"
-                        onClick={() =>
-                          setExpandedRows((prev) => ({
-                            ...prev,
-                            [order.id]: !prev[order.id],
-                          }))
+        {/* Status chips — horizontal scroll */}
+        {ordersData && Object.keys(statusCounts).length > 0 && (
+          <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-none">
+            {Object.entries(statusCounts).map(([status, count]) => (
+              <button
+                key={status}
+                onClick={() =>
+                  handleFilterChange(
+                    "status",
+                    filters.status === status ? "" : status,
+                  )
+                }
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium whitespace-nowrap transition-all shrink-0 ${
+                  filters.status === status
+                    ? "ring-2 ring-primary ring-offset-1"
+                    : "active:scale-95"
+                } ${STATUS_CONFIG[status]?.className || "bg-gray-100 text-gray-600 border-gray-200"}`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${DOT_COLORS[status] || "bg-gray-400"}`}
+                />
+                {STATUS_CONFIG[status]?.text || status}
+                <span className="font-bold">{count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-4 space-y-3 pb-8">
+        {loading && currentPage === 1 ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-2xl border bg-card p-4 space-y-3">
+                <div className="flex justify-between">
+                  <Skeleton className="h-5 w-36 rounded-lg" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-28 rounded" />
+                <Skeleton className="h-4 w-40 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : ordersData?.data?.length > 0 ? (
+          <>
+            {ordersData.data.map((order, index) => (
+              <div
+                key={order.id}
+                ref={index === ordersData.data.length - 1 ? lastRowRef : null}
+                className="rounded-2xl border bg-card shadow-sm overflow-hidden"
+              >
+                {/* Card header */}
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <span className="font-mono font-bold text-base leading-none mt-0.5">
+                      {order.orderNumber}
+                    </span>
+                    <StatusBadge status={order.status} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span
+                        className={
+                          isOverdue(order)
+                            ? "text-red-600 font-medium"
+                            : "text-muted-foreground"
                         }
                       >
-                        <TableCell className="pl-5 py-3">
-                          <span className="font-mono text-sm font-semibold text-foreground">
-                            {order.orderNumber}
+                        {formatDate(order.deadline)}
+                        {isOverdue(order) && (
+                          <span className="ml-1.5 text-xs bg-red-50 text-red-600 border border-red-200 px-1.5 py-0.5 rounded-full">
+                            Muddati o'tdi
                           </span>
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <StatusBadge status={order.status} />
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <div className="flex items-center gap-1.5 text-sm">
-                            <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span
-                              className={
-                                new Date(order.deadline) < new Date() &&
-                                order.status !== "closed" &&
-                                order.status !== "received"
-                                  ? "text-red-600 font-medium"
-                                  : "text-foreground"
+                        )}
+                      </span>
+                    </div>
+                    {order.comments && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {order.comments}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Items toggle */}
+                <button
+                  className="w-full px-4 py-2.5 flex items-center justify-between border-t bg-muted/30 text-sm active:bg-muted/50 transition-colors"
+                  onClick={() =>
+                    setExpandedRows((prev) => ({
+                      ...prev,
+                      [order.id]: !prev[order.id],
+                    }))
+                  }
+                >
+                  <div className="flex items-center gap-2">
+                    <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="font-medium">
+                      {order.items?.length || 0} ta mahsulot
+                    </span>
+                  </div>
+                  {expandedRows[order.id] ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+
+                {/* Expanded items */}
+                {expandedRows[order.id] && order.items?.length > 0 && (
+                  <div className="border-t divide-y bg-muted/10">
+                    {order.items.map((item) => (
+                      <div key={item.id} className="flex gap-3 p-3">
+                        {/* Thumbnail */}
+                        <div className="shrink-0">
+                          {item.item?.image ? (
+                            <button
+                              type="button"
+                              className="w-14 h-14 rounded-xl overflow-hidden ring-1 ring-border active:opacity-80 transition-opacity"
+                              onClick={() =>
+                                setImageDialog({
+                                  open: true,
+                                  src: item.item.image,
+                                  name: item.item.name,
+                                })
                               }
                             >
-                              {formatDate(order.deadline)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <span className="text-sm text-muted-foreground truncate max-w-40 block">
-                            {order.comments || "—"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <div className="flex items-center gap-1.5">
-                            <Badge
-                              variant="secondary"
-                              className="text-xs font-medium tabular-nums"
-                            >
-                              {order.items?.length || 0} ta
-                            </Badge>
-                            {expandedRows[order.id] ? (
-                              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                              <img
+                                src={item.item.image}
+                                alt={item.item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
+                          ) : (
+                            <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center">
+                              <Package className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <p className="font-medium text-sm leading-tight">
+                            {item.item?.name || "—"}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {item.item?.code && (
+                              <span className="font-mono text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                {item.item.code}
+                              </span>
+                            )}
+                            {item.item?.type?.name && (
+                              <span className="text-[11px] text-muted-foreground">
+                                {item.item.type.name}
+                              </span>
+                            )}
+                            {item.item?.color?.name && (
+                              <span className="text-[11px] text-muted-foreground">
+                                · {item.item.color.name}
+                              </span>
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell className="py-3 text-sm text-muted-foreground">
-                          {formatDate(order.createdAt)}
-                        </TableCell>
-                        <TableCell className="py-3 pr-5 text-right">
-                          {order.status === "pending" ? (
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-2.5 text-xs gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openSendDialog(order.id);
-                                }}
-                              >
-                                <Send className="h-3.5 w-3.5" />
-                                Qabul qilish
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">
-                              —
-                            </span>
-                          )}
-                        </TableCell>
-                      </TableRow>
 
-                      {/* Expanded items */}
-                      {expandedRows[order.id] && order.items?.length > 0 && (
-                        <TableRow className="bg-muted/10 hover:bg-muted/10 border-b">
-                          <TableCell colSpan={8} className="py-3 px-8">
-                            <div className="rounded-xl border border-border/60 overflow-hidden bg-background shadow-sm">
-                              <div className="px-4 py-2.5 bg-muted/40 border-b border-border/60">
-                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                  Buyurtma tarkibi — {order.items.length} ta
-                                  mahsulot
+                          {/* Quantities grid */}
+                          <div className="grid grid-cols-3 gap-1 mt-2">
+                            <div className="text-center rounded-lg bg-background border px-2 py-1.5">
+                              <p className="text-[10px] text-muted-foreground leading-none mb-1">
+                                So'ralgan
+                              </p>
+                              <p className="text-xs font-semibold">
+                                {formatNumber(item.requestedQuantity)}
+                                <span className="font-normal text-muted-foreground ml-0.5 text-[10px]">
+                                  {item.item?.unit?.name}
                                 </span>
-                              </div>
-                              <Table>
-                                <TableHeader>
-                                  <TableRow className="hover:bg-transparent border-b border-border/40">
-                                    <TableHead className="text-xs py-2 pl-4">
-                                      Mahsulot
-                                    </TableHead>
-                                    <TableHead className="text-xs py-2">
-                                      Kod
-                                    </TableHead>
-                                    <TableHead className="text-xs py-2">
-                                      Turi / Rangi
-                                    </TableHead>
-                                    <TableHead className="text-xs py-2">
-                                      So'ralgan
-                                    </TableHead>
-                                    <TableHead className="text-xs py-2">
-                                      Tasdiqlangan
-                                    </TableHead>
-                                    <TableHead className="text-xs py-2">
-                                      Qabul qilingan
-                                    </TableHead>
-                                    <TableHead className="text-xs py-2">
-                                      Narx
-                                    </TableHead>
-                                    <TableHead className="text-xs py-2">
-                                      Valyuta
-                                    </TableHead>
-                                    <TableHead className="text-xs py-2 pr-4">
-                                      Status
-                                    </TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {order.items.map((item) => (
-                                    <TableRow
-                                      key={item.id}
-                                      className="hover:bg-muted/20 border-b border-border/30 last:border-0"
-                                    >
-                                      <TableCell className="py-2.5 pl-4">
-                                        <div className="flex items-center gap-2.5">
-                                          {item.item?.image ? (
-                                            <button
-                                              type="button"
-                                              className="w-8 h-8 rounded-lg overflow-hidden cursor-zoom-in shrink-0 ring-1 ring-border hover:ring-2 hover:ring-primary transition-all"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setImageDialog({
-                                                  open: true,
-                                                  src: item.item.image,
-                                                  name: item.item.name,
-                                                });
-                                              }}
-                                            >
-                                              <img
-                                                src={item.item.image}
-                                                alt={item.item.name}
-                                                className="w-full h-full object-cover"
-                                              />
-                                            </button>
-                                          ) : (
-                                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                              <Package className="w-4 h-4 text-muted-foreground" />
-                                            </div>
-                                          )}
-                                          <span className="text-sm font-medium leading-tight">
-                                            {item.item?.name || "—"}
-                                          </span>
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="py-2.5">
-                                        <span className="font-mono text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                                          {item.item?.code || "—"}
-                                        </span>
-                                      </TableCell>
-                                      <TableCell className="py-2.5">
-                                        <div className="text-xs space-y-0.5">
-                                          <div className="text-foreground">
-                                            {item.item?.type?.name || "—"}
-                                          </div>
-                                          <div className="text-muted-foreground">
-                                            {item.item?.color?.name || "—"}
-                                          </div>
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="py-2.5 text-sm font-medium">
-                                        {formatNumber(item.requestedQuantity)}{" "}
-                                        <span className="text-xs text-muted-foreground font-normal">
-                                          {item.item?.unit?.name}
-                                        </span>
-                                      </TableCell>
-                                      <TableCell className="py-2.5 text-sm">
-                                        {item.confirmedQuantity != null ? (
-                                          <span className="font-medium">
-                                            {formatNumber(
-                                              item.confirmedQuantity,
-                                            )}
-                                          </span>
-                                        ) : (
-                                          <span className="text-muted-foreground">
-                                            —
-                                          </span>
-                                        )}
-                                      </TableCell>
-                                      <TableCell className="py-2.5 text-sm">
-                                        {item.receivedQuantity != null ? (
-                                          <span className="font-medium text-green-700">
-                                            {formatNumber(
-                                              item.receivedQuantity,
-                                            )}
-                                          </span>
-                                        ) : (
-                                          <span className="text-muted-foreground">
-                                            —
-                                          </span>
-                                        )}
-                                      </TableCell>
-                                      <TableCell className="py-2.5 text-sm font-semibold tabular-nums">
-                                        {formatNumber(item.unitPrice)}
-                                      </TableCell>
-                                      <TableCell className="py-2.5 text-xs text-muted-foreground">
-                                        {item.currency?.name || "—"}
-                                      </TableCell>
-                                      <TableCell className="py-2.5 pr-4">
-                                        <StatusBadge status={item.status} />
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
+                              </p>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </TableBody>
-              </Table>
+                            <div className="text-center rounded-lg bg-background border px-2 py-1.5">
+                              <p className="text-[10px] text-muted-foreground leading-none mb-1">
+                                Tasdiqlangan
+                              </p>
+                              <p className="text-xs font-semibold">
+                                {item.confirmedQuantity != null ? (
+                                  formatNumber(item.confirmedQuantity)
+                                ) : (
+                                  <span className="text-muted-foreground font-normal">
+                                    —
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            <div className="text-center rounded-lg bg-background border px-2 py-1.5">
+                              <p className="text-[10px] text-muted-foreground leading-none mb-1">
+                                Qabul
+                              </p>
+                              <p
+                                className={`text-xs font-semibold ${item.receivedQuantity != null ? "text-green-700" : ""}`}
+                              >
+                                {item.receivedQuantity != null ? (
+                                  formatNumber(item.receivedQuantity)
+                                ) : (
+                                  <span className="text-muted-foreground font-normal">
+                                    —
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
 
-              {loading && currentPage > 1 && (
-                <div className="flex justify-center py-6">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                          {/* Price + status */}
+                          <div className="flex items-center justify-between pt-0.5">
+                            {item.unitPrice > 0 ? (
+                              <span className="text-xs text-muted-foreground">
+                                <span className="font-semibold text-foreground">
+                                  {formatNumber(item.unitPrice)}
+                                </span>{" "}
+                                {item.currency?.name}
+                              </span>
+                            ) : (
+                              <span />
+                            )}
+                            <StatusBadge status={item.status} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Accept action — pending only */}
+                {order.status === "pending" && (
+                  <div className="px-3 py-3 border-t">
+                    <Button
+                      className="w-full h-10 gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                      onClick={() => openConfirmDialog(order.id)}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Buyurtmani qabul qilish
+                    </Button>
+                  </div>
+                )}
+
+                {/* Footer — created date */}
+                <div className="flex items-center gap-1.5 px-4 py-2 border-t bg-muted/10">
+                  <CalendarDays className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatDate(order.createdAt)}
+                  </span>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="py-20 text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-muted mb-4">
-                <Package className="h-7 w-7 text-muted-foreground" />
               </div>
-              <h3 className="text-base font-semibold">Buyurtmalar topilmadi</h3>
-              <p className="text-sm text-muted-foreground mt-1.5 max-w-xs mx-auto">
-                {hasActiveFilters
-                  ? "Filtr shartlariga mos buyurtma topilmadi. Filtrlarni tozalang."
-                  : "Hali birorta buyurtma yo'q. Yangi buyurtma qo'shing."}
-              </p>
-              {hasActiveFilters ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={resetFilters}
-                >
-                  Filtrlarni tozalash
-                </Button>
-              ) : (
-                <Button size="sm" className="mt-4" asChild>
-                  <Link to="create-order/">
-                    <CirclePlus className="h-4 w-4 mr-1.5" />
-                    Yangi buyurtma
-                  </Link>
-                </Button>
-              )}
+            ))}
+
+            {loading && currentPage > 1 && (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <Package className="h-8 w-8 text-muted-foreground" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <h3 className="text-base font-semibold">Buyurtmalar topilmadi</h3>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-xs">
+              {hasActiveFilters
+                ? "Filtr shartlariga mos buyurtma topilmadi"
+                : "Hali birorta buyurtma yo'q"}
+            </p>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={resetFilters}
+              >
+                Filtrlarni tozalash
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Image dialog */}
       <Dialog
@@ -674,7 +636,7 @@ const Orders = () => {
         onOpenChange={(open) => setImageDialog((prev) => ({ ...prev, open }))}
       >
         <DialogContent className="max-w-3xl w-full p-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b border-border">
+          <DialogHeader className="p-4 border-b">
             <DialogTitle className="text-base font-semibold">
               {imageDialog.name || "Rasm"}
             </DialogTitle>
@@ -692,22 +654,29 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Send to pending confirmation dialog */}
-      <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+      {/* Confirm dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Buyurtmani tasdiqlash</DialogTitle>
             <DialogDescription>
-              #{sendId} raqamli buyurtmani qabul qilmoqchimisiz? Status
+              #{confirmId} raqamli buyurtmani qabul qilmoqchimisiz? Status
               "Tasdiqlandi"ga o'zgaradi.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setSendDialogOpen(false)}>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDialogOpen(false)}
+            >
               Bekor qilish
             </Button>
-            <Button onClick={handleConfirmSend} disabled={isSending}>
-              {isSending ? (
+            <Button
+              className="bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={handleConfirm}
+              disabled={isConfirming}
+            >
+              {isConfirming ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Saqlanmoqda...
