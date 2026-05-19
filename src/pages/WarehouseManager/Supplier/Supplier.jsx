@@ -125,7 +125,11 @@ const Supplier = () => {
   const [sendId, setSendId] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [imageDialog, setImageDialog] = useState({ open: false, src: null, name: null });
+  const [imageDialog, setImageDialog] = useState({
+    open: false,
+    src: null,
+    name: null,
+  });
   const debounceRef = useRef(null);
   const observer = useRef();
 
@@ -146,7 +150,7 @@ const Supplier = () => {
   const fetchOrders = async (page = 1, filterParams = {}) => {
     try {
       setLoading(true);
-      const params = { Page: page, PageSize: 10 };
+      const params = { Page: page, PageSize: 20 };
       if (filterParams.search) params.Search = filterParams.search;
       if (filterParams.status) params.Status = filterParams.status;
       if (filterParams.startDate) params.StartDate = filterParams.startDate;
@@ -584,7 +588,11 @@ const Supplier = () => {
                                               className="w-8 h-8 rounded-lg overflow-hidden cursor-zoom-in shrink-0 ring-1 ring-border hover:ring-2 hover:ring-primary transition-all"
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                setImageDialog({ open: true, src: item.item.image, name: item.item.name });
+                                                setImageDialog({
+                                                  open: true,
+                                                  src: item.item.image,
+                                                  name: item.item.name,
+                                                });
                                               }}
                                             >
                                               <img
