@@ -366,7 +366,7 @@ const OrderView = () => {
                 </div>
 
                 {/* Quantity info */}
-                <div className="text-center rounded-xl bg-blue-100 border border-blue-100 border-t px-3 py-2.5 gap-2 mb-2">
+                <div className="text-center rounded-xl bg-blue-100 border border-blue-100 border-t px-3 py-2.5 gap-2 m-2">
                   <p className="text-[10px] text-blue-500 font-medium leading-none mb-1.5">
                     So'ralgan
                   </p>
