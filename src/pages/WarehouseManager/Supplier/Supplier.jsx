@@ -125,6 +125,7 @@ const Supplier = () => {
   const [sendId, setSendId] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [imageDialog, setImageDialog] = useState({ open: false, src: null, name: null });
   const debounceRef = useRef(null);
   const observer = useRef();
 
@@ -577,9 +578,26 @@ const Supplier = () => {
                                     >
                                       <TableCell className="py-2.5 pl-4">
                                         <div className="flex items-center gap-2.5">
-                                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                            <Package className="w-4 h-4 text-muted-foreground" />
-                                          </div>
+                                          {item.item?.image ? (
+                                            <button
+                                              type="button"
+                                              className="w-8 h-8 rounded-lg overflow-hidden cursor-zoom-in shrink-0 ring-1 ring-border hover:ring-2 hover:ring-primary transition-all"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setImageDialog({ open: true, src: item.item.image, name: item.item.name });
+                                              }}
+                                            >
+                                              <img
+                                                src={item.item.image}
+                                                alt={item.item.name}
+                                                className="w-full h-full object-cover"
+                                              />
+                                            </button>
+                                          ) : (
+                                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                              <Package className="w-4 h-4 text-muted-foreground" />
+                                            </div>
+                                          )}
                                           <span className="text-sm font-medium leading-tight">
                                             {item.item?.name || "—"}
                                           </span>
@@ -692,6 +710,30 @@ const Supplier = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Image dialog */}
+      <Dialog
+        open={imageDialog.open}
+        onOpenChange={(open) => setImageDialog((prev) => ({ ...prev, open }))}
+      >
+        <DialogContent className="max-w-3xl w-full p-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b border-border">
+            <DialogTitle className="text-base font-semibold">
+              {imageDialog.name || "Rasm"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center bg-muted/30 w-full h-[70vh] p-4">
+            {imageDialog.src && (
+              <img
+                src={imageDialog.src}
+                alt={imageDialog.name || "item-image"}
+                className="max-h-full max-w-full object-contain rounded-lg"
+                loading="lazy"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Send to pending confirmation dialog */}
       <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
