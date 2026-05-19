@@ -112,7 +112,7 @@ const Orders = () => {
       if (filterParams.deadline)
         params.append("deadline", filterParams.deadline);
 
-      const response = await api.get(`/supplier/orders?${params.toString()}`);
+      const response = await api.get(`/supplier/purchaseOrder`);
 
       if (page === 1) {
         setIncomesData(response.data);
