@@ -407,9 +407,6 @@ const Supplier = () => {
                       Status
                     </TableHead>
                     <TableHead className="text-xs font-semibold">
-                      Filial
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold">
                       Muddat
                     </TableHead>
                     <TableHead className="text-xs font-semibold">
@@ -450,12 +447,6 @@ const Supplier = () => {
                         </TableCell>
                         <TableCell className="py-3">
                           <StatusBadge status={order.status} />
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <MapPin className="h-3.5 w-3.5 shrink-0" />
-                            <span>{order.branch?.name || "—"}</span>
-                          </div>
                         </TableCell>
                         <TableCell className="py-3">
                           <div className="flex items-center gap-1.5 text-sm">
