@@ -151,7 +151,7 @@ const OrderView = () => {
 
   const fetchCurrencies = async () => {
     try {
-      const res = await api.get("/currency");
+      const res = await api.get("/supplier/currency");
       setCurrencies(res.data?.data ?? res.data ?? []);
     } catch {
       // silently fail — fallback to item's existing currency
