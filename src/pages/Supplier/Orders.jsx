@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
   SlidersHorizontal,
   CalendarDays,
   CheckCircle2,
+  Play,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -97,6 +99,7 @@ const EMPTY_FILTERS = { search: "", status: "", startDate: "", endDate: "" };
 
 const Orders = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [ordersData, setOrdersData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -623,6 +626,19 @@ const Orders = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Start action — supplier_confirmed only */}
+                {order.status === "supplier_confirmed" && (
+                  <div className="px-3 py-3 border-t">
+                    <Button
+                      className="w-full h-10 gap-2 bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => navigate(`/supplier/orders/${order.id}`)}
+                    >
+                      <Play className="h-4 w-4" />
+                      Boshlash
+                    </Button>
                   </div>
                 )}
 
