@@ -630,7 +630,6 @@ const Orders = () => {
                             ) : (
                               <span />
                             )}
-                            <StatusBadge status={item.status} />
                           </div>
                         </div>
                       </div>
