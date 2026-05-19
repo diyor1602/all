@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
@@ -27,6 +27,12 @@ import {
   Loader2,
   Truck,
   AlertCircle,
+  Banknote,
+  CreditCard,
+  Landmark,
+  ImageIcon,
+  X,
+  Check,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -79,6 +85,67 @@ const LOG_LABELS = {
   closed: "Yopildi",
 };
 
+const PAYMENT_METHODS = [
+  {
+    key: "cash",
+    label: "Naqt",
+    icon: Banknote,
+    color: "green",
+    activeBg: "bg-green-600",
+    activeText: "text-white",
+    activeBorder: "border-green-600",
+    inactiveBg: "bg-green-50",
+    inactiveText: "text-green-700",
+    inactiveBorder: "border-green-200",
+    fieldBg: "bg-green-50/50",
+    labelColor: "text-green-700",
+  },
+  {
+    key: "card",
+    label: "Karta",
+    icon: CreditCard,
+    color: "blue",
+    activeBg: "bg-blue-600",
+    activeText: "text-white",
+    activeBorder: "border-blue-600",
+    inactiveBg: "bg-blue-50",
+    inactiveText: "text-blue-700",
+    inactiveBorder: "border-blue-200",
+    fieldBg: "bg-blue-50/50",
+    labelColor: "text-blue-700",
+  },
+  {
+    key: "debt",
+    label: "Qarz",
+    icon: Clock,
+    color: "amber",
+    activeBg: "bg-amber-500",
+    activeText: "text-white",
+    activeBorder: "border-amber-500",
+    inactiveBg: "bg-amber-50",
+    inactiveText: "text-amber-700",
+    inactiveBorder: "border-amber-200",
+    fieldBg: "bg-amber-50/50",
+    labelColor: "text-amber-700",
+  },
+  {
+    key: "bank",
+    label: "Bank",
+    icon: Landmark,
+    color: "violet",
+    activeBg: "bg-violet-600",
+    activeText: "text-white",
+    activeBorder: "border-violet-600",
+    inactiveBg: "bg-violet-50",
+    inactiveText: "text-violet-700",
+    inactiveBorder: "border-violet-200",
+    fieldBg: "bg-violet-50/50",
+    labelColor: "text-violet-700",
+  },
+];
+
+const EMPTY_PAYMENT = { amount: "", currencyId: "", paidAt: "", comment: "" };
+
 const formatDate = (dateString) => {
   if (!dateString) return "—";
   return new Intl.DateTimeFormat("ru-RU", {
@@ -89,6 +156,8 @@ const formatDate = (dateString) => {
     minute: "2-digit",
   }).format(new Date(dateString));
 };
+
+const todayISO = () => new Date().toISOString().split("T")[0];
 
 const StatusBadge = ({ status }) => {
   const cfg = STATUS_CONFIG[status] || {
@@ -110,12 +179,15 @@ const OrderView = () => {
   const { toast } = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [comment, setComment] = useState("");
+  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [attachmentPreview, setAttachmentPreview] = useState(null);
   const [imageDialog, setImageDialog] = useState({
     open: false,
     src: null,
@@ -123,6 +195,11 @@ const OrderView = () => {
   });
   const [itemForms, setItemForms] = useState({});
   const [currencies, setCurrencies] = useState([]);
+  const [payments, setPayments] = useState(() =>
+    Object.fromEntries(
+      PAYMENT_METHODS.map((m) => [m.key, { enabled: false, ...EMPTY_PAYMENT }]),
+    ),
+  );
 
   const getItem = async () => {
     try {
@@ -133,8 +210,8 @@ const OrderView = () => {
       res.data.items.forEach((item) => {
         initial[item.id] = {
           confirmedQuantity: "",
-          unitPrice: "",
-          currencyId: "",
+          unitPrice: item.unitPrice ?? "",
+          currencyId: item.currency?.id ? String(item.currency.id) : "",
         };
       });
       setItemForms(initial);
@@ -170,6 +247,43 @@ const OrderView = () => {
     }));
   };
 
+  const togglePayment = (key) => {
+    setPayments((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        enabled: !prev[key].enabled,
+        ...(prev[key].enabled ? EMPTY_PAYMENT : { paidAt: todayISO() }),
+      },
+    }));
+  };
+
+  const updatePayment = (key, field, value) => {
+    setPayments((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value },
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAttachmentFile(file);
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setAttachmentPreview(ev.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      setAttachmentPreview(null);
+    }
+  };
+
+  const removeFile = () => {
+    setAttachmentFile(null);
+    setAttachmentPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = async () => {
     const items = data.items.map((item) => {
       const form = itemForms[item.id] || {};
@@ -191,11 +305,42 @@ const OrderView = () => {
       return;
     }
 
+    const enabledPayments = PAYMENT_METHODS.filter(
+      (m) => payments[m.key].enabled,
+    );
+    for (const m of enabledPayments) {
+      const p = payments[m.key];
+      if (!p.amount || !p.currencyId || !p.paidAt) {
+        toast({
+          title: "Xatolik",
+          description: `${m.label} to'lovi uchun summa, valyuta va sanani kiriting`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    const paymentsJson = enabledPayments.map((m) => {
+      const p = payments[m.key];
+      return {
+        method: m.key,
+        amount: Number(p.amount),
+        currencyId: Number(p.currencyId),
+        paidAt: p.paidAt,
+        comment: p.comment.trim() || "",
+      };
+    });
+
     try {
       setSubmitting(true);
-      await api.patch(`/supplier/purchaseOrder/${id}/status`, {
-        comment: comment.trim() || null,
-        items,
+      const formData = new FormData();
+      formData.append("comment", comment.trim() || "");
+      formData.append("itemsJson", JSON.stringify(items));
+      formData.append("paymentsJson", JSON.stringify(paymentsJson));
+      if (attachmentFile) formData.append("file", attachmentFile);
+
+      await api.patch(`/supplier/purchaseOrder/${id}/status`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       toast({ title: "Muvaffaqiyatli", description: "Yetkazish boshlandi" });
       navigate("/supplier/orders");
@@ -288,7 +433,6 @@ const OrderView = () => {
               </span>
             )}
           </div>
-
           {data.comments && (
             <p className="text-sm text-muted-foreground bg-muted/40 rounded-xl px-3 py-2 leading-relaxed">
               {data.comments}
@@ -298,15 +442,17 @@ const OrderView = () => {
 
         {/* Items */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Package className="h-4 w-4 text-muted-foreground" />
-              Mahsulotlar ({data.items.length})
-            </h2>
-          </div>
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            <Package className="h-4 w-4 text-muted-foreground" />
+            Mahsulotlar ({data.items.length})
+          </h2>
 
           {data.items.map((item) => {
             const form = itemForms[item.id] || {};
+            const itemStatus = ITEM_STATUS_CONFIG[item.status] || {
+              text: item.status,
+              className: "bg-gray-100 text-gray-600",
+            };
 
             return (
               <div
@@ -362,20 +508,61 @@ const OrderView = () => {
                         </span>
                       )}
                     </div>
+                    <span
+                      className={`inline-block text-[11px] px-2 py-0.5 rounded-md font-medium ${itemStatus.className}`}
+                    >
+                      {itemStatus.text}
+                    </span>
                   </div>
                 </div>
 
                 {/* Quantity info */}
-                <div className="text-center rounded-xl bg-blue-100 border border-blue-100 border-t px-3 py-2.5 gap-2 m-2">
-                  <p className="text-[10px] text-blue-500 font-medium leading-none mb-1.5">
-                    So'ralgan
-                  </p>
-                  <p className="text-xs font-bold text-blue-700">
-                    {formatNumber(item.requestedQuantity)}
-                    <span className="font-normal text-blue-400 ml-0.5 text-[10px]">
-                      {item.item?.unit?.name}
-                    </span>
-                  </p>
+                <div className="border-t px-3 py-2.5 grid grid-cols-3 gap-2 bg-muted/10">
+                  <div className="text-center rounded-xl bg-blue-50 border border-blue-100 px-2 py-2">
+                    <p className="text-[10px] text-blue-500 font-medium leading-none mb-1.5">
+                      So'ralgan
+                    </p>
+                    <p className="text-xs font-bold text-blue-700">
+                      {formatNumber(item.requestedQuantity)}
+                      <span className="font-normal text-blue-400 ml-0.5 text-[10px]">
+                        {item.item?.unit?.name}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="text-center rounded-xl bg-violet-50 border border-violet-100 px-2 py-2">
+                    <p className="text-[10px] text-violet-500 font-medium leading-none mb-1.5">
+                      Tasdiqlangan
+                    </p>
+                    <p className="text-xs font-bold text-violet-700">
+                      {item.confirmedQuantity != null ? (
+                        <>
+                          {formatNumber(item.confirmedQuantity)}
+                          <span className="font-normal text-violet-400 ml-0.5 text-[10px]">
+                            {item.item?.unit?.name}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-violet-300 font-normal">—</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="text-center rounded-xl bg-green-50 border border-green-100 px-2 py-2">
+                    <p className="text-[10px] text-green-500 font-medium leading-none mb-1.5">
+                      Qabul
+                    </p>
+                    <p className="text-xs font-bold text-green-700">
+                      {item.receivedQuantity != null ? (
+                        <>
+                          {formatNumber(item.receivedQuantity)}
+                          <span className="font-normal text-green-400 ml-0.5 text-[10px]">
+                            {item.item?.unit?.name}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-green-300 font-normal">—</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Editable fields */}
@@ -448,7 +635,7 @@ const OrderView = () => {
                   </div>
                 )}
 
-                {/* Read-only price for non-editable states */}
+                {/* Read-only price */}
                 {!canEdit && item.unitPrice > 0 && (
                   <div className="border-t px-3 py-2 flex items-center justify-between bg-background">
                     <span className="text-xs text-muted-foreground">Narx:</span>
@@ -465,7 +652,227 @@ const OrderView = () => {
           })}
         </div>
 
-        {/* Comment field */}
+        {/* ── Payments ── */}
+        {canEdit && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold">To'lov</h2>
+
+            {/* Method toggle grid */}
+            <div className="grid grid-cols-2 gap-2">
+              {PAYMENT_METHODS.map((m) => {
+                const active = payments[m.key].enabled;
+                const Icon = m.icon;
+                return (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => togglePayment(m.key)}
+                    className={`relative flex items-center gap-2.5 px-4 py-3 rounded-2xl border-2 font-medium text-sm transition-all active:scale-[0.97] ${
+                      active
+                        ? `${m.activeBg} ${m.activeText} ${m.activeBorder}`
+                        : `${m.inactiveBg} ${m.inactiveText} ${m.inactiveBorder}`
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {m.label}
+                    {active && (
+                      <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-white/30 flex items-center justify-center">
+                        <Check className="h-2.5 w-2.5" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active payment forms */}
+            {PAYMENT_METHODS.filter((m) => payments[m.key].enabled).map((m) => {
+              const p = payments[m.key];
+              const Icon = m.icon;
+              return (
+                <div
+                  key={m.key}
+                  className={`rounded-2xl border-2 overflow-hidden ${m.inactiveBorder}`}
+                >
+                  {/* Form header */}
+                  <div
+                    className={`flex items-center justify-between px-4 py-2.5 ${m.inactiveBg}`}
+                  >
+                    <div className={`flex items-center gap-2 font-semibold text-sm ${m.inactiveText}`}>
+                      <Icon className="h-4 w-4" />
+                      {m.label}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => togglePayment(m.key)}
+                      className={`p-1 rounded-full hover:bg-black/5 ${m.inactiveText}`}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Form fields */}
+                  <div className="px-4 py-3 bg-background space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Summa *
+                        </label>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          className="h-9 text-sm"
+                          value={p.amount}
+                          onChange={(e) =>
+                            updatePayment(m.key, "amount", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Valyuta *
+                        </label>
+                        <Select
+                          value={String(p.currencyId)}
+                          onValueChange={(v) =>
+                            updatePayment(m.key, "currencyId", v)
+                          }
+                        >
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Valyuta" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {currencyOptions.map((c) => (
+                              <SelectItem key={c.id} value={String(c.id)}>
+                                {c.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Sana *
+                      </label>
+                      <Input
+                        type="date"
+                        className="h-9 text-sm"
+                        value={p.paidAt}
+                        onChange={(e) =>
+                          updatePayment(m.key, "paidAt", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Izoh
+                      </label>
+                      <Input
+                        placeholder="Izoh..."
+                        className="h-9 text-sm"
+                        value={p.comment}
+                        onChange={(e) =>
+                          updatePayment(m.key, "comment", e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Attachment ── */}
+        {canEdit && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold">Fayl biriktirish</h2>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            {attachmentFile ? (
+              <div className="rounded-2xl border-2 border-dashed border-muted-foreground/20 bg-muted/20 overflow-hidden">
+                <div className="flex items-center gap-3 p-3">
+                  {attachmentPreview ? (
+                    <button
+                      type="button"
+                      className="w-16 h-16 rounded-xl overflow-hidden shrink-0 ring-1 ring-border"
+                      onClick={() =>
+                        setImageDialog({
+                          open: true,
+                          src: attachmentPreview,
+                          name: attachmentFile.name,
+                        })
+                      }
+                    >
+                      <img
+                        src={attachmentPreview}
+                        alt={attachmentFile.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                      <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {attachmentFile.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {(attachmentFile.size / 1024).toFixed(0)} KB
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-1.5 text-xs text-blue-600 font-medium"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Almashtirish
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="p-2 rounded-full hover:bg-muted text-muted-foreground shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full rounded-2xl border-2 border-dashed border-muted-foreground/25 bg-muted/20 hover:bg-muted/40 hover:border-muted-foreground/40 transition-colors active:scale-[0.99] py-8 flex flex-col items-center gap-2.5"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-background border flex items-center justify-center shadow-sm">
+                  <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    Fayl tanlang
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Rasm, PDF, Word yoki Excel
+                  </p>
+                </div>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Comment ── */}
         {canEdit && (
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Izoh (ixtiyoriy)</label>
@@ -478,7 +885,7 @@ const OrderView = () => {
           </div>
         )}
 
-        {/* Activity log */}
+        {/* ── Activity log ── */}
         {data.logs?.length > 0 && (
           <div className="rounded-2xl border bg-card overflow-hidden">
             <button
