@@ -8,7 +8,6 @@ import {
   ChevronUp,
   Package,
   Loader2,
-  MapPin,
   Clock,
   X,
   Send,
@@ -107,6 +106,9 @@ const Orders = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmId, setConfirmId] = useState(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectId, setRejectId] = useState(null);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [imageDialog, setImageDialog] = useState({
     open: false,
@@ -202,6 +204,32 @@ const Orders = () => {
   const openConfirmDialog = (id) => {
     setConfirmId(id);
     setConfirmDialogOpen(true);
+  };
+
+  const openRejectDialog = (id) => {
+    setRejectId(id);
+    setRejectDialogOpen(true);
+  };
+
+  const handleReject = async () => {
+    setIsRejecting(true);
+    try {
+      await api.patch(`/supplier/purchaseOrder/${rejectId}/status`, {
+        status: "closed",
+        comment: null,
+      });
+      toast({ title: "Muvaffaqiyatli", description: "Buyurtma rad etildi" });
+      setRejectDialogOpen(false);
+      fetchOrders(1, filters);
+    } catch {
+      toast({
+        title: "Xatolik",
+        description: "Statusni o'zgartirishda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   const handleConfirm = async () => {
@@ -431,6 +459,28 @@ const Orders = () => {
                       </p>
                     )}
                   </div>
+
+                  {/* Item names preview */}
+                  {order.items?.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {order.items.slice(0, 3).map((item) => (
+                        <span
+                          key={item.id}
+                          className="inline-flex items-center gap-1 text-xs bg-muted/60 text-foreground px-2 py-1 rounded-md max-w-[180px] truncate"
+                        >
+                          <Package className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <span className="truncate">
+                            {item.item?.name || "—"}
+                          </span>
+                        </span>
+                      ))}
+                      {order.items.length > 3 && (
+                        <span className="inline-flex items-center text-xs text-muted-foreground bg-muted/40 px-2 py-1 rounded-md">
+                          +{order.items.length - 3} ta
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Items toggle */}
@@ -578,13 +628,21 @@ const Orders = () => {
 
                 {/* Accept action — pending only */}
                 {order.status === "pending" && (
-                  <div className="px-3 py-3 border-t">
+                  <div className="px-3 py-3 border-t flex items-center gap-2">
                     <Button
-                      className="w-full h-10 gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                      variant="outline"
+                      className="flex-1 h-10 gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      onClick={() => openRejectDialog(order.id)}
+                    >
+                      <X className="h-4 w-4" />
+                      Rad etish
+                    </Button>
+                    <Button
+                      className="flex-1 h-10 gap-2 bg-violet-600 hover:bg-violet-700 text-white"
                       onClick={() => openConfirmDialog(order.id)}
                     >
                       <CheckCircle2 className="h-4 w-4" />
-                      Buyurtmani qabul qilish
+                      Qabul qilish
                     </Button>
                   </div>
                 )}
@@ -651,6 +709,43 @@ const Orders = () => {
               />
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Buyurtmani rad etish</DialogTitle>
+            <DialogDescription>
+              Buyurtmani rad etmoqchimisiz? Status "Yopildi"ga o'zgaradi.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setRejectDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={isRejecting}
+            >
+              {isRejecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saqlanmoqda...
+                </>
+              ) : (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Rad etish
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
