@@ -560,9 +560,6 @@ const Supplier = () => {
                                     <TableHead className="text-xs py-2">
                                       Valyuta
                                     </TableHead>
-                                    <TableHead className="text-xs py-2 pr-4">
-                                      Status
-                                    </TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -654,9 +651,6 @@ const Supplier = () => {
                                       </TableCell>
                                       <TableCell className="py-2.5 text-xs text-muted-foreground">
                                         {item.currency?.name || "—"}
-                                      </TableCell>
-                                      <TableCell className="py-2.5 pr-4">
-                                        <StatusBadge status={item.status} />
                                       </TableCell>
                                     </TableRow>
                                   ))}
