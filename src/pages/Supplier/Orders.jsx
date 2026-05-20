@@ -16,6 +16,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Play,
+  Eye,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -671,6 +672,26 @@ const Orders = () => {
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       Qabul qilish
+                    </Button>
+                  </div>
+                )}
+
+                {/* View action — all other statuses */}
+                {order.status !== "supplier_confirmed" && order.status !== "pending" && (
+                  <div className="px-3 py-3 border-t">
+                    <Button
+                      variant="outline"
+                      className={`w-full h-10 gap-2 ${
+                        order.status === "in_delivery"
+                          ? "border-amber-200 text-amber-700 hover:bg-amber-50"
+                          : order.status === "received"
+                            ? "border-green-200 text-green-700 hover:bg-green-50"
+                            : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                      }`}
+                      onClick={() => navigate(`/supplier/orders/${order.id}`)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Ko'rish
                     </Button>
                   </div>
                 )}
