@@ -6,6 +6,7 @@ import {
   Box,
   Users,
   FileText,
+  Snail,
 } from "lucide-react";
 
 const navigation = [
@@ -37,6 +38,12 @@ const navigation = [
     name: "Talabnomalar",
     href: "/warehouseManager/requisitions",
     icon: FileText,
+    onMobile: false,
+  },
+  {
+    name: "Ta'minot",
+    href: "/warehouseManager/supplier",
+    icon: Snail,
     onMobile: false,
   },
   {

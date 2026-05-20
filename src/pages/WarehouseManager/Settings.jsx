@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Box, ChartPie, Palette, Truck } from "lucide-react";
+import { Box, ChartPie, Palette } from "lucide-react";
 import Item from "./Items/Item";
 import Balance from "./Balance/Balance";
 import Colors from "./Additional/Colors";
@@ -36,12 +36,6 @@ const SettingsPage = () => {
       icon: Palette,
       link: "/warehouseManager/settings/colors",
       color: "bg-red-500",
-    },
-    {
-      name: "Ta'minot",
-      icon: Truck,
-      link: "/warehouseManager/supplier",
-      color: "bg-green-500",
     },
   ];
 
