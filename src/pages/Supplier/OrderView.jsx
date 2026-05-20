@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -184,6 +185,7 @@ const OrderView = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [comment, setComment] = useState("");
   const [attachmentFile, setAttachmentFile] = useState(null);
@@ -284,6 +286,36 @@ const OrderView = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handlePreSubmit = () => {
+    const items = data.items.map((item) => {
+      const form = itemForms[item.id] || {};
+      return {
+        purchaseOrderItemId: item.id,
+        confirmedQuantity: Number(form.confirmedQuantity) || 0,
+      };
+    });
+    if (items.some((i) => !i.confirmedQuantity)) {
+      toast({
+        title: "Xatolik",
+        description: "Barcha mahsulotlar uchun tasdiqlangan miqdorni kiriting",
+        variant: "destructive",
+      });
+      return;
+    }
+    for (const m of PAYMENT_METHODS.filter((m) => payments[m.key].enabled)) {
+      const p = payments[m.key];
+      if (!p.amount || !p.currencyId) {
+        toast({
+          title: "Xatolik",
+          description: `${m.label} to'lovi uchun summa va valyuta kiriting`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    setConfirmOpen(true);
+  };
+
   const handleSubmit = async () => {
     const items = data.items.map((item) => {
       const form = itemForms[item.id] || {};
@@ -295,32 +327,9 @@ const OrderView = () => {
       };
     });
 
-    const hasEmpty = items.some((i) => !i.confirmedQuantity);
-    if (hasEmpty) {
-      toast({
-        title: "Xatolik",
-        description: "Barcha mahsulotlar uchun tasdiqlangan miqdorni kiriting",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const enabledPayments = PAYMENT_METHODS.filter(
+    const paymentsJson = PAYMENT_METHODS.filter(
       (m) => payments[m.key].enabled,
-    );
-    for (const m of enabledPayments) {
-      const p = payments[m.key];
-      if (!p.amount || !p.currencyId) {
-        toast({
-          title: "Xatolik",
-          description: `${m.label} to'lovi uchun summa va valyuta kiriting`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    const paymentsJson = enabledPayments.map((m) => {
+    ).map((m) => {
       const p = payments[m.key];
       return {
         method: m.key,
@@ -351,6 +360,7 @@ const OrderView = () => {
       });
     } finally {
       setSubmitting(false);
+      setConfirmOpen(false);
     }
   };
 
@@ -371,6 +381,69 @@ const OrderView = () => {
           .filter(
             (c, idx, arr) => arr.findIndex((x) => x.id === c.id) === idx,
           ) ?? []);
+
+  const itemTotalsByCurrency = {};
+  if (data) {
+    data.items.forEach((item) => {
+      const form = itemForms[item.id] || {};
+      const qty = Number(form.confirmedQuantity) || 0;
+      const price = Number(form.unitPrice) || 0;
+      const currId = String(form.currencyId || item.currency?.id || "");
+      const currName =
+        currencyOptions.find((c) => String(c.id) === currId)?.name ??
+        item.currency?.name ??
+        "";
+      if (qty > 0 && price > 0 && currId) {
+        if (!itemTotalsByCurrency[currId])
+          itemTotalsByCurrency[currId] = { name: currName, total: 0 };
+        itemTotalsByCurrency[currId].total += qty * price;
+      }
+    });
+  }
+
+  const paymentTotalsByCurrency = {};
+  PAYMENT_METHODS.filter((m) => payments[m.key].enabled).forEach((m) => {
+    const p = payments[m.key];
+    const amount = Number(p.amount) || 0;
+    const currId = String(p.currencyId || "");
+    const currName =
+      currencyOptions.find((c) => String(c.id) === currId)?.name ?? "";
+    if (amount > 0 && currId) {
+      if (!paymentTotalsByCurrency[currId])
+        paymentTotalsByCurrency[currId] = { name: currName, total: 0 };
+      paymentTotalsByCurrency[currId].total += amount;
+    }
+  });
+
+  const hasEnabledPayments = PAYMENT_METHODS.some(
+    (m) => payments[m.key].enabled,
+  );
+
+  const paymentMismatches = hasEnabledPayments
+    ? (() => {
+        const allCurrIds = new Set([
+          ...Object.keys(itemTotalsByCurrency),
+          ...Object.keys(paymentTotalsByCurrency),
+        ]);
+        return [...allCurrIds]
+          .map((currId) => {
+            const itemTotal = itemTotalsByCurrency[currId]?.total ?? 0;
+            const payTotal = paymentTotalsByCurrency[currId]?.total ?? 0;
+            const name =
+              itemTotalsByCurrency[currId]?.name ??
+              paymentTotalsByCurrency[currId]?.name ??
+              "";
+            return {
+              currId,
+              name,
+              itemTotal,
+              payTotal,
+              diff: itemTotal - payTotal,
+            };
+          })
+          .filter((m) => m.diff !== 0);
+      })()
+    : [];
 
   if (loading) {
     return (
@@ -676,6 +749,83 @@ const OrderView = () => {
           <div className="space-y-3">
             <h2 className="text-sm font-semibold">To'lov</h2>
 
+            {/* Order totals summary */}
+            {Object.keys(itemTotalsByCurrency).length > 0 && (
+              <div className="rounded-2xl border bg-muted/20 px-4 py-3 space-y-2.5">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Buyurtma jami narxi
+                </p>
+                <div className="space-y-1.5">
+                  {Object.entries(itemTotalsByCurrency).map(
+                    ([currId, { name, total }]) => {
+                      const paid = paymentTotalsByCurrency[currId]?.total ?? 0;
+                      const diff = total - paid;
+                      const exact = hasEnabledPayments && diff === 0;
+                      const over = hasEnabledPayments && diff < 0;
+                      const under = hasEnabledPayments && diff > 0 && paid > 0;
+                      return (
+                        <div key={currId} className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              {name}
+                            </span>
+                            <span className="text-sm font-bold">
+                              {formatNumber(total)}
+                            </span>
+                          </div>
+                          {hasEnabledPayments && (
+                            <div
+                              className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium ${
+                                exact
+                                  ? "bg-green-50 text-green-700 border border-green-100"
+                                  : over
+                                    ? "bg-red-50 text-red-700 border border-red-100"
+                                    : under
+                                      ? "bg-amber-50 text-amber-700 border border-amber-100"
+                                      : "bg-muted/40 text-muted-foreground border border-transparent"
+                              }`}
+                            >
+                              <span>
+                                {exact
+                                  ? "To'lov to'liq ✓"
+                                  : over
+                                    ? `Ortiqcha: ${formatNumber(Math.abs(diff))} ${name}`
+                                    : under
+                                      ? `Qoldi: ${formatNumber(diff)} ${name}`
+                                      : `Kiritilmagan: ${formatNumber(total)} ${name}`}
+                              </span>
+                              {!exact && (
+                                <span className="font-normal opacity-70">
+                                  Kiritildi: {formatNumber(paid)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    },
+                  )}
+                  {/* Extra currencies in payments not in items */}
+                  {hasEnabledPayments &&
+                    Object.entries(paymentTotalsByCurrency)
+                      .filter(([currId]) => !itemTotalsByCurrency[currId])
+                      .map(([currId, { name, total }]) => (
+                        <div
+                          key={currId}
+                          className="flex items-center justify-between rounded-lg px-2.5 py-1.5 bg-red-50 text-red-700 border border-red-100 text-xs font-medium"
+                        >
+                          <span>
+                            Ortiqcha: {formatNumber(total)} {name}
+                          </span>
+                          <span className="font-normal opacity-70">
+                            buyurtmada yo'q
+                          </span>
+                        </div>
+                      ))}
+                </div>
+              </div>
+            )}
+
             {/* Method toggle grid */}
             <div className="grid grid-cols-2 gap-2">
               {PAYMENT_METHODS.map((m) => {
@@ -737,7 +887,7 @@ const OrderView = () => {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1.5">
                         <label className="text-xs font-medium text-muted-foreground">
-                          Summa *
+                          Summa * ({formatNumber(p.amount)})
                         </label>
                         <Input
                           type="number"
@@ -952,23 +1102,257 @@ const OrderView = () => {
         <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm border-t px-4 py-3">
           <Button
             className="w-full h-11 gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold"
-            onClick={handleSubmit}
+            onClick={handlePreSubmit}
             disabled={submitting}
           >
-            {submitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Yuborilmoqda...
-              </>
-            ) : (
-              <>
-                <Truck className="h-4 w-4" />
-                Yetkazishni tasdiqlash
-              </>
-            )}
+            <Truck className="h-4 w-4" />
+            Yetkazishni tasdiqlash
           </Button>
         </div>
       )}
+
+      {/* Confirmation dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-sm w-full p-0 overflow-hidden flex flex-col max-h-[90vh]">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b shrink-0">
+            <DialogTitle className="text-base font-semibold flex items-center gap-2">
+              <Truck className="h-4 w-4 text-green-600" />
+              Tasdiqlash
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {data.orderNumber} · {data.branch?.name}
+            </p>
+          </DialogHeader>
+
+          <div className="overflow-y-auto flex-1 px-4 py-3 space-y-4">
+            {/* Items summary */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Mahsulotlar
+              </p>
+              <div className="space-y-2">
+                {data.items.map((item) => {
+                  const form = itemForms[item.id] || {};
+                  const qty = Number(form.confirmedQuantity) || 0;
+                  const price = Number(form.unitPrice) || 0;
+                  const currName =
+                    currencyOptions.find(
+                      (c) => String(c.id) === String(form.currencyId),
+                    )?.name ?? item.currency?.name;
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-xl border bg-muted/20 p-3 space-y-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        {item.item?.image && (
+                          <img
+                            src={item.item.image}
+                            alt={item.item.name}
+                            className="w-8 h-8 rounded-lg object-cover shrink-0"
+                          />
+                        )}
+                        <p className="text-sm font-medium leading-snug line-clamp-2">
+                          {item.item?.name}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 text-center">
+                        <div className="rounded-lg bg-blue-50 border border-blue-100 py-1.5 px-1">
+                          <p className="text-[10px] text-blue-500 font-medium leading-none mb-1">
+                            So'ralgan
+                          </p>
+                          <p className="text-xs font-bold text-blue-700">
+                            {formatNumber(item.requestedQuantity)}
+                            <span className="font-normal text-[10px] ml-0.5 text-blue-400">
+                              {item.item?.unit?.name}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-violet-50 border border-violet-100 py-1.5 px-1">
+                          <p className="text-[10px] text-violet-500 font-medium leading-none mb-1">
+                            Tasdiqlangan
+                          </p>
+                          <p className="text-xs font-bold text-violet-700">
+                            {formatNumber(qty)}
+                            <span className="font-normal text-[10px] ml-0.5 text-violet-400">
+                              {item.item?.unit?.name}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-emerald-50 border border-emerald-100 py-1.5 px-1">
+                          <p className="text-[10px] text-emerald-500 font-medium leading-none mb-1">
+                            Jami
+                          </p>
+                          <p className="text-xs font-bold text-emerald-700">
+                            {price > 0 ? formatNumber(qty * price) : "—"}
+                            {price > 0 && (
+                              <span className="font-normal text-[10px] ml-0.5 text-emerald-400">
+                                {currName}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Payments summary */}
+            {PAYMENT_METHODS.some((m) => payments[m.key].enabled) && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  To'lov
+                </p>
+                <div className="space-y-1.5">
+                  {PAYMENT_METHODS.filter((m) => payments[m.key].enabled).map(
+                    (m) => {
+                      const p = payments[m.key];
+                      const Icon = m.icon;
+                      const currName = currencyOptions.find(
+                        (c) => String(c.id) === String(p.currencyId),
+                      )?.name;
+                      return (
+                        <div
+                          key={m.key}
+                          className={`flex items-center justify-between rounded-xl px-3 py-2.5 border ${m.inactiveBg} ${m.inactiveBorder}`}
+                        >
+                          <div
+                            className={`flex items-center gap-2 text-sm font-medium ${m.inactiveText}`}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                            {m.label}
+                            {p.comment && (
+                              <span className="text-xs font-normal opacity-70">
+                                · {p.comment}
+                              </span>
+                            )}
+                          </div>
+                          <span
+                            className={`text-sm font-bold ${m.inactiveText}`}
+                          >
+                            {formatNumber(Number(p.amount))}{" "}
+                            <span className="text-xs font-normal">
+                              {currName}
+                            </span>
+                          </span>
+                        </div>
+                      );
+                    },
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Attachment */}
+            {attachmentFile && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Fayl
+                </p>
+                <div className="flex items-center gap-2.5 rounded-xl border bg-muted/20 px-3 py-2.5">
+                  <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm truncate">
+                    {attachmentFile.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground shrink-0 ml-auto">
+                    {(attachmentFile.size / 1024).toFixed(0)} KB
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Comment */}
+            {comment.trim() && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Izoh
+                </p>
+                <p className="text-sm text-foreground bg-muted/30 rounded-xl px-3 py-2.5 leading-relaxed">
+                  {comment}
+                </p>
+              </div>
+            )}
+
+            {/* Payment mismatch error */}
+            {paymentMismatches.length > 0 && (
+              <div className="rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+                  <p className="text-sm font-semibold text-red-700">
+                    To'lov summasi mos emas
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  {paymentMismatches.map(
+                    ({ currId, name, itemTotal, payTotal, diff }) => (
+                      <div
+                        key={currId}
+                        className="rounded-lg bg-white border border-red-100 px-3 py-2 space-y-1"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Kerak:</span>
+                          <span className="font-semibold text-foreground">
+                            {formatNumber(itemTotal)} {name}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            Kiritildi:
+                          </span>
+                          <span className="font-semibold text-foreground">
+                            {formatNumber(payTotal)} {name}
+                          </span>
+                        </div>
+                        <div
+                          className={`flex items-center justify-between text-xs font-bold pt-0.5 border-t border-red-100 mt-1 ${diff > 0 ? "text-amber-600" : "text-red-600"}`}
+                        >
+                          <span>{diff > 0 ? "Yetishmaydi:" : "Ortiqcha:"}</span>
+                          <span>
+                            {formatNumber(Math.abs(diff))} {name}
+                          </span>
+                        </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+                <p className="text-xs text-red-600">
+                  To'lov summalarini tuzatib, qayta urinib ko'ring.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="px-4 pb-4 pt-3 border-t flex gap-2 shrink-0">
+            <Button
+              variant="outline"
+              className="flex-1 h-10"
+              onClick={() => setConfirmOpen(false)}
+              disabled={submitting}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              className="flex-1 h-10 gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-60"
+              onClick={handleSubmit}
+              disabled={submitting || paymentMismatches.length > 0}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Yuborilmoqda...
+                </>
+              ) : (
+                <>
+                  <Truck className="h-4 w-4" />
+                  Yuborish
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Image dialog */}
       <Dialog
