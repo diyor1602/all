@@ -144,7 +144,7 @@ const PAYMENT_METHODS = [
   },
 ];
 
-const EMPTY_PAYMENT = { amount: "", currencyId: "", paidAt: "", comment: "" };
+const EMPTY_PAYMENT = { amount: "", currencyId: "", comment: "" };
 
 const formatDate = (dateString) => {
   if (!dateString) return "—";
@@ -253,7 +253,7 @@ const OrderView = () => {
       [key]: {
         ...prev[key],
         enabled: !prev[key].enabled,
-        ...(prev[key].enabled ? EMPTY_PAYMENT : { paidAt: todayISO() }),
+        ...(prev[key].enabled ? EMPTY_PAYMENT : {}),
       },
     }));
   };
@@ -310,10 +310,10 @@ const OrderView = () => {
     );
     for (const m of enabledPayments) {
       const p = payments[m.key];
-      if (!p.amount || !p.currencyId || !p.paidAt) {
+      if (!p.amount || !p.currencyId) {
         toast({
           title: "Xatolik",
-          description: `${m.label} to'lovi uchun summa, valyuta va sanani kiriting`,
+          description: `${m.label} to'lovi uchun summa va valyuta kiriting`,
           variant: "destructive",
         });
         return;
@@ -326,7 +326,6 @@ const OrderView = () => {
         method: m.key,
         amount: Number(p.amount),
         currencyId: Number(p.currencyId),
-        paidAt: p.paidAt,
         comment: p.comment.trim() || "",
       };
     });
@@ -570,7 +569,8 @@ const OrderView = () => {
                   <div className="border-t px-3 py-3 space-y-3 bg-background">
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">
-                        Tasdiqlangan miqdor *
+                        Tasdiqlangan miqdor * (
+                        {formatNumber(form.confirmedQuantity)})
                       </label>
                       <div className="flex items-center gap-2">
                         <Input
@@ -596,7 +596,7 @@ const OrderView = () => {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1.5">
                         <label className="text-xs font-medium text-muted-foreground">
-                          Narx
+                          Narx ({formatNumber(form.unitPrice)})
                         </label>
                         <Input
                           type="number"
@@ -632,6 +632,25 @@ const OrderView = () => {
                         </Select>
                       </div>
                     </div>
+
+                    {form.confirmedQuantity > 0 && form.unitPrice > 0 && (
+                      <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 border border-green-100 px-3 py-2.5">
+                        <span className="text-xs font-medium text-green-700">
+                          Jami narxi
+                        </span>
+                        <span className="text-sm font-bold text-green-800">
+                          {formatNumber(
+                            Number(form.confirmedQuantity) *
+                              Number(form.unitPrice),
+                          )}{" "}
+                          <span className="text-xs font-normal text-green-600">
+                            {currencyOptions.find(
+                              (c) => String(c.id) === String(form.currencyId),
+                            )?.name ?? item.currency?.name}
+                          </span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -698,7 +717,9 @@ const OrderView = () => {
                   <div
                     className={`flex items-center justify-between px-4 py-2.5 ${m.inactiveBg}`}
                   >
-                    <div className={`flex items-center gap-2 font-semibold text-sm ${m.inactiveText}`}>
+                    <div
+                      className={`flex items-center gap-2 font-semibold text-sm ${m.inactiveText}`}
+                    >
                       <Icon className="h-4 w-4" />
                       {m.label}
                     </div>
@@ -751,20 +772,6 @@ const OrderView = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">
-                        Sana *
-                      </label>
-                      <Input
-                        type="date"
-                        className="h-9 text-sm"
-                        value={p.paidAt}
-                        onChange={(e) =>
-                          updatePayment(m.key, "paidAt", e.target.value)
-                        }
-                      />
                     </div>
 
                     <div className="space-y-1.5">
