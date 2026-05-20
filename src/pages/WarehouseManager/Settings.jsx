@@ -5,8 +5,6 @@ import { Box, ChartPie, Palette, Truck } from "lucide-react";
 import Item from "./Items/Item";
 import Balance from "./Balance/Balance";
 import Colors from "./Additional/Colors";
-import Supplier from "./Supplier/Supplier";
-import CreateOrder from "./Supplier/Order/CreateOrder";
 
 const Settings = () => {
   return (
@@ -15,8 +13,6 @@ const Settings = () => {
       <Route path="items/*" element={<Item />} />
       <Route path="balance/*" element={<Balance />} />
       <Route path="colors/" element={<Colors />} />
-      <Route path="supplier/" element={<Supplier />} />
-      <Route path="supplier/create-order/" element={<CreateOrder />} />
     </Routes>
   );
 };
@@ -44,7 +40,7 @@ const SettingsPage = () => {
     {
       name: "Ta'minot",
       icon: Truck,
-      link: "/warehouseManager/settings/supplier",
+      link: "/warehouseManager/supplier",
       color: "bg-green-500",
     },
   ];

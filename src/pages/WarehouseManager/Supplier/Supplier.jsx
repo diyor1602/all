@@ -13,6 +13,7 @@ import {
   Clock,
   X,
   Send,
+  Warehouse,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -513,6 +514,21 @@ const Supplier = () => {
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
+                          ) : order.status === "in_delivery" ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2.5 text-xs gap-1.5 text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                              asChild
+                            >
+                              <Link to={`receive/${order.id}`}>
+                                <Warehouse className="h-3.5 w-3.5" />
+                                Qabul qilish
+                              </Link>
+                            </Button>
                           ) : (
                             <span className="text-muted-foreground text-sm">
                               —

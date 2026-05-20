@@ -4,6 +4,7 @@ import Outcome from "./Outcome/Outcome";
 import CompleteOrders from "./CompleteOrders/CompleteOrders";
 import Settings from "./Settings";
 import Requisitions from "./Requisition/Requisitions";
+import SupplierIndex from "./Supplier/SupplierIndex";
 
 const WarehouseManager = () => {
   return (
@@ -13,6 +14,7 @@ const WarehouseManager = () => {
       <Route path="settings/*" element={<Settings />} />
       <Route path="completeOrders/*" element={<CompleteOrders />} />
       <Route path="requisitions/*" element={<Requisitions />} />
+      <Route path="supplier/*" element={<SupplierIndex />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
