@@ -575,44 +575,48 @@ const Orders = () => {
 
                           {/* Quantities grid */}
                           <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="text-center rounded-lg bg-background border px-2 py-1.5">
-                              <p className="text-[10px] text-muted-foreground leading-none mb-1">
+                            <div className="text-center rounded-xl bg-blue-50 border border-blue-100 px-2 py-1.5">
+                              <p className="text-[10px] text-blue-500 font-medium leading-none mb-1">
                                 So'ralgan
                               </p>
-                              <p className="text-xs font-semibold">
+                              <p className="text-xs font-bold text-blue-700">
                                 {formatNumber(item.requestedQuantity)}
-                                <span className="font-normal text-muted-foreground ml-0.5 text-[10px]">
+                                <span className="font-normal text-blue-400 ml-0.5 text-[10px]">
                                   {item.item?.unit?.name}
                                 </span>
                               </p>
                             </div>
-                            <div className="text-center rounded-lg bg-background border px-2 py-1.5">
-                              <p className="text-[10px] text-muted-foreground leading-none mb-1">
+                            <div className="text-center rounded-xl bg-violet-50 border border-violet-100 px-2 py-1.5">
+                              <p className="text-[10px] text-violet-500 font-medium leading-none mb-1">
                                 Tasdiqlangan
                               </p>
-                              <p className="text-xs font-semibold">
+                              <p className="text-xs font-bold text-violet-700">
                                 {item.confirmedQuantity != null ? (
-                                  formatNumber(item.confirmedQuantity)
+                                  <>
+                                    {formatNumber(item.confirmedQuantity)}
+                                    <span className="font-normal text-violet-400 ml-0.5 text-[10px]">
+                                      {item.item?.unit?.name}
+                                    </span>
+                                  </>
                                 ) : (
-                                  <span className="text-muted-foreground font-normal">
-                                    —
-                                  </span>
+                                  <span className="text-violet-300 font-normal">—</span>
                                 )}
                               </p>
                             </div>
-                            <div className="text-center rounded-lg bg-background border px-2 py-1.5">
-                              <p className="text-[10px] text-muted-foreground leading-none mb-1">
+                            <div className="text-center rounded-xl bg-green-50 border border-green-100 px-2 py-1.5">
+                              <p className="text-[10px] text-green-500 font-medium leading-none mb-1">
                                 Qabul
                               </p>
-                              <p
-                                className={`text-xs font-semibold ${item.receivedQuantity != null ? "text-green-700" : ""}`}
-                              >
+                              <p className="text-xs font-bold text-green-700">
                                 {item.receivedQuantity != null ? (
-                                  formatNumber(item.receivedQuantity)
+                                  <>
+                                    {formatNumber(item.receivedQuantity)}
+                                    <span className="font-normal text-green-400 ml-0.5 text-[10px]">
+                                      {item.item?.unit?.name}
+                                    </span>
+                                  </>
                                 ) : (
-                                  <span className="text-muted-foreground font-normal">
-                                    —
-                                  </span>
+                                  <span className="text-green-300 font-normal">—</span>
                                 )}
                               </p>
                             </div>
