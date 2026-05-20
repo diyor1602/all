@@ -327,6 +327,7 @@ const OrderView = () => {
       };
     });
 
+    const nowISO = new Date().toISOString();
     const paymentsJson = PAYMENT_METHODS.filter(
       (m) => payments[m.key].enabled,
     ).map((m) => {
@@ -336,6 +337,7 @@ const OrderView = () => {
         amount: Number(p.amount),
         currencyId: Number(p.currencyId),
         comment: p.comment.trim() || "",
+        paidAt: m.key === "debt" ? null : nowISO,
       };
     });
 
@@ -492,7 +494,7 @@ const OrderView = () => {
       <div className="px-4 py-4 space-y-4">
         {/* Order meta */}
         <div className="rounded-2xl border bg-card p-4 space-y-3">
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
             <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="text-muted-foreground">Muddat:</span>
             <span className={`font-medium ${isOverdue ? "text-red-600" : ""}`}>
@@ -729,20 +731,187 @@ const OrderView = () => {
 
                 {/* Read-only price */}
                 {!canEdit && item.unitPrice > 0 && (
-                  <div className="border-t px-3 py-2 flex items-center justify-between bg-background">
-                    <span className="text-xs text-muted-foreground">Narx:</span>
-                    <span className="text-sm font-semibold">
-                      {formatNumber(item.unitPrice)}{" "}
-                      <span className="font-normal text-muted-foreground text-xs">
+                  <div className="border-t px-3 py-2.5 flex items-center justify-between bg-muted/10">
+                    <div className="text-xs text-muted-foreground">
+                      {formatNumber(item.confirmedQuantity ?? item.requestedQuantity)}{" "}
+                      {item.item?.unit?.name} × {formatNumber(item.unitPrice)}{" "}
+                      {item.currency?.name}
+                    </div>
+                    <div className="text-sm font-bold text-emerald-700">
+                      {formatNumber(
+                        (item.confirmedQuantity ?? item.requestedQuantity) * item.unitPrice,
+                      )}{" "}
+                      <span className="text-xs font-normal text-emerald-600">
                         {item.currency?.name}
                       </span>
-                    </span>
+                    </div>
                   </div>
                 )}
               </div>
             );
           })}
         </div>
+
+        {/* ── Read-only: total + payments + attachments ── */}
+        {!canEdit && (
+          <>
+            {/* Order total */}
+            {(() => {
+              const totals = {};
+              data.items.forEach((item) => {
+                if (!item.unitPrice) return;
+                const qty = item.confirmedQuantity ?? item.requestedQuantity;
+                const currId = String(item.currency?.id ?? "");
+                const currName = item.currency?.name ?? "";
+                if (!totals[currId]) totals[currId] = { name: currName, total: 0 };
+                totals[currId].total += qty * item.unitPrice;
+              });
+              const entries = Object.entries(totals);
+              if (!entries.length) return null;
+              return (
+                <div className="rounded-2xl border bg-card overflow-hidden">
+                  <div className="px-4 py-3 border-b bg-muted/20">
+                    <p className="text-sm font-semibold">Buyurtma jami</p>
+                  </div>
+                  <div className="px-4 py-3 space-y-2">
+                    {entries.map(([currId, { name, total }]) => (
+                      <div key={currId} className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">{name}</span>
+                        <span className="text-base font-bold text-emerald-700">
+                          {formatNumber(total)}{" "}
+                          <span className="text-sm font-normal text-emerald-600">{name}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Payments */}
+            {data.payments?.length > 0 && (
+              <div className="rounded-2xl border bg-card overflow-hidden">
+                <div className="px-4 py-3 border-b bg-muted/20">
+                  <p className="text-sm font-semibold">To'lovlar</p>
+                </div>
+                <div className="divide-y">
+                  {data.payments.map((pay) => {
+                    const method = PAYMENT_METHODS.find((m) => m.key === pay.method);
+                    const Icon = method?.icon ?? Banknote;
+                    return (
+                      <div key={pay.id} className="flex items-center gap-3 px-4 py-3">
+                        <div
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${method?.inactiveBg ?? "bg-muted"}`}
+                        >
+                          <Icon className={`h-4 w-4 ${method?.inactiveText ?? "text-muted-foreground"}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-semibold ${method?.inactiveText ?? ""}`}>
+                            {method?.label ?? pay.method}
+                          </p>
+                          {pay.comment && (
+                            <p className="text-xs text-muted-foreground truncate">{pay.comment}</p>
+                          )}
+                          <p className="text-[11px] text-muted-foreground">
+                            {formatDate(pay.paidAt)}
+                          </p>
+                        </div>
+                        <span className={`text-sm font-bold shrink-0 ${method?.inactiveText ?? ""}`}>
+                          {formatNumber(pay.amount)}{" "}
+                          <span className="text-xs font-normal">{pay.currency?.name}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Payment totals by currency */}
+                {(() => {
+                  const totals = {};
+                  data.payments.forEach((pay) => {
+                    const currId = String(pay.currency?.id ?? "");
+                    const currName = pay.currency?.name ?? "";
+                    if (!totals[currId]) totals[currId] = { name: currName, total: 0 };
+                    totals[currId].total += pay.amount;
+                  });
+                  return (
+                    <div className="border-t px-4 py-2.5 bg-muted/10 flex flex-wrap gap-3">
+                      {Object.entries(totals).map(([currId, { name, total }]) => (
+                        <span key={currId} className="text-xs text-muted-foreground">
+                          Jami:{" "}
+                          <span className="font-semibold text-foreground">
+                            {formatNumber(total)} {name}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Attachments */}
+            {data.attachments?.length > 0 && (
+              <div className="rounded-2xl border bg-card overflow-hidden">
+                <div className="px-4 py-3 border-b bg-muted/20">
+                  <p className="text-sm font-semibold">Fayllar</p>
+                </div>
+                <div className="divide-y">
+                  {data.attachments.map((att) => {
+                    const isImage = att.fileType?.startsWith("image/");
+                    return (
+                      <div key={att.id} className="flex items-center gap-3 px-3 py-3">
+                        {isImage ? (
+                          <button
+                            type="button"
+                            className="w-14 h-14 rounded-xl overflow-hidden ring-1 ring-border shrink-0 active:opacity-80"
+                            onClick={() =>
+                              setImageDialog({
+                                open: true,
+                                src: att.filePath,
+                                name: att.fileName,
+                              })
+                            }
+                          >
+                            <img
+                              src={att.filePath}
+                              alt={att.fileName}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ) : (
+                          <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{att.fileName}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {formatDate(att.createdAt)}
+                          </p>
+                          {isImage && (
+                            <button
+                              type="button"
+                              className="mt-1 text-xs text-blue-600 font-medium"
+                              onClick={() =>
+                                setImageDialog({
+                                  open: true,
+                                  src: att.filePath,
+                                  name: att.fileName,
+                                })
+                              }
+                            >
+                              Ko'rish
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* ── Payments ── */}
         {canEdit && (
