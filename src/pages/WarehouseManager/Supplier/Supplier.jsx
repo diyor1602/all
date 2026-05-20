@@ -10,7 +10,6 @@ import {
   Package,
   Loader2,
   Trash2,
-  MapPin,
   Clock,
   X,
   Send,
