@@ -1,11 +1,17 @@
 import BaseLayout from "./BaseLayout";
-import { Calendar1 } from "lucide-react";
+import { Calendar1, Box } from "lucide-react";
 
 const navigation = [
   {
     name: "Buyurtmalar",
     href: "/supplier/orders",
     icon: Calendar1,
+    onMobile: true,
+  },
+  {
+    name: "Balans",
+    href: "/supplier/balance",
+    icon: Box,
     onMobile: true,
   },
 ];
