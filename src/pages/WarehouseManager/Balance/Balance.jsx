@@ -73,6 +73,14 @@ const Balance = () => {
   const sentinelRef = useRef(null);
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
+  const loadingMoreRef = useRef(loadingMore);
+  loadingMoreRef.current = loadingMore;
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  const totalPagesRef = useRef(totalPages);
+  totalPagesRef.current = totalPages;
 
   const fetchPage = useCallback(
     async (pageNum, filterParams, replace) => {
@@ -117,20 +125,25 @@ const Balance = () => {
     return () => clearTimeout(debounceRef.current);
   }, []);
 
-  // Infinite scroll observer
+  // Infinite scroll observer — stable, uses refs to avoid re-creating on every state change
   useEffect(() => {
     if (!sentinelRef.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !loadingMore && !loading && page < totalPages) {
-          fetchPage(page + 1, filtersRef.current, false);
+        if (
+          entry.isIntersecting &&
+          !loadingMoreRef.current &&
+          !loadingRef.current &&
+          pageRef.current < totalPagesRef.current
+        ) {
+          fetchPage(pageRef.current + 1, filtersRef.current, false);
         }
       },
       { threshold: 0.1 },
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [loading, loadingMore, page, totalPages, fetchPage]);
+  }, [fetchPage]);
 
   const saveFilters = (newFilters) => {
     localStorage.setItem(FILTERS_KEY, JSON.stringify(newFilters));
@@ -391,10 +404,6 @@ const Balance = () => {
               </TableBody>
             </Table>
 
-            {/* Infinite scroll sentinel */}
-            <div ref={sentinelRef} className="flex justify-center py-4">
-              {loadingMore && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
-            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -414,6 +423,11 @@ const Balance = () => {
             )}
           </div>
         )}
+      </div>
+
+      {/* Infinite scroll sentinel */}
+      <div ref={sentinelRef} className="flex justify-center py-2">
+        {loadingMore && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
       </div>
 
       {/* ── Image dialog ── */}
