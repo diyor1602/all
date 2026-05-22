@@ -290,6 +290,9 @@ const Orders = () => {
               </p>
             )}
           </div>
+          <Button onClick={() => navigate("/supplier/create-order")}>
+            Yangi buyurtma
+          </Button>
         </div>
 
         {/* Search row */}
@@ -600,7 +603,9 @@ const Orders = () => {
                                     </span>
                                   </>
                                 ) : (
-                                  <span className="text-violet-300 font-normal">—</span>
+                                  <span className="text-violet-300 font-normal">
+                                    —
+                                  </span>
                                 )}
                               </p>
                             </div>
@@ -617,7 +622,9 @@ const Orders = () => {
                                     </span>
                                   </>
                                 ) : (
-                                  <span className="text-green-300 font-normal">—</span>
+                                  <span className="text-green-300 font-normal">
+                                    —
+                                  </span>
                                 )}
                               </p>
                             </div>
@@ -677,24 +684,25 @@ const Orders = () => {
                 )}
 
                 {/* View action — all other statuses */}
-                {order.status !== "supplier_confirmed" && order.status !== "pending" && (
-                  <div className="px-3 py-3 border-t">
-                    <Button
-                      variant="outline"
-                      className={`w-full h-10 gap-2 ${
-                        order.status === "in_delivery"
-                          ? "border-amber-200 text-amber-700 hover:bg-amber-50"
-                          : order.status === "received"
-                            ? "border-green-200 text-green-700 hover:bg-green-50"
-                            : "border-gray-200 text-gray-500 hover:bg-gray-50"
-                      }`}
-                      onClick={() => navigate(`/supplier/orders/${order.id}`)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      Ko'rish
-                    </Button>
-                  </div>
-                )}
+                {order.status !== "supplier_confirmed" &&
+                  order.status !== "pending" && (
+                    <div className="px-3 py-3 border-t">
+                      <Button
+                        variant="outline"
+                        className={`w-full h-10 gap-2 ${
+                          order.status === "in_delivery"
+                            ? "border-amber-200 text-amber-700 hover:bg-amber-50"
+                            : order.status === "received"
+                              ? "border-green-200 text-green-700 hover:bg-green-50"
+                              : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                        }`}
+                        onClick={() => navigate(`/supplier/orders/${order.id}`)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        Ko'rish
+                      </Button>
+                    </div>
+                  )}
 
                 {/* Footer — created date */}
                 <div className="flex items-center gap-1.5 px-4 py-2 border-t bg-muted/10">

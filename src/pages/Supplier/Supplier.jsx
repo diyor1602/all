@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Orders from "./Orders";
 import OrderView from "./OrderView";
+import CreateOrder from "./CreateOrder";
 import Balance from "./Balance";
 
 const Supplier = () => {
@@ -8,6 +9,7 @@ const Supplier = () => {
     <Routes>
       <Route path="orders" element={<Orders />} />
       <Route path="orders/:id" element={<OrderView />} />
+      <Route path="create-order" element={<CreateOrder />} />
       <Route path="balance" element={<Balance />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
