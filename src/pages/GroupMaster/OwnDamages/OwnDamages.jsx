@@ -86,11 +86,11 @@ const OwnDamages = () => {
     const initialEmployeeState = {};
     const initialOrderState = {};
 
-    groupedDamages.forEach((employee, employeeIndex) => {
+    groupedDamages.forEach((employee) => {
       const employeeKey = employee.employeeKey;
       initialEmployeeState[employeeKey] = false;
 
-      employee.orders.forEach((order, orderIndex) => {
+      employee.orders.forEach((order) => {
         initialOrderState[`${employeeKey}-${order.orderId}`] = false;
       });
     });
