@@ -67,15 +67,15 @@ const Settings = ({ userData }) => {
     const formData = new FormData();
     formData.append("_method", "PATCH");
     formData.append("img", fileInputRef.current.files[0]);
-    formData.append("username", newUsername.trim()); // ✅ always send username
+    formData.append("username", newUsername.trim()); // always send username
 
     try {
       await api.post(`/profile/${userData.id}`, formData);
-      toast({ title: "Rasm yangilandi ✅", duration: 2000 });
+      toast({ title: "Rasm yangilandi", duration: 2000 });
       setIsEditingImg(false);
       setPreviewImg(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      navigate(0); // ✅ reload after success
+      navigate(0); // reload after success
     } catch (error) {
       toast({
         title: "Xatolik!",
@@ -104,10 +104,10 @@ const Settings = ({ userData }) => {
     try {
       await api.post(`/profile/${userData.id}`, {
         _method: "PATCH",
-        username: newUsername.trim(), // ✅ required
+        username: newUsername.trim(), // required
       });
       toast({
-        title: "Login yangilandi ✅",
+        title: "Login yangilandi",
         duration: 2000,
         style: {
           background: "green",
@@ -115,7 +115,7 @@ const Settings = ({ userData }) => {
         },
       });
       setIsEditingUsername(false);
-      navigate(0); // ✅ reload after success
+      navigate(0); // reload after success
     } catch (error) {
       toast({
         title: "Xatolik!",
@@ -166,14 +166,14 @@ const Settings = ({ userData }) => {
     try {
       await api.post(`/profile/${userData.id}`, {
         _method: "PATCH",
-        username: newUsername.trim(), // ✅ always send username
+        username: newUsername.trim(), // always send username
         password,
       });
-      toast({ title: "Parol yangilandi ✅" });
+      toast({ title: "Parol yangilandi" });
       setShowPasswordFields(false);
       setPassword("");
       setConfirmPassword("");
-      navigate(0); // ✅ reload after success
+      navigate(0); // reload after success
     } catch (error) {
       toast({
         title: "Xatolik!",
@@ -405,7 +405,7 @@ const Settings = ({ userData }) => {
             <div className="space-y-4">
               {userData.salaryChanges
                 ?.sort(
-                  (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                  (a, b) => new Date(b.created_at) - new Date(a.created_at),
                 )
                 ?.map((salary, index) => (
                   <div
@@ -419,7 +419,7 @@ const Settings = ({ userData }) => {
                         </span>
                         <span className="text-base font-semibold text-gray-800">
                           {parseFloat(salary.old_salary)?.toLocaleString(
-                            "ru-RU"
+                            "ru-RU",
                           )}{" "}
                           so’m{" "}
                           <span className="text-xs text-gray-500">
@@ -434,7 +434,7 @@ const Settings = ({ userData }) => {
                         </span>
                         <span className="text-base font-semibold text-green-600">
                           {parseFloat(salary.new_salary)?.toLocaleString(
-                            "ru-RU"
+                            "ru-RU",
                           )}{" "}
                           so’m{" "}
                           <span className="text-xs text-gray-500">
@@ -471,7 +471,7 @@ const Settings = ({ userData }) => {
             <div className="space-y-4">
               {userData.groupChanges
                 ?.sort(
-                  (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                  (a, b) => new Date(b.created_at) - new Date(a.created_at),
                 )
                 ?.map((change, index) => (
                   <div

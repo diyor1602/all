@@ -52,10 +52,10 @@ const Attendance = () => {
   const urlParams = getUrlParams();
 
   const [selectedYear, setSelectedYear] = useState(
-    urlParams.year ? parseInt(urlParams.year) : today.getFullYear()
+    urlParams.year ? parseInt(urlParams.year) : today.getFullYear(),
   );
   const [selectedMonth, setSelectedMonth] = useState(
-    urlParams.month ? parseInt(urlParams.month) - 1 : today.getMonth()
+    urlParams.month ? parseInt(urlParams.month) - 1 : today.getMonth(),
   );
 
   const [attendances, setAttendances] = useState([]);
@@ -92,7 +92,7 @@ const Attendance = () => {
     transport_ids: [],
   });
   const [selectedDate, setSelectedDate] = useState(
-    `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`
+    `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`,
   );
   const [transportSearchTerm, setTransportSearchTerm] = useState("");
   const [selectAll, setSelectAll] = useState(false);
@@ -200,7 +200,7 @@ const Attendance = () => {
   useEffect(() => {
     // Update the mass attendance date when month/year changes
     setSelectedDate(
-      `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`
+      `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`,
     );
     setMassAttendance((prev) => ({
       ...prev,
@@ -242,7 +242,7 @@ const Attendance = () => {
       (t) =>
         t.state_number?.toLowerCase().includes(value) ||
         t.driver_full_name?.toLowerCase().includes(value) ||
-        t.name?.toLowerCase().includes(value)
+        t.name?.toLowerCase().includes(value),
     );
     setTransportSearchResults(results);
   }, [transportSearchTerm, transports]);
@@ -312,10 +312,10 @@ const Attendance = () => {
       for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex++) {
         const date = `${selectedYear}-${String(selectedMonth + 1).padStart(
           2,
-          "0"
+          "0",
         )}-${String(dayIndex + 1).padStart(2, "0")}`;
         const attendance = attendances.find(
-          (a) => a.date === date && a.transport?.id === transportId
+          (a) => a.date === date && a.transport?.id === transportId,
         );
         if (attendance) {
           dailyMoneyTotals[dayIndex] +=
@@ -334,9 +334,9 @@ const Attendance = () => {
               a.date ===
                 `${selectedYear}-${String(selectedMonth + 1).padStart(
                   2,
-                  "0"
+                  "0",
                 )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport?.id === transportId
+              a.transport?.id === transportId,
           );
 
           // Add to daily totals
@@ -345,7 +345,7 @@ const Attendance = () => {
 
           return total + attendanceValue;
         },
-        0
+        0,
       );
 
       const totalSalary = Array.from({ length: daysInMonth }).reduce(
@@ -355,16 +355,16 @@ const Attendance = () => {
               a.date ===
                 `${selectedYear}-${String(selectedMonth + 1).padStart(
                   2,
-                  "0"
+                  "0",
                 )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport?.id === transportId
+              a.transport?.id === transportId,
           );
           return (
             total +
             (attendance?.salary * (attendance?.attendance_type || 0) || 0)
           );
         },
-        0
+        0,
       );
 
       const fuelDays = Array.from({ length: daysInMonth }).reduce(
@@ -374,16 +374,16 @@ const Attendance = () => {
               a.date ===
                 `${selectedYear}-${String(selectedMonth + 1).padStart(
                   2,
-                  "0"
+                  "0",
                 )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport?.id === transportId
+              a.transport?.id === transportId,
           );
           return (
             total +
             (attendance?.fuel_bonus > 0 ? attendance?.attendance_type || 0 : 0)
           );
         },
-        0
+        0,
       );
 
       const totalFuelBonus = Array.from({ length: daysInMonth }).reduce(
@@ -393,16 +393,16 @@ const Attendance = () => {
               a.date ===
                 `${selectedYear}-${String(selectedMonth + 1).padStart(
                   2,
-                  "0"
+                  "0",
                 )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport?.id === transportId
+              a.transport?.id === transportId,
           );
           return (
             total +
             (attendance?.fuel_bonus * (attendance?.attendance_type || 0) || 0)
           );
         },
-        0
+        0,
       );
 
       const totalTransportMoney = totalSalary + totalFuelBonus;
@@ -410,16 +410,16 @@ const Attendance = () => {
       const totalPaid =
         transport?.payment?.reduce(
           (total, payment) => total + (Number.parseInt(payment?.amount) || 0),
-          0
+          0,
         ) || 0;
 
       const debt = totalTransportMoney - totalPaid;
 
       const advance = Number.parseInt(
-        transport?.payment?.find((p) => p.type === "advance")?.amount || 0
+        transport?.payment?.find((p) => p.type === "advance")?.amount || 0,
       );
       const salary = Number.parseInt(
-        transport?.payment?.find((p) => p.type === "salary")?.amount || 0
+        transport?.payment?.find((p) => p.type === "salary")?.amount || 0,
       );
 
       calculations[transportId] = {
@@ -482,7 +482,7 @@ const Attendance = () => {
       // Create a new workbook and worksheet
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(
-        `Davomat ${selectedMonth + 1}-${selectedYear}`
+        `Davomat ${selectedMonth + 1}-${selectedYear}`,
       );
 
       // Add headers
@@ -493,8 +493,8 @@ const Attendance = () => {
         headers.push(
           `${String(day).padStart(2, "0")}.${String(selectedMonth + 1).padStart(
             2,
-            "0"
-          )}.${selectedYear}`
+            "0",
+          )}.${selectedYear}`,
         );
       }
 
@@ -510,7 +510,7 @@ const Attendance = () => {
         "Jami to'langan pul",
         "Avans",
         "Maosh",
-        "Transport umumiy balansi"
+        "Transport umumiy balansi",
       );
 
       // Add header row
@@ -539,10 +539,10 @@ const Attendance = () => {
         for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex++) {
           const date = `${selectedYear}-${String(selectedMonth + 1).padStart(
             2,
-            "0"
+            "0",
           )}-${String(dayIndex + 1).padStart(2, "0")}`;
           const attendance = attendances.find(
-            (a) => a?.date === date && a?.transport?.id === transport.id
+            (a) => a?.date === date && a?.transport?.id === transport.id,
           );
           row.push(attendance ? attendance.attendance_type : "");
         }
@@ -559,7 +559,7 @@ const Attendance = () => {
           calculations.totalPaid || 0,
           calculations.advance || 0,
           calculations.salary || 0,
-          transport?.balance || 0
+          transport?.balance || 0,
         );
 
         worksheet.addRow(row);
@@ -571,7 +571,7 @@ const Attendance = () => {
       // Add daily totals
       for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex++) {
         totalsRow.push(
-          transportCalculations.totals.dailyTotals[dayIndex].toFixed(1)
+          transportCalculations.totals.dailyTotals[dayIndex].toFixed(1),
         );
       }
 
@@ -579,7 +579,7 @@ const Attendance = () => {
       totalsRow.push(
         filteredTransports.reduce(
           (total, transport) => total + (parseInt(transport?.salary) || 0),
-          0
+          0,
         ),
         transportCalculations.totals.workDays.toFixed(1),
         transportCalculations.totals.totalSalary || 0,
@@ -590,7 +590,7 @@ const Attendance = () => {
         transportCalculations.totals.totalPaid || 0,
         transportCalculations.totals.advance || 0,
         transportCalculations.totals.salary || 0,
-        transportCalculations.totals.balance || 0
+        transportCalculations.totals.balance || 0,
       );
 
       worksheet.addRow(totalsRow);
@@ -647,7 +647,7 @@ const Attendance = () => {
   const openAttendanceDialog = (transportId, day, attendance) => {
     const formattedDate = `${selectedYear}-${String(selectedMonth + 1).padStart(
       2,
-      "0"
+      "0",
     )}-${String(day).padStart(2, "0")}`;
 
     // Find the transport to get its default salary and fuel_bonus
@@ -660,13 +660,13 @@ const Attendance = () => {
       salary: attendance
         ? attendance.salary || 0
         : transport?.salary
-        ? Number.parseInt(transport.salary)
-        : 0,
+          ? Number.parseInt(transport.salary)
+          : 0,
       fuel_bonus: attendance
         ? attendance.fuel_bonus || 0
         : transport?.fuel_bonus
-        ? Number.parseInt(transport.fuel_bonus)
-        : 0,
+          ? Number.parseInt(transport.fuel_bonus)
+          : 0,
       attendanceId: attendance ? attendance.id : null,
       hasAttendance: !!attendance,
     });
@@ -714,7 +714,7 @@ const Attendance = () => {
             attendance_type: currentAttendance.attendance_type,
             salary: currentAttendance.salary,
             fuel_bonus: currentAttendance.fuel_bonus,
-          }
+          },
         );
         toast({
           title: "Muvaffaqiyatli",
@@ -905,7 +905,7 @@ const Attendance = () => {
     setIsBulkUpdating(true);
     try {
       const existingPayment = selectedTransport?.payment?.find(
-        (payment) => payment?.type === type
+        (payment) => payment?.type === type,
       );
 
       const method = existingPayment ? "patch" : "post";
@@ -995,11 +995,11 @@ const Attendance = () => {
     day,
     hasAttendance,
     attendanceType,
-    attendanceId = null
+    attendanceId = null,
   ) => {
     const formattedDate = `${selectedYear}-${String(selectedMonth + 1).padStart(
       2,
-      "0"
+      "0",
     )}-${String(day).padStart(2, "0")}`;
 
     try {
@@ -1046,7 +1046,7 @@ const Attendance = () => {
           type="month"
           value={`${selectedYear}-${String(selectedMonth + 1).padStart(
             2,
-            "0"
+            "0",
           )}`}
           onChange={handleDateChange}
           className="px-2 py-1 rounded w-fit bg-white"
@@ -1161,13 +1161,14 @@ const Attendance = () => {
                   </td>
                   {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
                     const date = `${selectedYear}-${String(
-                      selectedMonth + 1
+                      selectedMonth + 1,
                     ).padStart(2, "0")}-${String(dayIndex + 1).padStart(
                       2,
-                      "0"
+                      "0",
                     )}`;
                     const attendance = attendances.find(
-                      (a) => a.date === date && a.transport?.id === transport.id
+                      (a) =>
+                        a.date === date && a.transport?.id === transport.id,
                     );
 
                     return (
@@ -1177,7 +1178,7 @@ const Attendance = () => {
                           new Date(
                             selectedYear,
                             selectedMonth,
-                            dayIndex + 1
+                            dayIndex + 1,
                           ).getDay() === 0
                             ? "bg-orange-200"
                             : ""
@@ -1192,7 +1193,7 @@ const Attendance = () => {
                                 openAttendanceDialog(
                                   transport.id,
                                   dayIndex + 1,
-                                  attendance
+                                  attendance,
                                 )
                               }
                               className="cursor-pointer w-full h-full flex items-center justify-center"
@@ -1212,7 +1213,7 @@ const Attendance = () => {
                                   dayIndex + 1,
                                   !!attendance,
                                   1,
-                                  attendance?.id
+                                  attendance?.id,
                                 )
                               }
                             >
@@ -1225,7 +1226,7 @@ const Attendance = () => {
                                   dayIndex + 1,
                                   !!attendance,
                                   0.5,
-                                  attendance?.id
+                                  attendance?.id,
                                 )
                               }
                             >
@@ -1238,7 +1239,7 @@ const Attendance = () => {
                                   dayIndex + 1,
                                   !!attendance,
                                   0,
-                                  attendance?.id
+                                  attendance?.id,
                                 )
                               }
                             >
@@ -1314,7 +1315,7 @@ const Attendance = () => {
                     {/* Workday total (current) */}
                     <span>
                       {transportCalculations.totals.dailyTotals[index].toFixed(
-                        1
+                        1,
                       )}
                     </span>
 
@@ -1322,7 +1323,7 @@ const Attendance = () => {
                     <span className="text-green-600 font-semibold text-[11px]">
                       {formatValue(
                         transportCalculations.totals.dailyMoneyTotals[index] ||
-                          0
+                          0,
                       )}
                     </span>
                   </div>
@@ -1334,8 +1335,8 @@ const Attendance = () => {
                   filteredTransports.reduce(
                     (total, transport) =>
                       total + (parseInt(transport?.salary) || 0),
-                    0
-                  )
+                    0,
+                  ),
                 )}
               </td>
               <td className="border-2 p-1 min-w-[70px]">
@@ -1357,7 +1358,7 @@ const Attendance = () => {
               </td>
               <td className="border-2 p-1 min-w-[70px]">
                 {formatValue(
-                  transportCalculations.totals.totalTransportMoney || 0
+                  transportCalculations.totals.totalTransportMoney || 0,
                 )}
               </td>
               <td className="border-2 p-1 min-w-[70px]">
@@ -1482,11 +1483,11 @@ const Attendance = () => {
                 }}
                 min={`${selectedYear}-${String(selectedMonth + 1).padStart(
                   2,
-                  "0"
+                  "0",
                 )}-01`}
                 max={`${selectedYear}-${String(selectedMonth + 1).padStart(
                   2,
-                  "0"
+                  "0",
                 )}-${String(daysInMonth).padStart(2, "0")}`}
               />
             </div>
@@ -1556,7 +1557,7 @@ const Attendance = () => {
                       <Checkbox
                         id={`transport-${transport.id}`}
                         checked={massAttendance.transport_ids.includes(
-                          transport.id
+                          transport.id,
                         )}
                         onCheckedChange={() =>
                           toggleTransportSelection(transport.id)
@@ -1661,7 +1662,7 @@ const Attendance = () => {
                       size="sm"
                       onClick={() => setSelectedTransport(null)}
                     >
-                      ❌
+                      x
                     </Button>
                   </div>
                 )}
@@ -1738,11 +1739,11 @@ const Attendance = () => {
                   {dateRange && dateRange.from && dateRange.to
                     ? `${format(dateRange.from, "dd.MM.yyyy")} - ${format(
                         dateRange.to,
-                        "dd.MM.yyyy"
+                        "dd.MM.yyyy",
                       )}`
                     : dateRange && dateRange.from
-                    ? `${format(dateRange.from, "dd.MM.yyyy")}`
-                    : "Sana tanlanmagan"}
+                      ? `${format(dateRange.from, "dd.MM.yyyy")}`
+                      : "Sana tanlanmagan"}
                 </div>
               </div>
 
@@ -1805,14 +1806,14 @@ const Attendance = () => {
               <div>{selectedTransport?.state_number}</div>
             </div>
             {selectedTransport?.payment?.find(
-              (p) => p.type === currentSubmitPayment.type
+              (p) => p.type === currentSubmitPayment.type,
             )?.date && (
               <div>
                 {currentSubmitPayment.type === "advance" ? "Avans" : "Maosh"}{" "}
                 berilgan sana:{" "}
                 {
                   selectedTransport?.payment?.find(
-                    (p) => p.type === currentSubmitPayment.type
+                    (p) => p.type === currentSubmitPayment.type,
                   )?.date
                 }
               </div>
@@ -1826,7 +1827,7 @@ const Attendance = () => {
                     ? transportCalculations.transportData[selectedTransport?.id]
                         ?.salary || 0
                     : transportCalculations.transportData[selectedTransport?.id]
-                        ?.advance || 0)
+                        ?.advance || 0),
               )}{" "}
               so'm
             </div>
@@ -1844,7 +1845,7 @@ const Attendance = () => {
               className="mb-4"
             />
             {!selectedTransport?.payment?.find(
-              (payment) => payment?.type === currentSubmitPayment.type
+              (payment) => payment?.type === currentSubmitPayment.type,
             )?.date && (
               <div className="w-full flex items-center justify-center">
                 <Calendar

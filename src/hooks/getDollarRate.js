@@ -11,7 +11,7 @@ const getDollarRate = async () => {
     const cachedRate = localStorage.getItem(CACHE_KEY);
     const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
 
-    // ✅ Agar cache mavjud va eskirmagan bo‘lsa
+    // Agar cache mavjud va eskirmagan bo‘lsa
     if (cachedRate && cachedTime) {
       const now = Date.now();
 
@@ -20,7 +20,7 @@ const getDollarRate = async () => {
       }
     }
 
-    // ❌ Aks holda API ga boradi
+    // Aks holda API ga boradi
     const response = await axios.get(
       "https://cbu.uz/uz/arkhiv-kursov-valyut/json/",
     );
@@ -29,7 +29,7 @@ const getDollarRate = async () => {
 
     if (!usd) throw new Error("USD rate not found");
 
-    // ✅ Cache ga yozamiz
+    // Cache ga yozamiz
     localStorage.setItem(CACHE_KEY, usd);
     localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
 

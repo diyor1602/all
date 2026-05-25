@@ -1181,8 +1181,8 @@ const Kpi = () => {
                                           {analysis.workingDaysRemaining === 0
                                             ? analysis.completed >=
                                               analysis.target
-                                              ? "Planni bajardi ✅"
-                                              : "Planni bajarmadi ❌"
+                                              ? "Planni bajardi"
+                                              : "Planni bajarmadi"
                                             : analysis.onTrack
                                               ? "Planni bajara oladi"
                                               : "Planni bajarish uchun harakat qilish kerak"}

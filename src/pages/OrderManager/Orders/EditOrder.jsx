@@ -709,7 +709,7 @@ const EditOrder = () => {
                                     ...prev.model,
                                     submodels: exists
                                       ? [] // if clicked again, unselect
-                                      : [submodel.id], // ✅ allow only ONE
+                                      : [submodel.id], // allow only ONE
                                   },
                                 };
                               });

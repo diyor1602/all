@@ -164,13 +164,13 @@ const Profile = () => {
   );
   const [secondChecks, setSecondChecks] = useState([]);
 
-  // ✅ Load activeIndex from localStorage
+  // Load activeIndex from localStorage
   const [activeIndex, setActiveIndex] = useState(() => {
     const saved = localStorage.getItem("activeIndex");
     return saved ? Number(saved) : 0;
   });
 
-  // ✅ Save activeIndex to localStorage whenever it changes
+  // Save activeIndex to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("activeIndex", activeIndex);
   }, [activeIndex]);
@@ -371,7 +371,7 @@ const Profile = () => {
           spaceBetween={16}
           slidesPerView={1}
           loop={true}
-          initialSlide={activeIndex} // ✅ Restore last active slide
+          initialSlide={activeIndex} // Restore last active slide
           onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
         >
           {cards.map((c, i) => (

@@ -18,7 +18,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// ✅ Add a response interceptor to handle 401/403 errors
+// Add a response interceptor to handle 401/403 errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {

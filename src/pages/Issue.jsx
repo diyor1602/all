@@ -71,7 +71,7 @@ const Issue = () => {
       await api.post("/issue", formData);
 
       toast({
-        title: "Yuborildi ✅",
+        title: "Yuborildi",
         description: "Xabaringiz muvaffaqiyatli yuborildi",
         style: { background: "#16a34a", color: "white" },
       });
@@ -80,7 +80,7 @@ const Issue = () => {
       setImage(null);
     } catch (error) {
       toast({
-        title: "Xatolik ❌",
+        title: "Xatolik",
         description:
           error?.response?.data?.message || "Yuborishda muammo bo‘ldi",
         variant: "destructive",

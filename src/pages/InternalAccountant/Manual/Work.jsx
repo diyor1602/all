@@ -1927,7 +1927,7 @@ const Work = () => {
                           </tr>
                         ))}
 
-                        {/* ✅ Sum row at the bottom */}
+                        {/* Sum row at the bottom */}
                         <tr className="bg-gray-100 font-bold sticky bottom-0 z-10">
                           <td
                             className="border border-gray-300 p-2 text-center"
