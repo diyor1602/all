@@ -31,6 +31,8 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  Upload,
+  X,
 } from "lucide-react";
 
 const WebSite = () => {
@@ -55,6 +57,8 @@ const WebSite = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [previewIndex, setPreviewIndex] = useState(null);
 
+  const [bgDragging, setBgDragging] = useState(false);
+  const [aboutDragging, setAboutDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [bgFile, setBgFile] = useState(null);
   const [aboutFiles, setAboutFiles] = useState([]);
@@ -581,16 +585,69 @@ const WebSite = () => {
             <DialogTitle>Video yuklash</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>Video fayl</Label>
-              <Input
-                ref={bgInputRef}
-                type="file"
-                accept="video/*"
-                onChange={(e) => setBgFile(e.target.files?.[0] || null)}
-                className="mt-1"
-                disabled={sending}
-              />
+            <input
+              ref={bgInputRef}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              disabled={sending}
+              onChange={(e) => setBgFile(e.target.files?.[0] || null)}
+            />
+            <div
+              onDragOver={(e) => { e.preventDefault(); setBgDragging(true); }}
+              onDragLeave={() => setBgDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setBgDragging(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) setBgFile(file);
+              }}
+              onClick={() => !sending && bgInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 transition-colors select-none ${
+                sending
+                  ? "cursor-default opacity-60"
+                  : "cursor-pointer"
+              } ${
+                bgDragging
+                  ? "border-blue-500 bg-blue-50"
+                  : bgFile
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+              }`}
+            >
+              {bgFile ? (
+                <>
+                  <Video className="w-10 h-10 text-green-500" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-green-700 break-all">{bgFile.name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {(bgFile.size / (1024 * 1024)).toFixed(1)} MB
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBgFile(null);
+                      if (bgInputRef.current) bgInputRef.current.value = "";
+                    }}
+                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700"
+                  >
+                    <X className="w-3 h-3" /> Bekor qilish
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-10 h-10 text-gray-400" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-600">
+                      {bgDragging ? "Tashlang!" : "Video faylni bu yerga tashlang"}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">yoki tanlash uchun bosing</p>
+                  </div>
+                  <p className="text-xs text-gray-300">MP4, WebM, MOV qabul qilinadi</p>
+                </>
+              )}
             </div>
             {sending && (
               <div className="space-y-1">
@@ -606,7 +663,7 @@ const WebSite = () => {
             <Button variant="outline" onClick={() => setBgDialogOpen(false)} disabled={sending}>
               Bekor qilish
             </Button>
-            <Button onClick={handleBgUpload} disabled={sending}>
+            <Button onClick={handleBgUpload} disabled={sending || !bgFile}>
               {sending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Yuklash
             </Button>
@@ -616,34 +673,96 @@ const WebSite = () => {
 
       {/* About Upload Dialog */}
       <Dialog open={aboutDialogOpen} onOpenChange={setAboutDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Rasm yuklash</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>Rasmlar (bir nechta tanlash mumkin)</Label>
-              <Input
-                ref={aboutInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => setAboutFiles(Array.from(e.target.files || []))}
-                className="mt-1"
-                disabled={sending}
-              />
-              {aboutFiles.length > 0 && !sending && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {aboutFiles.length} ta fayl tanlandi
+            <input
+              ref={aboutInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              disabled={sending}
+              onChange={(e) => setAboutFiles(Array.from(e.target.files || []))}
+            />
+            <div
+              onDragOver={(e) => { e.preventDefault(); setAboutDragging(true); }}
+              onDragLeave={() => setAboutDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setAboutDragging(false);
+                const files = Array.from(e.dataTransfer.files || []).filter((f) =>
+                  f.type.startsWith("image/")
+                );
+                if (files.length) setAboutFiles((prev) => [...prev, ...files]);
+              }}
+              onClick={() => !sending && aboutInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-3 transition-colors select-none ${
+                sending
+                  ? "cursor-default opacity-60"
+                  : "cursor-pointer"
+              } ${
+                aboutDragging
+                  ? "border-blue-500 bg-blue-50"
+                  : aboutFiles.length > 0
+                  ? "border-indigo-400 bg-indigo-50"
+                  : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+              }`}
+            >
+              <ImageIcon className={`w-9 h-9 ${aboutFiles.length ? "text-indigo-400" : "text-gray-400"}`} />
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-600">
+                  {aboutDragging ? "Tashlang!" : "Rasmlarni bu yerga tashlang"}
                 </p>
-              )}
+                <p className="text-xs text-gray-400 mt-0.5">
+                  yoki tanlash uchun bosing · bir nechta rasm mumkin
+                </p>
+              </div>
+              <p className="text-xs text-gray-300">JPG, PNG, WEBP va boshqalar</p>
             </div>
+
+            {aboutFiles.length > 0 && !sending && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-gray-500">{aboutFiles.length} ta rasm tanlandi</p>
+                  <button
+                    type="button"
+                    onClick={() => { setAboutFiles([]); if (aboutInputRef.current) aboutInputRef.current.value = ""; }}
+                    className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                  >
+                    <X className="w-3 h-3" /> Hammasini o'chirish
+                  </button>
+                </div>
+                <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
+                  {aboutFiles.map((file, i) => (
+                    <div key={i} className="relative group rounded-lg overflow-hidden border aspect-square bg-gray-100">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAboutFiles((prev) => prev.filter((_, j) => j !== i));
+                        }}
+                        className="absolute top-0.5 right-0.5 bg-black/60 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {sending && (
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-gray-500">
-                  <span>
-                    {aboutUploadIndex + 1} / {aboutFiles.length} rasm yuklanmoqda...
-                  </span>
+                  <span>{aboutUploadIndex + 1} / {aboutFiles.length} rasm yuklanmoqda...</span>
                   <span>{aboutUploadProgress}%</span>
                 </div>
                 <Progress value={aboutUploadProgress} className="h-2" />
@@ -654,7 +773,7 @@ const WebSite = () => {
             <Button variant="outline" onClick={() => setAboutDialogOpen(false)} disabled={sending}>
               Bekor qilish
             </Button>
-            <Button onClick={handleAboutUpload} disabled={sending}>
+            <Button onClick={handleAboutUpload} disabled={sending || aboutFiles.length === 0}>
               {sending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Yuklash
             </Button>
