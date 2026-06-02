@@ -11,6 +11,7 @@ import {
   TentTree,
   Users,
   Settings,
+  ChevronsLeftRightEllipsis,
 } from "lucide-react";
 
 const navigation = [
@@ -78,6 +79,12 @@ const navigation = [
     name: "Qo'shimcha",
     href: "/ceo/settings",
     icon: Settings,
+    onMobile: false,
+  },
+  {
+    name: "Sayt",
+    href: "/ceo/website",
+    icon: ChevronsLeftRightEllipsis,
     onMobile: false,
   },
 ];
