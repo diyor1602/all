@@ -99,7 +99,7 @@ const loadState = () => {
     const saved = localStorage.getItem(LS_KEY);
     if (saved) return JSON.parse(saved);
   } catch (e) {
-    console.error(e);
+    //ignore
   }
   return null;
 };
@@ -126,7 +126,7 @@ const Analysis = () => {
         JSON.stringify({ globalSearch, filters, sortConfig }),
       );
     } catch (e) {
-      console.error(e);
+      //ignore
     }
   }, [globalSearch, filters, sortConfig]);
 
