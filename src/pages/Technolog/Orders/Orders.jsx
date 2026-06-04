@@ -78,32 +78,56 @@ const SortIcon = ({ field, sortConfig }) => {
   );
 };
 
+const STORAGE_KEY = "technolog_orders_filters";
+
+const defaultFilters = {
+  name: "",
+  group: "",
+  month: "",
+  status: "",
+  seasonType: "",
+  seasonYear: "",
+  technologistStatus: "",
+  technologistStatusRu: "",
+  limitStatus: "",
+  sewingOutputCompare: "",
+  exceededStatus: "",
+  recipeStatus: "",
+};
+
+const defaultSortConfig = { key: "", direction: "asc" };
+
+const readStorage = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
 const Analysis = () => {
   const { toast } = useToast();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const [globalSearch, setGlobalSearch] = useState("");
-  const [filters, setFilters] = useState({
-    name: "",
-    group: "",
-    month: "",
-    status: "",
-    seasonType: "",
-    seasonYear: "",
-    technologistStatus: "",
-    technologistStatusRu: "",
-    limitStatus: "",
-    sewingOutputCompare: "",
-    exceededStatus: "",
-    recipeStatus: "",
-  });
+  const [globalSearch, setGlobalSearch] = useState(
+    () => readStorage()?.globalSearch ?? ""
+  );
+  const [filters, setFilters] = useState(
+    () => readStorage()?.filters ?? defaultFilters
+  );
+  const [sortConfig, setSortConfig] = useState(
+    () => readStorage()?.sortConfig ?? defaultSortConfig
+  );
 
-  const [sortConfig, setSortConfig] = useState({
-    key: "",
-    direction: "asc",
-  });
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ globalSearch, filters, sortConfig })
+    );
+  }, [globalSearch, filters, sortConfig]);
 
   useEffect(() => {
     setLoading(true);
@@ -305,25 +329,10 @@ const Analysis = () => {
   }, [normalizedData, globalSearch, filters, sortConfig]);
 
   const resetFilters = () => {
+    localStorage.removeItem(STORAGE_KEY);
     setGlobalSearch("");
-    setFilters({
-      name: "",
-      group: "",
-      month: "",
-      status: "",
-      seasonType: "",
-      seasonYear: "",
-      technologistStatus: "",
-      technologistStatusRu: "",
-      limitStatus: "",
-      sewingOutputCompare: "",
-      exceededStatus: "",
-      recipeStatus: "",
-    });
-    setSortConfig({
-      key: "",
-      direction: "asc",
-    });
+    setFilters(defaultFilters);
+    setSortConfig(defaultSortConfig);
   };
 
   const handleFilterChange = (key, value) => {
