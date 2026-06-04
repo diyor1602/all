@@ -1,15 +1,11 @@
-import React from "react";
 import TailorLevel from "./TailorLevel";
 import DailyResults from "./DailyResults";
 
-const programByRoles = {
-  tailor: <TailorLevel />,
-  universalTailor: <TailorLevel />,
-};
+const tailorRoles = new Set(["tailor", "universalTailor"]);
 
 const Home = () => {
   const role = localStorage.getItem("role");
-  return programByRoles[role] || <DailyResults />;
+  return tailorRoles.has(role) ? <TailorLevel /> : <DailyResults />;
 };
 
 export default Home;
