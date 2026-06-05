@@ -13,6 +13,7 @@ import {
   ChevronsUpDown,
   Timer,
   Trash,
+  X,
 } from "lucide-react";
 import {
   Command,
@@ -198,6 +199,16 @@ const EditTarif = () => {
 
     // Close the popover after selection
     setActivePopoverIndex(null);
+  };
+
+  const handleWorkerClear = (index) => {
+    const updateTarifications = [...tarif.tarifications];
+    updateTarifications[index] = {
+      ...updateTarifications[index],
+      employee_id: null,
+      employee: null,
+    };
+    setTarif({ ...tarif, tarifications: updateTarifications });
   };
 
   const handleRazryadSelect = (index, razryadId) => {
@@ -563,67 +574,80 @@ const EditTarif = () => {
                     )}
                   </td>
                   <td className="px-4 py-2 border">
-                    <Popover
-                      open={activePopoverIndex === `worker-${index}`}
-                      onOpenChange={(open) =>
-                        setActivePopoverIndex(open ? `worker-${index}` : null)
-                      }
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={
-                            activePopoverIndex === `worker-${index}`
-                          }
-                          className="w-[200px] justify-between"
-                        >
-                          {item?.employee?.id
-                            ? workers.find(
-                                (worker) => worker.id === item.employee.id,
-                              )?.name || "Xodimni tanlang"
-                            : item?.employee_id
+                    <div className="flex items-center gap-1">
+                      <Popover
+                        open={activePopoverIndex === `worker-${index}`}
+                        onOpenChange={(open) =>
+                          setActivePopoverIndex(open ? `worker-${index}` : null)
+                        }
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={
+                              activePopoverIndex === `worker-${index}`
+                            }
+                            className="justify-between"
+                          >
+                            {item?.employee?.id
                               ? workers.find(
-                                  (worker) => worker.id === item.employee_id,
+                                  (worker) => worker.id === item.employee.id,
                                 )?.name || "Xodimni tanlang"
-                              : "Xodimni tanlang"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              : item?.employee_id
+                                ? workers.find(
+                                    (worker) => worker.id === item.employee_id,
+                                  )?.name || "Xodimni tanlang"
+                                : "Xodimni tanlang"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[200px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Qidirish..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
+                              <CommandGroup>
+                                {workers.map((worker) => (
+                                  <CommandItem
+                                    key={worker.id}
+                                    value={worker.name}
+                                    onSelect={() =>
+                                      handleWorkerSelect(index, worker.id)
+                                    }
+                                  >
+                                    {worker.name}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto h-4 w-4",
+                                        item?.employee?.id === worker.id ||
+                                          item?.employee_id === worker.id
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {(item?.employee_id || item?.employee?.id) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                          onClick={() => handleWorkerClear(index)}
+                          title="Xodimni o'chirish"
+                        >
+                          <X className="h-4 w-4" />
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Qidirish..."
-                            className="h-9"
-                          />
-                          <CommandList>
-                            <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
-                            <CommandGroup>
-                              {workers.map((worker) => (
-                                <CommandItem
-                                  key={worker.id}
-                                  value={worker.name}
-                                  onSelect={() =>
-                                    handleWorkerSelect(index, worker.id)
-                                  }
-                                >
-                                  {worker.name}
-                                  <Check
-                                    className={cn(
-                                      "ml-auto h-4 w-4",
-                                      item?.employee?.id === worker.id ||
-                                        item?.employee_id === worker.id
-                                        ? "opacity-100"
-                                        : "opacity-0",
-                                    )}
-                                  />
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                      )}
+                    </div>
                   </td>
                   {/* <td className="px-4 py-2 border">
                     <Input
