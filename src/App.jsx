@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import checkAuth from "./hooks/checkAuth";
 
 import { Toaster } from "@/components/ui/toaster";
+import UpdateBanner from "./components/UpdateBanner";
 
 import DashboardLayout from "./components/layout/DashboardLayout";
 import Home from "./pages/Home";
@@ -63,6 +64,7 @@ const RootRoute = () => {
 function App() {
   return (
     <AuthProvider>
+      <UpdateBanner />
       <Toaster />
       <Routes>
         <Route path="/" element={<RootRoute />} />
