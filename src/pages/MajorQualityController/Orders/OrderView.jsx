@@ -44,9 +44,8 @@ const OrderView = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  // ── Minus dialog ────────────────────────────────────────────────────
+  // ── Minus form ──────────────────────────────────────────────────────
   const [sending, setSending] = useState(false);
-  const [minusDialogOpen, setMinusDialogOpen] = useState(false);
 
   // ── Image / camera ──────────────────────────────────────────────────
   const [selectedImage, setSelectedImage] = useState(null);
@@ -135,12 +134,8 @@ const OrderView = () => {
 
   // ── Camera effects ──────────────────────────────────────────────────
   useEffect(() => {
-    if (minusDialogOpen && useCamera) startCamera();
-  }, [minusDialogOpen]);
-
-  useEffect(() => {
-    if (minusDialogOpen && useCamera) startCamera();
-    if (!useCamera) stopCamera();
+    if (useCamera) startCamera();
+    else stopCamera();
   }, [useCamera]);
 
   // ── Image preview URL cleanup ───────────────────────────────────────
@@ -236,7 +231,6 @@ const OrderView = () => {
 
     try {
       await api.post("/majorQualityController/majorQualityControls", formData);
-      setMinusDialogOpen(false);
       toast({ title: "Tekshirildi", duration: 1000 });
       fetchOrder(selectedOrderId);
       setSelectedImage(null);
@@ -654,56 +648,12 @@ const OrderView = () => {
 
             {/* OTK section */}
             {otkCategory ? (
-              <>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mt-8 py-8 bg-white rounded-2xl shadow-lg"
-                >
-                  <div className="grid grid-cols-1 px-6">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="relative"
-                    >
-                      <button
-                        onClick={() => {
-                          setMinusDialogOpen(true);
-                          setDescription("");
-                          setSearchTerm("");
-                          setSearchResults([]);
-                          setSelectedSearchResult(null);
-                        }}
-                        className="w-full h-32 sm:h-40 bg-red-50 hover:bg-red-100 transition-colors rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer group"
-                      >
-                        <XCircle className="w-8 h-8 text-red-500 group-hover:scale-110 transition-transform" />
-                        <span className="text-4xl sm:text-5xl font-bold text-red-500">
-                          {order?.major_count || 0}
-                        </span>
-                        <span className="text-sm text-red-600">Yaroqsiz</span>
-                      </button>
-                    </motion.div>
-                  </div>
-                </motion.div>
-
-                {/* ── Minus dialog ── */}
-                <Dialog
-                  open={minusDialogOpen}
-                  onOpenChange={(open) => {
-                    setMinusDialogOpen(open);
-                    if (!open) {
-                      setSelectedImage(null);
-                      setImagePreview(null);
-                      setUseCamera(false);
-                      if (cameraStream) {
-                        cameraStream.getTracks().forEach((t) => t.stop());
-                        setCameraStream(null);
-                      }
-                    }
-                  }}
-                >
-                  <DialogContent className="max-w-2xl max-h-[95vh] overflow-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-8 p-6 bg-white rounded-2xl shadow-lg"
+              >
                     <div className="space-y-4 mt-4">
                       {/* Image / camera */}
                       <div className="space-y-2">
@@ -1056,18 +1006,6 @@ const OrderView = () => {
 
                     <div className="flex flex-col gap-2 mt-2 w-full">
                       <Button
-                        variant="outline"
-                        onClick={() => {
-                          setMinusDialogOpen(false);
-                          setSelectedEmployee("");
-                          setImagePreview(null);
-                          setSelectedImage(null);
-                          setDescription("");
-                        }}
-                      >
-                        Bekor qilish
-                      </Button>
-                      <Button
                         className="py-7"
                         disabled={sending || !selectedImage || hasEmptyEmployee}
                         onClick={handleMinus}
@@ -1079,9 +1017,7 @@ const OrderView = () => {
                         )}
                       </Button>
                     </div>
-                  </DialogContent>
-                </Dialog>
-              </>
+              </motion.div>
             ) : (
               <div className="text-center mt-6 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-6 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-3">
