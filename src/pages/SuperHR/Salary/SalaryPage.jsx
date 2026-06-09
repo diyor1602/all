@@ -466,6 +466,8 @@ const SalaryPage = () => {
       showDailyColumn: true,
     });
 
+  const [showHours, setShowHours] = useState(false);
+
   // Active additional dialog config
   const activeConfig = additionalDialogType
     ? SALARY_TYPE_CONFIG[additionalDialogType]
@@ -743,8 +745,12 @@ const SalaryPage = () => {
               <th className="border border-gray-200 p-1 text-left font-semibold">
                 Xodim
               </th>
-              <th className="border border-gray-200 p-1 text-center font-semibold">
-                Ish kunlari
+              <th
+                className="border border-gray-200 p-1 text-center font-semibold cursor-pointer select-none hover:bg-gray-200"
+                onClick={() => setShowHours((v) => !v)}
+                title="Bosish: kunlar / soatlar"
+              >
+                {showHours ? "Ish soatlari" : "Ish kunlari"}
               </th>
               {advancedFilters.showDailyColumn && (
                 <th className="border border-gray-200 p-1 text-center font-semibold">
@@ -804,7 +810,9 @@ const SalaryPage = () => {
                     </Link>
                   </td>
                   <td className="border border-gray-200 p-1 text-center">
-                    {days}
+                    {showHours
+                      ? ((employee?.attendance_hours || 0) / 10).toFixed(1)
+                      : days}
                   </td>
                   {advancedFilters.showDailyColumn && (
                     <td className="border border-gray-200 p-1 text-center text-gray-500">
