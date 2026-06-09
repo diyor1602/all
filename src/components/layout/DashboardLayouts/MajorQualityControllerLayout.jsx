@@ -1,11 +1,17 @@
 import BaseLayout from "./BaseLayout";
-import { Box } from "lucide-react";
+import { Box, BarChart3 } from "lucide-react";
 
 const navigation = [
   {
     name: "Buyurtmalar",
     href: "/majorQualityController/orders",
     icon: Box,
+    onMobile: true,
+  },
+  {
+    name: "Statistika",
+    href: "/majorQualityController/stats",
+    icon: BarChart3,
     onMobile: true,
   },
 ];
