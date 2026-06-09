@@ -1,2 +1,1 @@
 vizzano app
-test
