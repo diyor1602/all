@@ -214,7 +214,7 @@ const GroupDetails = () => {
   const handleEditMachine = async () => {
     setEditMachineLoading(true);
     try {
-      await api.patch(
+      await api.put(
         `/superhr/type-writers/${editMachineForm.id}`,
         editMachineForm,
       );
