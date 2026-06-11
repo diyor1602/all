@@ -61,13 +61,26 @@ const getShortName = (name) => {
   return (parts[0]?.[0] ?? "").toUpperCase();
 };
 
-const EMPTY_MACHINE_FORM = { name: "", comment: "", position: 0, started_at: TODAY };
-const EMPTY_EMPLOYEE_FORM = { employee_id: null, started_at: TODAY, type_writer_id: null };
+const EMPTY_MACHINE_FORM = {
+  name: "",
+  comment: "",
+  position: 0,
+  started_at: TODAY,
+};
+const EMPTY_EMPLOYEE_FORM = {
+  employee_id: null,
+  started_at: TODAY,
+  type_writer_id: null,
+};
 
 const EmployeeAvatar = ({ img, name, size = "md" }) => {
   const dim = size === "sm" ? "h-6 w-6 text-[10px]" : "h-9 w-9 text-xs";
   return img ? (
-    <img src={img} alt={name} className={`${dim} shrink-0 rounded-full object-cover`} />
+    <img
+      src={img}
+      alt={name}
+      className={`${dim} shrink-0 rounded-full object-cover`}
+    />
   ) : (
     <div
       className={`${dim} shrink-0 flex items-center justify-center rounded-full bg-gray-200 font-bold text-gray-600`}
@@ -90,7 +103,9 @@ const GroupDetails = () => {
 
   // Add machine
   const [addMachineDialog, setAddMachineDialog] = useState(false);
-  const [addMachineForm, setAddMachineForm] = useState({ ...EMPTY_MACHINE_FORM });
+  const [addMachineForm, setAddMachineForm] = useState({
+    ...EMPTY_MACHINE_FORM,
+  });
   const [addMachineLoading, setAddMachineLoading] = useState(false);
 
   // Edit machine
@@ -117,13 +132,19 @@ const GroupDetails = () => {
     setLoading(true);
     try {
       const [machinesRes, groupRes] = await Promise.all([
-        api.get(`/superhr/groups/${id}/type-writers`, { params: { date: selectedDate } }),
+        api.get(`/superhr/groups/${id}/type-writers`, {
+          params: { date: selectedDate },
+        }),
         api.get(`/tv-dashboard/${id}`, { params: { date: selectedDate } }),
       ]);
       setData(machinesRes.data);
       setGroupData(groupRes.data);
     } catch {
-      toast({ title: "Xatolik", description: "Ma'lumotlar yuklanmadi", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Ma'lumotlar yuklanmadi",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -140,7 +161,9 @@ const GroupDetails = () => {
   };
 
   // Set of present employee IDs for O(1) lookup — handles both `employee_id` and `id` field names
-  const presentIds = new Set((groupData?.present ?? []).map((e) => e.employee_id ?? e.id));
+  const presentIds = new Set(
+    (groupData?.present ?? []).map((e) => e.employee_id ?? e.id),
+  );
 
   // ── Add machine ──────────────────────────────────────────────
   const openAddMachine = () => {
@@ -151,11 +174,18 @@ const GroupDetails = () => {
   const handleAddMachine = async () => {
     setAddMachineLoading(true);
     try {
-      await api.post(`/superhr/type-writers`, { ...addMachineForm, group_id: id });
+      await api.post(`/superhr/type-writers`, {
+        ...addMachineForm,
+        group_id: id,
+      });
       setAddMachineDialog(false);
       fetchAll();
     } catch {
-      toast({ title: "Xatolik", description: "Mashina qo'shishda xatolik", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Mashina qo'shishda xatolik",
+        variant: "destructive",
+      });
     } finally {
       setAddMachineLoading(false);
     }
@@ -175,11 +205,18 @@ const GroupDetails = () => {
   const handleEditMachine = async () => {
     setEditMachineLoading(true);
     try {
-      await api.patch(`/superhr/type-writers/${editMachineForm.id}`, editMachineForm);
+      await api.patch(
+        `/superhr/type-writers/${editMachineForm.id}`,
+        editMachineForm,
+      );
       setEditMachineDialog(false);
       fetchAll();
     } catch {
-      toast({ title: "Xatolik", description: "Mashinani tahrirlashda xatolik", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Mashinani tahrirlashda xatolik",
+        variant: "destructive",
+      });
     } finally {
       setEditMachineLoading(false);
     }
@@ -189,11 +226,17 @@ const GroupDetails = () => {
   const handleDeleteMachine = async () => {
     setDeleteMachineLoading(true);
     try {
-      await api.delete(`/superhr/type-writers/${deleteMachineTarget.type_writer_id}`);
+      await api.delete(
+        `/superhr/type-writers/${deleteMachineTarget.type_writer_id}`,
+      );
       setDeleteMachineTarget(null);
       fetchAll();
     } catch {
-      toast({ title: "Xatolik", description: "Mashinani o'chirishda xatolik", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Mashinani o'chirishda xatolik",
+        variant: "destructive",
+      });
     } finally {
       setDeleteMachineLoading(false);
     }
@@ -203,7 +246,10 @@ const GroupDetails = () => {
   const openEmployeeDialog = (machine, mode) => {
     setEmployeeDialogMode(mode);
     setEmployeeMachine(machine);
-    setEmployeeForm({ ...EMPTY_EMPLOYEE_FORM, type_writer_id: machine.type_writer_id });
+    setEmployeeForm({
+      ...EMPTY_EMPLOYEE_FORM,
+      type_writer_id: machine.type_writer_id,
+    });
     setEmployeeDialog(true);
   };
 
@@ -217,7 +263,11 @@ const GroupDetails = () => {
       setEmployeeDialog(false);
       fetchAll();
     } catch {
-      toast({ title: "Xatolik", description: "Xodim biriktirishda xatolik", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Xodim biriktirishda xatolik",
+        variant: "destructive",
+      });
     } finally {
       setEmployeeLoading(false);
     }
@@ -233,7 +283,11 @@ const GroupDetails = () => {
       setRemoveEmployeeTarget(null);
       fetchAll();
     } catch {
-      toast({ title: "Xatolik", description: "Xodimni olib tashlashda xatolik", variant: "destructive" });
+      toast({
+        title: "Xatolik",
+        description: "Xodimni olib tashlashda xatolik",
+        variant: "destructive",
+      });
     } finally {
       setRemoveEmployeeLoading(false);
     }
@@ -241,17 +295,24 @@ const GroupDetails = () => {
 
   // ── Machine cell style ───────────────────────────────────────
   const getCellStyle = (machine) => {
-    if (!machine.employee) return "bg-slate-100 text-slate-400 border-slate-300";
+    if (!machine.employee)
+      return "bg-slate-100 text-slate-400 border-slate-300";
     const eid = machine.employee.employee_id ?? machine.employee.id;
     const present = presentIds.has(eid);
-    if (!present) return "bg-slate-300 text-slate-600 border-slate-400 opacity-70";
-    if (machine.employee.coefficient > 0) return "bg-emerald-500 text-white border-emerald-600";
-    if (machine.employee.coefficient < 0) return "bg-red-500 text-white border-red-600";
+    if (!present)
+      return "bg-slate-300 text-slate-600 border-slate-400 opacity-70";
+    if (machine.employee.coefficient > 80)
+      return "bg-blue-500 text-white border-blue-600";
+    if (machine.employee.coefficient > 50)
+      return "bg-amber-400 text-white border-amber-500";
+    if (machine.employee.coefficient < 50)
+      return "bg-red-500 text-white border-red-600";
     return "bg-amber-400 text-white border-amber-500";
   };
 
   const hasAnyEmployee =
-    (groupData?.present?.length ?? 0) > 0 || (groupData?.absent?.length ?? 0) > 0;
+    (groupData?.present?.length ?? 0) > 0 ||
+    (groupData?.absent?.length ?? 0) > 0;
 
   return (
     <TooltipProvider>
@@ -303,7 +364,9 @@ const GroupDetails = () => {
         {!loading && data && (
           <div className="rounded-2xl border bg-white shadow-sm">
             <div className="flex items-center gap-2 rounded-t-2xl border-b bg-blue-50 px-6 py-3">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700">KIRISH</Badge>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                KIRISH
+              </Badge>
               <span className="text-sm font-medium text-blue-700">KROY</span>
             </div>
 
@@ -312,8 +375,9 @@ const GroupDetails = () => {
                 const hasEmployee = !!machine.employee;
                 const name = machine.employee?.name || "";
                 const coefficient = machine.employee?.coefficient ?? 0;
-                const imgUrl = machine.employee?.img || null;
-                const empId = machine.employee?.employee_id ?? machine.employee?.id;
+                const imgUrl = machine.employee?.image || null;
+                const empId =
+                  machine.employee?.employee_id ?? machine.employee?.id;
                 const isPresent = hasEmployee && presentIds.has(empId);
 
                 return (
@@ -349,16 +413,25 @@ const GroupDetails = () => {
                           )}
                         </ContextMenuTrigger>
                       </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-48">
+                      <TooltipContent
+                        side="top"
+                        className="max-w-48 bg-white text-black shadow-lg"
+                      >
                         <p className="font-semibold">{machine.name}</p>
                         {machine.comment && (
-                          <p className="text-xs text-gray-400">{machine.comment}</p>
+                          <p className="text-xs text-gray-400">
+                            {machine.comment}
+                          </p>
                         )}
                         {hasEmployee && (
                           <>
                             <p className="mt-1 text-xs">{name}</p>
-                            <p className="text-xs text-emerald-400">{coefficient}%</p>
-                            <p className={`text-xs ${isPresent ? "text-green-400" : "text-red-400"}`}>
+                            <p className="text-xs text-emerald-400">
+                              {coefficient}%
+                            </p>
+                            <p
+                              className={`text-xs ${isPresent ? "text-green-400" : "text-red-400"}`}
+                            >
                               {isPresent ? "Kelgan" : "Kelmagan"}
                             </p>
                           </>
@@ -375,20 +448,24 @@ const GroupDetails = () => {
                         <ContextMenuSeparator />
 
                         {!hasEmployee && (
-                          <ContextMenuItem onClick={() => openEmployeeDialog(machine, "add")}>
+                          <ContextMenuItem
+                            onClick={() => openEmployeeDialog(machine, "add")}
+                          >
                             <UserPlus className="mr-2 h-4 w-4 text-emerald-500" />
-                            Xodim biriktirish
+                            <span className="text-emerald-500">
+                              Xodim biriktirish
+                            </span>
                           </ContextMenuItem>
                         )}
 
                         {hasEmployee && (
                           <>
-                            <ContextMenuItem disabled className="gap-2 text-xs text-gray-400">
+                            <ContextMenuItem className="gap-2 text-xs">
                               {imgUrl ? (
                                 <img
                                   src={imgUrl}
                                   alt={name}
-                                  className="h-5 w-5 rounded-full object-cover"
+                                  className="h-5 w-5 rounded-full object-cover shrink-0"
                                 />
                               ) : (
                                 <User2 className="h-4 w-4" />
@@ -401,9 +478,15 @@ const GroupDetails = () => {
                               />
                             </ContextMenuItem>
                             <ContextMenuSeparator />
-                            <ContextMenuItem onClick={() => openEmployeeDialog(machine, "replace")}>
+                            <ContextMenuItem
+                              onClick={() =>
+                                openEmployeeDialog(machine, "replace")
+                              }
+                            >
                               <UserPen className="mr-2 h-4 w-4 text-blue-500" />
-                              Ishchini almashtirish
+                              <span className="text-blue-500">
+                                Ishchini almashtirish
+                              </span>
                             </ContextMenuItem>
                             <ContextMenuItem
                               onClick={() => setRemoveEmployeeTarget(machine)}
@@ -416,7 +499,9 @@ const GroupDetails = () => {
                           </>
                         )}
 
-                        <ContextMenuItem onClick={() => openEditMachine(machine)}>
+                        <ContextMenuItem
+                          onClick={() => openEditMachine(machine)}
+                        >
                           <Edit className="mr-2 h-4 w-4" />
                           Mashinani tahrirlash
                         </ContextMenuItem>
@@ -450,8 +535,15 @@ const GroupDetails = () => {
             </div>
 
             <div className="flex items-center gap-2 rounded-b-2xl border-t bg-emerald-50 px-6 py-3">
-              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">CHIQISH</Badge>
-              <span className="text-sm font-medium text-emerald-700">TAYYOR</span>
+              <Badge
+                variant="secondary"
+                className="bg-emerald-100 text-emerald-700"
+              >
+                CHIQISH
+              </Badge>
+              <span className="text-sm font-medium text-emerald-700">
+                TAYYOR
+              </span>
             </div>
           </div>
         )}
@@ -475,7 +567,9 @@ const GroupDetails = () => {
               <Label>Mashina nomi *</Label>
               <Input
                 value={addMachineForm.name}
-                onChange={(e) => setAddMachineForm((f) => ({ ...f, name: e.target.value }))}
+                onChange={(e) =>
+                  setAddMachineForm((f) => ({ ...f, name: e.target.value }))
+                }
                 placeholder="Mashina nomi"
               />
             </div>
@@ -483,7 +577,9 @@ const GroupDetails = () => {
               <Label>Izoh</Label>
               <Input
                 value={addMachineForm.comment}
-                onChange={(e) => setAddMachineForm((f) => ({ ...f, comment: e.target.value }))}
+                onChange={(e) =>
+                  setAddMachineForm((f) => ({ ...f, comment: e.target.value }))
+                }
                 placeholder="Izoh"
               />
             </div>
@@ -493,7 +589,10 @@ const GroupDetails = () => {
                 type="number"
                 value={addMachineForm.position}
                 onChange={(e) =>
-                  setAddMachineForm((f) => ({ ...f, position: parseInt(e.target.value) || 0 }))
+                  setAddMachineForm((f) => ({
+                    ...f,
+                    position: parseInt(e.target.value) || 0,
+                  }))
                 }
               />
             </div>
@@ -502,12 +601,20 @@ const GroupDetails = () => {
               <Input
                 type="date"
                 value={addMachineForm.started_at}
-                onChange={(e) => setAddMachineForm((f) => ({ ...f, started_at: e.target.value }))}
+                onChange={(e) =>
+                  setAddMachineForm((f) => ({
+                    ...f,
+                    started_at: e.target.value,
+                  }))
+                }
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddMachineDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setAddMachineDialog(false)}
+            >
               Bekor qilish
             </Button>
             <Button
@@ -532,7 +639,9 @@ const GroupDetails = () => {
                 <Label>Mashina nomi *</Label>
                 <Input
                   value={editMachineForm.name}
-                  onChange={(e) => setEditMachineForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={(e) =>
+                    setEditMachineForm((f) => ({ ...f, name: e.target.value }))
+                  }
                   placeholder="Mashina nomi"
                 />
               </div>
@@ -540,7 +649,12 @@ const GroupDetails = () => {
                 <Label>Izoh</Label>
                 <Input
                   value={editMachineForm.comment}
-                  onChange={(e) => setEditMachineForm((f) => ({ ...f, comment: e.target.value }))}
+                  onChange={(e) =>
+                    setEditMachineForm((f) => ({
+                      ...f,
+                      comment: e.target.value,
+                    }))
+                  }
                   placeholder="Izoh"
                 />
               </div>
@@ -550,14 +664,20 @@ const GroupDetails = () => {
                   type="number"
                   value={editMachineForm.position}
                   onChange={(e) =>
-                    setEditMachineForm((f) => ({ ...f, position: parseInt(e.target.value) || 0 }))
+                    setEditMachineForm((f) => ({
+                      ...f,
+                      position: parseInt(e.target.value) || 0,
+                    }))
                   }
                 />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditMachineDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setEditMachineDialog(false)}
+            >
               Bekor qilish
             </Button>
             <Button
@@ -579,8 +699,8 @@ const GroupDetails = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Mashinani o'chirish</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>{deleteMachineTarget?.name}</strong> mashinasini o'chirishni tasdiqlaysizmi?
-              Bu amalni qaytarib bo'lmaydi.
+              <strong>{deleteMachineTarget?.name}</strong> mashinasini
+              o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -601,7 +721,9 @@ const GroupDetails = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {employeeDialogMode === "replace" ? "Ishchini almashtirish" : "Xodim biriktirish"}
+              {employeeDialogMode === "replace"
+                ? "Ishchini almashtirish"
+                : "Xodim biriktirish"}
             </DialogTitle>
             {employeeMachine && (
               <p className="flex items-center gap-1.5 text-sm text-gray-500">
@@ -626,7 +748,10 @@ const GroupDetails = () => {
                       isPresent
                       selected={employeeForm.employee_id === emp.employee_id}
                       onSelect={() =>
-                        setEmployeeForm((f) => ({ ...f, employee_id: emp.employee_id }))
+                        setEmployeeForm((f) => ({
+                          ...f,
+                          employee_id: emp.employee_id,
+                        }))
                       }
                     />
                   ))}
@@ -637,7 +762,7 @@ const GroupDetails = () => {
               {(groupData?.absent?.length ?? 0) > 0 && (
                 <>
                   <p className="sticky top-0 bg-white pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-red-500">
-                    Kelmaydiganlar
+                    Kelmaganlar
                   </p>
                   {groupData.absent.map((emp) => (
                     <EmployeeRow
@@ -646,7 +771,10 @@ const GroupDetails = () => {
                       isPresent={false}
                       selected={employeeForm.employee_id === emp.employee_id}
                       onSelect={() =>
-                        setEmployeeForm((f) => ({ ...f, employee_id: emp.employee_id }))
+                        setEmployeeForm((f) => ({
+                          ...f,
+                          employee_id: emp.employee_id,
+                        }))
                       }
                     />
                   ))}
@@ -654,7 +782,9 @@ const GroupDetails = () => {
               )}
 
               {!hasAnyEmployee && (
-                <p className="py-6 text-center text-sm text-gray-400">Xodimlar topilmadi</p>
+                <p className="py-6 text-center text-sm text-gray-400">
+                  Xodimlar topilmadi
+                </p>
               )}
             </div>
 
@@ -663,7 +793,9 @@ const GroupDetails = () => {
               <Input
                 type="date"
                 value={employeeForm.started_at}
-                onChange={(e) => setEmployeeForm((f) => ({ ...f, started_at: e.target.value }))}
+                onChange={(e) =>
+                  setEmployeeForm((f) => ({ ...f, started_at: e.target.value }))
+                }
               />
             </div>
           </div>
@@ -692,8 +824,8 @@ const GroupDetails = () => {
             <AlertDialogTitle>Ishchini olib tashlash</AlertDialogTitle>
             <AlertDialogDescription>
               <strong>{removeEmployeeTarget?.employee?.name}</strong> ni{" "}
-              <strong>{removeEmployeeTarget?.name}</strong> mashinasidan olib tashlashni
-              tasdiqlaysizmi?
+              <strong>{removeEmployeeTarget?.name}</strong> mashinasidan olib
+              tashlashni tasdiqlaysizmi?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -726,6 +858,5 @@ const EmployeeRow = ({ emp, isPresent, selected, onSelect }) => (
     />
   </div>
 );
-
 
 export default GroupDetails;
