@@ -19,10 +19,21 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
-import { Bot, Edit, Trash2, User2, UserPlus } from "lucide-react";
+import {
+  Bot,
+  Edit,
+  Trash2,
+  User2,
+  UserPlus,
+  UserMinus,
+  UserPen,
+} from "lucide-react";
 
 const GroupDetails = () => {
   const { id } = useParams();
+  const [selectedDate, setSelectedDate] = useState(
+    localStorage.getItem("panelDate") || new Date().toISOString().split("T")[0],
+  );
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -45,7 +56,11 @@ const GroupDetails = () => {
   const fetchGroup = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/superhr/groups/${id}/type-writers`);
+      const res = await api.get(`/superhr/groups/${id}/type-writers`, {
+        params: {
+          date: selectedDate,
+        },
+      });
       setData(res.data);
     } catch (err) {
       toast({
@@ -60,7 +75,11 @@ const GroupDetails = () => {
 
   const fetchGroupDetails = async () => {
     try {
-      const res = await api.get(`/tv-dashboard/${id}`);
+      const res = await api.get(`/tv-dashboard/${id}`, {
+        params: {
+          date: selectedDate,
+        },
+      });
       setGroupData(res.data);
     } catch (err) {
       toast({
@@ -74,7 +93,7 @@ const GroupDetails = () => {
   useEffect(() => {
     fetchGroup();
     fetchGroupDetails();
-  }, [id]);
+  }, [id, selectedDate]);
 
   const handleAddMachine = async () => {
     try {
@@ -124,8 +143,19 @@ const GroupDetails = () => {
       {loading && <p className="text-sm text-gray-500">Yuklanmoqda...</p>}
       {!loading && data && (
         <div>
+          <div className="mb-4">
+            <Input
+              className="bg-white w-fit"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                localStorage.setItem("selectedDate", e.target.value);
+              }}
+            />
+          </div>
           {/* Group Info */}
-          <div>
+          <div className="mb-4">
             <div>{groupData?.group_name || "-"}</div>
             <div>{groupData?.responsible_user || "-"}</div>
           </div>
@@ -194,6 +224,19 @@ const GroupDetails = () => {
                           )}
                           {employeeName}
                         </ContextMenuItem>
+                        <ContextMenuSeparator />
+                        {hasEmployee && (
+                          <>
+                            <ContextMenuItem>
+                              <UserPen className="w-4 h-4 mr-2" />
+                              Ishchini almashtirish
+                            </ContextMenuItem>
+                            <ContextMenuItem>
+                              <UserMinus className="w-4 h-4 mr-2" />
+                              Ishchini olib tashlash
+                            </ContextMenuItem>
+                          </>
+                        )}
                         <ContextMenuItem>
                           <Edit className="w-4 h-4 mr-2" />
                           Mashinani tahrirlash
