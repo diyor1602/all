@@ -19,7 +19,7 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
-import { Bot, Edit, User2, UserPlus } from "lucide-react";
+import { Bot, Edit, Trash2, User2, UserPlus } from "lucide-react";
 
 const GroupDetails = () => {
   const { id } = useParams();
@@ -197,6 +197,16 @@ const GroupDetails = () => {
                         <ContextMenuItem>
                           <Edit className="w-4 h-4 mr-2" />
                           Mashinani tahrirlash
+                        </ContextMenuItem>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem
+                          className="text-red-500"
+                          onClick={() => {
+                            // TODO: Delete machine
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Mashinani o'chirish
                         </ContextMenuItem>
                       </ContextMenuGroup>
                     </ContextMenuContent>
