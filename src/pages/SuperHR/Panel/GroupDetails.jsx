@@ -48,6 +48,11 @@ import {
   UserPen,
   Users,
   Plus,
+  TrendingUp,
+  Package,
+  Clock,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 
 const TODAY = new Date().toISOString().split("T")[0];
@@ -122,6 +127,7 @@ const GroupDetails = () => {
   const [employeeMachine, setEmployeeMachine] = useState(null);
   const [employeeDialogMode, setEmployeeDialogMode] = useState("add");
   const [employeeLoading, setEmployeeLoading] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState("");
 
   // Remove employee
   const [removeEmployeeTarget, setRemoveEmployeeTarget] = useState(null);
@@ -242,9 +248,20 @@ const GroupDetails = () => {
   };
 
   // ── Assign / replace employee ────────────────────────────────
+  // IDs of employees already assigned to another machine (excluded from selection)
+  const assignedEmployeeIds = new Set(
+    (data?.machines ?? [])
+      .filter(
+        (m) =>
+          m.employee && m.type_writer_id !== employeeMachine?.type_writer_id,
+      )
+      .map((m) => m.employee.employee_id ?? m.employee.id),
+  );
+
   const openEmployeeDialog = (machine, mode) => {
     setEmployeeDialogMode(mode);
     setEmployeeMachine(machine);
+    setEmployeeSearch("");
     setEmployeeForm({
       ...EMPTY_EMPLOYEE_FORM,
       type_writer_id: machine.type_writer_id,
@@ -345,6 +362,60 @@ const GroupDetails = () => {
           />
         </div>
 
+        {/* ── Stats ── */}
+        {!loading && groupData && (
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <StatCard
+              icon={<Package className="h-4 w-4" />}
+              label="Bugungi ishlab chiqarish"
+              value={groupData.sewing_output?.today_quantity ?? "—"}
+              color="blue"
+            />
+            <StatCard
+              icon={<TrendingUp className="h-4 w-4" />}
+              label="Bugungi reja"
+              value={groupData.sewing_output?.today_plan ?? "—"}
+              color="violet"
+            />
+            <StatCard
+              icon={<TrendingUp className="h-4 w-4" />}
+              label="Reja bajarilishi"
+              value={
+                groupData.sewing_output?.plan_completion_percent != null
+                  ? `${groupData.sewing_output.plan_completion_percent}%`
+                  : "—"
+              }
+              color={
+                (groupData.sewing_output?.plan_completion_percent ?? 0) >= 80
+                  ? "green"
+                  : (groupData.sewing_output?.plan_completion_percent ?? 0) >=
+                      50
+                    ? "amber"
+                    : "red"
+              }
+            />
+            <StatCard
+              icon={<UserCheck className="h-4 w-4" />}
+              label="Kelganlar"
+              value={groupData.present?.length ?? 0}
+              color="green"
+            />
+            <StatCard
+              icon={<UserX className="h-4 w-4" />}
+              label="Kelmaganlar"
+              value={groupData.absent?.length ?? 0}
+              color="red"
+            />
+          </div>
+        )}
+        {loading && (
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-xl" />
+            ))}
+          </div>
+        )}
+
         {/* ── Loading skeleton ── */}
         {loading && (
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -399,12 +470,13 @@ const GroupDetails = () => {
                           ) : (
                             <Bot className="h-5 w-5 opacity-50" />
                           )}
-                          <span className="max-w-full truncate px-1 text-center text-[10px] leading-tight opacity-80">
-                            {machine.name}
-                          </span>
-                          {hasEmployee && (
+                          {hasEmployee ? (
                             <span className="text-[10px] font-semibold leading-none">
                               {coefficient}%
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold leading-none">
+                              {machine?.name}
                             </span>
                           )}
                         </ContextMenuTrigger>
@@ -594,7 +666,7 @@ const GroupDetails = () => {
                 onChange={(e) =>
                   setAddMachineForm((f) => ({
                     ...f,
-                    position: parseInt(e.target.value) || 0,
+                    position: parseInt(e.target.value),
                   }))
                 }
               />
@@ -736,59 +808,94 @@ const GroupDetails = () => {
             )}
           </DialogHeader>
 
-          <div className="flex flex-col gap-4">
-            <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
-              {/* Present employees */}
-              {(groupData?.present?.length ?? 0) > 0 && (
-                <>
-                  <p className="sticky top-0 bg-white pb-1 pt-0.5 text-xs font-semibold uppercase tracking-wide text-emerald-600">
-                    Kelganlar
-                  </p>
-                  {groupData.present.map((emp) => (
-                    <EmployeeRow
-                      key={emp.employee_id}
-                      emp={emp}
-                      isPresent
-                      selected={employeeForm.employee_id === emp.employee_id}
-                      onSelect={() =>
-                        setEmployeeForm((f) => ({
-                          ...f,
-                          employee_id: emp.employee_id,
-                        }))
-                      }
-                    />
-                  ))}
-                </>
-              )}
+          <div className="flex flex-col gap-3">
+            <Input
+              placeholder="Xodim qidirish..."
+              value={employeeSearch}
+              onChange={(e) => setEmployeeSearch(e.target.value)}
+              autoFocus
+            />
 
-              {/* Absent employees */}
-              {(groupData?.absent?.length ?? 0) > 0 && (
-                <>
-                  <p className="sticky top-0 bg-white pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-red-500">
-                    Kelmaganlar
-                  </p>
-                  {groupData.absent.map((emp) => (
-                    <EmployeeRow
-                      key={emp.employee_id}
-                      emp={emp}
-                      isPresent={false}
-                      selected={employeeForm.employee_id === emp.employee_id}
-                      onSelect={() =>
-                        setEmployeeForm((f) => ({
-                          ...f,
-                          employee_id: emp.employee_id,
-                        }))
-                      }
-                    />
-                  ))}
-                </>
-              )}
+            <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+              {(() => {
+                const q = employeeSearch.toLowerCase();
+                const filter = (list) =>
+                  list.filter((e) => e.name.toLowerCase().includes(q));
+                const present = filter(groupData?.present ?? []);
+                const absent = filter(groupData?.absent ?? []);
+                const noneFound = present.length === 0 && absent.length === 0;
 
-              {!hasAnyEmployee && (
-                <p className="py-6 text-center text-sm text-gray-400">
-                  Xodimlar topilmadi
-                </p>
-              )}
+                if (!hasAnyEmployee || noneFound) {
+                  return (
+                    <p className="py-6 text-center text-sm text-gray-400">
+                      {hasAnyEmployee
+                        ? "Xodim topilmadi"
+                        : "Xodimlar topilmadi"}
+                    </p>
+                  );
+                }
+
+                return (
+                  <>
+                    {present.length > 0 && (
+                      <>
+                        <p className="sticky top-0 bg-white pb-1 pt-0.5 text-xs font-semibold uppercase tracking-wide text-emerald-600">
+                          Kelganlar
+                        </p>
+                        {present
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((emp) => (
+                            <EmployeeRow
+                              key={emp.employee_id}
+                              emp={emp}
+                              isPresent
+                              selected={
+                                employeeForm.employee_id === emp.employee_id
+                              }
+                              disabled={assignedEmployeeIds.has(
+                                emp.employee_id,
+                              )}
+                              onSelect={() =>
+                                setEmployeeForm((f) => ({
+                                  ...f,
+                                  employee_id: emp.employee_id,
+                                }))
+                              }
+                            />
+                          ))}
+                      </>
+                    )}
+                    {absent.length > 0 && (
+                      <>
+                        <p className="sticky top-0 bg-white pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-red-500">
+                          Kelmaganlar
+                        </p>
+                        {absent
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((emp) => (
+                            <EmployeeRow
+                              key={emp.employee_id}
+                              emp={emp}
+                              isPresent={false}
+                              selected={
+                                employeeForm.employee_id === emp.employee_id
+                              }
+                              disabled={assignedEmployeeIds.has(
+                                emp.employee_id,
+                              )}
+                              onSelect={() =>
+                                setEmployeeForm((f) => ({
+                                  ...f,
+                                  employee_id: emp.employee_id,
+                                }))
+                              }
+                            />
+                          ))}
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             <div className="space-y-1">
@@ -847,12 +954,16 @@ const GroupDetails = () => {
   );
 };
 
-const EmployeeRow = ({ emp, isPresent, selected, onSelect }) => (
+const EmployeeRow = ({ emp, isPresent, selected, disabled, onSelect }) => (
   <div
-    className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-gray-50 ${
-      selected ? "border-blue-400 bg-blue-50" : "border-transparent"
+    className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
+      disabled
+        ? "cursor-not-allowed border-transparent opacity-40"
+        : selected
+          ? "cursor-pointer border-blue-400 bg-blue-50"
+          : "cursor-pointer border-transparent hover:bg-gray-50"
     }`}
-    onClick={onSelect}
+    onClick={disabled ? undefined : onSelect}
   >
     <EmployeeAvatar img={emp.img} name={emp.name} size="md" />
     <span className="min-w-0 flex-1">
@@ -868,5 +979,37 @@ const EmployeeRow = ({ emp, isPresent, selected, onSelect }) => (
     />
   </div>
 );
+
+const COLOR_MAP = {
+  blue: { bg: "bg-blue-50", icon: "text-blue-500", value: "text-blue-700" },
+  violet: {
+    bg: "bg-violet-50",
+    icon: "text-violet-500",
+    value: "text-violet-700",
+  },
+  green: {
+    bg: "bg-emerald-50",
+    icon: "text-emerald-500",
+    value: "text-emerald-700",
+  },
+  amber: { bg: "bg-amber-50", icon: "text-amber-500", value: "text-amber-700" },
+  red: { bg: "bg-red-50", icon: "text-red-500", value: "text-red-700" },
+  slate: { bg: "bg-slate-50", icon: "text-slate-500", value: "text-slate-700" },
+};
+
+const StatCard = ({ icon, label, value, color = "slate" }) => {
+  const c = COLOR_MAP[color] ?? COLOR_MAP.slate;
+  return (
+    <div className={`flex flex-col gap-1.5 rounded-xl border p-3 ${c.bg}`}>
+      <div className={`flex items-center gap-1.5 ${c.icon}`}>
+        {icon}
+        <span className="text-[11px] font-medium leading-tight text-gray-500">
+          {label}
+        </span>
+      </div>
+      <p className={`text-xl font-bold leading-none ${c.value}`}>{value}</p>
+    </div>
+  );
+};
 
 export default GroupDetails;
