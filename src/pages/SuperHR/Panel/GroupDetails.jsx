@@ -589,14 +589,14 @@ const GroupDetails = () => {
                           <Edit className="mr-2 h-4 w-4" />
                           Mashinani tahrirlash
                         </ContextMenuItem>
-                        <ContextMenuSeparator />
+                        {/* <ContextMenuSeparator />
                         <ContextMenuItem
                           className="text-red-500 focus:text-red-600"
                           onClick={() => setDeleteMachineTarget(machine)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Mashinani o'chirish
-                        </ContextMenuItem>
+                        </ContextMenuItem> */}
                       </ContextMenuGroup>
                     </ContextMenuContent>
                   </ContextMenu>
