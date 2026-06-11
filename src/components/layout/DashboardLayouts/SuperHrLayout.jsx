@@ -7,6 +7,7 @@ import {
   Swords,
   CircleDollarSign,
   Gem,
+  LayoutDashboard,
 } from "lucide-react";
 
 const navigation = [
@@ -45,6 +46,12 @@ const navigation = [
     name: "Oylik jadval",
     href: "/superhr/salary-page",
     icon: Gem,
+    onMobile: false,
+  },
+  {
+    name: "Panel",
+    href: "/superhr/panel",
+    icon: LayoutDashboard,
     onMobile: false,
   },
 ];
