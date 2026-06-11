@@ -47,7 +47,6 @@ import {
   UserMinus,
   UserPen,
   Users,
-  Calendar,
   Plus,
 } from "lucide-react";
 
@@ -338,15 +337,12 @@ const GroupDetails = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={handleDateChange}
-              className="w-44 bg-white"
-            />
-          </div>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={handleDateChange}
+            className="w-44 bg-white"
+          />
         </div>
 
         {/* ── Loading skeleton ── */}
@@ -460,7 +456,7 @@ const GroupDetails = () => {
 
                         {hasEmployee && (
                           <>
-                            <ContextMenuItem className="gap-2 text-xs">
+                            <ContextMenuItem disabled className="gap-2 text-xs">
                               {imgUrl ? (
                                 <img
                                   src={imgUrl}
@@ -468,9 +464,16 @@ const GroupDetails = () => {
                                   className="h-5 w-5 rounded-full object-cover shrink-0"
                                 />
                               ) : (
-                                <User2 className="h-4 w-4" />
+                                <User2 className="h-4 w-4 shrink-0" />
                               )}
-                              <span className="truncate">{name}</span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate">{name}</span>
+                                {machine.employee?.position?.name && (
+                                  <span className="block truncate text-[10px] text-gray-400">
+                                    {machine.employee.position.name}
+                                  </span>
+                                )}
+                              </span>
                               <span
                                 className={`ml-auto h-2 w-2 shrink-0 rounded-full ${
                                   isPresent ? "bg-green-400" : "bg-red-400"
@@ -852,7 +855,14 @@ const EmployeeRow = ({ emp, isPresent, selected, onSelect }) => (
     onClick={onSelect}
   >
     <EmployeeAvatar img={emp.img} name={emp.name} size="md" />
-    <span className="min-w-0 flex-1 truncate">{emp.name}</span>
+    <span className="min-w-0 flex-1">
+      <span className="block truncate text-sm">{emp.name}</span>
+      {emp.position?.name && (
+        <span className="block truncate text-xs text-gray-400">
+          {emp.position.name}
+        </span>
+      )}
+    </span>
     <span
       className={`h-2 w-2 shrink-0 rounded-full ${isPresent ? "bg-emerald-400" : "bg-red-400"}`}
     />
