@@ -1010,16 +1010,15 @@ const GroupDetails = () => {
                 </p>
               </div>
               <div className="rounded-lg bg-slate-50 p-3 text-center">
-                <p className="text-xs text-gray-500">Biriktirilgan</p>
+                <p className="text-xs text-gray-500">Summa</p>
                 <p className="text-sm font-semibold text-slate-700">
-                  {employeeDetailTarget.assigned_since
-                    ? new Date(
-                        employeeDetailTarget.assigned_since,
-                      ).toLocaleDateString("uz-UZ", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })
+                  {employeeDetailTarget.tarification_logs?.length
+                    ? formatNumber(
+                        employeeDetailTarget.tarification_logs.reduce(
+                          (sum, l) => sum + Number(l.amount_earned),
+                          0,
+                        ),
+                      )
                     : "—"}
                 </p>
               </div>
