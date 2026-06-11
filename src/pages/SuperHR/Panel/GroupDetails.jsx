@@ -54,6 +54,7 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import formatNumber from "@/utils/formatNumber";
 
 const TODAY = new Date().toISOString().split("T")[0];
 
@@ -132,6 +133,9 @@ const GroupDetails = () => {
   // Remove employee
   const [removeEmployeeTarget, setRemoveEmployeeTarget] = useState(null);
   const [removeEmployeeLoading, setRemoveEmployeeLoading] = useState(false);
+
+  // Employee detail view
+  const [employeeDetailTarget, setEmployeeDetailTarget] = useState(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -528,7 +532,12 @@ const GroupDetails = () => {
 
                         {hasEmployee && (
                           <>
-                            <ContextMenuItem disabled className="gap-2 text-xs">
+                            <ContextMenuItem
+                              className="gap-2 text-xs"
+                              onClick={() =>
+                                setEmployeeDetailTarget(machine.employee)
+                              }
+                            >
                               {imgUrl ? (
                                 <img
                                   src={imgUrl}
@@ -950,6 +959,123 @@ const GroupDetails = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* ── Employee Detail Dialog ── */}
+      {employeeDetailTarget && (
+        <Dialog
+          open={!!employeeDetailTarget}
+          onOpenChange={(open) => !open && setEmployeeDetailTarget(null)}
+        >
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              {/* Avatar + name + position */}
+              <div className="flex items-center gap-4">
+                {employeeDetailTarget.image || employeeDetailTarget.img ? (
+                  <img
+                    src={employeeDetailTarget.image || employeeDetailTarget.img}
+                    alt={employeeDetailTarget.name}
+                    className="h-14 w-14 rounded-full object-cover ring-2 ring-gray-100"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-200 text-lg font-bold text-gray-600">
+                    {getShortName(employeeDetailTarget.name)}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <DialogTitle className="truncate text-base">
+                    {employeeDetailTarget.name}
+                  </DialogTitle>
+                  {employeeDetailTarget.position?.name && (
+                    <p className="text-sm text-gray-400">
+                      {employeeDetailTarget.position.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </DialogHeader>
+
+            {/* Key stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg bg-emerald-50 p-3 text-center">
+                <p className="text-xs text-gray-500">Koeffitsient</p>
+                <p className="text-lg font-bold text-emerald-600">
+                  {employeeDetailTarget.coefficient ?? 0}%
+                </p>
+              </div>
+              <div className="rounded-lg bg-blue-50 p-3 text-center">
+                <p className="text-xs text-gray-500">Ish vaqti</p>
+                <p className="text-lg font-bold text-blue-600">
+                  {employeeDetailTarget.total_seconds_today != null
+                    ? `${Math.round(employeeDetailTarget.total_seconds_today / 60)} min`
+                    : "—"}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3 text-center">
+                <p className="text-xs text-gray-500">Biriktirilgan</p>
+                <p className="text-sm font-semibold text-slate-700">
+                  {employeeDetailTarget.assigned_since
+                    ? new Date(
+                        employeeDetailTarget.assigned_since,
+                      ).toLocaleDateString("uz-UZ", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })
+                    : "—"}
+                </p>
+              </div>
+            </div>
+
+            {/* Tarification logs */}
+            {employeeDetailTarget.tarification_logs?.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Bajarilgan ishlar
+                </p>
+                <div className="max-h-52 overflow-y-auto rounded-lg border text-xs">
+                  <table className="w-full">
+                    <thead className="sticky top-0 bg-gray-50 text-[11px] text-gray-500">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium">
+                          Ish nomi
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          Soni
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          Vaqt
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          Summa
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {employeeDetailTarget.tarification_logs.map((log) => (
+                        <tr key={log.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2">
+                            <span className="line-clamp-2">
+                              {log.tarification_name}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-right text-gray-700">
+                            {log.quantity}
+                          </td>
+                          <td className="px-3 py-2 text-right text-gray-500">
+                            {formatNumber(log.total_seconds / log.quantity)} s
+                          </td>
+                          <td className="px-3 py-2 text-right font-medium text-emerald-600">
+                            {formatNumber(log.amount_earned)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </TooltipProvider>
   );
 };
