@@ -76,7 +76,7 @@ const MonthlyReport = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -92,12 +92,12 @@ const MonthlyReport = () => {
             setSelectedMonth(e.target.value);
             localStorage.setItem("selectedMonth", e.target.value);
           }}
-          className="w-44 bg-white"
+          className="w-fit bg-white"
         />
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-2 gap-4">
         <SummaryCard
           icon={<Hash className="h-4 w-4 text-blue-500" />}
           label="Jami buyurtmalar"
