@@ -66,8 +66,19 @@ const EditTarif = () => {
     setLoading(true);
     try {
       const response = await api.get(`/technologist/tarification/${id}`);
-      setTarif(response.data);
-      setSelectedTarifLang(response.data?.region);
+      const data = response.data;
+      if (data?.tarifications) {
+        data.tarifications = [...data.tarifications].sort((a, b) => {
+          const an = a.number ?? null;
+          const bn = b.number ?? null;
+          if (an === null && bn === null) return 0;
+          if (an === null) return 1;
+          if (bn === null) return -1;
+          return an - bn;
+        });
+      }
+      setTarif(data);
+      setSelectedTarifLang(data?.region);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -338,10 +349,10 @@ const EditTarif = () => {
       razryad_id: null,
       typewriter_id: null,
       second: 0,
-      // Preserve these fields as read-only
       code: "",
       summa: 0,
       video_id: "",
+      number: null,
     };
 
     setTarif({
@@ -393,17 +404,15 @@ const EditTarif = () => {
       const tarificationsToSubmit = tarif.tarifications.map((item) => {
         const preparedItem = {
           name: item.name || "",
-          // Use employee_id if available, otherwise use employee.id if available
           employee_id:
             item.employee_id || (item.employee ? item.employee.id : null),
-          // Use razryad_id if available, otherwise use razryad.id if available
           razryad_id:
             item.razryad_id || (item.razryad ? item.razryad.id : null),
-          // Use typewriter_id if available, otherwise use typewriter.id if available
           typewriter_id:
             item.typewriter_id || (item.typewriter ? item.typewriter.id : null),
           second: item.second || 0,
           video_id: item.video_id || null,
+          number: item.number ?? null,
         };
 
         // Only include code if it exists
@@ -421,6 +430,7 @@ const EditTarif = () => {
 
       await api.patch(`/technologist/tarification/${id}`, {
         name: tarif.name,
+        number: tarif.number ?? null,
         submodel_id: tarif.submodel_id,
         region: selectedTarifLang,
         tarifications: tarificationsToSubmit,
@@ -474,6 +484,19 @@ const EditTarif = () => {
             onChange={(e) => setTarif({ ...tarif, name: e.target.value })}
           />
         </div>
+        <Input
+          type="number"
+          placeholder="Tartib №"
+          className="w-28"
+          min={1}
+          value={tarif?.number ?? ""}
+          onChange={(e) =>
+            setTarif({
+              ...tarif,
+              number: e.target.value === "" ? null : parseInt(e.target.value),
+            })
+          }
+        />
         <Select
           value={selectedTarifLang}
           onValueChange={(value) => {
@@ -495,6 +518,7 @@ const EditTarif = () => {
           <thead>
             <tr>
               <th className="px-4 py-2 border">#</th>
+              <th className="px-4 py-2 border" title="Tartib raqami — saralash uchun">Tartib №</th>
               <th className="px-4 py-2 border">Kodi</th>
               <th className="px-4 py-2 border">Nomi</th>
               <th className="px-4 py-2 border">Xodim</th>
@@ -506,15 +530,25 @@ const EditTarif = () => {
           </thead>
           <tbody>
             {tarif?.tarifications
-              ?.sort((a, b) =>
-                a.code.localeCompare(b.code, undefined, {
-                  numeric: true,
-                  sensitivity: "base",
-                }),
-              )
-              .map((item, index) => (
+              ?.map((item, index) => (
                 <tr key={index}>
                   <td className="px-4 py-2 border text-center">{index + 1}</td>
+                  <td className="px-4 py-2 border">
+                    <Input
+                      type="number"
+                      className="w-16 text-center"
+                      value={item?.number ?? ""}
+                      placeholder="—"
+                      min={1}
+                      onChange={(e) =>
+                        handleInputChange(
+                          index,
+                          "number",
+                          e.target.value === "" ? null : parseInt(e.target.value),
+                        )
+                      }
+                    />
+                  </td>
                   <td className="px-4 py-2 border">{item?.code || "-"}</td>
                   <td className="px-4 py-2 border">
                     <Input

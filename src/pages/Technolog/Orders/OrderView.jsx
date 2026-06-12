@@ -38,6 +38,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -88,6 +89,10 @@ const OrderView = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [categoryNumberDialogOpen, setCategoryNumberDialogOpen] = useState(false);
+  const [selectedCategoryForNumber, setSelectedCategoryForNumber] = useState(null);
+  const [editingCategoryNumber, setEditingCategoryNumber] = useState("");
+
   // Spoiler states for time displays
   const [showUZTime, setShowUZTime] = useState(false);
   const [showRUTime, setShowRUTime] = useState(false);
@@ -123,6 +128,63 @@ const OrderView = () => {
       setDeleteDialogOpen(false);
       setDeleteId(null);
       fetchTarifications();
+    }
+  };
+
+  const [isCategoryNumberSaving, setIsCategoryNumberSaving] = useState(false);
+
+  const openCategoryNumberDialog = (category) => {
+    setSelectedCategoryForNumber(category);
+    setEditingCategoryNumber(category.number ?? "");
+    setCategoryNumberDialogOpen(true);
+  };
+
+  const handleUpdateCategoryNumber = async () => {
+    const number =
+      editingCategoryNumber === "" ? null : parseInt(editingCategoryNumber);
+    setIsCategoryNumberSaving(true);
+    const category = selectedCategoryForNumber;
+    try {
+      const tarificationsToSubmit = category.tarifications.map((item) => {
+        const preparedItem = {
+          name: item.name || "",
+          employee_id:
+            item.employee_id || (item.employee ? item.employee.id : null),
+          razryad_id:
+            item.razryad_id || (item.razryad ? item.razryad.id : null),
+          typewriter_id:
+            item.typewriter_id || (item.typewriter ? item.typewriter.id : null),
+          second: item.second || 0,
+          video_id: item.video_id || null,
+          number: item.number ?? null,
+        };
+        if (item.code) preparedItem.code = item.code;
+        if (item.id) preparedItem.id = item.id;
+        return preparedItem;
+      });
+
+      await api.patch(`/technologist/tarification/${category.id}`, {
+        name: category.name,
+        number,
+        submodel_id: selectedSubmodel?.id,
+        region: category.region,
+        tarifications: tarificationsToSubmit,
+      });
+
+      setTarifications((prev) =>
+        prev.map((t) =>
+          t.id === category.id ? { ...t, number } : t,
+        ),
+      );
+      setCategoryNumberDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Tartib raqamini yangilashda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCategoryNumberSaving(false);
     }
   };
 
@@ -300,6 +362,7 @@ const OrderView = () => {
 
       // Set column headers
       worksheet.columns = [
+        { header: "Tartib №", key: "number", width: 12 },
         { header: "Kod", key: "code", width: 15 },
         { header: "Nomi", key: "name", width: 30 },
         { header: "Xodim", key: "employee", width: 20 },
@@ -318,14 +381,18 @@ const OrderView = () => {
 
       // Add data rows for all tarifications in the category
       category?.tarifications
-        ?.sort((a, b) =>
-          a.code.localeCompare(b.code, undefined, {
-            numeric: true,
-            sensitivity: "base",
-          }),
-        )
+        ?.slice()
+        .sort((a, b) => {
+          const an = a.number ?? null;
+          const bn = b.number ?? null;
+          if (an === null && bn === null) return 0;
+          if (an === null) return 1;
+          if (bn === null) return -1;
+          return an - bn;
+        })
         ?.forEach((tarif) => {
           worksheet.addRow({
+            number: tarif.number ?? "",
             code: tarif.code,
             name: tarif.name,
             employee: tarif?.employee?.name || "",
@@ -666,6 +733,73 @@ const OrderView = () => {
 
   return (
     <div className="space-y-6">
+      <Dialog
+        open={categoryNumberDialogOpen}
+        onOpenChange={setCategoryNumberDialogOpen}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tartib raqamini o'zgartirish</DialogTitle>
+            <DialogDescription>
+              {selectedCategoryForNumber?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="number"
+              placeholder="Tartib №"
+              min={1}
+              value={editingCategoryNumber}
+              onChange={(e) => setEditingCategoryNumber(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleUpdateCategoryNumber()}
+              autoFocus
+            />
+            <div className="border rounded-md divide-y max-h-60 overflow-auto">
+              {tarifications
+                .slice()
+                .sort((a, b) => {
+                  const an = a.number ?? null;
+                  const bn = b.number ?? null;
+                  if (an === null && bn === null) return 0;
+                  if (an === null) return 1;
+                  if (bn === null) return -1;
+                  return an - bn;
+                })
+                .map((t) => (
+                  <div
+                    key={t.id}
+                    className={`flex items-center justify-between px-3 py-2 text-sm ${
+                      t.id === selectedCategoryForNumber?.id
+                        ? "bg-blue-50 font-medium"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    <span>{t.name}</span>
+                    <span className="text-gray-400">{t.number ?? "—"}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCategoryNumberDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={handleUpdateCategoryNumber}
+              disabled={isCategoryNumberSaving}
+            >
+              {isCategoryNumberSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Tasdiqlash
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1347,7 +1481,15 @@ const OrderView = () => {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {tarifications
-                        .sort((a, b) => a?.id - b?.id)
+                        .slice()
+                        .sort((a, b) => {
+                          const an = a.number ?? null;
+                          const bn = b.number ?? null;
+                          if (an === null && bn === null) return 0;
+                          if (an === null) return 1;
+                          if (bn === null) return -1;
+                          return an - bn;
+                        })
                         .map((tarification) => (
                           <div
                             key={tarification.id}
@@ -1355,15 +1497,25 @@ const OrderView = () => {
                           >
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                               <span className="font-medium text-gray-700">
-                                {tarification?.name}{" "}
+                                {tarification?.name}
                               </span>
-
-                              <Badge
-                                variant="outline"
-                                className="bg-indigo-100 text-indigo-800 border-indigo-200"
-                              >
-                                {tarification?.tarifications?.length} ta
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className="cursor-pointer bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                                  onClick={() =>
+                                    openCategoryNumberDialog(tarification)
+                                  }
+                                >
+                                  №{tarification?.number ?? "—"}
+                                </Badge>
+                                <Badge
+                                  variant="outline"
+                                  className="bg-indigo-100 text-indigo-800 border-indigo-200"
+                                >
+                                  {tarification?.tarifications?.length} ta
+                                </Badge>
+                              </div>
                             </div>
                             <div className="flex items-center justify-between gap-2 flex-wrap text-sm ">
                               <div className="flex items-center gap-2">
@@ -1497,10 +1649,10 @@ const OrderView = () => {
               <thead>
                 <tr className="text-center">
                   <th className="border border-gray-300 p-1">#</th>
+                  <th className="border border-gray-300 p-1" title="Tartib raqami">Tartib №</th>
                   <th className="border border-gray-300 p-1">Kod</th>
                   <th className="border border-gray-300 p-1">Nomi</th>
                   <th className="border border-gray-300 p-1">Xodim</th>
-                  {/* <th className="border border-gray-300 p-1">Video ID</th> */}
                   <th className="border border-gray-300 p-1">Razryad</th>
                   <th className="border border-gray-300 p-1">Sekund</th>
                   <th className="border border-gray-300 p-1">Summa (so'm)</th>
@@ -1519,16 +1671,22 @@ const OrderView = () => {
               </thead>
               <tbody>
                 {selectedTarification?.tarifications
-                  ?.sort((a, b) =>
-                    a.code.localeCompare(b.code, undefined, {
-                      numeric: true,
-                      sensitivity: "base",
-                    }),
-                  )
+                  ?.slice()
+                  .sort((a, b) => {
+                    const an = a.number ?? null;
+                    const bn = b.number ?? null;
+                    if (an === null && bn === null) return 0;
+                    if (an === null) return 1;
+                    if (bn === null) return -1;
+                    return an - bn;
+                  })
                   ?.map((tarif, index) => (
                     <tr key={tarif.id} className="text-center">
                       <td className="border border-gray-300 p-1">
                         {index + 1}
+                      </td>
+                      <td className="border border-gray-300 p-1 text-gray-500">
+                        {tarif?.number ?? "—"}
                       </td>
                       <td className="border border-gray-300 p-1">
                         {tarif?.code}
@@ -1539,14 +1697,6 @@ const OrderView = () => {
                       <td className="border border-gray-300 p-1">
                         {tarif?.employee?.name || "-"}
                       </td>
-                      {/* <td className="border border-gray-300 p-1">
-                        <Link
-                          to={`/technologist/videos/show/${tarif?.video_id}`}
-                          target="_blank"
-                        >
-                          {tarif?.video_id}
-                        </Link>
-                      </td> */}
                       <td className="border border-gray-300 p-1">
                         {tarif?.razryad?.name}
                       </td>
