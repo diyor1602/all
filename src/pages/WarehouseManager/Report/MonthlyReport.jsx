@@ -97,7 +97,7 @@ const MonthlyReport = () => {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-4 grid-cols-2">
+      <div className="grid grid-cols-2 gap-4">
         <SummaryCard
           icon={<Hash className="h-4 w-4 text-blue-500" />}
           label="Jami buyurtmalar"
