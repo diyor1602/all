@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -69,8 +69,8 @@ const COLOR_MAP = {
 
 // ── Sub-components ────────────────────────────────────────────
 
-const EmployeeAvatar = ({ img, name }) =>
-  img ? (
+function EmployeeAvatar({ img, name }) {
+  return img ? (
     <img
       src={img}
       alt={name}
@@ -81,8 +81,9 @@ const EmployeeAvatar = ({ img, name }) =>
       {getShortName(name)}
     </div>
   );
+}
 
-const LevelBadge = ({ level }) => {
+function LevelBadge({ level }) {
   const cfg = LEVEL_CONFIG[level];
   if (!cfg) return null;
   return (
@@ -92,9 +93,9 @@ const LevelBadge = ({ level }) => {
       {cfg.label}
     </span>
   );
-};
+}
 
-const StatCard = ({ icon, label, value, color = "slate" }) => {
+function StatCard({ icon, label, value, color = "slate" }) {
   const c = COLOR_MAP[color] ?? COLOR_MAP.slate;
   return (
     <div className={`flex flex-col gap-1.5 rounded-xl border p-3 ${c.bg}`}>
@@ -107,52 +108,69 @@ const StatCard = ({ icon, label, value, color = "slate" }) => {
       <p className={`text-xl font-bold leading-none ${c.value}`}>{value}</p>
     </div>
   );
-};
+}
 
-// Small avatar+name card used in attendance grids
-const EmployeeCard = ({ emp, isPresent, level, onClick }) => (
-  <button
-    onClick={onClick}
-    className="flex w-16 flex-col items-center gap-1 rounded-lg p-2 text-center transition-colors hover:bg-gray-50 active:bg-gray-100"
-  >
-    <div className="relative">
-      <EmployeeAvatar img={emp.img} name={emp.name} />
-      <span
-        className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${
-          isPresent ? "bg-emerald-400" : "bg-red-400"
-        }`}
+// onOpen is a stable callback (useCallback); emp is a stable object reference from groupData
+const EmployeeCard = memo(function EmployeeCard({
+  emp,
+  isPresent,
+  level,
+  onOpen,
+}) {
+  const handleClick = useCallback(() => onOpen(emp), [emp, onOpen]);
+  return (
+    <button
+      onClick={handleClick}
+      className="flex w-16 flex-col items-center gap-1 rounded-lg p-2 text-center transition-colors hover:bg-gray-50 active:bg-gray-100"
+    >
+      <div className="relative">
+        <EmployeeAvatar img={emp.img} name={emp.name} />
+        <span
+          className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${
+            isPresent ? "bg-emerald-400" : "bg-red-400"
+          }`}
+        />
+      </div>
+      <span className="w-full truncate text-[10px] font-medium leading-tight text-gray-700">
+        {getShortName(emp.name)}
+      </span>
+      <LevelBadge level={level} />
+    </button>
+  );
+});
+
+const EfficiencyRow = memo(function EfficiencyRow({
+  rank,
+  emp,
+  value,
+  onOpen,
+}) {
+  const handleClick = useCallback(() => onOpen(emp), [emp, onOpen]);
+  return (
+    <button
+      onClick={handleClick}
+      className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-gray-50"
+    >
+      <span className="w-5 shrink-0 text-center text-xs font-semibold text-gray-400">
+        {rank}
+      </span>
+      <img
+        src={emp.img}
+        alt={emp.name}
+        className="h-7 w-7 shrink-0 rounded-full object-cover"
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
       />
-    </div>
-    <span className="w-full truncate text-[10px] font-medium leading-tight text-gray-700">
-      {getShortName(emp.name)}
-    </span>
-    <LevelBadge level={level} />
-  </button>
-);
-
-// Ranked list row used in efficiency cards
-const EfficiencyRow = ({ rank, emp, value, onClick }) => (
-  <button
-    onClick={onClick}
-    className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-gray-50"
-  >
-    <span className="w-5 shrink-0 text-center text-xs font-semibold text-gray-400">
-      {rank}
-    </span>
-    <img
-      src={emp.img}
-      alt={emp.name}
-      className="h-7 w-7 shrink-0 rounded-full object-cover"
-      onError={(e) => {
-        e.currentTarget.style.display = "none";
-      }}
-    />
-    <span className="min-w-0 flex-1 truncate text-xs text-gray-700">
-      {emp.name}
-    </span>
-    <span className="shrink-0 text-xs font-bold text-emerald-600">{value}</span>
-  </button>
-);
+      <span className="min-w-0 flex-1 truncate text-xs text-gray-700">
+        {emp.name}
+      </span>
+      <span className="shrink-0 text-xs font-bold text-emerald-600">
+        {value}
+      </span>
+    </button>
+  );
+});
 
 // ── Main component ────────────────────────────────────────────
 
@@ -196,30 +214,40 @@ const GroupDetails = () => {
     localStorage.setItem("panelDate", val);
   };
 
-  // level map: employee_id → level string
-  const levelMap = new Map(
-    (groupData?.levels ?? []).flatMap((l) =>
-      l.employees.map((e) => [e.employee_id, l.level]),
-    ),
+  // Memoized so they're not rebuilt on every render (e.g. when dialog opens)
+  const levelMap = useMemo(
+    () =>
+      new Map(
+        (groupData?.levels ?? []).flatMap((l) =>
+          l.employees.map((e) => [e.employee_id, l.level]),
+        ),
+      ),
+    [groupData],
   );
 
-  // efficiency map: employee_id → today's efficiency object
-  const effMap = new Map();
-  [
-    ...(groupData?.efficiency?.today?.top7_best ?? []),
-    ...(groupData?.efficiency?.today?.top7_earners ?? []),
-    ...(groupData?.efficiency?.today?.top7_worst ?? []),
-  ].forEach((e) => {
-    if (!effMap.has(e.employee_id)) effMap.set(e.employee_id, e);
-  });
-
-  const openDetail = (emp) => {
-    setEmployeeDetailTarget({
-      ...emp,
-      _eff: effMap.get(emp.employee_id) ?? null,
+  const effMap = useMemo(() => {
+    const m = new Map();
+    [
+      ...(groupData?.efficiency?.today?.top7_best ?? []),
+      ...(groupData?.efficiency?.today?.top7_earners ?? []),
+      ...(groupData?.efficiency?.today?.top7_worst ?? []),
+    ].forEach((e) => {
+      if (!m.has(e.employee_id)) m.set(e.employee_id, e);
     });
-    setEmpDialogOpen(true);
-  };
+    return m;
+  }, [groupData]);
+
+  // Stable reference — doesn't change unless effMap changes (i.e. groupData changes)
+  const openDetail = useCallback(
+    (emp) => {
+      setEmployeeDetailTarget({
+        ...emp,
+        _eff: effMap.get(emp.employee_id) ?? null,
+      });
+      setEmpDialogOpen(true);
+    },
+    [effMap],
+  );
 
   const sewing = groupData?.sewing_output;
 
@@ -335,7 +363,7 @@ const GroupDetails = () => {
                     emp={emp}
                     isPresent
                     level={levelMap.get(emp.employee_id)}
-                    onClick={() => openDetail(emp)}
+                    onOpen={openDetail}
                   />
                 ))}
               </div>
@@ -359,7 +387,7 @@ const GroupDetails = () => {
                     emp={emp}
                     isPresent={false}
                     level={levelMap.get(emp.employee_id)}
-                    onClick={() => openDetail(emp)}
+                    onOpen={openDetail}
                   />
                 ))}
               </div>
@@ -384,7 +412,7 @@ const GroupDetails = () => {
                       rank={i + 1}
                       emp={emp}
                       value={`${emp.efficiency_percent}%`}
-                      onClick={() => openDetail(emp)}
+                      onOpen={openDetail}
                     />
                   ),
                 )}
@@ -407,7 +435,7 @@ const GroupDetails = () => {
                       rank={i + 1}
                       emp={emp}
                       value={formatNumber(emp.total_earned)}
-                      onClick={() => openDetail(emp)}
+                      onOpen={openDetail}
                     />
                   ),
                 )}
@@ -430,7 +458,7 @@ const GroupDetails = () => {
                       rank={i + 1}
                       emp={emp}
                       value={`${emp.efficiency_percent}%`}
-                      onClick={() => openDetail(emp)}
+                      onOpen={openDetail}
                     />
                   ),
                 )}
@@ -441,65 +469,65 @@ const GroupDetails = () => {
       )}
 
       {/* ── Employee Detail Dialog ── */}
-      {employeeDetailTarget && (
-        <Dialog open={empDialogOpen} onOpenChange={setEmpDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <div className="flex items-center gap-4">
-                <div className="relative">
+      <Dialog open={empDialogOpen} onOpenChange={setEmpDialogOpen}>
+        <DialogContent>
+          {employeeDetailTarget && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-4">
                   <EmployeeAvatar
                     img={employeeDetailTarget.img || employeeDetailTarget.image}
                     name={employeeDetailTarget.name}
                   />
-                </div>
-                <div className="min-w-0">
-                  <DialogTitle className="truncate text-base leading-tight">
-                    {employeeDetailTarget.name}
-                  </DialogTitle>
-                  {employeeDetailTarget.position?.name && (
-                    <p className="mt-0.5 text-sm text-gray-400">
-                      {employeeDetailTarget.position.name}
-                    </p>
-                  )}
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <LevelBadge
-                      level={levelMap.get(employeeDetailTarget.employee_id)}
-                    />
+                  <div className="min-w-0">
+                    <DialogTitle className="truncate text-base leading-tight">
+                      {employeeDetailTarget.name}
+                    </DialogTitle>
+                    {employeeDetailTarget.position?.name && (
+                      <p className="mt-0.5 text-sm text-gray-400">
+                        {employeeDetailTarget.position.name}
+                      </p>
+                    )}
+                    <div className="mt-1">
+                      <LevelBadge
+                        level={levelMap.get(employeeDetailTarget.employee_id)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </DialogHeader>
+              </DialogHeader>
 
-            {employeeDetailTarget._eff ? (
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-lg bg-emerald-50 p-3 text-center">
-                  <p className="text-xs text-gray-500">Samaradorlik</p>
-                  <p className="text-lg font-bold text-emerald-600">
-                    {employeeDetailTarget._eff.efficiency_percent}%
-                  </p>
+              {employeeDetailTarget._eff ? (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-lg bg-emerald-50 p-3 text-center">
+                    <p className="text-xs text-gray-500">Samaradorlik</p>
+                    <p className="text-lg font-bold text-emerald-600">
+                      {employeeDetailTarget._eff.efficiency_percent}%
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 p-3 text-center">
+                    <p className="text-xs text-gray-500">Ish vaqti</p>
+                    <p className="text-base font-bold text-blue-600">
+                      {Math.round(employeeDetailTarget._eff.total_seconds / 60)}{" "}
+                      min
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-slate-50 p-3 text-center">
+                    <p className="text-xs text-gray-500">Summa</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {formatNumber(employeeDetailTarget._eff.total_earned)}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-lg bg-blue-50 p-3 text-center">
-                  <p className="text-xs text-gray-500">Ish vaqti</p>
-                  <p className="text-base font-bold text-blue-600">
-                    {Math.round(employeeDetailTarget._eff.total_seconds / 60)}{" "}
-                    min
-                  </p>
-                </div>
-                <div className="rounded-lg bg-slate-50 p-3 text-center">
-                  <p className="text-xs text-gray-500">Summa</p>
-                  <p className="text-sm font-semibold text-slate-700">
-                    {formatNumber(employeeDetailTarget._eff.total_earned)}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <p className="py-3 text-center text-sm text-gray-400">
-                Bugun ma'lumot yo'q
-              </p>
-            )}
-          </DialogContent>
-        </Dialog>
-      )}
+              ) : (
+                <p className="py-3 text-center text-sm text-gray-400">
+                  Bugun ma'lumot yo'q
+                </p>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
