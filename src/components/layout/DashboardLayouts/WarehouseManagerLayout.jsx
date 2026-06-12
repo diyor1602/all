@@ -7,6 +7,7 @@ import {
   Users,
   FileText,
   Snail,
+  Calendar,
 } from "lucide-react";
 
 const navigation = [
@@ -14,6 +15,12 @@ const navigation = [
     name: "Buyurtmalar",
     href: "/warehouseManager/completeOrders",
     icon: Box,
+    onMobile: true,
+  },
+  {
+    name: "Oylik xulosa",
+    href: "/warehouseManager/monthly-report",
+    icon: Calendar,
     onMobile: true,
   },
   {
