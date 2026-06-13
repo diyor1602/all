@@ -21,6 +21,7 @@ import {
   Trophy,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
+import TarificationProgress from "./TarificationProgress";
 
 const TODAY = new Date().toISOString().split("T")[0];
 
@@ -475,6 +476,33 @@ const GroupDetails = () => {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Orders */}
+          <div className="space-y-6">
+            {Object.keys(groupData?.todaySewingOutputs || {}).length > 0 ? (
+              Object.keys(groupData.todaySewingOutputs).map((orderId) => {
+                const orderName =
+                  groupData.todaySewingOutputs[orderId][0]?.order_name ??
+                  orderId;
+                const submodelId =
+                  groupData.todaySewingOutputs[orderId][0]?.order_submodel_id;
+
+                return (
+                  <div key={orderId}>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">
+                      {orderName}
+                    </p>
+                    <TarificationProgress
+                      orderId={Number(orderId)}
+                      submodelId={submodelId}
+                    />
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-gray-400">No orders</p>
+            )}
           </div>
         </div>
       )}
