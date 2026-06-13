@@ -481,21 +481,21 @@ const GroupDetails = () => {
 
       {/* ── Employee Detail Dialog ── */}
       <Dialog open={empDialogOpen} onOpenChange={setEmpDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[calc(100vw-2rem)] overflow-hidden sm:max-w-lg">
           {employeeDetailTarget && (
             <>
               <DialogHeader>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <EmployeeAvatar
                     img={employeeDetailTarget.img || employeeDetailTarget.image}
                     name={employeeDetailTarget.name}
                   />
-                  <div className="min-w-0">
-                    <DialogTitle className="truncate text-base leading-tight">
+                  <div className="min-w-0 flex-1">
+                    <DialogTitle className="break-words text-sm leading-tight">
                       {employeeDetailTarget.name}
                     </DialogTitle>
                     {employeeDetailTarget.position?.name && (
-                      <p className="mt-0.5 text-sm text-gray-400">
+                      <p className="mt-0.5 truncate text-xs text-gray-400">
                         {employeeDetailTarget.position.name}
                       </p>
                     )}
@@ -509,23 +509,23 @@ const GroupDetails = () => {
               </DialogHeader>
 
               {employeeDetailTarget._eff ? (
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-lg bg-emerald-50 p-3 text-center">
-                    <p className="text-xs text-gray-500">Samaradorlik</p>
-                    <p className="text-lg font-bold text-emerald-600">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-lg bg-emerald-50 p-2.5 text-center">
+                    <p className="text-[10px] text-gray-500">Samaradorlik</p>
+                    <p className="text-base font-bold text-emerald-600">
                       {employeeDetailTarget._eff.efficiency_percent}%
                     </p>
                   </div>
-                  <div className="rounded-lg bg-blue-50 p-3 text-center">
-                    <p className="text-xs text-gray-500">Ish vaqti</p>
+                  <div className="rounded-lg bg-blue-50 p-2.5 text-center">
+                    <p className="text-[10px] text-gray-500">Ish vaqti</p>
                     <p className="text-base font-bold text-blue-600">
                       {Math.round(employeeDetailTarget._eff.total_seconds / 60)}{" "}
                       min
                     </p>
                   </div>
-                  <div className="rounded-lg bg-slate-50 p-3 text-center">
-                    <p className="text-xs text-gray-500">Summa</p>
-                    <p className="text-sm font-semibold text-slate-700">
+                  <div className="rounded-lg bg-slate-50 p-2.5 text-center">
+                    <p className="text-[10px] text-gray-500">Summa</p>
+                    <p className="text-xs font-semibold text-slate-700">
                       {formatNumber(employeeDetailTarget._eff.total_earned)}
                     </p>
                   </div>
