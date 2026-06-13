@@ -481,7 +481,7 @@ const GroupDetails = () => {
 
       {/* ── Employee Detail Dialog ── */}
       <Dialog open={empDialogOpen} onOpenChange={setEmpDialogOpen}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] overflow-hidden sm:max-w-lg">
+        <DialogContent className="max-w-2xl overflow-hidden sm:max-w-2xl">
           {employeeDetailTarget && (
             <>
               <DialogHeader>
