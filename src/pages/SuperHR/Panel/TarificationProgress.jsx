@@ -265,53 +265,55 @@ const TarificationProgress = ({ orderId, submodelId }) => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {displayTarifs.length > 0 ? (
-                displayTarifs.map((tarif) => {
-                  const pct = Math.round(tarif.pct);
-                  const colors = getColors(pct);
-                  return (
-                    <div
-                      key={tarif.id}
-                      className={cn(
-                        "rounded-lg border p-3 cursor-pointer hover:shadow-md transition-shadow select-none",
-                        colors.bg,
-                        colors.border,
-                      )}
-                      onClick={() => {
-                        setSelectedTarif(tarif);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <div className="flex items-center justify-between mb-1 gap-1">
-                        <span className="font-mono text-xs font-semibold text-gray-600 truncate">
-                          {tarif.code}
-                        </span>
-                        <span
-                          className={cn(
-                            "text-xs font-bold shrink-0",
-                            colors.text,
-                          )}
-                        >
-                          {pct}%
-                        </span>
+                displayTarifs
+                  .sort((a, b) => b.number - a.number)
+                  .map((tarif) => {
+                    const pct = Math.round(tarif.pct);
+                    const colors = getColors(pct);
+                    return (
+                      <div
+                        key={tarif.id}
+                        className={cn(
+                          "rounded-lg border p-3 cursor-pointer hover:shadow-md transition-shadow select-none",
+                          colors.bg,
+                          colors.border,
+                        )}
+                        onClick={() => {
+                          setSelectedTarif(tarif);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-1 gap-1">
+                          <span className="font-mono text-xs font-semibold text-gray-600 truncate">
+                            {tarif.code}
+                          </span>
+                          <span
+                            className={cn(
+                              "text-xs font-bold shrink-0",
+                              colors.text,
+                            )}
+                          >
+                            {pct}%
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400 truncate mb-2 leading-tight">
+                          {tarif.name}
+                        </p>
+                        <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all",
+                              colors.bar,
+                            )}
+                            style={{ width: `${Math.min(pct, 100)}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-[10px] text-gray-400">
+                          {tarif.done} / {order?.quantity} ta
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-400 truncate mb-2 leading-tight">
-                        {tarif.name}
-                      </p>
-                      <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={cn(
-                            "h-full rounded-full transition-all",
-                            colors.bar,
-                          )}
-                          style={{ width: `${Math.min(pct, 100)}%` }}
-                        />
-                      </div>
-                      <p className="mt-1 text-[10px] text-gray-400">
-                        {tarif.done} / {order?.quantity} ta
-                      </p>
-                    </div>
-                  );
-                })
+                    );
+                  })
               ) : (
                 <p className="col-span-full text-center text-gray-400 py-8">
                   Bu kategoriyada tariflar topilmadi
