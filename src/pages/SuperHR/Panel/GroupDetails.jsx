@@ -184,14 +184,21 @@ const GroupDetails = () => {
   const [loading, setLoading] = useState(false);
   const [employeeDetailTarget, setEmployeeDetailTarget] = useState(null);
   const [empDialogOpen, setEmpDialogOpen] = useState(false);
+  const [worksMap, setWorksMap] = useState(new Map());
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/tv-dashboard/${id}`, {
-        params: { date: selectedDate },
-      });
+      const [res, earnersRes] = await Promise.all([
+        api.get(`/tv-dashboard/${id}`, { params: { date: selectedDate } }),
+        api.get("/topEarners", { params: { date: selectedDate } }),
+      ]);
       setGroupData(res.data);
+      const m = new Map();
+      (earnersRes.data?.top_earners ?? []).forEach((e) =>
+        m.set(e.employee_id, e.works ?? []),
+      );
+      setWorksMap(m);
     } catch {
       toast({
         title: "Xatolik",
@@ -242,10 +249,11 @@ const GroupDetails = () => {
       setEmployeeDetailTarget({
         ...emp,
         _eff: effMap.get(emp.employee_id) ?? null,
+        _works: worksMap.get(emp.employee_id) ?? [],
       });
       setEmpDialogOpen(true);
     },
-    [effMap],
+    [effMap, worksMap],
   );
 
   const sewing = groupData?.sewing_output;
@@ -526,6 +534,37 @@ const GroupDetails = () => {
                 <p className="py-3 text-center text-sm text-gray-400">
                   Bugun ma'lumot yo'q
                 </p>
+              )}
+
+              {employeeDetailTarget._works?.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Bajarilgan ishlar
+                  </p>
+                  <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+                    {employeeDetailTarget._works.map((w, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start justify-between gap-3 rounded-lg border bg-gray-50 px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-gray-400">
+                            {w.tarification_category?.name} · {w.code}
+                          </p>
+                          <p className="truncate text-xs font-medium text-gray-700">
+                            {w.operation}
+                          </p>
+                          <p className="text-[10px] text-gray-400">
+                            {w.quantity} dona · {Math.round(+w.second)}s/dona
+                          </p>
+                        </div>
+                        <p className="shrink-0 text-sm font-bold text-emerald-600">
+                          {formatNumber(+w.earned)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </>
           )}
