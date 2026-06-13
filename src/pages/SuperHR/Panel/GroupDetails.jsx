@@ -110,26 +110,25 @@ function StatCard({ icon, label, value, color = "slate" }) {
   );
 }
 
+function coefCls(coef) {
+  if (coef == null) return "bg-gray-100 text-gray-400";
+  if (coef >= 80) return "bg-emerald-100 text-emerald-700";
+  if (coef >= 50) return "bg-amber-100 text-amber-700";
+  return "bg-red-100 text-red-600";
+}
+
 // onOpen is a stable callback (useCallback); emp is a stable object reference from groupData
-const EmployeeCard = memo(function EmployeeCard({
-  emp,
-  isPresent,
-  level,
-  onOpen,
-}) {
+const EmployeeCard = memo(function EmployeeCard({ emp, level, coef, onOpen }) {
   const handleClick = useCallback(() => onOpen(emp), [emp, onOpen]);
   return (
     <button
       onClick={handleClick}
       className="flex w-16 flex-col items-center gap-1 rounded-lg p-2 text-center transition-colors hover:bg-gray-50 active:bg-gray-100"
     >
-      <div className="relative">
-        <EmployeeAvatar img={emp.img} name={emp.name} />
-        <span
-          className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${
-            isPresent ? "bg-emerald-400" : "bg-red-400"
-          }`}
-        />
+      <div
+        className={`flex h-10 w-10 items-center justify-center rounded-full text-[11px] font-bold ${coefCls(coef)}`}
+      >
+        {coef != null ? `${formatNumber(coef, 0)}%` : "—"}
       </div>
       <span className="w-full truncate text-[10px] font-medium leading-tight text-gray-700">
         {getShortName(emp.name)}
@@ -361,8 +360,10 @@ const GroupDetails = () => {
                   <EmployeeCard
                     key={emp.employee_id}
                     emp={emp}
-                    isPresent
                     level={levelMap.get(emp.employee_id)}
+                    coef={
+                      effMap.get(emp.employee_id)?.efficiency_percent ?? null
+                    }
                     onOpen={openDetail}
                   />
                 ))}
@@ -385,8 +386,10 @@ const GroupDetails = () => {
                   <EmployeeCard
                     key={emp.employee_id}
                     emp={emp}
-                    isPresent={false}
                     level={levelMap.get(emp.employee_id)}
+                    coef={
+                      effMap.get(emp.employee_id)?.efficiency_percent ?? null
+                    }
                     onOpen={openDetail}
                   />
                 ))}
