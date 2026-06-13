@@ -481,7 +481,7 @@ const GroupDetails = () => {
 
       {/* ── Employee Detail Dialog ── */}
       <Dialog open={empDialogOpen} onOpenChange={setEmpDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           {employeeDetailTarget && (
             <>
               <DialogHeader>
