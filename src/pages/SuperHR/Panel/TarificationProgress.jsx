@@ -60,9 +60,6 @@ const TarificationProgress = ({ orderId, submodelId }) => {
   const { toast } = useToast();
   const [order, setOrder] = useState(null);
   const [selectedSubmodel, setSelectedSubmodel] = useState(null);
-  const [region, setRegion] = useState(
-    localStorage.getItem("tarifLang") || "uz",
-  );
   const [tarifications, setTarifications] = useState([]);
   const [tarifLogs, setTarifLogs] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -96,10 +93,10 @@ const TarificationProgress = ({ orderId, submodelId }) => {
     setDataLoading(true);
     Promise.all([
       api.get(`/superhr/tarifications`, {
-        params: { submodel_id: selectedSubmodel.id, region },
+        params: { submodel_id: selectedSubmodel.id, region: "uz" },
       }),
       api.get(`/superhr/tarificationLogs`, {
-        params: { submodel_id: selectedSubmodel.id, region },
+        params: { submodel_id: selectedSubmodel.id, region: "uz" },
       }),
       api.get(`/superhr/tarification/category/${submodelId}`),
     ])
@@ -116,7 +113,7 @@ const TarificationProgress = ({ orderId, submodelId }) => {
         }),
       )
       .finally(() => setDataLoading(false));
-  }, [selectedSubmodel, region]);
+  }, [selectedSubmodel]);
 
   const enriched = useMemo(() => {
     const grouped = {};
@@ -131,12 +128,13 @@ const TarificationProgress = ({ orderId, submodelId }) => {
     const qty = order?.quantity || 0;
     return tarifications
       .map((t) => {
+        const number = t.number;
         const done = t.total_quantity || 0;
         const pct = qty > 0 ? (done / qty) * 100 : 0;
         const employees = Object.entries(grouped[t.id] || {})
           .sort(([, a], [, b]) => b - a)
           .map(([name, quantity]) => ({ name, quantity }));
-        return { ...t, done, pct, employees };
+        return { ...t, done, pct, employees, number };
       })
       .sort((a, b) =>
         a.code.localeCompare(b.code, undefined, {
@@ -266,7 +264,7 @@ const TarificationProgress = ({ orderId, submodelId }) => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {displayTarifs.length > 0 ? (
                 displayTarifs
-                  .sort((a, b) => b.number - a.number)
+                  .sort((a, b) => a.number - b.number)
                   .map((tarif) => {
                     const pct = Math.round(tarif.pct);
                     const colors = getColors(pct);
@@ -285,7 +283,7 @@ const TarificationProgress = ({ orderId, submodelId }) => {
                       >
                         <div className="flex items-center justify-between mb-1 gap-1">
                           <span className="font-mono text-xs font-semibold text-gray-600 truncate">
-                            {tarif.code}
+                            {tarif.number} / {tarif.code}
                           </span>
                           <span
                             className={cn(
@@ -324,53 +322,55 @@ const TarificationProgress = ({ orderId, submodelId }) => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {enrichedCategories.length > 0 ? (
-              enrichedCategories.map((cat) => {
-                const pct = Math.round(cat.avgPct);
-                const colors = getColors(pct);
-                const doneTarifs = cat.tarifs.filter(
-                  (t) => t.pct >= 100,
-                ).length;
-                return (
-                  <div
-                    key={cat.id}
-                    className={cn(
-                      "rounded-lg border p-3 cursor-pointer hover:shadow-md transition-shadow select-none",
-                      colors.bg,
-                      colors.border,
-                    )}
-                    onClick={() => setSelectedCategory(cat)}
-                  >
-                    <div className="flex items-center justify-between mb-1 gap-1">
-                      <span
-                        className={cn(
-                          "text-xs font-bold shrink-0",
-                          colors.text,
-                        )}
-                      >
-                        {pct}%
-                      </span>
-                      <span className="text-[10px] text-gray-400 shrink-0">
-                        {doneTarifs}/{cat.tarifs.length} tarif
-                      </span>
+              enrichedCategories
+                .sort((a, b) => a.number - b.number)
+                .map((cat) => {
+                  const pct = Math.round(cat.avgPct);
+                  const colors = getColors(pct);
+                  const doneTarifs = cat.tarifs.filter(
+                    (t) => t.pct >= 100,
+                  ).length;
+                  return (
+                    <div
+                      key={cat.id}
+                      className={cn(
+                        "rounded-lg border p-3 cursor-pointer hover:shadow-md transition-shadow select-none",
+                        colors.bg,
+                        colors.border,
+                      )}
+                      onClick={() => setSelectedCategory(cat)}
+                    >
+                      <div className="flex items-center justify-between mb-1 gap-1">
+                        <span
+                          className={cn(
+                            "text-xs font-bold shrink-0",
+                            colors.text,
+                          )}
+                        >
+                          №{cat.number} / {pct}%
+                        </span>
+                        <span className="text-[10px] text-gray-400 shrink-0">
+                          {doneTarifs}/{cat.tarifs.length} tarif
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-gray-700 truncate mb-2 leading-tight">
+                        {cat.name}
+                      </p>
+                      <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all",
+                            colors.bar,
+                          )}
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                        />
+                      </div>
+                      <p className="mt-1 text-[10px] text-gray-400">
+                        o'rtacha {pct}% bajarilgan
+                      </p>
                     </div>
-                    <p className="text-xs font-semibold text-gray-700 truncate mb-2 leading-tight">
-                      {cat.name}
-                    </p>
-                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          colors.bar,
-                        )}
-                        style={{ width: `${Math.min(pct, 100)}%` }}
-                      />
-                    </div>
-                    <p className="mt-1 text-[10px] text-gray-400">
-                      o'rtacha {pct}% bajarilgan
-                    </p>
-                  </div>
-                );
-              })
+                  );
+                })
             ) : enriched.length > 0 ? (
               // fallback: categories not available, show all tarifs
               <p className="col-span-full text-center text-gray-400 py-4 text-sm">
