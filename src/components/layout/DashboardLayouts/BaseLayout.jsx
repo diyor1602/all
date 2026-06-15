@@ -7,7 +7,6 @@ import {
   Menu,
   X,
   MessageCircleMore,
-  MessageSquareMore,
   Home,
   Radical,
   BadgePercent,
@@ -148,14 +147,9 @@ export default function BaseLayout({ children, navigation }) {
       >
         <div className="flex h-full flex-col">
           {/* Logo section */}
-          <Link
-            to="/chat"
-            className="flex h-16 shrink-0 items-center justify-center border-b px-6 gap-2"
-            onClick={() => setSidebarOpen(false)}
-          >
+          <div className="flex h-16 shrink-0 items-center justify-center border-b px-6 gap-2">
             <span className="text-xl font-semibold">Vizzano</span>
-            <MessageSquareMore size={20} />
-          </Link>
+          </div>
 
           {/* Navigation */}
           <div className="flex-1 overflow-y-auto">
