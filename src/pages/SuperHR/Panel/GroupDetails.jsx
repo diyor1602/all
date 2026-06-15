@@ -406,6 +406,33 @@ const GroupDetails = () => {
             </div>
           </div>
 
+          {/* Orders */}
+          <div className="space-y-6">
+            {Object.keys(groupData?.todaySewingOutputs || {}).length > 0 ? (
+              Object.keys(groupData.todaySewingOutputs).map((orderId) => {
+                const orderName =
+                  groupData.todaySewingOutputs[orderId][0]?.order_name ??
+                  orderId;
+                const submodelId =
+                  groupData.todaySewingOutputs[orderId][0]?.order_submodel_id;
+
+                return (
+                  <div key={orderId}>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">
+                      {orderName}
+                    </p>
+                    <TarificationProgress
+                      orderId={Number(orderId)}
+                      submodelId={submodelId}
+                    />
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-gray-400">No orders</p>
+            )}
+          </div>
+
           {/* Efficiency today */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {/* Best */}
@@ -476,33 +503,6 @@ const GroupDetails = () => {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Orders */}
-          <div className="space-y-6">
-            {Object.keys(groupData?.todaySewingOutputs || {}).length > 0 ? (
-              Object.keys(groupData.todaySewingOutputs).map((orderId) => {
-                const orderName =
-                  groupData.todaySewingOutputs[orderId][0]?.order_name ??
-                  orderId;
-                const submodelId =
-                  groupData.todaySewingOutputs[orderId][0]?.order_submodel_id;
-
-                return (
-                  <div key={orderId}>
-                    <p className="text-sm font-semibold text-gray-700 mb-2">
-                      {orderName}
-                    </p>
-                    <TarificationProgress
-                      orderId={Number(orderId)}
-                      submodelId={submodelId}
-                    />
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-sm text-gray-400">No orders</p>
-            )}
           </div>
         </div>
       )}
