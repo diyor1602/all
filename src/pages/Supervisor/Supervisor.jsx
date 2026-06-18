@@ -8,6 +8,8 @@ import NewOrder from "./Orders/NewOrder";
 import EditOrder from "./Orders/EditOrder";
 import Plan from "./Plan/Plan";
 import Analysis from "./Analysis/Analysis";
+import Employees from "./Employees/Employees";
+import ViewEmployees from "./Employees/ViewEmployees";
 
 const Supervisor = () => {
   return (
@@ -21,6 +23,8 @@ const Supervisor = () => {
       <Route path="models/edit/:id" element={<EditModel />} />
       <Route path="plan/*" element={<Plan />} />
       <Route path="analysis" element={<Analysis />} />
+      <Route path="employees" element={<Employees />} />
+      <Route path="employees/view/:id" element={<ViewEmployees />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
