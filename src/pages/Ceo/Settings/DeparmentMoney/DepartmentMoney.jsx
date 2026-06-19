@@ -26,6 +26,9 @@ import {
   Wallet,
   UserX,
 } from "lucide-react";
+import ExcelJS from "exceljs";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
 const DepartmentMoney = () => {
@@ -131,6 +134,78 @@ const DepartmentMoney = () => {
 
   const employees = Array.isArray(data.employees) ? data.employees : [];
 
+  const downloadExcel = async () => {
+    const deptName =
+      departments.find((d) => String(d.id) === String(selectedDepartment))
+        ?.name || "bolim";
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Xodimlar");
+
+    sheet.columns = [
+      { header: "#", key: "index", width: 5 },
+      { header: "Xodim", key: "name", width: 36 },
+      { header: "Holat", key: "status", width: 14 },
+      { header: "Kunlar", key: "active_days_count", width: 10 },
+      { header: "Davomat (so'm)", key: "attendance_salary_uzs", width: 18 },
+      { header: "Mavsum (so'm)", key: "minute_salary_uzs", width: 18 },
+      { header: "Tarif (so'm)", key: "tarification_uzs", width: 16 },
+      { header: "Jarima/Bonus (so'm)", key: "money_logs_uzs", width: 20 },
+      { header: "Jami (so'm)", key: "total_earned_uzs", width: 18 },
+    ];
+
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF3F4F6" },
+    };
+    headerRow.alignment = { vertical: "middle", horizontal: "center" };
+
+    employees.forEach((emp, i) => {
+      sheet.addRow({
+        index: i + 1,
+        name: emp.name,
+        status: emp.status === "kicked" ? "Ishdan ketgan" : "Ishlamoqda",
+        active_days_count: emp.active_days_count,
+        attendance_salary_uzs: emp.attendance_salary_uzs || 0,
+        minute_salary_uzs: emp.minute_salary_uzs || 0,
+        tarification_uzs: emp.tarification_uzs || 0,
+        money_logs_uzs: emp.money_logs_uzs || 0,
+        total_earned_uzs: emp.total_earned_uzs || 0,
+      });
+    });
+
+    const totalRow = sheet.addRow({
+      index: "",
+      name: "Jami",
+      status: "",
+      active_days_count: employees.reduce((s, e) => s + (e.active_days_count || 0), 0),
+      attendance_salary_uzs: employees.reduce((s, e) => s + (e.attendance_salary_uzs || 0), 0),
+      minute_salary_uzs: employees.reduce((s, e) => s + (e.minute_salary_uzs || 0), 0),
+      tarification_uzs: employees.reduce((s, e) => s + (e.tarification_uzs || 0), 0),
+      money_logs_uzs: employees.reduce((s, e) => s + (e.money_logs_uzs || 0), 0),
+      total_earned_uzs: employees.reduce((s, e) => s + (e.total_earned_uzs || 0), 0),
+    });
+    totalRow.font = { bold: true };
+
+    ["attendance_salary_uzs", "minute_salary_uzs", "tarification_uzs", "money_logs_uzs", "total_earned_uzs"].forEach(
+      (key) => { sheet.getColumn(key).numFmt = "#,##0"; },
+    );
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${deptName}-${startDate}-${endDate}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-3">
       <Card className="shadow-sm border-gray-200">
@@ -142,6 +217,18 @@ const DepartmentMoney = () => {
                 Bo'lim byudjeti tahlili
               </CardTitle>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-[11px]"
+              onClick={downloadExcel}
+              disabled={employees.length === 0}
+            >
+              <Download className="h-3.5 w-3.5" />
+              Excel
+            </Button>
 
             <div className="flex flex-wrap items-center gap-2">
               <Select
