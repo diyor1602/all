@@ -15,6 +15,7 @@ import {
   Truck,
   Earth,
   CalendarSync,
+  FolderClock,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -27,6 +28,7 @@ import Moneys from "./Moneys/Moneys";
 import Shipments from "./Shipments/Shipments";
 import DifferenceRu from "./Difference/DifferenceRu";
 import CoefStat from "./CoefStat";
+import DepartmentMoney from "./DeparmentMoney/DepartmentMoney";
 
 const Settings = () => {
   return (
@@ -42,6 +44,7 @@ const Settings = () => {
       <Route path="shipments" element={<Shipments />} />
       <Route path="difference-ru" element={<DifferenceRu />} />
       <Route path="coef-stat" element={<CoefStat />} />
+      <Route path="department-money" element={<DepartmentMoney />} />
     </Routes>
   );
 };
@@ -131,6 +134,12 @@ const SettingsPage = () => {
       icon: CalendarSync,
       link: "/ceo/settings/coef-stat",
       color: "bg-cyan-500",
+    },
+    {
+      name: "Bo'lim mablag'i",
+      icon: FolderClock,
+      link: "/ceo/settings/department-money",
+      color: "bg-red-500",
     },
   ];
 
