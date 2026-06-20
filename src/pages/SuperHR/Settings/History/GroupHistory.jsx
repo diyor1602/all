@@ -4,7 +4,26 @@ import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Loader2,
+  Calendar,
+  ArrowRight,
+  User,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const GroupHistory = () => {
   const { toast } = useToast();
@@ -19,6 +38,10 @@ const GroupHistory = () => {
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedChange, setSelectedChange] = useState(null);
+  const [editDate, setEditDate] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   // Debounce search
   useEffect(() => {
@@ -69,6 +92,35 @@ const GroupHistory = () => {
   const handlePageChange = (page) => {
     if (page && page >= 1 && page <= pagination.last_page) {
       fetchSalaryHistory(page);
+    }
+  };
+
+  const openEditDialog = (salary) => {
+    setSelectedChange(salary);
+    const iso = salary.created_at;
+    setEditDate(iso ? iso.slice(0, 16) : "");
+    setEditDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!selectedChange || !editDate) return;
+    try {
+      setIsSaving(true);
+      await api.patch(`/superhr/groupChanges/${selectedChange.id}/`, {
+        created_at: editDate,
+      });
+      toast({ title: "Muvaffaqiyatli saqlandi" });
+      setEditDialogOpen(false);
+      fetchSalaryHistory(pagination.current_page);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message || "Saqlashda xatolik yuz berdi",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -157,13 +209,20 @@ const GroupHistory = () => {
                       </div>
                     </td>
                     <td className="px-3 py-1 border border-gray-200">
-                      <div className="text-xs font-medium text-gray-900">
+                      <div className="text-xs font-medium text-gray-900 flex items-center gap-2">
                         {salary.created_at
                           ?.split("T")[0]
                           ?.split("-")
                           ?.reverse()
                           ?.join(".")}{" "}
                         {salary.created_at?.split("T")[1]?.slice(0, 5)}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(salary)}
+                        >
+                          <Edit size={10} className="text-orange-400" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -250,6 +309,90 @@ const GroupHistory = () => {
           </div>
         </div>
       )}
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <User size={16} className="text-primary" />
+              {selectedChange?.employee?.name || "Xodim"}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Faqat vaqtni tahrirlash mumkin
+            </DialogDescription>
+          </DialogHeader>
+
+          <Separator />
+
+          <div className="space-y-2.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">O'zgartirgan</span>
+              <span className="font-medium">
+                {selectedChange?.user?.employee?.name || "—"}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground shrink-0">Guruh</span>
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                <Badge variant="secondary" className="text-xs font-normal">
+                  {selectedChange?.old_department?.name || "—"} /{" "}
+                  {selectedChange?.old_group?.name || "—"}
+                </Badge>
+                <ArrowRight
+                  size={12}
+                  className="text-muted-foreground shrink-0"
+                />
+                <Badge className="text-xs font-normal">
+                  {selectedChange?.new_department?.name || "—"} /{" "}
+                  {selectedChange?.new_group?.name || "—"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="edit-date"
+              className="text-xs font-medium flex items-center gap-1.5"
+            >
+              <Calendar size={13} />
+              Vaqti
+            </Label>
+            <Input
+              id="edit-date"
+              type="datetime-local"
+              value={editDate}
+              onChange={(e) => setEditDate(e.target.value)}
+              className="text-xs h-9"
+            />
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={isSaving}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving || !editDate}
+              className="min-w-[90px]"
+            >
+              {isSaving ? (
+                <Loader2 size={14} className="animate-spin mr-1" />
+              ) : null}
+              {isSaving ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
