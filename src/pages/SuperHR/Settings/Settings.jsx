@@ -14,6 +14,7 @@ import {
   TreePalm,
   UserCog,
   Wrench,
+  Bot,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddGroup from "./Departments/AddGroup";
@@ -24,6 +25,7 @@ import ApproveLevel from "./ApproveLevel/ApproveLevel";
 import Damages from "./Damages/Damages";
 import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
+import RentedMachines from "./RentedMachines/RentedMachines";
 
 const Settings = () => {
   return (
@@ -40,6 +42,7 @@ const Settings = () => {
       <Route path="salary-history" element={<SalaryHistory />} />
       <Route path="group-history" element={<GroupHistory />} />
       <Route path="damages" element={<Damages />} />
+      <Route path="rented-machines" element={<RentedMachines />} />
     </Routes>
   );
 };
@@ -105,6 +108,12 @@ const SettingsPage = () => {
       icon: CalendarClock,
       link: "/superhr/settings/group-history",
       color: "bg-purple-500",
+    },
+    {
+      name: "Ijaradagi mashinalar",
+      icon: Bot,
+      link: "/superhr/settings/rented-machines",
+      color: "bg-yellow-500",
     },
   ];
 
