@@ -462,7 +462,7 @@ const DailyResults = () => {
               value={formatNumber(aupCount)}
               icon={<Users size={24} />}
               iconBg="from-amber-500 to-orange-600"
-              subtitle="Administrativ boshqaruv xodimlari"
+              subtitle="Boshqaruv xodimlari"
             />
 
             <div
