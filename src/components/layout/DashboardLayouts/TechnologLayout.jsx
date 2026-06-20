@@ -6,6 +6,7 @@ import {
   Users,
   FileText,
   CalendarSync,
+  Bot,
 } from "lucide-react";
 
 const navigation = [
@@ -51,12 +52,12 @@ const navigation = [
   //   icon: CirclePlay,
   //   onMobile: true,
   // },
-  // {
-  //   name: "Mashinalar",
-  //   href: "/technologist/machines",
-  //   icon: Bot,
-  //   onMobile: false,
-  // },
+  {
+    name: "Mashinalar",
+    href: "/technologist/machines",
+    icon: Bot,
+    onMobile: false,
+  },
   // {
   //   name: "Nakladnoy",
   //   href: "/technologist/nakladnoy",
