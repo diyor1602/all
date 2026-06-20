@@ -4,7 +4,9 @@ import Deparments from "./Departments/Departments";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
+  BadgeDollarSign,
   Blocks,
+  CalendarClock,
   DraftingCompass,
   HeartCrack,
   History,
@@ -20,6 +22,8 @@ import TodayAbsence from "../Stats/TodayAbsence";
 import ExplanationLetters from "./ExplanationLetters/ExplanationLetters";
 import ApproveLevel from "./ApproveLevel/ApproveLevel";
 import Damages from "./Damages/Damages";
+import SalaryHistory from "./History/SalaryHistory";
+import GroupHistory from "./History/GroupHistory";
 
 const Settings = () => {
   return (
@@ -33,6 +37,8 @@ const Settings = () => {
       <Route path="today-absence" element={<TodayAbsence />} />
       <Route path="explanation-letters" element={<ExplanationLetters />} />
       <Route path="approve-level" element={<ApproveLevel />} />
+      <Route path="salary-history" element={<SalaryHistory />} />
+      <Route path="group-history" element={<GroupHistory />} />
       <Route path="damages" element={<Damages />} />
     </Routes>
   );
@@ -87,6 +93,18 @@ const SettingsPage = () => {
       icon: Wrench,
       link: "/superhr/settings/damages",
       color: "bg-red-500",
+    },
+    {
+      name: "Maosh o'zgarishlar tarixi",
+      icon: BadgeDollarSign,
+      link: "/superhr/settings/salary-history",
+      color: "bg-green-500",
+    },
+    {
+      name: "Guruh o'zgarishlar tarixi",
+      icon: CalendarClock,
+      link: "/superhr/settings/group-history",
+      color: "bg-purple-500",
     },
   ];
 
