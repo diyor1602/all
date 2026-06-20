@@ -98,7 +98,7 @@ const GroupHistory = () => {
   const openEditDialog = (salary) => {
     setSelectedChange(salary);
     const iso = salary.created_at;
-    setEditDate(iso ? iso.slice(0, 16) : "");
+    setEditDate(iso ? iso.replace(" ", "T").slice(0, 16) : "");
     setEditDialogOpen(true);
   };
 
@@ -211,11 +211,11 @@ const GroupHistory = () => {
                     <td className="px-3 py-1 border border-gray-200">
                       <div className="text-xs font-medium text-gray-900 flex items-center gap-2">
                         {salary.created_at
-                          ?.split("T")[0]
+                          ?.split(" ")[0]
                           ?.split("-")
                           ?.reverse()
                           ?.join(".")}{" "}
-                        {salary.created_at?.split("T")[1]?.slice(0, 5)}
+                        {salary.created_at?.split(" ")[1]?.slice(0, 5)}
                         <Button
                           variant="ghost"
                           size="icon"
