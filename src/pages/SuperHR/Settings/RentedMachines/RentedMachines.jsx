@@ -286,12 +286,10 @@ const RentedMachines = () => {
     try {
       const fd = new FormData();
       fd.append("returned_at", returnedAt);
+      fd.append("_method", "PATCH");
       if (returnComment) fd.append("comment", returnComment);
       if (returnedImage) fd.append("returned_image", returnedImage);
-      await api.patch(
-        `/superhr/home-typewriter/${selectedItem?.id}/return`,
-        fd,
-      );
+      await api.post(`/superhr/home-typewriter/${selectedItem?.id}/return`, fd);
       toast({ title: "Muvaffaqiyat", description: "Buyum qaytarildi" });
       setReturnDialog(false);
       getData(currentPage, debouncedFilterSearch, filterStatus);
