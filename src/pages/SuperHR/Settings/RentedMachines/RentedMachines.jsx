@@ -832,7 +832,7 @@ const RentedMachines = () => {
 
       {/* ── Image Viewer ── */}
       <Dialog open={!!viewerSrc} onOpenChange={() => setViewerSrc(null)}>
-        <DialogContent className="max-w-3xl p-2 bg-black/90 border-none">
+        <DialogContent className="p-2 bg-black/90 border-none">
           <button
             onClick={() => setViewerSrc(null)}
             className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
@@ -851,7 +851,7 @@ const RentedMachines = () => {
 
       {/* ── Add Dialog ── */}
       <Dialog open={addDialog} onOpenChange={setAddDialog}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center">
@@ -1016,7 +1016,7 @@ const RentedMachines = () => {
 
       {/* ── Return Dialog ── */}
       <Dialog open={returnDialog} onOpenChange={setReturnDialog}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-md bg-amber-500 flex items-center justify-center">
@@ -1103,7 +1103,7 @@ const RentedMachines = () => {
 
       {/* ── Delete Dialog ── */}
       <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
-        <DialogContent className="max-w-sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <div className="w-7 h-7 rounded-md bg-red-100 flex items-center justify-center">
