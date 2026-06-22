@@ -590,7 +590,7 @@ const RentedMachines = () => {
                     <div className="min-w-0">
                       <p className="text-xs text-slate-400">Buyum</p>
                       <p className="font-semibold text-slate-800 text-sm truncate">
-                        {item.item_name || "-"}
+                        {item.item || "-"}
                       </p>
                     </div>
                   </div>
@@ -712,7 +712,7 @@ const RentedMachines = () => {
                             <Package size={13} className="text-indigo-600" />
                           </div>
                           <span className="font-medium text-slate-800 truncate max-w-[140px]">
-                            {item.item_name || "-"}
+                            {item.item || "-"}
                           </span>
                         </div>
                       </td>
@@ -1043,7 +1043,7 @@ const RentedMachines = () => {
                   {selectedItem?.employee?.name}
                 </p>
                 <p className="text-xs text-slate-500 truncate">
-                  {selectedItem?.item_name}
+                  {selectedItem?.item}
                 </p>
               </div>
             </div>
@@ -1130,7 +1130,7 @@ const RentedMachines = () => {
                   {selectedItem?.employee?.name}
                 </p>
                 <p className="text-xs text-slate-500 truncate">
-                  {selectedItem?.item_name}
+                  {selectedItem?.item}
                 </p>
               </div>
             </div>
