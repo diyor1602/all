@@ -99,20 +99,30 @@ const MachineWrapper = () => {
 
   const getSortValue = (t, key) => {
     switch (key) {
-      case "id": return t.id;
-      case "name": return t.name?.toLowerCase() ?? "";
-      case "state_number": return t.state_number?.toLowerCase() ?? "";
-      case "driver": return t.employee?.name?.toLowerCase() ?? "";
-      case "phone": return t.phone ?? "";
-      case "salary": return parseFloat(t.salary) || 0;
-      case "capacity": return t.capacity || 0;
-      case "employees": return t.employees?.length || 0;
-      case "region": return t.region_id?.name?.toLowerCase() ?? "";
-      case "is_active": return t.is_active ? 1 : 0;
-      default: return "";
+      case "id":
+        return t.id;
+      case "name":
+        return t.name?.toLowerCase() ?? "";
+      case "state_number":
+        return t.state_number?.toLowerCase() ?? "";
+      case "driver":
+        return t.employee?.name?.toLowerCase() ?? "";
+      case "phone":
+        return t.phone ?? "";
+      case "salary":
+        return parseFloat(t.salary) || 0;
+      case "capacity":
+        return t.capacity || 0;
+      case "employees":
+        return t.employees?.length || 0;
+      case "region":
+        return t.region_id?.name?.toLowerCase() ?? "";
+      case "is_active":
+        return t.is_active ? 1 : 0;
+      default:
+        return "";
     }
   };
-
 
   const fetchTransports = async () => {
     setLoading(true);
@@ -315,16 +325,71 @@ const MachineWrapper = () => {
               <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
                 <TableRow>
                   <TableHead className="text-xs w-10 text-center">#</TableHead>
-                  <SortableHead colKey="id" label="ID" sortConfig={sortConfig} onSort={handleSort} className="w-14 text-center" />
-                  <SortableHead colKey="name" label="Nomi" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortableHead colKey="state_number" label="Davlat raqami" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortableHead colKey="driver" label="Haydovchi" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortableHead colKey="phone" label="Telefon" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortableHead colKey="salary" label="Maoshi" sortConfig={sortConfig} onSort={handleSort} className="text-right" />
-                  <SortableHead colKey="capacity" label="Sig'imi" sortConfig={sortConfig} onSort={handleSort} className="text-center" />
-                  <SortableHead colKey="employees" label="Xodimlar" sortConfig={sortConfig} onSort={handleSort} className="text-center" />
-                  <SortableHead colKey="region" label="Yo'nalish" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortableHead colKey="is_active" label="Holati" sortConfig={sortConfig} onSort={handleSort} className="text-center" />
+                  <SortableHead
+                    colKey="id"
+                    label="ID"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    className="w-14 text-center"
+                  />
+                  <SortableHead
+                    colKey="name"
+                    label="Nomi"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHead
+                    colKey="state_number"
+                    label="Davlat raqami"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHead
+                    colKey="driver"
+                    label="Haydovchi"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHead
+                    colKey="phone"
+                    label="Telefon"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHead
+                    colKey="salary"
+                    label="Maoshi"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    className="text-right"
+                  />
+                  <SortableHead
+                    colKey="capacity"
+                    label="Sig'imi"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    className="text-center"
+                  />
+                  <SortableHead
+                    colKey="employees"
+                    label="Xodimlar"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    className="text-center"
+                  />
+                  <SortableHead
+                    colKey="region"
+                    label="Yo'nalish"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHead
+                    colKey="is_active"
+                    label="Holati"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    className="text-center"
+                  />
                   <TableHead className="text-xs text-center">Amallar</TableHead>
                 </TableRow>
               </TableHeader>
@@ -360,7 +425,7 @@ const MachineWrapper = () => {
                               <img
                                 src={t.employee.img}
                                 alt={t.employee.name}
-                                className="h-6 w-6 rounded-full"
+                                className="h-6 w-6 rounded-full object-cover"
                               />
                             ) : (
                               <UserCog className="h-3 w-3 text-indigo-600 group-hover:text-indigo-800" />
@@ -616,7 +681,13 @@ const MachineWrapper = () => {
   );
 };
 
-const SortableHead = ({ colKey, label, sortConfig, onSort, className = "" }) => {
+const SortableHead = ({
+  colKey,
+  label,
+  sortConfig,
+  onSort,
+  className = "",
+}) => {
   const active = sortConfig.key === colKey;
   return (
     <TableHead
