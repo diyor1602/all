@@ -186,6 +186,7 @@ const RentedMachines = () => {
 
   // Image viewer
   const [viewerSrc, setViewerSrc] = useState(null);
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
 
   // Add dialog
   const [addDialog, setAddDialog] = useState(false);
@@ -633,12 +634,18 @@ const RentedMachines = () => {
                       <ImgThumb
                         src={item.given_image}
                         label="Berilgan rasm"
-                        onClick={() => setViewerSrc(item.given_image)}
+                        onClick={() => {
+                          setViewerSrc(item.given_image);
+                          setImgDialogOpen(true);
+                        }}
                       />
                       <ImgThumb
                         src={item.returned_image}
                         label="Qaytarilgan rasm"
-                        onClick={() => setViewerSrc(item.returned_image)}
+                        onClick={() => {
+                          setViewerSrc(item.returned_image);
+                          setImgDialogOpen(true);
+                        }}
                       />
                     </div>
                   )}
@@ -744,12 +751,18 @@ const RentedMachines = () => {
                           <ImgThumb
                             src={item.given_image}
                             label="Berilgan rasm"
-                            onClick={() => setViewerSrc(item.given_image)}
+                            onClick={() => {
+                              setViewerSrc(item.given_image);
+                              setImgDialogOpen(true);
+                            }}
                           />
                           <ImgThumb
                             src={item.returned_image}
                             label="Qaytarilgan rasm"
-                            onClick={() => setViewerSrc(item.returned_image)}
+                            onClick={() => {
+                              setViewerSrc(item.returned_image);
+                              setImgDialogOpen(true);
+                            }}
                           />
                           {!item.given_image && !item.returned_image && (
                             <span className="text-slate-300 text-xs">—</span>
@@ -831,14 +844,8 @@ const RentedMachines = () => {
       )}
 
       {/* ── Image Viewer ── */}
-      <Dialog open={!!viewerSrc} onOpenChange={() => setViewerSrc(null)}>
-        <DialogContent className="p-2 bg-black/90 border-none">
-          <button
-            onClick={() => setViewerSrc(null)}
-            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
-          >
-            <X size={16} />
-          </button>
+      <Dialog open={imgDialogOpen} onOpenChange={() => setImgDialogOpen(false)}>
+        <DialogContent>
           {viewerSrc && (
             <img
               src={viewerSrc}
