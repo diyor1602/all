@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -25,7 +25,7 @@ import {
   ChevronRight,
   Loader2,
   Plus,
-  Printer,
+  Package,
   Calendar,
   RotateCcw,
   Trash2,
@@ -36,6 +36,8 @@ import {
   Table2,
   X,
   Filter,
+  ImageIcon,
+  ZoomIn,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -103,6 +105,70 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+// Clickable thumbnail that opens viewer
+const ImgThumb = ({ src, label, onClick }) => {
+  if (!src) return null;
+  return (
+    <button
+      onClick={onClick}
+      className="relative w-10 h-10 rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-400 transition-colors group flex-shrink-0"
+      title={label}
+    >
+      <img src={src} alt={label} className="w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+        <ZoomIn
+          size={14}
+          className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
+        />
+      </div>
+    </button>
+  );
+};
+
+// Image upload field with preview
+const ImageUploader = ({ label, preview, onFile, onClear, inputRef }) => (
+  <div>
+    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+      {label}
+    </p>
+    {preview ? (
+      <div className="relative w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+        <img
+          src={preview}
+          alt="preview"
+          className="w-full max-h-52 object-contain"
+        />
+        <button
+          onClick={onClear}
+          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors"
+        >
+          <X size={13} />
+        </button>
+      </div>
+    ) : (
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="w-full h-28 border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-indigo-500 transition-colors bg-slate-50 hover:bg-indigo-50/30"
+      >
+        <ImageIcon size={22} />
+        <span className="text-xs">Rasm yuklash uchun bosing</span>
+      </button>
+    )}
+    <input
+      ref={inputRef}
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) onFile(file);
+        e.target.value = "";
+      }}
+    />
+  </div>
+);
+
 const RentedMachines = () => {
   const { toast } = useToast();
 
@@ -111,33 +177,41 @@ const RentedMachines = () => {
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [layout, setLayout] = useState("cards"); // "cards" | "table"
+  const [layout, setLayout] = useState("cards");
 
   // Filters
   const [filterSearch, setFilterSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const debouncedFilterSearch = useDebounce(filterSearch, 500);
 
+  // Image viewer
+  const [viewerSrc, setViewerSrc] = useState(null);
+
   // Add dialog
-  const [typewriters, setTypewriters] = useState([]);
   const [addDialog, setAddDialog] = useState(false);
   const [empSearch, setEmpSearch] = useState("");
   const [empResults, setEmpResults] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [selectedTypewriter, setSelectedTypewriter] = useState(null);
+  const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [comment, setComment] = useState("");
   const [givenAt, setGivenAt] = useState("");
+  const [givenImage, setGivenImage] = useState(null);
+  const [givenImagePreview, setGivenImagePreview] = useState(null);
   const [adding, setAdding] = useState(false);
   const [empSearching, setEmpSearching] = useState(false);
   const debouncedEmpSearch = useDebounce(empSearch, 500);
+  const givenImageRef = useRef(null);
 
   // Return dialog
   const [returnDialog, setReturnDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [returnedAt, setReturnedAt] = useState("");
   const [returnComment, setReturnComment] = useState("");
+  const [returnedImage, setReturnedImage] = useState(null);
+  const [returnedImagePreview, setReturnedImagePreview] = useState(null);
   const [returning, setReturning] = useState(false);
+  const returnedImageRef = useRef(null);
 
   // Delete dialog
   const [deleteDialog, setDeleteDialog] = useState(false);
@@ -163,15 +237,6 @@ const RentedMachines = () => {
     }
   };
 
-  const getTypeWriters = async () => {
-    try {
-      const res = await api.get("/superhr/typewriter");
-      setTypewriters(res.data || []);
-    } catch (_) {
-      // non-critical, list view still works without typewriter options
-    }
-  };
-
   const searchEmployees = async () => {
     if (debouncedEmpSearch.length < 2) {
       setEmpResults([]);
@@ -193,14 +258,15 @@ const RentedMachines = () => {
   const handleAdd = async () => {
     setAdding(true);
     try {
-      await api.post("/superhr/home-typewriter", {
-        employee_id: selectedEmployee?.id,
-        type_writer_id: selectedTypewriter?.id,
-        quantity,
-        comment,
-        given_at: givenAt,
-      });
-      toast({ title: "Muvaffaqiyat", description: "Mashina biriktirildi" });
+      const fd = new FormData();
+      fd.append("employee_id", selectedEmployee.id);
+      fd.append("item", itemName);
+      fd.append("quantity", quantity);
+      fd.append("given_at", givenAt);
+      if (comment) fd.append("comment", comment);
+      if (givenImage) fd.append("given_image", givenImage);
+      await api.post("/superhr/home-typewriter", fd);
+      toast({ title: "Muvaffaqiyat", description: "Buyum biriktirildi" });
       setAddDialog(false);
       getData(currentPage, debouncedFilterSearch, filterStatus);
     } catch {
@@ -217,11 +283,15 @@ const RentedMachines = () => {
   const handleReturn = async () => {
     setReturning(true);
     try {
-      await api.patch(`/superhr/home-typewriter/${selectedItem?.id}/return`, {
-        returned_at: returnedAt,
-        comment: returnComment || undefined,
-      });
-      toast({ title: "Muvaffaqiyat", description: "Mashina qaytarildi" });
+      const fd = new FormData();
+      fd.append("returned_at", returnedAt);
+      if (returnComment) fd.append("comment", returnComment);
+      if (returnedImage) fd.append("returned_image", returnedImage);
+      await api.patch(
+        `/superhr/home-typewriter/${selectedItem?.id}/return`,
+        fd,
+      );
+      toast({ title: "Muvaffaqiyat", description: "Buyum qaytarildi" });
       setReturnDialog(false);
       getData(currentPage, debouncedFilterSearch, filterStatus);
     } catch {
@@ -256,10 +326,32 @@ const RentedMachines = () => {
     }
   };
 
+  const setGivenFile = (file) => {
+    setGivenImage(file);
+    setGivenImagePreview(URL.createObjectURL(file));
+  };
+  const clearGivenImage = () => {
+    setGivenImage(null);
+    if (givenImagePreview) URL.revokeObjectURL(givenImagePreview);
+    setGivenImagePreview(null);
+  };
+
+  const setReturnedFile = (file) => {
+    setReturnedImage(file);
+    setReturnedImagePreview(URL.createObjectURL(file));
+  };
+  const clearReturnedImage = () => {
+    setReturnedImage(null);
+    if (returnedImagePreview) URL.revokeObjectURL(returnedImagePreview);
+    setReturnedImagePreview(null);
+  };
+
   const openReturnDialog = (item) => {
     setSelectedItem(item);
     setReturnedAt(new Date().toISOString().split("T")[0]);
     setReturnComment("");
+    setReturnedImage(null);
+    setReturnedImagePreview(null);
     setReturnDialog(true);
   };
 
@@ -274,37 +366,31 @@ const RentedMachines = () => {
     setCurrentPage(1);
   };
 
+  const clearAddForm = () => {
+    setEmpSearch("");
+    setEmpResults([]);
+    setSelectedEmployee(null);
+    setItemName("");
+    setQuantity(1);
+    setComment("");
+    setGivenAt(new Date().toISOString().split("T")[0]);
+    clearGivenImage();
+  };
+
   const isFiltered = filterSearch || filterStatus;
 
-  // Reload when page or filters change
   useEffect(() => {
     getData(currentPage, debouncedFilterSearch, filterStatus);
   }, [currentPage, debouncedFilterSearch, filterStatus]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedFilterSearch, filterStatus]);
 
   useEffect(() => {
-    getTypeWriters();
-  }, []);
-
-  useEffect(() => {
     searchEmployees();
   }, [debouncedEmpSearch]);
 
-  const clearAddForm = () => {
-    setEmpSearch("");
-    setEmpResults([]);
-    setSelectedEmployee(null);
-    setSelectedTypewriter(null);
-    setQuantity(1);
-    setComment("");
-    setGivenAt(new Date().toISOString().split("T")[0]);
-  };
-
-  // Shared action buttons render
   const ActionButtons = ({ item }) => (
     <div className="flex items-center gap-1.5">
       {item.status === "taken" && (
@@ -332,16 +418,16 @@ const RentedMachines = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-violet-50/20">
-      {/* Page header */}
+      {/* Header */}
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
               <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                <Printer size={16} className="text-white" />
+                <Package size={16} className="text-white" />
               </div>
               <h1 className="text-2xl font-bold text-slate-800">
-                Uy Mashinalari
+                Uy Buyumlari
               </h1>
             </div>
             <p className="text-slate-500 text-sm pl-10">
@@ -393,7 +479,7 @@ const RentedMachines = () => {
               className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10 pointer-events-none"
             />
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="pl-9 bg-white border-slate-200 focus:ring-indigo-500">
+              <SelectTrigger className="pl-9 bg-white border-slate-200">
                 <SelectValue placeholder="Barcha holatlar" />
               </SelectTrigger>
               <SelectContent>
@@ -415,7 +501,6 @@ const RentedMachines = () => {
             </Button>
           )}
 
-          {/* Layout toggle */}
           <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 self-start sm:self-auto ml-auto">
             <button
               onClick={() => setLayout("cards")}
@@ -467,7 +552,7 @@ const RentedMachines = () => {
       ) : data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-slate-400">
           <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-            <Printer size={28} className="opacity-40" />
+            <Package size={28} className="opacity-40" />
           </div>
           <p className="text-base font-medium text-slate-500">
             Ma'lumotlar topilmadi
@@ -482,117 +567,125 @@ const RentedMachines = () => {
           )}
         </div>
       ) : layout === "cards" ? (
-        /* ── Card layout ── */
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {data.map((item) => {
-              const cfg = statusConfig[item.status] || statusConfig.taken;
-              return (
-                <Card
-                  key={item.id}
-                  className={`border shadow-sm hover:shadow-md transition-all overflow-hidden bg-white ${cfg.card}`}
-                >
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <StatusBadge status={item.status} />
-                      <span className="text-xs text-slate-400 font-mono">
-                        #{item.id}
-                      </span>
-                    </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {data.map((item) => {
+            const cfg = statusConfig[item.status] || statusConfig.taken;
+            return (
+              <Card
+                key={item.id}
+                className={`border shadow-sm hover:shadow-md transition-all overflow-hidden bg-white ${cfg.card}`}
+              >
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <StatusBadge status={item.status} />
+                    <span className="text-xs text-slate-400 font-mono">
+                      #{item.id}
+                    </span>
+                  </div>
 
-                    <div className="flex items-start gap-2.5 p-2.5 bg-slate-50 rounded-lg">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                        <Printer size={15} className="text-indigo-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-slate-400">Mashina</p>
-                        <p className="font-semibold text-slate-800 text-sm truncate">
-                          {item.type_writer?.name || "-"}
-                        </p>
-                      </div>
+                  {/* Item name */}
+                  <div className="flex items-start gap-2.5 p-2.5 bg-slate-50 rounded-lg">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                      <Package size={15} className="text-indigo-600" />
                     </div>
-
-                    <div className="flex items-center gap-2.5 p-2.5 bg-violet-50 rounded-lg">
-                      <EmpAvatar
-                        img={item.employee?.img}
-                        name={item.employee?.name}
-                        size="sm"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs text-slate-400">Xodim</p>
-                        <p className="font-medium text-slate-700 text-sm truncate">
-                          {item.employee?.name || "-"}
-                        </p>
-                      </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-slate-400">Buyum</p>
+                      <p className="font-semibold text-slate-800 text-sm truncate">
+                        {item.item_name || "-"}
+                      </p>
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                  {/* Employee */}
+                  <div className="flex items-center gap-2.5 p-2.5 bg-violet-50 rounded-lg">
+                    <EmpAvatar
+                      img={item.employee?.img}
+                      name={item.employee?.name}
+                      size="sm"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs text-slate-400">Xodim</p>
+                      <p className="font-medium text-slate-700 text-sm truncate">
+                        {item.employee?.name || "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <div>
+                      <p className="text-slate-400 mb-0.5">Berilgan</p>
+                      <p className="font-medium">{formatDate(item.given_at)}</p>
+                    </div>
+                    {item.status === "returned" && item.returned_at && (
                       <div>
-                        <p className="text-slate-400 mb-0.5">Berilgan</p>
-                        <p className="font-medium">
-                          {formatDate(item.given_at)}
+                        <p className="text-slate-400 mb-0.5">Qaytarilgan</p>
+                        <p className="font-medium text-emerald-600">
+                          {formatDate(item.returned_at)}
                         </p>
-                      </div>
-                      {item.status === "returned" && item.returned_at && (
-                        <div>
-                          <p className="text-slate-400 mb-0.5">Qaytarilgan</p>
-                          <p className="font-medium text-emerald-600">
-                            {formatDate(item.returned_at)}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {item.comment && (
-                      <div className="flex items-start gap-1.5 text-xs text-slate-500 italic">
-                        <MessageSquare
-                          size={12}
-                          className="mt-0.5 flex-shrink-0 text-slate-400"
-                        />
-                        <span className="line-clamp-2">{item.comment}</span>
                       </div>
                     )}
+                  </div>
 
-                    <div className="pt-2 border-t border-slate-100">
-                      <ActionButtons item={item} />
+                  {/* Images */}
+                  {(item.given_image || item.returned_image) && (
+                    <div className="flex items-center gap-2">
+                      <ImgThumb
+                        src={item.given_image}
+                        label="Berilgan rasm"
+                        onClick={() => setViewerSrc(item.given_image)}
+                      />
+                      <ImgThumb
+                        src={item.returned_image}
+                        label="Qaytarilgan rasm"
+                        onClick={() => setViewerSrc(item.returned_image)}
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </>
+                  )}
+
+                  {item.comment && (
+                    <div className="flex items-start gap-1.5 text-xs text-slate-500 italic">
+                      <MessageSquare
+                        size={12}
+                        className="mt-0.5 flex-shrink-0 text-slate-400"
+                      />
+                      <span className="line-clamp-2">{item.comment}</span>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <ActionButtons item={item} />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       ) : (
-        /* ── Table layout ── */
+        /* Table layout */
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white">
-                  <th className="px-4 py-3 text-left font-medium text-xs uppercase tracking-wider opacity-80 w-12">
-                    #
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-xs uppercase tracking-wider opacity-80">
-                    Mashina
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-xs uppercase tracking-wider opacity-80">
-                    Xodim
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-xs uppercase tracking-wider opacity-80">
-                    Berilgan sana
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-xs uppercase tracking-wider opacity-80">
-                    Qaytarilgan sana
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-xs uppercase tracking-wider opacity-80">
-                    Holat
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-xs uppercase tracking-wider opacity-80">
-                    Izoh
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-xs uppercase tracking-wider opacity-80">
-                    Amallar
-                  </th>
+                  {[
+                    "#",
+                    "Buyum",
+                    "Xodim",
+                    "Berilgan",
+                    "Qaytarilgan",
+                    "Rasmlar",
+                    "Holat",
+                    "Izoh",
+                    "Amallar",
+                  ].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`px-4 py-3 text-left font-medium text-xs uppercase tracking-wider opacity-90 ${i === 8 ? "text-right" : ""}`}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -611,10 +704,10 @@ const RentedMachines = () => {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-md bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                            <Printer size={13} className="text-indigo-600" />
+                            <Package size={13} className="text-indigo-600" />
                           </div>
                           <span className="font-medium text-slate-800 truncate max-w-[140px]">
-                            {item.type_writer?.name || "-"}
+                            {item.item_name || "-"}
                           </span>
                         </div>
                       </td>
@@ -645,6 +738,23 @@ const RentedMachines = () => {
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <ImgThumb
+                            src={item.given_image}
+                            label="Berilgan rasm"
+                            onClick={() => setViewerSrc(item.given_image)}
+                          />
+                          <ImgThumb
+                            src={item.returned_image}
+                            label="Qaytarilgan rasm"
+                            onClick={() => setViewerSrc(item.returned_image)}
+                          />
+                          {!item.given_image && !item.returned_image && (
+                            <span className="text-slate-300 text-xs">—</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={item.status} />
@@ -720,19 +830,39 @@ const RentedMachines = () => {
         </div>
       )}
 
+      {/* ── Image Viewer ── */}
+      <Dialog open={!!viewerSrc} onOpenChange={() => setViewerSrc(null)}>
+        <DialogContent className="max-w-3xl p-2 bg-black/90 border-none">
+          <button
+            onClick={() => setViewerSrc(null)}
+            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+          >
+            <X size={16} />
+          </button>
+          {viewerSrc && (
+            <img
+              src={viewerSrc}
+              alt="preview"
+              className="w-full max-h-[80vh] object-contain rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* ── Add Dialog ── */}
       <Dialog open={addDialog} onOpenChange={setAddDialog}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center">
                 <Plus size={15} className="text-white" />
               </div>
-              Mashina biriktirish
+              Buyum biriktirish
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 mt-1">
+            {/* Employee */}
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 Xodim
@@ -796,30 +926,19 @@ const RentedMachines = () => {
               )}
             </div>
 
+            {/* Item name */}
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                Mashina
+                Buyum nomi *
               </p>
-              <Select
-                value={selectedTypewriter ? String(selectedTypewriter.id) : ""}
-                onValueChange={(val) => {
-                  const tw = typewriters.find((t) => String(t.id) === val);
-                  setSelectedTypewriter(tw || null);
-                }}
-              >
-                <SelectTrigger className="focus:ring-indigo-500">
-                  <SelectValue placeholder="Mashina tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {typewriters.map((tw) => (
-                    <SelectItem key={tw.id} value={String(tw.id)}>
-                      {tw.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                placeholder="Buyum nomini kiriting..."
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+              />
             </div>
 
+            {/* Date + Quantity */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
@@ -844,6 +963,7 @@ const RentedMachines = () => {
               </div>
             </div>
 
+            {/* Comment */}
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 Izoh (ixtiyoriy)
@@ -854,6 +974,15 @@ const RentedMachines = () => {
                 onChange={(e) => setComment(e.target.value)}
               />
             </div>
+
+            {/* Given image */}
+            <ImageUploader
+              label="Rasm (ixtiyoriy)"
+              preview={givenImagePreview}
+              onFile={setGivenFile}
+              onClear={clearGivenImage}
+              inputRef={givenImageRef}
+            />
 
             <div className="flex gap-2 pt-2 border-t">
               <Button
@@ -867,7 +996,7 @@ const RentedMachines = () => {
               <Button
                 className="flex-1 bg-indigo-600 hover:bg-indigo-700"
                 disabled={
-                  !selectedEmployee || !selectedTypewriter || !givenAt || adding
+                  !selectedEmployee || !itemName.trim() || !givenAt || adding
                 }
                 onClick={handleAdd}
               >
@@ -887,13 +1016,13 @@ const RentedMachines = () => {
 
       {/* ── Return Dialog ── */}
       <Dialog open={returnDialog} onOpenChange={setReturnDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-md bg-amber-500 flex items-center justify-center">
                 <RotateCcw size={14} className="text-white" />
               </div>
-              Mashinani qaytarish
+              Buyumni qaytarish
             </DialogTitle>
           </DialogHeader>
 
@@ -909,7 +1038,7 @@ const RentedMachines = () => {
                   {selectedItem?.employee?.name}
                 </p>
                 <p className="text-xs text-slate-500 truncate">
-                  {selectedItem?.type_writer?.name}
+                  {selectedItem?.item_name}
                 </p>
               </div>
             </div>
@@ -935,6 +1064,14 @@ const RentedMachines = () => {
                 onChange={(e) => setReturnComment(e.target.value)}
               />
             </div>
+
+            <ImageUploader
+              label="Qaytarilgan rasm (ixtiyoriy)"
+              preview={returnedImagePreview}
+              onFile={setReturnedFile}
+              onClear={clearReturnedImage}
+              inputRef={returnedImageRef}
+            />
 
             <div className="flex gap-2 pt-2 border-t">
               <Button
@@ -966,7 +1103,7 @@ const RentedMachines = () => {
 
       {/* ── Delete Dialog ── */}
       <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <div className="w-7 h-7 rounded-md bg-red-100 flex items-center justify-center">
@@ -988,7 +1125,7 @@ const RentedMachines = () => {
                   {selectedItem?.employee?.name}
                 </p>
                 <p className="text-xs text-slate-500 truncate">
-                  {selectedItem?.type_writer?.name}
+                  {selectedItem?.item_name}
                 </p>
               </div>
             </div>
