@@ -110,7 +110,7 @@ const SettingsPage = () => {
       color: "bg-purple-500",
     },
     {
-      name: "Ijaradagi mashinalar",
+      name: "Ijaradagi buyumlar",
       icon: Bot,
       link: "/superhr/settings/rented-machines",
       color: "bg-yellow-500",
