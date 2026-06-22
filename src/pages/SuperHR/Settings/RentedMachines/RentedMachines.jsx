@@ -426,7 +426,7 @@ const RentedMachines = () => {
                 <Package size={16} className="text-white" />
               </div>
               <h1 className="text-2xl font-bold text-slate-800">
-                Uy Buyumlari
+                Ijaradagi buyumlar
               </h1>
             </div>
             <p className="text-slate-500 text-sm pl-10">
