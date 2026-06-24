@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Building2 } from "lucide-react";
+import { Plus, Pencil, Building2, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -19,6 +20,7 @@ const emptyForm = { name: "", address: "", comment: "" };
 
 const Buildings = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -275,7 +277,20 @@ const Buildings = () => {
                     </p>
                   </CardContent>
                 )}
-                <CardContent className="pt-0 flex justify-end">
+                <CardContent className="pt-0 flex justify-between items-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() =>
+                      navigate(
+                        `/superhr/factory-details/buildings/${building.id}/floors`,
+                        { state: { buildingName: building.name } }
+                      )
+                    }
+                  >
+                    Qavatlar <ChevronRight className="w-4 h-4" />
+                  </Button>
                   <Button
                     size="icon"
                     variant="outline"

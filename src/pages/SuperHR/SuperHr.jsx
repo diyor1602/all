@@ -30,7 +30,7 @@ const SuperHr = () => {
       <Route path="new-attendance/:id" element={<NewAttendance />} />
       <Route path="salary-page" element={<SalaryPage />} />
       <Route path="panel/*" element={<Panel />} />
-      <Route path="factory-details" element={<FactoryDetails />} />
+      <Route path="factory-details/*" element={<FactoryDetails />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
