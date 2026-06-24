@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Users,
   UserPlus,
-  Trash2,
   ArrowRightLeft,
   QrCode,
   ClipboardList,
@@ -94,7 +93,11 @@ const FactoryDetails = () => {
   // Data
   const [buildings, setBuildings] = useState([]);
   const [equipment, setEquipment] = useState([]);
-  const [employees, setEmployees] = useState([]);
+
+  // Employee search for responsible assignment
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [employeeSearchResults, setEmployeeSearchResults] = useState([]);
+  const [employeeSearchLoading, setEmployeeSearchLoading] = useState(false);
 
   // Expansion (multiple can be open at once)
   const [expandedBuildings, setExpandedBuildings] = useState(new Set());
@@ -255,11 +258,28 @@ const FactoryDetails = () => {
 
   useEffect(() => {
     fetchBuildings();
-    api
-      .get("/superhr/employees?per_page=200")
-      .then((res) => setEmployees(res.data?.data || res.data || []))
-      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!employeeSearch.trim()) {
+      setEmployeeSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setEmployeeSearchLoading(true);
+      try {
+        const res = await api.get(
+          `/superhr/employees?search=${encodeURIComponent(employeeSearch)}&per_page=20`,
+        );
+        setEmployeeSearchResults(res.data?.data || res.data || []);
+      } catch {
+        setEmployeeSearchResults([]);
+      } finally {
+        setEmployeeSearchLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [employeeSearch]);
 
   // ── Selection ──────────────────────────────────────────────────────────────
 
@@ -479,6 +499,9 @@ const FactoryDetails = () => {
   const openResponsibles = async (zone) => {
     setResponsiblesZone(zone);
     setResponsiblesOpen(true);
+    setAssigningId("");
+    setEmployeeSearch("");
+    setEmployeeSearchResults([]);
     setLoadingResponsibles(true);
     try {
       const res = await api.get(`/zones/${zone.id}/responsibles`);
@@ -515,15 +538,6 @@ const FactoryDetails = () => {
       err(e, "Xatolik");
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleRemoveResponsible = async (rId) => {
-    try {
-      await api.delete(`/zones/${responsiblesZone.id}/responsibles/${rId}`);
-      setResponsibles((p) => p.filter((r) => r.id !== rId));
-    } catch (e) {
-      err(e, "Xatolik");
     }
   };
 
@@ -931,23 +945,54 @@ const FactoryDetails = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-2">
-            <Select value={assigningId} onValueChange={setAssigningId}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Xodim tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                {employees.map((e) => (
-                  <SelectItem key={e.id} value={String(e.id)}>
-                    {e.name} {e.last_name || ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="relative flex-1">
+              <Input
+                placeholder="Xodim ismi yoki username..."
+                value={employeeSearch}
+                onChange={(e) => {
+                  setEmployeeSearch(e.target.value);
+                  setAssigningId("");
+                }}
+                onBlur={() =>
+                  setTimeout(() => setEmployeeSearchResults([]), 150)
+                }
+              />
+              {(employeeSearchLoading || employeeSearchResults.length > 0) && (
+                <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto mt-0.5">
+                  {employeeSearchLoading ? (
+                    <p className="px-3 py-2 text-sm text-gray-400">
+                      Qidirilmoqda...
+                    </p>
+                  ) : (
+                    employeeSearchResults.map((e) => (
+                      <button
+                        key={e.id}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex flex-col"
+                        onMouseDown={() => {
+                          setAssigningId(String(e.id));
+                          setEmployeeSearch(
+                            `${e.name}${e.last_name ? " " + e.last_name : ""}`,
+                          );
+                          setEmployeeSearchResults([]);
+                        }}
+                      >
+                        <span className="font-medium">
+                          {e.name} {e.last_name || ""}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {e.user?.username || ""} · {e.department?.name || ""}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
             <Button
               size="icon"
               className="bg-green-500 hover:bg-green-600"
               onClick={handleAssign}
-              disabled={submitting}
+              disabled={submitting || !assigningId}
             >
               <UserPlus className="w-4 h-4" />
             </Button>
@@ -963,17 +1008,16 @@ const FactoryDetails = () => {
                   key={r.id}
                   className="flex items-center justify-between rounded-lg border px-3 py-2"
                 >
-                  <span className="text-sm font-medium">
-                    {r.name} {r.last_name || ""}
-                  </span>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-red-500 hover:text-red-700"
-                    onClick={() => handleRemoveResponsible(r.id)}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">
+                      {r.employee?.name || r.name || "—"}
+                    </span>
+                    {r.employee?.phone && (
+                      <span className="text-xs text-gray-400">
+                        {r.employee.phone}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))
             )}
