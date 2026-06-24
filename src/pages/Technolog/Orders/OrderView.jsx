@@ -1490,13 +1490,25 @@ const OrderView = () => {
                           if (bn === null) return -1;
                           return an - bn;
                         })
-                        .map((tarification) => (
+                        .map((tarification) => {
+                          const hasSingleSecond = tarification?.tarifications?.some(
+                            (t) => parseFloat(t.second) === 1,
+                          );
+                          const tarNameCount = {};
+                          tarification?.tarifications?.forEach((t) => {
+                            tarNameCount[t.name] = (tarNameCount[t.name] || 0) + 1;
+                          });
+                          const hasDuplicateNames = Object.values(tarNameCount).some(
+                            (count) => count > 1,
+                          );
+                          const isRedCategory = hasSingleSecond || hasDuplicateNames;
+                          return (
                           <div
                             key={tarification.id}
-                            className="flex flex-col gap-2 p-3 bg-white rounded-md shadow-sm"
+                            className={`flex flex-col gap-2 p-3 rounded-md shadow-sm ${isRedCategory ? "bg-red-50 border border-red-300" : "bg-white"}`}
                           >
                             <div className="flex items-center justify-between gap-2 flex-wrap">
-                              <span className="font-medium text-gray-700">
+                              <span className={`font-medium ${isRedCategory ? "text-red-600" : "text-gray-700"}`}>
                                 {tarification?.name}
                               </span>
                               <div className="flex items-center gap-2">
@@ -1588,7 +1600,8 @@ const OrderView = () => {
                               </Button>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                     </div>
                   </CardContent>
                 </Card>
@@ -1670,18 +1683,27 @@ const OrderView = () => {
                 </tr>
               </thead>
               <tbody>
-                {selectedTarification?.tarifications
-                  ?.slice()
-                  .sort((a, b) => {
-                    const an = a.number ?? null;
-                    const bn = b.number ?? null;
-                    if (an === null && bn === null) return 0;
-                    if (an === null) return 1;
-                    if (bn === null) return -1;
-                    return an - bn;
-                  })
-                  ?.map((tarif, index) => (
-                    <tr key={tarif.id} className="text-center">
+                {(() => {
+                  const dialogNameCount = {};
+                  selectedTarification?.tarifications?.forEach((t) => {
+                    dialogNameCount[t.name] = (dialogNameCount[t.name] || 0) + 1;
+                  });
+                  return selectedTarification?.tarifications
+                    ?.slice()
+                    .sort((a, b) => {
+                      const an = a.number ?? null;
+                      const bn = b.number ?? null;
+                      if (an === null && bn === null) return 0;
+                      if (an === null) return 1;
+                      if (bn === null) return -1;
+                      return an - bn;
+                    })
+                    ?.map((tarif, index) => {
+                      const isOneSec = parseFloat(tarif.second) === 1;
+                      const isDuplicate = dialogNameCount[tarif.name] > 1;
+                      const isRedRow = isOneSec || isDuplicate;
+                      return (
+                    <tr key={tarif.id} className={`text-center ${isRedRow ? "bg-red-50 text-red-600" : ""}`}>
                       <td className="border border-gray-300 p-1">
                         {index + 1}
                       </td>
@@ -1718,7 +1740,9 @@ const OrderView = () => {
                         </Button>
                       </td>
                     </tr>
-                  ))}
+                      );
+                    });
+                })()}
               </tbody>
             </table>
           </div>
