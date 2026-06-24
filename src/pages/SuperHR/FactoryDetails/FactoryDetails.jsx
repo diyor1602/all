@@ -24,6 +24,27 @@ const emptyZone = { name: "", comment: "" };
 const emptyEquip = { name: "", serial_number: "", qr_code: "", comment: "" };
 const emptyMaintenance = { date: "", type: "", description: "", next_maintenance_date: "" };
 
+const TextForm = ({ fields, form, setForm }) => (
+  <div className="flex flex-col gap-3">
+    {fields.map(({ key, placeholder, textarea }) =>
+      textarea ? (
+        <Textarea key={key} placeholder={placeholder} rows={3} value={form[key]}
+          onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+      ) : (
+        <Input key={key} placeholder={placeholder} value={form[key]}
+          onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+      )
+    )}
+  </div>
+);
+
+const DialogFooter = ({ onCancel, onSubmit, submitting, cancelLabel = "Bekor qilish", submitLabel = "Saqlash" }) => (
+  <div className="flex justify-end gap-2 mt-2">
+    <Button variant="outline" onClick={onCancel}>{cancelLabel}</Button>
+    <Button onClick={onSubmit} disabled={submitting}>{submitting ? "Saqlanmoqda..." : submitLabel}</Button>
+  </div>
+);
+
 const FactoryDetails = () => {
   const { toast } = useToast();
 
@@ -351,7 +372,7 @@ const FactoryDetails = () => {
     if (!transferZoneId) return toast({ title: "Xatolik", description: "Zona tanlanmagan", variant: "destructive", duration: 1500 });
     try {
       setSubmitting(true);
-      await api.post(`/equipment/${transferEquip.id}/transfer`, { zone_id: transferZoneId });
+      await api.post(`/equipment/${transferEquip.id}/transfer`, { zone_id: Number(transferZoneId) });
       ok("Jihoz ko'chirildi"); setTransferOpen(false);
       delete cache.current.equipment[activeZone.id]; fetchEquipment(activeZone.id);
     } catch (e) { err(e, "Xatolik"); } finally { setSubmitting(false); }
@@ -399,29 +420,6 @@ const FactoryDetails = () => {
     } catch (e) { err(e, "Xatolik"); } finally { setSubmitting(false); }
   };
 
-  // ── Reusable form fields ───────────────────────────────────────────────────
-
-  const TextForm = ({ fields, form, setForm }) => (
-    <div className="flex flex-col gap-3">
-      {fields.map(({ key, placeholder, textarea }) =>
-        textarea ? (
-          <Textarea key={key} placeholder={placeholder} rows={3} value={form[key]}
-            onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
-        ) : (
-          <Input key={key} placeholder={placeholder} value={form[key]}
-            onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
-        )
-      )}
-    </div>
-  );
-
-  const DialogFooter = ({ onCancel, onSubmit, cancelLabel = "Bekor qilish", submitLabel = "Saqlash" }) => (
-    <div className="flex justify-end gap-2 mt-2">
-      <Button variant="outline" onClick={onCancel}>{cancelLabel}</Button>
-      <Button onClick={onSubmit} disabled={submitting}>{submitting ? "Saqlanmoqda..." : submitLabel}</Button>
-    </div>
-  );
-
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -438,7 +436,7 @@ const FactoryDetails = () => {
             { key: "address", placeholder: "Manzil" },
             { key: "comment", placeholder: "Izoh", textarea: true },
           ]} />
-          <DialogFooter onCancel={() => { setAddBuildingOpen(false); setBuildingForm(emptyBuilding); }} onSubmit={handleAddBuilding} submitLabel="Qo'shish" />
+          <DialogFooter onCancel={() => { setAddBuildingOpen(false); setBuildingForm(emptyBuilding); }} onSubmit={handleAddBuilding} submitting={submitting} submitLabel="Qo'shish" />
         </DialogContent>
       </Dialog>
 
@@ -451,7 +449,7 @@ const FactoryDetails = () => {
             { key: "address", placeholder: "Manzil" },
             { key: "comment", placeholder: "Izoh", textarea: true },
           ]} />
-          <DialogFooter onCancel={() => { setEditBuildingOpen(false); setBuildingForm(emptyBuilding); }} onSubmit={handleEditBuilding} />
+          <DialogFooter onCancel={() => { setEditBuildingOpen(false); setBuildingForm(emptyBuilding); }} onSubmit={handleEditBuilding} submitting={submitting} />
         </DialogContent>
       </Dialog>
 
@@ -463,7 +461,7 @@ const FactoryDetails = () => {
             { key: "name", placeholder: "Qavat nomi * (masalan: 1-qavat)" },
             { key: "comment", placeholder: "Izoh", textarea: true },
           ]} />
-          <DialogFooter onCancel={() => { setAddFloorOpen(false); setFloorForm(emptyFloor); }} onSubmit={handleAddFloor} submitLabel="Qo'shish" />
+          <DialogFooter onCancel={() => { setAddFloorOpen(false); setFloorForm(emptyFloor); }} onSubmit={handleAddFloor} submitting={submitting} submitLabel="Qo'shish" />
         </DialogContent>
       </Dialog>
 
@@ -475,7 +473,7 @@ const FactoryDetails = () => {
             { key: "name", placeholder: "Qavat nomi *" },
             { key: "comment", placeholder: "Izoh", textarea: true },
           ]} />
-          <DialogFooter onCancel={() => { setEditFloorOpen(false); setFloorForm(emptyFloor); }} onSubmit={handleEditFloor} />
+          <DialogFooter onCancel={() => { setEditFloorOpen(false); setFloorForm(emptyFloor); }} onSubmit={handleEditFloor} submitting={submitting} />
         </DialogContent>
       </Dialog>
 
@@ -487,7 +485,7 @@ const FactoryDetails = () => {
             { key: "name", placeholder: "Zona nomi *" },
             { key: "comment", placeholder: "Izoh", textarea: true },
           ]} />
-          <DialogFooter onCancel={() => { setAddZoneOpen(false); setZoneForm(emptyZone); }} onSubmit={handleAddZone} submitLabel="Qo'shish" />
+          <DialogFooter onCancel={() => { setAddZoneOpen(false); setZoneForm(emptyZone); }} onSubmit={handleAddZone} submitting={submitting} submitLabel="Qo'shish" />
         </DialogContent>
       </Dialog>
 
@@ -499,7 +497,7 @@ const FactoryDetails = () => {
             { key: "name", placeholder: "Zona nomi *" },
             { key: "comment", placeholder: "Izoh", textarea: true },
           ]} />
-          <DialogFooter onCancel={() => { setEditZoneOpen(false); setZoneForm(emptyZone); }} onSubmit={handleEditZone} />
+          <DialogFooter onCancel={() => { setEditZoneOpen(false); setZoneForm(emptyZone); }} onSubmit={handleEditZone} submitting={submitting} />
         </DialogContent>
       </Dialog>
 
@@ -549,7 +547,7 @@ const FactoryDetails = () => {
             { key: "qr_code", placeholder: "QR kod" },
             { key: "comment", placeholder: "Izoh", textarea: true },
           ]} />
-          <DialogFooter onCancel={() => { setAddEquipOpen(false); setEquipForm(emptyEquip); }} onSubmit={handleAddEquip} submitLabel="Qo'shish" />
+          <DialogFooter onCancel={() => { setAddEquipOpen(false); setEquipForm(emptyEquip); }} onSubmit={handleAddEquip} submitting={submitting} submitLabel="Qo'shish" />
         </DialogContent>
       </Dialog>
 
@@ -563,7 +561,7 @@ const FactoryDetails = () => {
             { key: "qr_code", placeholder: "QR kod" },
             { key: "comment", placeholder: "Izoh", textarea: true },
           ]} />
-          <DialogFooter onCancel={() => { setEditEquipOpen(false); setEquipForm(emptyEquip); }} onSubmit={handleEditEquip} />
+          <DialogFooter onCancel={() => { setEditEquipOpen(false); setEquipForm(emptyEquip); }} onSubmit={handleEditEquip} submitting={submitting} />
         </DialogContent>
       </Dialog>
 
@@ -588,7 +586,7 @@ const FactoryDetails = () => {
               <SelectContent>{transferZones.map((z) => <SelectItem key={z.id} value={String(z.id)}>{z.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <DialogFooter onCancel={() => setTransferOpen(false)} onSubmit={handleTransfer} submitLabel="Ko'chirish" />
+          <DialogFooter onCancel={() => setTransferOpen(false)} onSubmit={handleTransfer} submitting={submitting} submitLabel="Ko'chirish" />
         </DialogContent>
       </Dialog>
 
