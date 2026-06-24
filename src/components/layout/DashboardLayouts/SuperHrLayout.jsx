@@ -8,6 +8,7 @@ import {
   CircleDollarSign,
   Gem,
   LayoutDashboard,
+  Factory,
 } from "lucide-react";
 
 const navigation = [
@@ -52,6 +53,12 @@ const navigation = [
     name: "Panel",
     href: "/superhr/panel",
     icon: LayoutDashboard,
+    onMobile: false,
+  },
+  {
+    name: "Zavod ma'lumotlari",
+    href: "/superhr/factory-details",
+    icon: Factory,
     onMobile: false,
   },
 ];
