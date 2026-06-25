@@ -15,6 +15,7 @@ import {
   UserCog,
   Wrench,
   Bot,
+  Car,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddGroup from "./Departments/AddGroup";
@@ -26,6 +27,7 @@ import Damages from "./Damages/Damages";
 import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
 import RentedMachines from "./RentedMachines/RentedMachines";
+import Machines from "./Machines/Machines";
 
 const Settings = () => {
   return (
@@ -43,6 +45,7 @@ const Settings = () => {
       <Route path="group-history" element={<GroupHistory />} />
       <Route path="damages" element={<Damages />} />
       <Route path="rented-machines" element={<RentedMachines />} />
+      <Route path="machines/*" element={<Machines />} />
     </Routes>
   );
 };
@@ -114,6 +117,12 @@ const SettingsPage = () => {
       icon: Bot,
       link: "/superhr/settings/rented-machines",
       color: "bg-yellow-500",
+    },
+    {
+      name: "Mashinalar",
+      icon: Car,
+      link: "/superhr/settings/machines",
+      color: "bg-black",
     },
   ];
 
