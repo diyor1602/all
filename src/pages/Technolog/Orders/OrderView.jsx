@@ -89,8 +89,10 @@ const OrderView = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [categoryNumberDialogOpen, setCategoryNumberDialogOpen] = useState(false);
-  const [selectedCategoryForNumber, setSelectedCategoryForNumber] = useState(null);
+  const [categoryNumberDialogOpen, setCategoryNumberDialogOpen] =
+    useState(false);
+  const [selectedCategoryForNumber, setSelectedCategoryForNumber] =
+    useState(null);
   const [editingCategoryNumber, setEditingCategoryNumber] = useState("");
 
   // Spoiler states for time displays
@@ -99,6 +101,9 @@ const OrderView = () => {
   const [showLimit, setShowLimit] = useState(false);
   const [showUZCost, setShowUZCost] = useState(false);
   const [showRUCost, setShowRUCost] = useState(false);
+
+  // Status
+  const [statusChanging, setStatusChanging] = useState(false);
 
   const deleteTarif = (id) => {
     setDeleteId(id);
@@ -172,9 +177,7 @@ const OrderView = () => {
       });
 
       setTarifications((prev) =>
-        prev.map((t) =>
-          t.id === category.id ? { ...t, number } : t,
-        ),
+        prev.map((t) => (t.id === category.id ? { ...t, number } : t)),
       );
       setCategoryNumberDialogOpen(false);
     } catch (error) {
@@ -296,6 +299,29 @@ const OrderView = () => {
       toast,
     ],
   );
+
+  const handleStatusChange = async (t) => {
+    setStatusChanging(true);
+    try {
+      await api.post(`/technologist/tarification/category/status/${t.id}`, {
+        status: !t.status,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Tarifikatsiya statusi o'zgartirildi!",
+      });
+      fetchTarifications();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error?.response?.data?.message || "Statusni o'zgartirib bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setStatusChanging(false);
+    }
+  };
 
   const handleDownloadSingleTarif = async (tarif) => {
     try {
@@ -751,7 +777,9 @@ const OrderView = () => {
               min={1}
               value={editingCategoryNumber}
               onChange={(e) => setEditingCategoryNumber(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleUpdateCategoryNumber()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && handleUpdateCategoryNumber()
+              }
               autoFocus
             />
             <div className="border rounded-md divide-y max-h-60 overflow-auto">
@@ -1491,115 +1519,145 @@ const OrderView = () => {
                           return an - bn;
                         })
                         .map((tarification) => {
-                          const hasSingleSecond = tarification?.tarifications?.some(
-                            (t) => parseFloat(t.second) === 1,
-                          );
+                          const hasSingleSecond =
+                            tarification?.tarifications?.some(
+                              (t) => parseFloat(t.second) === 1,
+                            );
                           const tarNameCount = {};
                           tarification?.tarifications?.forEach((t) => {
-                            tarNameCount[t.name] = (tarNameCount[t.name] || 0) + 1;
+                            tarNameCount[t.name] =
+                              (tarNameCount[t.name] || 0) + 1;
                           });
-                          const hasDuplicateNames = Object.values(tarNameCount).some(
-                            (count) => count > 1,
-                          );
-                          const isRedCategory = hasSingleSecond || hasDuplicateNames;
+                          const hasDuplicateNames = Object.values(
+                            tarNameCount,
+                          ).some((count) => count > 1);
+                          const isRedCategory =
+                            hasSingleSecond || hasDuplicateNames;
                           return (
-                          <div
-                            key={tarification.id}
-                            className={`flex flex-col gap-2 p-3 rounded-md shadow-sm ${isRedCategory ? "bg-red-50 border border-red-300" : "bg-white"}`}
-                          >
-                            <div className="flex items-center justify-between gap-2 flex-wrap">
-                              <span className={`font-medium ${isRedCategory ? "text-red-600" : "text-gray-700"}`}>
-                                {tarification?.name}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className="cursor-pointer bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                                  onClick={() =>
-                                    openCategoryNumberDialog(tarification)
-                                  }
+                            <div
+                              key={tarification.id}
+                              className={`flex flex-col gap-2 p-3 rounded-md shadow-sm ${isRedCategory ? "bg-red-50 border border-red-300" : "bg-white"}`}
+                            >
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <span
+                                  className={`font-medium ${isRedCategory ? "text-red-600" : "text-gray-700"}`}
                                 >
-                                  №{tarification?.number ?? "—"}
-                                </Badge>
-                                <Badge
-                                  variant="outline"
-                                  className="bg-indigo-100 text-indigo-800 border-indigo-200"
+                                  {tarification?.name}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <Badge
+                                    variant="outline"
+                                    className={
+                                      tarification.status
+                                        ? `bg-green-500 text-white border-green-500`
+                                        : `bg-red-500 text-white border-red-500`
+                                    }
+                                    onClick={() => {
+                                      if (!statusChanging) {
+                                        if (
+                                          window.confirm(
+                                            "Statusini o'zgartirishni tasdiqlaysizmi?",
+                                          )
+                                        ) {
+                                          handleStatusChange(tarification);
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    {statusChanging
+                                      ? "Saqlanmoqda"
+                                      : tarification?.status
+                                        ? "Tayyor"
+                                        : "Tayyor emas"}
+                                  </Badge>
+                                  <Badge
+                                    variant="outline"
+                                    className="cursor-pointer bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                                    onClick={() =>
+                                      openCategoryNumberDialog(tarification)
+                                    }
+                                  >
+                                    №{tarification?.number ?? "—"}
+                                  </Badge>
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-indigo-100 text-indigo-800 border-indigo-200"
+                                  >
+                                    {tarification?.tarifications?.length} ta
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between gap-2 flex-wrap text-sm ">
+                                <div className="flex items-center gap-2">
+                                  <Coins size={20} />
+                                  {formatNumber(
+                                    tarification?.tarifications?.reduce(
+                                      (acc, item) =>
+                                        acc + parseFloat(item?.summa),
+                                      0,
+                                    ),
+                                  )}{" "}
+                                  so'm
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Hourglass size={20} />
+                                  {formatNumber(
+                                    tarification?.tarifications?.reduce(
+                                      (acc, item) =>
+                                        acc + parseFloat(item?.second),
+                                      0,
+                                    ),
+                                  )}{" "}
+                                  sekund
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap justify-between gap-2 mt-4">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                    onClick={() => {
+                                      setTarifDialogOpen(true);
+                                      setSelectedTarification(tarification);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    Ko'rish
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                                    onClick={() => {
+                                      navigate(
+                                        `/technologist/edit-tarif/${tarification?.id}`,
+                                      );
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    O'zgartirish
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => {
+                                      deleteTarif(tarification?.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    O'chirish
+                                  </Button>
+                                </div>
+                                <Button
+                                  size="icon"
+                                  className="h-8 w-8 rounded-full text-white"
+                                  onClick={() => handleCopyTarif(tarification)}
                                 >
-                                  {tarification?.tarifications?.length} ta
-                                </Badge>
+                                  <Files className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between gap-2 flex-wrap text-sm ">
-                              <div className="flex items-center gap-2">
-                                <Coins size={20} />
-                                {formatNumber(
-                                  tarification?.tarifications?.reduce(
-                                    (acc, item) =>
-                                      acc + parseFloat(item?.summa),
-                                    0,
-                                  ),
-                                )}{" "}
-                                so'm
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Hourglass size={20} />
-                                {formatNumber(
-                                  tarification?.tarifications?.reduce(
-                                    (acc, item) =>
-                                      acc + parseFloat(item?.second),
-                                    0,
-                                  ),
-                                )}{" "}
-                                sekund
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap justify-between gap-2 mt-4">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                  onClick={() => {
-                                    setTarifDialogOpen(true);
-                                    setSelectedTarification(tarification);
-                                  }}
-                                >
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  Ko'rish
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-                                  onClick={() => {
-                                    navigate(
-                                      `/technologist/edit-tarif/${tarification?.id}`,
-                                    );
-                                  }}
-                                >
-                                  <Edit className="h-4 w-4 mr-1" />
-                                  O'zgartirish
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => {
-                                    deleteTarif(tarification?.id);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  O'chirish
-                                </Button>
-                              </div>
-                              <Button
-                                size="icon"
-                                className="h-8 w-8 rounded-full text-white"
-                                onClick={() => handleCopyTarif(tarification)}
-                              >
-                                <Files className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
                           );
                         })}
                     </div>
@@ -1662,7 +1720,12 @@ const OrderView = () => {
               <thead>
                 <tr className="text-center">
                   <th className="border border-gray-300 p-1">#</th>
-                  <th className="border border-gray-300 p-1" title="Tartib raqami">Tartib №</th>
+                  <th
+                    className="border border-gray-300 p-1"
+                    title="Tartib raqami"
+                  >
+                    Tartib №
+                  </th>
                   <th className="border border-gray-300 p-1">Kod</th>
                   <th className="border border-gray-300 p-1">Nomi</th>
                   <th className="border border-gray-300 p-1">Xodim</th>
@@ -1686,7 +1749,8 @@ const OrderView = () => {
                 {(() => {
                   const dialogNameCount = {};
                   selectedTarification?.tarifications?.forEach((t) => {
-                    dialogNameCount[t.name] = (dialogNameCount[t.name] || 0) + 1;
+                    dialogNameCount[t.name] =
+                      (dialogNameCount[t.name] || 0) + 1;
                   });
                   return selectedTarification?.tarifications
                     ?.slice()
@@ -1703,43 +1767,46 @@ const OrderView = () => {
                       const isDuplicate = dialogNameCount[tarif.name] > 1;
                       const isRedRow = isOneSec || isDuplicate;
                       return (
-                    <tr key={tarif.id} className={`text-center ${isRedRow ? "bg-red-50 text-red-600" : ""}`}>
-                      <td className="border border-gray-300 p-1">
-                        {index + 1}
-                      </td>
-                      <td className="border border-gray-300 p-1 text-gray-500">
-                        {tarif?.number ?? "—"}
-                      </td>
-                      <td className="border border-gray-300 p-1">
-                        {tarif?.code}
-                      </td>
-                      <td className="border border-gray-300 p-1">
-                        {tarif?.name}
-                      </td>
-                      <td className="border border-gray-300 p-1">
-                        {tarif?.employee?.name || "-"}
-                      </td>
-                      <td className="border border-gray-300 p-1">
-                        {tarif?.razryad?.name}
-                      </td>
-                      <td className="border border-gray-300 p-1">
-                        {formatNumber(tarif?.second)}
-                      </td>
-                      <td className="border border-gray-300 p-1">
-                        {formatNumber(tarif?.summa)}
-                      </td>
-                      <td className="border border-gray-300 p-1">
-                        <Button
-                          variant="ghost"
-                          siez="icon"
-                          onClick={() => {
-                            handleDownloadSingleTarif(tarif);
-                          }}
+                        <tr
+                          key={tarif.id}
+                          className={`text-center ${isRedRow ? "bg-red-50 text-red-600" : ""}`}
                         >
-                          <DownloadCloud className="text-green-500" />
-                        </Button>
-                      </td>
-                    </tr>
+                          <td className="border border-gray-300 p-1">
+                            {index + 1}
+                          </td>
+                          <td className="border border-gray-300 p-1 text-gray-500">
+                            {tarif?.number ?? "—"}
+                          </td>
+                          <td className="border border-gray-300 p-1">
+                            {tarif?.code}
+                          </td>
+                          <td className="border border-gray-300 p-1">
+                            {tarif?.name}
+                          </td>
+                          <td className="border border-gray-300 p-1">
+                            {tarif?.employee?.name || "-"}
+                          </td>
+                          <td className="border border-gray-300 p-1">
+                            {tarif?.razryad?.name}
+                          </td>
+                          <td className="border border-gray-300 p-1">
+                            {formatNumber(tarif?.second)}
+                          </td>
+                          <td className="border border-gray-300 p-1">
+                            {formatNumber(tarif?.summa)}
+                          </td>
+                          <td className="border border-gray-300 p-1">
+                            <Button
+                              variant="ghost"
+                              siez="icon"
+                              onClick={() => {
+                                handleDownloadSingleTarif(tarif);
+                              }}
+                            >
+                              <DownloadCloud className="text-green-500" />
+                            </Button>
+                          </td>
+                        </tr>
                       );
                     });
                 })()}
