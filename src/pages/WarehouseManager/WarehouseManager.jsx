@@ -6,6 +6,7 @@ import Settings from "./Settings";
 import Requisitions from "./Requisition/Requisitions";
 import SupplierIndex from "./Supplier/SupplierIndex";
 import MonthlyReport from "./Report/MonthlyReport";
+import FactoryDetails from "./FactoryDetails/FactoryDetails";
 
 const WarehouseManager = () => {
   return (
@@ -17,6 +18,7 @@ const WarehouseManager = () => {
       <Route path="requisitions/*" element={<Requisitions />} />
       <Route path="supplier/*" element={<SupplierIndex />} />
       <Route path="monthly-report/*" element={<MonthlyReport />} />
+      <Route path="factory-details/*" element={<FactoryDetails />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

@@ -750,7 +750,7 @@ const FactoryDetails = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col md:flex-row h-full -mx-4 sm:-mx-6 lg:-mx-8">
+    <div className="flex flex-col md:flex-row h-full">
       {/* ── ALL DIALOGS ─────────────────────────────────────────────────── */}
 
       {/* Add Building */}

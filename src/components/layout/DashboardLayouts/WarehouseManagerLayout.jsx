@@ -8,6 +8,7 @@ import {
   FileText,
   Snail,
   Calendar,
+  Factory,
 } from "lucide-react";
 
 const navigation = [
@@ -57,6 +58,12 @@ const navigation = [
     name: "Qo'chimcha",
     href: "/warehouseManager/settings",
     icon: Settings,
+    onMobile: false,
+  },
+  {
+    name: "Zavod ma'lumotlari",
+    href: "/warehouseManager/factory-details",
+    icon: Factory,
     onMobile: false,
   },
 ];

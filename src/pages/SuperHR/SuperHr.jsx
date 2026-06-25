@@ -12,7 +12,6 @@ import Salary from "./Salary/Salary";
 import NewAttendance from "./Attendance/NewAttendance";
 import SalaryPage from "./Salary/SalaryPage";
 import Panel from "./Panel/Panel";
-import FactoryDetails from "./FactoryDetails/FactoryDetails";
 
 const SuperHr = () => {
   return (
@@ -30,7 +29,6 @@ const SuperHr = () => {
       <Route path="new-attendance/:id" element={<NewAttendance />} />
       <Route path="salary-page" element={<SalaryPage />} />
       <Route path="panel/*" element={<Panel />} />
-      <Route path="factory-details/*" element={<FactoryDetails />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
