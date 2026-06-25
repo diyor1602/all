@@ -39,7 +39,7 @@ const MAINTENANCE_TYPES = ["Texnik xizmat", "Remont", "Tekshiruv", "Boshqa"];
 const emptyBuilding = { name: "", address: "", comment: "" };
 const emptyFloor = { name: "", comment: "" };
 const emptyZone = { name: "", comment: "" };
-const emptyEquip = { name: "", serial_number: "", qr_code: "", comment: "" };
+const emptyEquip = { name: "", serial_number: "", qr_code: "", price: "", comment: "" };
 const emptyMaintenance = {
   date: "",
   type: "",
@@ -49,7 +49,7 @@ const emptyMaintenance = {
 
 const TextForm = ({ fields, form, setForm }) => (
   <div className="flex flex-col gap-3">
-    {fields.map(({ key, placeholder, textarea }) =>
+    {fields.map(({ key, placeholder, textarea, type }) =>
       textarea ? (
         <Textarea
           key={key}
@@ -61,6 +61,7 @@ const TextForm = ({ fields, form, setForm }) => (
       ) : (
         <Input
           key={key}
+          type={type || "text"}
           placeholder={placeholder}
           value={form[key]}
           onChange={(e) => setForm({ ...form, [key]: e.target.value })}
@@ -553,7 +554,10 @@ const FactoryDetails = () => {
       });
     try {
       setSubmitting(true);
-      await api.post(`/zones/${activeZone.id}/equipment`, equipForm);
+      await api.post(`/zones/${activeZone.id}/equipment`, {
+        ...equipForm,
+        price: equipForm.price !== "" ? parseFloat(equipForm.price) : null,
+      });
       ok("Jihoz qo'shildi");
       setAddEquipOpen(false);
       setEquipForm(emptyEquip);
@@ -576,7 +580,10 @@ const FactoryDetails = () => {
       });
     try {
       setSubmitting(true);
-      await api.patch(`/equipment/${editingEquipId}`, equipForm);
+      await api.patch(`/equipment/${editingEquipId}`, {
+        ...equipForm,
+        price: equipForm.price !== "" ? parseFloat(equipForm.price) : null,
+      });
       ok("Jihoz yangilandi");
       setEditEquipOpen(false);
       setEquipForm(emptyEquip);
@@ -1042,6 +1049,7 @@ const FactoryDetails = () => {
               { key: "name", placeholder: "Jihoz nomi *" },
               { key: "serial_number", placeholder: "Seriya raqami" },
               { key: "qr_code", placeholder: "QR kod" },
+              { key: "price", placeholder: "Narxi (so'm)", type: "number" },
               { key: "comment", placeholder: "Izoh", textarea: true },
             ]}
           />
@@ -1071,6 +1079,7 @@ const FactoryDetails = () => {
               { key: "name", placeholder: "Jihoz nomi *" },
               { key: "serial_number", placeholder: "Seriya raqami" },
               { key: "qr_code", placeholder: "QR kod" },
+              { key: "price", placeholder: "Narxi (so'm)", type: "number" },
               { key: "comment", placeholder: "Izoh", textarea: true },
             ]}
           />
@@ -1663,6 +1672,11 @@ const FactoryDetails = () => {
                             S/N: {item.serial_number}
                           </p>
                         )}
+                        {item.price != null && item.price !== "" && (
+                          <p className="text-xs font-semibold text-green-600">
+                            {Number(item.price).toLocaleString("uz-UZ")} UZS
+                          </p>
+                        )}
                       </CardHeader>
                       {item.comment && (
                         <CardContent className="pt-0 pb-2">
@@ -1701,6 +1715,7 @@ const FactoryDetails = () => {
                               name: item.name || "",
                               serial_number: item.serial_number || "",
                               qr_code: item.qr_code || "",
+                              price: item.price != null ? String(item.price) : "",
                               comment: item.comment || "",
                             });
                             setEditEquipOpen(true);

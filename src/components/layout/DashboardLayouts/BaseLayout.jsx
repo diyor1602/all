@@ -14,6 +14,7 @@ import {
   Glasses,
   SquareScissors,
   ListTodo,
+  Sprout,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -95,6 +96,12 @@ export default function BaseLayout({ children, navigation }) {
       onMobile: true,
       dontShow: !damageRoles.includes(localStorage.getItem("role")),
       badge: damageCount > 0 ? damageCount : null,
+    },
+    {
+      name: "Tikuvchilar",
+      href: "/tailorRating",
+      icon: Sprout,
+      onMobile: false,
     },
     {
       name: "Koeffitsiyent",
