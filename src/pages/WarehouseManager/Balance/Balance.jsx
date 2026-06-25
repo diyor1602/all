@@ -58,7 +58,11 @@ const Balance = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
-  const [imageDialog, setImageDialog] = useState({ open: false, src: null, name: null });
+  const [imageDialog, setImageDialog] = useState({
+    open: false,
+    src: null,
+    name: null,
+  });
 
   const [filters, setFilters] = useState(() => {
     try {
@@ -91,17 +95,25 @@ const Balance = () => {
         params.append("Page", pageNum);
         params.append("PageSize", PAGE_SIZE);
         if (filterParams.search) params.append("Search", filterParams.search);
-        if (filterParams.warehouseId) params.append("WarehouseId", filterParams.warehouseId);
-        if (filterParams.hasRoll !== "") params.append("HasRoll", filterParams.hasRoll);
+        if (filterParams.warehouseId)
+          params.append("WarehouseId", filterParams.warehouseId);
+        if (filterParams.hasRoll !== "")
+          params.append("HasRoll", filterParams.hasRoll);
 
-        const { data } = await api.get(`/warehouseManager/StockBalance?${params.toString()}`);
+        const { data } = await api.get(
+          `/warehouseManager/StockBalance?${params.toString()}`,
+        );
         const incoming = data.data ?? [];
         setRows((prev) => (replace ? incoming : [...prev, ...incoming]));
         setTotal(data.total ?? 0);
         setPage(data.page ?? pageNum);
         setTotalPages(data.totalPages ?? 1);
       } catch {
-        toast({ variant: "destructive", title: "Xatolik!", description: "Balansni olishda xatolik yuz berdi!" });
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Balansni olishda xatolik yuz berdi!",
+        });
       } finally {
         if (replace) setLoading(false);
         else setLoadingMore(false);
@@ -153,7 +165,10 @@ const Balance = () => {
   const applyFilters = useCallback(
     (newFilters) => {
       clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => fetchPage(1, newFilters, true), DEBOUNCE_DELAY);
+      debounceRef.current = setTimeout(
+        () => fetchPage(1, newFilters, true),
+        DEBOUNCE_DELAY,
+      );
     },
     [fetchPage],
   );
@@ -182,7 +197,9 @@ const Balance = () => {
     fetchPage(1, defaultFilters, true);
   }, [fetchPage]);
 
-  const activeFilterCount = Object.values(filters).filter((v) => v !== "").length;
+  const activeFilterCount = Object.values(filters).filter(
+    (v) => v !== "",
+  ).length;
 
   return (
     <div className="space-y-5">
@@ -220,14 +237,18 @@ const Balance = () => {
             <SelectContent>
               <SelectItem value="all">Barcha omborlar</SelectItem>
               {warehouses.map((w) => (
-                <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
+                <SelectItem key={w.id} value={String(w.id)}>
+                  {w.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <Select
             value={filters.hasRoll === "" ? "all" : filters.hasRoll}
-            onValueChange={(v) => handleFilterChange("hasRoll", v === "all" ? "" : v)}
+            onValueChange={(v) =>
+              handleFilterChange("hasRoll", v === "all" ? "" : v)
+            }
           >
             <SelectTrigger className="h-9 w-[160px]">
               <Layers className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
@@ -270,15 +291,33 @@ const Balance = () => {
             <Table className="text-sm whitespace-nowrap">
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-14 text-xs font-semibold text-muted-foreground">#</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Mahsulot</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Turi</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Rang</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Ombor</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Rulon #</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">Miqdor</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">Min miqdor</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">Narxi</TableHead>
+                  <TableHead className="w-14 text-xs font-semibold text-muted-foreground">
+                    #
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Mahsulot
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Turi
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Rang
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Ombor
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Rulon #
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">
+                    Miqdor
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">
+                    Min miqdor
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">
+                    Narxi
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -287,14 +326,17 @@ const Balance = () => {
                   const qty = isRoll ? entry.length : entry.quantity;
                   const unit = entry.item?.unit?.name;
                   const minQty = entry.item?.minQuantity;
-                  const belowMin = minQty != null && qty != null && qty < minQty;
+                  const belowMin =
+                    minQty != null && qty != null && qty < minQty;
 
                   return (
                     <TableRow
                       key={entry.id}
-                      className={`transition-colors ${belowMin ? "bg-red-50/60 hover:bg-red-50" : "hover:bg-muted/30"}`}
+                      className={`transition-colors ${belowMin ? "bg-red-100 hover:bg-red-50" : "hover:bg-muted/30"}`}
                     >
-                      <TableCell className="text-xs text-muted-foreground font-mono">{entry.id}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground font-mono">
+                        {entry.id}
+                      </TableCell>
 
                       <TableCell>
                         <div className="flex items-center gap-2.5">
@@ -302,9 +344,19 @@ const Balance = () => {
                             <button
                               type="button"
                               className="w-9 h-9 rounded-md overflow-hidden cursor-zoom-in flex-shrink-0 ring-1 ring-border"
-                              onClick={() => setImageDialog({ open: true, src: entry.item.image, name: entry.item.name })}
+                              onClick={() =>
+                                setImageDialog({
+                                  open: true,
+                                  src: entry.item.image,
+                                  name: entry.item.name,
+                                })
+                              }
                             >
-                              <img src={entry.item.image} alt={entry.item.name} className="w-full h-full object-cover" />
+                              <img
+                                src={entry.item.image}
+                                alt={entry.item.name}
+                                className="w-full h-full object-cover"
+                              />
                             </button>
                           ) : (
                             <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
@@ -312,9 +364,13 @@ const Balance = () => {
                             </div>
                           )}
                           <div>
-                            <p className="font-medium text-sm">{entry.item?.name}</p>
+                            <p className="font-medium text-sm">
+                              {entry.item?.name}
+                            </p>
                             {entry.item?.code && (
-                              <p className="text-xs text-muted-foreground font-mono">{entry.item.code}</p>
+                              <p className="text-xs text-muted-foreground font-mono">
+                                {entry.item.code}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -336,10 +392,14 @@ const Balance = () => {
                             {entry.item.color.hex && (
                               <span
                                 className="w-3 h-3 rounded-full border border-border flex-shrink-0"
-                                style={{ backgroundColor: `#${entry.item.color.hex}` }}
+                                style={{
+                                  backgroundColor: `#${entry.item.color.hex}`,
+                                }}
                               />
                             )}
-                            <span className="text-sm">{entry.item.color.name}</span>
+                            <span className="text-sm">
+                              {entry.item.color.name}
+                            </span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
@@ -350,9 +410,13 @@ const Balance = () => {
                         <div className="flex items-center gap-1.5">
                           <Warehouse className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                           <div>
-                            <p className="font-medium text-sm">{entry.warehouse?.name}</p>
+                            <p className="font-medium text-sm">
+                              {entry.warehouse?.name}
+                            </p>
                             {entry.warehouse?.branch?.name && (
-                              <p className="text-xs text-muted-foreground">{entry.warehouse.branch.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {entry.warehouse.branch.name}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -370,17 +434,25 @@ const Balance = () => {
 
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {belowMin && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
-                          <span className={`font-semibold ${belowMin ? "text-red-600" : ""}`}>
+                          {belowMin && (
+                            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                          )}
+                          <span
+                            className={`font-semibold ${belowMin ? "text-red-600" : ""}`}
+                          >
                             {formatNumber(qty)}
                           </span>
-                          <span className="text-muted-foreground text-xs">{unit}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {unit}
+                          </span>
                         </div>
                       </TableCell>
 
                       <TableCell className="text-right">
                         {minQty != null ? (
-                          <span className={`font-medium ${belowMin ? "text-red-500" : "text-muted-foreground"}`}>
+                          <span
+                            className={`font-medium ${belowMin ? "text-red-500" : "text-muted-foreground"}`}
+                          >
                             {formatNumber(minQty)}
                           </span>
                         ) : (
@@ -391,8 +463,12 @@ const Balance = () => {
                       <TableCell className="text-right">
                         {entry.item?.price ? (
                           <div>
-                            <p className="font-medium">{formatNumber(entry.item.price)}</p>
-                            <p className="text-xs text-muted-foreground">{entry.item.currency?.name}</p>
+                            <p className="font-medium">
+                              {formatNumber(entry.item.price)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {entry.item.currency?.name}
+                            </p>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
@@ -403,7 +479,6 @@ const Balance = () => {
                 })}
               </TableBody>
             </Table>
-
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -417,7 +492,12 @@ const Balance = () => {
                 : "Hali hech qanday balans ma'lumoti yo'q"}
             </p>
             {activeFilterCount > 0 && (
-              <Button variant="outline" size="sm" className="mt-4" onClick={resetFilters}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={resetFilters}
+              >
                 Filtrlarni tozalash
               </Button>
             )}
@@ -427,7 +507,9 @@ const Balance = () => {
 
       {/* Infinite scroll sentinel */}
       <div ref={sentinelRef} className="flex justify-center py-2">
-        {loadingMore && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+        {loadingMore && (
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        )}
       </div>
 
       {/* ── Image dialog ── */}
