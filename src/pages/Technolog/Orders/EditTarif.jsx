@@ -529,9 +529,15 @@ const EditTarif = () => {
             </tr>
           </thead>
           <tbody>
-            {tarif?.tarifications
-              ?.map((item, index) => (
-                <tr key={index}>
+            {(() => {
+              const nameCount = {};
+              tarif?.tarifications?.forEach((t) => {
+                if (t.name) nameCount[t.name] = (nameCount[t.name] || 0) + 1;
+              });
+              return tarif?.tarifications?.map((item, index) => {
+                const isRedRow = parseFloat(item?.second) === 1 || (item?.name && nameCount[item.name] > 1);
+                return (
+                <tr key={index} className={isRedRow ? "bg-red-50 text-red-600" : ""}>
                   <td className="px-4 py-2 border text-center">{index + 1}</td>
                   <td className="px-4 py-2 border">
                     <Input
@@ -763,7 +769,9 @@ const EditTarif = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              });
+            })()}
           </tbody>
         </table>
       </div>
