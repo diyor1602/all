@@ -43,6 +43,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import ModelImages from "@/components/ModelImages";
 import formatNumber from "@/utils/formatNumber";
 
@@ -1545,15 +1546,11 @@ const OrderView = () => {
                                   {tarification?.name}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                  <Badge
-                                    variant="outline"
-                                    className={
-                                      tarification.status
-                                        ? `bg-green-500 text-white border-green-500`
-                                        : `bg-red-500 text-white border-red-500`
-                                    }
-                                    onClick={() => {
-                                      if (!statusChanging) {
+                                  <div className="flex items-center gap-2">
+                                    <Switch
+                                      checked={!!tarification.status}
+                                      disabled={statusChanging}
+                                      onCheckedChange={() => {
                                         if (
                                           window.confirm(
                                             "Statusini o'zgartirishni tasdiqlaysizmi?",
@@ -1561,15 +1558,24 @@ const OrderView = () => {
                                         ) {
                                           handleStatusChange(tarification);
                                         }
-                                      }
-                                    }}
-                                  >
-                                    {statusChanging
-                                      ? "Saqlanmoqda"
-                                      : tarification?.status
-                                        ? "Tayyor"
-                                        : "Tayyor emas"}
-                                  </Badge>
+                                      }}
+                                    />
+                                    <span
+                                      className={`text-xs font-semibold px-2 py-0.5 rounded-full text-white ${
+                                        statusChanging
+                                          ? "bg-gray-400"
+                                          : tarification?.status
+                                            ? "bg-green-500"
+                                            : "bg-red-500"
+                                      }`}
+                                    >
+                                      {statusChanging
+                                        ? "Saqlanmoqda"
+                                        : tarification?.status
+                                          ? "Tayyor"
+                                          : "Tayyor emas"}
+                                    </span>
+                                  </div>
                                   <Badge
                                     variant="outline"
                                     className="cursor-pointer bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
