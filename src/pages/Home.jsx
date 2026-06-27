@@ -11,7 +11,7 @@ const roleComponents = {
 const Home = () => {
   const role = localStorage.getItem("role");
 
-  const Component = roleComponents[role] || DailyResults;
+  const Component = (role && Object.hasOwn(roleComponents, role) ? roleComponents[role] : null) || DailyResults;
 
   return <Component />;
 };
