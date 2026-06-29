@@ -170,11 +170,11 @@ const SalaryHistory = () => {
                     <td className="px-3 py-1 border border-gray-200">
                       <div className="text-xs font-medium text-gray-900">
                         {salary.created_at
-                          ?.split("T")[0]
+                          ?.split(" ")[0]
                           ?.split("-")
                           ?.reverse()
                           ?.join(".")}{" "}
-                        {salary.created_at?.split("T")[1]?.slice(0, 5)}
+                        {salary.created_at?.split(" ")[1]?.slice(0, 5)}
                       </div>
                     </td>
                   </tr>
