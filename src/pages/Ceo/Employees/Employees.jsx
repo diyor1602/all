@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/pagination";
 import {
   Eye,
-  EyeOff,
   Pencil,
   RotateCcw,
   Search,
@@ -204,27 +203,6 @@ const Employees = () => {
       type: "all",
     });
     setGroups([]);
-    fetchEmployees();
-  };
-
-  const toggleSalaryVisible = async (employee) => {
-    if (employee.salary_visible) {
-      if (!window.confirm("Xodimning maoshi barchadan berkitilsinmi?")) return;
-      await api.patch(`/ceo/employees/${employee.id}`, {
-        salary_visible: false,
-        group_id: employee.group?.id,
-        department_id: employee.department?.id,
-        status: employees.data.find((emp) => emp.id === employee.id).status,
-      });
-    } else {
-      if (!window.confirm("Xodimning maoshi barchaga ko'rsatilsinmi?")) return;
-      await api.patch(`/ceo/employees/${employee.id}`, {
-        salary_visible: true,
-        group_id: employee.group?.id,
-        department_id: employee.department?.id,
-        status: employees.data.find((emp) => emp.id === employee.id).status,
-      });
-    }
     fetchEmployees();
   };
 
@@ -639,7 +617,6 @@ const Employees = () => {
             <TableHead className="border">Lavozimi</TableHead>
             <TableHead className="border">To'lov turi</TableHead>
             <TableHead className="border">Maosh</TableHead>
-            <TableHead className="border"></TableHead>
             <TableHead className="border">KPI</TableHead>
             <TableHead className="border">Holati</TableHead>
             <TableHead className="border">Amallar</TableHead>
@@ -711,19 +688,6 @@ const Employees = () => {
                   {Number.parseFloat(employee?.salary || 0)?.toLocaleString(
                     "ru-RU",
                   )}
-                </TableCell>
-                <TableCell className="border">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggleSalaryVisible(employee)}
-                  >
-                    {employee?.salary_visible ? (
-                      <Eye className="text-blue-500" />
-                    ) : (
-                      <EyeOff className="text-red-500" />
-                    )}
-                  </Button>
                 </TableCell>
                 <TableCell className="border">
                   {Number.parseFloat(employee?.bonus || 0)?.toLocaleString(

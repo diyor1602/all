@@ -225,7 +225,7 @@ const Employees = () => {
         `/groupMaster/employees/export-excel?${params.toString()}`,
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create a blob URL and trigger download
@@ -234,7 +234,7 @@ const Employees = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`
+        `xodimlar_${new Date().toISOString().split("T")[0]}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -398,16 +398,12 @@ const Employees = () => {
                   </div>
                 </TableCell>
                 <TableCell className="border">
-                  {employee.salary_visible
-                    ? payment_types[employee.payment_type]
-                    : "-"}
+                  {payment_types[employee.payment_type]}
                 </TableCell>
                 <TableCell className="border">
-                  {employee.salary_visible
-                    ? Number.parseFloat(employee?.salary || 0)?.toLocaleString(
-                        "ru-RU"
-                      )
-                    : "-"}
+                  {Number.parseFloat(employee?.salary || 0)?.toLocaleString(
+                    "ru-RU",
+                  )}
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}
@@ -475,7 +471,7 @@ const Employees = () => {
                 }
 
                 return null;
-              }
+              },
             )}
 
             <PaginationItem>

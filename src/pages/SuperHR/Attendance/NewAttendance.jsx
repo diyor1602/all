@@ -106,7 +106,7 @@ const NewAttendance = () => {
 
   const [filters, setFilters] = useState(initialFilters);
   const [selectedMonth, setSelectedMonth] = useState(
-    filters.start_date.substring(0, 7)
+    filters.start_date.substring(0, 7),
   );
   const [loading, setLoading] = useState(false);
   const [employeeData, setEmployeeData] = useState(null);
@@ -164,7 +164,7 @@ const NewAttendance = () => {
 
   const handleAbsent = async (date) => {
     const isAbsent = window.confirm(
-      `${employeeData.name} ni kelmadi qilishga rozimisiz?`
+      `${employeeData.name} ni kelmadi qilishga rozimisiz?`,
     );
     if (!date) {
       toast({
@@ -209,7 +209,7 @@ const NewAttendance = () => {
 
       const localDate = new Date(checkInDate);
       const isoWithTimezone = new Date(
-        localDate.getTime() - localDate.getTimezoneOffset() * 60000
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000,
       )
         .toISOString()
         .replace("Z", "+05:00");
@@ -248,13 +248,13 @@ const NewAttendance = () => {
 
       const localDate = new Date(checkOutDate);
       const isoWithTimezone = new Date(
-        localDate.getTime() - localDate.getTimezoneOffset() * 60000
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000,
       )
         .toISOString()
         .replace("Z", "+05:00");
 
       const attendanceRecord = employeeData.attendances.find(
-        (a) => a.date === date
+        (a) => a.date === date,
       );
 
       if (!attendanceRecord) {
@@ -493,22 +493,20 @@ const NewAttendance = () => {
                       </div>
                     </td>
                     <td className="border border-gray-300 p-1 text-center">
-                      {employeeData?.salary_visible
-                        ? employeeData?.attendance_salaries?.find(
-                            (att) => att.date === key
-                          )?.amount && (
-                            <div>
-                              {parseFloat(
-                                employeeData?.attendance_salaries?.find(
-                                  (att) => att.date === key
-                                )?.amount
-                              )?.toLocaleString("ru-RU", {
-                                maximumFractionDigits: 0,
-                              })}{" "}
-                              so'm
-                            </div>
-                          )
-                        : "-"}
+                      {employeeData?.attendance_salaries?.find(
+                        (att) => att.date === key,
+                      )?.amount && (
+                        <div>
+                          {parseFloat(
+                            employeeData?.attendance_salaries?.find(
+                              (att) => att.date === key,
+                            )?.amount,
+                          )?.toLocaleString("ru-RU", {
+                            maximumFractionDigits: 0,
+                          })}{" "}
+                          so'm
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -522,7 +520,7 @@ const NewAttendance = () => {
               </td>
               <td className="border border-gray-300 p-1 text-center">
                 {employeeData?.attendances?.filter(
-                  (att) => att.status === "present"
+                  (att) => att.status === "present",
                 ).length || 0}
               </td>
               <td
@@ -532,16 +530,14 @@ const NewAttendance = () => {
                 Jami:
               </td>
               <td className="border border-gray-300 p-1 text-center">
-                {employeeData?.salary_visible
-                  ? `${employeeData?.attendance_salaries
-                      ?.reduce(
-                        (sum, item) => sum + (parseFloat(item.amount) || 0),
-                        0
-                      )
-                      .toLocaleString("ru-RU", {
-                        maximumFractionDigits: 0,
-                      })} so'm`
-                  : "-"}
+                {`${employeeData?.attendance_salaries
+                  ?.reduce(
+                    (sum, item) => sum + (parseFloat(item.amount) || 0),
+                    0,
+                  )
+                  .toLocaleString("ru-RU", {
+                    maximumFractionDigits: 0,
+                  })} so'm`}
               </td>
             </tr>
           </tbody>
