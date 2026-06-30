@@ -24,6 +24,7 @@ const damageRoles = ["universalTailor", "tailor"];
 
 export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const { logout } = useAuth();
   const location = useLocation();
 
@@ -57,6 +58,7 @@ export default function BaseLayout({ children, navigation }) {
   }, []);
 
   const handleLogout = async () => {
+    setLoggingOut(true);
     try {
       await api.post("/logout");
       logout();
@@ -119,6 +121,12 @@ export default function BaseLayout({ children, navigation }) {
 
   return (
     <div className="min-h-screen bg-gray-50 pointer-events-auto">
+      {loggingOut && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent mb-4" />
+          <p className="text-sm font-medium text-gray-600">Ma'lumotlar saqlanmoqda...</p>
+        </div>
+      )}
       {/* Sidebar trigger button for mobile */}
       {!isChatPage && (
         <div className="lg:hidden fixed top-4 right-4 z-50">
