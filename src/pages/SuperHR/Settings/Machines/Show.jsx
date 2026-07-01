@@ -69,7 +69,7 @@ const Show = () => {
       status: true,
     });
     try {
-      await api.post(`/superhr/employeeTransport`, {
+      await api.post(`/superhr/transports/employeeTransport`, {
         employee_id: employee.id,
         transport_id: id,
       });
@@ -104,7 +104,7 @@ const Show = () => {
       status: true,
     });
     try {
-      await api.delete(`/superhr/employeeTransport`, {
+      await api.delete(`/superhr/transports/employeeTransport`, {
         data: {
           employee_id: employee.id,
         },
