@@ -13,6 +13,7 @@ import {
   Lock,
   AlarmClockPlus,
   Wrench,
+  Coins,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 import Nakladnoy from "./Nakladnoy";
@@ -22,6 +23,7 @@ import TarifSearch from "./TarifSearch";
 import Result from "./Result/Result";
 import ResultView from "./Result/ResultView";
 import Damages from "./Damages/Damages";
+import SalaryPage from "./SalaryPage";
 
 const Settings = () => {
   return (
@@ -35,6 +37,7 @@ const Settings = () => {
       <Route path="result" element={<Result />} />
       <Route path="result/:id" element={<ResultView />} />
       <Route path="damages" element={<Damages />} />
+      <Route path="salary" element={<SalaryPage />} />
     </Routes>
   );
 };
@@ -106,6 +109,12 @@ const SettingsPage = () => {
       icon: Wrench,
       link: "/internalAccountant/settings/damages",
       color: "bg-yellow-500",
+    },
+    {
+      name: "Oylik jadval",
+      icon: Coins,
+      link: "/internalAccountant/settings/salary",
+      color: "bg-emerald-500",
     },
   ];
 
