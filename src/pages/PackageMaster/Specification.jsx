@@ -315,13 +315,22 @@ const Specification = () => {
 
     setIsSending(true);
     try {
+      const APIURL = import.meta.env.VITE_API_URL_J;
       const response = await api.post("/packageMaster/packageStore", payload);
 
       if (response?.data?.url) {
+        let fileUrl = response.data.url;
+
+        // If it's a relative URL, prepend the API URL
+        if (!/^https?:\/\//i.test(fileUrl)) {
+          fileUrl = `${APIURL.replace(/\/$/, "")}/${fileUrl.replace(/^\//, "")}`;
+        }
+
         const link = document.createElement("a");
-        link.href = response.data.url;
+        link.href = fileUrl;
         link.target = "_blank";
-        link.download = response.data.url.split("/").pop() || "download.zip";
+        link.download = fileUrl.split("/").pop() || "download.zip";
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
