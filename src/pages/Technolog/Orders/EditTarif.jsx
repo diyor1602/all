@@ -434,6 +434,7 @@ const EditTarif = () => {
         submodel_id: tarif.submodel_id,
         region: selectedTarifLang,
         tarifications: tarificationsToSubmit,
+        status: tarif.status,
       });
 
       toast({
@@ -518,7 +519,12 @@ const EditTarif = () => {
           <thead>
             <tr>
               <th className="px-4 py-2 border">#</th>
-              <th className="px-4 py-2 border" title="Tartib raqami — saralash uchun">Tartib №</th>
+              <th
+                className="px-4 py-2 border"
+                title="Tartib raqami — saralash uchun"
+              >
+                Tartib №
+              </th>
               <th className="px-4 py-2 border">Kodi</th>
               <th className="px-4 py-2 border">Nomi</th>
               <th className="px-4 py-2 border">Xodim</th>
@@ -535,161 +541,174 @@ const EditTarif = () => {
                 if (t.name) nameCount[t.name] = (nameCount[t.name] || 0) + 1;
               });
               return tarif?.tarifications?.map((item, index) => {
-                const isRedRow = parseFloat(item?.second) === 1 || (item?.name && nameCount[item.name] > 1);
+                const isRedRow =
+                  parseFloat(item?.second) === 1 ||
+                  (item?.name && nameCount[item.name] > 1);
                 return (
-                <tr key={index} className={isRedRow ? "bg-red-50 text-red-600" : ""}>
-                  <td className="px-4 py-2 border text-center">{index + 1}</td>
-                  <td className="px-4 py-2 border">
-                    <Input
-                      type="number"
-                      className="w-16 text-center"
-                      value={item?.number ?? ""}
-                      placeholder="—"
-                      min={1}
-                      onChange={(e) =>
-                        handleInputChange(
-                          index,
-                          "number",
-                          e.target.value === "" ? null : parseInt(e.target.value),
-                        )
-                      }
-                    />
-                  </td>
-                  <td className="px-4 py-2 border">{item?.code || "-"}</td>
-                  <td className="px-4 py-2 border">
-                    <Input
-                      placeholder="Nomi"
-                      className="min-w-[400px]"
-                      type="text"
-                      value={item?.name || ""}
-                      onChange={(e) => {
-                        // Get the selected option from the datalist
-                        const input = e.target;
-                        const value = input.value;
-                        const options =
-                          document.getElementById("nomi-options").options;
-                        let selectedName = value;
-
-                        // Check if the selected value matches any option with seconds
-                        for (let i = 0; i < options.length; i++) {
-                          if (options[i].value === value) {
-                            // Use the data-value attribute if it exists (contains just the name)
-                            selectedName =
-                              options[i].dataset.value || value.split(" (")[0];
-                            break;
-                          }
+                  <tr
+                    key={index}
+                    className={isRedRow ? "bg-red-50 text-red-600" : ""}
+                  >
+                    <td className="px-4 py-2 border text-center">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 py-2 border">
+                      <Input
+                        type="number"
+                        className="w-16 text-center"
+                        value={item?.number ?? ""}
+                        placeholder="—"
+                        min={1}
+                        onChange={(e) =>
+                          handleInputChange(
+                            index,
+                            "number",
+                            e.target.value === ""
+                              ? null
+                              : parseInt(e.target.value),
+                          )
                         }
+                      />
+                    </td>
+                    <td className="px-4 py-2 border">{item?.code || "-"}</td>
+                    <td className="px-4 py-2 border">
+                      <Input
+                        placeholder="Nomi"
+                        className="min-w-[400px]"
+                        type="text"
+                        value={item?.name || ""}
+                        onChange={(e) => {
+                          // Get the selected option from the datalist
+                          const input = e.target;
+                          const value = input.value;
+                          const options =
+                            document.getElementById("nomi-options").options;
+                          let selectedName = value;
 
-                        handleInputChange(index, "name", selectedName);
-                      }}
-                      ref={
-                        index === tarif.tarifications.length - 1
-                          ? newRowRef
-                          : null
-                      }
-                      list="nomi-options"
-                    />
-                    {index === 0 && (
-                      <datalist id="nomi-options">
-                        {Array.from(
-                          new Set(
-                            tarif.tarifications
-                              .map((t) => t.name)
-                              .filter(Boolean),
-                          ),
-                        ).map((name, idx) => (
-                          <option key={idx} value={name} data-value={name} />
-                        ))}
-                        {lastTarifs?.map((tarif, idx) => {
-                          const displayValue = `${tarif?.name} (${tarif?.second})`;
-                          return (
-                            <option
-                              key={idx}
-                              value={displayValue}
-                              data-value={tarif?.name}
-                            />
-                          );
-                        })}
-                      </datalist>
-                    )}
-                  </td>
-                  <td className="px-4 py-2 border">
-                    <div className="flex items-center gap-1">
-                      <Popover
-                        open={activePopoverIndex === `worker-${index}`}
-                        onOpenChange={(open) =>
-                          setActivePopoverIndex(open ? `worker-${index}` : null)
-                        }
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={
-                              activePopoverIndex === `worker-${index}`
+                          // Check if the selected value matches any option with seconds
+                          for (let i = 0; i < options.length; i++) {
+                            if (options[i].value === value) {
+                              // Use the data-value attribute if it exists (contains just the name)
+                              selectedName =
+                                options[i].dataset.value ||
+                                value.split(" (")[0];
+                              break;
                             }
-                            className="justify-between"
-                          >
-                            {item?.employee?.id
-                              ? workers.find(
-                                  (worker) => worker.id === item.employee.id,
-                                )?.name || "Xodimni tanlang"
-                              : item?.employee_id
-                                ? workers.find(
-                                    (worker) => worker.id === item.employee_id,
-                                  )?.name || "Xodimni tanlang"
-                                : "Xodimni tanlang"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[200px] p-0">
-                          <Command>
-                            <CommandInput
-                              placeholder="Qidirish..."
-                              className="h-9"
-                            />
-                            <CommandList>
-                              <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
-                              <CommandGroup>
-                                {workers.map((worker) => (
-                                  <CommandItem
-                                    key={worker.id}
-                                    value={worker.name}
-                                    onSelect={() =>
-                                      handleWorkerSelect(index, worker.id)
-                                    }
-                                  >
-                                    {worker.name}
-                                    <Check
-                                      className={cn(
-                                        "ml-auto h-4 w-4",
-                                        item?.employee?.id === worker.id ||
-                                          item?.employee_id === worker.id
-                                          ? "opacity-100"
-                                          : "opacity-0",
-                                      )}
-                                    />
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      {(item?.employee_id || item?.employee?.id) && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
-                          onClick={() => handleWorkerClear(index)}
-                          title="Xodimni o'chirish"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                          }
+
+                          handleInputChange(index, "name", selectedName);
+                        }}
+                        ref={
+                          index === tarif.tarifications.length - 1
+                            ? newRowRef
+                            : null
+                        }
+                        list="nomi-options"
+                      />
+                      {index === 0 && (
+                        <datalist id="nomi-options">
+                          {Array.from(
+                            new Set(
+                              tarif.tarifications
+                                .map((t) => t.name)
+                                .filter(Boolean),
+                            ),
+                          ).map((name, idx) => (
+                            <option key={idx} value={name} data-value={name} />
+                          ))}
+                          {lastTarifs?.map((tarif, idx) => {
+                            const displayValue = `${tarif?.name} (${tarif?.second})`;
+                            return (
+                              <option
+                                key={idx}
+                                value={displayValue}
+                                data-value={tarif?.name}
+                              />
+                            );
+                          })}
+                        </datalist>
                       )}
-                    </div>
-                  </td>
-                  {/* <td className="px-4 py-2 border">
+                    </td>
+                    <td className="px-4 py-2 border">
+                      <div className="flex items-center gap-1">
+                        <Popover
+                          open={activePopoverIndex === `worker-${index}`}
+                          onOpenChange={(open) =>
+                            setActivePopoverIndex(
+                              open ? `worker-${index}` : null,
+                            )
+                          }
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={
+                                activePopoverIndex === `worker-${index}`
+                              }
+                              className="justify-between"
+                            >
+                              {item?.employee?.id
+                                ? workers.find(
+                                    (worker) => worker.id === item.employee.id,
+                                  )?.name || "Xodimni tanlang"
+                                : item?.employee_id
+                                  ? workers.find(
+                                      (worker) =>
+                                        worker.id === item.employee_id,
+                                    )?.name || "Xodimni tanlang"
+                                  : "Xodimni tanlang"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[200px] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Qidirish..."
+                                className="h-9"
+                              />
+                              <CommandList>
+                                <CommandEmpty>Xodimlar topilmadi.</CommandEmpty>
+                                <CommandGroup>
+                                  {workers.map((worker) => (
+                                    <CommandItem
+                                      key={worker.id}
+                                      value={worker.name}
+                                      onSelect={() =>
+                                        handleWorkerSelect(index, worker.id)
+                                      }
+                                    >
+                                      {worker.name}
+                                      <Check
+                                        className={cn(
+                                          "ml-auto h-4 w-4",
+                                          item?.employee?.id === worker.id ||
+                                            item?.employee_id === worker.id
+                                            ? "opacity-100"
+                                            : "opacity-0",
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {(item?.employee_id || item?.employee?.id) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                            onClick={() => handleWorkerClear(index)}
+                            title="Xodimni o'chirish"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                    {/* <td className="px-4 py-2 border">
                     <Input
                       type="text"
                       value={item?.video_id}
@@ -698,77 +717,80 @@ const EditTarif = () => {
                       }
                     />
                   </td> */}
-                  <td className="px-4 py-2 border">
-                    <Select
-                      value={(
-                        item?.razryad_id || item?.razryad?.id
-                      )?.toString()}
-                      onValueChange={(value) =>
-                        handleRazryadSelect(index, parseInt(value))
-                      }
-                    >
-                      <SelectTrigger className="w-fit">
-                        <SelectValue placeholder="Razryadni tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {ranks
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((rank) => (
-                              <SelectItem
-                                key={rank.id}
-                                value={rank.id.toString()}
-                              >
-                                {rank.name}
-                              </SelectItem>
-                            ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="px-4 py-2 border">
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="number"
-                        className="w-24"
-                        value={item?.second}
-                        onChange={(e) =>
-                          handleSecondChange(index, parseFloat(e.target.value))
+                    <td className="px-4 py-2 border">
+                      <Select
+                        value={(
+                          item?.razryad_id || item?.razryad?.id
+                        )?.toString()}
+                        onValueChange={(value) =>
+                          handleRazryadSelect(index, parseInt(value))
                         }
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                        onClick={() => openTimerDialog(index)}
-                        title="Vaqtni o'lchash"
                       >
-                        <Timer className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2 border">
-                    <div className="flex items-center justify-between">
-                      <span>
-                        {parseFloat(item?.summa).toLocaleString("en-US", {
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteRow(index);
-                        }}
-                        title="O'chirish"
-                      >
-                        <Trash className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                        <SelectTrigger className="w-fit">
+                          <SelectValue placeholder="Razryadni tanlang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {ranks
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map((rank) => (
+                                <SelectItem
+                                  key={rank.id}
+                                  value={rank.id.toString()}
+                                >
+                                  {rank.name}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-4 py-2 border">
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="number"
+                          className="w-24"
+                          value={item?.second}
+                          onChange={(e) =>
+                            handleSecondChange(
+                              index,
+                              parseFloat(e.target.value),
+                            )
+                          }
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                          onClick={() => openTimerDialog(index)}
+                          title="Vaqtni o'lchash"
+                        >
+                          <Timer className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 border">
+                      <div className="flex items-center justify-between">
+                        <span>
+                          {parseFloat(item?.summa).toLocaleString("en-US", {
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteRow(index);
+                          }}
+                          title="O'chirish"
+                        >
+                          <Trash className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
                 );
               });
             })()}
