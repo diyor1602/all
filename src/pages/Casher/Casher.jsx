@@ -5,13 +5,13 @@ import Requests from "./Requests/Requests";
 import Transfer from "./Transfer/Transfer";
 import Salary from "./Salary/Salary";
 import Employees from "./Employees/Employees";
-import Balancer from "./Outcome/Balancer";
+import Outcome from "./Outcome/Outcome";
 
 const Casher = () => {
   return (
     <Routes>
       <Route path="income/*" element={<Income />} />
-      <Route path="outcome/*" element={<Balancer />} />
+      <Route path="outcome/*" element={<Outcome />} />
       <Route path="balance/*" element={<Balance />} />
       <Route path="requests/*" element={<Requests />} />
       <Route path="transfer" element={<Transfer />} />
