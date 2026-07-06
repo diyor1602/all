@@ -31,7 +31,7 @@ const Outcome = () => {
 
   const [filters, setFilters] = useState({
     start_date: formatDateToYYYYMMDD(
-      new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     ),
     end_date: formatDateToYYYYMMDD(new Date()),
     search: "",
@@ -137,7 +137,7 @@ const Outcome = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `Chiqimlar_${debouncedFilters.start_date}_${debouncedFilters.end_date}.xlsx`
+        `Chiqimlar_${debouncedFilters.start_date}_${debouncedFilters.end_date}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -232,19 +232,20 @@ const Outcome = () => {
               <th className="px-4 py-3 border">Miqdori</th>
               <th className="px-4 py-3 border">Maxsulot yoki shaxs ismi</th>
               <th className="px-4 py-3 border">Ochiqlama</th>
+              <th className="px-4 py-3 border">Manba</th>
               <th className="px-4 py-3 border">Chiqim qiluvchi</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="text-center py-8">
+                <td colSpan={9} className="text-center py-8">
                   <Loader2 className="mx-auto animate-spin h-6 w-6 text-gray-500" />
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-6">
+                <td colSpan={9} className="text-center py-6">
                   Hech qanday ma'lumot topilmadi.
                 </td>
               </tr>
@@ -256,7 +257,7 @@ const Outcome = () => {
                     key={index}
                     className={cn(
                       "hover:bg-gray-50",
-                      index % 2 === 0 && "bg-gray-50"
+                      index % 2 === 0 && "bg-gray-50",
                     )}
                   >
                     <td className="px-4 py-2 border text-center">
@@ -266,8 +267,8 @@ const Outcome = () => {
                       {item?.date?.split("-").reverse().join(".")}
                     </td>
                     <td className="px-4 py-2 border">
-                      {parseFloat(item?.amount).toLocaleString("ru-Ru", {
-                        maximumFractionDigits: 0,
+                      {parseFloat(item?.amount).toLocaleString("ru-RU", {
+                        maximumFractionDigits: 2,
                       })}{" "}
                       {item?.currency?.name}
                     </td>
@@ -296,6 +297,17 @@ const Outcome = () => {
                       }}
                     >
                       {item?.comment || "-"}
+                    </td>
+                    <td className="px-4 py-2 border">
+                      {item?.sources?.length > 0
+                        ? item.sources.map((s, i) => (
+                            <div key={i}>
+                              {i + 1}. {s.income_purpose} (
+                              {parseFloat(s.amount).toLocaleString("ru-RU")}{" "}
+                              {item.currency?.name})
+                            </div>
+                          ))
+                        : "-"}
                     </td>
                     <td className="px-4 py-2 border">
                       {item?.via?.name || "-"}
