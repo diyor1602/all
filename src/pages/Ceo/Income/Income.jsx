@@ -352,6 +352,19 @@ const Income = () => {
                                 })}{" "}
                               {item.currency?.name}
                             </div>
+                            <div className="text-xs text-green-600">
+                              Qoldiq:{" "}
+                              {(
+                                parseFloat(item.amount) -
+                                item.used_by.reduce(
+                                  (sum, u) => sum + parseFloat(u.amount),
+                                  0,
+                                )
+                              ).toLocaleString("ru-RU", {
+                                maximumFractionDigits: 2,
+                              })}{" "}
+                              {item.currency?.name}
+                            </div>
                             <button
                               onClick={() =>
                                 setExpandedRows((prev) => ({
