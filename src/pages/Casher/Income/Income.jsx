@@ -341,6 +341,17 @@ const Income = () => {
                                 %
                               </span>
                             </div>
+                            <div className="text-xs text-gray-600">
+                              {item.used_by
+                                .reduce(
+                                  (sum, u) => sum + parseFloat(u.amount),
+                                  0,
+                                )
+                                .toLocaleString("ru-RU", {
+                                  maximumFractionDigits: 2,
+                                })}{" "}
+                              {item.currency?.name}
+                            </div>
                             <button
                               onClick={() =>
                                 setExpandedRows((prev) => ({
