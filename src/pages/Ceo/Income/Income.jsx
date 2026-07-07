@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -260,7 +260,7 @@ const Income = () => {
               data
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map((item, index) => (
-                  <>
+                  <React.Fragment key={index}>
                     <tr
                       key={index}
                       className={cn(
@@ -433,7 +433,7 @@ const Income = () => {
                           </td>
                         </tr>
                       )}
-                  </>
+                  </React.Fragment>
                 ))
             )}
           </tbody>
