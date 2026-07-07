@@ -38,6 +38,7 @@ import {
   PlusCircle,
   CheckCircle,
   Trash2,
+  Magnet,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Label } from "@/components/ui/label";
@@ -1557,19 +1558,43 @@ const SalaryPage = () => {
                             <Label className="text-[11px] text-gray-500">
                               Kiritilayotgan summa
                             </Label>
-                            <Input
-                              type="number"
-                              size="sm"
-                              className="h-8 py-1 text-sm"
-                              placeholder="Miqdor"
-                              value={targetSelection.allocatedAmount}
-                              onChange={(e) =>
-                                handleAllocatedAmountChange(
-                                  source.id,
-                                  e.target.value,
-                                )
-                              }
-                            />
+                            <div className="flex gap-1">
+                              <Input
+                                type="number"
+                                size="sm"
+                                className="h-8 py-1 text-sm bg-white"
+                                placeholder="Miqdor"
+                                value={targetSelection.allocatedAmount}
+                                onChange={(e) =>
+                                  handleAllocatedAmountChange(
+                                    source.id,
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  const remainingNeeded =
+                                    parseFloat(paymentForm.amount) -
+                                    totalSelectedAmount;
+                                  const amountToFill = Math.min(
+                                    remainingNeeded,
+                                    source.remaining_amount,
+                                  );
+                                  handleAllocatedAmountChange(
+                                    source.id,
+                                    amountToFill,
+                                  );
+                                }}
+                                title="Qoldiqni avtomatik to'ldirish"
+                              >
+                                <Magnet className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         )}
                         <Button
