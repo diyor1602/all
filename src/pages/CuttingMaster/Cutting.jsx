@@ -19,8 +19,6 @@ import {
   AlertCircle,
   Tag,
   ShoppingBag,
-  Clock,
-  User,
   RulerIcon,
   Calendar,
   Snowflake,
@@ -28,7 +26,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { statuses } from "@/lib/status";
 import {
   Select,
   SelectContent,
@@ -51,19 +48,10 @@ const Cutting = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const [cuttingResponse, activeResponse] = await Promise.all([
-        api.get("/cuttingMaster/orders", {
-          // params: { status: "cutting" },
-        }),
-        // api.get("/cuttingMaster/orders", {
-        //   params: { status: "active" },
-        // }),
-      ]);
+      const cuttingResponse = await api.get("/cuttingMaster/orders");
 
-      // const allOrders = [...cuttingResponse.data, ...activeResponse.data];
-      const allOrders = [...cuttingResponse.data];
-      setOrders(allOrders);
-      setFilteredOrders(allOrders);
+      setOrders(cuttingResponse.data);
+      setFilteredOrders(cuttingResponse.data);
     } catch (error) {
       toast({
         title: "Xatolik",
@@ -512,78 +500,6 @@ const Cutting = () => {
                                 </div>
                               );
                             })()}
-                        </div>
-
-                        <div className="mt-6 pt-4 border-t border-gray-200">
-                          <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center">
-                            <Clock className="h-4 w-4 mr-2 text-purple-600" />
-                            Vaqt ma'lumotlari
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-purple-50 p-4 rounded-lg border border-purple-100">
-                            <div>
-                              <div className="text-xs font-semibold text-gray-500 mb-1">
-                                Reja vaqti
-                              </div>
-                              <div className="text-sm font-medium">
-                                {order?.order_printing_time?.planned_time
-                                  ? new Date(
-                                      order?.order_printing_time?.planned_time,
-                                    ).toLocaleString("en-GB")
-                                  : "Belgilanmagan"}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-xs font-semibold text-gray-500 mb-1">
-                                Status
-                              </div>
-                              <Badge
-                                className={`${
-                                  order?.order_printing_time?.status ===
-                                  "completed"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-amber-100 text-amber-800"
-                                }`}
-                              >
-                                {statuses[order?.order_printing_time?.status]
-                                  ?.text ||
-                                  order?.order_printing_time?.status ||
-                                  "Belgilanmagan"}
-                              </Badge>
-                            </div>
-                            <div>
-                              <div className="text-xs font-semibold text-gray-500 mb-1">
-                                Bajarilgan vaqti
-                              </div>
-                              <div className="text-sm font-medium">
-                                {order?.order_printing_time?.actual_time
-                                  ? new Date(
-                                      order?.order_printing_time?.actual_time,
-                                    ).toLocaleString("en-GB")
-                                  : "Bajarilmagan"}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-xs font-semibold text-gray-500 mb-1">
-                                <User className="h-3 w-3 inline mr-1" />
-                                Ma'sul
-                              </div>
-                              <div className="text-sm font-medium">
-                                {order?.order_printing_time?.user?.employee
-                                  ?.name || "Belgilanmagan"}
-                              </div>
-                            </div>
-                          </div>
-
-                          {order?.order_printing_time?.comment && (
-                            <div className="mt-3">
-                              <div className="text-xs font-semibold text-gray-500 mb-1">
-                                Izoh
-                              </div>
-                              <div className="text-sm bg-white p-3 rounded-lg border border-gray-200">
-                                {order?.order_printing_time?.comment}
-                              </div>
-                            </div>
-                          )}
                         </div>
 
                         <Button
