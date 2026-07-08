@@ -20,7 +20,6 @@ import {
   Tag,
   ShoppingBag,
   CheckCircle,
-  Shell,
   Clock,
   User,
   RulerIcon,
@@ -89,9 +88,6 @@ const Cutting = () => {
         order?.quantity?.toString().includes(search) ||
         order?.comment?.toLowerCase().includes(search.toLowerCase()) ||
         order?.order_model?.model?.name
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        order?.order_model?.material?.name
           .toLowerCase()
           .includes(search.toLowerCase()),
     );
@@ -283,9 +279,9 @@ const Cutting = () => {
             </motion.div>
           ) : (
             <Accordion type="single" collapsible className="space-y-4">
-              {filteredOrders.map((order) => (
+              {filteredOrders.map((order, index) => (
                 <motion.div
-                  key={order.id}
+                  key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
@@ -385,16 +381,6 @@ const Cutting = () => {
 
                             <div>
                               <h4 className="text-sm font-bold text-gray-700 mb-2 flex items-center">
-                                <Shell className="h-4 w-4 mr-2 text-purple-600" />
-                                Material
-                              </h4>
-                              <div className="font-medium text-gray-800 bg-purple-50 p-3 rounded-lg border border-purple-100">
-                                {order?.order_model?.material?.name}
-                              </div>
-                            </div>
-
-                            <div>
-                              <h4 className="text-sm font-bold text-gray-700 mb-2 flex items-center">
                                 <MessageSquare className="h-4 w-4 mr-2 text-indigo-600" />
                                 Izoh
                               </h4>
@@ -481,8 +467,8 @@ const Cutting = () => {
                                         </tr>
                                       </thead>
                                       <tbody>
-                                        {sizes.map((size) => (
-                                          <tr key={size}>
+                                        {sizes.map((size, index) => (
+                                          <tr key={index}>
                                             <td className="bg-yellow-50 border border-gray-300 p-2 font-medium text-center">
                                               {size}
                                             </td>
