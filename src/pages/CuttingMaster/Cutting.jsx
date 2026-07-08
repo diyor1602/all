@@ -11,7 +11,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import {
   Search,
   Package,
@@ -19,7 +19,6 @@ import {
   AlertCircle,
   Tag,
   ShoppingBag,
-  CheckCircle,
   Clock,
   User,
   RulerIcon,
@@ -513,36 +512,6 @@ const Cutting = () => {
                                 </div>
                               );
                             })()}
-                        </div>
-
-                        <div className="mt-6">
-                          <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                            Instruksiyalar
-                          </h4>
-                          <Card className="bg-green-50 border border-green-100">
-                            <div className="divide-y divide-green-100">
-                              {order?.instructions?.length > 0 ? (
-                                order?.instructions?.map((instruction) => (
-                                  <div
-                                    key={instruction.id}
-                                    className="p-3 flex flex-col"
-                                  >
-                                    <div className="font-medium text-gray-800 mb-1">
-                                      {instruction?.title}
-                                    </div>
-                                    <div className="text-gray-700 text-sm">
-                                      {instruction?.description}
-                                    </div>
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="p-3 text-gray-600">
-                                  Instruksiyalar mavjud emas
-                                </div>
-                              )}
-                            </div>
-                          </Card>
                         </div>
 
                         <div className="mt-6 pt-4 border-t border-gray-200">
