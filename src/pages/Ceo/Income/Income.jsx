@@ -174,6 +174,14 @@ const Income = () => {
         { header: "Kirim qiluvchi", key: "via", width: 20 },
       ];
 
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      headerRow.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4F81BD" },
+      };
+
       worksheet.addRow({
         date: item?.date?.split("-").reverse().join("."),
         amount: parseFloat(item?.amount),
@@ -185,7 +193,13 @@ const Income = () => {
 
       if (item?.used_by && item.used_by.length > 0) {
         worksheet.addRow([]);
-        worksheet.addRow(["Foydalanilgan (Chiqimlar)"]);
+        const sectionRow = worksheet.addRow(["Foydalanilgan (Chiqimlar)"]);
+        sectionRow.font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
+        sectionRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFED7D31" },
+        };
 
         worksheet.columns = [
           { header: "Sabab", key: "expense_purpose", width: 30 },
@@ -193,7 +207,16 @@ const Income = () => {
           { header: "Valyuta", key: "currency", width: 15 },
           { header: "Chiqim ID", key: "expense_transaction_id", width: 15 },
           { header: "Sana", key: "expense_date", width: 15 },
+          { header: "Qabul qiluvchi", key: "destination", width: 30 },
         ];
+
+        const expenseHeaderRow = worksheet.getRow(worksheet.rowCount);
+        expenseHeaderRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        expenseHeaderRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF70AD47" },
+        };
 
         item.used_by.forEach((used) => {
           worksheet.addRow({
@@ -202,6 +225,7 @@ const Income = () => {
             currency: item.currency?.name,
             expense_transaction_id: used.expense_transaction_id,
             expense_date: used.expense_date?.split("-").reverse().join("."),
+            destination: used.destination?.name || "-",
           });
         });
 
@@ -212,16 +236,29 @@ const Income = () => {
         const remaining = parseFloat(item.amount) - totalUsed;
 
         worksheet.addRow([]);
-        worksheet.addRow([
+        const totalRow = worksheet.addRow([
           "Jami foydalanilgan:",
           totalUsed.toLocaleString("ru-RU", { maximumFractionDigits: 2 }),
           item.currency?.name,
         ]);
-        worksheet.addRow([
+        totalRow.font = { bold: true };
+        totalRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFC000" },
+        };
+
+        const remainingRow = worksheet.addRow([
           "Qoldiq:",
           remaining.toLocaleString("ru-RU", { maximumFractionDigits: 2 }),
           item.currency?.name,
         ]);
+        remainingRow.font = { bold: true };
+        remainingRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFC000" },
+        };
       }
 
       const buffer = await workbook.xlsx.writeBuffer();
@@ -518,6 +555,10 @@ const Income = () => {
                                         ?.split("-")
                                         .reverse()
                                         .join(".")}
+                                    </div>
+                                    <div className="text-gray-500">
+                                      Qabul qiluvchi:{" "}
+                                      {used.destination?.name || "-"}
                                     </div>
                                   </div>
                                   <div className="font-semibold text-blue-600">
