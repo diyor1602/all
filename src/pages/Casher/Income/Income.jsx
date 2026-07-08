@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ExcelJS from "exceljs";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -159,6 +160,134 @@ const Income = () => {
     }
   };
 
+  const handleSingleDownload = async (item) => {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Kirim");
+
+      worksheet.columns = [
+        { header: "Sana", key: "date", width: 15 },
+        { header: "Miqdori", key: "amount", width: 20 },
+        { header: "Valyuta", key: "currency", width: 15 },
+        { header: "Manba", key: "source", width: 30 },
+        { header: "Sabab", key: "purpose", width: 30 },
+        { header: "Kirim qiluvchi", key: "via", width: 20 },
+      ];
+
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      headerRow.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4F81BD" },
+      };
+
+      worksheet.addRow({
+        date: item?.date?.split("-").reverse().join("."),
+        amount: parseFloat(item?.amount),
+        currency: item?.currency?.name,
+        source: item?.source || "-",
+        purpose: item?.purpose || "-",
+        via: item?.via?.name || "-",
+      });
+
+      if (item?.used_by && item.used_by.length > 0) {
+        worksheet.addRow([]);
+        const sectionRow = worksheet.addRow(["Foydalanilgan (Chiqimlar)"]);
+        sectionRow.font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
+        sectionRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFED7D31" },
+        };
+
+        worksheet.columns = [
+          { header: "Sabab", key: "expense_purpose", width: 30 },
+          { header: "Miqdori", key: "amount", width: 20 },
+          { header: "Valyuta", key: "currency", width: 15 },
+          { header: "Chiqim ID", key: "expense_transaction_id", width: 15 },
+          { header: "Sana", key: "expense_date", width: 15 },
+          { header: "Qabul qiluvchi", key: "destination", width: 30 },
+        ];
+
+        const expenseHeaderRow = worksheet.getRow(worksheet.rowCount);
+        expenseHeaderRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        expenseHeaderRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF70AD47" },
+        };
+
+        item.used_by.forEach((used) => {
+          worksheet.addRow({
+            expense_purpose: used.expense_purpose || "-",
+            amount: parseFloat(used.amount),
+            currency: item.currency?.name,
+            expense_transaction_id: used.expense_transaction_id,
+            expense_date: used.expense_date?.split("-").reverse().join("."),
+            destination: used.destination?.name || "-",
+          });
+        });
+
+        const totalUsed = item.used_by.reduce(
+          (sum, u) => sum + parseFloat(u.amount),
+          0,
+        );
+        const remaining = parseFloat(item.amount) - totalUsed;
+
+        worksheet.addRow([]);
+        const totalRow = worksheet.addRow([
+          "Jami foydalanilgan:",
+          totalUsed.toLocaleString("ru-RU", { maximumFractionDigits: 2 }),
+          item.currency?.name,
+        ]);
+        totalRow.font = { bold: true };
+        totalRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFC000" },
+        };
+
+        const remainingRow = worksheet.addRow([
+          "Qoldiq:",
+          remaining.toLocaleString("ru-RU", { maximumFractionDigits: 2 }),
+          item.currency?.name,
+        ]);
+        remainingRow.font = { bold: true };
+        remainingRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFC000" },
+        };
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Kirim_${item.id}_${item.date}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        variant: "default",
+        title: "Muvaffaqiyatli!",
+        description: "Kirim muvaffaqiyatli yuklab olindi!",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Kirimni yuklab olishda xatolik yuz berdi!",
+      });
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 bg-white rounded-xl shadow-md">
       <div className="flex justify-between items-center mb-6">
@@ -241,12 +370,13 @@ const Income = () => {
               <th className="px-4 py-3 border">Sabab</th>
               <th className="px-4 py-3 border">Kirim qiluvchi</th>
               <th className="px-4 py-3 border">Foydalanilgan</th>
+              <th className="px-4 py-3 border">Yuklab olish</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="text-center py-8">
+                <td colSpan={9} className="text-center py-8">
                   <Loader2 className="mx-auto animate-spin h-6 w-6 text-gray-500" />
                 </td>
               </tr>
@@ -391,12 +521,21 @@ const Income = () => {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
+                      <td className="px-4 py-2 border text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleSingleDownload(item)}
+                        >
+                          <Download className="text-primary" size={16} />
+                        </Button>
+                      </td>
                     </tr>
                     {expandedRows[item.id] &&
                       item.used_by &&
                       item.used_by.length > 0 && (
                         <tr key={`${index}-details`} className="bg-blue-50">
-                          <td colSpan={8} className="px-4 py-2 border">
+                          <td colSpan={9} className="px-4 py-2 border">
                             <div className="space-y-2">
                               <h4 className="font-semibold text-sm text-gray-700">
                                 Chiqimlar ({item.used_by.length}):
@@ -416,6 +555,10 @@ const Income = () => {
                                         ?.split("-")
                                         .reverse()
                                         .join(".")}
+                                    </div>
+                                    <div className="text-gray-500">
+                                      Qabul qiluvchi:{" "}
+                                      {used.destination?.name || "-"}
                                     </div>
                                   </div>
                                   <div className="font-semibold text-blue-600">
