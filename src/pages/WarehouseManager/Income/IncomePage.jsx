@@ -41,8 +41,10 @@ import {
   User,
   X,
   Inbox,
+  Banknote,
 } from "lucide-react";
 import { statuses } from "@/lib/status";
+import { PAYMENT_METHODS } from "@/lib/supplierPaymentMethods";
 import formatNumber from "@/utils/formatNumber";
 
 // Constants
@@ -718,6 +720,100 @@ const IncomePage = () => {
                                   </div>
                                 );
                               })()}
+
+                              {/* ── Payments ── */}
+                              {item.payments?.length > 0 && (
+                                <>
+                                  <div className="mt-4 pt-4 border-t border-dashed border-border">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                      To'lovlar
+                                    </p>
+                                    <div className="grid grid-cols-1 gap-2">
+                                      {item.payments.map((pay) => {
+                                        const method = PAYMENT_METHODS.find(
+                                          (m) => m.key === pay.method,
+                                        );
+                                        const Icon = method?.icon ?? Banknote;
+                                        return (
+                                          <div
+                                            key={pay.id}
+                                            className="flex items-center gap-3 rounded-lg bg-background border border-border px-3 py-2.5"
+                                          >
+                                            <div
+                                              className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${method?.inactiveBg ?? "bg-muted"}`}
+                                            >
+                                              <Icon
+                                                className={`h-4 w-4 ${method?.inactiveText ?? "text-muted-foreground"}`}
+                                              />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <p
+                                                className={`text-sm font-semibold ${method?.inactiveText ?? ""}`}
+                                              >
+                                                {method?.label ?? pay.method}
+                                              </p>
+                                              {pay.comment && (
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                  {pay.comment}
+                                                </p>
+                                              )}
+                                              <p className="text-[11px] text-muted-foreground">
+                                                {formatDate(pay.paidAt)}
+                                              </p>
+                                            </div>
+                                            <span
+                                              className={`text-sm font-bold shrink-0 ${method?.inactiveText ?? ""}`}
+                                            >
+                                              {formatNumber(pay.amount)}{" "}
+                                              <span className="text-xs font-normal">
+                                                {pay.currency?.name}
+                                              </span>
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
+                                  {/* Payment totals by currency */}
+                                  {(() => {
+                                    const totals = {};
+                                    item.payments.forEach((pay) => {
+                                      const currId = String(
+                                        pay.currency?.id ?? "",
+                                      );
+                                      const currName = pay.currency?.name ?? "";
+                                      if (!totals[currId])
+                                        totals[currId] = {
+                                          name: currName,
+                                          total: 0,
+                                        };
+                                      totals[currId].total += pay.amount;
+                                    });
+                                    const entries = Object.values(
+                                      totals,
+                                    ).filter((t) => t.total > 0);
+                                    if (entries.length === 0) return null;
+                                    return (
+                                      <div className="mt-2 flex flex-wrap justify-end gap-2">
+                                        {entries.map((t) => (
+                                          <div
+                                            key={t.name}
+                                            className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5"
+                                          >
+                                            <span className="text-xs text-muted-foreground">
+                                              Jami to'lov ({t.name}):
+                                            </span>
+                                            <span className="text-sm font-bold text-foreground">
+                                              {formatNumber(t.total)}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  })()}
+                                </>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>

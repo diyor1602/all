@@ -29,13 +29,12 @@ import {
   Truck,
   AlertCircle,
   Banknote,
-  CreditCard,
-  Landmark,
   ImageIcon,
   X,
   Check,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
+import { PAYMENT_METHODS } from "@/lib/supplierPaymentMethods";
 
 const STATUS_CONFIG = {
   draft: {
@@ -85,65 +84,6 @@ const LOG_LABELS = {
   received: "Qabul qilindi",
   closed: "Yopildi",
 };
-
-const PAYMENT_METHODS = [
-  {
-    key: "cash",
-    label: "Naqt",
-    icon: Banknote,
-    color: "green",
-    activeBg: "bg-green-600",
-    activeText: "text-white",
-    activeBorder: "border-green-600",
-    inactiveBg: "bg-green-50",
-    inactiveText: "text-green-700",
-    inactiveBorder: "border-green-200",
-    fieldBg: "bg-green-50/50",
-    labelColor: "text-green-700",
-  },
-  {
-    key: "card",
-    label: "Karta",
-    icon: CreditCard,
-    color: "blue",
-    activeBg: "bg-blue-600",
-    activeText: "text-white",
-    activeBorder: "border-blue-600",
-    inactiveBg: "bg-blue-50",
-    inactiveText: "text-blue-700",
-    inactiveBorder: "border-blue-200",
-    fieldBg: "bg-blue-50/50",
-    labelColor: "text-blue-700",
-  },
-  {
-    key: "debt",
-    label: "Qarz",
-    icon: Clock,
-    color: "amber",
-    activeBg: "bg-amber-500",
-    activeText: "text-white",
-    activeBorder: "border-amber-500",
-    inactiveBg: "bg-amber-50",
-    inactiveText: "text-amber-700",
-    inactiveBorder: "border-amber-200",
-    fieldBg: "bg-amber-50/50",
-    labelColor: "text-amber-700",
-  },
-  {
-    key: "bank",
-    label: "Bank",
-    icon: Landmark,
-    color: "violet",
-    activeBg: "bg-violet-600",
-    activeText: "text-white",
-    activeBorder: "border-violet-600",
-    inactiveBg: "bg-violet-50",
-    inactiveText: "text-violet-700",
-    inactiveBorder: "border-violet-200",
-    fieldBg: "bg-violet-50/50",
-    labelColor: "text-violet-700",
-  },
-];
 
 const EMPTY_PAYMENT = { amount: "", currencyId: "", comment: "" };
 
@@ -733,13 +673,16 @@ const OrderView = () => {
                 {!canEdit && item.unitPrice > 0 && (
                   <div className="border-t px-3 py-2.5 flex items-center justify-between bg-muted/10">
                     <div className="text-xs text-muted-foreground">
-                      {formatNumber(item.confirmedQuantity ?? item.requestedQuantity)}{" "}
+                      {formatNumber(
+                        item.confirmedQuantity ?? item.requestedQuantity,
+                      )}{" "}
                       {item.item?.unit?.name} × {formatNumber(item.unitPrice)}{" "}
                       {item.currency?.name}
                     </div>
                     <div className="text-sm font-bold text-emerald-700">
                       {formatNumber(
-                        (item.confirmedQuantity ?? item.requestedQuantity) * item.unitPrice,
+                        (item.confirmedQuantity ?? item.requestedQuantity) *
+                          item.unitPrice,
                       )}{" "}
                       <span className="text-xs font-normal text-emerald-600">
                         {item.currency?.name}
@@ -763,7 +706,8 @@ const OrderView = () => {
                 const qty = item.confirmedQuantity ?? item.requestedQuantity;
                 const currId = String(item.currency?.id ?? "");
                 const currName = item.currency?.name ?? "";
-                if (!totals[currId]) totals[currId] = { name: currName, total: 0 };
+                if (!totals[currId])
+                  totals[currId] = { name: currName, total: 0 };
                 totals[currId].total += qty * item.unitPrice;
               });
               const entries = Object.entries(totals);
@@ -775,11 +719,18 @@ const OrderView = () => {
                   </div>
                   <div className="px-4 py-3 space-y-2">
                     {entries.map(([currId, { name, total }]) => (
-                      <div key={currId} className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{name}</span>
+                      <div
+                        key={currId}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm text-muted-foreground">
+                          {name}
+                        </span>
                         <span className="text-base font-bold text-emerald-700">
                           {formatNumber(total)}{" "}
-                          <span className="text-sm font-normal text-emerald-600">{name}</span>
+                          <span className="text-sm font-normal text-emerald-600">
+                            {name}
+                          </span>
                         </span>
                       </div>
                     ))}
@@ -796,29 +747,44 @@ const OrderView = () => {
                 </div>
                 <div className="divide-y">
                   {data.payments.map((pay) => {
-                    const method = PAYMENT_METHODS.find((m) => m.key === pay.method);
+                    const method = PAYMENT_METHODS.find(
+                      (m) => m.key === pay.method,
+                    );
                     const Icon = method?.icon ?? Banknote;
                     return (
-                      <div key={pay.id} className="flex items-center gap-3 px-4 py-3">
+                      <div
+                        key={pay.id}
+                        className="flex items-center gap-3 px-4 py-3"
+                      >
                         <div
                           className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${method?.inactiveBg ?? "bg-muted"}`}
                         >
-                          <Icon className={`h-4 w-4 ${method?.inactiveText ?? "text-muted-foreground"}`} />
+                          <Icon
+                            className={`h-4 w-4 ${method?.inactiveText ?? "text-muted-foreground"}`}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-semibold ${method?.inactiveText ?? ""}`}>
+                          <p
+                            className={`text-sm font-semibold ${method?.inactiveText ?? ""}`}
+                          >
                             {method?.label ?? pay.method}
                           </p>
                           {pay.comment && (
-                            <p className="text-xs text-muted-foreground truncate">{pay.comment}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {pay.comment}
+                            </p>
                           )}
                           <p className="text-[11px] text-muted-foreground">
                             {formatDate(pay.paidAt)}
                           </p>
                         </div>
-                        <span className={`text-sm font-bold shrink-0 ${method?.inactiveText ?? ""}`}>
+                        <span
+                          className={`text-sm font-bold shrink-0 ${method?.inactiveText ?? ""}`}
+                        >
                           {formatNumber(pay.amount)}{" "}
-                          <span className="text-xs font-normal">{pay.currency?.name}</span>
+                          <span className="text-xs font-normal">
+                            {pay.currency?.name}
+                          </span>
                         </span>
                       </div>
                     );
@@ -830,19 +796,25 @@ const OrderView = () => {
                   data.payments.forEach((pay) => {
                     const currId = String(pay.currency?.id ?? "");
                     const currName = pay.currency?.name ?? "";
-                    if (!totals[currId]) totals[currId] = { name: currName, total: 0 };
+                    if (!totals[currId])
+                      totals[currId] = { name: currName, total: 0 };
                     totals[currId].total += pay.amount;
                   });
                   return (
                     <div className="border-t px-4 py-2.5 bg-muted/10 flex flex-wrap gap-3">
-                      {Object.entries(totals).map(([currId, { name, total }]) => (
-                        <span key={currId} className="text-xs text-muted-foreground">
-                          Jami:{" "}
-                          <span className="font-semibold text-foreground">
-                            {formatNumber(total)} {name}
+                      {Object.entries(totals).map(
+                        ([currId, { name, total }]) => (
+                          <span
+                            key={currId}
+                            className="text-xs text-muted-foreground"
+                          >
+                            Jami:{" "}
+                            <span className="font-semibold text-foreground">
+                              {formatNumber(total)} {name}
+                            </span>
                           </span>
-                        </span>
-                      ))}
+                        ),
+                      )}
                     </div>
                   );
                 })()}
@@ -859,7 +831,10 @@ const OrderView = () => {
                   {data.attachments.map((att) => {
                     const isImage = att.fileType?.startsWith("image/");
                     return (
-                      <div key={att.id} className="flex items-center gap-3 px-3 py-3">
+                      <div
+                        key={att.id}
+                        className="flex items-center gap-3 px-3 py-3"
+                      >
                         {isImage ? (
                           <button
                             type="button"
@@ -884,7 +859,9 @@ const OrderView = () => {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{att.fileName}</p>
+                          <p className="text-sm font-medium truncate">
+                            {att.fileName}
+                          </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             {formatDate(att.createdAt)}
                           </p>

@@ -28,6 +28,8 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { statuses } from "@/lib/status";
+import { PAYMENT_METHODS } from "@/lib/supplierPaymentMethods";
+import formatNumber from "@/utils/formatNumber";
 
 const ItemBadge = ({ children }) => (
   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
@@ -87,6 +89,13 @@ const New = () => {
   const empSentinelRef = useRef(null);
 
   const [stockBalances, setStockBalances] = useState({});
+
+  const EMPTY_PAYMENT = { amount: "", currencyId: "", comment: "" };
+  const [payments, setPayments] = useState(() =>
+    Object.fromEntries(
+      PAYMENT_METHODS.map((m) => [m.key, { enabled: false, ...EMPTY_PAYMENT }]),
+    ),
+  );
 
   const getStockLotLength = (itemId, stockId) =>
     (stockBalances[itemId] ?? []).find((s) => s.id === stockId)?.length ?? null;
@@ -297,6 +306,24 @@ const New = () => {
       ),
     );
 
+  const togglePayment = (key) => {
+    setPayments((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        enabled: !prev[key].enabled,
+        ...(prev[key].enabled ? EMPTY_PAYMENT : {}),
+      },
+    }));
+  };
+
+  const updatePayment = (key, field, value) => {
+    setPayments((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value },
+    }));
+  };
+
   // --- Employee search ---
 
   const searchEmployees = async (pageNum = 1, deptOverride, groupOverride) => {
@@ -433,8 +460,35 @@ const New = () => {
       seen.add(rn);
     }
 
+    // Validate payments
+    for (const m of PAYMENT_METHODS.filter((m) => payments[m.key].enabled)) {
+      const p = payments[m.key];
+      if (!p.amount || !p.currencyId) {
+        toast({
+          title: "Xatolik",
+          description: `${m.label} to'lovi uchun summa va valyuta kiriting`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
+      const nowISO = new Date().toISOString();
+      const paymentsJson = PAYMENT_METHODS.filter(
+        (m) => payments[m.key].enabled,
+      ).map((m) => {
+        const p = payments[m.key];
+        return {
+          method: m.key,
+          amount: Number(p.amount),
+          currencyId: Number(p.currencyId),
+          comment: p.comment.trim() || null,
+          paidAt: m.key === "debt" ? null : nowISO,
+        };
+      });
+
       await api.post("/warehouseManager/StockEntry", {
         warehouseId: Number(warehouseId),
         type: "income",
@@ -442,6 +496,7 @@ const New = () => {
         orderId: selectedOrder ? selectedOrder.id : null,
         sourceId: sourceId ? Number(sourceId) : null,
         userId: selectedEmployee ? selectedEmployee.user.id : null,
+        payments: paymentsJson.length > 0 ? paymentsJson : undefined,
         items: items.flatMap((i) =>
           i.lots.length > 0
             ? i.lots.map((lot) => ({
@@ -470,6 +525,14 @@ const New = () => {
       setComment("");
       setItems([]);
       setStockBalances({});
+      setPayments(() =>
+        Object.fromEntries(
+          PAYMENT_METHODS.map((m) => [
+            m.key,
+            { enabled: false, ...EMPTY_PAYMENT },
+          ]),
+        ),
+      );
     } catch (err) {
       toast({
         title: "Xatolik",
@@ -1006,6 +1069,165 @@ const New = () => {
             </div>
           );
         })()}
+
+      {/* Payments */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          To'lovlar
+        </p>
+
+        {/* Payment method selection */}
+        <div className="flex flex-wrap gap-2">
+          {PAYMENT_METHODS.map((method) => {
+            const Icon = method.icon;
+            const isEnabled = payments[method.key].enabled;
+            return (
+              <button
+                key={method.key}
+                type="button"
+                onClick={() => togglePayment(method.key)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  isEnabled
+                    ? `${method.activeBg} ${method.activeText} ${method.activeBorder}`
+                    : `${method.inactiveBg} ${method.inactiveText} ${method.inactiveBorder}`
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {method.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Payment details fields */}
+        {PAYMENT_METHODS.filter((m) => payments[m.key].enabled).map(
+          (method) => {
+            const p = payments[method.key];
+            return (
+              <div
+                key={method.key}
+                className={`p-4 rounded-xl border ${method.fieldBg} space-y-3`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <method.icon className={`w-4 h-4 ${method.labelColor}`} />
+                  <span
+                    className={`text-sm font-semibold ${method.labelColor}`}
+                  >
+                    {method.label}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-gray-600">
+                      Summa *
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={p.amount}
+                      onChange={(e) =>
+                        updatePayment(method.key, "amount", e.target.value)
+                      }
+                      className="h-9 text-sm bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-gray-600">
+                      Valyuta *
+                    </label>
+                    <Select
+                      value={p.currencyId}
+                      onValueChange={(v) =>
+                        updatePayment(method.key, "currencyId", v)
+                      }
+                    >
+                      <SelectTrigger className="h-9 text-sm bg-white">
+                        <SelectValue placeholder="Valyuta" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currencies.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-gray-600">
+                    Izoh
+                  </label>
+                  <Input
+                    placeholder="Izoh..."
+                    value={p.comment}
+                    onChange={(e) =>
+                      updatePayment(method.key, "comment", e.target.value)
+                    }
+                    className="h-9 text-sm bg-white"
+                  />
+                </div>
+
+                {p.amount && p.currencyId && (
+                  <div className="flex items-center justify-between rounded-lg bg-white/50 px-3 py-2">
+                    <span className="text-xs font-medium text-gray-600">
+                      To'lov summasi
+                    </span>
+                    <span className={`text-sm font-bold ${method.labelColor}`}>
+                      {formatNumber(Number(p.amount))}{" "}
+                      <span className="text-xs font-normal">
+                        {currencies.find((c) => String(c.id) === p.currencyId)
+                          ?.name ?? ""}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          },
+        )}
+
+        {/* Payment totals */}
+        {(() => {
+          const paymentTotalsByCurrency = {};
+          PAYMENT_METHODS.filter((m) => payments[m.key].enabled).forEach(
+            (m) => {
+              const p = payments[m.key];
+              const amount = Number(p.amount) || 0;
+              const currId = String(p.currencyId || "");
+              const currName =
+                currencies.find((c) => String(c.id) === currId)?.name ?? "";
+              if (amount > 0 && currId) {
+                if (!paymentTotalsByCurrency[currId])
+                  paymentTotalsByCurrency[currId] = {
+                    name: currName,
+                    total: 0,
+                  };
+                paymentTotalsByCurrency[currId].total += amount;
+              }
+            },
+          );
+
+          const entries = Object.entries(paymentTotalsByCurrency);
+          if (entries.length === 0) return null;
+          return (
+            <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
+              {entries.map(([currId, { name, total }]) => (
+                <span key={currId} className="text-xs text-gray-600">
+                  Jami to'lov:{" "}
+                  <span className="font-semibold text-gray-900">
+                    {formatNumber(total)} {name}
+                  </span>
+                </span>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
 
       <Button
         onClick={handleSubmit}
