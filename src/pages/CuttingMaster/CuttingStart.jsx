@@ -286,8 +286,8 @@ const CuttingStart = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {sizes.map((size) => (
-                            <tr key={size}>
+                          {sizes.map((size, index) => (
+                            <tr key={index}>
                               <td className="bg-yellow-50 border border-gray-300 p-1 font-medium text-center">
                                 {size}
                               </td>
