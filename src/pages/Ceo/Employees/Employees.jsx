@@ -808,6 +808,7 @@ const Employees = () => {
         onOpenChange={setRoleDialogOpen}
         employee={selectedEmployee}
         roles={roles}
+        onSuccess={fetchEmployees}
       />
     </div>
   );
@@ -831,7 +832,59 @@ const ImageDialog = ({ open, onOpenChange, image }) => {
   );
 };
 
-const RoleDialog = ({ open, onOpenChange, employee, roles }) => {
+const RoleDialog = ({ open, onOpenChange, employee, roles, onSuccess }) => {
+  const { toast } = useToast();
+  const [selectedRoleIds, setSelectedRoleIds] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (employee?.user?.roles) {
+      setSelectedRoleIds(employee.user.roles.map((r) => r.id));
+    }
+  }, [employee]);
+
+  const handleToggleRole = (roleId) => {
+    setSelectedRoleIds((prev) =>
+      prev.includes(roleId)
+        ? prev.filter((id) => id !== roleId)
+        : [...prev, roleId],
+    );
+  };
+
+  const handleSave = async () => {
+    if (!employee?.user_id) return;
+
+    setLoading(true);
+    try {
+      await api.post("ceo/userRoles/sync", {
+        user_id: employee.user_id,
+        role_ids: selectedRoleIds,
+      });
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Dasturlar belgilandi",
+        style: {
+          backgroundColor: "green",
+          color: "white",
+        },
+        duration: 1500,
+      });
+
+      onOpenChange(false);
+      onSuccess();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Dasturlarni belgilashda xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -842,13 +895,12 @@ const RoleDialog = ({ open, onOpenChange, employee, roles }) => {
           <h2>{employee?.name}</h2>
           <div className="flex items-center gap-2 flex-wrap max-h-[80vh] overflow-auto">
             {roles?.map((role, index) => {
-              const isRoleSelected = employee?.user?.roles?.some(
-                (r) => r.id === role.id,
-              );
+              const isRoleSelected = selectedRoleIds.includes(role.id);
               return (
                 <Button
-                  key={index}
+                  key={role.id}
                   variant={isRoleSelected ? "default" : "outline"}
+                  onClick={() => handleToggleRole(role.id)}
                 >
                   {role.description}
                 </Button>
@@ -856,6 +908,14 @@ const RoleDialog = ({ open, onOpenChange, employee, roles }) => {
             })}
           </div>
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Yopish
+          </Button>
+          <Button onClick={handleSave} disabled={loading}>
+            {loading ? "Saqlanmoqda..." : "Saqlash"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
