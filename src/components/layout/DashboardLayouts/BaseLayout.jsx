@@ -17,6 +17,7 @@ import {
   Sprout,
   ChevronDown,
   ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -251,18 +252,16 @@ export default function BaseLayout({ children, navigation }) {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-between mb-4 text-sm"
+                    className="w-full justify-between mb-4 text-sm h-auto py-2.5"
                   >
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4" />
-                      <span className="truncate">
-                        {currentRole || "Rol tanlang"}
-                      </span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 shrink-0" />
+                    <span className="text-xs text-gray-500 truncate">
+                      {allRoles.find((r) => r.name === currentRole)
+                        ?.description || ""}
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
+                <DropdownMenuContent className="w-72" align="start">
                   {allRoles.map((role) => (
                     <DropdownMenuItem
                       key={role.id}
@@ -272,14 +271,17 @@ export default function BaseLayout({ children, navigation }) {
                         window.location.reload();
                       }}
                       className={cn(
-                        "cursor-pointer",
+                        "cursor-pointer py-3",
                         currentRole === role.name && "bg-primary/10",
                       )}
                     >
-                      <ShieldCheck className="h-4 w-4 mr-2" />
-                      <span className="flex-1">{role.name}</span>
+                      <div className="flex flex-col gap-1 flex-1 min-w-0">
+                        <span className="text-xs text-gray-500 line-clamp-2">
+                          {role.description}
+                        </span>
+                      </div>
                       {currentRole === role.name && (
-                        <span className="text-xs text-primary">Aktiv</span>
+                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0 ml-2" />
                       )}
                     </DropdownMenuItem>
                   ))}
