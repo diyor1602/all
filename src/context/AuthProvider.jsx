@@ -6,24 +6,33 @@ import { AuthContext } from "./auth-context";
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [allRoles, setAllRoles] = useState([]);
+  const [currentRole, setCurrentRole] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
     const role = localStorage.getItem("role");
+    const rolesStr = localStorage.getItem("roles");
+    const roles = rolesStr ? JSON.parse(rolesStr) : [];
 
     if (token && username) {
       setUser({ username, role });
+      setAllRoles(roles);
+      setCurrentRole(role);
     }
   }, []);
 
   const saveUserData = (res, username) => {
     const token = res.data.token;
+    const roles = res.data.user?.roles || [];
+    const activeRole = res.data.user?.role?.name || "";
 
     localStorage.setItem("token", token);
     localStorage.setItem("username", username);
-    localStorage.setItem("role", res.data.user?.role?.name || "");
+    localStorage.setItem("role", activeRole);
+    localStorage.setItem("roles", JSON.stringify(roles));
     localStorage.setItem("user_id", res.data.user?.id || "");
     localStorage.setItem("name", res.data.user?.employee?.name || "");
     localStorage.setItem("imgUrl", res.data.user?.employee?.img || "");
@@ -38,10 +47,12 @@ const AuthProvider = ({ children }) => {
 
     setUser({
       username,
-      role: res.data.user?.role?.name,
+      role: activeRole,
     });
+    setAllRoles(roles);
+    setCurrentRole(activeRole);
 
-    navigate(res.data.user?.role?.name === "tv" ? "/tv" : "/home", {
+    navigate(activeRole === "tv" ? "/tv" : "/home", {
       replace: true,
     });
   };
@@ -137,14 +148,33 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const switchRole = (newRole) => {
+    localStorage.setItem("role", newRole);
+    setUser((prev) => ({ ...prev, role: newRole }));
+    setCurrentRole(newRole);
+    navigate(newRole === "tv" ? "/tv" : "/home", { replace: true });
+  };
+
   const logout = () => {
     localStorage.clear();
     setUser(null);
+    setAllRoles([]);
+    setCurrentRole(null);
     navigate("/", { replace: true });
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        allRoles,
+        currentRole,
+        switchRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

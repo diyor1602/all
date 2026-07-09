@@ -15,17 +15,25 @@ import {
   SquareScissors,
   ListTodo,
   Sprout,
+  ChevronDown,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const damageRoles = ["universalTailor", "tailor", "groupMaster"];
 
 export default function BaseLayout({ children, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const { logout } = useAuth();
+  const { logout, allRoles, currentRole, switchRole } = useAuth();
   const location = useLocation();
 
   const isChatPage = location.pathname.startsWith("/chat");
@@ -236,6 +244,48 @@ export default function BaseLayout({ children, navigation }) {
                 </p>
               </div>
             </Link>
+
+            {/* Role switcher for users with multiple roles */}
+            {allRoles && allRoles.length > 1 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between mb-4 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span className="truncate">
+                        {currentRole || "Rol tanlang"}
+                      </span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  {allRoles.map((role) => (
+                    <DropdownMenuItem
+                      key={role.id}
+                      onClick={() => {
+                        switchRole(role.name);
+                        setSidebarOpen(false);
+                        window.location.reload();
+                      }}
+                      className={cn(
+                        "cursor-pointer",
+                        currentRole === role.name && "bg-primary/10",
+                      )}
+                    >
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                      <span className="flex-1">{role.name}</span>
+                      {currentRole === role.name && (
+                        <span className="text-xs text-primary">Aktiv</span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <Button
               asChild
               variant="ghost"

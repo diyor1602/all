@@ -21,7 +21,7 @@ const isTokenValid = (tok) => {
 const checkAuth = () => {
   const token = localStorage.getItem("token");
   const decodedToken = token ? JSON.parse(atob(token.split(".")[1])) : "";
-  const role = decodedToken?.role?.name;
+  const currentRole = localStorage.getItem("role");
   const path = window.location.pathname.split("/")[1];
 
   if (!token || !isTokenValid(decodedToken)) {
@@ -30,7 +30,7 @@ const checkAuth = () => {
   }
 
   if (!allowPaths.includes(path)) {
-    if (role !== path) {
+    if (currentRole !== path) {
       localStorage.clear();
       return false;
     }
