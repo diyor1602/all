@@ -1,7 +1,7 @@
 import api from "@/utils/api";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -33,6 +33,7 @@ import {
   Pencil,
   RotateCcw,
   Search,
+  ShieldUser,
   UserLock,
   UserRoundCheck,
 } from "lucide-react";
@@ -66,7 +67,6 @@ const useDebounce = (value, delay) => {
 
 const Employees = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   // States
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -108,6 +108,23 @@ const Employees = () => {
   const debouncedGroup = useDebounce(filters.group_id, 300);
   const debouncedStatus = useDebounce(filters.status, 300);
   const debouncedType = useDebounce(filters.type, 300);
+
+  // Roles section
+  const [roles, setRoles] = useState([]);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+
+  const fetchRoles = async () => {
+    try {
+      const res = await api.get("/ceo/roles");
+      setRoles(res.data);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Rollarni olishda xatolik",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -255,6 +272,7 @@ const Employees = () => {
 
   useEffect(() => {
     fetchDepartments();
+    fetchRoles();
   }, []);
 
   // Handle payment type change with validation rules
@@ -359,14 +377,6 @@ const Employees = () => {
   // Check if salary input should be disabled
   const isSalaryDisabled = () => {
     return selectedEmployee?.payment_type === "piece_work";
-  };
-
-  // Check if bonus input should be disabled
-  const isBonusDisabled = () => {
-    return (
-      selectedEmployee?.payment_type === "piece_work" ||
-      ["hourly", "daily", "monthly"].includes(selectedEmployee?.payment_type)
-    );
   };
 
   const handleEditType = async (employee) => {
@@ -474,31 +484,6 @@ const Employees = () => {
                 }
                 disabled={isSalaryDisabled()}
                 className={isSalaryDisabled() ? "bg-gray-100" : ""}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                KPI (
-                {parseFloat(selectedEmployee?.bonus)?.toLocaleString("ru-RU")})
-                {isBonusDisabled() && (
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Ushbu tur uchun avtomatik 0)
-                  </span>
-                )}
-              </label>
-              <Input
-                type="number"
-                placeholder="KPI"
-                value={selectedEmployee?.bonus || ""}
-                onChange={(e) =>
-                  setSelectedEmployee({
-                    ...selectedEmployee,
-                    bonus: e.target.value,
-                  })
-                }
-                disabled={isBonusDisabled()}
-                className={isBonusDisabled() ? "bg-gray-100" : ""}
               />
             </div>
           </div>
@@ -617,7 +602,7 @@ const Employees = () => {
             <TableHead className="border">Lavozimi</TableHead>
             <TableHead className="border">To'lov turi</TableHead>
             <TableHead className="border">Maosh</TableHead>
-            <TableHead className="border">KPI</TableHead>
+            <TableHead className="border">Dastur</TableHead>
             <TableHead className="border">Holati</TableHead>
             <TableHead className="border">Amallar</TableHead>
           </TableRow>
@@ -676,10 +661,7 @@ const Employees = () => {
                   </div>
                 </TableCell>
                 <TableCell className="border">
-                  <div className="flex flex-col text-xs">
-                    <div>{employee.position || "-"}</div>
-                    <div>{employee.user?.role?.description || "-"}</div>
-                  </div>
+                  <div className="text-xs">{employee.position || "-"}</div>
                 </TableCell>
                 <TableCell className="border">
                   {payment_types[employee.payment_type]}
@@ -690,9 +672,11 @@ const Employees = () => {
                   )}
                 </TableCell>
                 <TableCell className="border">
-                  {Number.parseFloat(employee?.bonus || 0)?.toLocaleString(
-                    "ru-RU",
-                  )}
+                  <div className="flex flex-col">
+                    {employee?.user?.roles?.map((role, index) => (
+                      <div key={index}>{role?.description}</div>
+                    )) || "-"}
+                  </div>
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}
@@ -727,6 +711,17 @@ const Employees = () => {
                       <UserLock className="h-4 w-4 text-green-500" />
                     </Button>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Dastur belgilash"
+                    onClick={() => {
+                      setSelectedEmployee(employee);
+                      setRoleDialogOpen(true);
+                    }}
+                  >
+                    <ShieldUser className="h-4 w-4 text-red-500" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))
@@ -806,6 +801,14 @@ const Employees = () => {
         onOpenChange={setImageDialogOpen}
         image={selectedImage}
       />
+
+      {/* Role Dialog */}
+      <RoleDialog
+        open={roleDialogOpen}
+        onOpenChange={setRoleDialogOpen}
+        employee={selectedEmployee}
+        roles={roles}
+      />
     </div>
   );
 };
@@ -822,6 +825,36 @@ const ImageDialog = ({ open, onOpenChange, image }) => {
           {image && (
             <img src={image} alt="" className="w-full h-auto max-h-[90vh]" />
           )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const RoleDialog = ({ open, onOpenChange, employee, roles }) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Dastur belgilash</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <h2>{employee?.name}</h2>
+          <div className="flex items-center gap-2 flex-wrap max-h-[80vh] overflow-auto">
+            {roles?.map((role, index) => {
+              const isRoleSelected = employee?.user?.roles?.some(
+                (r) => r.id === role.id,
+              );
+              return (
+                <Button
+                  key={index}
+                  variant={isRoleSelected ? "default" : "outline"}
+                >
+                  {role.description}
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
