@@ -836,6 +836,7 @@ const RoleDialog = ({ open, onOpenChange, employee, roles, onSuccess }) => {
   const { toast } = useToast();
   const [selectedRoleIds, setSelectedRoleIds] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (employee?.user?.roles) {
@@ -885,35 +886,187 @@ const RoleDialog = ({ open, onOpenChange, employee, roles, onSuccess }) => {
     }
   };
 
+  const filteredRoles = roles?.filter((role) =>
+    role.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Dastur belgilash</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldUser className="h-5 w-5" />
+            Dastur belgilash
+          </DialogTitle>
+          <DialogDescription>
+            Xodim uchun kirish huquqi bo'ladigan dasturlarni tanlang
+          </DialogDescription>
         </DialogHeader>
+
         <div className="flex flex-col gap-4">
-          <h2>{employee?.name}</h2>
-          <div className="flex items-center gap-2 flex-wrap max-h-[80vh] overflow-auto">
-            {roles?.map((role, index) => {
-              const isRoleSelected = selectedRoleIds.includes(role.id);
-              return (
-                <Button
-                  key={role.id}
-                  variant={isRoleSelected ? "default" : "outline"}
-                  onClick={() => handleToggleRole(role.id)}
-                >
-                  {role.description}
-                </Button>
-              );
-            })}
+          {/* Employee Info Card */}
+          <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+            {employee?.img ? (
+              <img
+                src={employee.img}
+                alt={employee.name}
+                className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-sm"
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xl font-semibold shadow-sm">
+                {employee?.name?.charAt(0) || "?"}
+              </div>
+            )}
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg text-gray-900">
+                {employee?.name}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {employee?.position || "Lavozim ko'rsatilmagan"}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="secondary" className="text-xs">
+                  ID: {employee?.id}
+                </Badge>
+                {employee?.user?.username && (
+                  <Badge variant="outline" className="text-xs">
+                    @{employee.user.username}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Dastur qidirish..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Selected Count */}
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600">
+              Tanlangan:{" "}
+              <span className="font-semibold text-gray-900">
+                {selectedRoleIds.length}
+              </span>{" "}
+              ta
+            </span>
+            {selectedRoleIds.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedRoleIds([])}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+              >
+                Hammasini bekor qilish
+              </Button>
+            )}
+          </div>
+
+          {/* Roles Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
+            {filteredRoles?.length === 0 ? (
+              <div className="col-span-2 text-center py-8 text-gray-500">
+                <ShieldUser className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <p>Dasturlar topilmadi</p>
+              </div>
+            ) : (
+              filteredRoles?.map((role) => {
+                const isRoleSelected = selectedRoleIds.includes(role.id);
+                return (
+                  <button
+                    key={role.id}
+                    onClick={() => handleToggleRole(role.id)}
+                    className={`
+                      relative p-4 rounded-lg border-2 text-left transition-all duration-200
+                      ${
+                        isRoleSelected
+                          ? "border-blue-500 bg-blue-50 hover:bg-blue-100"
+                          : "border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50"
+                      }
+                    `}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">
+                          {role.description}
+                        </p>
+                      </div>
+                      <div
+                        className={`
+                        h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors
+                        ${
+                          isRoleSelected
+                            ? "border-blue-500 bg-blue-500"
+                            : "border-gray-300"
+                        }
+                      `}
+                      >
+                        {isRoleSelected && (
+                          <svg
+                            className="h-3 w-3 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
-        <DialogFooter>
+
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Yopish
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? "Saqlanmoqda..." : "Saqlash"}
+          <Button
+            onClick={handleSave}
+            disabled={loading || selectedRoleIds.length === 0}
+            className="min-w-[100px]"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Saqlanmoqda...
+              </span>
+            ) : (
+              "Saqlash"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
