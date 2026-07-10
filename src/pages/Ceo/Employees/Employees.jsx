@@ -673,9 +673,20 @@ const Employees = () => {
                 </TableCell>
                 <TableCell className="border">
                   <div className="flex flex-col">
-                    {employee?.user?.roles?.map((role, index) => (
-                      <div key={index}>{role?.description}</div>
-                    )) || "-"}
+                    {employee?.user?.roles && employee.user.roles.length > 0 ? (
+                      <>
+                        {employee.user.roles.slice(0, 2).map((role, index) => (
+                          <div key={index}>{role?.description}</div>
+                        ))}
+                        {employee.user.roles.length > 2 && (
+                          <div className="text-gray-500">
+                            +{employee.user.roles.length - 2}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      "-"
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="border">

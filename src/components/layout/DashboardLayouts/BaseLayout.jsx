@@ -261,7 +261,10 @@ export default function BaseLayout({ children, navigation }) {
                     <ChevronDown className="h-4 w-4 shrink-0 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-72" align="start">
+                <DropdownMenuContent
+                  className="w-72 max-h-[60vh] overflow-auto"
+                  align="start"
+                >
                   {allRoles.map((role) => (
                     <DropdownMenuItem
                       key={role.id}
