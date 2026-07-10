@@ -236,8 +236,8 @@ const Balance = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Barcha omborlar</SelectItem>
-              {warehouses.map((w) => (
-                <SelectItem key={w.id} value={String(w.id)}>
+              {warehouses.map((w, index) => (
+                <SelectItem key={index} value={String(w.id)}>
                   {w.name}
                 </SelectItem>
               ))}
@@ -321,7 +321,7 @@ const Balance = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((entry) => {
+                {rows.map((entry, index) => {
                   const isRoll = entry.rollNumber != null;
                   const qty = isRoll ? entry.length : entry.quantity;
                   const unit = entry.item?.unit?.name;
@@ -331,7 +331,7 @@ const Balance = () => {
 
                   return (
                     <TableRow
-                      key={entry.id}
+                      key={index}
                       className={`transition-colors ${belowMin ? "bg-red-100 hover:bg-red-50" : "hover:bg-muted/30"}`}
                     >
                       <TableCell className="text-xs text-muted-foreground font-mono">
