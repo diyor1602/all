@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ExcelJS from "exceljs";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import {
   Select,
@@ -231,10 +233,105 @@ const QualityRatings = () => {
     }
   };
 
+  const downloadExcel = async () => {
+    if (!sortedData?.length) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Yuklash uchun ma'lumot yo'q",
+      });
+      return;
+    }
+
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Quality Ratings");
+
+      worksheet.columns = [
+        { header: "№", key: "index", width: 5 },
+        { header: "Xodim", key: "employee", width: 30 },
+        { header: "Guruh", key: "group", width: 20 },
+        { header: "Jami braklar", key: "failTotal", width: 15 },
+        { header: "To'g'rilangan", key: "failApproved", width: 15 },
+        { header: "Yakunlanmagan", key: "failPending", width: 15 },
+      ];
+
+      sortedData.forEach((employee, index) => {
+        worksheet.addRow({
+          index: index + 1,
+          employee: employee?.employee_name || "",
+          group: employee?.group?.name || "",
+          failTotal: employee?.fail_total || 0,
+          failApproved: employee?.fail_approved || 0,
+          failPending: employee?.fail_pending || 0,
+        });
+      });
+
+      const totalRow = worksheet.addRow({
+        index: "Jami",
+        employee: "",
+        group: "",
+        failTotal: sortedData.reduce((sum, e) => sum + (e?.fail_total || 0), 0),
+        failApproved: sortedData.reduce(
+          (sum, e) => sum + (e?.fail_approved || 0),
+          0,
+        ),
+        failPending: sortedData.reduce(
+          (sum, e) => sum + (e?.fail_pending || 0),
+          0,
+        ),
+      });
+
+      worksheet.eachRow((row, rowNumber) => {
+        row.font = { name: "Arial", size: 11 };
+        if (rowNumber === 1) {
+          row.font = { bold: true, size: 12 };
+          row.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFE0E0E0" },
+          };
+        }
+        if (rowNumber === sortedData.length + 2) {
+          row.font = { bold: true };
+          row.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFF0F0F0" },
+          };
+        }
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `quality-ratings-${startDate}-${endDate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Excel fayli yuklab olindi",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Excel faylini yaratishda xatolik yuz berdi",
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-end">
           <div className="space-y-1">
             <div className="text-xs text-gray-500">Boshlanish sana</div>
             <Input
@@ -302,6 +399,16 @@ const QualityRatings = () => {
               </SelectContent>
             </Select>
           </div>
+
+          <button
+            type="button"
+            onClick={downloadExcel}
+            disabled={!sortedData?.length || loading}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Excel
+          </button>
         </div>
       </div>
 
