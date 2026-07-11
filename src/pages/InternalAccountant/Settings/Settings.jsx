@@ -14,6 +14,7 @@ import {
   AlarmClockPlus,
   Wrench,
   Coins,
+  Star,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory";
 import Nakladnoy from "./Nakladnoy";
@@ -118,7 +119,7 @@ const SettingsPage = () => {
     },
     {
       name: "OTK hisoboti",
-      icon: Coins,
+      icon: Star,
       link: "/qualityratings",
       color: "bg-purple-500",
     },
