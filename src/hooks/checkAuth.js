@@ -11,6 +11,7 @@ const allowPaths = [
   "damages",
   "newSeason",
   "todo",
+  "qualityratings",
 ];
 
 const isTokenValid = (tok) => {

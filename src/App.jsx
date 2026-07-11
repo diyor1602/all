@@ -39,6 +39,7 @@ import Coefficient from "./pages/Coefficient/Coefficient";
 import DailyPayments from "./pages/DailyPayments";
 import NewSeason from "./pages/NewSeason";
 import Todo from "./Todo";
+import QualityRatings from "./pages/QualityRatings";
 
 const ProtectedRoute = () => {
   const isAuthenticated = checkAuth();
@@ -77,6 +78,7 @@ function App() {
           <Route path="/damages" element={<Damages />} />
           <Route path="/newSeason" element={<NewSeason />} />
           <Route path="/todo" element={<Todo />} />
+          <Route path="/qualityratings" element={<QualityRatings />} />
           {/* ROLES */}
           <Route path="/superhr/*" element={<SuperHr />} />
           <Route path="/technologist/*" element={<Technolog />} />

@@ -22,7 +22,6 @@ import SalaryOrders from "./SalaryOrders/SalaryOrders";
 import Coefficient from "./Coefficient/Coefficient";
 import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
-import QualityRatings from "./QualityRatings/QualityRatings";
 import Universals from "./Universals/Universals";
 import Moneys from "./Moneys/Moneys";
 import Shipments from "./Shipments/Shipments";
@@ -38,7 +37,6 @@ const Settings = () => {
       <Route path="coefficient" element={<Coefficient />} />
       <Route path="salaryhistory" element={<SalaryHistory />} />
       <Route path="grouphistory" element={<GroupHistory />} />
-      <Route path="qualityratings" element={<QualityRatings />} />
       <Route path="universals" element={<Universals />} />
       <Route path="moneys" element={<Moneys />} />
       <Route path="shipments" element={<Shipments />} />
@@ -102,7 +100,7 @@ const SettingsPage = () => {
     {
       name: "Sifat reyting",
       icon: ChartArea,
-      link: "/ceo/settings/qualityratings",
+      link: "/qualityratings",
       color: "bg-red-500",
     },
     {

@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Car, CalendarCheck, Users } from "lucide-react";
+import { Car, CalendarCheck, Users, Scale } from "lucide-react";
 
 const navigation = [
   {
@@ -18,6 +18,12 @@ const navigation = [
     name: "Xodimlar",
     href: "/transport/employees",
     icon: Users,
+    onMobile: true,
+  },
+  {
+    name: "Balans",
+    href: "/transport/balance",
+    icon: Scale,
     onMobile: true,
   },
 ];

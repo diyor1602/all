@@ -116,6 +116,12 @@ const SettingsPage = () => {
       link: "/internalAccountant/settings/salary",
       color: "bg-emerald-500",
     },
+    {
+      name: "OTK hisoboti",
+      icon: Coins,
+      link: "/qualityratings",
+      color: "bg-purple-500",
+    },
   ];
 
   const container = {
