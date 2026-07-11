@@ -1326,6 +1326,25 @@ const SalaryPage = () => {
                               <span>{payment.comment}</span>
                             </div>
                           )}
+                          {payment.income_transaction_source && (
+                            <div className="mt-1 text-sm text-gray-600 flex items-start gap-2">
+                              <User className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                              <span>
+                                Manba: {payment.income_transaction_source}
+                              </span>
+                            </div>
+                          )}
+                          {payment.income_transaction_amount > 0 && (
+                            <div className="mt-1 text-sm text-gray-600 flex items-start gap-2">
+                              <DollarSign className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                              <span>
+                                Kirim miqdori:{" "}
+                                {formatNumber(
+                                  payment.income_transaction_amount,
+                                )}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
