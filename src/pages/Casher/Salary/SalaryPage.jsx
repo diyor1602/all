@@ -603,6 +603,15 @@ const SalaryPage = () => {
     const { employee, type } = paymentDialog;
     const { amount, comment } = paymentForm;
 
+    if (amount == 0) {
+      toast({
+        title: "Diqqat",
+        description: "To'lov miqdorini kiriting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (Number.parseFloat(amount) < 0 && !comment) {
       toast({
         title: "Diqqat",
@@ -652,6 +661,7 @@ const SalaryPage = () => {
         duration: 1500,
       });
       await fetchSalaryData(filters);
+      await getAvailableSources();
       closePaymentDialog();
     } catch (error) {
       toast({
