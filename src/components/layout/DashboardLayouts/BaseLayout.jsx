@@ -265,29 +265,31 @@ export default function BaseLayout({ children, navigation }) {
                   className="w-72 max-h-[60vh] overflow-auto"
                   align="start"
                 >
-                  {allRoles.map((role) => (
-                    <DropdownMenuItem
-                      key={role.id}
-                      onClick={() => {
-                        switchRole(role.name);
-                        setSidebarOpen(false);
-                        window.location.reload();
-                      }}
-                      className={cn(
-                        "cursor-pointer py-3",
-                        currentRole === role.name && "bg-primary/10",
-                      )}
-                    >
-                      <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <span className="text-xs text-gray-500 line-clamp-2">
-                          {role.description}
-                        </span>
-                      </div>
-                      {currentRole === role.name && (
-                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0 ml-2" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
+                  {allRoles
+                    .sort((a, b) => a.description.localeCompare(b.description))
+                    .map((role) => (
+                      <DropdownMenuItem
+                        key={role.id}
+                        onClick={() => {
+                          switchRole(role.name);
+                          setSidebarOpen(false);
+                          window.location.reload();
+                        }}
+                        className={cn(
+                          "cursor-pointer py-3",
+                          currentRole === role.name && "bg-primary/10",
+                        )}
+                      >
+                        <div className="flex flex-col gap-1 flex-1 min-w-0">
+                          <span className="text-xs text-gray-500 line-clamp-2">
+                            {role.description}
+                          </span>
+                        </div>
+                        {currentRole === role.name && (
+                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0 ml-2" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
