@@ -388,14 +388,6 @@ const Salary = () => {
     return selectedEmployee?.payment_type === "piece_work";
   };
 
-  // Check if bonus input should be disabled
-  const isBonusDisabled = () => {
-    return (
-      selectedEmployee?.payment_type === "piece_work" ||
-      ["hourly", "daily", "monthly"].includes(selectedEmployee?.payment_type)
-    );
-  };
-
   const handleEditType = async (employee) => {
     if (employee.type === "aup") {
       if (
@@ -501,31 +493,6 @@ const Salary = () => {
                 }
                 disabled={isSalaryDisabled()}
                 className={isSalaryDisabled() ? "bg-gray-100" : ""}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                KPI (
-                {parseFloat(selectedEmployee?.bonus)?.toLocaleString("ru-RU")})
-                {isBonusDisabled() && (
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Ushbu tur uchun avtomatik 0)
-                  </span>
-                )}
-              </label>
-              <Input
-                type="number"
-                placeholder="KPI"
-                value={selectedEmployee?.bonus || ""}
-                onChange={(e) =>
-                  setSelectedEmployee({
-                    ...selectedEmployee,
-                    bonus: e.target.value,
-                  })
-                }
-                disabled={isBonusDisabled()}
-                className={isBonusDisabled() ? "bg-gray-100" : ""}
               />
             </div>
           </div>
@@ -660,7 +627,6 @@ const Salary = () => {
             <TableHead className="border">Lavozimi</TableHead>
             <TableHead className="border">To'lov turi</TableHead>
             <TableHead className="border">Maosh</TableHead>
-            <TableHead className="border">KPI</TableHead>
             <TableHead className="border">Holati</TableHead>
             <TableHead className="border">Amallar</TableHead>
           </TableRow>
@@ -729,9 +695,6 @@ const Salary = () => {
                 </TableCell>
                 <TableCell className="border">
                   {formatNumber(employee?.salary)}
-                </TableCell>
-                <TableCell className="border">
-                  {formatNumber(employee?.bonus)}
                 </TableCell>
                 <TableCell className="border">
                   {getStatusBadge(employee.status)}
