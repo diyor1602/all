@@ -61,6 +61,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import formatNumber from "@/utils/formatNumber";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -1605,14 +1606,13 @@ const Work = () => {
                                         <span className="font-medium">
                                           Sekund:
                                         </span>{" "}
-                                        {tarification.second}
+                                        {formatNumber(tarification.second)}
                                       </div>
                                       <div>
                                         <span className="font-medium">
                                           Summa:
                                         </span>{" "}
-                                        {tarification.summa?.toLocaleString()}{" "}
-                                        so'm
+                                        {formatNumber(tarification.summa)} so'm
                                       </div>
                                       <div>
                                         <span className="font-medium">
@@ -1670,10 +1670,10 @@ const Work = () => {
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm pt-2 border-t">
                                         <div className="font-medium text-green-600">
                                           Jami summa:{" "}
-                                          {(
+                                          {formatNumber(
                                             tarification.summa *
-                                            Number.parseInt(work.quantity)
-                                          )?.toLocaleString()}{" "}
+                                              Number.parseInt(work.quantity),
+                                          )}{" "}
                                           so'm
                                         </div>
                                       </div>
@@ -1718,8 +1718,7 @@ const Work = () => {
                       <div className="flex items-center gap-2">
                         <Bitcoin className="h-4 w-4 text-green-600" />
                         <span className="font-medium">
-                          Jami summa: {calculateTotalCost()?.toLocaleString()}{" "}
-                          so'm
+                          Jami summa: {formatNumber(calculateTotalCost())} so'm
                         </span>
                       </div>
                     </div>
