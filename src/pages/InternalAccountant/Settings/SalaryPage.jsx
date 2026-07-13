@@ -141,6 +141,8 @@ const SalaryPage = () => {
             maxPerDay: "",
             minTotal: "",
             maxTotal: "",
+            minDays: "",
+            maxDays: "",
             paymentStatus: "all",
             showDailyColumn: true,
           };
@@ -150,6 +152,8 @@ const SalaryPage = () => {
         maxPerDay: "",
         minTotal: "",
         maxTotal: "",
+        minDays: "",
+        maxDays: "",
         paymentStatus: "all",
         showDailyColumn: true,
       };
@@ -424,8 +428,15 @@ const SalaryPage = () => {
 
   // All client-side filtering
   const filteredEmployees = useMemo(() => {
-    const { minPerDay, maxPerDay, minTotal, maxTotal, paymentStatus } =
-      advancedFilters;
+    const {
+      minPerDay,
+      maxPerDay,
+      minTotal,
+      maxTotal,
+      minDays,
+      maxDays,
+      paymentStatus,
+    } = advancedFilters;
     return employees
       .filter((emp) =>
         emp.name.toLowerCase().includes(searchText.toLowerCase()),
@@ -439,6 +450,8 @@ const SalaryPage = () => {
         if (maxPerDay && perDay > Number(maxPerDay)) return false;
         if (minTotal && total < Number(minTotal)) return false;
         if (maxTotal && total > Number(maxTotal)) return false;
+        if (minDays && days < Number(minDays)) return false;
+        if (maxDays && days > Number(maxDays)) return false;
         if (paymentStatus === "paid" && remaining > 0) return false;
         if (paymentStatus === "unpaid" && remaining <= 0) return false;
         return true;
@@ -457,6 +470,8 @@ const SalaryPage = () => {
     advancedFilters.maxPerDay ||
     advancedFilters.minTotal ||
     advancedFilters.maxTotal ||
+    advancedFilters.minDays ||
+    advancedFilters.maxDays ||
     advancedFilters.paymentStatus !== "all" ||
     advancedFilters.showDailyColumn === false;
 
@@ -466,6 +481,8 @@ const SalaryPage = () => {
       maxPerDay: "",
       minTotal: "",
       maxTotal: "",
+      minDays: "",
+      maxDays: "",
       paymentStatus: "all",
       showDailyColumn: true,
     });
@@ -606,7 +623,7 @@ const SalaryPage = () => {
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-xs text-blue-700">
                 Min kunlik daromad (so'm)
@@ -670,6 +687,36 @@ const SalaryPage = () => {
                   setAdvancedFilters((p) => ({
                     ...p,
                     maxTotal: e.target.value,
+                  }))
+                }
+                className="bg-white h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-blue-700">Min ish kunlari</Label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={advancedFilters.minDays}
+                onChange={(e) =>
+                  setAdvancedFilters((p) => ({
+                    ...p,
+                    minDays: e.target.value,
+                  }))
+                }
+                className="bg-white h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-blue-700">Max ish kunlari</Label>
+              <Input
+                type="number"
+                placeholder="∞"
+                value={advancedFilters.maxDays}
+                onChange={(e) =>
+                  setAdvancedFilters((p) => ({
+                    ...p,
+                    maxDays: e.target.value,
                   }))
                 }
                 className="bg-white h-8 text-sm"
