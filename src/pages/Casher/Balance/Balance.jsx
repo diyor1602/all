@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Wallet,
-  DollarSign,
-  CreditCard,
   BadgeRussianRuble,
   BadgeDollarSign,
   Loader2,
