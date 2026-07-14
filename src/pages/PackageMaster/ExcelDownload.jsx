@@ -43,8 +43,7 @@ const ExcelDownload = () => {
             response.data.message || "Fayl yuklab olish oynasi ochildi",
         });
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast({
         title: "Xatolik",
         description: "Faylni yuklab bo'lmadi",
