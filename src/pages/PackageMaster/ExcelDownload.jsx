@@ -16,25 +16,35 @@ const ExcelDownload = () => {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
+
       const response = await api.post(
         "packageMaster/package/reprint-stickers",
         formData,
       );
 
       if (response.data && response.data.url) {
+        const fileUrl = response.data.url;
+
         const link = document.createElement("a");
-        link.href = response.data.url;
-        link.download = response.data.url.split("/").pop();
+        link.href = fileUrl;
+
+        link.setAttribute("download", fileUrl.split("/").pop());
+
+        link.setAttribute("target", "_blank");
+        link.setAttribute("rel", "noopener noreferrer");
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
         toast({
           title: "Muvaffaqiyat",
-          description: response.data.message || "Fayl yuklab olindi",
+          description:
+            response.data.message || "Fayl yuklab olish oynasi ochildi",
         });
       }
     } catch (error) {
+      console.error(error);
       toast({
         title: "Xatolik",
         description: "Faylni yuklab bo'lmadi",
