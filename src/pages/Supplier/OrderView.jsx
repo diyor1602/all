@@ -227,21 +227,6 @@ const OrderView = () => {
   };
 
   const handlePreSubmit = () => {
-    const items = data.items.map((item) => {
-      const form = itemForms[item.id] || {};
-      return {
-        purchaseOrderItemId: item.id,
-        confirmedQuantity: Number(form.confirmedQuantity) || 0,
-      };
-    });
-    if (items.some((i) => !i.confirmedQuantity)) {
-      toast({
-        title: "Xatolik",
-        description: "Barcha mahsulotlar uchun tasdiqlangan miqdorni kiriting",
-        variant: "destructive",
-      });
-      return;
-    }
     for (const m of PAYMENT_METHODS.filter((m) => payments[m.key].enabled)) {
       const p = payments[m.key];
       if (!p.amount || !p.currencyId) {
