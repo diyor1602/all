@@ -68,6 +68,7 @@ const Balance = () => {
     open: false,
     id: null,
   });
+  const [deleting, setDeleting] = useState(false);
 
   const [filters, setFilters] = useState(() => {
     try {
@@ -204,6 +205,7 @@ const Balance = () => {
 
   const handleDelete = async () => {
     if (!deleteDialog.id) return;
+    setDeleting(true);
     try {
       await api.delete(`/warehouseManager/StockBalance/${deleteDialog.id}`);
       toast({
@@ -218,6 +220,8 @@ const Balance = () => {
         title: "Xatolik!",
         description: "Balansni o'chirishda xatolik yuz berdi!",
       });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -600,8 +604,19 @@ const Balance = () => {
             >
               Bekor qilish
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              O'chirish
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  O'chirilmoqda...
+                </>
+              ) : (
+                "O'chirish"
+              )}
             </Button>
           </div>
         </DialogContent>
