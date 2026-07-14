@@ -35,6 +35,7 @@ import {
   Layers,
   AlertTriangle,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
@@ -62,6 +63,10 @@ const Balance = () => {
     open: false,
     src: null,
     name: null,
+  });
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    id: null,
   });
 
   const [filters, setFilters] = useState(() => {
@@ -197,6 +202,25 @@ const Balance = () => {
     fetchPage(1, defaultFilters, true);
   }, [fetchPage]);
 
+  const handleDelete = async () => {
+    if (!deleteDialog.id) return;
+    try {
+      await api.delete(`/warehouseManager/StockBalance/${deleteDialog.id}`);
+      toast({
+        title: "Muvaffaqiyat!",
+        description: "Balans muvaffaqiyatli o'chirildi",
+      });
+      setDeleteDialog({ open: false, id: null });
+      fetchPage(1, filters, true);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Balansni o'chirishda xatolik yuz berdi!",
+      });
+    }
+  };
+
   const activeFilterCount = Object.values(filters).filter(
     (v) => v !== "",
   ).length;
@@ -317,6 +341,9 @@ const Balance = () => {
                   </TableHead>
                   <TableHead className="text-xs font-semibold text-muted-foreground text-right">
                     Narxi
+                  </TableHead>
+                  <TableHead className="w-16 text-xs font-semibold text-muted-foreground text-center">
+                    Amallar
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -474,6 +501,19 @@ const Balance = () => {
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
+
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() =>
+                            setDeleteDialog({ open: true, id: entry.id })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -532,6 +572,37 @@ const Balance = () => {
                 loading="lazy"
               />
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete confirmation dialog ── */}
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
+      >
+        <DialogContent className="max-w-md w-full">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">
+              O'chirishni tasdiqlash
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Haqiqatan ham bu balans yozuvini o'chirmoqchimisiz? Bu amal
+              qaytarib bo'lmaydi.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialog({ open: false, id: null })}
+            >
+              Bekor qilish
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              O'chirish
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
