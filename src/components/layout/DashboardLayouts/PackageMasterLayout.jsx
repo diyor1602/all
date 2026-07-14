@@ -1,11 +1,17 @@
 import BaseLayout from "./BaseLayout";
-import { PackageOpen, TruckElectric } from "lucide-react";
+import { CloudDownload, PackageOpen, TruckElectric } from "lucide-react";
 
 const navigation = [
   {
     name: "Buyurtmalar",
     href: "/packageMaster/spec",
     icon: PackageOpen,
+    onMobile: true,
+  },
+  {
+    name: "Excel",
+    href: "/packageMaster/excel-download",
+    icon: CloudDownload,
     onMobile: true,
   },
   {
