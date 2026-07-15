@@ -366,18 +366,7 @@ const ReceiveOrder = () => {
 
     for (const item of selectedOrder.items) {
       const form = itemForms[item.id] || {};
-      const hasLots = form.lots?.length > 0;
-      if (
-        !hasLots &&
-        (!form.receivedQuantity || Number(form.receivedQuantity) <= 0)
-      ) {
-        toast({
-          title: "Xatolik",
-          description: `"${item.item?.name}" uchun qabul miqdorini kiriting`,
-          variant: "destructive",
-        });
-        return;
-      }
+
       if (!form.currencyId) {
         toast({
           title: "Xatolik",
