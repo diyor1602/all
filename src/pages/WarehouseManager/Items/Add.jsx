@@ -375,7 +375,7 @@ const Add = () => {
               placeholder="0.00"
               className="w-full focus:ring-2 focus:ring-blue-500"
               min="0"
-              step="0.01"
+              step="0.000001"
               required
             />
           </div>
@@ -425,7 +425,7 @@ const Add = () => {
               placeholder="0.00"
               className="w-full focus:ring-2 focus:ring-blue-500"
               min="0"
-              step="0.01"
+              step="0.000001"
               required
             />
           </div>
