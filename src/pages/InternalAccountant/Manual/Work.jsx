@@ -1439,7 +1439,7 @@ const Work = () => {
                                     aria-expanded={
                                       workPopoverOpen[work.tempId] || false
                                     }
-                                    className="w-fit justify-between truncate"
+                                    className="w-[300px] justify-between truncate"
                                   >
                                     {work.id
                                       ? `${
