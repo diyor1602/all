@@ -352,6 +352,7 @@ const OrderView = () => {
           ...Object.keys(itemTotalsByCurrency),
           ...Object.keys(paymentTotalsByCurrency),
         ]);
+        const TOLERANCE = 0.01;
         return [...allCurrIds]
           .map((currId) => {
             const itemTotal = itemTotalsByCurrency[currId]?.total ?? 0;
@@ -368,7 +369,7 @@ const OrderView = () => {
               diff: itemTotal - payTotal,
             };
           })
-          .filter((m) => m.diff !== 0);
+          .filter((m) => Math.abs(m.diff) > TOLERANCE);
       })()
     : [];
 
