@@ -1420,7 +1420,7 @@ const Work = () => {
                     <div className="space-y-4">
                       {selectedWorks.map((work) => (
                         <Card key={work.tempId} className="p-4 bg-gray-50">
-                          <div className="flex flex-wrap items-center gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
                             <div className="space-y-2 flex flex-col gap-1">
                               <Label>Tarifikatsiya</Label>
                               <Popover
@@ -1439,7 +1439,7 @@ const Work = () => {
                                     aria-expanded={
                                       workPopoverOpen[work.tempId] || false
                                     }
-                                    className="w-[300px] justify-between truncate"
+                                    className="w-full justify-between truncate"
                                   >
                                     {work.id
                                       ? `${
