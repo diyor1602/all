@@ -1420,8 +1420,8 @@ const Work = () => {
                     <div className="space-y-4">
                       {selectedWorks.map((work) => (
                         <Card key={work.tempId} className="p-4 bg-gray-50">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                            <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-4">
+                            <div className="space-y-2 flex flex-col gap-1">
                               <Label>Tarifikatsiya</Label>
                               <Popover
                                 open={workPopoverOpen[work.tempId] || false}
@@ -1439,7 +1439,7 @@ const Work = () => {
                                     aria-expanded={
                                       workPopoverOpen[work.tempId] || false
                                     }
-                                    className="w-full justify-between truncate"
+                                    className="w-fit justify-between truncate"
                                   >
                                     {work.id
                                       ? `${
@@ -1450,6 +1450,10 @@ const Work = () => {
                                           tarifications?.find(
                                             (t) => t.id === work.id,
                                           )?.name || ""
+                                        } - ${
+                                          tarifications?.find(
+                                            (t) => t.id === work.id,
+                                          )?.number || ""
                                         }`
                                       : "Ishni tanlang"}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -1488,7 +1492,7 @@ const Work = () => {
                                           ?.map((tarification) => (
                                             <CommandItem
                                               key={tarification.id}
-                                              value={`${tarification.code} - ${tarification.name}`}
+                                              value={`${tarification.code} - ${tarification.name} - ${tarification.number}`}
                                               onSelect={() => {
                                                 updateWork(
                                                   work.tempId,
@@ -1502,10 +1506,16 @@ const Work = () => {
                                               }}
                                               className="flex items-center justify-between"
                                             >
-                                              <span>
-                                                {tarification.code} -{" "}
-                                                {tarification.name}
-                                              </span>
+                                              <div>
+                                                <span>
+                                                  {tarification.code} -{" "}
+                                                  {tarification.name}
+                                                </span>{" "}
+                                                <br />
+                                                <span>
+                                                  Raqam: {tarification.number}
+                                                </span>
+                                              </div>
                                               {work.id === tarification.id && (
                                                 <Check className="h-4 w-4 text-primary" />
                                               )}
@@ -1518,8 +1528,25 @@ const Work = () => {
                               </Popover>
                             </div>
 
-                            <div className="space-y-2">
-                              <Label>Miqdor</Label>
+                            <div className="space-y-2 flex flex-col gap-1">
+                              <Label>
+                                {(() => {
+                                  const tarification = getSelectedTarification(
+                                    work.id,
+                                  );
+
+                                  if (tarification) {
+                                    return (
+                                      <p className="text-gray-500 text-xs">
+                                        Limit: {tarification.limit}, Bajarilgan:{" "}
+                                        {tarification.total_quantity || 0}
+                                      </p>
+                                    );
+                                  } else {
+                                    return "Miqdor";
+                                  }
+                                })()}
+                              </Label>
                               <Input
                                 type="number"
                                 min="1"
@@ -1550,29 +1577,13 @@ const Work = () => {
                                   const currentQuantity =
                                     Number.parseInt(work.quantity) || 0;
                                   return currentQuantity > availableLimit
-                                    ? "border-red-500 focus:border-red-500 bg-white"
-                                    : "bg-white";
+                                    ? "border-red-500 focus:border-red-500 bg-white min-w-[150px]"
+                                    : "bg-white min-w-[150px]";
                                 })()}
                               />
-                              {(() => {
-                                const tarification = getSelectedTarification(
-                                  work.id,
-                                );
-
-                                if (tarification) {
-                                  return (
-                                    <p className="text-gray-500 text-xs">
-                                      Limit: {tarification.limit}, Bajarilgan:{" "}
-                                      {tarification.total_quantity || 0}
-                                    </p>
-                                  );
-                                }
-
-                                return null;
-                              })()}
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-2 flex flex-col gap-1">
                               <Label>O'chirish</Label>
                               <Button
                                 type="button"
