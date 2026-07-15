@@ -32,7 +32,6 @@ import {
   User,
   X,
   AlertCircle,
-  Warehouse,
   Plus,
   Trash2,
   Paperclip,
