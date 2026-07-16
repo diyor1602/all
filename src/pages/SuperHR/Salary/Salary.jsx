@@ -29,6 +29,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
+  AlarmClockCheck,
   Eye,
   Pencil,
   RotateCcw,
@@ -700,6 +701,18 @@ const Salary = () => {
                   {getStatusBadge(employee.status)}
                 </TableCell>
                 <TableCell className="border">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      navigate(`/superhr/new-attendance/${employee.id}`)
+                    }
+                  >
+                    <AlarmClockCheck
+                      size={16}
+                      className="text-gray-500 hover:text-gray-600 hover:scale-110 transition-all duration-200 cursor-pointer"
+                    />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
