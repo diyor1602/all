@@ -32,6 +32,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Debts = () => {
   const { toast } = useToast();
@@ -42,6 +49,28 @@ const Debts = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDebt, setSelectedDebt] = useState(null);
   const [settleAmount, setSettleAmount] = useState("");
+  const [availableSources, setAvailableSources] = useState([]);
+  const [selectedSource, setSelectedSource] = useState("");
+  const [sourcesLoading, setSourcesLoading] = useState(false);
+
+  const getAvailableSources = async (currencyId, cashboxId) => {
+    try {
+      const response = await api.get("/v1/supplier/cashbox/available-sources", {
+        params: {
+          currency_id: currencyId,
+          cashbox_id: cashboxId,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Manbalar ma'lumotlarni olib bo'lmadi",
+        variant: "destructive",
+      });
+      return [];
+    }
+  };
 
   const getData = async () => {
     setLoading(true);
@@ -59,10 +88,18 @@ const Debts = () => {
     }
   };
 
-  const openSettleDialog = (debt) => {
+  const openSettleDialog = async (debt) => {
     setSelectedDebt(debt);
     setSettleAmount(debt.amount);
+    setSelectedSource("");
+    setSourcesLoading(true);
     setDialogOpen(true);
+    const sources = await getAvailableSources(
+      debt.currency_id,
+      debt.cashbox_id,
+    );
+    setAvailableSources(sources?.sources || []);
+    setSourcesLoading(false);
   };
 
   const settleDebt = async () => {
@@ -72,6 +109,7 @@ const Debts = () => {
     try {
       await api.post(`/v1/supplier/cashbox/debts/${selectedDebt.id}/settle`, {
         amount: settleAmount,
+        source_id: selectedSource,
       });
       toast({
         title: "Muvaffaqiyatli",
@@ -378,6 +416,45 @@ const Debts = () => {
                   Maksimal: {formatNumber(parseFloat(selectedDebt.amount))}{" "}
                   {selectedDebt.currency?.name}
                 </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="source">Manba</Label>
+                {sourcesLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Yuklanmoqda...
+                  </div>
+                ) : (
+                  <>
+                    <Select
+                      value={selectedSource}
+                      onValueChange={setSelectedSource}
+                      disabled={availableSources.length === 0}
+                    >
+                      <SelectTrigger id="source">
+                        <SelectValue placeholder="Manbani tanlang" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSources.map((source) => (
+                          <SelectItem
+                            key={source.id}
+                            value={source.id.toString()}
+                          >
+                            {source.date} -{" "}
+                            {formatNumber(parseFloat(source.remaining_amount))}{" "}
+                            qoldiq
+                            {source.comment && ` (${source.comment})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {availableSources.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Mavjud manbalar yo'q
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}
