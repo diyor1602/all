@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Calendar1, Box } from "lucide-react";
+import { Calendar1, Box, Landmark } from "lucide-react";
 
 const navigation = [
   {
@@ -9,9 +9,15 @@ const navigation = [
     onMobile: true,
   },
   {
-    name: "Balans",
-    href: "/supplier/balance",
+    name: "Ombor holati",
+    href: "/supplier/stockbalance",
     icon: Box,
+    onMobile: true,
+  },
+  {
+    name: "Kassa",
+    href: "/supplier/cashbox",
+    icon: Landmark,
     onMobile: true,
   },
 ];

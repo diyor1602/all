@@ -48,7 +48,7 @@ const defaultFilters = {
   hasRoll: "",
 };
 
-const Balance = () => {
+const StockBalance = () => {
   const { toast } = useToast();
 
   const [rows, setRows] = useState([]);
@@ -539,4 +539,4 @@ const Balance = () => {
   );
 };
 
-export default Balance;
+export default StockBalance;
