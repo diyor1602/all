@@ -20,6 +20,7 @@ const Add = ({ onSuccess }) => {
   const [currincies, setCurrincies] = useState([]);
   const [sources, setSources] = useState([]);
   const [purposes, setPurposes] = useState([]);
+  const [cashboxes, setCashboxes] = useState([]);
 
   const [sending, setSending] = useState(false);
 
@@ -30,6 +31,7 @@ const Add = ({ onSuccess }) => {
     purpose: "",
     source: "",
     date: new Date().toISOString().split("T")[0],
+    cashbox_id: "",
   });
 
   // Fetch initial data on component mount
@@ -39,35 +41,49 @@ const Add = ({ onSuccess }) => {
 
   const fetchData = async () => {
     try {
-      // Fetch currencies, sources, and purposes in parallel
-      const [currenciesResponse, sourcesResponse, purposesResponse] =
-        await Promise.all([
-          api.get("/ceo/currencies"),
-          api.get("/ceo/sources", {
-            params: {
-              type: "income",
-            },
-          }),
-          api.get("/ceo/purposes", {
-            params: {
-              type: "income",
-            },
-          }),
-        ]);
+      // Fetch currencies, sources, purposes, and cashboxes in parallel
+      const [
+        currenciesResponse,
+        sourcesResponse,
+        purposesResponse,
+        cashboxesResponse,
+      ] = await Promise.all([
+        api.get("/ceo/currencies"),
+        api.get("/ceo/sources", {
+          params: {
+            type: "income",
+          },
+        }),
+        api.get("/ceo/purposes", {
+          params: {
+            type: "income",
+          },
+        }),
+        api.get("/ceo/balances"),
+      ]);
 
       // Update state with fetched data
       setCurrincies(currenciesResponse.data);
       setSources(sourcesResponse.data);
       setPurposes(purposesResponse.data);
+      setCashboxes(cashboxesResponse.data.cashboxes);
 
       // Set default currency to "So'm" if available
       const soM = currenciesResponse.data.find(
-        (currency) => currency.name.toLowerCase() === "so'm"
+        (currency) => currency.name.toLowerCase() === "so'm",
       );
       if (soM) {
         setPayload((prevPayload) => ({
           ...prevPayload,
           currency_id: soM.id,
+        }));
+      }
+
+      // Set default cashbox to first available if exists
+      if (cashboxesResponse.data.cashboxes.length > 0) {
+        setPayload((prevPayload) => ({
+          ...prevPayload,
+          cashbox_id: cashboxesResponse.data.cashboxes[0].id,
         }));
       }
     } catch (error) {
@@ -83,7 +99,12 @@ const Add = ({ onSuccess }) => {
   };
 
   const handleSubmit = async () => {
-    if (!payload.amount || !payload.currency_id || !payload.date) {
+    if (
+      !payload.amount ||
+      !payload.currency_id ||
+      !payload.date ||
+      !payload.cashbox_id
+    ) {
       toast({
         variant: "destructive",
         title: "Diqqat!",
@@ -113,6 +134,7 @@ const Add = ({ onSuccess }) => {
         purpose: "",
         source: "",
         currency_id: payload.currency_id, // Keep the currency selected
+        cashbox_id: payload.cashbox_id, // Keep the cashbox selected
         date: new Date().toISOString().split("T")[0], // Reset to today
       });
 
@@ -155,6 +177,35 @@ const Add = ({ onSuccess }) => {
             value={payload.amount}
             onChange={(e) => setPayload({ ...payload, amount: e.target.value })}
           />
+        </div>
+
+        {/* Cashbox Select */}
+        <div className="flex flex-col gap-2">
+          <Label>Kassa</Label>
+          <Select
+            value={payload.cashbox_id}
+            onValueChange={(value) =>
+              setPayload({ ...payload, cashbox_id: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Kassa" />
+            </SelectTrigger>
+            <SelectContent>
+              {cashboxes.map((cashbox) => (
+                <SelectItem key={cashbox.id} value={cashbox.id}>
+                  <div className="flex flex-col">
+                    <span>{cashbox.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {cashbox.balance
+                        .map((b) => `${b.currency}: ${b.amount}`)
+                        .join(" | ")}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Currency Select */}
