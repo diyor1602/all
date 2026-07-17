@@ -23,6 +23,7 @@ const Add = ({ onSuccess }) => {
   const [currincies, setCurrincies] = useState([]);
   const [comments, setComments] = useState([]);
   const [purposes, setPurposes] = useState([]);
+  const [cashboxes, setCashboxes] = useState([]);
   const [sending, setSending] = useState(false);
 
   // Form payload state
@@ -32,6 +33,7 @@ const Add = ({ onSuccess }) => {
     purpose: "",
     comment: "",
     date: new Date().toISOString().split("T")[0],
+    cashbox_id: "",
   });
 
   // Sources tracking state
@@ -67,16 +69,22 @@ const Add = ({ onSuccess }) => {
 
   const fetchData = async () => {
     try {
-      const [currenciesResponse, commentsResponse, purposesResponse] =
-        await Promise.all([
-          api.get("/casher/currencies"),
-          api.get("/casher/comments", { params: { type: "expense" } }),
-          api.get("/casher/purposes", { params: { type: "expense" } }),
-        ]);
+      const [
+        currenciesResponse,
+        commentsResponse,
+        purposesResponse,
+        cashboxesResponse,
+      ] = await Promise.all([
+        api.get("/casher/currencies"),
+        api.get("/casher/comments", { params: { type: "expense" } }),
+        api.get("/casher/purposes", { params: { type: "expense" } }),
+        api.get("/casher/balances"),
+      ]);
 
       setCurrincies(currenciesResponse.data);
       setComments(commentsResponse.data);
       setPurposes(purposesResponse.data);
+      setCashboxes(cashboxesResponse.data.cashboxes);
 
       const soM = currenciesResponse.data.find(
         (currency) => currency.name.toLowerCase() === "so'm",
@@ -85,6 +93,14 @@ const Add = ({ onSuccess }) => {
         setPayload((prevPayload) => ({
           ...prevPayload,
           currency_id: soM.id,
+        }));
+      }
+
+      // Set default cashbox to first available if exists
+      if (cashboxesResponse.data.cashboxes.length > 0) {
+        setPayload((prevPayload) => ({
+          ...prevPayload,
+          cashbox_id: cashboxesResponse.data.cashboxes[0].id,
         }));
       }
     } catch (error) {
@@ -141,7 +157,12 @@ const Add = ({ onSuccess }) => {
   );
 
   const handleSubmit = async () => {
-    if (!payload.amount || !payload.currency_id || !payload.date) {
+    if (
+      !payload.amount ||
+      !payload.currency_id ||
+      !payload.date ||
+      !payload.cashbox_id
+    ) {
       toast({
         variant: "destructive",
         title: "Diqqat!",
@@ -192,6 +213,7 @@ const Add = ({ onSuccess }) => {
         purpose: "",
         comment: "",
         currency_id: payload.currency_id,
+        cashbox_id: payload.cashbox_id,
         date: new Date().toISOString().split("T")[0],
       });
       setSelectedSources([]);
@@ -232,6 +254,35 @@ const Add = ({ onSuccess }) => {
             value={payload.amount}
             onChange={(e) => setPayload({ ...payload, amount: e.target.value })}
           />
+        </div>
+
+        {/* Cashbox Select */}
+        <div className="flex flex-col gap-2">
+          <Label>Kassa</Label>
+          <Select
+            value={payload.cashbox_id}
+            onValueChange={(value) =>
+              setPayload({ ...payload, cashbox_id: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Kassa" />
+            </SelectTrigger>
+            <SelectContent>
+              {cashboxes.map((cashbox) => (
+                <SelectItem key={cashbox.id} value={cashbox.id}>
+                  <div className="flex flex-col">
+                    <span>{cashbox.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {cashbox.balance
+                        .map((b) => `${b.currency}: ${b.amount}`)
+                        .join(" | ")}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Currency Select */}
