@@ -1,370 +1,325 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import formatNumber from "@/utils/formatNumber";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
-  ArrowUpRight,
-  ArrowDownRight,
   Wallet,
-  TrendingUp,
-  TrendingDown,
+  DollarSign,
+  Loader2,
+  ArrowUpCircle,
+  ArrowDownCircle,
   Calendar,
-  User,
 } from "lucide-react";
+import formatNumber from "@/utils/formatNumber";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Balance = () => {
   const { toast } = useToast();
 
-  const [balance, setBalance] = useState(2450000);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [transactions, setTransactions] = useState(null);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const incomes = [
-    {
-      id: 1,
-      name: "Yo'lovchi tushumlari",
-      description: "Toshkent - Samarqand marshruti",
-      amount: 3500000,
-      date: "2024-07-10",
-      category: "Ticket",
-      passenger: "15 ta yo'lovchi",
-    },
-    {
-      id: 2,
-      name: "Yuk tashish",
-      description: "Buxoro - Xiva marshruti",
-      amount: 2800000,
-      date: "2024-07-09",
-      category: "Cargo",
-      passenger: "3 tonna yuk",
-    },
-    {
-      id: 3,
-      name: "Ijaraga berish",
-      description: "Kunlik avtomobil ijarasi",
-      amount: 1500000,
-      date: "2024-07-08",
-      category: "Rental",
-      passenger: "1 kun",
-    },
-    {
-      id: 4,
-      name: "Yo'lovchi tushumlari",
-      description: "Farg'ona - Andijon marshruti",
-      amount: 1200000,
-      date: "2024-07-07",
-      category: "Ticket",
-      passenger: "8 ta yo'lovchi",
-    },
-    {
-      id: 5,
-      name: "Korporativ tushum",
-      description: "Kompaniya uchun xizmat",
-      amount: 5000000,
-      date: "2024-07-06",
-      category: "Corporate",
-      passenger: "Shartnoma #1234",
-    },
-  ];
-
-  const outcomes = [
-    {
-      id: 1,
-      name: "Benzin to'lovi",
-      description: "AI-95 benzin, 40 litr",
-      amount: 520000,
-      date: "2024-07-10",
-      category: "Fuel",
-      status: "completed",
-    },
-    {
-      id: 2,
-      name: "Haydovchi maoshi",
-      description: "Iyul oyi uchun maosh",
-      amount: 2500000,
-      date: "2024-07-09",
-      category: "Salary",
-      status: "completed",
-    },
-    {
-      id: 3,
-      name: "Texnik xizmat",
-      description: "Moy almashtirish",
-      amount: 350000,
-      date: "2024-07-08",
-      category: "Maintenance",
-      status: "completed",
-    },
-    {
-      id: 4,
-      name: "Yo'l haqi",
-      description: "Toll yo'l to'lovi",
-      amount: 150000,
-      date: "2024-07-07",
-      category: "Toll",
-      status: "completed",
-    },
-    {
-      id: 5,
-      name: "Avtomobil yuvashi",
-      description: "Tashqi va ichki tozalash",
-      amount: 80000,
-      date: "2024-07-06",
-      category: "Cleaning",
-      status: "completed",
-    },
-    {
-      id: 6,
-      name: "Qismlar va ehtiyot qismlar",
-      description: "Tormoz kolodkasi",
-      amount: 420000,
-      date: "2024-07-05",
-      category: "Parts",
-      status: "pending",
-    },
-  ];
-
-  const totalIncome = incomes.reduce((sum, item) => sum + item.amount, 0);
-  const totalOutcome = outcomes.reduce((sum, item) => sum + item.amount, 0);
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      Ticket: "bg-blue-100 text-blue-800",
-      Cargo: "bg-purple-100 text-purple-800",
-      Rental: "bg-orange-100 text-orange-800",
-      Corporate: "bg-indigo-100 text-indigo-800",
-      Fuel: "bg-red-100 text-red-800",
-      Salary: "bg-green-100 text-green-800",
-      Maintenance: "bg-yellow-100 text-yellow-800",
-      Toll: "bg-pink-100 text-pink-800",
-      Cleaning: "bg-cyan-100 text-cyan-800",
-      Parts: "bg-gray-100 text-gray-800",
+  useEffect(() => {
+    const fetchCashbox = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("transport/cashbox/balance");
+        setData(response.data);
+      } catch (error) {
+        toast({
+          title: "Xatolik",
+          description: "Kassa ma'lumotlarini olishda xatolik yuz berdi",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
-    return colors[category] || "bg-gray-100 text-gray-800";
+
+    fetchCashbox();
+  }, []);
+
+  const fetchTransactions = async (page = 1) => {
+    try {
+      setTransactionsLoading(true);
+      const response = await api.get(
+        `/transport/cashbox/transactions?page=${page}`,
+      );
+      setTransactions(response.data);
+      setCurrentPage(response.data.current_page);
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Tranzaksiyalarni olishda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions(1);
+  }, []);
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > transactions?.last_page) return;
+    fetchTransactions(page);
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
+    <div className="space-y-5">
+      {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Moliyaviy Balans</h1>
-          <p className="text-gray-500 mt-1">
-            Transport tizimi moliyaviy hisoboti
+          <h1 className="text-2xl font-semibold tracking-tight">Kassa</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {data?.cashbox || "Yuklanmoqda…"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Wallet className="w-5 h-5 text-gray-500" />
-          <span className="text-sm text-gray-500">2024-yil Iyul</span>
-        </div>
       </div>
 
-      {/* Balance Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-blue-100">
-              Joriy Balans
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {formatNumber(balance)} so'm
+      {/* Cashbox info card */}
+      <div className="rounded-xl border border-border bg-card shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Wallet className="h-5 w-5 text-primary" />
             </div>
-            <div className="flex items-center mt-2 text-sm text-blue-100">
-              <TrendingUp className="w-4 h-4 mr-1" />
-              <span>+12.5% o'tgan oyga nisbatan</span>
+            <div>
+              <CardTitle className="text-base">
+                {loading ? (
+                  <Skeleton className="h-5 w-48" />
+                ) : (
+                  data?.cashbox || "Kassa"
+                )}
+              </CardTitle>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {loading ? (
+                  <Skeleton className="h-4 w-24 mt-1" />
+                ) : (
+                  `Turi: ${data?.type || "—"}`
+                )}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-green-100">
-              Jami Tushumlar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {formatNumber(totalIncome)} so'm
-            </div>
-            <div className="flex items-center mt-2 text-sm text-green-100">
-              <ArrowUpRight className="w-4 h-4 mr-1" />
-              <span>{incomes.length} ta operatsiya</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-red-100">
-              Jami Xarajatlar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {formatNumber(totalOutcome)} so'm
-            </div>
-            <div className="flex items-center mt-2 text-sm text-red-100">
-              <ArrowDownRight className="w-4 h-4 mr-1" />
-              <span>{outcomes.length} ta operatsiya</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Transactions */}
-      <Tabs defaultValue="incomes" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="incomes" className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Tushumlar ({incomes.length})
-          </TabsTrigger>
-          <TabsTrigger value="outcomes" className="flex items-center gap-2">
-            <TrendingDown className="w-4 h-4" />
-            Xarajatlar ({outcomes.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="incomes" className="space-y-4 mt-6">
-          <div className="grid gap-4">
-            {incomes.map((income) => (
-              <Card
-                key={income.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-gray-900">
-                          {income.name}
-                        </h3>
-                        <Badge className={getCategoryColor(income.category)}>
-                          {income.category}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-3">
-                        {income.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{income.date}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <User className="w-4 h-4" />
-                          <span>{income.passenger}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-green-600">
-                        +{formatNumber(income.amount)}
-                      </div>
-                      <div className="text-sm text-gray-500">so'm</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="outcomes" className="space-y-4 mt-6">
-          <div className="grid gap-4">
-            {outcomes.map((outcome) => (
-              <Card
-                key={outcome.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-gray-900">
-                          {outcome.name}
-                        </h3>
-                        <Badge className={getCategoryColor(outcome.category)}>
-                          {outcome.category}
-                        </Badge>
-                        {outcome.status === "pending" && (
-                          <Badge
-                            variant="outline"
-                            className="border-yellow-500 text-yellow-700"
-                          >
-                            Kutilmoqda
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-gray-600 text-sm mb-3">
-                        {outcome.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{outcome.date}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-red-600">
-                        -{formatNumber(outcome.amount)}
-                      </div>
-                      <div className="text-sm text-gray-500">so'm</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Hisobotlar Xulosasi</CardTitle>
-          <CardDescription>Oylik moliyaviy ko'rsatkichlar</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">
-                {incomes.length}
-              </div>
-              <div className="text-sm text-gray-500">Tushumlar soni</div>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(2)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              ))}
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">
-                {outcomes.length}
-              </div>
-              <div className="text-sm text-gray-500">Xarajatlar soni</div>
+          ) : data?.balances && data.balances.length > 0 ? (
+            <div className="grid gap-3">
+              {data.balances.map((balance, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-primary/5 flex items-center justify-center">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{balance.currency}</p>
+                      <p className="text-xs text-muted-foreground">Balans</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-lg">
+                      {formatNumber(balance.amount)}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                {formatNumber(totalIncome - totalOutcome)}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-3">
+                <Wallet className="h-6 w-6 text-muted-foreground" />
               </div>
-              <div className="text-sm text-gray-500">Sof Foyda</div>
+              <h3 className="text-sm font-medium">Ma'lumot topilmadi</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Kassa balans ma'lumotlari mavjud emas
+              </p>
             </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
-                {(((totalIncome - totalOutcome) / totalIncome) * 100).toFixed(
-                  1,
-                )}
-                %
-              </div>
-              <div className="text-sm text-gray-500">Foyda Foizi</div>
+          )}
+        </CardContent>
+      </div>
+
+      {/* Transactions table */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-border">
+          <h2 className="text-base font-semibold">Tranzaksiyalar</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {transactions?.total
+              ? `Jami ${transactions.total} ta tranzaksiya`
+              : "Yuklanmoqda…"}
+          </p>
+        </div>
+        {transactionsLoading ? (
+          <div className="p-4 space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : transactions?.data && transactions.data.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table className="text-sm whitespace-nowrap">
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="w-14 text-xs font-semibold text-muted-foreground">
+                    #
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Sana
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Turi
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Maqsad
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Izoh
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Valyuta
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground text-right">
+                    Summa
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.data.map((transaction) => (
+                  <TableRow
+                    key={transaction.id}
+                    className="hover:bg-muted/30 transition-colors"
+                  >
+                    <TableCell className="text-xs text-muted-foreground font-mono">
+                      {transaction.id}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm">{transaction.date}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {transaction.type === "income" ? (
+                        <Badge className="bg-green-50 text-green-700 border-green-200 hover:bg-green-50">
+                          <ArrowUpCircle className="h-3 w-3 mr-1" />
+                          Kirim
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-red-50 text-red-700 border-red-200 hover:bg-red-50">
+                          <ArrowDownCircle className="h-3 w-3 mr-1" />
+                          Chiqim
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">
+                        {transaction.purpose || "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">
+                        {transaction.comment || "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm font-medium">
+                        {transaction.currency?.name || "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span
+                        className={`font-semibold ${
+                          transaction.type === "income"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {transaction.type === "income" ? "+" : "-"}
+                        {formatNumber(parseFloat(transaction.amount))}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <Wallet className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-base font-semibold">Ma'lumot topilmadi</h3>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+              Hali hech qanday tranzaksiya yo'q
+            </p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {transactions && transactions.last_page > 1 && (
+          <div className="flex items-center justify-between p-4 border-t border-border bg-muted/30">
+            <p className="text-xs text-muted-foreground">
+              Sahifa {currentPage} / {transactions.last_page} (Jami{" "}
+              {transactions.total} ta)
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || transactionsLoading}
+                className="h-8"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Oldingi
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={
+                  currentPage === transactions.last_page || transactionsLoading
+                }
+                className="h-8"
+              >
+                Keyingi
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      {/* Loading indicator */}
+      {(loading || transactionsLoading) && (
+        <div className="flex justify-center py-4">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      )}
     </div>
   );
 };
