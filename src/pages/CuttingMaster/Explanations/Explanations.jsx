@@ -244,10 +244,10 @@ const Explanations = () => {
                                       <div className="text-xs text-gray-500">
                                         {new Date(
                                           explanation.created_at,
-                                        ).toLocaleDateString("uz-UZ")}{" "}
+                                        ).toLocaleDateString("ru-RU")}{" "}
                                         {new Date(
                                           explanation.created_at,
-                                        ).toLocaleTimeString("uz-UZ", {
+                                        ).toLocaleTimeString("ru-RU", {
                                           hour: "2-digit",
                                           minute: "2-digit",
                                         })}

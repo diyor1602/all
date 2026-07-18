@@ -80,7 +80,7 @@ const formatTimeFromString = (datetimeStr) => {
   try {
     const d = new Date(datetimeStr);
     if (isNaN(d)) return "-";
-    return d.toLocaleTimeString("uz-UZ", {
+    return d.toLocaleTimeString("ru-RU", {
       hour: "2-digit",
       minute: "2-digit",
     });

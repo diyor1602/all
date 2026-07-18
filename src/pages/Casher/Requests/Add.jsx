@@ -170,7 +170,7 @@ const Add = () => {
             <div>
               <Label>
                 Miqdor (
-                {Number.parseFloat(form.amount || 0).toLocaleString("ru-Ru")})
+                {Number.parseFloat(form.amount || 0).toLocaleString("ru-RU")})
               </Label>
               <Input
                 type="number"

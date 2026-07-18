@@ -204,7 +204,7 @@ const TailorRating = () => {
   }, [selectedDay]);
 
   const isToday = selectedDay === new Date().toISOString().split("T")[0];
-  const formattedDate = new Date(selectedDay).toLocaleDateString("uz-UZ", {
+  const formattedDate = new Date(selectedDay).toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "long",
     year: "numeric",

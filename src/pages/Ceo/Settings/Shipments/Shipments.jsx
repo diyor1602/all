@@ -366,7 +366,7 @@ const OrderCard = ({ order }) => {
             {months.map((m) => {
               const [y, mo] = m.split("-");
               const label = new Date(Number(y), Number(mo) - 1).toLocaleString(
-                "uz-UZ",
+                "ru-RU",
                 {
                   month: "short",
                   year: "2-digit",

@@ -167,7 +167,7 @@ const Add = () => {
             <div>
               <Label>
                 Miqdor (
-                {Number.parseFloat(form.amount || 0).toLocaleString("ru-Ru")})
+                {Number.parseFloat(form.amount || 0).toLocaleString("ru-RU")})
               </Label>
               <Input
                 type="number"
@@ -224,7 +224,7 @@ const Add = () => {
                     <span
                       className={cn(
                         "truncate",
-                        !selectedViaName && "text-muted-foreground"
+                        !selectedViaName && "text-muted-foreground",
                       )}
                     >
                       {selectedViaName || "Xodimni tanlang..."}
@@ -272,7 +272,7 @@ const Add = () => {
                                   "ml-auto h-4 w-4",
                                   form.via_id === employee.id
                                     ? "opacity-100"
-                                    : "opacity-0"
+                                    : "opacity-0",
                                 )}
                               />
                             </CommandItem>

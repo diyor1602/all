@@ -16,7 +16,7 @@ import ModelImages from "@/components/ModelImages";
 import { statuses } from "@/lib/status";
 
 const fmt = (n) =>
-  Number(n).toLocaleString("uz-UZ", { maximumFractionDigits: 0 });
+  Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 0 });
 
 const fmtUsd = (n) =>
   "$" + Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });

@@ -566,11 +566,11 @@ const AddHoliday = () => {
               <div className="space-y-2">
                 <p>
                   <span className="font-medium text-gray-700">Boshlanish:</span>{" "}
-                  {new Date(payload.start_date).toLocaleDateString("uz-UZ")}
+                  {new Date(payload.start_date).toLocaleDateString("ru-RU")}
                 </p>
                 <p>
                   <span className="font-medium text-gray-700">Tugash:</span>{" "}
-                  {new Date(payload.end_date).toLocaleDateString("uz-UZ")}
+                  {new Date(payload.end_date).toLocaleDateString("ru-RU")}
                 </p>
                 <p>
                   <span className="font-medium text-gray-700">
