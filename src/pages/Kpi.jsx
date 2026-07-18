@@ -590,6 +590,11 @@ const Kpi = () => {
               onChange={(e) =>
                 setAddPayload({ ...addPayload, quantity: e.target.value })
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleAddGroupPlan();
+                }
+              }}
             />
           </div>
           <DialogFooter>
@@ -616,6 +621,11 @@ const Kpi = () => {
               onChange={(e) =>
                 setEditPayload({ ...editPayload, quantity: e.target.value })
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleEditGroupPlan();
+                }
+              }}
             />
           </div>
           <DialogFooter>
