@@ -21,6 +21,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import formatNumber from "@/utils/formatNumber";
 
@@ -56,6 +63,7 @@ const DepartmentView = () => {
         };
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [groupFilter, setGroupFilter] = useState("");
 
   const getData = async () => {
     try {
@@ -185,6 +193,13 @@ const DepartmentView = () => {
       );
     }
 
+    // Filter by group
+    if (groupFilter && groupFilter !== "all") {
+      filtered = filtered.filter(
+        (item) => item?.employee?.group?.name === groupFilter,
+      );
+    }
+
     // Filter by zero per minute
     if (hideZeroPerMinute) {
       filtered = filtered.filter(
@@ -193,6 +208,17 @@ const DepartmentView = () => {
     }
 
     return filtered;
+  };
+
+  const getUniqueGroups = () => {
+    if (!data?.items) return [];
+    const groups = new Set();
+    data.items.forEach((item) => {
+      if (item?.employee?.group?.name) {
+        groups.add(item.employee.group.name);
+      }
+    });
+    return Array.from(groups).sort();
   };
 
   const navigateMonth = (direction) => {
@@ -290,15 +316,30 @@ const DepartmentView = () => {
           <Card className="bg-white shadow-sm border-0">
             <CardContent className="p-3 sm:p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3">
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    type="text"
-                    placeholder="Xodim nomi bo'yicha qidirish..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 text-xs h-8"
-                  />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      type="text"
+                      placeholder="Xodim nomi bo'yicha qidirish..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 text-xs h-8"
+                    />
+                  </div>
+                  <Select value={groupFilter} onValueChange={setGroupFilter}>
+                    <SelectTrigger className="w-full sm:w-48 h-8 text-xs">
+                      <SelectValue placeholder="Barcha guruhlar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Barcha guruhlar</SelectItem>
+                      {getUniqueGroups().map((group) => (
+                        <SelectItem key={group} value={group}>
+                          {group}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button
                   variant="outline"
