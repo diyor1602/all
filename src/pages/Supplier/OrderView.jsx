@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import { PAYMENT_METHODS } from "@/lib/supplierPaymentMethods";
-import Stores from "./Stores";
+import EmployeeSearch from "./EmployeeSearch";
 
 const STATUS_CONFIG = {
   draft: {
@@ -86,7 +86,17 @@ const LOG_LABELS = {
   closed: "Yopildi",
 };
 
-const EMPTY_PAYMENT = { amount: "", currencyId: "", comment: "" };
+const EMPTY_PAYMENT = {
+  amount: "",
+  currencyId: "",
+  comment: "",
+  debtorType: "",
+  storeId: "",
+  debtorStoreId: "",
+  debtorEmployeeId: "",
+  debtorName: "",
+  debtorPhone: "",
+};
 
 const formatDate = (dateString) => {
   if (!dateString) return "—";
@@ -143,6 +153,9 @@ const OrderView = () => {
       PAYMENT_METHODS.map((m) => [m.key, { enabled: false, ...EMPTY_PAYMENT }]),
     ),
   );
+  const [stores, setStores] = useState([]);
+  const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const getItem = async () => {
     try {
@@ -178,9 +191,21 @@ const OrderView = () => {
     }
   };
 
+  const fetchStores = async () => {
+    try {
+      const res = await api.get("v1/supplier/stores", {
+        params: { is_active: true },
+      });
+      setStores(res.data || []);
+    } catch {
+      // silently fail
+    }
+  };
+
   useEffect(() => {
     getItem();
     fetchCurrencies();
+    fetchStores();
   }, []);
 
   const updateItemForm = (itemId, field, value) => {
@@ -238,6 +263,46 @@ const OrderView = () => {
         });
         return;
       }
+      if (m.key === "debt" && !p.debtorType) {
+        toast({
+          title: "Xatolik",
+          description: "Qarz turi (magazin/xodim/begona shaxs)ni tanlang",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (m.key === "debt" && p.debtorType === "store" && !p.debtorStoreId) {
+        toast({
+          title: "Xatolik",
+          description: "Do'konni tanlang",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (
+        m.key === "debt" &&
+        p.debtorType === "employee" &&
+        !p.debtorEmployeeId
+      ) {
+        toast({
+          title: "Xatolik",
+          description: "Xodimni tanlang",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (
+        m.key === "debt" &&
+        p.debtorType === "other" &&
+        (!p.debtorName || !p.debtorPhone)
+      ) {
+        toast({
+          title: "Xatolik",
+          description: "Begona shaxs ismi va telefon raqamini kiriting",
+          variant: "destructive",
+        });
+        return;
+      }
     }
     setConfirmOpen(true);
   };
@@ -258,13 +323,36 @@ const OrderView = () => {
       (m) => payments[m.key].enabled,
     ).map((m) => {
       const p = payments[m.key];
-      return {
+      const paymentData = {
         method: m.key,
         amount: Number(p.amount),
         currencyId: Number(p.currencyId),
         comment: p.comment.trim() || "",
         paidAt: m.key === "debt" ? null : nowISO,
       };
+
+      if (m.key === "debt") {
+        paymentData.debtorType = p.debtorType;
+        paymentData.storeId = data.storeId;
+        if (p.debtorType === "store") {
+          paymentData.debtorStoreId = Number(p.debtorStoreId);
+          paymentData.debtorEmployeeId = null;
+          paymentData.debtorName = null;
+          paymentData.debtorPhone = null;
+        } else if (p.debtorType === "employee") {
+          paymentData.debtorStoreId = null;
+          paymentData.debtorEmployeeId = Number(p.debtorEmployeeId);
+          paymentData.debtorName = null;
+          paymentData.debtorPhone = null;
+        } else if (p.debtorType === "other") {
+          paymentData.debtorStoreId = null;
+          paymentData.debtorEmployeeId = null;
+          paymentData.debtorName = p.debtorName.trim();
+          paymentData.debtorPhone = p.debtorPhone.trim();
+        }
+      }
+
+      return paymentData;
     });
 
     try {
@@ -398,7 +486,14 @@ const OrderView = () => {
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      <Stores />
+      <EmployeeSearch
+        open={employeeSearchOpen}
+        onOpenChange={setEmployeeSearchOpen}
+        onSelectEmployee={(employee) => {
+          setSelectedEmployee(employee);
+          updatePayment("debt", "debtorEmployeeId", employee.id);
+        }}
+      />
 
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
@@ -1058,6 +1153,125 @@ const OrderView = () => {
                         </Select>
                       </div>
                     </div>
+
+                    {/* Debt-specific fields */}
+                    {m.key === "debt" && (
+                      <>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-muted-foreground">
+                            Qarz beruvchi turi *
+                          </label>
+                          <Select
+                            value={p.debtorType}
+                            onValueChange={(v) => {
+                              updatePayment(m.key, "debtorType", v);
+                              // Reset dependent fields when type changes
+                              updatePayment(m.key, "debtorStoreId", "");
+                              updatePayment(m.key, "debtorEmployeeId", "");
+                              updatePayment(m.key, "debtorName", "");
+                              updatePayment(m.key, "debtorPhone", "");
+                              setSelectedEmployee(null);
+                            }}
+                          >
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Turini tanlang" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="store">Magazin</SelectItem>
+                              <SelectItem value="employee">Xodim</SelectItem>
+                              <SelectItem value="other">
+                                Begona shaxs
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {p.debtorType === "store" && (
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Do'kon *
+                            </label>
+                            <Select
+                              value={String(p.debtorStoreId)}
+                              onValueChange={(v) =>
+                                updatePayment(m.key, "debtorStoreId", v)
+                              }
+                            >
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Do'konni tanlang" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {stores.map((store) => (
+                                  <SelectItem
+                                    key={store.id}
+                                    value={String(store.id)}
+                                  >
+                                    {store.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {p.debtorType === "employee" && (
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Xodim *
+                            </label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full h-9 text-sm justify-start"
+                              onClick={() => setEmployeeSearchOpen(true)}
+                            >
+                              {selectedEmployee
+                                ? selectedEmployee.name
+                                : "Xodimni tanlang"}
+                            </Button>
+                          </div>
+                        )}
+
+                        {p.debtorType === "other" && (
+                          <>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Ism *
+                              </label>
+                              <Input
+                                placeholder="Ismi"
+                                className="h-9 text-sm"
+                                value={p.debtorName}
+                                onChange={(e) =>
+                                  updatePayment(
+                                    m.key,
+                                    "debtorName",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Telefon *
+                              </label>
+                              <Input
+                                placeholder="+998 90 123 45 67"
+                                className="h-9 text-sm"
+                                value={p.debtorPhone}
+                                onChange={(e) =>
+                                  updatePayment(
+                                    m.key,
+                                    "debtorPhone",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
 
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">
