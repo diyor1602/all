@@ -12,6 +12,7 @@ import {
   AlarmClock,
   ChevronUp,
   ChevronDown,
+  Search,
 } from "lucide-react";
 import {
   Dialog,
@@ -54,6 +55,7 @@ const DepartmentView = () => {
           direction: "asc",
         };
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const getData = async () => {
     try {
@@ -173,8 +175,24 @@ const DepartmentView = () => {
 
   const getDisplayedData = () => {
     const sorted = getSortedData();
-    if (!hideZeroPerMinute) return sorted;
-    return sorted.filter((item) => (Number(item?.per_minute_sum) || 0) !== 0);
+    let filtered = sorted;
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = sorted.filter((item) =>
+        item?.employee?.name?.toLowerCase().includes(query),
+      );
+    }
+
+    // Filter by zero per minute
+    if (hideZeroPerMinute) {
+      filtered = filtered.filter(
+        (item) => (Number(item?.per_minute_sum) || 0) !== 0,
+      );
+    }
+
+    return filtered;
   };
 
   const navigateMonth = (direction) => {
@@ -271,7 +289,17 @@ const DepartmentView = () => {
         {!loading && (
           <Card className="bg-white shadow-sm border-0">
             <CardContent className="p-3 sm:p-6">
-              <div className="flex items-center justify-end pb-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    type="text"
+                    placeholder="Xodim nomi bo'yicha qidirish..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 text-xs h-8"
+                  />
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
