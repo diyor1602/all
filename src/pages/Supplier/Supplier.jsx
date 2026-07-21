@@ -4,6 +4,7 @@ import OrderView from "./OrderView";
 import CreateOrder from "./CreateOrder";
 import StockBalance from "./StockBalance";
 import Cashbox from "./Cashbox/Cashbox";
+import Stores from "./Stores";
 
 const Supplier = () => {
   return (
@@ -13,6 +14,7 @@ const Supplier = () => {
       <Route path="create-order" element={<CreateOrder />} />
       <Route path="stockbalance" element={<StockBalance />} />
       <Route path="cashbox/*" element={<Cashbox />} />
+      <Route path="stores" element={<Stores />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

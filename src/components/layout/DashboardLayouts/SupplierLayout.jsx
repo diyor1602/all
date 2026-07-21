@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Calendar1, Box, Landmark } from "lucide-react";
+import { Calendar1, Box, Landmark, Store } from "lucide-react";
 
 const navigation = [
   {
@@ -19,6 +19,12 @@ const navigation = [
     href: "/supplier/cashbox",
     icon: Landmark,
     onMobile: true,
+  },
+  {
+    name: "Do'konlar",
+    href: "/supplier/stores",
+    icon: Store,
+    onMobile: false,
   },
 ];
 
