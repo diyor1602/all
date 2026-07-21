@@ -168,7 +168,7 @@ const Debts = () => {
           <p className="text-sm text-muted-foreground mt-0.5">
             {data?.items?.length
               ? `Jami ${data.items.length} ta qarz`
-              : "Yuklanmoqda…"}
+              : "0 ta qarz"}
           </p>
         </div>
         <Link to="/supplier/cashbox">
@@ -247,7 +247,7 @@ const Debts = () => {
           <p className="text-xs text-muted-foreground mt-0.5">
             {data?.items?.length
               ? `Jami ${data.items.length} ta qarz`
-              : "Yuklanmoqda…"}
+              : "0 ta qarz"}
           </p>
         </div>
         {loading ? (
