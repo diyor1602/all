@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 import { PAYMENT_METHODS } from "@/lib/supplierPaymentMethods";
+import Stores from "./Stores";
 
 const STATUS_CONFIG = {
   draft: {
@@ -397,6 +398,8 @@ const OrderView = () => {
 
   return (
     <div className="min-h-screen bg-background pb-32">
+      <Stores />
+
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
         <div className="flex items-center gap-3 px-4 py-3">
