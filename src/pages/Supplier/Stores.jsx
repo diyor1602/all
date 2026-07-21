@@ -253,7 +253,9 @@ const Stores = () => {
                       {store.phone ? (
                         <div className="flex items-center gap-1.5">
                           <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                          <span className="text-sm">{store.phone}</span>
+                          <a href={`tel:${store.phone}`} className="text-sm">
+                            {store.phone}
+                          </a>
                         </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
