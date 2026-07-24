@@ -1378,30 +1378,41 @@ const SalaryPage = () => {
                             </div>
                           </div>
                           {payment.comment && (
-                            <div className="mt-1 text-sm text-gray-600 flex items-start gap-2">
-                              <MessageSquare className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                            <div className="mt-1 text-sm text-gray-600 flex items-center gap-2">
+                              <MessageSquare className="h-3 w-3 flex-shrink-0" />
                               <span>{payment.comment}</span>
                             </div>
                           )}
-                          {payment.income_transaction_source && (
-                            <div className="mt-1 text-sm text-gray-600 flex items-start gap-2">
-                              <User className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                              <span>
-                                Manba: {payment.income_transaction_source}
-                              </span>
-                            </div>
-                          )}
-                          {payment.income_transaction_amount > 0 && (
-                            <div className="mt-1 text-sm text-gray-600 flex items-start gap-2">
-                              <DollarSign className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                              <span>
-                                Kirim miqdori:{" "}
-                                {formatNumber(
-                                  payment.income_transaction_amount,
-                                )}
-                              </span>
-                            </div>
-                          )}
+                          {payment.income_sources &&
+                            payment.income_sources.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                {payment.income_sources.map((source, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="text-sm text-gray-600 flex items-center gap-2"
+                                  >
+                                    <User className="h-3 w-3 flex-shrink-0" />
+                                    <div className="flex-1 items-center">
+                                      {source.income_transaction_source && (
+                                        <span>
+                                          Manba:{" "}
+                                          {source.income_transaction_source}
+                                        </span>
+                                      )}
+                                      {source.income_transaction_amount > 0 && (
+                                        <span className="ml-2">
+                                          (
+                                          {formatNumber(
+                                            source.income_transaction_amount,
+                                          )}
+                                          )
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                         </div>
                       ))}
                     </div>
