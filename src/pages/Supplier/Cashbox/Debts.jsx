@@ -11,15 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  CreditCard,
-  Loader2,
-  Calendar,
-  DollarSign,
-  CheckCircle2,
-} from "lucide-react";
+import { CreditCard, Loader2, Calendar, CheckCircle2 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
@@ -32,13 +25,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const Debts = () => {
   const { toast } = useToast();
@@ -49,28 +35,6 @@ const Debts = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDebt, setSelectedDebt] = useState(null);
   const [settleAmount, setSettleAmount] = useState("");
-  const [availableSources, setAvailableSources] = useState([]);
-  const [selectedSource, setSelectedSource] = useState("");
-  const [sourcesLoading, setSourcesLoading] = useState(false);
-
-  const getAvailableSources = async (currencyId, cashboxId) => {
-    try {
-      const response = await api.get("/v1/supplier/cashbox/available-sources", {
-        params: {
-          currency_id: currencyId,
-          cashbox_id: cashboxId,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      toast({
-        title: "Xatolik",
-        description: "Manbalar ma'lumotlarni olib bo'lmadi",
-        variant: "destructive",
-      });
-      return [];
-    }
-  };
 
   const getData = async () => {
     setLoading(true);
@@ -88,18 +52,10 @@ const Debts = () => {
     }
   };
 
-  const openSettleDialog = async (debt) => {
+  const openSettleDialog = (debt) => {
     setSelectedDebt(debt);
     setSettleAmount(debt.amount);
-    setSelectedSource("");
-    setSourcesLoading(true);
     setDialogOpen(true);
-    const sources = await getAvailableSources(
-      debt.currency_id,
-      debt.cashbox_id,
-    );
-    setAvailableSources(sources?.sources || []);
-    setSourcesLoading(false);
   };
 
   const settleDebt = async () => {
@@ -109,7 +65,6 @@ const Debts = () => {
     try {
       await api.post(`/v1/supplier/cashbox/debts/${selectedDebt.id}/settle`, {
         amount: settleAmount,
-        source_id: selectedSource,
       });
       toast({
         title: "Muvaffaqiyatli",
@@ -141,22 +96,24 @@ const Debts = () => {
     });
   };
 
-  const calculateTotalsByCurrency = () => {
-    if (!data?.items) return [];
+  const calculateTotals = () => {
+    if (!data?.by_debtor) return [];
 
-    const totals = {};
-    data.items.forEach((debt) => {
-      const currencyName = debt.currency?.name || "Noma'lum";
-      if (!totals[currencyName]) {
-        totals[currencyName] = 0;
-      }
-      totals[currencyName] += parseFloat(debt.amount);
-    });
-
-    return Object.entries(totals).map(([currency, amount]) => ({
-      currency,
-      amount,
+    return data.by_debtor.map((debtor) => ({
+      debtorLabel: debtor.debtor_label,
+      debtorType: debtor.debtor_type,
+      debtorId: debtor.debtor_id,
+      debtorPhone: debtor.debtor_phone,
+      totalDebt: debtor.total_debt,
+      debtsCount: debtor.debts_count,
+      oldestDays: debtor.oldest_days,
+      items: debtor.items,
     }));
+  };
+
+  const getAllDebts = () => {
+    if (!data?.by_debtor) return [];
+    return data.by_debtor.flatMap((debtor) => debtor.items);
   };
 
   return (
@@ -166,8 +123,8 @@ const Debts = () => {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Qarzlar</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {data?.items?.length
-              ? `Jami ${data.items.length} ta qarz`
+            {data?.debtors_count
+              ? `Jami ${data.debtors_count} ta qarzdor, ${data.total_debt} summa`
               : "0 ta qarz"}
           </p>
         </div>
@@ -200,27 +157,29 @@ const Debts = () => {
                 <Skeleton key={i} className="h-16 w-full rounded-lg" />
               ))}
             </div>
-          ) : calculateTotalsByCurrency().length > 0 ? (
+          ) : calculateTotals().length > 0 ? (
             <div className="grid gap-3">
-              {calculateTotalsByCurrency().map((total, index) => (
+              {calculateTotals().map((debtor, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-full bg-primary/5 flex items-center justify-center">
-                      <DollarSign className="h-4 w-4 text-primary" />
+                      <CreditCard className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">{total.currency}</p>
+                      <p className="font-medium text-sm">
+                        {debtor.debtorLabel}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        Qarz miqdori
+                        {debtor.debtsCount} ta qarz • {debtor.oldestDays} kun
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-lg text-red-600">
-                      {formatNumber(total.amount)}
+                      {formatNumber(debtor.totalDebt)}
                     </p>
                   </div>
                 </div>
@@ -245,8 +204,8 @@ const Debts = () => {
         <div className="p-4 border-b border-border">
           <h2 className="text-base font-semibold">Qarzlar ro'yxati</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {data?.items?.length
-              ? `Jami ${data.items.length} ta qarz`
+            {getAllDebts().length
+              ? `Jami ${getAllDebts().length} ta qarz`
               : "0 ta qarz"}
           </p>
         </div>
@@ -256,7 +215,7 @@ const Debts = () => {
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))}
           </div>
-        ) : data?.items && data.items.length > 0 ? (
+        ) : getAllDebts().length > 0 ? (
           <div className="overflow-x-auto">
             <Table className="text-sm whitespace-nowrap">
               <TableHeader>
@@ -265,16 +224,16 @@ const Debts = () => {
                     #
                   </TableHead>
                   <TableHead className="text-xs font-semibold text-muted-foreground">
+                    Qarzdor
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground">
                     Sana
                   </TableHead>
                   <TableHead className="text-xs font-semibold text-muted-foreground">
                     Summa
                   </TableHead>
                   <TableHead className="text-xs font-semibold text-muted-foreground">
-                    Valyuta
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">
-                    Holat
+                    Kunlar
                   </TableHead>
                   <TableHead className="text-xs font-semibold text-muted-foreground">
                     Izoh
@@ -285,50 +244,54 @@ const Debts = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.items.map((debt) => (
-                  <TableRow
-                    key={debt.id}
-                    className="hover:bg-muted/30 transition-colors"
-                  >
-                    <TableCell className="text-xs text-muted-foreground font-mono">
-                      {debt.id}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm">
-                          {formatDate(debt.created_at)}
+                {getAllDebts().map((debt) => {
+                  const debtor = calculateTotals().find((d) =>
+                    d.items.some((item) => item.id === debt.id),
+                  );
+                  return (
+                    <TableRow
+                      key={debt.id}
+                      className="hover:bg-muted/30 transition-colors"
+                    >
+                      <TableCell className="text-xs text-muted-foreground font-mono">
+                        {debt.id}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-sm">
+                            {debtor?.debtorLabel || "—"}
+                          </p>
+                          {debtor?.debtorPhone && (
+                            <p className="text-xs text-muted-foreground">
+                              {debtor.debtorPhone}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm">
+                            {formatDate(debt.created_at)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-semibold text-red-600">
+                          {formatNumber(debt.amount)}
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-semibold text-red-600">
-                        {formatNumber(parseFloat(debt.amount))}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm font-medium">
-                        {debt.currency?.name || "—"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          debt.status === "debt_open"
-                            ? "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-50"
-                            : "bg-green-50 text-green-700 border-green-200 hover:bg-green-50"
-                        }
-                      >
-                        {debt.status === "debt_open" ? "Ochiq" : "Yopiq"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-muted-foreground">
-                        {debt.comment || "—"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {debt.status === "debt_open" && (
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-medium">
+                          {debt.days_open} kun
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {debt.comment || "—"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
                         <Button
                           size="sm"
                           onClick={() => openSettleDialog(debt)}
@@ -337,10 +300,10 @@ const Debts = () => {
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           To'lash
                         </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
@@ -393,11 +356,16 @@ const Debts = () => {
                     Qarz summasi
                   </Label>
                   <p className="font-semibold text-red-600">
-                    {formatNumber(parseFloat(selectedDebt.amount))}{" "}
-                    {selectedDebt.currency?.name}
+                    {formatNumber(selectedDebt.amount)}
                   </p>
                 </div>
                 <div>
+                  <Label className="text-xs text-muted-foreground">
+                    Ochiq kunlar
+                  </Label>
+                  <p className="font-medium">{selectedDebt.days_open} kun</p>
+                </div>
+                <div className="col-span-2">
                   <Label className="text-xs text-muted-foreground">Izoh</Label>
                   <p className="font-medium">{selectedDebt.comment || "—"}</p>
                 </div>
@@ -413,48 +381,8 @@ const Debts = () => {
                   className="text-lg font-semibold"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Maksimal: {formatNumber(parseFloat(selectedDebt.amount))}{" "}
-                  {selectedDebt.currency?.name}
+                  Maksimal: {formatNumber(selectedDebt.amount)}
                 </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="source">Manba</Label>
-                {sourcesLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Yuklanmoqda...
-                  </div>
-                ) : (
-                  <>
-                    <Select
-                      value={selectedSource}
-                      onValueChange={setSelectedSource}
-                      disabled={availableSources.length === 0}
-                    >
-                      <SelectTrigger id="source">
-                        <SelectValue placeholder="Manbani tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableSources.map((source) => (
-                          <SelectItem
-                            key={source.id}
-                            value={source.id.toString()}
-                          >
-                            {source.date} -{" "}
-                            {formatNumber(parseFloat(source.remaining_amount))}{" "}
-                            qoldiq
-                            {source.comment && ` (${source.comment})`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {availableSources.length === 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Mavjud manbalar yo'q
-                      </p>
-                    )}
-                  </>
-                )}
               </div>
             </div>
           )}
