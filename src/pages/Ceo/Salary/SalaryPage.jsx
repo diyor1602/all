@@ -39,6 +39,8 @@ import {
   CheckCircle,
   Trash2,
   Magnet,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Label } from "@/components/ui/label";
@@ -130,6 +132,8 @@ const SalaryPage = () => {
   });
   const [paymentForm, setPaymentForm] = useState({ amount: "", comment: "" });
 
+  const [montlyClosure, setMonthlyClosure] = useState([]);
+
   // Currency and sources state
   const [currencies, setCurrencies] = useState([]);
   const [availableSources, setAvailableSources] = useState([]);
@@ -186,6 +190,72 @@ const SalaryPage = () => {
   const [additionalAmount, setAdditionalAmount] = useState("");
   const [additionalComment, setAdditionalComment] = useState("");
   const [sending, setSending] = useState(false);
+
+  const getMonthlyClosures = async () => {
+    try {
+      const res = await api.get("/ceo/monthly-closures", {
+        params: {
+          year: selectedMonth.split("-")[0],
+          month: selectedMonth.split("-")[1],
+        },
+      });
+      setMonthlyClosure(res.data);
+    } catch {
+      toast({
+        title: "Xatolik",
+        description: "Ma'lumotlarni olib bo'lmadi",
+        variant: "destructive",
+        duration: 1500,
+      });
+    }
+  };
+
+  const handleClosureChange = async () => {
+    const confirmMessage = montlyClosure.is_closed
+      ? "Oyni ochishni tasdiqlaysizmi?"
+      : "Oyni yopishni tasdiqlaysizmi?";
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      if (montlyClosure.is_closed) {
+        await api.post("/ceo/monthly-closures/reopen", {
+          year: parseInt(selectedMonth.split("-")[0]),
+          month: parseInt(selectedMonth.split("-")[1]),
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Oy muvaffaqiyatli ochildi",
+          duration: 1500,
+        });
+      } else {
+        await api.post("/ceo/monthly-closures/close", {
+          year: parseInt(selectedMonth.split("-")[0]),
+          month: parseInt(selectedMonth.split("-")[1]),
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Oy muvaffaqiyatli yopildi",
+          duration: 1500,
+        });
+      }
+      getMonthlyClosures();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Amalni bajarishda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    }
+  };
+
+  useEffect(() => {
+    getMonthlyClosures();
+  }, [selectedMonth]);
 
   const handleAdditionalDialog = (employee, type) => {
     const config = SALARY_TYPE_CONFIG[type];
@@ -856,6 +926,22 @@ const SalaryPage = () => {
         </Button>
 
         <ExcelAdding />
+        <Button
+          variant={montlyClosure.is_closed ? "default" : "destructive"}
+          onClick={handleClosureChange}
+        >
+          {montlyClosure.is_closed ? (
+            <>
+              <Lock />
+              Qulflangan
+            </>
+          ) : (
+            <>
+              <Unlock />
+              Ochiq
+            </>
+          )}
+        </Button>
         <Button
           variant="ghost"
           size="icon"
