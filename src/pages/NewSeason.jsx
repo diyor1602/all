@@ -3,6 +3,12 @@ import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
@@ -55,6 +61,8 @@ const NewSeason = () => {
     localStorage.getItem("newSeasonSelectedMonth") ||
       new Date().toISOString().slice(0, 7),
   );
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const getData = async () => {
     setLoading(true);
@@ -118,6 +126,13 @@ const NewSeason = () => {
         return dayDate <= today;
       })
       .map((day) => apiDaysMap.get(day.date) || day);
+  };
+
+  const handleDayClick = (day) => {
+    if (day.orders && day.orders.length > 0) {
+      setSelectedDay(day);
+      setIsDialogOpen(true);
+    }
   };
 
   return (
@@ -313,7 +328,8 @@ const NewSeason = () => {
                     ?.map((day, i) => (
                       <div
                         key={i}
-                        className={`p-4 flex items-center justify-between transition-all duration-200 group ${
+                        onClick={() => handleDayClick(day)}
+                        className={`p-4 flex items-center justify-between transition-all duration-200 group cursor-pointer ${
                           day.amount > 0
                             ? "hover:bg-emerald-50/60"
                             : "hover:bg-slate-50"
@@ -429,6 +445,66 @@ const NewSeason = () => {
           </>
         )}
       </div>
+
+      {/* Orders Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-800">
+              {selectedDay?.date} - Buyurtmalar
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {selectedDay?.orders?.map((order) => (
+              <div
+                key={order.order_id}
+                className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-slate-800 text-sm mb-1">
+                      {order.order_name}
+                    </h4>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium">
+                        {order.model_name}
+                      </span>
+                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                        {order.submodel_name}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-emerald-600 text-lg">
+                      {formatNumber(order.amount, 0)} so'm
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-200">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Miqdor</p>
+                    <p className="font-semibold text-slate-700 text-sm">
+                      {formatNumber(order.qty, 0)} dona
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Vaqt</p>
+                    <p className="font-semibold text-slate-700 text-sm">
+                      {formatNumber(order.minutes, 0)} daq
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {selectedDay?.orders?.length === 0 && (
+              <div className="text-center py-8 text-slate-500">
+                <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                <p className="text-sm font-medium">Buyurtmalar mavjud emas</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
