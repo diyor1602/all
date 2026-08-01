@@ -493,6 +493,12 @@ const NewSeason = () => {
                       {formatNumber(order.minutes, 0)} daq
                     </p>
                   </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Birligi</p>
+                    <p className="font-semibold text-slate-700 text-sm">
+                      {formatNumber(order.minutes / order.qty, 0)} daqiqa
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
