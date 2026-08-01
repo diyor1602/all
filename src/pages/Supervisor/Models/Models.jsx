@@ -170,10 +170,10 @@ const Models = () => {
               <TooltipTrigger>
                 <div className="flex flex-col gap-1">
                   <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
-                    {formatNumber(parseFloat(model?.rasxod))} so'm
+                    {formatNumber(model?.rasxod)} so'm
                   </div>
                   <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
-                    {formatNumber(parseFloat(model?.rasxod) / 250)} daqiqa
+                    {formatNumber(model?.minute)} daqiqa
                   </div>
                 </div>
               </TooltipTrigger>
