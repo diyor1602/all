@@ -168,6 +168,7 @@ const OrderView = () => {
           confirmedQuantity: "",
           unitPrice: item.unitPrice ?? "",
           currencyId: item.currency?.id ? String(item.currency.id) : "",
+          storeId: "",
         };
       });
       setItemForms(initial);
@@ -315,6 +316,7 @@ const OrderView = () => {
         confirmedQuantity: Number(form.confirmedQuantity) || 0,
         unitPrice: Number(form.unitPrice) || 0,
         currencyId: Number(form.currencyId) || item.currency?.id,
+        storeId: Number(form.storeId) || null,
       };
     });
 
@@ -690,6 +692,29 @@ const OrderView = () => {
                           {item.item?.unit?.name}
                         </span>
                       </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Magazin
+                      </label>
+                      <Select
+                        value={form.storeId}
+                        onValueChange={(value) =>
+                          updateItemForm(item.id, "storeId", value)
+                        }
+                      >
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue placeholder="Magazinni tanlang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {stores.map((store) => (
+                            <SelectItem key={store.id} value={String(store.id)}>
+                              {store.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
