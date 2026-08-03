@@ -79,7 +79,6 @@ const Attendance = () => {
     date: "",
     attendance_type: 1,
     salary: 0,
-    fuel_bonus: 0,
     attendanceId: null,
     hasAttendance: false,
   });
@@ -104,7 +103,6 @@ const Attendance = () => {
     dates: [],
     attendance_type: 1,
     salary: 0,
-    fuel_bonus: 0,
   });
   const [transportSearchResults, setTransportSearchResults] = useState([]);
   const [selectedTransport, setSelectedTransport] = useState(null);
@@ -256,9 +254,6 @@ const Attendance = () => {
         salary: selectedTransport.salary
           ? Number.parseInt(selectedTransport.salary)
           : 0,
-        fuel_bonus: selectedTransport.fuel_bonus
-          ? Number.parseInt(selectedTransport.fuel_bonus)
-          : 0,
       }));
     }
   }, [selectedTransport]);
@@ -319,8 +314,7 @@ const Attendance = () => {
         );
         if (attendance) {
           dailyMoneyTotals[dayIndex] +=
-            (attendance.salary || 0) * (attendance.attendance_type || 0) +
-            (attendance.fuel_bonus || 0) * (attendance.attendance_type || 0);
+            (attendance.salary || 0) * (attendance.attendance_type || 0);
         }
       }
     });
@@ -367,45 +361,7 @@ const Attendance = () => {
         0,
       );
 
-      const fuelDays = Array.from({ length: daysInMonth }).reduce(
-        (total, _, dayIndex) => {
-          const attendance = attendances.find(
-            (a) =>
-              a.date ===
-                `${selectedYear}-${String(selectedMonth + 1).padStart(
-                  2,
-                  "0",
-                )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport?.id === transportId,
-          );
-          return (
-            total +
-            (attendance?.fuel_bonus > 0 ? attendance?.attendance_type || 0 : 0)
-          );
-        },
-        0,
-      );
-
-      const totalFuelBonus = Array.from({ length: daysInMonth }).reduce(
-        (total, _, dayIndex) => {
-          const attendance = attendances.find(
-            (a) =>
-              a.date ===
-                `${selectedYear}-${String(selectedMonth + 1).padStart(
-                  2,
-                  "0",
-                )}-${String(dayIndex + 1).padStart(2, "0")}` &&
-              a.transport?.id === transportId,
-          );
-          return (
-            total +
-            (attendance?.fuel_bonus * (attendance?.attendance_type || 0) || 0)
-          );
-        },
-        0,
-      );
-
-      const totalTransportMoney = totalSalary + totalFuelBonus;
+      const totalTransportMoney = totalSalary;
 
       const totalPaid =
         transport?.payment?.reduce(
@@ -425,8 +381,6 @@ const Attendance = () => {
       calculations[transportId] = {
         workDays,
         totalSalary,
-        fuelDays,
-        totalFuelBonus,
         totalTransportMoney,
         totalPaid,
         debt,
@@ -440,8 +394,6 @@ const Attendance = () => {
     const totals = {
       workDays: 0,
       totalSalary: 0,
-      fuelDays: 0,
-      totalFuelBonus: 0,
       totalTransportMoney: 0,
       totalPaid: 0,
       debt: 0,
@@ -455,8 +407,6 @@ const Attendance = () => {
     Object.values(calculations).forEach((calc) => {
       totals.workDays += calc.workDays;
       totals.totalSalary += calc.totalSalary;
-      totals.fuelDays += calc.fuelDays;
-      totals.totalFuelBonus += calc.totalFuelBonus;
       totals.totalTransportMoney += calc.totalTransportMoney;
       totals.totalPaid += calc.totalPaid;
       totals.debt += calc.debt;
@@ -502,15 +452,9 @@ const Attendance = () => {
       headers.push(
         "Kunlik yo'l kira",
         "Jami ish kuni",
-        "Jami yo'l kira haqqi",
-        "Jami benzinli kun",
-        "Jami benzin uchun",
-        "Qarzdorlik",
+        "Qoldiq",
         "Jami transport puli",
-        "Jami to'langan pul",
         "Avans",
-        "Maosh",
-        "Transport umumiy balansi",
       );
 
       // Add header row
@@ -551,15 +495,9 @@ const Attendance = () => {
         row.push(
           transport?.salary || 0,
           calculations.workDays || 0,
-          calculations.totalSalary || 0,
-          calculations.fuelDays || 0,
-          calculations.totalFuelBonus || 0,
           calculations.debt || 0,
           calculations.totalTransportMoney || 0,
-          calculations.totalPaid || 0,
           calculations.advance || 0,
-          calculations.salary || 0,
-          transport?.balance || 0,
         );
 
         worksheet.addRow(row);
@@ -582,15 +520,9 @@ const Attendance = () => {
           0,
         ),
         transportCalculations.totals.workDays.toFixed(1),
-        transportCalculations.totals.totalSalary || 0,
-        transportCalculations.totals.fuelDays.toFixed(1),
-        transportCalculations.totals.totalFuelBonus || 0,
         transportCalculations.totals.debt || 0,
         transportCalculations.totals.totalTransportMoney || 0,
-        transportCalculations.totals.totalPaid || 0,
         transportCalculations.totals.advance || 0,
-        transportCalculations.totals.salary || 0,
-        transportCalculations.totals.balance || 0,
       );
 
       worksheet.addRow(totalsRow);
@@ -650,7 +582,7 @@ const Attendance = () => {
       "0",
     )}-${String(day).padStart(2, "0")}`;
 
-    // Find the transport to get its default salary and fuel_bonus
+    // Find the transport to get its default salary
     const transport = transports.find((t) => t.id === transportId);
 
     setCurrentAttendance({
@@ -661,11 +593,6 @@ const Attendance = () => {
         ? attendance.salary || 0
         : transport?.salary
           ? Number.parseInt(transport.salary)
-          : 0,
-      fuel_bonus: attendance
-        ? attendance.fuel_bonus || 0
-        : transport?.fuel_bonus
-          ? Number.parseInt(transport.fuel_bonus)
           : 0,
       attendanceId: attendance ? attendance.id : null,
       hasAttendance: !!attendance,
@@ -691,7 +618,6 @@ const Attendance = () => {
       dates: [],
       attendance_type: 1,
       salary: 0,
-      fuel_bonus: 0,
     });
     setDateRange({
       from: new Date(selectedYear, selectedMonth, 1),
@@ -713,7 +639,6 @@ const Attendance = () => {
             date: currentAttendance.date,
             attendance_type: currentAttendance.attendance_type,
             salary: currentAttendance.salary,
-            fuel_bonus: currentAttendance.fuel_bonus,
           },
         );
         toast({
@@ -727,7 +652,6 @@ const Attendance = () => {
           date: currentAttendance.date,
           attendance_type: currentAttendance.attendance_type,
           salary: currentAttendance.salary,
-          fuel_bonus: currentAttendance.fuel_bonus,
         });
         toast({
           title: "Muvaffaqiyatli",
@@ -817,7 +741,6 @@ const Attendance = () => {
         dates: selectedDates,
         attendance_type: smallAttendance.attendance_type,
         salary: smallAttendance.salary,
-        fuel_bonus: smallAttendance.fuel_bonus,
       };
 
       await api.post("/transport/massStoreByDates", payload);
@@ -1123,19 +1046,9 @@ const Attendance = () => {
               ))}
               <th className="border-2 p-1 min-w-[70px]">Kunlik yo'l kira</th>
               <th className="border-2 p-1 min-w-[70px]">Jami ish kuni</th>
-              <th className="border-2 p-1 min-w-[70px]">
-                Jami yo'l kira haqqi
-              </th>
-              <th className="border-2 p-1 min-w-[70px]">Jami benzinli kun</th>
-              <th className="border-2 p-1 min-w-[70px]">Jami benzin uchun</th>
-              <th className="border-2 p-1 min-w-[70px]">Qarzdorlik</th>
+              <th className="border-2 p-1 min-w-[70px]">Qoldiq</th>
               <th className="border-2 p-1 min-w-[70px]">Jami transport puli</th>
-              <th className="border-2 p-1 min-w-[70px]">Jami to'langan pul</th>
               <th className="border-2 p-1 min-w-[70px]">Avans</th>
-              <th className="border-2 p-1 min-w-[70px]">Maosh</th>
-              <th className="border-2 p-1 min-w-[70px]">
-                Transport umumiy balansi
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -1257,24 +1170,12 @@ const Attendance = () => {
                     {calculations.workDays || 0}
                   </td>
                   <td className="border-2 p-1 min-w-[70px]">
-                    {formatValue(calculations.totalSalary || 0)}
-                  </td>
-                  <td className="border-2 p-1 min-w-[70px]">
-                    {calculations.fuelDays || 0}
-                  </td>
-                  <td className="border-2 p-1 min-w-[70px]">
-                    {formatValue(calculations.totalFuelBonus || 0)}
-                  </td>
-                  <td className="border-2 p-1 min-w-[70px]">
                     <span className="text-red-500 font-semibold">
                       {formatValue(calculations.debt || 0)}
                     </span>
                   </td>
                   <td className="border-2 p-1 min-w-[70px]">
                     {formatValue(calculations.totalTransportMoney || 0)}
-                  </td>
-                  <td className="border-2 p-1 min-w-[70px]">
-                    {formatValue(calculations.totalPaid || 0)}
                   </td>
                   <td className="border-2 p-1 min-w-[70px]">
                     <Button
@@ -1284,18 +1185,6 @@ const Attendance = () => {
                     >
                       {formatValue(calculations.advance) || 0}
                     </Button>
-                  </td>
-                  <td className="border-2 p-1 min-w-[70px]">
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      onClick={() => openPaymentDialog(transport, "salary")}
-                    >
-                      {formatValue(calculations.salary) || 0}
-                    </Button>
-                  </td>
-                  <td className="border-2 p-1 min-w-[70px]">
-                    {formatValue(transport?.balance || 0)}
                   </td>
                 </tr>
               );
@@ -1343,15 +1232,6 @@ const Attendance = () => {
                 {transportCalculations.totals.workDays.toFixed(1)}
               </td>
               <td className="border-2 p-1 min-w-[70px]">
-                {formatValue(transportCalculations.totals.totalSalary || 0)}
-              </td>
-              <td className="border-2 p-1 min-w-[70px]">
-                {transportCalculations.totals.fuelDays.toFixed(1)}
-              </td>
-              <td className="border-2 p-1 min-w-[70px]">
-                {formatValue(transportCalculations.totals.totalFuelBonus || 0)}
-              </td>
-              <td className="border-2 p-1 min-w-[70px]">
                 <span className="text-red-500">
                   {formatValue(transportCalculations.totals.debt || 0)}
                 </span>
@@ -1362,16 +1242,7 @@ const Attendance = () => {
                 )}
               </td>
               <td className="border-2 p-1 min-w-[70px]">
-                {formatValue(transportCalculations.totals.totalPaid || 0)}
-              </td>
-              <td className="border-2 p-1 min-w-[70px]">
                 {formatValue(transportCalculations.totals.advance || 0)}
-              </td>
-              <td className="border-2 p-1 min-w-[70px]">
-                {formatValue(transportCalculations.totals.salary || 0)}
-              </td>
-              <td className="border-2 p-1 min-w-[70px]">
-                {formatValue(transportCalculations.totals.balance || 0)}
               </td>
             </tr>
           </tbody>
@@ -1427,24 +1298,6 @@ const Attendance = () => {
                   setCurrentAttendance((prev) => ({
                     ...prev,
                     salary: Number.parseInt(e.target.value),
-                  }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fuel-bonus">
-                Benzin uchun bonus ({formatValue(currentAttendance.fuel_bonus)}{" "}
-                so'm)
-              </Label>
-              <Input
-                id="fuel-bonus"
-                type="number"
-                value={currentAttendance.fuel_bonus}
-                onChange={(e) =>
-                  setCurrentAttendance((prev) => ({
-                    ...prev,
-                    fuel_bonus: Number.parseInt(e.target.value),
                   }))
                 }
               />
@@ -1709,24 +1562,6 @@ const Attendance = () => {
                   setSmallAttendance((prev) => ({
                     ...prev,
                     salary: Number.parseInt(e.target.value),
-                  }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="small-fuel-bonus">
-                Benzin uchun bonus ({formatValue(smallAttendance.fuel_bonus)}{" "}
-                so'm)
-              </Label>
-              <Input
-                id="small-fuel-bonus"
-                type="number"
-                value={smallAttendance.fuel_bonus}
-                onChange={(e) =>
-                  setSmallAttendance((prev) => ({
-                    ...prev,
-                    fuel_bonus: Number.parseInt(e.target.value),
                   }))
                 }
               />
