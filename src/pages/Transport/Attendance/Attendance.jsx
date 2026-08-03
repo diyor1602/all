@@ -836,6 +836,7 @@ const Attendance = () => {
         transport_id: Number.parseInt(selectedTransport.id),
         amount: Number.parseInt(currentSubmitPayment.amount),
         type: type,
+        month: selectedMonth,
       };
 
       if (method === "post") {
