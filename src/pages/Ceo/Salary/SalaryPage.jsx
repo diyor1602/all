@@ -133,6 +133,9 @@ const SalaryPage = () => {
   const [paymentForm, setPaymentForm] = useState({ amount: "", comment: "" });
 
   const [montlyClosure, setMonthlyClosure] = useState([]);
+  const [attendance_monthly_closure, setAttendanceMonthlyClosure] = useState(
+    [],
+  );
 
   // Currency and sources state
   const [currencies, setCurrencies] = useState([]);
@@ -192,6 +195,7 @@ const SalaryPage = () => {
   const [sending, setSending] = useState(false);
 
   const getMonthlyClosures = async () => {
+    if (!selectedMonth) return;
     try {
       const res = await api.get("/ceo/monthly-closures", {
         params: {
@@ -200,6 +204,26 @@ const SalaryPage = () => {
         },
       });
       setMonthlyClosure(res.data);
+    } catch {
+      toast({
+        title: "Xatolik",
+        description: "Ma'lumotlarni olib bo'lmadi",
+        variant: "destructive",
+        duration: 1500,
+      });
+    }
+  };
+
+  const getAttendanceMonthlyClosures = async () => {
+    if (!selectedMonth) return;
+    try {
+      const res = await api.get("/ceo/attendance-closures", {
+        params: {
+          year: selectedMonth.split("-")[0],
+          month: selectedMonth.split("-")[1],
+        },
+      });
+      setAttendanceMonthlyClosure(res.data);
     } catch {
       toast({
         title: "Xatolik",
@@ -253,8 +277,52 @@ const SalaryPage = () => {
     }
   };
 
+  const handleAttendanceClosureChange = async () => {
+    const confirmMessage = attendance_monthly_closure.is_closed
+      ? "Oyni ochishni tasdiqlaysizmi?"
+      : "Oyni yopishni tasdiqlaysizmi?";
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      if (attendance_monthly_closure.is_closed) {
+        await api.post("/ceo/attendance-closures/reopen", {
+          year: parseInt(selectedMonth.split("-")[0]),
+          month: parseInt(selectedMonth.split("-")[1]),
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Oy muvaffaqiyatli ochildi",
+          duration: 1500,
+        });
+      } else {
+        await api.post("/ceo/attendance-closures/close", {
+          year: parseInt(selectedMonth.split("-")[0]),
+          month: parseInt(selectedMonth.split("-")[1]),
+        });
+        toast({
+          title: "Muvaffaqiyatli",
+          description: "Oy muvaffaqiyatli yopildi",
+          duration: 1500,
+        });
+      }
+      getAttendanceMonthlyClosures();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description:
+          error.response?.data?.message || "Amalni bajarishda xatolik",
+        variant: "destructive",
+        duration: 1500,
+      });
+    }
+  };
+
   useEffect(() => {
     getMonthlyClosures();
+    getAttendanceMonthlyClosures();
   }, [selectedMonth]);
 
   const handleAdditionalDialog = (employee, type) => {
@@ -939,6 +1007,24 @@ const SalaryPage = () => {
             <>
               <Unlock />
               Ochiq
+            </>
+          )}
+        </Button>
+        <Button
+          variant={
+            attendance_monthly_closure.is_closed ? "default" : "destructive"
+          }
+          onClick={handleAttendanceClosureChange}
+        >
+          {attendance_monthly_closure.is_closed ? (
+            <>
+              <Lock />
+              Davomat Qulflangan
+            </>
+          ) : (
+            <>
+              <Unlock />
+              Davomat Ochiq
             </>
           )}
         </Button>
