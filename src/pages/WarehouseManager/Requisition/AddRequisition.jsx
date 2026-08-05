@@ -229,7 +229,7 @@ const AddRequisition = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-5">
+    <div className="max-w-3xl mx-auto space-y-5">
       <h1 className="text-2xl font-semibold text-gray-900">Yangi Talabnoma</h1>
 
       {/* Main info */}
@@ -333,8 +333,8 @@ const AddRequisition = () => {
                       {item.lot > 0 && <ItemBadge>Lot: {item.lot}</ItemBadge>}
                     </div>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto">
                       <Input
                         type="number"
                         min={1}
@@ -346,7 +346,7 @@ const AddRequisition = () => {
                             e.target.value,
                           )
                         }
-                        className="w-20 h-8 text-sm bg-white"
+                        className="w-full sm:w-20 h-8 text-sm bg-white"
                       />
                       {item.unitLabel && (
                         <span className="text-xs text-gray-500 whitespace-nowrap">
@@ -361,14 +361,14 @@ const AddRequisition = () => {
                       onChange={(e) =>
                         updateItem(item.itemId, "comment", e.target.value)
                       }
-                      className="flex-1 h-8 text-sm bg-white"
+                      className="flex-1 w-full h-8 text-sm bg-white"
                     />
                   </div>
                 </div>
 
                 <button
                   onClick={() => removeItem(item.itemId)}
-                  className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 self-start mt-1 opacity-0 group-hover:opacity-100"
+                  className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 self-start mt-1"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
