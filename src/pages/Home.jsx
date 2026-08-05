@@ -1,13 +1,15 @@
 import TailorLevel from "./TailorLevel";
 import DailyResults from "./DailyResults";
 import Balance from "./WarehouseManager/Balance/Balance";
-import Dashboard from "./GroupMaster/Dashboard";
+import GroupMasterDashboard from "./GroupMaster/GroupMasterDashboard";
+import MajorQualityControllerDashboard from "./MajorQualityController/MajorQualityControllerDashboard";
 
 const roleComponents = {
   tailor: TailorLevel,
   universalTailor: TailorLevel,
   warehouseManager: Balance,
-  groupMaster: Dashboard,
+  groupMaster: GroupMasterDashboard,
+  majorQualityController: MajorQualityControllerDashboard,
 };
 
 const Home = () => {
