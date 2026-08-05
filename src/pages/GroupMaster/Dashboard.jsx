@@ -21,7 +21,6 @@ import {
   ChevronDown,
   ChevronUp,
   User,
-  Search,
 } from "lucide-react";
 import formatNumber from "@/utils/formatNumber";
 
