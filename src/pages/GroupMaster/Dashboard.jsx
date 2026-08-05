@@ -23,6 +23,7 @@ import {
   User,
   Search,
 } from "lucide-react";
+import formatNumber from "@/utils/formatNumber";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -159,7 +160,7 @@ const Dashboard = () => {
                           acc + (g?.avg_efficiency_percent?.today || 0),
                         0,
                       ) / data.groups.length
-                    ).toFixed(1)
+                    ).toFixed(0)
                   : 0}
                 %
               </span>
@@ -204,14 +205,22 @@ const Dashboard = () => {
                               <TrendingUp className="w-4 h-4 text-green-500" />
                               <span className="font-medium">
                                 Bugun:{" "}
-                                {group.avg_efficiency_percent?.today || 0}%
+                                {formatNumber(
+                                  group.avg_efficiency_percent?.today || 0,
+                                  0,
+                                )}
+                                %
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="w-4 h-4 text-blue-500" />
                               <span className="font-medium">
                                 7 kun:{" "}
-                                {group.avg_efficiency_percent?.last_7_days || 0}
+                                {formatNumber(
+                                  group.avg_efficiency_percent?.last_7_days ||
+                                    0,
+                                  0,
+                                )}
                                 %
                               </span>
                             </div>
@@ -283,104 +292,99 @@ const Dashboard = () => {
                             <TabsTrigger value="week">7 kun</TabsTrigger>
                           </TabsList>
                           <TabsContent value="today" className="space-y-4 mt-4">
-                            <div>
-                              <h5 className="text-sm font-medium mb-2 text-red-600">
-                                Eng kam ishlayotganlar (Bugun)
-                              </h5>
-                              <div className="space-y-2">
-                                {group.efficiency?.today?.top7_worst
-                                  ?.slice(0, 5)
-                                  .map((emp, idx) => (
-                                    <div
-                                      key={emp.employee_id}
-                                      className="flex items-center gap-3 p-2 rounded-lg bg-red-50 border border-red-200"
-                                    >
-                                      <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">
-                                        {idx + 1}
+                            <div className="space-y-2">
+                              {group.efficiency?.today?.top7_worst
+                                ?.slice(0, 5)
+                                .map((emp, idx) => (
+                                  <div
+                                    key={emp.employee_id}
+                                    className="flex items-center gap-3 p-2 rounded-lg bg-red-50 border border-red-200"
+                                  >
+                                    <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">
+                                      {idx + 1}
+                                    </div>
+                                    {emp.img ? (
+                                      <img
+                                        src={emp.img}
+                                        alt={emp.name}
+                                        className="w-8 h-8 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-full bg-red-200 flex items-center justify-center text-xs font-semibold">
+                                        {emp.name?.charAt(0)}
                                       </div>
-                                      {emp.img ? (
-                                        <img
-                                          src={emp.img}
-                                          alt={emp.name}
-                                          className="w-8 h-8 rounded-full object-cover"
-                                        />
-                                      ) : (
-                                        <div className="w-8 h-8 rounded-full bg-red-200 flex items-center justify-center text-xs font-semibold">
-                                          {emp.name?.charAt(0)}
-                                        </div>
-                                      )}
-                                      <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-medium truncate">
-                                          {emp.name}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                          {emp.efficiency_percent.toFixed(1)}%
-                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm font-medium truncate">
+                                        {emp.name}
                                       </div>
-                                      <div className="text-sm font-semibold text-red-600">
-                                        {emp.total_earned?.toLocaleString()}{" "}
-                                        so'm
+                                      <div className="text-xs text-muted-foreground">
+                                        {formatNumber(
+                                          emp.efficiency_percent,
+                                          0,
+                                        )}
+                                        %
                                       </div>
                                     </div>
-                                  ))}
-                                {group.efficiency?.today?.top7_worst?.length ===
-                                  0 && (
-                                  <div className="text-sm text-muted-foreground">
-                                    Ma'lumot yo'q
+                                    <div className="text-sm font-semibold text-red-600">
+                                      {formatNumber(emp.total_earned, 0)} so'm
+                                    </div>
                                   </div>
-                                )}
-                              </div>
+                                ))}
+                              {group.efficiency?.today?.top7_worst?.length ===
+                                0 && (
+                                <div className="text-sm text-muted-foreground">
+                                  Ma'lumot yo'q
+                                </div>
+                              )}
                             </div>
                           </TabsContent>
                           <TabsContent value="week" className="space-y-4 mt-4">
-                            <div>
-                              <h5 className="text-sm font-medium mb-2 text-red-600">
-                                (7 kun)
-                              </h5>
-                              <div className="space-y-2">
-                                {group.efficiency?.last_7_days?.top7_worst
-                                  ?.slice(0, 5)
-                                  .map((emp, idx) => (
-                                    <div
-                                      key={emp.employee_id}
-                                      className="flex items-center gap-3 p-2 rounded-lg bg-red-50 border border-red-200"
-                                    >
-                                      <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">
-                                        {idx + 1}
+                            <div className="space-y-2">
+                              {group.efficiency?.last_7_days?.top7_worst
+                                ?.slice(0, 5)
+                                .map((emp, idx) => (
+                                  <div
+                                    key={emp.employee_id}
+                                    className="flex items-center gap-3 p-2 rounded-lg bg-red-50 border border-red-200"
+                                  >
+                                    <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">
+                                      {idx + 1}
+                                    </div>
+                                    {emp.img ? (
+                                      <img
+                                        src={emp.img}
+                                        alt={emp.name}
+                                        className="w-8 h-8 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-full bg-red-200 flex items-center justify-center text-xs font-semibold">
+                                        {emp.name?.charAt(0)}
                                       </div>
-                                      {emp.img ? (
-                                        <img
-                                          src={emp.img}
-                                          alt={emp.name}
-                                          className="w-8 h-8 rounded-full object-cover"
-                                        />
-                                      ) : (
-                                        <div className="w-8 h-8 rounded-full bg-red-200 flex items-center justify-center text-xs font-semibold">
-                                          {emp.name?.charAt(0)}
-                                        </div>
-                                      )}
-                                      <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-medium truncate">
-                                          {emp.name}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                          {emp.efficiency_percent.toFixed(1)}% (
-                                          {emp.worked_days} kun)
-                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm font-medium truncate">
+                                        {emp.name}
                                       </div>
-                                      <div className="text-sm font-semibold text-red-600">
-                                        {emp.total_earned?.toLocaleString()}{" "}
-                                        so'm
+                                      <div className="text-xs text-muted-foreground">
+                                        {formatNumber(
+                                          emp.efficiency_percent,
+                                          0,
+                                        )}
+                                        % ({emp.worked_days} kun)
                                       </div>
                                     </div>
-                                  ))}
-                                {group.efficiency?.last_7_days?.top7_worst
-                                  ?.length === 0 && (
-                                  <div className="text-sm text-muted-foreground">
-                                    Ma'lumot yo'q
+                                    <div className="text-sm font-semibold text-red-600">
+                                      {formatNumber(emp.total_earned, 0)} so'm
+                                    </div>
                                   </div>
-                                )}
-                              </div>
+                                ))}
+                              {group.efficiency?.last_7_days?.top7_worst
+                                ?.length === 0 && (
+                                <div className="text-sm text-muted-foreground">
+                                  Ma'lumot yo'q
+                                </div>
+                              )}
                             </div>
                           </TabsContent>
                         </Tabs>
