@@ -1,5 +1,13 @@
 import BaseLayout from "./BaseLayout";
-import { Bot, FilePlus, Users, Clock, Bug, Sprout } from "lucide-react";
+import {
+  Bot,
+  FilePlus,
+  Users,
+  Clock,
+  Bug,
+  Sprout,
+  FileText,
+} from "lucide-react";
 
 const navigation = [
   {
@@ -12,6 +20,12 @@ const navigation = [
     name: "Xodimlar",
     href: "/groupMaster/employees",
     icon: Users,
+    onMobile: false,
+  },
+  {
+    name: "Talabnoma",
+    href: "/groupMaster/addRequisition",
+    icon: FileText,
     onMobile: false,
   },
   {

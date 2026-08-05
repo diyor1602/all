@@ -8,6 +8,7 @@ import Employees from "./Employees/Employees";
 import ViewEmployees from "./Employees/ViewEmployees";
 import AttendanceHistory from "./AttendanceHistory";
 import OwnDamages from "./OwnDamages/OwnDamages";
+import AddRequisition from "./AddRequisition";
 
 const GroupMaster = () => {
   return (
@@ -21,6 +22,7 @@ const GroupMaster = () => {
       <Route path="employees/view/:id" element={<ViewEmployees />} />
       <Route path="attendanceHistory" element={<AttendanceHistory />} />
       <Route path="ownDamages" element={<OwnDamages />} />
+      <Route path="addRequisition" element={<AddRequisition />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
