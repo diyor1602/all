@@ -87,8 +87,7 @@ const LOG_LABELS = {
 };
 
 const EMPTY_PAYMENT = {
-  amount: "",
-  currencyId: "",
+  currencies: [{ amount: "", currencyId: "" }],
   comment: "",
   debtorType: "",
   storeId: "",
@@ -234,6 +233,40 @@ const OrderView = () => {
     }));
   };
 
+  const updatePaymentCurrency = (key, currencyIndex, field, value) => {
+    setPayments((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        currencies: prev[key].currencies.map((row, idx) =>
+          idx === currencyIndex ? { ...row, [field]: value } : row,
+        ),
+      },
+    }));
+  };
+
+  const addCurrencyRow = (key) => {
+    setPayments((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        currencies: [...prev[key].currencies, { amount: "", currencyId: "" }],
+      },
+    }));
+  };
+
+  const removeCurrencyRow = (key, currencyIndex) => {
+    setPayments((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        currencies: prev[key].currencies.filter(
+          (_, idx) => idx !== currencyIndex,
+        ),
+      },
+    }));
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -256,13 +289,34 @@ const OrderView = () => {
   const handlePreSubmit = () => {
     for (const m of PAYMENT_METHODS.filter((m) => payments[m.key].enabled)) {
       const p = payments[m.key];
-      if (!p.amount || !p.currencyId) {
+
+      // Validate at least one currency row is filled
+      const hasValidCurrency = p.currencies.some(
+        (row) => row.amount && row.currencyId,
+      );
+
+      if (!hasValidCurrency) {
         toast({
           title: "Xatolik",
-          description: `${m.label} to'lovi uchun summa va valyuta kiriting`,
+          description: `${m.label} to'lovi uchun kamida bitta valyuta va summa kiriting`,
           variant: "destructive",
         });
         return;
+      }
+
+      // Validate all filled currency rows have both amount and currency
+      for (const row of p.currencies) {
+        if (
+          (row.amount && !row.currencyId) ||
+          (!row.amount && row.currencyId)
+        ) {
+          toast({
+            title: "Xatolik",
+            description: `${m.label} to'lovi uchun har bir valyuta qatori uchun summa va valyutani kiriting`,
+            variant: "destructive",
+          });
+          return;
+        }
       }
       if (m.key === "debt" && !p.debtorType) {
         toast({
@@ -323,38 +377,44 @@ const OrderView = () => {
     const nowISO = new Date().toISOString();
     const paymentsJson = PAYMENT_METHODS.filter(
       (m) => payments[m.key].enabled,
-    ).map((m) => {
+    ).flatMap((m) => {
       const p = payments[m.key];
-      const paymentData = {
-        method: m.key,
-        amount: Number(p.amount),
-        currencyId: Number(p.currencyId),
-        comment: p.comment.trim() || "",
-        paidAt: m.key === "debt" ? null : nowISO,
-      };
 
-      if (m.key === "debt") {
-        paymentData.debtorType = p.debtorType;
-        paymentData.storeId = data.storeId;
-        if (p.debtorType === "store") {
-          paymentData.debtorStoreId = Number(p.debtorStoreId);
-          paymentData.debtorEmployeeId = null;
-          paymentData.debtorName = null;
-          paymentData.debtorPhone = null;
-        } else if (p.debtorType === "employee") {
-          paymentData.debtorStoreId = null;
-          paymentData.debtorEmployeeId = Number(p.debtorEmployeeId);
-          paymentData.debtorName = null;
-          paymentData.debtorPhone = null;
-        } else if (p.debtorType === "other") {
-          paymentData.debtorStoreId = null;
-          paymentData.debtorEmployeeId = null;
-          paymentData.debtorName = p.debtorName.trim();
-          paymentData.debtorPhone = p.debtorPhone.trim();
-        }
-      }
+      // Create a separate payment entry for each currency row
+      return p.currencies
+        .filter((row) => row.amount && row.currencyId) // Only include filled rows
+        .map((currencyRow) => {
+          const paymentData = {
+            method: m.key,
+            amount: Number(currencyRow.amount),
+            currencyId: Number(currencyRow.currencyId),
+            comment: p.comment.trim() || "",
+            paidAt: m.key === "debt" ? null : nowISO,
+          };
 
-      return paymentData;
+          if (m.key === "debt") {
+            paymentData.debtorType = p.debtorType;
+            paymentData.storeId = data.storeId;
+            if (p.debtorType === "store") {
+              paymentData.debtorStoreId = Number(p.debtorStoreId);
+              paymentData.debtorEmployeeId = null;
+              paymentData.debtorName = null;
+              paymentData.debtorPhone = null;
+            } else if (p.debtorType === "employee") {
+              paymentData.debtorStoreId = null;
+              paymentData.debtorEmployeeId = Number(p.debtorEmployeeId);
+              paymentData.debtorName = null;
+              paymentData.debtorPhone = null;
+            } else if (p.debtorType === "other") {
+              paymentData.debtorStoreId = null;
+              paymentData.debtorEmployeeId = null;
+              paymentData.debtorName = p.debtorName.trim();
+              paymentData.debtorPhone = p.debtorPhone.trim();
+            }
+          }
+
+          return paymentData;
+        });
     });
 
     try {
@@ -1139,44 +1199,80 @@ const OrderView = () => {
 
                   {/* Form fields */}
                   <div className="px-4 py-3 bg-background space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Summa * ({formatNumber(p.amount)})
-                        </label>
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          className="h-9 text-sm"
-                          value={p.amount}
-                          onChange={(e) =>
-                            updatePayment(m.key, "amount", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Valyuta *
-                        </label>
-                        <Select
-                          value={String(p.currencyId)}
-                          onValueChange={(v) =>
-                            updatePayment(m.key, "currencyId", v)
-                          }
-                        >
-                          <SelectTrigger className="h-9 text-sm">
-                            <SelectValue placeholder="Valyuta" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {currencyOptions.map((c) => (
-                              <SelectItem key={c.id} value={String(c.id)}>
-                                {c.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    {/* Multi-currency rows */}
+                    <div className="space-y-2">
+                      {p.currencies.map((currencyRow, index) => (
+                        <div key={index} className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Summa * ({formatNumber(currencyRow.amount)})
+                            </label>
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              className="h-9 text-sm"
+                              value={currencyRow.amount}
+                              onChange={(e) =>
+                                updatePaymentCurrency(
+                                  m.key,
+                                  index,
+                                  "amount",
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Valyuta *
+                            </label>
+                            <div className="flex gap-1">
+                              <Select
+                                value={String(currencyRow.currencyId)}
+                                onValueChange={(v) =>
+                                  updatePaymentCurrency(
+                                    m.key,
+                                    index,
+                                    "currencyId",
+                                    v,
+                                  )
+                                }
+                                className="flex-1"
+                              >
+                                <SelectTrigger className="h-9 text-sm">
+                                  <SelectValue placeholder="Valyuta" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {currencyOptions.map((c) => (
+                                    <SelectItem key={c.id} value={String(c.id)}>
+                                      {c.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {p.currencies.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    removeCurrencyRow(m.key, index)
+                                  }
+                                  className="p-2 h-9 rounded-md hover:bg-destructive/10 text-destructive"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => addCurrencyRow(m.key)}
+                        className="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
+                      >
+                        <span className="text-lg">+</span> Valyuta qo'shish
+                      </button>
                     </div>
 
                     {/* Debt-specific fields */}
