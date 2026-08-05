@@ -26,13 +26,13 @@ const navigation = [
     name: "Talabnoma",
     href: "/groupMaster/addRequisition",
     icon: FileText,
-    onMobile: false,
+    onMobile: true,
   },
   {
     name: "Davomat",
     href: "/groupMaster/attendanceHistory",
     icon: Clock,
-    onMobile: true,
+    onMobile: false,
   },
   {
     name: "Tarif",
