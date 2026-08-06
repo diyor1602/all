@@ -482,15 +482,17 @@ const OrderView = () => {
   const paymentTotalsByCurrency = {};
   PAYMENT_METHODS.filter((m) => payments[m.key].enabled).forEach((m) => {
     const p = payments[m.key];
-    const amount = Number(p.amount) || 0;
-    const currId = String(p.currencyId || "");
-    const currName =
-      currencyOptions.find((c) => String(c.id) === currId)?.name ?? "";
-    if (amount > 0 && currId) {
-      if (!paymentTotalsByCurrency[currId])
-        paymentTotalsByCurrency[currId] = { name: currName, total: 0 };
-      paymentTotalsByCurrency[currId].total += amount;
-    }
+    p.currencies.forEach((currencyRow) => {
+      const amount = Number(currencyRow.amount) || 0;
+      const currId = String(currencyRow.currencyId || "");
+      const currName =
+        currencyOptions.find((c) => String(c.id) === currId)?.name ?? "";
+      if (amount > 0 && currId) {
+        if (!paymentTotalsByCurrency[currId])
+          paymentTotalsByCurrency[currId] = { name: currName, total: 0 };
+        paymentTotalsByCurrency[currId].total += amount;
+      }
+    });
   });
 
   const hasEnabledPayments = PAYMENT_METHODS.some(
@@ -1680,9 +1682,6 @@ const OrderView = () => {
                     (m) => {
                       const p = payments[m.key];
                       const Icon = m.icon;
-                      const currName = currencyOptions.find(
-                        (c) => String(c.id) === String(p.currencyId),
-                      )?.name;
                       return (
                         <div
                           key={m.key}
@@ -1699,14 +1698,26 @@ const OrderView = () => {
                               </span>
                             )}
                           </div>
-                          <span
-                            className={`text-sm font-bold ${m.inactiveText}`}
-                          >
-                            {formatNumber(Number(p.amount))}{" "}
-                            <span className="text-xs font-normal">
-                              {currName}
-                            </span>
-                          </span>
+                          <div className="flex flex-col items-end gap-0.5">
+                            {p.currencies.map((currencyRow, idx) => {
+                              const currName = currencyOptions.find(
+                                (c) =>
+                                  String(c.id) ===
+                                  String(currencyRow.currencyId),
+                              )?.name;
+                              return (
+                                <span
+                                  key={idx}
+                                  className={`text-sm font-bold ${m.inactiveText}`}
+                                >
+                                  {formatNumber(Number(currencyRow.amount))}{" "}
+                                  <span className="text-xs font-normal">
+                                    {currName}
+                                  </span>
+                                </span>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     },
