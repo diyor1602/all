@@ -1015,18 +1015,18 @@ const Attendance = () => {
 
       <div className="max-h-[84vh] overflow-auto mt-4">
         <table className="border w-full text-xs bg-white">
-          <thead className="sticky top-0 bg-white shadow z-20">
+          <thead className="md:sticky top-0 bg-white shadow z-20">
             <tr>
-              <th className="border-2 p-1 min-w-[40px] sticky left-0 bg-white z-10">
+              <th className="border-2 p-1 min-w-[40px] md:sticky left-0 bg-white z-10">
                 №
               </th>
-              <th className="border-2 p-1 min-w-[70px] sticky left-[38px] bg-white z-10">
+              <th className="border-2 p-1 min-w-[70px] md:sticky left-[38px] bg-white z-10">
                 Rusumi
               </th>
-              <th className="border-2 p-1 min-w-[70px] sticky left-[106px] bg-white z-10">
+              <th className="border-2 p-1 min-w-[70px] md:sticky left-[106px] bg-white z-10">
                 Davlat raqami
               </th>
-              <th className="border-2 p-1 min-w-[150px] sticky left-[174px] bg-white z-10">
+              <th className="border-2 p-1 min-w-[150px] md:sticky left-[174px] bg-white z-10">
                 Haydovchi
               </th>
               {Array.from({ length: daysInMonth }).map((_, index) => (
@@ -1058,16 +1058,16 @@ const Attendance = () => {
                 transportCalculations.transportData[transport.id] || {};
               return (
                 <tr key={index} className="text-center">
-                  <td className="border-2 p-1 min-w-[40px] sticky left-0 bg-white z-10">
+                  <td className="border-2 p-1 min-w-[40px] md:sticky left-0 bg-white z-10">
                     {index + 1}
                   </td>
-                  <td className="border-2 p-1 min-w-[70px] sticky left-[38px] bg-white z-10">
+                  <td className="border-2 p-1 min-w-[70px] md:sticky left-[38px] bg-white z-10">
                     {transport?.name}
                   </td>
-                  <td className="border-2 p-1 min-w-[70px] sticky left-[106px] bg-white z-10">
+                  <td className="border-2 p-1 min-w-[70px] md:sticky left-[106px] bg-white z-10">
                     {transport?.state_number}
                   </td>
-                  <td className="border-2 p-1 min-w-[150px] sticky left-[174px] bg-white z-10">
+                  <td className="border-2 p-1 min-w-[150px] md:sticky left-[174px] bg-white z-10">
                     {transport?.driver_full_name
                       ?.split(" ")
                       .slice(0, 2)
@@ -1193,7 +1193,7 @@ const Attendance = () => {
             {/* Summary row with totals */}
             <tr className="text-center font-bold bg-gray-100">
               <td
-                className="border-2 p-1 sticky left-0 bg-gray-100 z-10"
+                className="border-2 p-1 md:sticky left-0 bg-gray-100 z-10"
                 colSpan={4}
               >
                 Jami:
