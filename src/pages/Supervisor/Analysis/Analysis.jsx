@@ -336,11 +336,11 @@ const Analysis = () => {
   };
 
   const stickyBase =
-    "sticky bg-inherit backdrop-blur supports-[backdrop-filter]:bg-white/95";
+    "md:sticky bg-inherit backdrop-blur supports-[backdrop-filter]:bg-white/95";
   const stickyHeader =
-    "sticky top-0 z-30 bg-slate-100 supports-[backdrop-filter]:bg-slate-100/95";
+    "md:sticky top-0 z-30 bg-slate-100 supports-[backdrop-filter]:bg-slate-100/95";
   const stickyFilterRow =
-    "sticky top-[33px] z-20 bg-white supports-[backdrop-filter]:bg-white/95";
+    "md:sticky top-[33px] z-20 bg-white supports-[backdrop-filter]:bg-white/95";
 
   return (
     <div className="space-y-4">
