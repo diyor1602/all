@@ -839,6 +839,7 @@ const SalaryPage = () => {
               const perDay = days > 0 ? totalEarned / days : 0;
               const highlight = employee.group === "N/A" && containsTikuv;
               const isLowEarner = perDay > 0 && perDay <= 100000;
+              const isInMinus = advanceTotal - totalEarned > 1000;
 
               return (
                 <tr
@@ -847,6 +848,7 @@ const SalaryPage = () => {
                     "hover:bg-gray-50 transition-colors",
                     highlight && "bg-red-200 hover:bg-red-100",
                     isLowEarner && "bg-yellow-200 hover:bg-yellow-100",
+                    isInMinus && "bg-sky-200 hover:bg-sky-100",
                   )}
                 >
                   <td className="border border-gray-200 p-1 text-center">
