@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar } from "@/components/ui/calendar";
 import { addDays, format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { Download, Loader2 } from "lucide-react";
@@ -836,7 +835,7 @@ const Attendance = () => {
         transport_id: Number.parseInt(selectedTransport.id),
         amount: Number.parseInt(currentSubmitPayment.amount),
         type: type,
-        month: selectedMonth,
+        month: `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`,
       };
 
       if (method === "post") {
@@ -1582,22 +1581,6 @@ const Attendance = () => {
                       : "Sana tanlanmagan"}
                 </div>
               </div>
-
-              <div className="w-full flex items-center justify-center">
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  className="border rounded-md"
-                  month={new Date(selectedYear, selectedMonth)}
-                  disabled={[
-                    {
-                      before: new Date(selectedYear, selectedMonth, 1),
-                      after: new Date(selectedYear, selectedMonth + 1, 0),
-                    },
-                  ]}
-                />
-              </div>
             </div>
           </div>
 
@@ -1680,26 +1663,6 @@ const Attendance = () => {
               }
               className="mb-4"
             />
-            {!selectedTransport?.payment?.find(
-              (payment) => payment?.type === currentSubmitPayment.type,
-            )?.date && (
-              <div className="w-full flex items-center justify-center">
-                <Calendar
-                  mode="single"
-                  className="mb-4"
-                  selected={currentSubmitPayment.date}
-                  onSelect={(date) => {
-                    setCurrentSubmitPayment((prev) => ({ ...prev, date }));
-                  }}
-                  disabled={[
-                    {
-                      before: new Date(selectedYear, selectedMonth, 1),
-                      after: new Date(selectedYear, selectedMonth + 1, 0),
-                    },
-                  ]}
-                />
-              </div>
-            )}
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
