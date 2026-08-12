@@ -151,15 +151,21 @@ const OrderView = () => {
           confirmedQuantity: "",
           unitPrice: item.unitPrice ?? "",
           currencyId: item.currency?.id ? String(item.currency.id) : "",
-          storeId: "",
           paymentMethod: "",
           paymentCurrencies: [{ amount: "", currencyId: "" }],
+          paymentDebts: [
+            {
+              amount: "",
+              currencyId: "",
+              debtorType: "",
+              debtorStoreId: "",
+              debtorEmployeeId: "",
+              debtorEmployeeName: "",
+              debtorName: "",
+              debtorPhone: "",
+            },
+          ],
           paymentComment: "",
-          paymentDebtorType: "",
-          paymentDebtorStoreId: "",
-          paymentDebtorEmployeeId: "",
-          paymentDebtorName: "",
-          paymentDebtorPhone: "",
         };
       });
       setItemForms(initial);
@@ -244,6 +250,52 @@ const OrderView = () => {
     }));
   };
 
+  const updateItemPaymentDebt = (itemId, debtIndex, field, value) => {
+    setItemForms((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        paymentDebts: prev[itemId].paymentDebts.map((row, idx) =>
+          idx === debtIndex ? { ...row, [field]: value } : row,
+        ),
+      },
+    }));
+  };
+
+  const addItemPaymentDebtRow = (itemId) => {
+    setItemForms((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        paymentDebts: [
+          ...prev[itemId].paymentDebts,
+          {
+            amount: "",
+            currencyId: "",
+            debtorType: "",
+            debtorStoreId: "",
+            debtorEmployeeId: "",
+            debtorEmployeeName: "",
+            debtorName: "",
+            debtorPhone: "",
+          },
+        ],
+      },
+    }));
+  };
+
+  const removeItemPaymentDebtRow = (itemId, debtIndex) => {
+    setItemForms((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        paymentDebts: prev[itemId].paymentDebts.filter(
+          (_, idx) => idx !== debtIndex,
+        ),
+      },
+    }));
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -282,79 +334,98 @@ const OrderView = () => {
         return;
       }
 
-      // Validate at least one currency row is filled
-      const hasValidCurrency = form.paymentCurrencies.some(
-        (row) => row.amount && row.currencyId,
-      );
+      // Validate based on payment method
+      if (form.paymentMethod === "debt") {
+        // Validate at least one debt entry is filled
+        const hasValidDebt = form.paymentDebts?.some(
+          (debt) => debt.amount && debt.currencyId && debt.debtorType,
+        );
 
-      if (!hasValidCurrency) {
-        toast({
-          title: "Xatolik",
-          description: `${item.item?.name || "Mahsulot"} uchun kamida bitta valyuta va summa kiriting`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Validate all filled currency rows have both amount and currency
-      for (const row of form.paymentCurrencies) {
-        if (
-          (row.amount && !row.currencyId) ||
-          (!row.amount && row.currencyId)
-        ) {
+        if (!hasValidDebt) {
           toast({
             title: "Xatolik",
-            description: `${item.item?.name || "Mahsulot"} uchun har bir valyuta qatori uchun summa va valyutani kiriting`,
+            description: `${item.item?.name || "Mahsulot"} uchun kamida bitta qarz qatori kiriting`,
             variant: "destructive",
           });
           return;
         }
-      }
 
-      // Validate debt-specific fields
-      if (form.paymentMethod === "debt" && !form.paymentDebtorType) {
-        toast({
-          title: "Xatolik",
-          description: `${item.item?.name || "Mahsulot"} uchun qarz turi (magazin/xodim/begona shaxs)ni tanlang`,
-          variant: "destructive",
-        });
-        return;
-      }
-      if (
-        form.paymentMethod === "debt" &&
-        form.paymentDebtorType === "store" &&
-        !form.paymentDebtorStoreId
-      ) {
-        toast({
-          title: "Xatolik",
-          description: `${item.item?.name || "Mahsulot"} uchun do'konni tanlang`,
-          variant: "destructive",
-        });
-        return;
-      }
-      if (
-        form.paymentMethod === "debt" &&
-        form.paymentDebtorType === "employee" &&
-        !form.paymentDebtorEmployeeId
-      ) {
-        toast({
-          title: "Xatolik",
-          description: `${item.item?.name || "Mahsulot"} uchun xodimni tanlang`,
-          variant: "destructive",
-        });
-        return;
-      }
-      if (
-        form.paymentMethod === "debt" &&
-        form.paymentDebtorType === "other" &&
-        (!form.paymentDebtorName || !form.paymentDebtorPhone)
-      ) {
-        toast({
-          title: "Xatolik",
-          description: `${item.item?.name || "Mahsulot"} uchun begona shaxs ismi va telefon raqamini kiriting`,
-          variant: "destructive",
-        });
-        return;
+        // Validate each debt entry
+        for (const debt of form.paymentDebts) {
+          // Skip empty rows
+          if (!debt.amount && !debt.currencyId && !debt.debtorType) continue;
+
+          // Validate all filled fields are complete
+          if (
+            (debt.amount && !debt.currencyId) ||
+            (!debt.amount && debt.currencyId) ||
+            (debt.amount && !debt.debtorType)
+          ) {
+            toast({
+              title: "Xatolik",
+              description: `${item.item?.name || "Mahsulot"} uchun har bir qarz qatori uchun summa, valyuta va qarz turini kiriting`,
+              variant: "destructive",
+            });
+            return;
+          }
+
+          if (debt.debtorType === "store" && !debt.debtorStoreId) {
+            toast({
+              title: "Xatolik",
+              description: `${item.item?.name || "Mahsulot"} uchun do'konni tanlang`,
+              variant: "destructive",
+            });
+            return;
+          }
+          if (debt.debtorType === "employee" && !debt.debtorEmployeeId) {
+            toast({
+              title: "Xatolik",
+              description: `${item.item?.name || "Mahsulot"} uchun xodimni tanlang`,
+              variant: "destructive",
+            });
+            return;
+          }
+          if (
+            debt.debtorType === "other" &&
+            (!debt.debtorName || !debt.debtorPhone)
+          ) {
+            toast({
+              title: "Xatolik",
+              description: `${item.item?.name || "Mahsulot"} uchun begona shaxs ismi va telefon raqamini kiriting`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      } else {
+        // For non-debt payments (cash, card, etc.), validate paymentCurrencies
+        const hasValidCurrency = form.paymentCurrencies.some(
+          (row) => row.amount && row.currencyId,
+        );
+
+        if (!hasValidCurrency) {
+          toast({
+            title: "Xatolik",
+            description: `${item.item?.name || "Mahsulot"} uchun kamida bitta valyuta va summa kiriting`,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Validate all filled currency rows have both amount and currency
+        for (const row of form.paymentCurrencies) {
+          if (
+            (row.amount && !row.currencyId) ||
+            (!row.amount && row.currencyId)
+          ) {
+            toast({
+              title: "Xatolik",
+              description: `${item.item?.name || "Mahsulot"} uchun har bir valyuta qatori uchun summa va valyutani kiriting`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
       }
     }
     setConfirmOpen(true);
@@ -378,24 +449,35 @@ const OrderView = () => {
       };
 
       if (form.paymentMethod === "debt") {
-        paymentData.debtorType = form.paymentDebtorType;
-        paymentData.storeId = data.storeId;
-        if (form.paymentDebtorType === "store") {
-          paymentData.debtorStoreId = Number(form.paymentDebtorStoreId);
-          paymentData.debtorEmployeeId = null;
-          paymentData.debtorName = null;
-          paymentData.debtorPhone = null;
-        } else if (form.paymentDebtorType === "employee") {
-          paymentData.debtorStoreId = null;
-          paymentData.debtorEmployeeId = Number(form.paymentDebtorEmployeeId);
-          paymentData.debtorName = null;
-          paymentData.debtorPhone = null;
-        } else if (form.paymentDebtorType === "other") {
-          paymentData.debtorStoreId = null;
-          paymentData.debtorEmployeeId = null;
-          paymentData.debtorName = form.paymentDebtorName?.trim() || "";
-          paymentData.debtorPhone = form.paymentDebtorPhone?.trim() || "";
-        }
+        paymentData.debts = form.paymentDebts
+          .filter((debt) => debt.amount && debt.currencyId && debt.debtorType)
+          .map((debt) => {
+            const debtData = {
+              amount: Number(debt.amount),
+              currencyId: Number(debt.currencyId),
+              debtorType: debt.debtorType,
+              storeId: data.storeId,
+            };
+
+            if (debt.debtorType === "store") {
+              debtData.debtorStoreId = Number(debt.debtorStoreId);
+              debtData.debtorEmployeeId = null;
+              debtData.debtorName = null;
+              debtData.debtorPhone = null;
+            } else if (debt.debtorType === "employee") {
+              debtData.debtorStoreId = null;
+              debtData.debtorEmployeeId = Number(debt.debtorEmployeeId);
+              debtData.debtorName = null;
+              debtData.debtorPhone = null;
+            } else if (debt.debtorType === "other") {
+              debtData.debtorStoreId = null;
+              debtData.debtorEmployeeId = null;
+              debtData.debtorName = debt.debtorName?.trim() || "";
+              debtData.debtorPhone = debt.debtorPhone?.trim() || "";
+            }
+
+            return debtData;
+          });
       }
 
       return {
@@ -403,7 +485,6 @@ const OrderView = () => {
         confirmedQuantity: Number(form.confirmedQuantity) || 0,
         unitPrice: Number(form.unitPrice) || 0,
         currencyId: Number(form.currencyId) || item.currency?.id,
-        storeId: Number(form.storeId) || null,
         payment: paymentData,
       };
     });
@@ -473,17 +554,34 @@ const OrderView = () => {
   if (data) {
     data.items.forEach((item) => {
       const form = itemForms[item.id] || {};
-      form.paymentCurrencies?.forEach((currencyRow) => {
-        const amount = Number(currencyRow.amount) || 0;
-        const currId = String(currencyRow.currencyId || "");
-        const currName =
-          currencyOptions.find((c) => String(c.id) === currId)?.name ?? "";
-        if (amount > 0 && currId) {
-          if (!paymentTotalsByCurrency[currId])
-            paymentTotalsByCurrency[currId] = { name: currName, total: 0 };
-          paymentTotalsByCurrency[currId].total += amount;
-        }
-      });
+
+      // For cash/card payments, use paymentCurrencies
+      if (form.paymentMethod !== "debt") {
+        form.paymentCurrencies?.forEach((currencyRow) => {
+          const amount = Number(currencyRow.amount) || 0;
+          const currId = String(currencyRow.currencyId || "");
+          const currName =
+            currencyOptions.find((c) => String(c.id) === currId)?.name ?? "";
+          if (amount > 0 && currId) {
+            if (!paymentTotalsByCurrency[currId])
+              paymentTotalsByCurrency[currId] = { name: currName, total: 0 };
+            paymentTotalsByCurrency[currId].total += amount;
+          }
+        });
+      } else {
+        // For debt payments, use paymentDebts
+        form.paymentDebts?.forEach((debt) => {
+          const amount = Number(debt.amount) || 0;
+          const currId = String(debt.currencyId || "");
+          const currName =
+            currencyOptions.find((c) => String(c.id) === currId)?.name ?? "";
+          if (amount > 0 && currId) {
+            if (!paymentTotalsByCurrency[currId])
+              paymentTotalsByCurrency[currId] = { name: currName, total: 0 };
+            paymentTotalsByCurrency[currId].total += amount;
+          }
+        });
+      }
     });
   }
 
@@ -547,11 +645,30 @@ const OrderView = () => {
         onOpenChange={setEmployeeSearchOpen}
         onSelectEmployee={(employee) => {
           if (employeeSearchForItem) {
-            updateItemForm(
-              employeeSearchForItem,
-              "paymentDebtorEmployeeId",
-              employee.id,
-            );
+            // Parse the item ID and debt index from the format "itemId-debtIndex"
+            const [itemId, debtIndex] = employeeSearchForItem.split("-");
+            if (debtIndex !== undefined) {
+              updateItemPaymentDebt(
+                itemId,
+                parseInt(debtIndex),
+                "debtorEmployeeId",
+                employee.id,
+              );
+              updateItemPaymentDebt(
+                itemId,
+                parseInt(debtIndex),
+                "debtorEmployeeName",
+                employee.name,
+              );
+            } else {
+              // Fallback for old format (just itemId)
+              updateItemForm(itemId, "paymentDebtorEmployeeId", employee.id);
+              updateItemForm(
+                itemId,
+                "paymentDebtorEmployeeName",
+                employee.name,
+              );
+            }
           }
           setEmployeeSearchOpen(false);
           setEmployeeSearchForItem(null);
@@ -832,29 +949,6 @@ const OrderView = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">
-                        Magazin
-                      </label>
-                      <Select
-                        value={form.storeId}
-                        onValueChange={(value) =>
-                          updateItemForm(item.id, "storeId", value)
-                        }
-                      >
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue placeholder="Magazinni tanlang" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {stores.map((store) => (
-                            <SelectItem key={store.id} value={String(store.id)}>
-                              {store.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1.5">
                         <label className="text-xs font-medium text-muted-foreground">
@@ -936,31 +1030,18 @@ const OrderView = () => {
                                   { amount: "", currencyId: "" },
                                 ]);
                                 updateItemForm(item.id, "paymentComment", "");
-                                updateItemForm(
-                                  item.id,
-                                  "paymentDebtorType",
-                                  "",
-                                );
-                                updateItemForm(
-                                  item.id,
-                                  "paymentDebtorStoreId",
-                                  "",
-                                );
-                                updateItemForm(
-                                  item.id,
-                                  "paymentDebtorEmployeeId",
-                                  "",
-                                );
-                                updateItemForm(
-                                  item.id,
-                                  "paymentDebtorName",
-                                  "",
-                                );
-                                updateItemForm(
-                                  item.id,
-                                  "paymentDebtorPhone",
-                                  "",
-                                );
+                                updateItemForm(item.id, "paymentDebts", [
+                                  {
+                                    amount: "",
+                                    currencyId: "",
+                                    debtorType: "",
+                                    debtorStoreId: "",
+                                    debtorEmployeeId: "",
+                                    debtorEmployeeName: "",
+                                    debtorName: "",
+                                    debtorPhone: "",
+                                  },
+                                ]);
                               }}
                               className={`relative flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 font-medium text-xs transition-all active:scale-[0.97] ${
                                 active
@@ -1002,249 +1083,361 @@ const OrderView = () => {
                               </div>
 
                               <div className="px-3 py-3 bg-background space-y-2.5">
-                                {/* Multi-currency rows */}
-                                <div className="space-y-2">
-                                  {form.paymentCurrencies?.map(
-                                    (currencyRow, index) => (
-                                      <div
-                                        key={index}
-                                        className="grid grid-cols-2 gap-2"
-                                      >
-                                        <div className="space-y-1">
-                                          <label className="text-[11px] font-medium text-muted-foreground">
-                                            Summa * (
-                                            {formatNumber(currencyRow.amount)})
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min="0"
-                                            placeholder="0"
-                                            className="h-8 text-xs"
-                                            value={currencyRow.amount}
-                                            onChange={(e) =>
-                                              updateItemPaymentCurrency(
-                                                item.id,
-                                                index,
-                                                "amount",
-                                                e.target.value,
+                                {/* Multi-currency rows (for non-debt payments) */}
+                                {form.paymentMethod !== "debt" && (
+                                  <div className="space-y-2">
+                                    {form.paymentCurrencies?.map(
+                                      (currencyRow, index) => (
+                                        <div
+                                          key={index}
+                                          className="grid grid-cols-2 gap-2"
+                                        >
+                                          <div className="space-y-1">
+                                            <label className="text-[11px] font-medium text-muted-foreground">
+                                              Summa * (
+                                              {formatNumber(currencyRow.amount)}
                                               )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[11px] font-medium text-muted-foreground">
-                                            Valyuta *
-                                          </label>
-                                          <div className="flex gap-1">
-                                            <Select
-                                              value={String(
-                                                currencyRow.currencyId,
-                                              )}
-                                              onValueChange={(v) =>
+                                            </label>
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              placeholder="0"
+                                              className="h-8 text-xs"
+                                              value={currencyRow.amount}
+                                              onChange={(e) =>
                                                 updateItemPaymentCurrency(
                                                   item.id,
                                                   index,
-                                                  "currencyId",
-                                                  v,
+                                                  "amount",
+                                                  e.target.value,
                                                 )
                                               }
-                                              className="flex-1"
-                                            >
-                                              <SelectTrigger className="h-8 text-xs">
-                                                <SelectValue placeholder="Valyuta" />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {currencyOptions.map((c) => (
-                                                  <SelectItem
-                                                    key={c.id}
-                                                    value={String(c.id)}
-                                                  >
-                                                    {c.name}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                            {form.paymentCurrencies.length >
-                                              1 && (
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  removeItemPaymentCurrencyRow(
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <label className="text-[11px] font-medium text-muted-foreground">
+                                              Valyuta *
+                                            </label>
+                                            <div className="flex gap-1">
+                                              <Select
+                                                value={String(
+                                                  currencyRow.currencyId,
+                                                )}
+                                                onValueChange={(v) =>
+                                                  updateItemPaymentCurrency(
                                                     item.id,
                                                     index,
+                                                    "currencyId",
+                                                    v,
                                                   )
                                                 }
-                                                className="p-1.5 h-8 rounded-md hover:bg-destructive/10 text-destructive"
+                                                className="flex-1"
                                               >
-                                                <X className="h-3.5 w-3.5" />
-                                              </button>
-                                            )}
+                                                <SelectTrigger className="h-8 text-xs">
+                                                  <SelectValue placeholder="Valyuta" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {currencyOptions.map((c) => (
+                                                    <SelectItem
+                                                      key={c.id}
+                                                      value={String(c.id)}
+                                                    >
+                                                      {c.name}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                              {form.paymentCurrencies.length >
+                                                1 && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    removeItemPaymentCurrencyRow(
+                                                      item.id,
+                                                      index,
+                                                    )
+                                                  }
+                                                  className="p-1.5 h-8 rounded-md hover:bg-destructive/10 text-destructive"
+                                                >
+                                                  <X className="h-3.5 w-3.5" />
+                                                </button>
+                                              )}
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    ),
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      addItemPaymentCurrencyRow(item.id)
-                                    }
-                                    className="text-[11px] text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
-                                  >
-                                    <span className="text-base">+</span> Valyuta
-                                    qo'shish
-                                  </button>
-                                </div>
+                                      ),
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        addItemPaymentCurrencyRow(item.id)
+                                      }
+                                      className="text-[11px] text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
+                                    >
+                                      <span className="text-base">+</span>{" "}
+                                      Valyuta qo'shish
+                                    </button>
+                                  </div>
+                                )}
 
                                 {/* Debt-specific fields */}
                                 {form.paymentMethod === "debt" && (
-                                  <>
-                                    <div className="space-y-1">
-                                      <label className="text-[11px] font-medium text-muted-foreground">
-                                        Qarz beruvchi turi *
-                                      </label>
-                                      <Select
-                                        value={form.paymentDebtorType}
-                                        onValueChange={(v) => {
-                                          updateItemForm(
-                                            item.id,
-                                            "paymentDebtorType",
-                                            v,
-                                          );
-                                          // Reset dependent fields when type changes
-                                          updateItemForm(
-                                            item.id,
-                                            "paymentDebtorStoreId",
-                                            "",
-                                          );
-                                          updateItemForm(
-                                            item.id,
-                                            "paymentDebtorEmployeeId",
-                                            "",
-                                          );
-                                          updateItemForm(
-                                            item.id,
-                                            "paymentDebtorName",
-                                            "",
-                                          );
-                                          updateItemForm(
-                                            item.id,
-                                            "paymentDebtorPhone",
-                                            "",
-                                          );
-                                        }}
-                                      >
-                                        <SelectTrigger className="h-8 text-xs">
-                                          <SelectValue placeholder="Turini tanlang" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="store">
-                                            Magazin
-                                          </SelectItem>
-                                          <SelectItem value="employee">
-                                            Xodim
-                                          </SelectItem>
-                                          <SelectItem value="other">
-                                            Begona shaxs
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-
-                                    {form.paymentDebtorType === "store" && (
-                                      <div className="space-y-1">
-                                        <label className="text-[11px] font-medium text-muted-foreground">
-                                          Do'kon *
-                                        </label>
-                                        <Select
-                                          value={String(
-                                            form.paymentDebtorStoreId,
-                                          )}
-                                          onValueChange={(v) =>
-                                            updateItemForm(
-                                              item.id,
-                                              "paymentDebtorStoreId",
-                                              v,
-                                            )
-                                          }
+                                  <div className="space-y-2">
+                                    {form.paymentDebts?.map(
+                                      (debt, debtIndex) => (
+                                        <div
+                                          key={debtIndex}
+                                          className="rounded-lg border bg-muted/20 p-2 space-y-2"
                                         >
-                                          <SelectTrigger className="h-8 text-xs">
-                                            <SelectValue placeholder="Do'konni tanlang" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {stores.map((store) => (
-                                              <SelectItem
-                                                key={store.id}
-                                                value={String(store.id)}
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[11px] font-medium text-muted-foreground">
+                                              Qarz #{debtIndex + 1}
+                                            </span>
+                                            {form.paymentDebts.length > 1 && (
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  removeItemPaymentDebtRow(
+                                                    item.id,
+                                                    debtIndex,
+                                                  )
+                                                }
+                                                className="p-1 rounded hover:bg-destructive/10 text-destructive"
                                               >
-                                                {store.name}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                    )}
+                                                <X className="h-3 w-3" />
+                                              </button>
+                                            )}
+                                          </div>
 
-                                    {form.paymentDebtorType === "employee" && (
-                                      <div className="space-y-1">
-                                        <label className="text-[11px] font-medium text-muted-foreground">
-                                          Xodim *
-                                        </label>
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          className="w-full h-8 text-xs justify-start"
-                                          onClick={() => {
-                                            setEmployeeSearchForItem(item.id);
-                                            setEmployeeSearchOpen(true);
-                                          }}
-                                        >
-                                          {form.paymentDebtorEmployeeId
-                                            ? "Xodim tanlandi"
-                                            : "Xodimni tanlang"}
-                                        </Button>
-                                      </div>
-                                    )}
+                                          <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] font-medium text-muted-foreground">
+                                                Summa * (
+                                                {formatNumber(debt.amount)})
+                                              </label>
+                                              <Input
+                                                type="number"
+                                                min="0"
+                                                placeholder="0"
+                                                className="h-7 text-[11px]"
+                                                value={debt.amount}
+                                                onChange={(e) =>
+                                                  updateItemPaymentDebt(
+                                                    item.id,
+                                                    debtIndex,
+                                                    "amount",
+                                                    e.target.value,
+                                                  )
+                                                }
+                                              />
+                                            </div>
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] font-medium text-muted-foreground">
+                                                Valyuta *
+                                              </label>
+                                              <Select
+                                                value={String(debt.currencyId)}
+                                                onValueChange={(v) =>
+                                                  updateItemPaymentDebt(
+                                                    item.id,
+                                                    debtIndex,
+                                                    "currencyId",
+                                                    v,
+                                                  )
+                                                }
+                                              >
+                                                <SelectTrigger className="h-7 text-[11px]">
+                                                  <SelectValue placeholder="Valyuta" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {currencyOptions.map((c) => (
+                                                    <SelectItem
+                                                      key={c.id}
+                                                      value={String(c.id)}
+                                                    >
+                                                      {c.name}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                          </div>
 
-                                    {form.paymentDebtorType === "other" && (
-                                      <>
-                                        <div className="space-y-1">
-                                          <label className="text-[11px] font-medium text-muted-foreground">
-                                            Ism *
-                                          </label>
-                                          <Input
-                                            placeholder="Ismi"
-                                            className="h-8 text-xs"
-                                            value={form.paymentDebtorName}
-                                            onChange={(e) =>
-                                              updateItemForm(
-                                                item.id,
-                                                "paymentDebtorName",
-                                                e.target.value,
-                                              )
-                                            }
-                                          />
+                                          <div className="space-y-1">
+                                            <label className="text-[10px] font-medium text-muted-foreground">
+                                              Qarz beruvchi turi *
+                                            </label>
+                                            <Select
+                                              value={debt.debtorType}
+                                              onValueChange={(v) => {
+                                                updateItemPaymentDebt(
+                                                  item.id,
+                                                  debtIndex,
+                                                  "debtorType",
+                                                  v,
+                                                );
+                                                // Reset dependent fields when type changes
+                                                updateItemPaymentDebt(
+                                                  item.id,
+                                                  debtIndex,
+                                                  "debtorStoreId",
+                                                  "",
+                                                );
+                                                updateItemPaymentDebt(
+                                                  item.id,
+                                                  debtIndex,
+                                                  "debtorEmployeeId",
+                                                  "",
+                                                );
+                                                updateItemPaymentDebt(
+                                                  item.id,
+                                                  debtIndex,
+                                                  "debtorEmployeeName",
+                                                  "",
+                                                );
+                                                updateItemPaymentDebt(
+                                                  item.id,
+                                                  debtIndex,
+                                                  "debtorName",
+                                                  "",
+                                                );
+                                                updateItemPaymentDebt(
+                                                  item.id,
+                                                  debtIndex,
+                                                  "debtorPhone",
+                                                  "",
+                                                );
+                                              }}
+                                            >
+                                              <SelectTrigger className="h-7 text-[11px]">
+                                                <SelectValue placeholder="Turini tanlang" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="store">
+                                                  Magazin
+                                                </SelectItem>
+                                                <SelectItem value="employee">
+                                                  Xodim
+                                                </SelectItem>
+                                                <SelectItem value="other">
+                                                  Begona shaxs
+                                                </SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+
+                                          {debt.debtorType === "store" && (
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] font-medium text-muted-foreground">
+                                                Do'kon *
+                                              </label>
+                                              <Select
+                                                value={String(
+                                                  debt.debtorStoreId,
+                                                )}
+                                                onValueChange={(v) =>
+                                                  updateItemPaymentDebt(
+                                                    item.id,
+                                                    debtIndex,
+                                                    "debtorStoreId",
+                                                    v,
+                                                  )
+                                                }
+                                              >
+                                                <SelectTrigger className="h-7 text-[11px]">
+                                                  <SelectValue placeholder="Do'konni tanlang" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {stores.map((store) => (
+                                                    <SelectItem
+                                                      key={store.id}
+                                                      value={String(store.id)}
+                                                    >
+                                                      {store.name}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                          )}
+
+                                          {debt.debtorType === "employee" && (
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] font-medium text-muted-foreground">
+                                                Xodim *
+                                              </label>
+                                              <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="w-full h-7 text-[11px] justify-start"
+                                                onClick={() => {
+                                                  setEmployeeSearchForItem(
+                                                    `${item.id}-${debtIndex}`,
+                                                  );
+                                                  setEmployeeSearchOpen(true);
+                                                }}
+                                              >
+                                                {debt.debtorEmployeeName
+                                                  ? debt.debtorEmployeeName
+                                                  : "Xodimni tanlang"}
+                                              </Button>
+                                            </div>
+                                          )}
+
+                                          {debt.debtorType === "other" && (
+                                            <>
+                                              <div className="space-y-1">
+                                                <label className="text-[10px] font-medium text-muted-foreground">
+                                                  Ism *
+                                                </label>
+                                                <Input
+                                                  placeholder="Ismi"
+                                                  className="h-7 text-[11px]"
+                                                  value={debt.debtorName}
+                                                  onChange={(e) =>
+                                                    updateItemPaymentDebt(
+                                                      item.id,
+                                                      debtIndex,
+                                                      "debtorName",
+                                                      e.target.value,
+                                                    )
+                                                  }
+                                                />
+                                              </div>
+                                              <div className="space-y-1">
+                                                <label className="text-[10px] font-medium text-muted-foreground">
+                                                  Telefon *
+                                                </label>
+                                                <Input
+                                                  placeholder="+998 90 123 45 67"
+                                                  className="h-7 text-[11px]"
+                                                  value={debt.debtorPhone}
+                                                  onChange={(e) =>
+                                                    updateItemPaymentDebt(
+                                                      item.id,
+                                                      debtIndex,
+                                                      "debtorPhone",
+                                                      e.target.value,
+                                                    )
+                                                  }
+                                                />
+                                              </div>
+                                            </>
+                                          )}
                                         </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[11px] font-medium text-muted-foreground">
-                                            Telefon *
-                                          </label>
-                                          <Input
-                                            placeholder="+998 90 123 45 67"
-                                            className="h-8 text-xs"
-                                            value={form.paymentDebtorPhone}
-                                            onChange={(e) =>
-                                              updateItemForm(
-                                                item.id,
-                                                "paymentDebtorPhone",
-                                                e.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      </>
+                                      ),
                                     )}
-                                  </>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        addItemPaymentDebtRow(item.id)
+                                      }
+                                      className="text-[11px] text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
+                                    >
+                                      <span className="text-base">+</span> Qarz
+                                      qo'shish
+                                    </button>
+                                  </div>
                                 )}
 
                                 <div className="space-y-1">
@@ -1785,23 +1978,59 @@ const OrderView = () => {
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {form.paymentCurrencies?.map((currencyRow, idx) => {
-                            const currName = currencyOptions.find(
-                              (c) =>
-                                String(c.id) === String(currencyRow.currencyId),
-                            )?.name;
-                            return (
-                              <span
-                                key={idx}
-                                className={`text-xs font-bold ${method.inactiveText}`}
-                              >
-                                {formatNumber(Number(currencyRow.amount))}{" "}
-                                <span className="text-[11px] font-normal">
-                                  {currName}
-                                </span>
-                              </span>
-                            );
-                          })}
+                          {form.paymentMethod === "debt"
+                            ? form.paymentDebts?.map((debt, idx) => {
+                                const currName = currencyOptions.find(
+                                  (c) =>
+                                    String(c.id) === String(debt.currencyId),
+                                )?.name;
+                                const debtorLabel =
+                                  debt.debtorType === "store"
+                                    ? stores.find(
+                                        (s) =>
+                                          String(s.id) ===
+                                          String(debt.debtorStoreId),
+                                      )?.name
+                                    : debt.debtorType === "employee"
+                                      ? debt.debtorEmployeeName || "Xodim"
+                                      : debt.debtorName;
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`text-xs font-bold ${method.inactiveText}`}
+                                  >
+                                    {formatNumber(Number(debt.amount))}{" "}
+                                    <span className="text-[11px] font-normal">
+                                      {currName}
+                                    </span>
+                                    {debtorLabel && (
+                                      <span className="text-[10px] font-normal opacity-70 ml-1">
+                                        ({debtorLabel})
+                                      </span>
+                                    )}
+                                  </span>
+                                );
+                              })
+                            : form.paymentCurrencies?.map(
+                                (currencyRow, idx) => {
+                                  const currName = currencyOptions.find(
+                                    (c) =>
+                                      String(c.id) ===
+                                      String(currencyRow.currencyId),
+                                  )?.name;
+                                  return (
+                                    <span
+                                      key={idx}
+                                      className={`text-xs font-bold ${method.inactiveText}`}
+                                    >
+                                      {formatNumber(Number(currencyRow.amount))}{" "}
+                                      <span className="text-[11px] font-normal">
+                                        {currName}
+                                      </span>
+                                    </span>
+                                  );
+                                },
+                              )}
                         </div>
                         {form.paymentComment && (
                           <p className="text-[11px] text-muted-foreground mt-1">
