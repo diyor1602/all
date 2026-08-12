@@ -86,17 +86,6 @@ const LOG_LABELS = {
   closed: "Yopildi",
 };
 
-const EMPTY_PAYMENT = {
-  currencies: [{ amount: "", currencyId: "" }],
-  comment: "",
-  debtorType: "",
-  storeId: "",
-  debtorStoreId: "",
-  debtorEmployeeId: "",
-  debtorName: "",
-  debtorPhone: "",
-};
-
 const formatDate = (dateString) => {
   if (!dateString) return "—";
   return new Intl.DateTimeFormat("ru-RU", {
@@ -147,14 +136,9 @@ const OrderView = () => {
   });
   const [itemForms, setItemForms] = useState({});
   const [currencies, setCurrencies] = useState([]);
-  const [payments, setPayments] = useState(() =>
-    Object.fromEntries(
-      PAYMENT_METHODS.map((m) => [m.key, { enabled: false, ...EMPTY_PAYMENT }]),
-    ),
-  );
   const [stores, setStores] = useState([]);
   const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [employeeSearchForItem, setEmployeeSearchForItem] = useState(null);
 
   const getItem = async () => {
     try {
@@ -168,6 +152,14 @@ const OrderView = () => {
           unitPrice: item.unitPrice ?? "",
           currencyId: item.currency?.id ? String(item.currency.id) : "",
           storeId: "",
+          paymentMethod: "",
+          paymentCurrencies: [{ amount: "", currencyId: "" }],
+          paymentComment: "",
+          paymentDebtorType: "",
+          paymentDebtorStoreId: "",
+          paymentDebtorEmployeeId: "",
+          paymentDebtorName: "",
+          paymentDebtorPhone: "",
         };
       });
       setItemForms(initial);
@@ -215,52 +207,37 @@ const OrderView = () => {
     }));
   };
 
-  const togglePayment = (key) => {
-    setPayments((prev) => ({
+  const updateItemPaymentCurrency = (itemId, currencyIndex, field, value) => {
+    setItemForms((prev) => ({
       ...prev,
-      [key]: {
-        ...prev[key],
-        enabled: !prev[key].enabled,
-        ...(prev[key].enabled ? EMPTY_PAYMENT : {}),
-      },
-    }));
-  };
-
-  const updatePayment = (key, field, value) => {
-    setPayments((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], [field]: value },
-    }));
-  };
-
-  const updatePaymentCurrency = (key, currencyIndex, field, value) => {
-    setPayments((prev) => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        currencies: prev[key].currencies.map((row, idx) =>
+      [itemId]: {
+        ...prev[itemId],
+        paymentCurrencies: prev[itemId].paymentCurrencies.map((row, idx) =>
           idx === currencyIndex ? { ...row, [field]: value } : row,
         ),
       },
     }));
   };
 
-  const addCurrencyRow = (key) => {
-    setPayments((prev) => ({
+  const addItemPaymentCurrencyRow = (itemId) => {
+    setItemForms((prev) => ({
       ...prev,
-      [key]: {
-        ...prev[key],
-        currencies: [...prev[key].currencies, { amount: "", currencyId: "" }],
+      [itemId]: {
+        ...prev[itemId],
+        paymentCurrencies: [
+          ...prev[itemId].paymentCurrencies,
+          { amount: "", currencyId: "" },
+        ],
       },
     }));
   };
 
-  const removeCurrencyRow = (key, currencyIndex) => {
-    setPayments((prev) => ({
+  const removeItemPaymentCurrencyRow = (itemId, currencyIndex) => {
+    setItemForms((prev) => ({
       ...prev,
-      [key]: {
-        ...prev[key],
-        currencies: prev[key].currencies.filter(
+      [itemId]: {
+        ...prev[itemId],
+        paymentCurrencies: prev[itemId].paymentCurrencies.filter(
           (_, idx) => idx !== currencyIndex,
         ),
       },
@@ -287,73 +264,94 @@ const OrderView = () => {
   };
 
   const handlePreSubmit = () => {
-    for (const m of PAYMENT_METHODS.filter((m) => payments[m.key].enabled)) {
-      const p = payments[m.key];
+    for (const item of data.items) {
+      const form = itemForms[item.id] || {};
+
+      // Skip items without confirmed quantity
+      if (!form.confirmedQuantity || Number(form.confirmedQuantity) === 0) {
+        continue;
+      }
+
+      // Validate payment method is selected
+      if (!form.paymentMethod) {
+        toast({
+          title: "Xatolik",
+          description: `${item.item?.name || "Mahsulot"} uchun to'lov turini tanlang`,
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Validate at least one currency row is filled
-      const hasValidCurrency = p.currencies.some(
+      const hasValidCurrency = form.paymentCurrencies.some(
         (row) => row.amount && row.currencyId,
       );
 
       if (!hasValidCurrency) {
         toast({
           title: "Xatolik",
-          description: `${m.label} to'lovi uchun kamida bitta valyuta va summa kiriting`,
+          description: `${item.item?.name || "Mahsulot"} uchun kamida bitta valyuta va summa kiriting`,
           variant: "destructive",
         });
         return;
       }
 
       // Validate all filled currency rows have both amount and currency
-      for (const row of p.currencies) {
+      for (const row of form.paymentCurrencies) {
         if (
           (row.amount && !row.currencyId) ||
           (!row.amount && row.currencyId)
         ) {
           toast({
             title: "Xatolik",
-            description: `${m.label} to'lovi uchun har bir valyuta qatori uchun summa va valyutani kiriting`,
+            description: `${item.item?.name || "Mahsulot"} uchun har bir valyuta qatori uchun summa va valyutani kiriting`,
             variant: "destructive",
           });
           return;
         }
       }
-      if (m.key === "debt" && !p.debtorType) {
+
+      // Validate debt-specific fields
+      if (form.paymentMethod === "debt" && !form.paymentDebtorType) {
         toast({
           title: "Xatolik",
-          description: "Qarz turi (magazin/xodim/begona shaxs)ni tanlang",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (m.key === "debt" && p.debtorType === "store" && !p.debtorStoreId) {
-        toast({
-          title: "Xatolik",
-          description: "Do'konni tanlang",
+          description: `${item.item?.name || "Mahsulot"} uchun qarz turi (magazin/xodim/begona shaxs)ni tanlang`,
           variant: "destructive",
         });
         return;
       }
       if (
-        m.key === "debt" &&
-        p.debtorType === "employee" &&
-        !p.debtorEmployeeId
+        form.paymentMethod === "debt" &&
+        form.paymentDebtorType === "store" &&
+        !form.paymentDebtorStoreId
       ) {
         toast({
           title: "Xatolik",
-          description: "Xodimni tanlang",
+          description: `${item.item?.name || "Mahsulot"} uchun do'konni tanlang`,
           variant: "destructive",
         });
         return;
       }
       if (
-        m.key === "debt" &&
-        p.debtorType === "other" &&
-        (!p.debtorName || !p.debtorPhone)
+        form.paymentMethod === "debt" &&
+        form.paymentDebtorType === "employee" &&
+        !form.paymentDebtorEmployeeId
       ) {
         toast({
           title: "Xatolik",
-          description: "Begona shaxs ismi va telefon raqamini kiriting",
+          description: `${item.item?.name || "Mahsulot"} uchun xodimni tanlang`,
+          variant: "destructive",
+        });
+        return;
+      }
+      if (
+        form.paymentMethod === "debt" &&
+        form.paymentDebtorType === "other" &&
+        (!form.paymentDebtorName || !form.paymentDebtorPhone)
+      ) {
+        toast({
+          title: "Xatolik",
+          description: `${item.item?.name || "Mahsulot"} uchun begona shaxs ismi va telefon raqamini kiriting`,
           variant: "destructive",
         });
         return;
@@ -363,58 +361,51 @@ const OrderView = () => {
   };
 
   const handleSubmit = async () => {
+    const nowISO = new Date().toISOString();
     const items = data.items.map((item) => {
       const form = itemForms[item.id] || {};
+
+      const paymentData = {
+        method: form.paymentMethod,
+        currencies: form.paymentCurrencies
+          .filter((row) => row.amount && row.currencyId)
+          .map((currencyRow) => ({
+            amount: Number(currencyRow.amount),
+            currencyId: Number(currencyRow.currencyId),
+          })),
+        comment: form.paymentComment?.trim() || "",
+        paidAt: form.paymentMethod === "debt" ? null : nowISO,
+      };
+
+      if (form.paymentMethod === "debt") {
+        paymentData.debtorType = form.paymentDebtorType;
+        paymentData.storeId = data.storeId;
+        if (form.paymentDebtorType === "store") {
+          paymentData.debtorStoreId = Number(form.paymentDebtorStoreId);
+          paymentData.debtorEmployeeId = null;
+          paymentData.debtorName = null;
+          paymentData.debtorPhone = null;
+        } else if (form.paymentDebtorType === "employee") {
+          paymentData.debtorStoreId = null;
+          paymentData.debtorEmployeeId = Number(form.paymentDebtorEmployeeId);
+          paymentData.debtorName = null;
+          paymentData.debtorPhone = null;
+        } else if (form.paymentDebtorType === "other") {
+          paymentData.debtorStoreId = null;
+          paymentData.debtorEmployeeId = null;
+          paymentData.debtorName = form.paymentDebtorName?.trim() || "";
+          paymentData.debtorPhone = form.paymentDebtorPhone?.trim() || "";
+        }
+      }
+
       return {
         purchaseOrderItemId: item.id,
         confirmedQuantity: Number(form.confirmedQuantity) || 0,
         unitPrice: Number(form.unitPrice) || 0,
         currencyId: Number(form.currencyId) || item.currency?.id,
         storeId: Number(form.storeId) || null,
+        payment: paymentData,
       };
-    });
-
-    const nowISO = new Date().toISOString();
-    const paymentsJson = PAYMENT_METHODS.filter(
-      (m) => payments[m.key].enabled,
-    ).flatMap((m) => {
-      const p = payments[m.key];
-
-      // Create a separate payment entry for each currency row
-      return p.currencies
-        .filter((row) => row.amount && row.currencyId) // Only include filled rows
-        .map((currencyRow) => {
-          const paymentData = {
-            method: m.key,
-            amount: Number(currencyRow.amount),
-            currencyId: Number(currencyRow.currencyId),
-            comment: p.comment.trim() || "",
-            paidAt: m.key === "debt" ? null : nowISO,
-          };
-
-          if (m.key === "debt") {
-            paymentData.debtorType = p.debtorType;
-            paymentData.storeId = data.storeId;
-            if (p.debtorType === "store") {
-              paymentData.debtorStoreId = Number(p.debtorStoreId);
-              paymentData.debtorEmployeeId = null;
-              paymentData.debtorName = null;
-              paymentData.debtorPhone = null;
-            } else if (p.debtorType === "employee") {
-              paymentData.debtorStoreId = null;
-              paymentData.debtorEmployeeId = Number(p.debtorEmployeeId);
-              paymentData.debtorName = null;
-              paymentData.debtorPhone = null;
-            } else if (p.debtorType === "other") {
-              paymentData.debtorStoreId = null;
-              paymentData.debtorEmployeeId = null;
-              paymentData.debtorName = p.debtorName.trim();
-              paymentData.debtorPhone = p.debtorPhone.trim();
-            }
-          }
-
-          return paymentData;
-        });
     });
 
     try {
@@ -422,7 +413,6 @@ const OrderView = () => {
       const formData = new FormData();
       formData.append("comment", comment.trim() || "");
       formData.append("itemsJson", JSON.stringify(items));
-      formData.append("paymentsJson", JSON.stringify(paymentsJson));
       if (attachmentFile) formData.append("file", attachmentFile);
 
       await api.patch(`/supplier/purchaseOrder/${id}/status`, formData, {
@@ -480,26 +470,28 @@ const OrderView = () => {
   }
 
   const paymentTotalsByCurrency = {};
-  PAYMENT_METHODS.filter((m) => payments[m.key].enabled).forEach((m) => {
-    const p = payments[m.key];
-    p.currencies.forEach((currencyRow) => {
-      const amount = Number(currencyRow.amount) || 0;
-      const currId = String(currencyRow.currencyId || "");
-      const currName =
-        currencyOptions.find((c) => String(c.id) === currId)?.name ?? "";
-      if (amount > 0 && currId) {
-        if (!paymentTotalsByCurrency[currId])
-          paymentTotalsByCurrency[currId] = { name: currName, total: 0 };
-        paymentTotalsByCurrency[currId].total += amount;
-      }
+  if (data) {
+    data.items.forEach((item) => {
+      const form = itemForms[item.id] || {};
+      form.paymentCurrencies?.forEach((currencyRow) => {
+        const amount = Number(currencyRow.amount) || 0;
+        const currId = String(currencyRow.currencyId || "");
+        const currName =
+          currencyOptions.find((c) => String(c.id) === currId)?.name ?? "";
+        if (amount > 0 && currId) {
+          if (!paymentTotalsByCurrency[currId])
+            paymentTotalsByCurrency[currId] = { name: currName, total: 0 };
+          paymentTotalsByCurrency[currId].total += amount;
+        }
+      });
     });
-  });
+  }
 
-  const hasEnabledPayments = PAYMENT_METHODS.some(
-    (m) => payments[m.key].enabled,
+  const hasItemPayments = data?.items.some(
+    (item) => itemForms[item.id]?.paymentMethod,
   );
 
-  const paymentMismatches = hasEnabledPayments
+  const paymentMismatches = hasItemPayments
     ? (() => {
         const allCurrIds = new Set([
           ...Object.keys(itemTotalsByCurrency),
@@ -554,8 +546,15 @@ const OrderView = () => {
         open={employeeSearchOpen}
         onOpenChange={setEmployeeSearchOpen}
         onSelectEmployee={(employee) => {
-          setSelectedEmployee(employee);
-          updatePayment("debt", "debtorEmployeeId", employee.id);
+          if (employeeSearchForItem) {
+            updateItemForm(
+              employeeSearchForItem,
+              "paymentDebtorEmployeeId",
+              employee.id,
+            );
+          }
+          setEmployeeSearchOpen(false);
+          setEmployeeSearchForItem(null);
         }}
       />
 
@@ -601,6 +600,83 @@ const OrderView = () => {
             </p>
           )}
         </div>
+
+        {/* Order totals summary (for editing) */}
+        {canEdit && Object.keys(itemTotalsByCurrency).length > 0 && (
+          <div className="rounded-2xl border bg-muted/20 px-4 py-3 space-y-2.5">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Buyurtma jami narxi
+            </p>
+            <div className="space-y-1.5">
+              {Object.entries(itemTotalsByCurrency).map(
+                ([currId, { name, total }]) => {
+                  const paid = paymentTotalsByCurrency[currId]?.total ?? 0;
+                  const diff = total - paid;
+                  const exact = hasItemPayments && diff === 0;
+                  const over = hasItemPayments && diff < 0;
+                  const under = hasItemPayments && diff > 0 && paid > 0;
+                  return (
+                    <div key={currId} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          {name}
+                        </span>
+                        <span className="text-sm font-bold">
+                          {formatNumber(total)}
+                        </span>
+                      </div>
+                      {hasItemPayments && (
+                        <div
+                          className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium ${
+                            exact
+                              ? "bg-green-50 text-green-700 border border-green-100"
+                              : over
+                                ? "bg-red-50 text-red-700 border border-red-100"
+                                : under
+                                  ? "bg-amber-50 text-amber-700 border border-amber-100"
+                                  : "bg-muted/40 text-muted-foreground border border-transparent"
+                          }`}
+                        >
+                          <span>
+                            {exact
+                              ? "To'lov to'liq ✓"
+                              : over
+                                ? `Ortiqcha: ${formatNumber(Math.abs(diff))} ${name}`
+                                : under
+                                  ? `Qoldi: ${formatNumber(diff)} ${name}`
+                                  : `Kiritilmagan: ${formatNumber(total)} ${name}`}
+                          </span>
+                          {!exact && (
+                            <span className="font-normal opacity-70">
+                              Kiritildi: {formatNumber(paid)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                },
+              )}
+              {/* Extra currencies in payments not in items */}
+              {hasItemPayments &&
+                Object.entries(paymentTotalsByCurrency)
+                  .filter(([currId]) => !itemTotalsByCurrency[currId])
+                  .map(([currId, { name, total }]) => (
+                    <div
+                      key={currId}
+                      className="flex items-center justify-between rounded-lg px-2.5 py-1.5 bg-red-50 text-red-700 border border-red-100 text-xs font-medium"
+                    >
+                      <span>
+                        Ortiqcha: {formatNumber(total)} {name}
+                      </span>
+                      <span className="font-normal opacity-70">
+                        buyurtmada yo'q
+                      </span>
+                    </div>
+                  ))}
+            </div>
+          </div>
+        )}
 
         {/* Items */}
         <div className="space-y-3">
@@ -837,6 +913,362 @@ const OrderView = () => {
                         </span>
                       </div>
                     )}
+
+                    {/* Payment section per item */}
+                    <div className="border-t pt-3 space-y-3">
+                      <p className="text-xs font-semibold text-muted-foreground">
+                        To'lov
+                      </p>
+
+                      {/* Payment method selection */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {PAYMENT_METHODS.map((m) => {
+                          const active = form.paymentMethod === m.key;
+                          const Icon = m.icon;
+                          return (
+                            <button
+                              key={m.key}
+                              type="button"
+                              onClick={() => {
+                                updateItemForm(item.id, "paymentMethod", m.key);
+                                // Reset payment fields when method changes
+                                updateItemForm(item.id, "paymentCurrencies", [
+                                  { amount: "", currencyId: "" },
+                                ]);
+                                updateItemForm(item.id, "paymentComment", "");
+                                updateItemForm(
+                                  item.id,
+                                  "paymentDebtorType",
+                                  "",
+                                );
+                                updateItemForm(
+                                  item.id,
+                                  "paymentDebtorStoreId",
+                                  "",
+                                );
+                                updateItemForm(
+                                  item.id,
+                                  "paymentDebtorEmployeeId",
+                                  "",
+                                );
+                                updateItemForm(
+                                  item.id,
+                                  "paymentDebtorName",
+                                  "",
+                                );
+                                updateItemForm(
+                                  item.id,
+                                  "paymentDebtorPhone",
+                                  "",
+                                );
+                              }}
+                              className={`relative flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 font-medium text-xs transition-all active:scale-[0.97] ${
+                                active
+                                  ? `${m.activeBg} ${m.activeText} ${m.activeBorder}`
+                                  : `${m.inactiveBg} ${m.inactiveText} ${m.inactiveBorder}`
+                              }`}
+                            >
+                              <Icon className="h-3.5 w-3.5 shrink-0" />
+                              {m.label}
+                              {active && (
+                                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/30 flex items-center justify-center">
+                                  <Check className="h-2 w-2" />
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Payment form fields */}
+                      {form.paymentMethod &&
+                        (() => {
+                          const method = PAYMENT_METHODS.find(
+                            (m) => m.key === form.paymentMethod,
+                          );
+                          if (!method) return null;
+
+                          return (
+                            <div
+                              className={`rounded-xl border-2 overflow-hidden ${method.inactiveBorder}`}
+                            >
+                              <div className={`px-3 py-2 ${method.inactiveBg}`}>
+                                <div
+                                  className={`flex items-center gap-2 font-semibold text-xs ${method.inactiveText}`}
+                                >
+                                  <method.icon className="h-3.5 w-3.5" />
+                                  {method.label}
+                                </div>
+                              </div>
+
+                              <div className="px-3 py-3 bg-background space-y-2.5">
+                                {/* Multi-currency rows */}
+                                <div className="space-y-2">
+                                  {form.paymentCurrencies?.map(
+                                    (currencyRow, index) => (
+                                      <div
+                                        key={index}
+                                        className="grid grid-cols-2 gap-2"
+                                      >
+                                        <div className="space-y-1">
+                                          <label className="text-[11px] font-medium text-muted-foreground">
+                                            Summa * (
+                                            {formatNumber(currencyRow.amount)})
+                                          </label>
+                                          <Input
+                                            type="number"
+                                            min="0"
+                                            placeholder="0"
+                                            className="h-8 text-xs"
+                                            value={currencyRow.amount}
+                                            onChange={(e) =>
+                                              updateItemPaymentCurrency(
+                                                item.id,
+                                                index,
+                                                "amount",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[11px] font-medium text-muted-foreground">
+                                            Valyuta *
+                                          </label>
+                                          <div className="flex gap-1">
+                                            <Select
+                                              value={String(
+                                                currencyRow.currencyId,
+                                              )}
+                                              onValueChange={(v) =>
+                                                updateItemPaymentCurrency(
+                                                  item.id,
+                                                  index,
+                                                  "currencyId",
+                                                  v,
+                                                )
+                                              }
+                                              className="flex-1"
+                                            >
+                                              <SelectTrigger className="h-8 text-xs">
+                                                <SelectValue placeholder="Valyuta" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {currencyOptions.map((c) => (
+                                                  <SelectItem
+                                                    key={c.id}
+                                                    value={String(c.id)}
+                                                  >
+                                                    {c.name}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                            {form.paymentCurrencies.length >
+                                              1 && (
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  removeItemPaymentCurrencyRow(
+                                                    item.id,
+                                                    index,
+                                                  )
+                                                }
+                                                className="p-1.5 h-8 rounded-md hover:bg-destructive/10 text-destructive"
+                                              >
+                                                <X className="h-3.5 w-3.5" />
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ),
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      addItemPaymentCurrencyRow(item.id)
+                                    }
+                                    className="text-[11px] text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
+                                  >
+                                    <span className="text-base">+</span> Valyuta
+                                    qo'shish
+                                  </button>
+                                </div>
+
+                                {/* Debt-specific fields */}
+                                {form.paymentMethod === "debt" && (
+                                  <>
+                                    <div className="space-y-1">
+                                      <label className="text-[11px] font-medium text-muted-foreground">
+                                        Qarz beruvchi turi *
+                                      </label>
+                                      <Select
+                                        value={form.paymentDebtorType}
+                                        onValueChange={(v) => {
+                                          updateItemForm(
+                                            item.id,
+                                            "paymentDebtorType",
+                                            v,
+                                          );
+                                          // Reset dependent fields when type changes
+                                          updateItemForm(
+                                            item.id,
+                                            "paymentDebtorStoreId",
+                                            "",
+                                          );
+                                          updateItemForm(
+                                            item.id,
+                                            "paymentDebtorEmployeeId",
+                                            "",
+                                          );
+                                          updateItemForm(
+                                            item.id,
+                                            "paymentDebtorName",
+                                            "",
+                                          );
+                                          updateItemForm(
+                                            item.id,
+                                            "paymentDebtorPhone",
+                                            "",
+                                          );
+                                        }}
+                                      >
+                                        <SelectTrigger className="h-8 text-xs">
+                                          <SelectValue placeholder="Turini tanlang" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="store">
+                                            Magazin
+                                          </SelectItem>
+                                          <SelectItem value="employee">
+                                            Xodim
+                                          </SelectItem>
+                                          <SelectItem value="other">
+                                            Begona shaxs
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    {form.paymentDebtorType === "store" && (
+                                      <div className="space-y-1">
+                                        <label className="text-[11px] font-medium text-muted-foreground">
+                                          Do'kon *
+                                        </label>
+                                        <Select
+                                          value={String(
+                                            form.paymentDebtorStoreId,
+                                          )}
+                                          onValueChange={(v) =>
+                                            updateItemForm(
+                                              item.id,
+                                              "paymentDebtorStoreId",
+                                              v,
+                                            )
+                                          }
+                                        >
+                                          <SelectTrigger className="h-8 text-xs">
+                                            <SelectValue placeholder="Do'konni tanlang" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {stores.map((store) => (
+                                              <SelectItem
+                                                key={store.id}
+                                                value={String(store.id)}
+                                              >
+                                                {store.name}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    )}
+
+                                    {form.paymentDebtorType === "employee" && (
+                                      <div className="space-y-1">
+                                        <label className="text-[11px] font-medium text-muted-foreground">
+                                          Xodim *
+                                        </label>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          className="w-full h-8 text-xs justify-start"
+                                          onClick={() => {
+                                            setEmployeeSearchForItem(item.id);
+                                            setEmployeeSearchOpen(true);
+                                          }}
+                                        >
+                                          {form.paymentDebtorEmployeeId
+                                            ? "Xodim tanlandi"
+                                            : "Xodimni tanlang"}
+                                        </Button>
+                                      </div>
+                                    )}
+
+                                    {form.paymentDebtorType === "other" && (
+                                      <>
+                                        <div className="space-y-1">
+                                          <label className="text-[11px] font-medium text-muted-foreground">
+                                            Ism *
+                                          </label>
+                                          <Input
+                                            placeholder="Ismi"
+                                            className="h-8 text-xs"
+                                            value={form.paymentDebtorName}
+                                            onChange={(e) =>
+                                              updateItemForm(
+                                                item.id,
+                                                "paymentDebtorName",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[11px] font-medium text-muted-foreground">
+                                            Telefon *
+                                          </label>
+                                          <Input
+                                            placeholder="+998 90 123 45 67"
+                                            className="h-8 text-xs"
+                                            value={form.paymentDebtorPhone}
+                                            onChange={(e) =>
+                                              updateItemForm(
+                                                item.id,
+                                                "paymentDebtorPhone",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      </>
+                                    )}
+                                  </>
+                                )}
+
+                                <div className="space-y-1">
+                                  <label className="text-[11px] font-medium text-muted-foreground">
+                                    Izoh
+                                  </label>
+                                  <Input
+                                    placeholder="Izoh..."
+                                    className="h-8 text-xs"
+                                    value={form.paymentComment}
+                                    onChange={(e) =>
+                                      updateItemForm(
+                                        item.id,
+                                        "paymentComment",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                    </div>
                   </div>
                 )}
 
@@ -1059,361 +1491,6 @@ const OrderView = () => {
               </div>
             )}
           </>
-        )}
-
-        {/* ── Payments ── */}
-        {canEdit && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold">To'lov</h2>
-
-            {/* Order totals summary */}
-            {Object.keys(itemTotalsByCurrency).length > 0 && (
-              <div className="rounded-2xl border bg-muted/20 px-4 py-3 space-y-2.5">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  Buyurtma jami narxi
-                </p>
-                <div className="space-y-1.5">
-                  {Object.entries(itemTotalsByCurrency).map(
-                    ([currId, { name, total }]) => {
-                      const paid = paymentTotalsByCurrency[currId]?.total ?? 0;
-                      const diff = total - paid;
-                      const exact = hasEnabledPayments && diff === 0;
-                      const over = hasEnabledPayments && diff < 0;
-                      const under = hasEnabledPayments && diff > 0 && paid > 0;
-                      return (
-                        <div key={currId} className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">
-                              {name}
-                            </span>
-                            <span className="text-sm font-bold">
-                              {formatNumber(total)}
-                            </span>
-                          </div>
-                          {hasEnabledPayments && (
-                            <div
-                              className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium ${
-                                exact
-                                  ? "bg-green-50 text-green-700 border border-green-100"
-                                  : over
-                                    ? "bg-red-50 text-red-700 border border-red-100"
-                                    : under
-                                      ? "bg-amber-50 text-amber-700 border border-amber-100"
-                                      : "bg-muted/40 text-muted-foreground border border-transparent"
-                              }`}
-                            >
-                              <span>
-                                {exact
-                                  ? "To'lov to'liq ✓"
-                                  : over
-                                    ? `Ortiqcha: ${formatNumber(Math.abs(diff))} ${name}`
-                                    : under
-                                      ? `Qoldi: ${formatNumber(diff)} ${name}`
-                                      : `Kiritilmagan: ${formatNumber(total)} ${name}`}
-                              </span>
-                              {!exact && (
-                                <span className="font-normal opacity-70">
-                                  Kiritildi: {formatNumber(paid)}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    },
-                  )}
-                  {/* Extra currencies in payments not in items */}
-                  {hasEnabledPayments &&
-                    Object.entries(paymentTotalsByCurrency)
-                      .filter(([currId]) => !itemTotalsByCurrency[currId])
-                      .map(([currId, { name, total }]) => (
-                        <div
-                          key={currId}
-                          className="flex items-center justify-between rounded-lg px-2.5 py-1.5 bg-red-50 text-red-700 border border-red-100 text-xs font-medium"
-                        >
-                          <span>
-                            Ortiqcha: {formatNumber(total)} {name}
-                          </span>
-                          <span className="font-normal opacity-70">
-                            buyurtmada yo'q
-                          </span>
-                        </div>
-                      ))}
-                </div>
-              </div>
-            )}
-
-            {/* Method toggle grid */}
-            <div className="grid grid-cols-2 gap-2">
-              {PAYMENT_METHODS.map((m) => {
-                const active = payments[m.key].enabled;
-                const Icon = m.icon;
-                return (
-                  <button
-                    key={m.key}
-                    type="button"
-                    onClick={() => togglePayment(m.key)}
-                    className={`relative flex items-center gap-2.5 px-4 py-3 rounded-2xl border-2 font-medium text-sm transition-all active:scale-[0.97] ${
-                      active
-                        ? `${m.activeBg} ${m.activeText} ${m.activeBorder}`
-                        : `${m.inactiveBg} ${m.inactiveText} ${m.inactiveBorder}`
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {m.label}
-                    {active && (
-                      <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-white/30 flex items-center justify-center">
-                        <Check className="h-2.5 w-2.5" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Active payment forms */}
-            {PAYMENT_METHODS.filter((m) => payments[m.key].enabled).map((m) => {
-              const p = payments[m.key];
-              const Icon = m.icon;
-              return (
-                <div
-                  key={m.key}
-                  className={`rounded-2xl border-2 overflow-hidden ${m.inactiveBorder}`}
-                >
-                  {/* Form header */}
-                  <div
-                    className={`flex items-center justify-between px-4 py-2.5 ${m.inactiveBg}`}
-                  >
-                    <div
-                      className={`flex items-center gap-2 font-semibold text-sm ${m.inactiveText}`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {m.label}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => togglePayment(m.key)}
-                      className={`p-1 rounded-full hover:bg-black/5 ${m.inactiveText}`}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Form fields */}
-                  <div className="px-4 py-3 bg-background space-y-3">
-                    {/* Multi-currency rows */}
-                    <div className="space-y-2">
-                      {p.currencies.map((currencyRow, index) => (
-                        <div key={index} className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">
-                              Summa * ({formatNumber(currencyRow.amount)})
-                            </label>
-                            <Input
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              className="h-9 text-sm"
-                              value={currencyRow.amount}
-                              onChange={(e) =>
-                                updatePaymentCurrency(
-                                  m.key,
-                                  index,
-                                  "amount",
-                                  e.target.value,
-                                )
-                              }
-                            />
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">
-                              Valyuta *
-                            </label>
-                            <div className="flex gap-1">
-                              <Select
-                                value={String(currencyRow.currencyId)}
-                                onValueChange={(v) =>
-                                  updatePaymentCurrency(
-                                    m.key,
-                                    index,
-                                    "currencyId",
-                                    v,
-                                  )
-                                }
-                                className="flex-1"
-                              >
-                                <SelectTrigger className="h-9 text-sm">
-                                  <SelectValue placeholder="Valyuta" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {currencyOptions.map((c) => (
-                                    <SelectItem key={c.id} value={String(c.id)}>
-                                      {c.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {p.currencies.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    removeCurrencyRow(m.key, index)
-                                  }
-                                  className="p-2 h-9 rounded-md hover:bg-destructive/10 text-destructive"
-                                >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => addCurrencyRow(m.key)}
-                        className="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
-                      >
-                        <span className="text-lg">+</span> Valyuta qo'shish
-                      </button>
-                    </div>
-
-                    {/* Debt-specific fields */}
-                    {m.key === "debt" && (
-                      <>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">
-                            Qarz beruvchi turi *
-                          </label>
-                          <Select
-                            value={p.debtorType}
-                            onValueChange={(v) => {
-                              updatePayment(m.key, "debtorType", v);
-                              // Reset dependent fields when type changes
-                              updatePayment(m.key, "debtorStoreId", "");
-                              updatePayment(m.key, "debtorEmployeeId", "");
-                              updatePayment(m.key, "debtorName", "");
-                              updatePayment(m.key, "debtorPhone", "");
-                              setSelectedEmployee(null);
-                            }}
-                          >
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Turini tanlang" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="store">Magazin</SelectItem>
-                              <SelectItem value="employee">Xodim</SelectItem>
-                              <SelectItem value="other">
-                                Begona shaxs
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {p.debtorType === "store" && (
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">
-                              Do'kon *
-                            </label>
-                            <Select
-                              value={String(p.debtorStoreId)}
-                              onValueChange={(v) =>
-                                updatePayment(m.key, "debtorStoreId", v)
-                              }
-                            >
-                              <SelectTrigger className="h-9 text-sm">
-                                <SelectValue placeholder="Do'konni tanlang" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {stores.map((store) => (
-                                  <SelectItem
-                                    key={store.id}
-                                    value={String(store.id)}
-                                  >
-                                    {store.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-
-                        {p.debtorType === "employee" && (
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">
-                              Xodim *
-                            </label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full h-9 text-sm justify-start"
-                              onClick={() => setEmployeeSearchOpen(true)}
-                            >
-                              {selectedEmployee
-                                ? selectedEmployee.name
-                                : "Xodimni tanlang"}
-                            </Button>
-                          </div>
-                        )}
-
-                        {p.debtorType === "other" && (
-                          <>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-muted-foreground">
-                                Ism *
-                              </label>
-                              <Input
-                                placeholder="Ismi"
-                                className="h-9 text-sm"
-                                value={p.debtorName}
-                                onChange={(e) =>
-                                  updatePayment(
-                                    m.key,
-                                    "debtorName",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-muted-foreground">
-                                Telefon *
-                              </label>
-                              <Input
-                                placeholder="+998 90 123 45 67"
-                                className="h-9 text-sm"
-                                value={p.debtorPhone}
-                                onChange={(e) =>
-                                  updatePayment(
-                                    m.key,
-                                    "debtorPhone",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">
-                        Izoh
-                      </label>
-                      <Input
-                        placeholder="Izoh..."
-                        className="h-9 text-sm"
-                        value={p.comment}
-                        onChange={(e) =>
-                          updatePayment(m.key, "comment", e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         )}
 
         {/* ── Attachment ── */}
@@ -1672,56 +1749,68 @@ const OrderView = () => {
             </div>
 
             {/* Payments summary */}
-            {PAYMENT_METHODS.some((m) => payments[m.key].enabled) && (
+            {data.items.some((item) => itemForms[item.id]?.paymentMethod) && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   To'lov
                 </p>
-                <div className="space-y-1.5">
-                  {PAYMENT_METHODS.filter((m) => payments[m.key].enabled).map(
-                    (m) => {
-                      const p = payments[m.key];
-                      const Icon = m.icon;
-                      return (
-                        <div
-                          key={m.key}
-                          className={`flex items-center justify-between rounded-xl px-3 py-2.5 border ${m.inactiveBg} ${m.inactiveBorder}`}
-                        >
-                          <div
-                            className={`flex items-center gap-2 text-sm font-medium ${m.inactiveText}`}
+                <div className="space-y-2">
+                  {data.items.map((item) => {
+                    const form = itemForms[item.id] || {};
+                    if (!form.paymentMethod) return null;
+
+                    const method = PAYMENT_METHODS.find(
+                      (m) => m.key === form.paymentMethod,
+                    );
+                    if (!method) return null;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`rounded-xl px-3 py-2.5 border ${method.inactiveBg} ${method.inactiveBorder}`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <method.icon
+                            className={`h-3.5 w-3.5 ${method.inactiveText}`}
+                          />
+                          <span
+                            className={`text-xs font-medium ${method.inactiveText}`}
                           >
-                            <Icon className="h-3.5 w-3.5" />
-                            {m.label}
-                            {p.comment && (
-                              <span className="text-xs font-normal opacity-70">
-                                · {p.comment}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-end gap-0.5">
-                            {p.currencies.map((currencyRow, idx) => {
-                              const currName = currencyOptions.find(
-                                (c) =>
-                                  String(c.id) ===
-                                  String(currencyRow.currencyId),
-                              )?.name;
-                              return (
-                                <span
-                                  key={idx}
-                                  className={`text-sm font-bold ${m.inactiveText}`}
-                                >
-                                  {formatNumber(Number(currencyRow.amount))}{" "}
-                                  <span className="text-xs font-normal">
-                                    {currName}
-                                  </span>
-                                </span>
-                              );
-                            })}
-                          </div>
+                            {item.item?.name}
+                          </span>
+                          <span
+                            className={`text-[11px] font-medium ${method.inactiveText} ml-auto`}
+                          >
+                            {method.label}
+                          </span>
                         </div>
-                      );
-                    },
-                  )}
+                        <div className="flex flex-wrap gap-2">
+                          {form.paymentCurrencies?.map((currencyRow, idx) => {
+                            const currName = currencyOptions.find(
+                              (c) =>
+                                String(c.id) === String(currencyRow.currencyId),
+                            )?.name;
+                            return (
+                              <span
+                                key={idx}
+                                className={`text-xs font-bold ${method.inactiveText}`}
+                              >
+                                {formatNumber(Number(currencyRow.amount))}{" "}
+                                <span className="text-[11px] font-normal">
+                                  {currName}
+                                </span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                        {form.paymentComment && (
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            {form.paymentComment}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1817,7 +1906,7 @@ const OrderView = () => {
             <Button
               className="flex-1 h-10 gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-60"
               onClick={handleSubmit}
-              disabled={submitting || paymentMismatches.length > 0}
+              disabled={submitting}
             >
               {submitting ? (
                 <>
