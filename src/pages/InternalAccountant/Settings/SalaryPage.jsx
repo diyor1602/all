@@ -72,6 +72,11 @@ const getEmployeeTotalEarned = (emp) => {
       emp?.monthly_daily_payment?.amount >= 0
         ? emp?.monthly_daily_payment?.amount
         : newSeason,
+    ) +
+    parseFloat(
+      emp?.monthly_money_log?.amount > 0
+        ? emp?.monthly_money_log?.amount
+        : emp?.employee_money_logs_total,
     )
   );
 };
@@ -97,6 +102,13 @@ const SALARY_TYPE_CONFIG = {
     getRecord: (emp) => emp?.monthly_daily_payment,
     getBase: (emp) => calculateNewSeasonSalary(emp),
     title: "Yangi mavsum",
+  },
+  moneyLog: {
+    apiPost: "internalAccountant/employeeMonthlyMoneyLogs",
+    apiPatch: (id) => `internalAccountant/employeeMonthlyMoneyLog/${id}`,
+    getRecord: (emp) => emp?.monthly_money_log,
+    getBase: (emp) => emp?.employee_money_logs_total,
+    title: "Jarim/Bonus",
   },
 };
 
@@ -817,6 +829,9 @@ const SalaryPage = () => {
               <th className="border border-gray-200 p-1 text-center font-semibold whitespace-normal">
                 Ish haqi (ishbay)
               </th>
+              <th className="border border-gray-200 p-1 text-center font-semibold whitespace-normal">
+                Jarima/Bonus
+              </th>
               <th className="border border-gray-200 p-1 text-center font-semibold">
                 Topgan pul
               </th>
@@ -941,6 +956,28 @@ const SalaryPage = () => {
                       )}
                     </div>
                   </td>
+                  <td
+                    className="border border-gray-200 p-1 text-center cursor-pointer"
+                    onClick={() => handleAdditionalDialog(employee, "moneyLog")}
+                  >
+                    <div
+                      className={cn(
+                        "cursor-pointer",
+                        employee?.monthly_money_log?.amount ==
+                          employee?.employee_money_logs_total
+                          ? "bg-green-400"
+                          : employee?.monthly_money_log?.amount > 0
+                            ? "bg-orange-400"
+                            : "",
+                      )}
+                    >
+                      {formatNumber(
+                        employee?.monthly_money_log?.amount > 0
+                          ? employee?.monthly_money_log?.amount
+                          : employee?.employee_money_logs_total,
+                      )}
+                    </div>
+                  </td>
                   <td className="border border-gray-200 p-1 text-center">
                     {formatNumber(totalEarned)}
                   </td>
@@ -1014,6 +1051,18 @@ const SalaryPage = () => {
                             ? emp?.monthly_piecework?.amount
                             : emp?.tarification_salary,
                         ) || 0),
+                      0,
+                    ),
+                  )}
+                </td>
+                <td className="border border-gray-200 p-1 text-center">
+                  {formatNumber(
+                    filteredEmployees.reduce(
+                      (sum, emp) =>
+                        sum +
+                        (emp?.monthly_money_log?.amount > 0
+                          ? emp?.monthly_money_log?.amount
+                          : emp?.employee_money_logs_total),
                       0,
                     ),
                   )}
