@@ -16,6 +16,7 @@ import {
   Wrench,
   Bot,
   Car,
+  Clock,
 } from "lucide-react";
 import AttendanceHistory from "./AttendanceHistory/AttendanceHistory";
 import AddGroup from "./Departments/AddGroup";
@@ -28,6 +29,7 @@ import SalaryHistory from "./History/SalaryHistory";
 import GroupHistory from "./History/GroupHistory";
 import RentedMachines from "./RentedMachines/RentedMachines";
 import Machines from "./Machines/Machines";
+import LatePenalties from "./LatePenalties/LatePenalties";
 
 const Settings = () => {
   return (
@@ -46,6 +48,7 @@ const Settings = () => {
       <Route path="damages" element={<Damages />} />
       <Route path="rented-machines" element={<RentedMachines />} />
       <Route path="machines/*" element={<Machines />} />
+      <Route path="late-penalties" element={<LatePenalties />} />
     </Routes>
   );
 };
@@ -123,6 +126,12 @@ const SettingsPage = () => {
       icon: Car,
       link: "/superhr/settings/machines",
       color: "bg-black",
+    },
+    {
+      name: "Kechikish jarimalari",
+      icon: Clock,
+      link: "/superhr/settings/late-penalties",
+      color: "bg-gray-500",
     },
   ];
 
