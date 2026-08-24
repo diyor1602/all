@@ -84,7 +84,7 @@ const getEmployeeTotalEarned = (emp) => {
         : newSeason,
     ) +
     parseFloat(
-      emp?.monthly_money_log?.amount > 0
+      emp?.monthly_money_log?.amount >= 0
         ? emp?.monthly_money_log?.amount
         : emp?.employee_money_logs_total,
     )
@@ -1222,13 +1222,13 @@ const SalaryPage = () => {
                         employee?.monthly_money_log?.amount ==
                           employee?.employee_money_logs_total
                           ? "bg-green-400"
-                          : employee?.monthly_money_log?.amount > 0
+                          : employee?.monthly_money_log?.amount >= 0
                             ? "bg-orange-400"
                             : "",
                       )}
                     >
                       {formatNumber(
-                        employee?.monthly_money_log?.amount > 0
+                        employee?.monthly_money_log?.amount >= 0
                           ? employee?.monthly_money_log?.amount
                           : employee?.employee_money_logs_total,
                       )}
@@ -1321,7 +1321,7 @@ const SalaryPage = () => {
                     filteredEmployees.reduce(
                       (sum, emp) =>
                         sum +
-                        (emp?.monthly_money_log?.amount > 0
+                        (emp?.monthly_money_log?.amount >= 0
                           ? emp?.monthly_money_log?.amount
                           : emp?.employee_money_logs_total),
                       0,
