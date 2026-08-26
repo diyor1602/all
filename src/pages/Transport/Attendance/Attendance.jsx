@@ -370,12 +370,20 @@ const Attendance = () => {
 
       const debt = totalTransportMoney - totalPaid;
 
-      const advance = Number.parseInt(
-        transport?.payment?.find((p) => p.type === "advance")?.amount || 0,
-      );
-      const salary = Number.parseInt(
-        transport?.payment?.find((p) => p.type === "salary")?.amount || 0,
-      );
+      const advance =
+        transport?.payment
+          ?.filter((p) => p.type === "advance")
+          .reduce(
+            (total, payment) => total + (Number.parseInt(payment?.amount) || 0),
+            0,
+          ) || 0;
+      const salary =
+        transport?.payment
+          ?.filter((p) => p.type === "salary")
+          .reduce(
+            (total, payment) => total + (Number.parseInt(payment?.amount) || 0),
+            0,
+          ) || 0;
 
       calculations[transportId] = {
         workDays,
@@ -826,11 +834,6 @@ const Attendance = () => {
 
     setIsBulkUpdating(true);
     try {
-      const existingPayment = selectedTransport?.payment?.find(
-        (payment) => payment?.type === type,
-      );
-
-      const method = existingPayment ? "patch" : "post";
       const payload = {
         transport_id: Number.parseInt(selectedTransport.id),
         amount: Number.parseInt(currentSubmitPayment.amount),
@@ -838,35 +841,23 @@ const Attendance = () => {
         month: `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`,
       };
 
-      if (method === "post") {
-        payload.date = format(currentSubmitPayment.date, "yyyy-MM-dd");
-        if (!currentSubmitPayment.date) {
-          toast({
-            title: "Diqqat",
-            description: "Sanani tanlang!",
-            variant: "destructive",
-          });
-          return;
-        }
-        await api.post("/transport/payment/", payload);
+      payload.date = format(currentSubmitPayment.date, "yyyy-MM-dd");
+      if (!currentSubmitPayment.date) {
         toast({
-          title: "Muvaffaqiyatli",
-          description: `${
-            isAdvance ? "Avans" : "Maosh"
-          } muvaffaqiyatli qo'shildi`,
-          style: { backgroundColor: "green", color: "white" },
+          title: "Diqqat",
+          description: "Sanani tanlang!",
+          variant: "destructive",
         });
-      } else {
-        payload.date = existingPayment?.date;
-        await api.patch(`/transport/payment/${existingPayment.id}`, payload);
-        toast({
-          title: "Muvaffaqiyatli",
-          description: `${
-            isAdvance ? "Avans" : "Maosh"
-          } muvaffaqiyatli yangilandi`,
-          style: { backgroundColor: "green", color: "white" },
-        });
+        return;
       }
+      await api.post("/transport/payment/", payload);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: `${
+          isAdvance ? "Avans" : "Maosh"
+        } muvaffaqiyatli qo'shildi`,
+        style: { backgroundColor: "green", color: "white" },
+      });
 
       // Fetch updated data and update the UI
       await fetchAttendances();
@@ -893,14 +884,20 @@ const Attendance = () => {
   const openPaymentDialog = (transport, type) => {
     setSelectedTransport(transport);
 
-    const existingPayment = transport?.payment?.find((p) => p.type === type);
-    const amount = existingPayment?.amount || 0;
-    const date = existingPayment?.date
-      ? new Date(existingPayment.date)
-      : new Date();
+    const existingPayments =
+      transport?.payment?.filter((p) => p.type === type) || [];
+    const totalAmount = existingPayments.reduce(
+      (total, payment) => total + (Number.parseInt(payment?.amount) || 0),
+      0,
+    );
+    const lastPayment =
+      existingPayments.length > 0
+        ? existingPayments[existingPayments.length - 1]
+        : null;
+    const date = lastPayment?.date ? new Date(lastPayment.date) : new Date();
 
     setCurrentSubmitPayment({
-      amount,
+      amount: totalAmount,
       date,
       type,
     });
@@ -1613,7 +1610,7 @@ const Attendance = () => {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>
               {currentSubmitPayment.type === "advance" ? "Avans" : "Maosh"}
@@ -1624,20 +1621,35 @@ const Attendance = () => {
               <div>{selectedTransport?.name}</div>
               <div>{selectedTransport?.state_number}</div>
             </div>
-            {selectedTransport?.payment?.find(
+
+            {/* Display all existing payments of this type */}
+            {selectedTransport?.payment?.filter(
               (p) => p.type === currentSubmitPayment.type,
-            )?.date && (
-              <div>
-                {currentSubmitPayment.type === "advance" ? "Avans" : "Maosh"}{" "}
-                berilgan sana:{" "}
-                {
-                  selectedTransport?.payment?.find(
-                    (p) => p.type === currentSubmitPayment.type,
-                  )?.date
-                }
+            ).length > 0 && (
+              <div className="mt-4">
+                <div className="font-semibold mb-2">
+                  {currentSubmitPayment.type === "advance" ? "Avans" : "Maosh"}{" "}
+                  tarixi:
+                </div>
+                <div className="space-y-2 max-h-40 overflow-auto">
+                  {selectedTransport?.payment
+                    ?.filter((p) => p.type === currentSubmitPayment.type)
+                    .map((payment, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm"
+                      >
+                        <span>{payment.date}</span>
+                        <span className="font-semibold">
+                          {formatValue(payment.amount)} so'm
+                        </span>
+                      </div>
+                    ))}
+                </div>
               </div>
             )}
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center gap-2 mt-4">
               <div>Balansi:</div>
               {formatValue(
                 (transportCalculations.transportData[selectedTransport?.id]
@@ -1651,7 +1663,8 @@ const Attendance = () => {
               so'm
             </div>
             <div className="text-sm text-muted-foreground">
-              Miqdori: {formatValue(currentSubmitPayment.amount)} so'm
+              Jami {currentSubmitPayment.type === "advance" ? "avans" : "maosh"}
+              : {formatValue(currentSubmitPayment.amount)} so'm
             </div>
             <Input
               value={currentSubmitPayment.amount}
