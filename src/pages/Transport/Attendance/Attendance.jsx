@@ -459,9 +459,9 @@ const Attendance = () => {
       headers.push(
         "Kunlik yo'l kira",
         "Jami ish kuni",
-        "Qoldiq",
         "Jami transport puli",
         "Avans",
+        "Qoldiq",
       );
 
       // Add header row
@@ -502,9 +502,9 @@ const Attendance = () => {
         row.push(
           transport?.salary || 0,
           calculations.workDays || 0,
-          calculations.debt || 0,
           calculations.totalTransportMoney || 0,
           calculations.advance || 0,
+          calculations.debt || 0,
         );
 
         worksheet.addRow(row);
@@ -527,9 +527,9 @@ const Attendance = () => {
           0,
         ),
         transportCalculations.totals.workDays.toFixed(1),
-        transportCalculations.totals.debt || 0,
         transportCalculations.totals.totalTransportMoney || 0,
         transportCalculations.totals.advance || 0,
+        transportCalculations.totals.debt || 0,
       );
 
       worksheet.addRow(totalsRow);
@@ -1043,9 +1043,9 @@ const Attendance = () => {
               ))}
               <th className="border-2 p-1 min-w-[70px]">Kunlik yo'l kira</th>
               <th className="border-2 p-1 min-w-[70px]">Jami ish kuni</th>
-              <th className="border-2 p-1 min-w-[70px]">Qoldiq</th>
               <th className="border-2 p-1 min-w-[70px]">Jami transport puli</th>
               <th className="border-2 p-1 min-w-[70px]">Avans</th>
+              <th className="border-2 p-1 min-w-[70px]">Qoldiq</th>
             </tr>
           </thead>
           <tbody>
@@ -1167,11 +1167,6 @@ const Attendance = () => {
                     {calculations.workDays || 0}
                   </td>
                   <td className="border-2 p-1 min-w-[70px]">
-                    <span className="text-red-500 font-semibold">
-                      {formatValue(calculations.debt || 0)}
-                    </span>
-                  </td>
-                  <td className="border-2 p-1 min-w-[70px]">
                     {formatValue(calculations.totalTransportMoney || 0)}
                   </td>
                   <td className="border-2 p-1 min-w-[70px]">
@@ -1182,6 +1177,11 @@ const Attendance = () => {
                     >
                       {formatValue(calculations.advance) || 0}
                     </Button>
+                  </td>
+                  <td className="border-2 p-1 min-w-[70px]">
+                    <span className="text-red-500 font-semibold">
+                      {formatValue(calculations.debt || 0)}
+                    </span>
                   </td>
                 </tr>
               );
@@ -1229,17 +1229,17 @@ const Attendance = () => {
                 {transportCalculations.totals.workDays.toFixed(1)}
               </td>
               <td className="border-2 p-1 min-w-[70px]">
-                <span className="text-red-500">
-                  {formatValue(transportCalculations.totals.debt || 0)}
-                </span>
-              </td>
-              <td className="border-2 p-1 min-w-[70px]">
                 {formatValue(
                   transportCalculations.totals.totalTransportMoney || 0,
                 )}
               </td>
               <td className="border-2 p-1 min-w-[70px]">
                 {formatValue(transportCalculations.totals.advance || 0)}
+              </td>
+              <td className="border-2 p-1 min-w-[70px]">
+                <span className="text-red-500">
+                  {formatValue(transportCalculations.totals.debt || 0)}
+                </span>
               </td>
             </tr>
           </tbody>
