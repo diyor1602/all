@@ -72,7 +72,6 @@ const LatePenalties = () => {
       setLatePenalties(response.data?.data || []);
       setMeta(response.data);
     } catch (error) {
-      console.error("Error fetching late penalties:", error);
       toast({
         title: "Error",
         description: "Failed to fetch late penalties",
@@ -143,7 +142,6 @@ const LatePenalties = () => {
       setReverseDialogOpen(false);
       getData(currentPage);
     } catch (error) {
-      console.error("Error reversing penalty:", error);
       toast({
         title: "Xatolik",
         description:
