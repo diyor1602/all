@@ -23,8 +23,16 @@ import {
   Utensils,
   FileText,
   PieChart,
+  ChevronDown,
+  X,
 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Overall3 = () => {
   const { toast } = useToast();
@@ -32,13 +40,96 @@ const Overall3 = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState(["2026-07"]);
+  const [selectedPreset, setSelectedPreset] = useState("custom");
+  const [customYear, setCustomYear] = useState(new Date().getFullYear());
+  const [customMonth, setCustomMonth] = useState(new Date().getMonth());
 
-  // Generate available months (last 12 months)
-  const availableMonths = Array.from({ length: 12 }, (_, i) => {
+  // Generate available months (last 120 months = 10 years for preset functionality)
+  const availableMonths = Array.from({ length: 120 }, (_, i) => {
     const date = new Date();
     date.setMonth(date.getMonth() - i);
-    return date.toISOString().slice(0, 7); // YYYY-MM format
+    return {
+      value: date.toISOString().slice(0, 7), // YYYY-MM format
+      label: date.toLocaleDateString("ru-RU", {
+        month: "long",
+        year: "numeric",
+      }),
+    };
   }).reverse();
+
+  // Generate years for custom selection (10 years back and 2 years forward)
+  const currentYear = new Date().getFullYear();
+  const availableYears = Array.from(
+    { length: 13 },
+    (_, i) => currentYear - 10 + i,
+  );
+
+  // Generate months for custom selection
+  const monthsList = [
+    { value: 0, label: "Январь" },
+    { value: 1, label: "Февраль" },
+    { value: 2, label: "Март" },
+    { value: 3, label: "Апрель" },
+    { value: 4, label: "Май" },
+    { value: 5, label: "Июнь" },
+    { value: 6, label: "Июль" },
+    { value: 7, label: "Август" },
+    { value: 8, label: "Сентябрь" },
+    { value: 9, label: "Октябрь" },
+    { value: 10, label: "Ноябрь" },
+    { value: 11, label: "Декабрь" },
+  ];
+
+  const addCustomMonth = () => {
+    const monthValue = `${customYear}-${String(customMonth + 1).padStart(2, "0")}`;
+    if (!selectedMonths.includes(monthValue)) {
+      setSelectedMonths([...selectedMonths, monthValue]);
+      setSelectedPreset("custom");
+    }
+  };
+
+  // Preset options
+  const presetOptions = [
+    { value: "1", label: "Oxirgi 1 oy", months: 1 },
+    { value: "3", label: "Oxirgi 3 oy", months: 3 },
+    { value: "6", label: "Oxirgi 6 oy", months: 6 },
+    { value: "12", label: "Oxirgi 12 oy", months: 12 },
+    { value: "custom", label: "Tanlash", months: 0 },
+  ];
+
+  const handlePresetChange = (value) => {
+    setSelectedPreset(value);
+    if (value !== "custom") {
+      const monthsCount = parseInt(value);
+      const selected = availableMonths
+        .slice(-monthsCount)
+        .map((month) => month.value);
+      setSelectedMonths(selected);
+    }
+  };
+
+  const getMonthLabel = (monthValue) => {
+    const [year, month] = monthValue.split("-");
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString("ru-RU", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const handleMonthToggle = (monthValue) => {
+    setSelectedMonths((prev) =>
+      prev.includes(monthValue)
+        ? prev.filter((m) => m !== monthValue)
+        : [...prev, monthValue],
+    );
+    setSelectedPreset("custom");
+  };
+
+  const clearSelection = () => {
+    setSelectedMonths([]);
+    setSelectedPreset("custom");
+  };
 
   const fetchData = async () => {
     try {
@@ -62,12 +153,6 @@ const Overall3 = () => {
   useEffect(() => {
     fetchData();
   }, [selectedMonths]);
-
-  const handleMonthToggle = (month) => {
-    setSelectedMonths((prev) =>
-      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month],
-    );
-  };
 
   const categoryIcons = {
     tikuv: Building2,
@@ -154,26 +239,120 @@ const Overall3 = () => {
         <div className="flex flex-wrap items-center gap-3 bg-white shadow-sm border p-4 md:p-3 rounded-lg">
           <div className="flex items-center gap-2">
             <Calendar size={16} className="text-slate-400" />
-            <span className="text-sm font-medium text-slate-600">Oylar:</span>
+            <span className="text-sm font-medium text-slate-600">Davr:</span>
           </div>
-          <div className="flex flex-wrap gap-2 max-w-md">
-            {availableMonths.map((month) => (
-              <div key={month} className="flex items-center gap-1">
-                <Checkbox
-                  id={`month-${month}`}
-                  checked={selectedMonths.includes(month)}
-                  onCheckedChange={() => handleMonthToggle(month)}
-                  className="w-4 h-4"
-                />
-                <label
-                  htmlFor={`month-${month}`}
-                  className="text-xs cursor-pointer select-none whitespace-nowrap"
+
+          <Select value={selectedPreset} onValueChange={handlePresetChange}>
+            <SelectTrigger className="w-40 h-8 text-xs">
+              <SelectValue placeholder="Tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {presetOptions.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="text-xs"
                 >
-                  {month}
-                </label>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {selectedPreset === "custom" && (
+            <>
+              <Separator
+                orientation="vertical"
+                className="h-8 hidden md:block"
+              />
+              <div className="flex items-center gap-2">
+                <Select
+                  value={customYear.toString()}
+                  onValueChange={(value) => setCustomYear(parseInt(value))}
+                >
+                  <SelectTrigger className="w-24 h-8 text-xs">
+                    <SelectValue placeholder="Yil" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableYears.map((year) => (
+                      <SelectItem
+                        key={year}
+                        value={year.toString()}
+                        className="text-xs"
+                      >
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={customMonth.toString()}
+                  onValueChange={(value) => setCustomMonth(parseInt(value))}
+                >
+                  <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectValue placeholder="Oy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthsList.map((month) => (
+                      <SelectItem
+                        key={month.value}
+                        value={month.value.toString()}
+                        className="text-xs"
+                      >
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  onClick={addCustomMonth}
+                  disabled={selectedMonths.includes(
+                    `${customYear}-${String(customMonth + 1).padStart(2, "0")}`,
+                  )}
+                  className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Qo'shish
+                </Button>
               </div>
-            ))}
-          </div>
+            </>
+          )}
+
+          {selectedMonths.length > 0 && (
+            <>
+              <Separator
+                orientation="vertical"
+                className="h-8 hidden md:block"
+              />
+              <div className="flex flex-wrap gap-2 items-center">
+                {selectedMonths.map((monthValue) => {
+                  return (
+                    <Badge
+                      key={monthValue}
+                      variant="secondary"
+                      className="text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 cursor-pointer"
+                      onClick={() => handleMonthToggle(monthValue)}
+                    >
+                      {getMonthLabel(monthValue)}
+                      <X size={12} className="ml-1" />
+                    </Badge>
+                  );
+                })}
+                {selectedMonths.length > 1 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={clearSelection}
+                    className="h-6 px-2 text-xs text-slate-500 hover:text-slate-700"
+                  >
+                    <X size={12} className="mr-1" />
+                    Tozalash
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+
           <Separator orientation="vertical" className="h-8 hidden md:block" />
           <Button
             size="sm"
