@@ -25,6 +25,7 @@ import {
   PieChart,
   ChevronDown,
   X,
+  CircleDollarSign,
 } from "lucide-react";
 import {
   Select,
@@ -33,16 +34,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import getDollarRate from "@/hooks/getDollarRate";
 
 const Overall3 = () => {
   const { toast } = useToast();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedMonths, setSelectedMonths] = useState(["2026-07"]);
-  const [selectedPreset, setSelectedPreset] = useState("custom");
-  const [customYear, setCustomYear] = useState(new Date().getFullYear());
-  const [customMonth, setCustomMonth] = useState(new Date().getMonth());
+  const [dollarRate, setDollarRate] = useState(null);
+  const [selectedMonths, setSelectedMonths] = useState(() => {
+    const saved = localStorage.getItem("overall3SelectedMonths");
+    return saved ? JSON.parse(saved) : ["2026-07"];
+  });
+  const [selectedPreset, setSelectedPreset] = useState(() => {
+    const saved = localStorage.getItem("overall3SelectedPreset");
+    return saved || "custom";
+  });
+  const [customYear, setCustomYear] = useState(() => {
+    const saved = localStorage.getItem("overall3CustomYear");
+    return saved ? parseInt(saved) : new Date().getFullYear();
+  });
+  const [customMonth, setCustomMonth] = useState(() => {
+    const saved = localStorage.getItem("overall3CustomMonth");
+    return saved ? parseInt(saved) : new Date().getMonth();
+  });
 
   // Generate available months (last 120 months = 10 years for preset functionality)
   const availableMonths = Array.from({ length: 120 }, (_, i) => {
@@ -83,8 +98,14 @@ const Overall3 = () => {
   const addCustomMonth = () => {
     const monthValue = `${customYear}-${String(customMonth + 1).padStart(2, "0")}`;
     if (!selectedMonths.includes(monthValue)) {
-      setSelectedMonths([...selectedMonths, monthValue]);
+      const newSelection = [...selectedMonths, monthValue];
+      setSelectedMonths(newSelection);
+      localStorage.setItem(
+        "overall3SelectedMonths",
+        JSON.stringify(newSelection),
+      );
       setSelectedPreset("custom");
+      localStorage.setItem("overall3SelectedPreset", "custom");
     }
   };
 
@@ -99,12 +120,19 @@ const Overall3 = () => {
 
   const handlePresetChange = (value) => {
     setSelectedPreset(value);
+    localStorage.setItem("overall3SelectedPreset", value);
     if (value !== "custom") {
       const monthsCount = parseInt(value);
       const selected = availableMonths
         .slice(-monthsCount)
         .map((month) => month.value);
       setSelectedMonths(selected);
+      localStorage.setItem("overall3SelectedMonths", JSON.stringify(selected));
+    } else {
+      localStorage.setItem(
+        "overall3SelectedMonths",
+        JSON.stringify(selectedMonths),
+      );
     }
   };
 
@@ -118,17 +146,25 @@ const Overall3 = () => {
   };
 
   const handleMonthToggle = (monthValue) => {
-    setSelectedMonths((prev) =>
-      prev.includes(monthValue)
+    setSelectedMonths((prev) => {
+      const newSelection = prev.includes(monthValue)
         ? prev.filter((m) => m !== monthValue)
-        : [...prev, monthValue],
-    );
+        : [...prev, monthValue];
+      localStorage.setItem(
+        "overall3SelectedMonths",
+        JSON.stringify(newSelection),
+      );
+      return newSelection;
+    });
     setSelectedPreset("custom");
+    localStorage.setItem("overall3SelectedPreset", "custom");
   };
 
   const clearSelection = () => {
     setSelectedMonths([]);
     setSelectedPreset("custom");
+    localStorage.setItem("overall3SelectedMonths", JSON.stringify([]));
+    localStorage.setItem("overall3SelectedPreset", "custom");
   };
 
   const fetchData = async () => {
@@ -153,6 +189,35 @@ const Overall3 = () => {
   useEffect(() => {
     fetchData();
   }, [selectedMonths]);
+
+  const applyDollarRate = async () => {
+    const rate = await getDollarRate();
+    setDollarRate(rate);
+  };
+
+  useEffect(() => {
+    applyDollarRate();
+  }, []);
+
+  // Calculate derived values
+  const calculatedValues =
+    data?.data && dollarRate
+      ? {
+          revenueUZS: data.data.jami_daromad_usd * dollarRate,
+          expensesUZS: data.data.jami_xarajat,
+          profitUZS:
+            data.data.jami_daromad_usd * dollarRate - data.data.jami_xarajat,
+          profitUSD:
+            data.data.jami_daromad_usd - data.data.jami_xarajat / dollarRate,
+          profitMargin:
+            data.data.jami_daromad_usd > 0
+              ? ((data.data.jami_daromad_usd * dollarRate -
+                  data.data.jami_xarajat) /
+                  (data.data.jami_daromad_usd * dollarRate)) *
+                100
+              : 0,
+        }
+      : null;
 
   const categoryIcons = {
     tikuv: Building2,
@@ -187,11 +252,12 @@ const Overall3 = () => {
     boshqa_harajatlar: "Boshqa xarajatlar",
   };
 
-  const ExpenseCard = ({ category, value, percentage, total }) => {
+  const ExpenseCard = ({ category, value, percentage, total, dollarRate }) => {
     const Icon = categoryIcons[category] || Wallet;
     const colorClass =
       categoryColors[category] || "text-slate-600 bg-slate-50 border-slate-200";
     const label = categoryLabels[category] || category;
+    const valueUSD = dollarRate ? value / dollarRate : null;
 
     return (
       <div className="p-4 rounded-lg border bg-white hover:shadow-md transition-shadow">
@@ -211,6 +277,9 @@ const Overall3 = () => {
         <div className="space-y-1">
           <p className="text-lg font-bold text-slate-900">
             {formatNumber(value)} UZS
+          </p>
+          <p className="text-xs text-slate-500">
+            {valueUSD !== null ? formatNumber(valueUSD) : "..."} USD
           </p>
           <div className="w-full bg-slate-100 rounded-full h-2">
             <div
@@ -268,7 +337,10 @@ const Overall3 = () => {
               <div className="flex items-center gap-2">
                 <Select
                   value={customYear.toString()}
-                  onValueChange={(value) => setCustomYear(parseInt(value))}
+                  onValueChange={(value) => {
+                    setCustomYear(parseInt(value));
+                    localStorage.setItem("overall3CustomYear", value);
+                  }}
                 >
                   <SelectTrigger className="w-24 h-8 text-xs">
                     <SelectValue placeholder="Yil" />
@@ -287,7 +359,10 @@ const Overall3 = () => {
                 </Select>
                 <Select
                   value={customMonth.toString()}
-                  onValueChange={(value) => setCustomMonth(parseInt(value))}
+                  onValueChange={(value) => {
+                    setCustomMonth(parseInt(value));
+                    localStorage.setItem("overall3CustomMonth", value);
+                  }}
                 >
                   <SelectTrigger className="w-32 h-8 text-xs">
                     <SelectValue placeholder="Oy" />
@@ -370,40 +445,121 @@ const Overall3 = () => {
       </header>
 
       {/* MAIN CONTENT */}
-      {loading ? (
+      {loading || !dollarRate ? (
         <div className="flex flex-col items-center justify-center h-96 space-y-4">
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
           <p className="text-slate-500 font-medium text-sm">
-            Ma'lumotlar yuklanmoqda...
+            {!dollarRate ? "Kurs yuklanmoqda..." : "Ma'lumotlar yuklanmoqda..."}
           </p>
         </div>
       ) : data ? (
         <div className="space-y-6">
-          {/* TOTAL EXPENSES CARD */}
-          <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-indigo-100 text-xs font-medium uppercase tracking-wider mb-1">
-                    Davr: {data.period?.start_date} - {data.period?.end_date}
-                  </p>
-                  <p className="text-indigo-100 text-sm font-medium uppercase tracking-wider">
-                    Jami Xarajatlar
-                  </p>
+          {/* FINANCIAL SUMMARY CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* REVENUE CARD */}
+            <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider mb-1">
+                      Davr: {data.period?.start_date} - {data.period?.end_date}
+                    </p>
+                    <p className="text-emerald-100 text-sm font-medium uppercase tracking-wider">
+                      Jami Daromad
+                    </p>
+                  </div>
+                  <TrendingUp className="text-emerald-200" size={28} />
                 </div>
-                <Wallet className="text-indigo-200" size={28} />
-              </div>
-              <h2 className="text-2xl font-black mt-3">
-                {formatNumber(data.data?.somda?.jami_xarajat)}{" "}
-                <span className="text-base font-normal opacity-80">UZS</span>
-              </h2>
-              <div className="mt-4 flex items-center gap-2">
-                <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
-                  {selectedMonths.length} oy tanlangan
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+                <h2 className="text-2xl font-black mt-3">
+                  {formatNumber(data.data?.jami_daromad_usd)}{" "}
+                  <span className="text-base font-normal opacity-80">USD</span>
+                </h2>
+                <p className="text-emerald-100 text-sm mt-1">
+                  {calculatedValues
+                    ? formatNumber(calculatedValues.revenueUZS)
+                    : "..."}{" "}
+                  UZS
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                  <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
+                    {data.data?.buyurtmalar_soni} buyurtma
+                  </Badge>
+                  <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
+                    Kurs: {formatNumber(dollarRate)}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* EXPENSES CARD */}
+            <Card className="border-none shadow-sm bg-gradient-to-br from-rose-500 to-rose-600 text-white">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-rose-100 text-xs font-medium uppercase tracking-wider mb-1">
+                      Davr: {data.period?.start_date} - {data.period?.end_date}
+                    </p>
+                    <p className="text-rose-100 text-sm font-medium uppercase tracking-wider">
+                      Jami Xarajatlar
+                    </p>
+                  </div>
+                  <Wallet className="text-rose-200" size={28} />
+                </div>
+                <h2 className="text-2xl font-black mt-3">
+                  {dollarRate
+                    ? formatNumber(data.data?.jami_xarajat / dollarRate)
+                    : "..."}{" "}
+                  <span className="text-base font-normal opacity-80">USD</span>
+                </h2>
+                <p className="text-rose-100 text-sm mt-1">
+                  {formatNumber(data.data?.jami_xarajat)} UZS
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                  <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
+                    {selectedMonths.length} oy tanlangan
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* PROFIT CARD */}
+            <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-indigo-100 text-xs font-medium uppercase tracking-wider mb-1">
+                      Davr: {data.period?.start_date} - {data.period?.end_date}
+                    </p>
+                    <p className="text-indigo-100 text-sm font-medium uppercase tracking-wider">
+                      Sof Foyda
+                    </p>
+                  </div>
+                  <CircleDollarSign className="text-indigo-200" size={28} />
+                </div>
+                <h2 className="text-2xl font-black mt-3">
+                  {calculatedValues
+                    ? formatNumber(calculatedValues.profitUSD)
+                    : "..."}{" "}
+                  <span className="text-base font-normal opacity-80">USD</span>
+                </h2>
+                <p className="text-indigo-100 text-sm mt-1">
+                  {calculatedValues
+                    ? formatNumber(calculatedValues.profitUZS)
+                    : "..."}{" "}
+                  UZS
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                  <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
+                    Rentabellik:{" "}
+                    {calculatedValues
+                      ? formatNumber(calculatedValues.profitMargin)
+                      : "..."}
+                    %
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* EXPENSE BREAKDOWN GRID */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -423,6 +579,7 @@ const Overall3 = () => {
                     value={value}
                     percentage={percentage}
                     total={data.data?.somda?.jami_xarajat}
+                    dollarRate={dollarRate}
                   />
                 );
               })}
@@ -448,6 +605,9 @@ const Overall3 = () => {
                         Xarajat (UZS)
                       </th>
                       <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                        Xarajat (USD)
+                      </th>
+                      <th className="text-right text-xs font-semibold text-slate-600 p-3">
                         Foiz (%)
                       </th>
                       <th className="text-right text-xs font-semibold text-slate-600 p-3">
@@ -466,6 +626,7 @@ const Overall3 = () => {
                       .map(([key, value]) => {
                         const percentage = data.data?.foizda?.[key] || 0;
                         const label = categoryLabels[key] || key;
+                        const valueUSD = dollarRate ? value / dollarRate : null;
                         return (
                           <tr
                             key={key}
@@ -476,6 +637,11 @@ const Overall3 = () => {
                             </td>
                             <td className="text-sm text-right text-slate-900 font-semibold p-3">
                               {formatNumber(value)}
+                            </td>
+                            <td className="text-sm text-right text-slate-600 p-3">
+                              {valueUSD !== null
+                                ? formatNumber(valueUSD)
+                                : "..."}
                             </td>
                             <td className="text-sm text-right text-slate-600 p-3">
                               {percentage}%
@@ -497,6 +663,13 @@ const Overall3 = () => {
                       <td className="text-sm text-slate-900 p-3">Jami</td>
                       <td className="text-sm text-right text-indigo-600 p-3">
                         {formatNumber(data.data?.somda?.jami_xarajat)}
+                      </td>
+                      <td className="text-sm text-right text-slate-600 p-3">
+                        {dollarRate
+                          ? formatNumber(
+                              data.data?.somda?.jami_xarajat / dollarRate,
+                            )
+                          : "..."}
                       </td>
                       <td className="text-sm text-right text-slate-900 p-3">
                         {data.data?.foizda?.jami_xarajat}%
