@@ -94,7 +94,7 @@ const SettingsPage = () => {
     {
       name: "Mavsumiy tahlil",
       icon: SunSnow,
-      link: "/ceo/newSeason/overall2",
+      link: "/ceo/newSeason/overall3",
       color: "bg-black",
     },
     {
