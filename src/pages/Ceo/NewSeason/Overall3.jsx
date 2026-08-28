@@ -62,6 +62,7 @@ const Overall3 = () => {
   const [expandedSections, setExpandedSections] = useState({
     boshqa_bolimlar: false,
     boshqa_harajatlar: false,
+    soliq: false,
   });
 
   // Generate available months (last 120 months = 10 years for preset functionality)
@@ -673,7 +674,9 @@ const Overall3 = () => {
               .map(([key, value]) => {
                 const percentage = data.data?.foizda?.[key] || 0;
                 const isExpandable =
-                  key === "boshqa_bolimlar" || key === "boshqa_harajatlar";
+                  key === "boshqa_bolimlar" ||
+                  key === "boshqa_harajatlar" ||
+                  key === "soliq";
                 const expandedItems = isExpandable
                   ? data.data?.tafsilotlar?.[key]
                   : null;
@@ -837,7 +840,8 @@ const Overall3 = () => {
                         const valueUSD = dollarRate ? value / dollarRate : null;
                         const isExpandable =
                           key === "boshqa_bolimlar" ||
-                          key === "boshqa_harajatlar";
+                          key === "boshqa_harajatlar" ||
+                          key === "soliq";
                         const isExpanded = expandedSections[key] || false;
                         const expandedItems = isExpandable
                           ? data.data?.tafsilotlar?.[key]

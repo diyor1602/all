@@ -112,6 +112,7 @@ const Overall4 = () => {
   const [expandedSections, setExpandedSections] = useState({
     boshqa_bolimlar: false,
     boshqa_harajatlar: false,
+    soliq: false,
   });
 
   // Generate available seasons (10 years back and 2 years forward)
@@ -1364,7 +1365,9 @@ const Overall4 = () => {
               .map(([key, value]) => {
                 const percentage = data.data?.foizda?.[key] || 0;
                 const isExpandable =
-                  key === "boshqa_bolimlar" || key === "boshqa_harajatlar";
+                  key === "boshqa_bolimlar" ||
+                  key === "boshqa_harajatlar" ||
+                  key === "soliq";
                 const expandedItems = isExpandable
                   ? data.data?.tafsilotlar?.[key]
                   : null;
@@ -1574,7 +1577,8 @@ const Overall4 = () => {
                         const valueUSD = dollarRate ? value / dollarRate : null;
                         const isExpandable =
                           key === "boshqa_bolimlar" ||
-                          key === "boshqa_harajatlar";
+                          key === "boshqa_harajatlar" ||
+                          key === "soliq";
                         const isExpanded = expandedSections[key] || false;
                         const expandedItems = isExpandable
                           ? data.data?.tafsilotlar?.[key]
