@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import formatNumber from "@/utils/formatNumber";
 import {
@@ -23,7 +22,6 @@ import {
   Utensils,
   FileText,
   PieChart,
-  ChevronDown,
   X,
   CircleDollarSign,
 } from "lucide-react";
