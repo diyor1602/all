@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,8 @@ import {
   PieChart,
   X,
   CircleDollarSign,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   Select,
@@ -55,6 +57,11 @@ const Overall3 = () => {
   const [customMonth, setCustomMonth] = useState(() => {
     const saved = localStorage.getItem("overall3CustomMonth");
     return saved ? parseInt(saved) : new Date().getMonth();
+  });
+
+  const [expandedSections, setExpandedSections] = useState({
+    boshqa_bolimlar: false,
+    boshqa_harajatlar: false,
   });
 
   // Generate available months (last 120 months = 10 years for preset functionality)
@@ -165,6 +172,13 @@ const Overall3 = () => {
     localStorage.setItem("overall3SelectedPreset", "custom");
   };
 
+  const toggleSection = (category) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -250,16 +264,29 @@ const Overall3 = () => {
     boshqa_harajatlar: "Boshqa xarajatlar",
   };
 
-  const ExpenseCard = ({ category, value, percentage, total, dollarRate }) => {
+  const ExpenseCard = ({
+    category,
+    value,
+    percentage,
+    total,
+    dollarRate,
+    isExpandable,
+    expandedItems,
+    onToggle,
+  }) => {
     const Icon = categoryIcons[category] || Wallet;
     const colorClass =
       categoryColors[category] || "text-slate-600 bg-slate-50 border-slate-200";
     const label = categoryLabels[category] || category;
     const valueUSD = dollarRate ? value / dollarRate : null;
+    const isExpanded = expandedSections[category] || false;
 
     return (
       <div className="p-4 rounded-lg border bg-white hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-3">
+        <div
+          className={`flex items-center justify-between mb-3 ${isExpandable ? "cursor-pointer" : ""}`}
+          onClick={() => isExpandable && onToggle(category)}
+        >
           <div className="flex items-center gap-2">
             <div className={`p-2 rounded-lg border ${colorClass}`}>
               <Icon size={18} />
@@ -267,6 +294,12 @@ const Overall3 = () => {
             <span className="text-sm font-semibold text-slate-700">
               {label}
             </span>
+            {isExpandable &&
+              (isExpanded ? (
+                <ChevronUp size={16} className="text-slate-400" />
+              ) : (
+                <ChevronDown size={16} className="text-slate-400" />
+              ))}
           </div>
           <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200">
             {percentage}%
@@ -286,6 +319,72 @@ const Overall3 = () => {
             />
           </div>
         </div>
+
+        {isExpandable &&
+          isExpanded &&
+          expandedItems &&
+          expandedItems.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="text-left text-xs font-semibold text-slate-600 p-2">
+                      Nomi
+                    </th>
+                    <th className="text-right text-xs font-semibold text-slate-600 p-2">
+                      Summa (UZS)
+                    </th>
+                    <th className="text-right text-xs font-semibold text-slate-600 p-2">
+                      Summa (USD)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expandedItems.map((item, index) => (
+                    <tr
+                      key={index}
+                      className="border-b border-slate-100 hover:bg-slate-50"
+                    >
+                      <td className="text-xs font-medium text-slate-700 p-2">
+                        {item.nomi}
+                      </td>
+                      <td className="text-xs text-right text-slate-900 font-semibold p-2">
+                        {formatNumber(item.summa)}
+                      </td>
+                      <td className="text-xs text-right text-slate-600 p-2">
+                        {dollarRate
+                          ? formatNumber(item.summa / dollarRate)
+                          : "..."}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-slate-300 bg-slate-50 font-bold">
+                    <td className="text-xs text-slate-900 p-2">Jami</td>
+                    <td className="text-xs text-right text-indigo-600 p-2">
+                      {formatNumber(
+                        expandedItems.reduce(
+                          (sum, item) => sum + item.summa,
+                          0,
+                        ),
+                      )}
+                    </td>
+                    <td className="text-xs text-right text-slate-600 p-2">
+                      {dollarRate
+                        ? formatNumber(
+                            expandedItems.reduce(
+                              (sum, item) => sum + item.summa,
+                              0,
+                            ) / dollarRate,
+                          )
+                        : "..."}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
       </div>
     );
   };
@@ -483,6 +582,9 @@ const Overall3 = () => {
                     {data.data?.buyurtmalar_soni} buyurtma
                   </Badge>
                   <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
+                    {data.data?.tikilgan_soni} dona tikilgan
+                  </Badge>
+                  <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
                     Kurs: {formatNumber(dollarRate)}
                   </Badge>
                 </div>
@@ -570,6 +672,12 @@ const Overall3 = () => {
               })
               .map(([key, value]) => {
                 const percentage = data.data?.foizda?.[key] || 0;
+                const isExpandable =
+                  key === "boshqa_bolimlar" || key === "boshqa_harajatlar";
+                const expandedItems = isExpandable
+                  ? data.data?.tafsilotlar?.[key]
+                  : null;
+
                 return (
                   <ExpenseCard
                     key={key}
@@ -578,10 +686,112 @@ const Overall3 = () => {
                     percentage={percentage}
                     total={data.data?.somda?.jami_xarajat}
                     dollarRate={dollarRate}
+                    isExpandable={isExpandable}
+                    expandedItems={expandedItems}
+                    onToggle={toggleSection}
                   />
                 );
               })}
           </div>
+
+          {/* KEY PERFORMANCE INDICATORS */}
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-base">Ko'rsatkichlar</CardTitle>
+              <CardDescription className="text-xs">
+                Asosiy ishlab chiqarish ko'rsatkichlari
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {data.data?.korsatkichlar && (
+                  <>
+                    <div className="p-4 rounded-lg border bg-white">
+                      <p className="text-xs text-slate-500 mb-1">
+                        Bir mahsulot narxi
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {formatNumber(
+                          data.data.korsatkichlar.bir_mahsulot_narxi_som,
+                        )}{" "}
+                        UZS
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-white">
+                      <p className="text-xs text-slate-500 mb-1">
+                        O'rtacha tikuvchi soni
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {formatNumber(
+                          data.data.korsatkichlar.ortacha_tikuvchi_soni,
+                        )}{" "}
+                        kishi
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-white">
+                      <p className="text-xs text-slate-500 mb-1">
+                        O'rtacha ishchi soni (umumiy)
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {formatNumber(
+                          data.data.korsatkichlar.ortacha_ishchi_soni_umumiy,
+                        )}{" "}
+                        kishi
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-white">
+                      <p className="text-xs text-slate-500 mb-1">
+                        Bir xodimga (davr uchun)
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {formatNumber(
+                          data.data.korsatkichlar.bir_xodimga_davr_uchun_som,
+                        )}{" "}
+                        UZS
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-white">
+                      <p className="text-xs text-slate-500 mb-1">
+                        Bir xodimga (kunlik)
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {formatNumber(
+                          data.data.korsatkichlar.bir_xodimga_kunlik_som,
+                        )}{" "}
+                        UZS
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-white">
+                      <p className="text-xs text-slate-500 mb-1">
+                        Transport (bir xodimga davr uchun)
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {formatNumber(
+                          data.data.korsatkichlar
+                            .transport_bir_xodimga_davr_uchun_som,
+                        )}{" "}
+                        UZS
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-white">
+                      <p className="text-xs text-slate-500 mb-1">
+                        Transport (bir xodimga kunlik)
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {formatNumber(
+                          data.data.korsatkichlar
+                            .transport_bir_xodimga_kunlik_som,
+                        )}{" "}
+                        UZS
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* DETAILED BREAKDOWN */}
 
           {/* SUMMARY TABLE */}
           <Card className="shadow-sm border-slate-200">
@@ -625,34 +835,168 @@ const Overall3 = () => {
                         const percentage = data.data?.foizda?.[key] || 0;
                         const label = categoryLabels[key] || key;
                         const valueUSD = dollarRate ? value / dollarRate : null;
+                        const isExpandable =
+                          key === "boshqa_bolimlar" ||
+                          key === "boshqa_harajatlar";
+                        const isExpanded = expandedSections[key] || false;
+                        const expandedItems = isExpandable
+                          ? data.data?.tafsilotlar?.[key]
+                          : null;
+
                         return (
-                          <tr
-                            key={key}
-                            className="border-b border-slate-100 hover:bg-slate-50"
-                          >
-                            <td className="text-sm font-medium text-slate-700 p-3">
-                              {label}
-                            </td>
-                            <td className="text-sm text-right text-slate-900 font-semibold p-3">
-                              {formatNumber(value)}
-                            </td>
-                            <td className="text-sm text-right text-slate-600 p-3">
-                              {valueUSD !== null
-                                ? formatNumber(valueUSD)
-                                : "..."}
-                            </td>
-                            <td className="text-sm text-right text-slate-600 p-3">
-                              {percentage}%
-                            </td>
-                            <td className="p-3">
-                              <div className="w-full bg-slate-100 rounded-full h-2">
-                                <div
-                                  className="bg-indigo-500 h-2 rounded-full"
-                                  style={{ width: `${percentage}%` }}
-                                />
-                              </div>
-                            </td>
-                          </tr>
+                          <Fragment key={key}>
+                            <tr
+                              className={`border-b border-slate-100 ${isExpandable ? "cursor-pointer hover:bg-slate-50" : ""}`}
+                              onClick={() => isExpandable && toggleSection(key)}
+                            >
+                              <td className="text-sm font-medium text-slate-700 p-3">
+                                <div className="flex items-center gap-2">
+                                  {label}
+                                  {isExpandable &&
+                                    (isExpanded ? (
+                                      <ChevronUp
+                                        size={14}
+                                        className="text-slate-400"
+                                      />
+                                    ) : (
+                                      <ChevronDown
+                                        size={14}
+                                        className="text-slate-400"
+                                      />
+                                    ))}
+                                </div>
+                              </td>
+                              <td className="text-sm text-right text-slate-900 font-semibold p-3">
+                                {formatNumber(value)}
+                              </td>
+                              <td className="text-sm text-right text-slate-600 p-3">
+                                {valueUSD !== null
+                                  ? formatNumber(valueUSD)
+                                  : "..."}
+                              </td>
+                              <td className="text-sm text-right text-slate-600 p-3">
+                                {percentage}%
+                              </td>
+                              <td className="p-3">
+                                <div className="w-full bg-slate-100 rounded-full h-2">
+                                  <div
+                                    className="bg-indigo-500 h-2 rounded-full"
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                </div>
+                              </td>
+                            </tr>
+
+                            {isExpandable &&
+                              isExpanded &&
+                              expandedItems &&
+                              expandedItems.length > 0 && (
+                                <tr key={`${key}-expanded`}>
+                                  <td colSpan={5} className="p-0">
+                                    <div className="bg-slate-50 p-3 border-b border-slate-200">
+                                      <table className="w-full">
+                                        <thead>
+                                          <tr className="border-b border-slate-200">
+                                            <th className="text-left text-xs font-semibold text-slate-600 p-2">
+                                              Nomi
+                                            </th>
+                                            <th className="text-right text-xs font-semibold text-slate-600 p-2">
+                                              Summa (UZS)
+                                            </th>
+                                            <th className="text-right text-xs font-semibold text-slate-600 p-2">
+                                              Summa (USD)
+                                            </th>
+                                            <th className="text-right text-xs font-semibold text-slate-600 p-2">
+                                              Foiz (%)
+                                            </th>
+                                            <th className="text-right text-xs font-semibold text-slate-600 p-2">
+                                              Jadval
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {expandedItems.map((item, index) => {
+                                            const itemPercentage =
+                                              (item.summa / value) * 100;
+                                            return (
+                                              <tr
+                                                key={index}
+                                                className="border-b border-slate-100 hover:bg-slate-100"
+                                              >
+                                                <td className="text-xs font-medium text-slate-700 p-2 pl-4">
+                                                  {item.nomi}
+                                                </td>
+                                                <td className="text-xs text-right text-slate-900 font-semibold p-2">
+                                                  {formatNumber(item.summa)}
+                                                </td>
+                                                <td className="text-xs text-right text-slate-600 p-2">
+                                                  {dollarRate
+                                                    ? formatNumber(
+                                                        item.summa / dollarRate,
+                                                      )
+                                                    : "..."}
+                                                </td>
+                                                <td className="text-xs text-right text-slate-600 p-2">
+                                                  {itemPercentage.toFixed(1)}%
+                                                </td>
+                                                <td className="p-2">
+                                                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                                                    <div
+                                                      className="bg-indigo-400 h-1.5 rounded-full"
+                                                      style={{
+                                                        width: `${itemPercentage}%`,
+                                                      }}
+                                                    />
+                                                  </div>
+                                                </td>
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                        <tfoot>
+                                          <tr className="border-t-2 border-slate-300 bg-slate-100 font-bold">
+                                            <td className="text-xs text-slate-900 p-2 pl-4">
+                                              Jami
+                                            </td>
+                                            <td className="text-xs text-right text-indigo-600 p-2">
+                                              {formatNumber(
+                                                expandedItems.reduce(
+                                                  (sum, item) =>
+                                                    sum + item.summa,
+                                                  0,
+                                                ),
+                                              )}
+                                            </td>
+                                            <td className="text-xs text-right text-slate-600 p-2">
+                                              {dollarRate
+                                                ? formatNumber(
+                                                    expandedItems.reduce(
+                                                      (sum, item) =>
+                                                        sum + item.summa,
+                                                      0,
+                                                    ) / dollarRate,
+                                                  )
+                                                : "..."}
+                                            </td>
+                                            <td className="text-xs text-right text-slate-900 p-2">
+                                              100%
+                                            </td>
+                                            <td className="p-2">
+                                              <div className="w-full bg-slate-300 rounded-full h-1.5">
+                                                <div
+                                                  className="bg-indigo-500 h-1.5 rounded-full"
+                                                  style={{ width: "100%" }}
+                                                />
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        </tfoot>
+                                      </table>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                          </Fragment>
                         );
                       })}
                   </tbody>
