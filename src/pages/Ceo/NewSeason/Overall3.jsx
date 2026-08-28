@@ -282,7 +282,7 @@ const Overall3 = () => {
     const isExpanded = expandedSections[category] || false;
 
     return (
-      <div className="p-4 rounded-lg border bg-white hover:shadow-md transition-shadow">
+      <div className="p-4 rounded-lg border bg-white hover:shadow-md transition-shadow h-fit">
         <div
           className={`flex items-center justify-between mb-3 ${isExpandable ? "cursor-pointer" : ""}`}
           onClick={() => isExpandable && onToggle(category)}
@@ -592,7 +592,7 @@ const Overall3 = () => {
             </Card>
 
             {/* EXPENSES CARD */}
-            <Card className="border-none shadow-sm bg-gradient-to-br from-rose-500 to-rose-600 text-white">
+            <Card className="border-none shadow-sm bg-gradient-to-br from-rose-500 to-rose-600 text-white ">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start">
                   <div>
