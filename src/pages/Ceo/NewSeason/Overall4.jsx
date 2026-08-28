@@ -89,6 +89,26 @@ const Overall4 = () => {
     localStorage.setItem("overall4MaqsadKun", value);
   };
 
+  // Reference dates for expense/revenue rates
+  const [referenceStartDate, setReferenceStartDate] = useState(() => {
+    const saved = localStorage.getItem("overall4ReferenceStartDate");
+    return saved || "";
+  });
+  const [referenceEndDate, setReferenceEndDate] = useState(() => {
+    const saved = localStorage.getItem("overall4ReferenceEndDate");
+    return saved || "";
+  });
+
+  const handleReferenceStartDateChange = (value) => {
+    setReferenceStartDate(value);
+    localStorage.setItem("overall4ReferenceStartDate", value);
+  };
+
+  const handleReferenceEndDateChange = (value) => {
+    setReferenceEndDate(value);
+    localStorage.setItem("overall4ReferenceEndDate", value);
+  };
+
   const [expandedSections, setExpandedSections] = useState({
     boshqa_bolimlar: false,
     boshqa_harajatlar: false,
@@ -200,6 +220,12 @@ const Overall4 = () => {
       }
       if (maqsadKun) {
         payload.maqsad_kun = parseFloat(maqsadKun);
+      }
+
+      // Add reference dates only if both are provided
+      if (referenceStartDate && referenceEndDate) {
+        payload.reference_start_date = referenceStartDate;
+        payload.reference_end_date = referenceEndDate;
       }
 
       const response = await api.post("/ceo/expenseBreakdownReport", payload);
@@ -562,6 +588,26 @@ const Overall4 = () => {
           </div>
 
           <Separator orientation="vertical" className="h-8 hidden md:block" />
+
+          {/* Reference Dates */}
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              placeholder="Reference start"
+              value={referenceStartDate}
+              onChange={(e) => handleReferenceStartDateChange(e.target.value)}
+              className="w-36 h-9 text-xs"
+            />
+            <Input
+              type="date"
+              placeholder="Reference end"
+              value={referenceEndDate}
+              onChange={(e) => handleReferenceEndDateChange(e.target.value)}
+              className="w-36 h-9 text-xs"
+            />
+          </div>
+
+          <Separator orientation="vertical" className="h-8 hidden md:block" />
           <Button
             size="sm"
             onClick={fetchData}
@@ -772,6 +818,20 @@ const Overall4 = () => {
                         {data.mavsum_prognozi.tugash_muddati_oy?.toFixed(1)} oy
                       </p>
                     </div>
+                    <div className="p-4 rounded-lg border bg-white">
+                      <p className="text-xs text-slate-500 mb-1">
+                        Kunlik chiqadigan mahsulotlar soni
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {data.mavsum_prognozi.tugash_muddati_kun
+                          ? formatNumber(
+                              data.mavsum_prognozi.mavsum_umumiy_mahsulot_soni /
+                                data.mavsum_prognozi.tugash_muddati_kun,
+                            )
+                          : "..."}{" "}
+                        dona
+                      </p>
+                    </div>
                   </div>
 
                   {/* Base Budget Projection */}
@@ -791,6 +851,15 @@ const Overall4 = () => {
                           )}{" "}
                           UZS
                         </p>
+                        <p className="text-xs text-slate-500">
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.byudjet_prognozi
+                                  ?.tikuv_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
+                        </p>
                       </div>
                       <div className="p-3 rounded bg-white border">
                         <p className="text-xs text-slate-500 mb-1">Kroy</p>
@@ -800,6 +869,15 @@ const Overall4 = () => {
                           )}{" "}
                           UZS
                         </p>
+                        <p className="text-xs text-slate-500">
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.byudjet_prognozi
+                                  ?.kroy_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
+                        </p>
                       </div>
                       <div className="p-3 rounded bg-white border">
                         <p className="text-xs text-slate-500 mb-1">Ombor</p>
@@ -808,6 +886,15 @@ const Overall4 = () => {
                             data.mavsum_prognozi.byudjet_prognozi?.ombor_som,
                           )}{" "}
                           UZS
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.byudjet_prognozi
+                                  ?.ombor_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
                         </p>
                       </div>
                       <div className="p-3 rounded bg-white border">
@@ -821,6 +908,15 @@ const Overall4 = () => {
                           )}{" "}
                           UZS
                         </p>
+                        <p className="text-xs text-slate-500">
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.byudjet_prognozi
+                                  ?.boshqa_bolimlar_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
+                        </p>
                       </div>
                       <div className="p-3 rounded bg-white border">
                         <p className="text-xs text-slate-500 mb-1">Transport</p>
@@ -830,6 +926,15 @@ const Overall4 = () => {
                               ?.transport_som,
                           )}{" "}
                           UZS
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.byudjet_prognozi
+                                  ?.transport_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
                         </p>
                       </div>
                       <div className="p-3 rounded bg-white border">
@@ -843,6 +948,15 @@ const Overall4 = () => {
                           )}{" "}
                           UZS
                         </p>
+                        <p className="text-xs text-slate-500">
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.byudjet_prognozi
+                                  ?.doimiy_oylik_xarajatlar_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
+                        </p>
                       </div>
                       <div className="p-3 rounded bg-white border">
                         <p className="text-xs text-slate-500 mb-1">
@@ -855,6 +969,15 @@ const Overall4 = () => {
                           )}{" "}
                           UZS
                         </p>
+                        <p className="text-xs text-slate-500">
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.byudjet_prognozi
+                                  ?.umumiy_xarajat_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
+                        </p>
                       </div>
                       <div className="p-3 rounded bg-white border">
                         <p className="text-xs text-slate-500 mb-1">
@@ -866,6 +989,15 @@ const Overall4 = () => {
                               ?.umumiy_daromad_som,
                           )}{" "}
                           UZS
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.byudjet_prognozi
+                                  ?.umumiy_daromad_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
                         </p>
                       </div>
                     </div>
@@ -881,6 +1013,17 @@ const Overall4 = () => {
                             ?.prognoz_foyda_som,
                         )}{" "}
                         UZS
+                      </p>
+                      <p
+                        className={`text-sm ${data.mavsum_prognozi.byudjet_prognozi?.prognoz_foyda_som >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                      >
+                        {dollarRate
+                          ? formatNumber(
+                              data.mavsum_prognozi.byudjet_prognozi
+                                ?.prognoz_foyda_som / dollarRate,
+                            )
+                          : "..."}{" "}
+                        USD
                       </p>
                     </div>
                   </div>
@@ -988,6 +1131,22 @@ const Overall4 = () => {
                             oy
                           </p>
                         </div>
+                        <div className="p-3 rounded bg-white border">
+                          <p className="text-xs text-slate-500 mb-1">
+                            Kunlik chiqadigan mahsulotlar soni
+                          </p>
+                          <p className="text-sm font-bold text-slate-900">
+                            {data.mavsum_prognozi.ssenariy.tugash_muddati_kun
+                              ? formatNumber(
+                                  data.mavsum_prognozi
+                                    .mavsum_umumiy_mahsulot_soni /
+                                    data.mavsum_prognozi.ssenariy
+                                      .tugash_muddati_kun,
+                                )
+                              : "..."}{" "}
+                            dona
+                          </p>
+                        </div>
                       </div>
 
                       <p className="text-xs text-slate-500 mb-3 italic">
@@ -1007,6 +1166,15 @@ const Overall4 = () => {
                             )}{" "}
                             UZS
                           </p>
+                          <p className="text-xs text-slate-500">
+                            {dollarRate
+                              ? formatNumber(
+                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                    ?.tikuv_som / dollarRate,
+                                )
+                              : "..."}{" "}
+                            USD
+                          </p>
                         </div>
                         <div className="p-3 rounded bg-white border">
                           <p className="text-xs text-slate-500 mb-1">Kroy</p>
@@ -1017,6 +1185,15 @@ const Overall4 = () => {
                             )}{" "}
                             UZS
                           </p>
+                          <p className="text-xs text-slate-500">
+                            {dollarRate
+                              ? formatNumber(
+                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                    ?.kroy_som / dollarRate,
+                                )
+                              : "..."}{" "}
+                            USD
+                          </p>
                         </div>
                         <div className="p-3 rounded bg-white border">
                           <p className="text-xs text-slate-500 mb-1">Ombor</p>
@@ -1026,6 +1203,15 @@ const Overall4 = () => {
                                 ?.ombor_som,
                             )}{" "}
                             UZS
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {dollarRate
+                              ? formatNumber(
+                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                    ?.ombor_som / dollarRate,
+                                )
+                              : "..."}{" "}
+                            USD
                           </p>
                         </div>
                         <div className="p-3 rounded bg-white border">
@@ -1039,6 +1225,15 @@ const Overall4 = () => {
                             )}{" "}
                             UZS
                           </p>
+                          <p className="text-xs text-slate-500">
+                            {dollarRate
+                              ? formatNumber(
+                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                    ?.boshqa_bolimlar_som / dollarRate,
+                                )
+                              : "..."}{" "}
+                            USD
+                          </p>
                         </div>
                         <div className="p-3 rounded bg-white border">
                           <p className="text-xs text-slate-500 mb-1">
@@ -1050,6 +1245,15 @@ const Overall4 = () => {
                                 ?.transport_som,
                             )}{" "}
                             UZS
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {dollarRate
+                              ? formatNumber(
+                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                    ?.transport_som / dollarRate,
+                                )
+                              : "..."}{" "}
+                            USD
                           </p>
                         </div>
                         <div className="p-3 rounded bg-white border">
@@ -1063,6 +1267,15 @@ const Overall4 = () => {
                             )}{" "}
                             UZS
                           </p>
+                          <p className="text-xs text-slate-500">
+                            {dollarRate
+                              ? formatNumber(
+                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                    ?.doimiy_oylik_xarajatlar_som / dollarRate,
+                                )
+                              : "..."}{" "}
+                            USD
+                          </p>
                         </div>
                         <div className="p-3 rounded bg-white border">
                           <p className="text-xs text-slate-500 mb-1">
@@ -1075,6 +1288,15 @@ const Overall4 = () => {
                             )}{" "}
                             UZS
                           </p>
+                          <p className="text-xs text-slate-500">
+                            {dollarRate
+                              ? formatNumber(
+                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                    ?.umumiy_xarajat_som / dollarRate,
+                                )
+                              : "..."}{" "}
+                            USD
+                          </p>
                         </div>
                         <div className="p-3 rounded bg-white border">
                           <p className="text-xs text-slate-500 mb-1">
@@ -1086,6 +1308,15 @@ const Overall4 = () => {
                                 ?.umumiy_daromad_som,
                             )}{" "}
                             UZS
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {dollarRate
+                              ? formatNumber(
+                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                    ?.umumiy_daromad_som / dollarRate,
+                                )
+                              : "..."}{" "}
+                            USD
                           </p>
                         </div>
                       </div>
@@ -1101,6 +1332,17 @@ const Overall4 = () => {
                               ?.prognoz_foyda_som,
                           )}{" "}
                           UZS
+                        </p>
+                        <p
+                          className={`text-sm ${data.mavsum_prognozi.ssenariy.byudjet_prognozi?.prognoz_foyda_som >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                        >
+                          {dollarRate
+                            ? formatNumber(
+                                data.mavsum_prognozi.ssenariy.byudjet_prognozi
+                                  ?.prognoz_foyda_som / dollarRate,
+                              )
+                            : "..."}{" "}
+                          USD
                         </p>
                       </div>
                     </div>
@@ -1165,6 +1407,15 @@ const Overall4 = () => {
                         )}{" "}
                         UZS
                       </p>
+                      <p className="text-xs text-slate-500">
+                        {dollarRate
+                          ? formatNumber(
+                              data.data.korsatkichlar.bir_mahsulot_narxi_som /
+                                dollarRate,
+                            )
+                          : "..."}{" "}
+                        USD
+                      </p>
                     </div>
                     <div className="p-4 rounded-lg border bg-white">
                       <p className="text-xs text-slate-500 mb-1">
@@ -1198,6 +1449,15 @@ const Overall4 = () => {
                         )}{" "}
                         UZS
                       </p>
+                      <p className="text-xs text-slate-500">
+                        {dollarRate
+                          ? formatNumber(
+                              data.data.korsatkichlar
+                                .bir_xodimga_davr_uchun_som / dollarRate,
+                            )
+                          : "..."}{" "}
+                        USD
+                      </p>
                     </div>
                     <div className="p-4 rounded-lg border bg-white">
                       <p className="text-xs text-slate-500 mb-1">
@@ -1208,6 +1468,15 @@ const Overall4 = () => {
                           data.data.korsatkichlar.bir_xodimga_kunlik_som,
                         )}{" "}
                         UZS
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {dollarRate
+                          ? formatNumber(
+                              data.data.korsatkichlar.bir_xodimga_kunlik_som /
+                                dollarRate,
+                            )
+                          : "..."}{" "}
+                        USD
                       </p>
                     </div>
                     <div className="p-4 rounded-lg border bg-white">
@@ -1221,6 +1490,16 @@ const Overall4 = () => {
                         )}{" "}
                         UZS
                       </p>
+                      <p className="text-xs text-slate-500">
+                        {dollarRate
+                          ? formatNumber(
+                              data.data.korsatkichlar
+                                .transport_bir_xodimga_davr_uchun_som /
+                                dollarRate,
+                            )
+                          : "..."}{" "}
+                        USD
+                      </p>
                     </div>
                     <div className="p-4 rounded-lg border bg-white">
                       <p className="text-xs text-slate-500 mb-1">
@@ -1232,6 +1511,15 @@ const Overall4 = () => {
                             .transport_bir_xodimga_kunlik_som,
                         )}{" "}
                         UZS
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {dollarRate
+                          ? formatNumber(
+                              data.data.korsatkichlar
+                                .transport_bir_xodimga_kunlik_som / dollarRate,
+                            )
+                          : "..."}{" "}
+                        USD
                       </p>
                     </div>
                   </>
