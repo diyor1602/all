@@ -88,7 +88,7 @@ const SettingsPage = () => {
     {
       name: "Yangi mavsum hisobot",
       icon: SunSnow,
-      link: "/ceo/newSeason/overall",
+      link: "/ceo/newSeason/overall4",
       color: "bg-rose-500",
     },
     {
