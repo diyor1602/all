@@ -743,7 +743,12 @@ const Overall3 = () => {
                             acc.chokPuli += o.cost_breakdown?.rasxod || 0;
                             return acc;
                           },
-                          { sewedQuantity: 0, revenue: 0, cost: 0, chokPuli: 0 },
+                          {
+                            sewedQuantity: 0,
+                            revenue: 0,
+                            cost: 0,
+                            chokPuli: 0,
+                          },
                         );
                         const chokPercent =
                           totals.cost > 0

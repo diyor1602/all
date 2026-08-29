@@ -1,8 +1,8 @@
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import formatNumber from "@/utils/formatNumber";
 import {
   Card,
@@ -14,19 +14,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  Calendar,
+  Calculator,
   RefreshCcw,
   Wallet,
-  TrendingUp,
-  Building2,
-  Truck,
-  Utensils,
-  FileText,
-  PieChart,
-  X,
-  CircleDollarSign,
-  ChevronDown,
-  ChevronUp,
+  Users,
+  DollarSign,
+  Package,
+  Clock,
+  CalendarRange,
+  Info,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Select,
@@ -35,201 +32,89 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import getDollarRate from "@/hooks/getDollarRate";
+import { monthly_expence_types } from "@/lib/monthlyExpenceTypes";
+
+const seasonTypes = [
+  { value: "summer", label: "Bahor" },
+  { value: "winter", label: "Qish" },
+];
+
+const getSeasonLabel = (year, type) => {
+  const typeLabel = seasonTypes.find((s) => s.value === type)?.label || type;
+  return `${year} ${typeLabel} mavsum`;
+};
+
+const COST_BREAKDOWN_META = {
+  rasxod: { label: "Rasxod (mato/material)", color: "bg-indigo-500" },
+  season_salary: { label: "Mavsumiy ish haqi", color: "bg-emerald-500" },
+  attendance: { label: "Davomat", color: "bg-amber-500" },
+  transport: { label: "Transport", color: "bg-sky-500" },
+  monthly_expense: { label: "Oylik xarajatlar", color: "bg-rose-500" },
+};
 
 const Overall4 = () => {
   const { toast } = useToast();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [dollarRate, setDollarRate] = useState(null);
-  const [selectedSeason, setSelectedSeason] = useState(() => {
-    const saved = localStorage.getItem("overall4SelectedSeason");
-    return saved ? JSON.parse(saved) : { year: 2026, type: "summer" };
+
+  const [referenceYear, setReferenceYear] = useState(() => {
+    return localStorage.getItem("overall4ReferenceYear") || "2026";
   });
-  const [selectedPreset, setSelectedPreset] = useState(() => {
-    const saved = localStorage.getItem("overall4SelectedPreset");
-    return saved || "custom";
+  const [referenceType, setReferenceType] = useState(() => {
+    return localStorage.getItem("overall4ReferenceType") || "winter";
   });
-  const [customYear, setCustomYear] = useState(() => {
-    const saved = localStorage.getItem("overall4CustomYear");
-    return saved ? parseInt(saved) : new Date().getFullYear();
+  const [targetYear, setTargetYear] = useState(() => {
+    return localStorage.getItem("overall4TargetYear") || "2027";
   });
-  const [customSeasonType, setCustomSeasonType] = useState(() => {
-    const saved = localStorage.getItem("overall4CustomSeasonType");
-    return saved || "summer";
+  const [targetType, setTargetType] = useState(() => {
+    return localStorage.getItem("overall4TargetType") || "summer";
+  });
+  const [avgWorkerCount, setAvgWorkerCount] = useState(() => {
+    return localStorage.getItem("overall4AvgWorkerCount") || "300";
+  });
+  const [workDaysPerMonth, setWorkDaysPerMonth] = useState(() => {
+    return localStorage.getItem("overall4WorkDaysPerMonth") || "20";
   });
 
-  // Override fields
-  const [ishchiSoniOverride, setIshchiSoniOverride] = useState(() => {
-    const saved = localStorage.getItem("overall4IshchiSoniOverride");
-    return saved ? parseInt(saved) : "";
-  });
-  const [kunlikNormaOverride, setKunlikNormaOverride] = useState(() => {
-    const saved = localStorage.getItem("overall4KunlikNormaOverride");
-    return saved ? parseInt(saved) : "";
-  });
-  const [maqsadKun, setMaqsadKun] = useState(() => {
-    const saved = localStorage.getItem("overall4MaqsadKun");
-    return saved ? parseFloat(saved) : "";
-  });
-
-  const handleIshchiSoniOverrideChange = (value) => {
-    setIshchiSoniOverride(value);
-    localStorage.setItem("overall4IshchiSoniOverride", value);
+  const handleReferenceYearChange = (value) => {
+    setReferenceYear(value);
+    localStorage.setItem("overall4ReferenceYear", value);
   };
-
-  const handleKunlikNormaOverrideChange = (value) => {
-    setKunlikNormaOverride(value);
-    localStorage.setItem("overall4KunlikNormaOverride", value);
+  const handleReferenceTypeChange = (value) => {
+    setReferenceType(value);
+    localStorage.setItem("overall4ReferenceType", value);
   };
-
-  const handleMaqsadKunChange = (value) => {
-    setMaqsadKun(value);
-    localStorage.setItem("overall4MaqsadKun", value);
+  const handleTargetYearChange = (value) => {
+    setTargetYear(value);
+    localStorage.setItem("overall4TargetYear", value);
   };
-
-  // Reference dates for expense/revenue rates
-  const [referenceStartDate, setReferenceStartDate] = useState(() => {
-    const saved = localStorage.getItem("overall4ReferenceStartDate");
-    return saved || "";
-  });
-  const [referenceEndDate, setReferenceEndDate] = useState(() => {
-    const saved = localStorage.getItem("overall4ReferenceEndDate");
-    return saved || "";
-  });
-
-  const handleReferenceStartDateChange = (value) => {
-    setReferenceStartDate(value);
-    localStorage.setItem("overall4ReferenceStartDate", value);
+  const handleTargetTypeChange = (value) => {
+    setTargetType(value);
+    localStorage.setItem("overall4TargetType", value);
   };
-
-  const handleReferenceEndDateChange = (value) => {
-    setReferenceEndDate(value);
-    localStorage.setItem("overall4ReferenceEndDate", value);
+  const handleAvgWorkerCountChange = (value) => {
+    setAvgWorkerCount(value);
+    localStorage.setItem("overall4AvgWorkerCount", value);
   };
-
-  const [expandedSections, setExpandedSections] = useState({
-    boshqa_bolimlar: false,
-    boshqa_harajatlar: false,
-    soliq: false,
-  });
-
-  // Generate available seasons (10 years back and 2 years forward)
-  const currentYear = new Date().getFullYear();
-  const availableYears = Array.from(
-    { length: 13 },
-    (_, i) => currentYear - 10 + i,
-  );
-
-  const seasonTypes = [
-    { value: "summer", label: "Bahor" },
-    { value: "winter", label: "Qish" },
-  ];
-
-  const addCustomSeason = () => {
-    const seasonValue = { year: customYear, type: customSeasonType };
-    setSelectedSeason(seasonValue);
-    localStorage.setItem("overall4SelectedSeason", JSON.stringify(seasonValue));
-    setSelectedPreset("custom");
-    localStorage.setItem("overall4SelectedPreset", "custom");
-  };
-
-  // Preset options
-  const presetOptions = [
-    { value: "1", label: "Oxirgi 1 fasl", seasons: 1 },
-    { value: "2", label: "Oxirgi 2 fasl", seasons: 2 },
-    { value: "4", label: "Oxirgi 4 fasl", seasons: 4 },
-    { value: "custom", label: "Tanlash", seasons: 0 },
-  ];
-
-  const handlePresetChange = (value) => {
-    setSelectedPreset(value);
-    localStorage.setItem("overall4SelectedPreset", value);
-    if (value !== "custom") {
-      const seasonsCount = parseInt(value);
-      // Calculate the season that is 'seasonsCount' seasons back from current
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
-
-      // Determine current season type
-      let currentSeasonType =
-        currentMonth >= 3 && currentMonth <= 8 ? "summer" : "winter";
-
-      // Go back seasonsCount seasons
-      let targetYear = currentYear;
-      let targetSeasonType = currentSeasonType;
-
-      for (let i = 0; i < seasonsCount - 1; i++) {
-        if (targetSeasonType === "summer") {
-          targetSeasonType = "winter";
-        } else {
-          targetSeasonType = "summer";
-          targetYear -= 1;
-        }
-      }
-
-      const selected = { year: targetYear, type: targetSeasonType };
-      setSelectedSeason(selected);
-      localStorage.setItem("overall4SelectedSeason", JSON.stringify(selected));
-    } else {
-      localStorage.setItem(
-        "overall4SelectedSeason",
-        JSON.stringify(selectedSeason),
-      );
-    }
-  };
-
-  const getSeasonLabel = (season) => {
-    const seasonTypeLabel = season.type === "summer" ? "Bahor" : "Qish";
-    return `${season.year} ${seasonTypeLabel}`;
-  };
-
-  const clearSelection = () => {
-    setSelectedSeason({ year: currentYear, type: "summer" });
-    setSelectedPreset("custom");
-    localStorage.setItem(
-      "overall4SelectedSeason",
-      JSON.stringify({ year: currentYear, type: "summer" }),
-    );
-    localStorage.setItem("overall4SelectedPreset", "custom");
-  };
-
-  const toggleSection = (category) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [category]: !prev[category],
-    }));
+  const handleWorkDaysPerMonthChange = (value) => {
+    setWorkDaysPerMonth(value);
+    localStorage.setItem("overall4WorkDaysPerMonth", value);
   };
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const payload = {
-        type: "season",
-        season_type: selectedSeason.type,
-        season_year: selectedSeason.year,
-      };
-
-      // Add override fields if they have values
-      if (ishchiSoniOverride) {
-        payload.ishchi_soni_override = parseInt(ishchiSoniOverride);
-      }
-      if (kunlikNormaOverride) {
-        payload.kunlik_norma_override = parseInt(kunlikNormaOverride);
-      }
-      if (maqsadKun) {
-        payload.maqsad_kun = parseFloat(maqsadKun);
-      }
-
-      // Add reference dates only if both are provided
-      if (referenceStartDate && referenceEndDate) {
-        payload.reference_start_date = referenceStartDate;
-        payload.reference_end_date = referenceEndDate;
-      }
-
-      const response = await api.post("/ceo/expenseBreakdownReport", payload);
+      const response = await api.get("/seasonForecast", {
+        params: {
+          reference_season_year: referenceYear,
+          reference_season_type: referenceType,
+          season_year: targetYear,
+          season_type: targetType,
+          avg_worker_count: avgWorkerCount,
+          work_days_per_month: workDaysPerMonth,
+        },
+      });
       setData(response.data);
     } catch (error) {
       toast({
@@ -244,367 +129,104 @@ const Overall4 = () => {
 
   useEffect(() => {
     fetchData();
-  }, [selectedSeason]);
-
-  const applyDollarRate = async () => {
-    const rate = await getDollarRate();
-    setDollarRate(rate);
-  };
-
-  useEffect(() => {
-    applyDollarRate();
   }, []);
 
-  // Calculate derived values
-  const calculatedValues =
-    data?.data && dollarRate
-      ? {
-          revenueUZS: data.data.jami_daromad_usd * dollarRate,
-          expensesUZS: data.data.jami_xarajat,
-          profitUZS:
-            data.data.jami_daromad_usd * dollarRate - data.data.jami_xarajat,
-          profitUSD:
-            data.data.jami_daromad_usd - data.data.jami_xarajat / dollarRate,
-          profitMargin:
-            data.data.jami_daromad_usd > 0
-              ? ((data.data.jami_daromad_usd * dollarRate -
-                  data.data.jami_xarajat) /
-                  (data.data.jami_daromad_usd * dollarRate)) *
-                100
-              : 0,
-        }
-      : null;
-
-  const categoryIcons = {
-    tikuv: Building2,
-    kroy: Wallet,
-    ombor: FileText,
-    boshqa_bolimlar: Building2,
-    transport: Truck,
-    oziq_ovqat: Utensils,
-    soliq: PieChart,
-    boshqa_harajatlar: Wallet,
-  };
-
-  const categoryColors = {
-    tikuv: "text-blue-600 bg-blue-50 border-blue-200",
-    kroy: "text-emerald-600 bg-emerald-50 border-emerald-200",
-    ombor: "text-amber-600 bg-amber-50 border-amber-200",
-    boshqa_bolimlar: "text-purple-600 bg-purple-50 border-purple-200",
-    transport: "text-orange-600 bg-orange-50 border-orange-200",
-    oziq_ovqat: "text-rose-600 bg-rose-50 border-rose-200",
-    soliq: "text-indigo-600 bg-indigo-50 border-indigo-200",
-    boshqa_harajatlar: "text-slate-600 bg-slate-50 border-slate-200",
-  };
-
-  const categoryLabels = {
-    tikuv: "Tikuv",
-    kroy: "Kroy",
-    ombor: "Ombor",
-    boshqa_bolimlar: "Boshqa bo'limlar",
-    transport: "Transport",
-    oziq_ovqat: "Oziq-ovqat",
-    soliq: "Soliq",
-    boshqa_harajatlar: "Boshqa xarajatlar",
-  };
-
-  const ExpenseCard = ({
-    category,
-    value,
-    percentage,
-    total,
-    dollarRate,
-    isExpandable,
-    expandedItems,
-    onToggle,
-  }) => {
-    const Icon = categoryIcons[category] || Wallet;
-    const colorClass =
-      categoryColors[category] || "text-slate-600 bg-slate-50 border-slate-200";
-    const label = categoryLabels[category] || category;
-    const valueUSD = dollarRate ? value / dollarRate : null;
-    const isExpanded = expandedSections[category] || false;
-
-    return (
-      <div className="p-4 rounded-lg border bg-white hover:shadow-md transition-shadow h-fit">
-        <div
-          className={`flex items-center justify-between mb-3 ${isExpandable ? "cursor-pointer" : ""}`}
-          onClick={() => isExpandable && onToggle(category)}
-        >
-          <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-lg border ${colorClass}`}>
-              <Icon size={18} />
-            </div>
-            <span className="text-sm font-semibold text-slate-700">
-              {label}
-            </span>
-            {isExpandable &&
-              (isExpanded ? (
-                <ChevronUp size={16} className="text-slate-400" />
-              ) : (
-                <ChevronDown size={16} className="text-slate-400" />
-              ))}
-          </div>
-          <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200">
-            {percentage}%
-          </Badge>
-        </div>
-        <div className="space-y-1">
-          <p className="text-lg font-bold text-slate-900">
-            {formatNumber(value)} UZS
-          </p>
-          <p className="text-xs text-slate-500">
-            {valueUSD !== null ? formatNumber(valueUSD) : "..."} USD
-          </p>
-          <div className="w-full bg-slate-100 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all"
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
-        </div>
-
-        {isExpandable &&
-          isExpanded &&
-          expandedItems &&
-          expandedItems.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="text-left text-xs font-semibold text-slate-600 p-2">
-                      Nomi
-                    </th>
-                    <th className="text-right text-xs font-semibold text-slate-600 p-2">
-                      Summa (UZS)
-                    </th>
-                    <th className="text-right text-xs font-semibold text-slate-600 p-2">
-                      Summa (USD)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expandedItems.map((item, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-slate-100 hover:bg-slate-50"
-                    >
-                      <td className="text-xs font-medium text-slate-700 p-2">
-                        {item.nomi}
-                      </td>
-                      <td className="text-xs text-right text-slate-900 font-semibold p-2">
-                        {formatNumber(item.summa)}
-                      </td>
-                      <td className="text-xs text-right text-slate-600 p-2">
-                        {dollarRate
-                          ? formatNumber(item.summa / dollarRate)
-                          : "..."}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t-2 border-slate-300 bg-slate-50 font-bold">
-                    <td className="text-xs text-slate-900 p-2">Jami</td>
-                    <td className="text-xs text-right text-indigo-600 p-2">
-                      {formatNumber(
-                        expandedItems.reduce(
-                          (sum, item) => sum + item.summa,
-                          0,
-                        ),
-                      )}
-                    </td>
-                    <td className="text-xs text-right text-slate-600 p-2">
-                      {dollarRate
-                        ? formatNumber(
-                            expandedItems.reduce(
-                              (sum, item) => sum + item.summa,
-                              0,
-                            ) / dollarRate,
-                          )
-                        : "..."}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
-      </div>
-    );
-  };
+  const dollarRate = data?.dollar_rate || null;
 
   return (
-    <div className="space-y-6 bg-[#f8fafc] min-h-screen font-sans p-6">
+    <div className="space-y-6">
       {/* HEADER & FILTERS */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-lg font-bold text-slate-900">
-            Xarajatlar Tahlili
-          </h1>
-          <p className="text-slate-500 text-xs">
-            Fasllar bo'yicha xarajatlarning bo'linishi va foizlari
-          </p>
-        </div>
-
         <div className="flex flex-wrap items-center gap-3 bg-white shadow-sm border p-4 md:p-3 rounded-lg">
           <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-slate-400" />
-            <span className="text-sm font-medium text-slate-600">Fasl:</span>
+            <Calculator size={16} className="text-slate-400" />
+            <span className="text-sm font-medium text-slate-600">
+              Bazaviy mavsum:
+            </span>
           </div>
-
-          <Select value={selectedPreset} onValueChange={handlePresetChange}>
-            <SelectTrigger className="w-40 h-8 text-xs">
-              <SelectValue placeholder="Tanlang" />
+          <Input
+            type="number"
+            value={referenceYear}
+            onChange={(e) => handleReferenceYearChange(e.target.value)}
+            className="w-20 h-9 text-xs"
+            min="2000"
+            max="2100"
+          />
+          <Select value={referenceType} onValueChange={handleReferenceTypeChange}>
+            <SelectTrigger className="w-28 h-8 text-xs">
+              <SelectValue placeholder="Mavsum" />
             </SelectTrigger>
             <SelectContent>
-              {presetOptions.map((option) => (
+              {seasonTypes.map((season) => (
                 <SelectItem
-                  key={option.value}
-                  value={option.value}
+                  key={season.value}
+                  value={season.value}
                   className="text-xs"
                 >
-                  {option.label}
+                  {season.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          {selectedPreset === "custom" && (
-            <>
-              <Separator
-                orientation="vertical"
-                className="h-8 hidden md:block"
-              />
-              <div className="flex items-center gap-2">
-                <Select
-                  value={customYear.toString()}
-                  onValueChange={(value) => {
-                    setCustomYear(parseInt(value));
-                    localStorage.setItem("overall4CustomYear", value);
-                  }}
-                >
-                  <SelectTrigger className="w-24 h-8 text-xs">
-                    <SelectValue placeholder="Yil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableYears.map((year) => (
-                      <SelectItem
-                        key={year}
-                        value={year.toString()}
-                        className="text-xs"
-                      >
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={customSeasonType}
-                  onValueChange={(value) => {
-                    setCustomSeasonType(value);
-                    localStorage.setItem("overall4CustomSeasonType", value);
-                  }}
-                >
-                  <SelectTrigger className="w-32 h-8 text-xs">
-                    <SelectValue placeholder="Fasl" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seasonTypes.map((season) => (
-                      <SelectItem
-                        key={season.value}
-                        value={season.value}
-                        className="text-xs"
-                      >
-                        {season.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  size="sm"
-                  onClick={addCustomSeason}
-                  className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
-                >
-                  Tanlash
-                </Button>
-              </div>
-            </>
-          )}
+          <Separator orientation="vertical" className="h-8 hidden md:block" />
 
-          {selectedSeason && (
-            <>
-              <Separator
-                orientation="vertical"
-                className="h-8 hidden md:block"
-              />
-              <div className="flex flex-wrap gap-2 items-center">
-                <Badge
-                  variant="secondary"
-                  className="text-xs bg-indigo-100 text-indigo-700"
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-600">
+              Nishon mavsum:
+            </span>
+          </div>
+          <Input
+            type="number"
+            value={targetYear}
+            onChange={(e) => handleTargetYearChange(e.target.value)}
+            className="w-20 h-9 text-xs"
+            min="2000"
+            max="2100"
+          />
+          <Select value={targetType} onValueChange={handleTargetTypeChange}>
+            <SelectTrigger className="w-28 h-8 text-xs">
+              <SelectValue placeholder="Mavsum" />
+            </SelectTrigger>
+            <SelectContent>
+              {seasonTypes.map((season) => (
+                <SelectItem
+                  key={season.value}
+                  value={season.value}
+                  className="text-xs"
                 >
-                  {getSeasonLabel(selectedSeason)}
-                </Badge>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={clearSelection}
-                  className="h-6 px-2 text-xs text-slate-500 hover:text-slate-700"
-                >
-                  <X size={12} className="mr-1" />
-                  Tozalash
-                </Button>
-              </div>
-            </>
-          )}
+                  {season.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Separator orientation="vertical" className="h-8 hidden md:block" />
 
-          {/* Override Fields */}
           <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-600">
+              Ishchi soni:
+            </span>
             <Input
               type="number"
-              placeholder="Ishchi soni"
-              value={ishchiSoniOverride}
-              onChange={(e) => handleIshchiSoniOverrideChange(e.target.value)}
-              className="w-32 h-9 text-xs"
+              value={avgWorkerCount}
+              onChange={(e) => handleAvgWorkerCountChange(e.target.value)}
+              className="w-20 h-9 text-xs"
               min="1"
-            />
-            <Input
-              type="number"
-              placeholder="Kunlik norma"
-              value={kunlikNormaOverride}
-              onChange={(e) => handleKunlikNormaOverrideChange(e.target.value)}
-              className="w-32 h-9 text-xs"
-              min="1"
-            />
-            <Input
-              type="number"
-              placeholder="Maqsad kun"
-              value={maqsadKun}
-              onChange={(e) => handleMaqsadKunChange(e.target.value)}
-              className="w-32 h-9 text-xs"
-              min="0.1"
-              step="0.1"
             />
           </div>
 
-          <Separator orientation="vertical" className="h-8 hidden md:block" />
-
-          {/* Reference Dates */}
           <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-600">
+              Ish kuni/oy:
+            </span>
             <Input
-              type="date"
-              placeholder="Reference start"
-              value={referenceStartDate}
-              onChange={(e) => handleReferenceStartDateChange(e.target.value)}
-              className="w-36 h-9 text-xs"
-            />
-            <Input
-              type="date"
-              placeholder="Reference end"
-              value={referenceEndDate}
-              onChange={(e) => handleReferenceEndDateChange(e.target.value)}
-              className="w-36 h-9 text-xs"
+              type="number"
+              value={workDaysPerMonth}
+              onChange={(e) => handleWorkDaysPerMonthChange(e.target.value)}
+              className="w-16 h-9 text-xs"
+              min="1"
+              max="31"
             />
           </div>
 
@@ -619,21 +241,121 @@ const Overall4 = () => {
               size={14}
               className={`${loading ? "animate-spin" : ""} mr-1`}
             />
-            {loading ? "Yuklanmoqda..." : "Yangilash"}
+            {loading ? "Hisoblanmoqda..." : "Hisoblash"}
           </Button>
         </div>
       </header>
 
       {/* MAIN CONTENT */}
-      {loading || !dollarRate ? (
+      {loading ? (
         <div className="flex flex-col items-center justify-center h-96 space-y-4">
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
           <p className="text-slate-500 font-medium text-sm">
-            {!dollarRate ? "Kurs yuklanmoqda..." : "Ma'lumotlar yuklanmoqda..."}
+            Prognoz hisoblanmoqda...
           </p>
         </div>
       ) : data ? (
         <div className="space-y-6">
+          {/* NOTE */}
+          {data.eslatma && (
+            <div className="flex items-start gap-3 p-4 rounded-lg border border-amber-200 bg-amber-50">
+              <AlertTriangle
+                className="text-amber-500 shrink-0 mt-0.5"
+                size={18}
+              />
+              <p className="text-sm text-amber-800">{data.eslatma}</p>
+            </div>
+          )}
+
+          {/* SEASON OVERVIEW */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Bazaviy mavsum</CardTitle>
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-slate-100 text-slate-700"
+                  >
+                    {getSeasonLabel(
+                      data.reference_season?.season_year,
+                      data.reference_season?.season_type,
+                    )}
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs">
+                  {data.reference_season?.start_date} -{" "}
+                  {data.reference_season?.end_date}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">
+                      Tikuvchilar soni
+                    </p>
+                    <p className="text-lg font-bold text-slate-900">
+                      {formatNumber(
+                        data.reference_season?.avg_sewing_worker_count,
+                      )}{" "}
+                      kishi
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">
+                      Jami xodimlar soni
+                    </p>
+                    <p className="text-lg font-bold text-slate-900">
+                      {formatNumber(
+                        data.reference_season?.avg_total_employee_count,
+                      )}{" "}
+                      kishi
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Nishon mavsum</CardTitle>
+                  <Badge className="text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-100">
+                    {getSeasonLabel(
+                      data.target_season?.season_year,
+                      data.target_season?.season_type,
+                    )}
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs">
+                  {formatNumber(data.kirish?.avg_worker_count)} kishi ·{" "}
+                  {formatNumber(data.kirish?.work_days_per_month)} ish kuni/oy
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">
+                      Taxminiy jami xodimlar
+                    </p>
+                    <p className="text-lg font-bold text-slate-900">
+                      {formatNumber(data.avg_total_employee_count_estimate)}{" "}
+                      kishi
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">
+                      Dollar kursi
+                    </p>
+                    <p className="text-lg font-bold text-slate-900">
+                      {formatNumber(data.dollar_rate)} so'm
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* FINANCIAL SUMMARY CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* REVENUE CARD */}
@@ -642,1139 +364,509 @@ const Overall4 = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider mb-1">
-                      Davr: {data.period?.start_date} - {data.period?.end_date}
+                      Prognoz miqdor: {formatNumber(data.target_total_quantity)}{" "}
+                      dona
                     </p>
                     <p className="text-emerald-100 text-sm font-medium uppercase tracking-wider">
-                      Jami Daromad
+                      Prognoz Tushum
                     </p>
                   </div>
-                  <TrendingUp className="text-emerald-200" size={28} />
+                  <DollarSign className="text-emerald-200" size={28} />
                 </div>
                 <h2 className="text-2xl font-black mt-3">
-                  {formatNumber(data.data?.jami_daromad_usd)}{" "}
+                  {formatNumber(data.forecast_revenue_usd)}{" "}
                   <span className="text-base font-normal opacity-80">USD</span>
                 </h2>
                 <p className="text-emerald-100 text-sm mt-1">
-                  {calculatedValues
-                    ? formatNumber(calculatedValues.revenueUZS)
-                    : "..."}{" "}
-                  UZS
+                  {formatNumber(data.forecast_revenue_uzs)} UZS
                 </p>
                 <div className="mt-4 flex items-center gap-2">
                   <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
-                    {data.data?.buyurtmalar_soni} buyurtma
+                    Xarajatlar: {formatNumber(data.forecast_total_cost)} UZS (
+                    {(
+                      (data.forecast_total_cost / data.forecast_revenue_uzs) *
+                      100
+                    ).toFixed(1)}
+                    %)
                   </Badge>
                   <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
-                    {data.data?.tikilgan_soni} dona tikilgan
-                  </Badge>
-                  <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
-                    Kurs: {formatNumber(dollarRate)}
+                    Foyda: {formatNumber(data.forecast_profit)} UZS (
+                    {(
+                      (data.forecast_profit / data.forecast_revenue_uzs) *
+                      100
+                    ).toFixed(1)}
+                    %)
                   </Badge>
                 </div>
               </CardContent>
             </Card>
 
-            {/* EXPENSES CARD */}
-            <Card className="border-none shadow-sm bg-gradient-to-br from-rose-500 to-rose-600 text-white ">
+            {/* COST CARD */}
+            <Card className="border-none shadow-sm bg-gradient-to-br from-rose-500 to-rose-600 text-white">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-rose-100 text-xs font-medium uppercase tracking-wider mb-1">
-                      Davr: {data.period?.start_date} - {data.period?.end_date}
+                      Soliqsiz: {formatNumber(data.forecast_total_cost_without_tax)}{" "}
+                      UZS
                     </p>
                     <p className="text-rose-100 text-sm font-medium uppercase tracking-wider">
-                      Jami Xarajatlar
+                      Prognoz Jami Xarajat
                     </p>
                   </div>
                   <Wallet className="text-rose-200" size={28} />
                 </div>
                 <h2 className="text-2xl font-black mt-3">
                   {dollarRate
-                    ? formatNumber(data.data?.jami_xarajat / dollarRate)
+                    ? formatNumber(data.forecast_total_cost / dollarRate)
                     : "..."}{" "}
                   <span className="text-base font-normal opacity-80">USD</span>
                 </h2>
                 <p className="text-rose-100 text-sm mt-1">
-                  {formatNumber(data.data?.jami_xarajat)} UZS
+                  {formatNumber(data.forecast_total_cost)} UZS
                 </p>
                 <div className="mt-4 flex items-center gap-2">
                   <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
-                    {getSeasonLabel(selectedSeason)}
+                    Soliq: {formatNumber(data.forecast_tax_total)} UZS
+                  </Badge>
+                  <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
+                    {dollarRate
+                      ? formatNumber(data.forecast_tax_total / dollarRate)
+                      : "..."}{" "}
+                    USD
                   </Badge>
                 </div>
               </CardContent>
             </Card>
 
             {/* PROFIT CARD */}
-            <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+            <Card
+              className={`border-none shadow-sm bg-gradient-to-br ${
+                data.forecast_profit >= 0
+                  ? "from-indigo-500 to-purple-600"
+                  : "from-orange-500 to-red-600"
+              } text-white`}
+            >
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-indigo-100 text-xs font-medium uppercase tracking-wider mb-1">
-                      Davr: {data.period?.start_date} - {data.period?.end_date}
+                    <p className="text-white/80 text-xs font-medium uppercase tracking-wider mb-1">
+                      Nishon: {getSeasonLabel(
+                        data.target_season?.season_year,
+                        data.target_season?.season_type,
+                      )}
                     </p>
-                    <p className="text-indigo-100 text-sm font-medium uppercase tracking-wider">
-                      Sof Foyda
+                    <p className="text-white/80 text-sm font-medium uppercase tracking-wider">
+                      Prognoz Sof Foyda
                     </p>
                   </div>
-                  <CircleDollarSign className="text-indigo-200" size={28} />
+                  <DollarSign className="text-white/80" size={28} />
                 </div>
                 <h2 className="text-2xl font-black mt-3">
-                  {calculatedValues
-                    ? formatNumber(calculatedValues.profitUSD)
+                  {dollarRate
+                    ? formatNumber(data.forecast_profit / dollarRate)
                     : "..."}{" "}
                   <span className="text-base font-normal opacity-80">USD</span>
                 </h2>
-                <p className="text-indigo-100 text-sm mt-1">
-                  {calculatedValues
-                    ? formatNumber(calculatedValues.profitUZS)
-                    : "..."}{" "}
-                  UZS
+                <p className="text-white/80 text-sm mt-1">
+                  {formatNumber(data.forecast_profit)} UZS
                 </p>
                 <div className="mt-4 flex items-center gap-2">
-                  <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-xs">
-                    Rentabellik:{" "}
-                    {calculatedValues
-                      ? formatNumber(calculatedValues.profitMargin)
-                      : "..."}
-                    %
+                  <Badge
+                    className={`${
+                      data.forecast_profit >= 0
+                        ? "bg-emerald-500/30 hover:bg-emerald-500/40"
+                        : "bg-rose-500/30 hover:bg-rose-500/40"
+                    } border-none text-white text-xs`}
+                  >
+                    {data.forecast_profit >= 0 ? "Foyda" : "Zarar"}
                   </Badge>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* MAVSUM PROGNOZI */}
-          {data?.mavsum_prognozi && (
+          {/* PRODUCTION METRICS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="text-indigo-600" size={18} />
+                  <p className="text-xs text-slate-500">Prognoz miqdor</p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(data.target_total_quantity)} dona
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="text-amber-600" size={18} />
+                  <p className="text-xs text-slate-500">Kerakli ish kunlari</p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(data.required_work_days)} kun
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <CalendarRange className="text-sky-600" size={18} />
+                  <p className="text-xs text-slate-500">Taqvim kunlari</p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(data.estimated_calendar_days)} kun
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <CalendarRange className="text-purple-600" size={18} />
+                  <p className="text-xs text-slate-500">Taqvim oylari</p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(data.estimated_calendar_months)} oy
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* UNIT COST METRICS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <DollarSign className="text-amber-600" size={18} />
+                  <p className="text-xs text-slate-500">
+                    Bir dona narxi (soliqsiz)
+                  </p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(data.forecast_cost_per_unit_without_tax)} UZS
+                </p>
+                <p className="text-sm text-slate-500 mt-1">
+                  {dollarRate
+                    ? formatNumber(
+                        data.forecast_cost_per_unit_without_tax / dollarRate,
+                      )
+                    : "..."}{" "}
+                  USD
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <DollarSign className="text-slate-500" size={18} />
+                  <p className="text-xs text-slate-500">Bir dona soliq</p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(data.forecast_tax_per_unit)} UZS
+                </p>
+                <p className="text-sm text-slate-500 mt-1">
+                  {dollarRate
+                    ? formatNumber(data.forecast_tax_per_unit / dollarRate)
+                    : "..."}{" "}
+                  USD
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <DollarSign className="text-rose-600" size={18} />
+                  <p className="text-xs text-slate-500">
+                    Bir dona narxi (soliq bilan)
+                  </p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(data.forecast_cost_per_unit_with_tax)} UZS
+                </p>
+                <p className="text-sm text-slate-500 mt-1">
+                  {dollarRate
+                    ? formatNumber(
+                        data.forecast_cost_per_unit_with_tax / dollarRate,
+                      )
+                    : "..."}{" "}
+                  USD
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* EMPLOYEE COST BREAKDOWN */}
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-base">
+                Xodim Bo'yicha Prognoz Xarajatlar
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Bir xodimga tushadigan kunlik va oylik prognoz xarajatlar
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg border bg-white">
+                  <p className="text-xs text-slate-500 mb-1">
+                    Kunlik xarajat (soliqsiz)
+                  </p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {formatNumber(
+                      data.forecast_cost_per_employee_per_day_without_tax,
+                    )}{" "}
+                    UZS
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {dollarRate
+                      ? formatNumber(
+                          data.forecast_cost_per_employee_per_day_without_tax /
+                            dollarRate,
+                        )
+                      : "..."}{" "}
+                    USD
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg border bg-white">
+                  <p className="text-xs text-slate-500 mb-1">
+                    Oylik xarajat (soliqsiz)
+                  </p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {formatNumber(
+                      data.forecast_cost_per_employee_per_month_without_tax,
+                    )}{" "}
+                    UZS
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {dollarRate
+                      ? formatNumber(
+                          data.forecast_cost_per_employee_per_month_without_tax /
+                            dollarRate,
+                        )
+                      : "..."}{" "}
+                    USD
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg border bg-white">
+                  <p className="text-xs text-slate-500 mb-1">Kunlik soliq</p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {formatNumber(data.forecast_tax_per_employee_per_day)} UZS
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {dollarRate
+                      ? formatNumber(
+                          data.forecast_tax_per_employee_per_day / dollarRate,
+                        )
+                      : "..."}{" "}
+                    USD
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg border bg-white">
+                  <p className="text-xs text-slate-500 mb-1">Oylik soliq</p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {formatNumber(data.forecast_tax_per_employee_per_month)}{" "}
+                    UZS
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {dollarRate
+                      ? formatNumber(
+                          data.forecast_tax_per_employee_per_month /
+                            dollarRate,
+                        )
+                      : "..."}{" "}
+                    USD
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg border bg-white">
+                  <p className="text-xs text-slate-500 mb-1">
+                    Kunlik xarajat (soliq bilan)
+                  </p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {formatNumber(data.forecast_cost_per_employee_per_day)}{" "}
+                    UZS
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {dollarRate
+                      ? formatNumber(
+                          data.forecast_cost_per_employee_per_day / dollarRate,
+                        )
+                      : "..."}{" "}
+                    USD
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg border bg-white">
+                  <p className="text-xs text-slate-500 mb-1">
+                    Oylik xarajat (soliq bilan)
+                  </p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {formatNumber(data.forecast_cost_per_employee_per_month)}{" "}
+                    UZS
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {dollarRate
+                      ? formatNumber(
+                          data.forecast_cost_per_employee_per_month /
+                            dollarRate,
+                        )
+                      : "..."}{" "}
+                    USD
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* COST BREAKDOWN BY CATEGORY */}
+          {data.cost_breakdown && (
             <Card className="shadow-sm border-slate-200">
               <CardHeader>
-                <CardTitle className="text-base">Mavsum Prognozi</CardTitle>
+                <CardTitle className="text-base">
+                  Xarajat Turlari Bo'yicha Taqsimot
+                </CardTitle>
                 <CardDescription className="text-xs">
-                  Mavsum hajmiga asoslangan byudjet va ishlab chiqarish prognozi
+                  Prognoz jami xarajatning tarkibi
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {/* Base Forecast Metrics */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        O'rtacha tikuvchi soni
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.mavsum_prognozi.ortacha_tikuvchi_soni,
-                        )}{" "}
-                        kishi
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Kunlik ishlab chiqarish quvvati (daqiqa)
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.mavsum_prognozi
-                            .kunlik_ishlab_chiqarish_quvvati_daqiqa,
-                        )}{" "}
-                        daqiqa
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Mavsum umumiy daqiqa
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.mavsum_prognozi.mavsum_umumiy_daqiqa,
-                        )}{" "}
-                        daqiqa
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Mavsum umumiy mahsulot soni
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.mavsum_prognozi.mavsum_umumiy_mahsulot_soni,
-                        )}{" "}
-                        dona
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Tugash muddati (kun)
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {data.mavsum_prognozi.tugash_muddati_kun?.toFixed(1)}{" "}
-                        kun
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Tugash muddati (oy)
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {data.mavsum_prognozi.tugash_muddati_oy?.toFixed(1)} oy
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Kunlik chiqadigan mahsulotlar soni
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {data.mavsum_prognozi.tugash_muddati_kun
-                          ? formatNumber(
-                              data.mavsum_prognozi.mavsum_umumiy_mahsulot_soni /
-                                data.mavsum_prognozi.tugash_muddati_kun,
-                            )
-                          : "..."}{" "}
-                        dona
-                      </p>
-                    </div>
-                  </div>
+                <div className="space-y-4">
+                  {Object.entries(data.cost_breakdown).map(([key, value]) => {
+                    const meta = COST_BREAKDOWN_META[key] || {
+                      label: key,
+                      color: "bg-slate-400",
+                    };
+                    const percent =
+                      data.forecast_total_cost > 0
+                        ? (value / data.forecast_total_cost) * 100
+                        : 0;
 
-                  {/* Base Budget Projection */}
-                  <div className="p-4 rounded-lg border bg-slate-50">
-                    <h3 className="text-sm font-semibold text-slate-700 mb-3">
-                      Asosiy Byudjet Prognozi
-                    </h3>
-                    <p className="text-xs text-slate-500 mb-3 italic">
-                      {data.mavsum_prognozi.byudjet_prognozi?.eslatma}
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                      <div className="p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">Tikuv</p>
-                        <p className="text-sm font-bold text-slate-900">
-                          {formatNumber(
-                            data.mavsum_prognozi.byudjet_prognozi?.tikuv_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.byudjet_prognozi
-                                  ?.tikuv_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                      <div className="p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">Kroy</p>
-                        <p className="text-sm font-bold text-slate-900">
-                          {formatNumber(
-                            data.mavsum_prognozi.byudjet_prognozi?.kroy_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.byudjet_prognozi
-                                  ?.kroy_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                      <div className="p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">Ombor</p>
-                        <p className="text-sm font-bold text-slate-900">
-                          {formatNumber(
-                            data.mavsum_prognozi.byudjet_prognozi?.ombor_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.byudjet_prognozi
-                                  ?.ombor_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                      <div className="p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">
-                          Boshqa bo'limlar
-                        </p>
-                        <p className="text-sm font-bold text-slate-900">
-                          {formatNumber(
-                            data.mavsum_prognozi.byudjet_prognozi
-                              ?.boshqa_bolimlar_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.byudjet_prognozi
-                                  ?.boshqa_bolimlar_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                      <div className="p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">Transport</p>
-                        <p className="text-sm font-bold text-slate-900">
-                          {formatNumber(
-                            data.mavsum_prognozi.byudjet_prognozi
-                              ?.transport_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.byudjet_prognozi
-                                  ?.transport_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                      <div className="p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">
-                          Doimiy oylik xarajatlar
-                        </p>
-                        <p className="text-sm font-bold text-slate-900">
-                          {formatNumber(
-                            data.mavsum_prognozi.byudjet_prognozi
-                              ?.doimiy_oylik_xarajatlar_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.byudjet_prognozi
-                                  ?.doimiy_oylik_xarajatlar_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                      <div className="p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">
-                          Umumiy xarajat
-                        </p>
-                        <p className="text-sm font-bold text-rose-600">
-                          {formatNumber(
-                            data.mavsum_prognozi.byudjet_prognozi
-                              ?.umumiy_xarajat_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.byudjet_prognozi
-                                  ?.umumiy_xarajat_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                      <div className="p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">
-                          Umumiy daromad
-                        </p>
-                        <p className="text-sm font-bold text-emerald-600">
-                          {formatNumber(
-                            data.mavsum_prognozi.byudjet_prognozi
-                              ?.umumiy_daromad_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.byudjet_prognozi
-                                  ?.umumiy_daromad_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-3 p-3 rounded bg-white border">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Prognoz foyda
-                      </p>
-                      <p
-                        className={`text-lg font-bold ${data.mavsum_prognozi.byudjet_prognozi?.prognoz_foyda_som >= 0 ? "text-emerald-600" : "text-rose-600"}`}
-                      >
-                        {formatNumber(
-                          data.mavsum_prognozi.byudjet_prognozi
-                            ?.prognoz_foyda_som,
-                        )}{" "}
-                        UZS
-                      </p>
-                      <p
-                        className={`text-sm ${data.mavsum_prognozi.byudjet_prognozi?.prognoz_foyda_som >= 0 ? "text-emerald-600" : "text-rose-600"}`}
-                      >
-                        {dollarRate
-                          ? formatNumber(
-                              data.mavsum_prognozi.byudjet_prognozi
-                                ?.prognoz_foyda_som / dollarRate,
-                            )
-                          : "..."}{" "}
-                        USD
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Scenario/Override Results */}
-                  {data.mavsum_prognozi?.ssenariy && (
-                    <div className="p-4 rounded-lg border bg-indigo-50">
-                      <h3 className="text-sm font-semibold text-indigo-700 mb-3">
-                        Ssenariy (Override natijalari)
-                      </h3>
-                      {data.mavsum_prognozi.ssenariy.kiritilgan && (
-                        <div className="mb-3 p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-2">
-                            Kiritilgan qiymatlar:
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {data.mavsum_prognozi.ssenariy.kiritilgan
-                              .ishchi_soni_override && (
-                              <Badge className="bg-indigo-100 text-indigo-700">
-                                Ishchi soni:{" "}
-                                {
-                                  data.mavsum_prognozi.ssenariy.kiritilgan
-                                    .ishchi_soni_override
-                                }
-                              </Badge>
-                            )}
-                            {data.mavsum_prognozi.ssenariy.kiritilgan
-                              .kunlik_norma_override && (
-                              <Badge className="bg-indigo-100 text-indigo-700">
-                                Kunlik norma:{" "}
-                                {
-                                  data.mavsum_prognozi.ssenariy.kiritilgan
-                                    .kunlik_norma_override
-                                }
-                              </Badge>
-                            )}
-                            {data.mavsum_prognozi.ssenariy.kiritilgan
-                              .maqsad_kun && (
-                              <Badge className="bg-indigo-100 text-indigo-700">
-                                Maqsad kun:{" "}
-                                {
-                                  data.mavsum_prognozi.ssenariy.kiritilgan
-                                    .maqsad_kun
-                                }
-                              </Badge>
-                            )}
-                          </div>
+                    return (
+                      <div key={key}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-slate-700">
+                            {meta.label}
+                          </span>
+                          <span className="text-sm text-slate-600">
+                            {formatNumber(value)} UZS ({percent.toFixed(1)}%)
+                          </span>
                         </div>
-                      )}
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Ishchi soni
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.ishchi_soni,
-                            )}{" "}
-                            kishi
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Kunlik norma (daqiqa)
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.kunlik_norma_daqiqa,
-                            )}{" "}
-                            daqiqa
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Kunlik quvvat (daqiqa)
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy
-                                .kunlik_ishlab_chiqarish_quvvati_daqiqa,
-                            )}{" "}
-                            daqiqa
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Tugash muddati (kun)
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {data.mavsum_prognozi.ssenariy.tugash_muddati_kun?.toFixed(
-                              1,
-                            )}{" "}
-                            kun
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Tugash muddati (oy)
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {data.mavsum_prognozi.ssenariy.tugash_muddati_oy?.toFixed(
-                              1,
-                            )}{" "}
-                            oy
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Kunlik chiqadigan mahsulotlar soni
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {data.mavsum_prognozi.ssenariy.tugash_muddati_kun
-                              ? formatNumber(
-                                  data.mavsum_prognozi
-                                    .mavsum_umumiy_mahsulot_soni /
-                                    data.mavsum_prognozi.ssenariy
-                                      .tugash_muddati_kun,
-                                )
-                              : "..."}{" "}
-                            dona
-                          </p>
+                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${meta.color} rounded-full`}
+                            style={{ width: `${Math.min(100, percent)}%` }}
+                          />
                         </div>
                       </div>
-
-                      <p className="text-xs text-slate-500 mb-3 italic">
-                        {
-                          data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                            ?.eslatma
-                        }
-                      </p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">Tikuv</p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                ?.tikuv_som,
-                            )}{" "}
-                            UZS
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {dollarRate
-                              ? formatNumber(
-                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                    ?.tikuv_som / dollarRate,
-                                )
-                              : "..."}{" "}
-                            USD
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">Kroy</p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                ?.kroy_som,
-                            )}{" "}
-                            UZS
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {dollarRate
-                              ? formatNumber(
-                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                    ?.kroy_som / dollarRate,
-                                )
-                              : "..."}{" "}
-                            USD
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">Ombor</p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                ?.ombor_som,
-                            )}{" "}
-                            UZS
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {dollarRate
-                              ? formatNumber(
-                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                    ?.ombor_som / dollarRate,
-                                )
-                              : "..."}{" "}
-                            USD
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Boshqa bo'limlar
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                ?.boshqa_bolimlar_som,
-                            )}{" "}
-                            UZS
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {dollarRate
-                              ? formatNumber(
-                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                    ?.boshqa_bolimlar_som / dollarRate,
-                                )
-                              : "..."}{" "}
-                            USD
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Transport
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                ?.transport_som,
-                            )}{" "}
-                            UZS
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {dollarRate
-                              ? formatNumber(
-                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                    ?.transport_som / dollarRate,
-                                )
-                              : "..."}{" "}
-                            USD
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Doimiy oylik xarajatlar
-                          </p>
-                          <p className="text-sm font-bold text-slate-900">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                ?.doimiy_oylik_xarajatlar_som,
-                            )}{" "}
-                            UZS
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {dollarRate
-                              ? formatNumber(
-                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                    ?.doimiy_oylik_xarajatlar_som / dollarRate,
-                                )
-                              : "..."}{" "}
-                            USD
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Umumiy xarajat
-                          </p>
-                          <p className="text-sm font-bold text-rose-600">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                ?.umumiy_xarajat_som,
-                            )}{" "}
-                            UZS
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {dollarRate
-                              ? formatNumber(
-                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                    ?.umumiy_xarajat_som / dollarRate,
-                                )
-                              : "..."}{" "}
-                            USD
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-white border">
-                          <p className="text-xs text-slate-500 mb-1">
-                            Umumiy daromad
-                          </p>
-                          <p className="text-sm font-bold text-emerald-600">
-                            {formatNumber(
-                              data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                ?.umumiy_daromad_som,
-                            )}{" "}
-                            UZS
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {dollarRate
-                              ? formatNumber(
-                                  data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                    ?.umumiy_daromad_som / dollarRate,
-                                )
-                              : "..."}{" "}
-                            USD
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 p-3 rounded bg-white border">
-                        <p className="text-xs text-slate-500 mb-1">
-                          Prognoz foyda
-                        </p>
-                        <p
-                          className={`text-lg font-bold ${data.mavsum_prognozi.ssenariy.byudjet_prognozi?.prognoz_foyda_som >= 0 ? "text-emerald-600" : "text-rose-600"}`}
-                        >
-                          {formatNumber(
-                            data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                              ?.prognoz_foyda_som,
-                          )}{" "}
-                          UZS
-                        </p>
-                        <p
-                          className={`text-sm ${data.mavsum_prognozi.ssenariy.byudjet_prognozi?.prognoz_foyda_som >= 0 ? "text-emerald-600" : "text-rose-600"}`}
-                        >
-                          {dollarRate
-                            ? formatNumber(
-                                data.mavsum_prognozi.ssenariy.byudjet_prognozi
-                                  ?.prognoz_foyda_som / dollarRate,
-                              )
-                            : "..."}{" "}
-                          USD
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* EXPENSE BREAKDOWN GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.entries(data.data?.somda || {})
-              .filter(([key]) => key !== "jami_xarajat")
-              .sort(([keyA], [keyB]) => {
-                const percentageA = data.data?.foizda?.[keyA] || 0;
-                const percentageB = data.data?.foizda?.[keyB] || 0;
-                return percentageB - percentageA;
-              })
-              .map(([key, value]) => {
-                const percentage = data.data?.foizda?.[key] || 0;
-                const isExpandable =
-                  key === "boshqa_bolimlar" ||
-                  key === "boshqa_harajatlar" ||
-                  key === "soliq";
-                const expandedItems = isExpandable
-                  ? data.data?.tafsilotlar?.[key]
-                  : null;
+          {/* MONTHLY EXPENSES BREAKDOWN */}
+          {data.monthly_expense_breakdown?.length > 0 && (
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Oylik Xarajatlar Prognozi
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {data.monthly_expense_breakdown.length} ta xarajat moddasi
+                  bo'yicha proyeksiya
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="max-h-96 overflow-auto border border-slate-200 rounded-lg">
+                  <table className="w-full min-w-[640px] text-left border-collapse">
+                    <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left text-xs font-semibold text-slate-600 p-3">
+                          Xarajat turi
+                        </th>
+                        <th className="text-left text-xs font-semibold text-slate-600 p-3">
+                          Turi
+                        </th>
+                        <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                          Asl summa
+                        </th>
+                        <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                          Prognoz summa
+                        </th>
+                      </tr>
+                    </thead>
 
-                return (
-                  <ExpenseCard
-                    key={key}
-                    category={key}
-                    value={value}
-                    percentage={percentage}
-                    total={data.data?.somda?.jami_xarajat}
-                    dollarRate={dollarRate}
-                    isExpandable={isExpandable}
-                    expandedItems={expandedItems}
-                    onToggle={toggleSection}
-                  />
-                );
-              })}
-          </div>
-
-          {/* KEY PERFORMANCE INDICATORS */}
-          <Card className="shadow-sm border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-base">Ko'rsatkichlar</CardTitle>
-              <CardDescription className="text-xs">
-                Asosiy ishlab chiqarish ko'rsatkichlari (fasl bo'yicha)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {data.data?.korsatkichlar && (
-                  <>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Bir mahsulot narxi
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.data.korsatkichlar.bir_mahsulot_narxi_som,
-                        )}{" "}
-                        UZS
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {dollarRate
-                          ? formatNumber(
-                              data.data.korsatkichlar.bir_mahsulot_narxi_som /
-                                dollarRate,
-                            )
-                          : "..."}{" "}
-                        USD
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        O'rtacha tikuvchi soni
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.data.korsatkichlar.ortacha_tikuvchi_soni,
-                        )}{" "}
-                        kishi
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        O'rtacha ishchi soni (umumiy)
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.data.korsatkichlar.ortacha_ishchi_soni_umumiy,
-                        )}{" "}
-                        kishi
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Bir xodimga (davr uchun)
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.data.korsatkichlar.bir_xodimga_davr_uchun_som,
-                        )}{" "}
-                        UZS
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {dollarRate
-                          ? formatNumber(
-                              data.data.korsatkichlar
-                                .bir_xodimga_davr_uchun_som / dollarRate,
-                            )
-                          : "..."}{" "}
-                        USD
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Bir xodimga (kunlik)
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.data.korsatkichlar.bir_xodimga_kunlik_som,
-                        )}{" "}
-                        UZS
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {dollarRate
-                          ? formatNumber(
-                              data.data.korsatkichlar.bir_xodimga_kunlik_som /
-                                dollarRate,
-                            )
-                          : "..."}{" "}
-                        USD
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Transport (bir xodimga davr uchun)
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.data.korsatkichlar
-                            .transport_bir_xodimga_davr_uchun_som,
-                        )}{" "}
-                        UZS
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {dollarRate
-                          ? formatNumber(
-                              data.data.korsatkichlar
-                                .transport_bir_xodimga_davr_uchun_som /
-                                dollarRate,
-                            )
-                          : "..."}{" "}
-                        USD
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg border bg-white">
-                      <p className="text-xs text-slate-500 mb-1">
-                        Transport (bir xodimga kunlik)
-                      </p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {formatNumber(
-                          data.data.korsatkichlar
-                            .transport_bir_xodimga_kunlik_som,
-                        )}{" "}
-                        UZS
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {dollarRate
-                          ? formatNumber(
-                              data.data.korsatkichlar
-                                .transport_bir_xodimga_kunlik_som / dollarRate,
-                            )
-                          : "..."}{" "}
-                        USD
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* DETAILED BREAKDOWN */}
-
-          {/* SUMMARY TABLE */}
-          <Card className="shadow-sm border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-base">Xarajatlar Jadvali</CardTitle>
-              <CardDescription className="text-xs">
-                Bo'limlar bo'yicha xarajatlar tafsiloti (fasl bo'yicha)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="text-left text-xs font-semibold text-slate-600 p-3">
-                        Bo'lim
-                      </th>
-                      <th className="text-right text-xs font-semibold text-slate-600 p-3">
-                        Xarajat (UZS)
-                      </th>
-                      <th className="text-right text-xs font-semibold text-slate-600 p-3">
-                        Xarajat (USD)
-                      </th>
-                      <th className="text-right text-xs font-semibold text-slate-600 p-3">
-                        Foiz (%)
-                      </th>
-                      <th className="text-right text-xs font-semibold text-slate-600 p-3">
-                        Jadval
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(data.data?.somda || {})
-                      .filter(([key]) => key !== "jami_xarajat")
-                      .sort(([keyA], [keyB]) => {
-                        const percentageA = data.data?.foizda?.[keyA] || 0;
-                        const percentageB = data.data?.foizda?.[keyB] || 0;
-                        return percentageB - percentageA;
-                      })
-                      .map(([key, value]) => {
-                        const percentage = data.data?.foizda?.[key] || 0;
-                        const label = categoryLabels[key] || key;
-                        const valueUSD = dollarRate ? value / dollarRate : null;
-                        const isExpandable =
-                          key === "boshqa_bolimlar" ||
-                          key === "boshqa_harajatlar" ||
-                          key === "soliq";
-                        const isExpanded = expandedSections[key] || false;
-                        const expandedItems = isExpandable
-                          ? data.data?.tafsilotlar?.[key]
-                          : null;
-
-                        return (
-                          <Fragment key={key}>
-                            <tr
-                              className={`border-b border-slate-100 ${isExpandable ? "cursor-pointer hover:bg-slate-50" : ""}`}
-                              onClick={() => isExpandable && toggleSection(key)}
+                    <tbody>
+                      {data.monthly_expense_breakdown.map((expense) => (
+                        <tr
+                          key={expense.id}
+                          className="border-b border-slate-100 hover:bg-slate-50"
+                        >
+                          <td className="text-sm font-medium text-slate-700 p-3">
+                            {expense.name}
+                          </td>
+                          <td className="p-3">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-slate-100 text-slate-600"
                             >
-                              <td className="text-sm font-medium text-slate-700 p-3">
-                                <div className="flex items-center gap-2">
-                                  {label}
-                                  {isExpandable &&
-                                    (isExpanded ? (
-                                      <ChevronUp
-                                        size={14}
-                                        className="text-slate-400"
-                                      />
-                                    ) : (
-                                      <ChevronDown
-                                        size={14}
-                                        className="text-slate-400"
-                                      />
-                                    ))}
-                                </div>
-                              </td>
-                              <td className="text-sm text-right text-slate-900 font-semibold p-3">
-                                {formatNumber(value)}
-                              </td>
-                              <td className="text-sm text-right text-slate-600 p-3">
-                                {valueUSD !== null
-                                  ? formatNumber(valueUSD)
-                                  : "..."}
-                              </td>
-                              <td className="text-sm text-right text-slate-600 p-3">
-                                {percentage}%
-                              </td>
-                              <td className="p-3">
-                                <div className="w-full bg-slate-100 rounded-full h-2">
-                                  <div
-                                    className="bg-indigo-500 h-2 rounded-full"
-                                    style={{ width: `${percentage}%` }}
-                                  />
-                                </div>
-                              </td>
-                            </tr>
+                              {monthly_expence_types[expense.type] ||
+                                expense.type}
+                            </Badge>
+                          </td>
+                          <td className="text-sm text-right text-slate-600 p-3">
+                            {formatNumber(expense.reference_amount)} UZS
+                          </td>
+                          <td className="text-sm text-right text-slate-900 font-semibold p-3">
+                            {formatNumber(expense.forecasted_amount)} UZS
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
 
-                            {isExpandable &&
-                              isExpanded &&
-                              expandedItems &&
-                              expandedItems.length > 0 && (
-                                <tr key={`${key}-expanded`}>
-                                  <td colSpan={5} className="p-0">
-                                    <div className="bg-slate-50 p-3 border-b border-slate-200">
-                                      <table className="w-full">
-                                        <thead>
-                                          <tr className="border-b border-slate-200">
-                                            <th className="text-left text-xs font-semibold text-slate-600 p-2">
-                                              Nomi
-                                            </th>
-                                            <th className="text-right text-xs font-semibold text-slate-600 p-2">
-                                              Summa (UZS)
-                                            </th>
-                                            <th className="text-right text-xs font-semibold text-slate-600 p-2">
-                                              Summa (USD)
-                                            </th>
-                                            <th className="text-right text-xs font-semibold text-slate-600 p-2">
-                                              Foiz (%)
-                                            </th>
-                                            <th className="text-right text-xs font-semibold text-slate-600 p-2">
-                                              Jadval
-                                            </th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {expandedItems.map((item, index) => {
-                                            const itemPercentage =
-                                              (item.summa / value) * 100;
-                                            return (
-                                              <tr
-                                                key={index}
-                                                className="border-b border-slate-100 hover:bg-slate-100"
-                                              >
-                                                <td className="text-xs font-medium text-slate-700 p-2 pl-4">
-                                                  {item.nomi}
-                                                </td>
-                                                <td className="text-xs text-right text-slate-900 font-semibold p-2">
-                                                  {formatNumber(item.summa)}
-                                                </td>
-                                                <td className="text-xs text-right text-slate-600 p-2">
-                                                  {dollarRate
-                                                    ? formatNumber(
-                                                        item.summa / dollarRate,
-                                                      )
-                                                    : "..."}
-                                                </td>
-                                                <td className="text-xs text-right text-slate-600 p-2">
-                                                  {itemPercentage.toFixed(1)}%
-                                                </td>
-                                                <td className="p-2">
-                                                  <div className="w-full bg-slate-200 rounded-full h-1.5">
-                                                    <div
-                                                      className="bg-indigo-400 h-1.5 rounded-full"
-                                                      style={{
-                                                        width: `${itemPercentage}%`,
-                                                      }}
-                                                    />
-                                                  </div>
-                                                </td>
-                                              </tr>
-                                            );
-                                          })}
-                                        </tbody>
-                                        <tfoot>
-                                          <tr className="border-t-2 border-slate-300 bg-slate-100 font-bold">
-                                            <td className="text-xs text-slate-900 p-2 pl-4">
-                                              Jami
-                                            </td>
-                                            <td className="text-xs text-right text-indigo-600 p-2">
-                                              {formatNumber(
-                                                expandedItems.reduce(
-                                                  (sum, item) =>
-                                                    sum + item.summa,
-                                                  0,
-                                                ),
-                                              )}
-                                            </td>
-                                            <td className="text-xs text-right text-slate-600 p-2">
-                                              {dollarRate
-                                                ? formatNumber(
-                                                    expandedItems.reduce(
-                                                      (sum, item) =>
-                                                        sum + item.summa,
-                                                      0,
-                                                    ) / dollarRate,
-                                                  )
-                                                : "..."}
-                                            </td>
-                                            <td className="text-xs text-right text-slate-900 p-2">
-                                              100%
-                                            </td>
-                                            <td className="p-2">
-                                              <div className="w-full bg-slate-300 rounded-full h-1.5">
-                                                <div
-                                                  className="bg-indigo-500 h-1.5 rounded-full"
-                                                  style={{ width: "100%" }}
-                                                />
-                                              </div>
-                                            </td>
-                                          </tr>
-                                        </tfoot>
-                                      </table>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                          </Fragment>
-                        );
-                      })}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t-2 border-slate-300 bg-slate-50 font-bold">
-                      <td className="text-sm text-slate-900 p-3">Jami</td>
-                      <td className="text-sm text-right text-indigo-600 p-3">
-                        {formatNumber(data.data?.somda?.jami_xarajat)}
-                      </td>
-                      <td className="text-sm text-right text-slate-600 p-3">
-                        {dollarRate
-                          ? formatNumber(
-                              data.data?.somda?.jami_xarajat / dollarRate,
-                            )
-                          : "..."}
-                      </td>
-                      <td className="text-sm text-right text-slate-900 p-3">
-                        {data.data?.foizda?.jami_xarajat}%
-                      </td>
-                      <td className="p-3">
-                        <div className="w-full bg-slate-200 rounded-full h-2">
-                          <div
-                            className="bg-indigo-600 h-2 rounded-full"
-                            style={{ width: "100%" }}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                    <tfoot className="sticky bottom-0 z-10 bg-slate-50 shadow-[0_-1px_2px_rgba(0,0,0,0.05)]">
+                      <tr className="border-t-2 border-slate-300 font-bold">
+                        <td className="text-sm text-slate-900 p-3" colSpan={2}>
+                          Jami
+                        </td>
+                        <td className="text-sm text-right text-slate-600 p-3">
+                          {formatNumber(
+                            data.monthly_expense_breakdown.reduce(
+                              (sum, e) => sum + (e.reference_amount || 0),
+                              0,
+                            ),
+                          )}{" "}
+                          UZS
+                        </td>
+                        <td className="text-sm text-right text-indigo-600 p-3">
+                          {formatNumber(
+                            data.monthly_expense_breakdown.reduce(
+                              (sum, e) => sum + (e.forecasted_amount || 0),
+                              0,
+                            ),
+                          )}{" "}
+                          UZS
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-96 space-y-4">
-          <p className="text-slate-500 font-medium text-sm">Ma'lumotlar yo'q</p>
+          <Info className="text-slate-300" size={32} />
+          <p className="text-slate-500 font-medium text-sm">
+            Ma'lumotlar yo'q
+          </p>
         </div>
       )}
     </div>
