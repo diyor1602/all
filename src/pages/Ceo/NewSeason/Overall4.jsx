@@ -24,6 +24,7 @@ import {
   CalendarRange,
   Info,
   AlertTriangle,
+  Gauge,
 } from "lucide-react";
 import {
   Select,
@@ -152,7 +153,10 @@ const Overall4 = () => {
             min="2000"
             max="2100"
           />
-          <Select value={referenceType} onValueChange={handleReferenceTypeChange}>
+          <Select
+            value={referenceType}
+            onValueChange={handleReferenceTypeChange}
+          >
             <SelectTrigger className="w-28 h-8 text-xs">
               <SelectValue placeholder="Mavsum" />
             </SelectTrigger>
@@ -344,9 +348,7 @@ const Overall4 = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">
-                      Dollar kursi
-                    </p>
+                    <p className="text-xs text-slate-500 mb-1">Dollar kursi</p>
                     <p className="text-lg font-bold text-slate-900">
                       {formatNumber(data.dollar_rate)} so'm
                     </p>
@@ -407,8 +409,8 @@ const Overall4 = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-rose-100 text-xs font-medium uppercase tracking-wider mb-1">
-                      Soliqsiz: {formatNumber(data.forecast_total_cost_without_tax)}{" "}
-                      UZS
+                      Soliqsiz:{" "}
+                      {formatNumber(data.forecast_total_cost_without_tax)} UZS
                     </p>
                     <p className="text-rose-100 text-sm font-medium uppercase tracking-wider">
                       Prognoz Jami Xarajat
@@ -451,7 +453,8 @@ const Overall4 = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-white/80 text-xs font-medium uppercase tracking-wider mb-1">
-                      Nishon: {getSeasonLabel(
+                      Nishon:{" "}
+                      {getSeasonLabel(
                         data.target_season?.season_year,
                         data.target_season?.season_type,
                       )}
@@ -487,7 +490,7 @@ const Overall4 = () => {
           </div>
 
           {/* PRODUCTION METRICS GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card className="shadow-sm border-slate-200">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-2">
@@ -508,6 +511,23 @@ const Overall4 = () => {
                 </div>
                 <p className="text-xl font-bold text-slate-900">
                   {formatNumber(data.required_work_days)} kun
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gauge className="text-emerald-600" size={18} />
+                  <p className="text-xs text-slate-500">Kunlik chiqadi</p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(
+                    data.required_work_days > 0
+                      ? data.target_total_quantity / data.required_work_days
+                      : 0,
+                  )}{" "}
+                  dona/kun
                 </p>
               </CardContent>
             </Card>
@@ -671,14 +691,12 @@ const Overall4 = () => {
                 <div className="p-4 rounded-lg border bg-white">
                   <p className="text-xs text-slate-500 mb-1">Oylik soliq</p>
                   <p className="text-lg font-bold text-slate-900">
-                    {formatNumber(data.forecast_tax_per_employee_per_month)}{" "}
-                    UZS
+                    {formatNumber(data.forecast_tax_per_employee_per_month)} UZS
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
                     {dollarRate
                       ? formatNumber(
-                          data.forecast_tax_per_employee_per_month /
-                            dollarRate,
+                          data.forecast_tax_per_employee_per_month / dollarRate,
                         )
                       : "..."}{" "}
                     USD
@@ -689,8 +707,7 @@ const Overall4 = () => {
                     Kunlik xarajat (soliq bilan)
                   </p>
                   <p className="text-lg font-bold text-slate-900">
-                    {formatNumber(data.forecast_cost_per_employee_per_day)}{" "}
-                    UZS
+                    {formatNumber(data.forecast_cost_per_employee_per_day)} UZS
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
                     {dollarRate
@@ -864,9 +881,7 @@ const Overall4 = () => {
       ) : (
         <div className="flex flex-col items-center justify-center h-96 space-y-4">
           <Info className="text-slate-300" size={32} />
-          <p className="text-slate-500 font-medium text-sm">
-            Ma'lumotlar yo'q
-          </p>
+          <p className="text-slate-500 font-medium text-sm">Ma'lumotlar yo'q</p>
         </div>
       )}
     </div>
