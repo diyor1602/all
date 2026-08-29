@@ -22,6 +22,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import getDollarRate from "@/hooks/getDollarRate";
+import {
+  monthly_expence_types,
+  monthly_expence_currency,
+} from "@/lib/monthlyExpenceTypes";
 
 const Overall3 = () => {
   const { toast } = useToast();
@@ -584,10 +588,10 @@ const Overall3 = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
+              <div className="max-h-96 overflow-y-auto border border-slate-200 rounded-lg">
+                <table className="w-full text-left border-collapse">
+                  <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
+                    <tr className="border-b border-slate-200">
                       <th className="text-left text-xs font-semibold text-slate-600 p-3">
                         Xarajat turi
                       </th>
@@ -605,10 +609,11 @@ const Overall3 = () => {
                       </th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    {data.monthly_expenses?.map((expense) => (
+                    {data.monthly_expenses?.map((expense, index) => (
                       <tr
-                        key={expense.id}
+                        key={index}
                         className="border-b border-slate-100 hover:bg-slate-50"
                       >
                         <td className="text-sm font-medium text-slate-700 p-3">
@@ -621,13 +626,12 @@ const Overall3 = () => {
                           })}
                         </td>
                         <td className="text-sm text-right text-slate-900 font-semibold p-3">
-                          {formatNumber(expense.amount)} UZS
+                          {formatNumber(expense.amount)}{" "}
+                          {monthly_expence_currency[expense.type] || "UZS"}
                         </td>
-                        <td className="text-sm text-right text-indigo-600 font-semibold p-3">
-                          {formatNumber(
-                            expense.calculated_today || expense.amount,
-                          )}{" "}
-                          UZS
+                        <td className="text-sm text-right text-slate-900 font-semibold p-3">
+                          {formatNumber(expense.amount)}{" "}
+                          {monthly_expence_currency[expense.type] || "UZS"}
                         </td>
                         <td className="text-sm text-right text-slate-600 p-3">
                           {dollarRate
@@ -641,8 +645,9 @@ const Overall3 = () => {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot>
-                    <tr className="border-t-2 border-slate-300 bg-slate-50 font-bold">
+
+                  <tfoot className="sticky bottom-0 z-10 bg-slate-50 shadow-[0_-1px_2px_rgba(0,0,0,0.05)]">
+                    <tr className="border-t-2 border-slate-300 font-bold">
                       <td className="text-sm text-slate-900 p-3">Jami</td>
                       <td className="text-sm text-right text-slate-600 p-3">
                         -
