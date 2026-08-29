@@ -13,7 +13,14 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, RefreshCcw, Wallet, Users, DollarSign } from "lucide-react";
+import {
+  Calendar,
+  RefreshCcw,
+  Wallet,
+  Users,
+  DollarSign,
+  Package,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,6 +33,7 @@ import {
   monthly_expence_types,
   monthly_expence_currency,
 } from "@/lib/monthlyExpenceTypes";
+import { statuses } from "@/lib/status";
 
 const Overall3 = () => {
   const { toast } = useToast();
@@ -413,7 +421,7 @@ const Overall3 = () => {
           </div>
 
           {/* METRICS GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="shadow-sm border-slate-200">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-2">
@@ -422,6 +430,20 @@ const Overall3 = () => {
                 </div>
                 <p className="text-xl font-bold text-slate-900">
                   {formatNumber(data.avg_employee_count)} kishi
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="text-orange-600" size={18} />
+                  <p className="text-xs text-slate-500">
+                    Bugungi tikilgan buyurtmalar
+                  </p>
+                </div>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatNumber(data.today_total_sewed_orders)} ta
                 </p>
               </CardContent>
             </Card>
@@ -576,6 +598,201 @@ const Overall3 = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* TODAY SEWED ORDERS */}
+          {data.today_sewed_orders?.length > 0 && (
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Tikilgan Buyurtmalar
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Ttikilgan {data.today_sewed_orders.length} ta buyurtma
+                  bo'yicha tafsilotlar
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="max-h-96 overflow-y-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left text-xs font-semibold text-slate-600 p-3">
+                          Model
+                        </th>
+                        <th className="text-left text-xs font-semibold text-slate-600 p-3">
+                          Holati
+                        </th>
+                        <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                          Tikilgan / Jami
+                        </th>
+                        <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                          Tushum
+                        </th>
+                        <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                          Tan narxi
+                        </th>
+                        <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                          Chok puli
+                        </th>
+                        <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                          Dona narxi
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.today_sewed_orders.map((order) => {
+                        const status = statuses[order.status] || {
+                          secondaryBg: "bg-slate-50",
+                          textColor: "text-slate-500",
+                          text: order.status,
+                        };
+
+                        return (
+                          <tr
+                            key={order.id}
+                            className="border-b border-slate-100 hover:bg-slate-50"
+                          >
+                            <td className="p-3">
+                              <p className="text-sm font-medium text-slate-700">
+                                {order.model_name}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {order.submodel_name} · {order.name}
+                              </p>
+                            </td>
+                            <td className="p-3">
+                              <span
+                                className={`text-xs font-semibold px-2.5 py-1 rounded-full ${status.secondaryBg} ${status.textColor}`}
+                              >
+                                {status.text}
+                              </span>
+                            </td>
+                            <td className="text-sm text-right text-slate-600 p-3">
+                              {formatNumber(order.sewed_quantity)} /{" "}
+                              {formatNumber(order.quantity)}
+                            </td>
+                            <td className="text-right p-3">
+                              <p className="text-sm font-semibold text-slate-900">
+                                {formatNumber(order.todayRevenue_uzs)} UZS
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {dollarRate
+                                  ? formatNumber(order.todayRevenue_usd)
+                                  : "..."}{" "}
+                                USD
+                              </p>
+                            </td>
+                            <td className="text-right p-3">
+                              <p className="text-sm font-semibold text-slate-900">
+                                {formatNumber(order.total_cost)} UZS
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {dollarRate
+                                  ? formatNumber(order.total_cost / dollarRate)
+                                  : "..."}{" "}
+                                USD
+                              </p>
+                            </td>
+                            <td className="text-right p-3">
+                              {(() => {
+                                const chokPuli = order.cost_breakdown?.rasxod || 0;
+                                const chokPercent =
+                                  order.total_cost > 0
+                                    ? (chokPuli / order.total_cost) * 100
+                                    : 0;
+                                return (
+                                  <>
+                                    <p className="text-sm font-semibold text-slate-900">
+                                      {formatNumber(chokPuli)} UZS
+                                    </p>
+                                    <p className="text-xs text-slate-500">
+                                      {chokPercent.toFixed(1)}%
+                                    </p>
+                                  </>
+                                );
+                              })()}
+                            </td>
+                            <td className="text-right p-3">
+                              <p className="text-sm font-semibold text-slate-900">
+                                {formatNumber(order.cost_per_unit)} UZS
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {dollarRate
+                                  ? formatNumber(
+                                      order.cost_per_unit / dollarRate,
+                                    )
+                                  : "..."}{" "}
+                                USD
+                              </p>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+
+                    <tfoot className="sticky bottom-0 z-10 bg-slate-50 shadow-[0_-1px_2px_rgba(0,0,0,0.05)]">
+                      <tr className="border-t-2 border-slate-300 font-bold">
+                        <td className="text-sm text-slate-900 p-3" colSpan={2}>
+                          Jami ({formatNumber(data.today_total_sewed_orders)}{" "}
+                          ta)
+                        </td>
+                        <td className="text-sm text-right text-slate-600 p-3">
+                          {formatNumber(
+                            data.today_sewed_orders.reduce(
+                              (sum, o) => sum + (o.sewed_quantity || 0),
+                              0,
+                            ),
+                          )}
+                        </td>
+                        <td className="text-sm text-right text-indigo-600 p-3">
+                          {formatNumber(
+                            data.today_sewed_orders.reduce(
+                              (sum, o) => sum + (o.todayRevenue_uzs || 0),
+                              0,
+                            ),
+                          )}{" "}
+                          UZS
+                        </td>
+                        <td className="text-sm text-right text-rose-600 p-3">
+                          {formatNumber(
+                            data.today_sewed_orders.reduce(
+                              (sum, o) => sum + (o.total_cost || 0),
+                              0,
+                            ),
+                          )}{" "}
+                          UZS
+                        </td>
+                        <td className="text-sm text-right text-amber-600 p-3">
+                          {(() => {
+                            const totalChokPuli = data.today_sewed_orders.reduce(
+                              (sum, o) => sum + (o.cost_breakdown?.rasxod || 0),
+                              0,
+                            );
+                            const totalCost = data.today_sewed_orders.reduce(
+                              (sum, o) => sum + (o.total_cost || 0),
+                              0,
+                            );
+                            const totalChokPercent =
+                              totalCost > 0
+                                ? (totalChokPuli / totalCost) * 100
+                                : 0;
+                            return (
+                              <>
+                                {formatNumber(totalChokPuli)} UZS (
+                                {totalChokPercent.toFixed(1)}%)
+                              </>
+                            );
+                          })()}
+                        </td>
+                        <td className="p-3"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* MONTHLY EXPENSES BREAKDOWN */}
           <Card className="shadow-sm border-slate-200">
