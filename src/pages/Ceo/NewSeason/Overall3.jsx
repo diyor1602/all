@@ -35,6 +35,12 @@ import {
 } from "@/lib/monthlyExpenceTypes";
 import { statuses } from "@/lib/status";
 
+const getChokPuliInfo = (order) => {
+  const amount = order.cost_breakdown?.rasxod || 0;
+  const percent = order.total_cost > 0 ? (amount / order.total_cost) * 100 : 0;
+  return { amount, percent };
+};
+
 const Overall3 = () => {
   const { toast } = useToast();
 
@@ -500,7 +506,7 @@ const Overall3 = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg border bg-white">
                   <p className="text-xs text-slate-500 mb-1">
                     Kunlik xarajat (soliqsiz)
@@ -604,16 +610,16 @@ const Overall3 = () => {
             <Card className="shadow-sm border-slate-200">
               <CardHeader>
                 <CardTitle className="text-base">
-                  Tikilgan Buyurtmalar
+                  Bugungi Tikilgan Buyurtmalar
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Ttikilgan {data.today_sewed_orders.length} ta buyurtma
+                  Bugun tikilgan {data.today_sewed_orders.length} ta buyurtma
                   bo'yicha tafsilotlar
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="max-h-96 overflow-y-auto border border-slate-200 rounded-lg">
-                  <table className="w-full text-left border-collapse">
+                <div className="max-h-96 overflow-auto border border-slate-200 rounded-lg">
+                  <table className="w-full min-w-[900px] text-left border-collapse">
                     <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
                       <tr className="border-b border-slate-200">
                         <th className="text-left text-xs font-semibold text-slate-600 p-3">
@@ -696,18 +702,14 @@ const Overall3 = () => {
                             </td>
                             <td className="text-right p-3">
                               {(() => {
-                                const chokPuli = order.cost_breakdown?.rasxod || 0;
-                                const chokPercent =
-                                  order.total_cost > 0
-                                    ? (chokPuli / order.total_cost) * 100
-                                    : 0;
+                                const chokPuli = getChokPuliInfo(order);
                                 return (
                                   <>
                                     <p className="text-sm font-semibold text-slate-900">
-                                      {formatNumber(chokPuli)} UZS
+                                      {formatNumber(chokPuli.amount)} UZS
                                     </p>
                                     <p className="text-xs text-slate-500">
-                                      {chokPercent.toFixed(1)}%
+                                      {chokPuli.percent.toFixed(1)}%
                                     </p>
                                   </>
                                 );
@@ -732,61 +734,48 @@ const Overall3 = () => {
                     </tbody>
 
                     <tfoot className="sticky bottom-0 z-10 bg-slate-50 shadow-[0_-1px_2px_rgba(0,0,0,0.05)]">
-                      <tr className="border-t-2 border-slate-300 font-bold">
-                        <td className="text-sm text-slate-900 p-3" colSpan={2}>
-                          Jami ({formatNumber(data.today_total_sewed_orders)}{" "}
-                          ta)
-                        </td>
-                        <td className="text-sm text-right text-slate-600 p-3">
-                          {formatNumber(
-                            data.today_sewed_orders.reduce(
-                              (sum, o) => sum + (o.sewed_quantity || 0),
-                              0,
-                            ),
-                          )}
-                        </td>
-                        <td className="text-sm text-right text-indigo-600 p-3">
-                          {formatNumber(
-                            data.today_sewed_orders.reduce(
-                              (sum, o) => sum + (o.todayRevenue_uzs || 0),
-                              0,
-                            ),
-                          )}{" "}
-                          UZS
-                        </td>
-                        <td className="text-sm text-right text-rose-600 p-3">
-                          {formatNumber(
-                            data.today_sewed_orders.reduce(
-                              (sum, o) => sum + (o.total_cost || 0),
-                              0,
-                            ),
-                          )}{" "}
-                          UZS
-                        </td>
-                        <td className="text-sm text-right text-amber-600 p-3">
-                          {(() => {
-                            const totalChokPuli = data.today_sewed_orders.reduce(
-                              (sum, o) => sum + (o.cost_breakdown?.rasxod || 0),
-                              0,
-                            );
-                            const totalCost = data.today_sewed_orders.reduce(
-                              (sum, o) => sum + (o.total_cost || 0),
-                              0,
-                            );
-                            const totalChokPercent =
-                              totalCost > 0
-                                ? (totalChokPuli / totalCost) * 100
-                                : 0;
-                            return (
-                              <>
-                                {formatNumber(totalChokPuli)} UZS (
-                                {totalChokPercent.toFixed(1)}%)
-                              </>
-                            );
-                          })()}
-                        </td>
-                        <td className="p-3"></td>
-                      </tr>
+                      {(() => {
+                        const totals = data.today_sewed_orders.reduce(
+                          (acc, o) => {
+                            acc.sewedQuantity += o.sewed_quantity || 0;
+                            acc.revenue += o.todayRevenue_uzs || 0;
+                            acc.cost += o.total_cost || 0;
+                            acc.chokPuli += o.cost_breakdown?.rasxod || 0;
+                            return acc;
+                          },
+                          { sewedQuantity: 0, revenue: 0, cost: 0, chokPuli: 0 },
+                        );
+                        const chokPercent =
+                          totals.cost > 0
+                            ? (totals.chokPuli / totals.cost) * 100
+                            : 0;
+
+                        return (
+                          <tr className="border-t-2 border-slate-300 font-bold">
+                            <td
+                              className="text-sm text-slate-900 p-3"
+                              colSpan={2}
+                            >
+                              Jami (
+                              {formatNumber(data.today_total_sewed_orders)} ta)
+                            </td>
+                            <td className="text-sm text-right text-slate-600 p-3">
+                              {formatNumber(totals.sewedQuantity)}
+                            </td>
+                            <td className="text-sm text-right text-indigo-600 p-3">
+                              {formatNumber(totals.revenue)} UZS
+                            </td>
+                            <td className="text-sm text-right text-rose-600 p-3">
+                              {formatNumber(totals.cost)} UZS
+                            </td>
+                            <td className="text-sm text-right text-amber-600 p-3">
+                              {formatNumber(totals.chokPuli)} UZS (
+                              {chokPercent.toFixed(1)}%)
+                            </td>
+                            <td className="p-3"></td>
+                          </tr>
+                        );
+                      })()}
                     </tfoot>
                   </table>
                 </div>
