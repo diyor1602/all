@@ -31,7 +31,6 @@ import {
   Calculator,
   RefreshCcw,
   Wallet,
-  Users,
   DollarSign,
   Package,
   Clock,
@@ -827,6 +826,9 @@ const Overall4 = () => {
                           Miqdor
                         </TableHead>
                         <TableHead className="border border-slate-200">
+                          Narx
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
                           Prognoz tushum
                         </TableHead>
                         <TableHead className="border border-slate-200">
@@ -845,11 +847,13 @@ const Overall4 = () => {
                     </TableHeader>
                     <TableBody>
                       {data.orders.map((order) => {
+                        const chokPerUnit = order.price
+                          ? (order.price / 0.07) * 250
+                          : 0;
+                        const chokTotal = chokPerUnit * (order.quantity || 0);
                         const chokPercent =
                           order.forecast_total_cost > 0
-                            ? ((order.cost_breakdown?.rasxod || 0) /
-                                order.forecast_total_cost) *
-                              100
+                            ? (chokTotal / order.forecast_total_cost) * 100
                             : 0;
 
                         return (
@@ -877,6 +881,16 @@ const Overall4 = () => {
                               <div className="text-slate-400">
                                 {formatNumber(order.minute)} daq/dona
                               </div>
+                            </TableCell>
+                            <TableCell className="border border-slate-200">
+                              <div className="font-mono">
+                                {formatNumber(order.price)} $
+                              </div>
+                              {dollarRate && (
+                                <div className="font-mono text-slate-400">
+                                  {formatNumber(order.price * dollarRate)} so'm
+                                </div>
+                              )}
                             </TableCell>
                             <TableCell className="border border-slate-200">
                               <div className="font-mono">
@@ -924,12 +938,7 @@ const Overall4 = () => {
                               {formatNumber(order.forecast_cost_per_unit)} so'm
                             </TableCell>
                             <TableCell className="font-mono border border-slate-200">
-                              <div>
-                                {formatNumber(
-                                  order.cost_breakdown?.rasxod || 0,
-                                )}{" "}
-                                so'm
-                              </div>
+                              <div>{formatNumber(chokTotal)} so'm</div>
                               <div className="flex items-center gap-2">
                                 {chokPercent > 30 && (
                                   <TriangleAlert
