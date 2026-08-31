@@ -14,6 +14,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Calculator,
   RefreshCcw,
   Wallet,
@@ -25,6 +39,7 @@ import {
   Info,
   AlertTriangle,
   Gauge,
+  TriangleAlert,
 } from "lucide-react";
 import {
   Select,
@@ -34,6 +49,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { monthly_expence_types } from "@/lib/monthlyExpenceTypes";
+import { cn } from "@/lib/utils";
 
 const seasonTypes = [
   { value: "summer", label: "Bahor" },
@@ -782,6 +798,162 @@ const Overall4 = () => {
                       </div>
                     );
                   })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* FORECASTED ORDERS */}
+          {data.orders?.length > 0 && (
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader>
+                <CardTitle className="text-base">Prognoz Buyurtmalar</CardTitle>
+                <CardDescription className="text-xs">
+                  {data.orders.length} ta buyurtma bo'yicha prognoz taqsimot
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto w-full">
+                  <Table className="border border-slate-200 w-full whitespace-nowrap text-xs">
+                    <TableHeader className="bg-slate-50">
+                      <TableRow>
+                        <TableHead className="border border-slate-200">
+                          Id
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
+                          Nomi
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
+                          Model
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
+                          Miqdor
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
+                          Prognoz tushum
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
+                          Prognoz xarajat
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
+                          1 tasi xarajat
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
+                          Chok
+                        </TableHead>
+                        <TableHead className="border border-slate-200">
+                          Prognoz foyda
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.orders.map((order) => {
+                        const chokPercent =
+                          order.forecast_total_cost > 0
+                            ? ((order.cost_breakdown?.rasxod || 0) /
+                                order.forecast_total_cost) *
+                              100
+                            : 0;
+
+                        return (
+                          <TableRow
+                            key={order.id}
+                            className={cn(
+                              order.forecast_profit > 0
+                                ? "bg-green-100 hover:bg-green-200"
+                                : "bg-red-100 hover:bg-red-200",
+                            )}
+                          >
+                            <TableCell className="font-medium border border-slate-200 text-center">
+                              {order.id}
+                            </TableCell>
+                            <TableCell className="border border-slate-200">
+                              {order.name}
+                            </TableCell>
+                            <TableCell className="border border-slate-200">
+                              {order.model_name}
+                            </TableCell>
+                            <TableCell className="border border-slate-200">
+                              <div className="font-mono">
+                                {formatNumber(order.quantity)} ta
+                              </div>
+                              <div className="text-slate-400">
+                                {formatNumber(order.minute)} daq/dona
+                              </div>
+                            </TableCell>
+                            <TableCell className="border border-slate-200">
+                              <div className="font-mono">
+                                {formatNumber(order.forecast_revenue_uzs)} so'm
+                              </div>
+                              <div className="font-mono text-slate-500">
+                                {formatNumber(order.forecast_revenue_usd)} $
+                              </div>
+                            </TableCell>
+                            <TableCell className="border border-slate-200">
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <div className="font-mono">
+                                      {formatNumber(order.forecast_total_cost)}{" "}
+                                      so'm
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="space-y-1">
+                                      {Object.entries(
+                                        order.cost_breakdown || {},
+                                      ).map(([key, value]) => {
+                                        const meta = COST_BREAKDOWN_META[
+                                          key
+                                        ] || { label: key };
+                                        return (
+                                          <div
+                                            key={key}
+                                            className="w-full flex justify-between gap-2"
+                                          >
+                                            <div>{meta.label}:</div>
+                                            <div>
+                                              {formatNumber(value)} so'm
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableCell>
+                            <TableCell className="font-mono border border-slate-200">
+                              {formatNumber(order.forecast_cost_per_unit)} so'm
+                            </TableCell>
+                            <TableCell className="font-mono border border-slate-200">
+                              <div className="flex items-center gap-2">
+                                {chokPercent > 30 && (
+                                  <TriangleAlert
+                                    size={16}
+                                    className="text-red-500"
+                                  />
+                                )}
+                                {chokPercent.toFixed(1)} %
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div
+                                className={cn(
+                                  "font-bold font-mono",
+                                  order.forecast_profit > 0
+                                    ? "text-green-600"
+                                    : "text-red-600",
+                                )}
+                              >
+                                {formatNumber(order.forecast_profit)} so'm
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
