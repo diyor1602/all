@@ -12,7 +12,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -28,7 +27,20 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Calendar, RefreshCcw, Package, Diff, Image } from "lucide-react";
+import {
+  Calendar,
+  Package,
+  Diff,
+  Sparkles,
+  Search,
+  ArrowRight,
+  Percent,
+  Clock,
+  Wallet,
+  TrendingUp,
+  Lightbulb,
+  SearchX,
+} from "lucide-react";
 
 const seasonTypes = [
   { value: "summer", label: "Bahor" },
@@ -41,15 +53,51 @@ const getSeasonLabel = (year, type) => {
 };
 
 const getSimilarityStyle = (percent) => {
-  if (percent >= 80) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-  if (percent >= 60) return "bg-amber-100 text-amber-700 border-amber-200";
-  return "bg-rose-100 text-rose-700 border-rose-200";
+  if (percent >= 80)
+    return {
+      badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+      border: "border-l-emerald-400",
+      ring: "from-emerald-500/10",
+    };
+  if (percent >= 60)
+    return {
+      badge: "bg-amber-100 text-amber-700 border-amber-200",
+      border: "border-l-amber-400",
+      ring: "from-amber-500/10",
+    };
+  return {
+    badge: "bg-rose-100 text-rose-700 border-rose-200",
+    border: "border-l-rose-400",
+    ring: "from-rose-500/10",
+  };
 };
 
-const OrderColumn = ({ title, order, badgeClass }) => {
+const columnThemes = {
+  old: {
+    badge: "bg-slate-200 text-slate-700 border-slate-300",
+    card: "border-slate-200 bg-slate-50/70",
+    modelHeader: "bg-slate-100 border-slate-200",
+    tableHead: "bg-slate-50",
+    rowHover: "hover:bg-slate-50/80",
+    accent: "text-slate-500",
+  },
+  new: {
+    badge: "bg-indigo-600 text-white border-indigo-600",
+    card: "border-indigo-200 bg-indigo-50/50",
+    modelHeader: "bg-indigo-50 border-indigo-100",
+    tableHead: "bg-indigo-50/60",
+    rowHover: "hover:bg-indigo-50/60",
+    accent: "text-indigo-500",
+  },
+};
+
+const OrderColumn = ({ title, order, theme }) => {
+  const t = columnThemes[theme];
+
   if (!order) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6 text-sm text-slate-400 border border-dashed rounded-lg">
+      <div className="flex-1 flex flex-col items-center justify-center gap-2 p-8 text-sm text-slate-400 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/40">
+        <Package size={22} className="text-slate-300" />
         Ma'lumot yo'q
       </div>
     );
@@ -60,16 +108,14 @@ const OrderColumn = ({ title, order, badgeClass }) => {
   return (
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between mb-2">
-        <Badge variant="outline" className={`text-xs ${badgeClass}`}>
-          {title}
-        </Badge>
+        <Badge className={`text-xs border ${t.badge}`}>{title}</Badge>
       </div>
 
-      <div className="p-3 rounded-lg border bg-white">
+      <div className={`p-3 rounded-xl border ${t.card}`}>
         <p className="text-sm font-semibold text-slate-800">
           {order.order_name}
         </p>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <p className={`text-xs mt-0.5 ${t.accent}`}>
           ID: {order.order_id} · {formatNumber(order.quantity)} dona
         </p>
 
@@ -80,7 +126,7 @@ const OrderColumn = ({ title, order, badgeClass }) => {
                 key={idx}
                 src={img?.image || img}
                 alt="-"
-                className="w-12 h-12 object-cover rounded border"
+                className="w-12 h-12 object-cover rounded-lg border-2 border-white shadow-sm"
               />
             ))}
           </div>
@@ -91,18 +137,20 @@ const OrderColumn = ({ title, order, badgeClass }) => {
         {order.models?.map((model) => (
           <div
             key={model.order_model_id}
-            className="rounded-lg border overflow-hidden"
+            className="rounded-xl border border-slate-200 overflow-hidden shadow-sm"
           >
-            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b">
-              <p className="text-xs font-medium text-slate-600">
+            <div
+              className={`flex items-center justify-between px-3 py-2 border-b ${t.modelHeader}`}
+            >
+              <p className="text-xs font-semibold text-slate-700">
                 Model #{model.model_id}
               </p>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-500">
-                  Reja: {formatNumber(model.planned_minute)} daq
+                  Daqiqa: {formatNumber(model.planned_minute)} daq
                 </span>
                 <span className="text-xs text-slate-500">
-                  Rasxod: {formatNumber(model.rasxod)}
+                  Chok: {formatNumber(model.rasxod)}
                 </span>
               </div>
             </div>
@@ -111,28 +159,32 @@ const OrderColumn = ({ title, order, badgeClass }) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs">Guruh</TableHead>
-                    <TableHead className="text-xs text-right">
+                    <TableHead className={`text-xs ${t.tableHead}`}>
+                      Guruh
+                    </TableHead>
+                    <TableHead className={`text-xs text-right ${t.tableHead}`}>
                       Kunlik o'rtacha
                     </TableHead>
-                    <TableHead className="text-xs text-right">Jami</TableHead>
-                    <TableHead className="text-xs text-right">
+                    <TableHead className={`text-xs text-right ${t.tableHead}`}>
+                      Jami
+                    </TableHead>
+                    <TableHead className={`text-xs text-right ${t.tableHead}`}>
                       Ish kuni
                     </TableHead>
-                    <TableHead className="text-xs text-right">
+                    <TableHead className={`text-xs text-right ${t.tableHead}`}>
                       O'rtacha ishchi
                     </TableHead>
-                    <TableHead className="text-xs text-right">
+                    <TableHead className={`text-xs text-right ${t.tableHead}`}>
                       Sekund
                     </TableHead>
-                    <TableHead className="text-xs text-right">
+                    <TableHead className={`text-xs text-right ${t.tableHead}`}>
                       Summa
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {model.submodels?.map((sub) => (
-                    <TableRow key={sub.submodel_id}>
+                    <TableRow key={sub.submodel_id} className={t.rowHover}>
                       <TableCell className="text-xs font-medium text-slate-700">
                         {sub.group_name}
                       </TableCell>
@@ -155,7 +207,7 @@ const OrderColumn = ({ title, order, badgeClass }) => {
                           ? formatNumber(sub.actual_seconds)
                           : "-"}
                       </TableCell>
-                      <TableCell className="text-xs text-right">
+                      <TableCell className="text-xs text-right font-medium text-slate-700">
                         {sub.actual_summa != null
                           ? formatNumber(sub.actual_summa)
                           : "-"}
@@ -200,7 +252,72 @@ const SeasonDifference = () => {
     return saved || "55";
   });
 
+  const [aiRecommendations, setAiRecommendations] = useState({});
+  const [aiLoading, setAiLoading] = useState({});
+
   const persist = (key, value) => localStorage.setItem(key, value);
+
+  const getAiRecommendation = async (idx, item) => {
+    const old_order_id = item.old?.order_id;
+    const new_order_id = item.new?.order_id;
+    if (!old_order_id || !new_order_id) return;
+
+    setAiLoading((prev) => ({ ...prev, [idx]: true }));
+    try {
+      const res = await api.post("ceo/seasonOrderComparison/ai-recommend", {
+        old_order_id,
+        new_order_id,
+      });
+      setAiRecommendations((prev) => ({
+        ...prev,
+        [idx]: res.data?.data ?? res.data,
+      }));
+    } catch {
+      toast({
+        title: "Xatolik",
+        description: "AI tavsiyasini olib bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setAiLoading((prev) => ({ ...prev, [idx]: false }));
+    }
+  };
+
+  const aiSections = [
+    {
+      key: "oxshashlik_bahosi",
+      label: "O'xshashlik bahosi",
+      icon: Percent,
+      color: "text-blue-600 bg-blue-100",
+    },
+    {
+      key: "vaqt_tahlili",
+      label: "Vaqt tahlili",
+      icon: Clock,
+      color: "text-amber-600 bg-amber-100",
+    },
+    {
+      key: "xarajat_tahlili",
+      label: "Xarajat tahlili",
+      icon: Wallet,
+      color: "text-emerald-600 bg-emerald-100",
+    },
+    {
+      key: "unumdorlik_ozgarishi",
+      label: "Unumdorlik o'zgarishi",
+      icon: TrendingUp,
+      color: "text-purple-600 bg-purple-100",
+    },
+    {
+      key: "tavsiya",
+      label: "Tavsiya",
+      icon: Lightbulb,
+      color: "text-white bg-amber-500",
+    },
+  ];
+
+  const formatAiValue = (value) =>
+    value === "malumot_yetarli_emas" ? "Ma'lumot yetarli emas" : value;
 
   const getData = async () => {
     setLoading(true);
@@ -238,161 +355,233 @@ const SeasonDifference = () => {
 
   return (
     <div className="space-y-6">
-      {/* HEADER & FILTERS */}
-      <header className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <Diff size={18} className="text-indigo-600" />
-          <h2 className="text-xl font-bold text-slate-800">Mavsum farqi</h2>
-        </div>
-
-        <div className="flex flex-wrap items-end gap-4 bg-white shadow-sm border p-4 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-slate-400" />
-            <span className="text-sm font-medium text-slate-600">
-              Eski mavsum:
-            </span>
-            <Input
-              type="number"
-              value={oldYear}
-              onChange={(e) => setOldYear(e.target.value)}
-              className="w-24 h-9 text-xs"
-              min="2000"
-              max="2100"
-            />
-            <Select value={oldType} onValueChange={setOldType}>
-              <SelectTrigger className="w-28 h-9 text-xs">
-                <SelectValue placeholder="Mavsum" />
-              </SelectTrigger>
-              <SelectContent>
-                {seasonTypes.map((s) => (
-                  <SelectItem key={s.value} value={s.value} className="text-xs">
-                    {s.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* HEADER */}
+      <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 p-6 shadow-lg shadow-indigo-200">
+        <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -left-6 -bottom-10 w-40 h-40 bg-violet-400/20 rounded-full blur-3xl" />
+        <div className="relative flex items-center gap-3">
+          <div className="p-2.5 bg-white/15 rounded-xl backdrop-blur-sm">
+            <Diff size={22} className="text-white" />
           </div>
-
-          <Separator orientation="vertical" className="h-8 hidden md:block" />
-
-          <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-slate-400" />
-            <span className="text-sm font-medium text-slate-600">
-              Yangi mavsum:
-            </span>
-            <Input
-              type="number"
-              value={newYear}
-              onChange={(e) => setNewYear(e.target.value)}
-              className="w-24 h-9 text-xs"
-              min="2000"
-              max="2100"
-            />
-            <Select value={newType} onValueChange={setNewType}>
-              <SelectTrigger className="w-28 h-9 text-xs">
-                <SelectValue placeholder="Mavsum" />
-              </SelectTrigger>
-              <SelectContent>
-                {seasonTypes.map((s) => (
-                  <SelectItem key={s.value} value={s.value} className="text-xs">
-                    {s.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div>
+            <h2 className="text-xl font-bold text-white">Mavsum farqi</h2>
+            <p className="text-indigo-100 text-sm mt-0.5">
+              Ikki mavsumdagi o'xshash buyurtmalarni solishtiring va AI
+              tahlilidan foydalaning
+            </p>
           </div>
-
-          <Separator orientation="vertical" className="h-8 hidden md:block" />
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-600">
-              Min. o'xshashlik (%):
-            </span>
-            <Input
-              type="number"
-              value={minSimilarity}
-              onChange={(e) => setMinSimilarity(e.target.value)}
-              className="w-20 h-9 text-xs"
-              min="0"
-              max="100"
-            />
-          </div>
-
-          <Button
-            size="sm"
-            onClick={handleSearch}
-            disabled={loading}
-            className="bg-indigo-600 hover:bg-indigo-700 px-3 text-xs h-9"
-          >
-            <RefreshCcw
-              size={14}
-              className={`${loading ? "animate-spin" : ""} mr-1`}
-            />
-            {loading ? "Yuklanmoqda..." : "Qidirish"}
-          </Button>
         </div>
       </header>
+
+      {/* FILTERS */}
+      <div className="flex flex-wrap items-center gap-4 bg-white shadow-sm border border-slate-200 p-5 rounded-2xl">
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <Calendar size={16} className="text-slate-400 shrink-0" />
+          <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
+            Eski mavsum:
+          </span>
+          <Input
+            type="number"
+            value={oldYear}
+            onChange={(e) => setOldYear(e.target.value)}
+            className="w-24 h-9 text-xs bg-white"
+            min="2000"
+            max="2100"
+          />
+          <Select value={oldType} onValueChange={setOldType}>
+            <SelectTrigger className="w-28 h-9 text-xs bg-white">
+              <SelectValue placeholder="Mavsum" />
+            </SelectTrigger>
+            <SelectContent>
+              {seasonTypes.map((s) => (
+                <SelectItem key={s.value} value={s.value} className="text-xs">
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <ArrowRight size={18} className="text-slate-300 hidden md:block" />
+
+        <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+          <Calendar size={16} className="text-indigo-400 shrink-0" />
+          <span className="text-sm font-medium text-indigo-700 whitespace-nowrap">
+            Yangi mavsum:
+          </span>
+          <Input
+            type="number"
+            value={newYear}
+            onChange={(e) => setNewYear(e.target.value)}
+            className="w-24 h-9 text-xs bg-white"
+            min="2000"
+            max="2100"
+          />
+          <Select value={newType} onValueChange={setNewType}>
+            <SelectTrigger className="w-28 h-9 text-xs bg-white">
+              <SelectValue placeholder="Mavsum" />
+            </SelectTrigger>
+            <SelectContent>
+              {seasonTypes.map((s) => (
+                <SelectItem key={s.value} value={s.value} className="text-xs">
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <Percent size={16} className="text-amber-500 shrink-0" />
+          <span className="text-sm font-medium text-amber-700 whitespace-nowrap">
+            Min. o'xshashlik:
+          </span>
+          <Input
+            type="number"
+            value={minSimilarity}
+            onChange={(e) => setMinSimilarity(e.target.value)}
+            className="w-20 h-9 text-xs bg-white"
+            min="0"
+            max="100"
+          />
+        </div>
+
+        <Button
+          size="sm"
+          onClick={handleSearch}
+          disabled={loading}
+          className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 px-4 text-xs h-11 shadow-md shadow-indigo-200"
+        >
+          <Search size={14} className="mr-1.5" />
+          {loading ? "Yuklanmoqda..." : "Qidirish"}
+        </Button>
+      </div>
 
       {/* RESULTS */}
       {loading ? (
         <div className="flex flex-col items-center justify-center h-96 space-y-4">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+          <div className="w-14 h-14 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
           <p className="text-slate-500 font-medium text-sm">
             Ma'lumotlar yuklanmoqda...
           </p>
         </div>
       ) : data.length > 0 ? (
-        <div className="space-y-4">
-          <p className="text-sm text-slate-500">
+        <div className="space-y-5">
+          <div className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1.5 rounded-full border border-indigo-100">
+            <Package size={13} />
             {data.length} ta o'xshash buyurtma juftligi topildi
-          </p>
-          {data.map((item, idx) => (
-            <Card key={idx} className="shadow-sm border-slate-200">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Package size={16} className="text-indigo-600" />
-                    Buyurtma taqqoslash
-                  </CardTitle>
-                  <Badge
-                    className={`text-xs border ${getSimilarityStyle(
-                      item.similarity_percent,
-                    )}`}
-                  >
-                    O'xshashlik: {item.similarity_percent?.toFixed
-                      ? item.similarity_percent.toFixed(1)
-                      : item.similarity_percent}
-                    %
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs">
-                  {getSeasonLabel(oldYear, oldType)} → {getSeasonLabel(newYear, newType)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col lg:flex-row gap-4">
-                  <OrderColumn
-                    title="Eski"
-                    order={item.old}
-                    badgeClass="bg-slate-100 text-slate-600 border-slate-200"
-                  />
-                  <Separator
-                    orientation="vertical"
-                    className="hidden lg:block h-auto"
-                  />
-                  <OrderColumn
-                    title="Yangi"
-                    order={item.new}
-                    badgeClass="bg-indigo-100 text-indigo-700 border-indigo-200"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          </div>
+          {data.map((item, idx) => {
+            const sim = getSimilarityStyle(item.similarity_percent);
+            return (
+              <Card
+                key={idx}
+                className={`shadow-sm border-slate-200 border-l-4 ${sim.border} rounded-xl overflow-hidden`}
+              >
+                <CardHeader
+                  className={`pb-3 bg-gradient-to-r ${sim.ring} to-transparent`}
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-slate-800">
+                      <Package size={16} className="text-indigo-600" />
+                      Buyurtma taqqoslash
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        className={`text-xs border font-semibold ${sim.badge}`}
+                      >
+                        O'xshashlik:{" "}
+                        {item.similarity_percent?.toFixed
+                          ? item.similarity_percent.toFixed(1)
+                          : item.similarity_percent}
+                        %
+                      </Badge>
+                      <Button
+                        size="sm"
+                        onClick={() => getAiRecommendation(idx, item)}
+                        disabled={!item.old || !item.new || aiLoading[idx]}
+                        className="h-7 px-2.5 text-xs bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-sm"
+                      >
+                        <Sparkles
+                          size={12}
+                          className={`mr-1 ${aiLoading[idx] ? "animate-pulse" : ""}`}
+                        />
+                        {aiLoading[idx] ? "Tahlil qilinmoqda..." : "AI tavsiya"}
+                      </Button>
+                    </div>
+                  </div>
+                  <CardDescription className="text-xs flex items-center gap-1.5">
+                    <span className="font-medium text-slate-500">
+                      {getSeasonLabel(oldYear, oldType)}
+                    </span>
+                    <ArrowRight size={11} className="text-slate-400" />
+                    <span className="font-medium text-indigo-600">
+                      {getSeasonLabel(newYear, newType)}
+                    </span>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col lg:flex-row gap-4 mt-3">
+                    <OrderColumn title="Eski" order={item.old} theme="old" />
+
+                    <div className="hidden lg:flex items-center justify-center">
+                      <div className="p-1.5 rounded-full bg-slate-100 border border-slate-200">
+                        <ArrowRight size={14} className="text-slate-400" />
+                      </div>
+                    </div>
+
+                    <OrderColumn title="Yangi" order={item.new} theme="new" />
+                  </div>
+
+                  {aiRecommendations[idx] && (
+                    <div className="mt-4 rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-violet-50/60 to-white p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={14} className="text-indigo-600" />
+                        <span className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
+                          AI tahlili
+                        </span>
+                      </div>
+                      {aiSections.map(({ key, label, icon: Icon, color }) => {
+                        const value = aiRecommendations[idx]?.[key];
+                        if (!value) return null;
+                        const isTavsiya = key === "tavsiya";
+                        return (
+                          <div
+                            key={key}
+                            className={
+                              isTavsiya
+                                ? "rounded-lg border-l-4 border-amber-400 bg-amber-50 p-3"
+                                : ""
+                            }
+                          >
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span
+                                className={`p-1 rounded-md ${color} flex items-center justify-center`}
+                              >
+                                <Icon size={11} />
+                              </span>
+                              <p className="text-xs font-semibold text-slate-700">
+                                {label}
+                              </p>
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                              {formatAiValue(value)}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-96 space-y-3">
-          <Image size={32} className="text-slate-300" />
+          <div className="p-4 rounded-full bg-slate-100">
+            <SearchX size={28} className="text-slate-300" />
+          </div>
           <p className="text-slate-500 font-medium text-sm">
             {hasSearched
               ? "Mos buyurtmalar topilmadi"
