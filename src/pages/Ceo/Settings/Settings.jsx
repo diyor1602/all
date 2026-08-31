@@ -16,6 +16,7 @@ import {
   Earth,
   CalendarSync,
   FolderClock,
+  Diff,
 } from "lucide-react";
 
 import SalaryOrders from "./SalaryOrders/SalaryOrders";
@@ -28,6 +29,7 @@ import Shipments from "./Shipments/Shipments";
 import DifferenceRu from "./Difference/DifferenceRu";
 import CoefStat from "./CoefStat";
 import DepartmentMoney from "./DeparmentMoney/DepartmentMoney";
+import SeasonDifference from "./SeasonDifference/SeasonDifference";
 
 const Settings = () => {
   return (
@@ -43,6 +45,7 @@ const Settings = () => {
       <Route path="difference-ru" element={<DifferenceRu />} />
       <Route path="coef-stat" element={<CoefStat />} />
       <Route path="department-money" element={<DepartmentMoney />} />
+      <Route path="season-difference" element={<SeasonDifference />} />
     </Routes>
   );
 };
@@ -138,6 +141,12 @@ const SettingsPage = () => {
       icon: FolderClock,
       link: "/ceo/settings/department-money",
       color: "bg-red-500",
+    },
+    {
+      name: "Mavsum farqi",
+      icon: Diff,
+      link: "/ceo/settings/season-difference",
+      color: "bg-lime-500",
     },
   ];
 
