@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import formatNumber from "@/utils/formatNumber";
+import ModelImages from "@/components/ModelImages";
 import {
   Card,
   CardContent,
@@ -119,6 +120,15 @@ const OrderColumn = ({ title, order, theme }) => {
         </p>
         <p className={`text-xs mt-0.5 ${t.accent}`}>
           ID: {order.order_id} · {formatNumber(order.quantity)} dona
+          {order.price != null && (
+            <>
+              {" "}
+              ·{" "}
+              <span className="font-semibold text-emerald-600">
+                {formatNumber(order.price)} $
+              </span>
+            </>
+          )}
         </p>
 
         {images.length > 0 && (
@@ -144,9 +154,12 @@ const OrderColumn = ({ title, order, theme }) => {
             <div
               className={`flex items-center justify-between px-3 py-2 border-b ${t.modelHeader}`}
             >
-              <p className="text-xs font-semibold text-slate-700">
-                Model #{model.model_id}
-              </p>
+              <div className="flex items-center gap-2">
+                <ModelImages modelCode={order.order_name} />
+                <p className="text-xs font-semibold text-slate-700">
+                  Model #{model.model_id}
+                </p>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-500">
                   Daqiqa: {formatNumber(model.planned_minute)} daq
@@ -257,6 +270,8 @@ const SeasonDifference = () => {
   const [aiRecommendations, setAiRecommendations] = useState({});
   const [aiLoading, setAiLoading] = useState({});
 
+  const [modelSearch, setModelSearch] = useState("");
+
   const [groups, setGroups] = useState([]);
   const [selectedGroupIds, setSelectedGroupIds] = useState(() => {
     try {
@@ -357,6 +372,28 @@ const SeasonDifference = () => {
   const formatAiValue = (value) =>
     value === "malumot_yetarli_emas" ? "Ma'lumot yetarli emas" : value;
 
+  const orderHasSelectedGroup = (order) =>
+    (order?.models || []).some((model) =>
+      (model.submodels || []).some((sub) =>
+        selectedGroupIds.includes(sub.group_id),
+      ),
+    );
+
+  const filteredData = data.filter((item) => {
+    const query = modelSearch.trim().toLowerCase();
+    const matchesSearch =
+      !query ||
+      item.old?.order_name?.toLowerCase().includes(query) ||
+      item.new?.order_name?.toLowerCase().includes(query);
+
+    const matchesGroup =
+      selectedGroupIds.length === 0 ||
+      orderHasSelectedGroup(item.old) ||
+      orderHasSelectedGroup(item.new);
+
+    return matchesSearch && matchesGroup;
+  });
+
   const getData = async () => {
     setLoading(true);
     try {
@@ -367,9 +404,6 @@ const SeasonDifference = () => {
           new_season_year: newYear,
           new_season_type: newType,
           min_similarity: minSimilarity,
-          ...(selectedGroupIds.length > 0
-            ? { group_ids: selectedGroupIds.join(",") }
-            : {}),
         },
       });
       setData(res.data?.data || []);
@@ -419,129 +453,151 @@ const SeasonDifference = () => {
       <div className="bg-white shadow-sm border border-slate-200 p-5 rounded-2xl space-y-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
-          <Calendar size={16} className="text-slate-400 shrink-0" />
-          <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
-            Eski mavsum:
-          </span>
-          <Input
-            type="number"
-            value={oldYear}
-            onChange={(e) => setOldYear(e.target.value)}
-            className="w-24 h-9 text-xs bg-white"
-            min="2000"
-            max="2100"
-          />
-          <Select value={oldType} onValueChange={setOldType}>
-            <SelectTrigger className="w-28 h-9 text-xs bg-white">
-              <SelectValue placeholder="Mavsum" />
-            </SelectTrigger>
-            <SelectContent>
-              {seasonTypes.map((s) => (
-                <SelectItem key={s.value} value={s.value} className="text-xs">
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <Calendar size={16} className="text-slate-400 shrink-0" />
+            <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
+              Eski mavsum:
+            </span>
+            <Input
+              type="number"
+              value={oldYear}
+              onChange={(e) => setOldYear(e.target.value)}
+              className="w-24 h-9 text-xs bg-white"
+              min="2000"
+              max="2100"
+            />
+            <Select value={oldType} onValueChange={setOldType}>
+              <SelectTrigger className="w-28 h-9 text-xs bg-white">
+                <SelectValue placeholder="Mavsum" />
+              </SelectTrigger>
+              <SelectContent>
+                {seasonTypes.map((s) => (
+                  <SelectItem key={s.value} value={s.value} className="text-xs">
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <ArrowRight size={18} className="text-slate-300 hidden md:block" />
+          <ArrowRight size={18} className="text-slate-300 hidden md:block" />
 
-        <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-xl p-3">
-          <Calendar size={16} className="text-indigo-400 shrink-0" />
-          <span className="text-sm font-medium text-indigo-700 whitespace-nowrap">
-            Yangi mavsum:
-          </span>
-          <Input
-            type="number"
-            value={newYear}
-            onChange={(e) => setNewYear(e.target.value)}
-            className="w-24 h-9 text-xs bg-white"
-            min="2000"
-            max="2100"
-          />
-          <Select value={newType} onValueChange={setNewType}>
-            <SelectTrigger className="w-28 h-9 text-xs bg-white">
-              <SelectValue placeholder="Mavsum" />
-            </SelectTrigger>
-            <SelectContent>
-              {seasonTypes.map((s) => (
-                <SelectItem key={s.value} value={s.value} className="text-xs">
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+            <Calendar size={16} className="text-indigo-400 shrink-0" />
+            <span className="text-sm font-medium text-indigo-700 whitespace-nowrap">
+              Yangi mavsum:
+            </span>
+            <Input
+              type="number"
+              value={newYear}
+              onChange={(e) => setNewYear(e.target.value)}
+              className="w-24 h-9 text-xs bg-white"
+              min="2000"
+              max="2100"
+            />
+            <Select value={newType} onValueChange={setNewType}>
+              <SelectTrigger className="w-28 h-9 text-xs bg-white">
+                <SelectValue placeholder="Mavsum" />
+              </SelectTrigger>
+              <SelectContent>
+                {seasonTypes.map((s) => (
+                  <SelectItem key={s.value} value={s.value} className="text-xs">
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
-          <Percent size={16} className="text-amber-500 shrink-0" />
-          <span className="text-sm font-medium text-amber-700 whitespace-nowrap">
-            Min. o'xshashlik:
-          </span>
-          <Input
-            type="number"
-            value={minSimilarity}
-            onChange={(e) => setMinSimilarity(e.target.value)}
-            className="w-20 h-9 text-xs bg-white"
-            min="0"
-            max="100"
-          />
-        </div>
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <Percent size={16} className="text-amber-500 shrink-0" />
+            <span className="text-sm font-medium text-amber-700 whitespace-nowrap">
+              Min. o'xshashlik:
+            </span>
+            <Input
+              type="number"
+              value={minSimilarity}
+              onChange={(e) => setMinSimilarity(e.target.value)}
+              className="w-20 h-9 text-xs bg-white"
+              min="0"
+              max="100"
+            />
+          </div>
 
-        <Button
-          size="sm"
-          onClick={handleSearch}
-          disabled={loading}
-          className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 px-4 text-xs h-11 shadow-md shadow-indigo-200"
-        >
-          <Search size={14} className="mr-1.5" />
-          {loading ? "Yuklanmoqda..." : "Qidirish"}
-        </Button>
-      </div>
-
-      {groups.length > 0 && (
-        <div className="pt-3 border-t border-slate-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600">
-              <Users size={14} className="text-slate-400" />
-              Guruhlar
-              {selectedGroupIds.length > 0 && (
-                <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 text-[10px] h-4 px-1.5">
-                  {selectedGroupIds.length}
-                </Badge>
-              )}
-            </div>
-            {selectedGroupIds.length > 0 && (
+          <div className="relative flex-1 min-w-[220px]">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <Input
+              type="text"
+              value={modelSearch}
+              onChange={(e) => setModelSearch(e.target.value)}
+              placeholder="Model nomi bo'yicha qidirish..."
+              className="h-11 text-xs pl-9 bg-slate-50 border-slate-200"
+            />
+            {modelSearch && (
               <button
-                onClick={clearGroups}
-                className="flex items-center gap-1 text-xs text-slate-400 hover:text-rose-500 transition-colors"
+                onClick={() => setModelSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500"
               >
-                <X size={12} />
-                Tozalash
+                <X size={14} />
               </button>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {groups.map((group) => {
-              const active = selectedGroupIds.includes(group.id);
-              return (
-                <button
-                  key={group.id}
-                  onClick={() => toggleGroup(group.id)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    active
-                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
-                      : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
-                  }`}
-                >
-                  {group.name}
-                </button>
-              );
-            })}
-          </div>
+
+          <Button
+            size="sm"
+            onClick={handleSearch}
+            disabled={loading}
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 px-4 text-xs h-11 shadow-md shadow-indigo-200"
+          >
+            <Search size={14} className="mr-1.5" />
+            {loading ? "Yuklanmoqda..." : "Qidirish"}
+          </Button>
         </div>
-      )}
+
+        {groups.length > 0 && (
+          <div className="pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                <Users size={14} className="text-slate-400" />
+                Guruhlar
+                {selectedGroupIds.length > 0 && (
+                  <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 text-[10px] h-4 px-1.5">
+                    {selectedGroupIds.length}
+                  </Badge>
+                )}
+              </div>
+              {selectedGroupIds.length > 0 && (
+                <button
+                  onClick={clearGroups}
+                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-rose-500 transition-colors"
+                >
+                  <X size={12} />
+                  Tozalash
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {groups.map((group) => {
+                const active = selectedGroupIds.includes(group.id);
+                return (
+                  <button
+                    key={group.id}
+                    onClick={() => toggleGroup(group.id)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                      active
+                        ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+                    }`}
+                  >
+                    {group.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* RESULTS */}
@@ -552,13 +608,16 @@ const SeasonDifference = () => {
             Ma'lumotlar yuklanmoqda...
           </p>
         </div>
-      ) : data.length > 0 ? (
+      ) : filteredData.length > 0 ? (
         <div className="space-y-5">
           <div className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1.5 rounded-full border border-indigo-100">
             <Package size={13} />
-            {data.length} ta o'xshash buyurtma juftligi topildi
+            {filteredData.length} ta o'xshash buyurtma juftligi topildi
+            {(modelSearch.trim() || selectedGroupIds.length > 0) &&
+              filteredData.length !== data.length &&
+              ` (jami ${data.length} tadan)`}
           </div>
-          {data.map((item, idx) => {
+          {filteredData.map((item, idx) => {
             const sim = getSimilarityStyle(item.similarity_percent);
             return (
               <Card
@@ -671,7 +730,9 @@ const SeasonDifference = () => {
           </div>
           <p className="text-slate-500 font-medium text-sm">
             {hasSearched
-              ? "Mos buyurtmalar topilmadi"
+              ? data.length > 0
+                ? "Filtrga mos buyurtma topilmadi"
+                : "Mos buyurtmalar topilmadi"
               : "Filtrlarni tanlab qidiring"}
           </p>
         </div>
