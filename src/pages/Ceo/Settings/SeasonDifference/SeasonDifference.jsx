@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,8 @@ import {
   TrendingUp,
   Lightbulb,
   SearchX,
+  Users,
+  X,
 } from "lucide-react";
 
 const seasonTypes = [
@@ -255,7 +257,43 @@ const SeasonDifference = () => {
   const [aiRecommendations, setAiRecommendations] = useState({});
   const [aiLoading, setAiLoading] = useState({});
 
+  const [groups, setGroups] = useState([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem("seasonDiffGroupIds");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const persist = (key, value) => localStorage.setItem(key, value);
+
+  const fetchGroups = async () => {
+    try {
+      const res = await api.get("ceo/departments");
+      const departments = res.data?.flatMap((item) => item?.departments) || [];
+      const allGroups = departments.flatMap((dept) => dept?.groups || []);
+      const uniqueGroups = Array.from(
+        new Map(allGroups.map((g) => [g.id, g])).values(),
+      ).sort((a, b) => a.name.localeCompare(b.name));
+      setGroups(uniqueGroups);
+    } catch {
+      // guruhlar ro'yxati ixtiyoriy filtr, xatolik bo'lsa filtr ko'rsatilmaydi
+    }
+  };
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  const toggleGroup = (id) => {
+    setSelectedGroupIds((prev) =>
+      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
+    );
+  };
+
+  const clearGroups = () => setSelectedGroupIds([]);
 
   const getAiRecommendation = async (idx, item) => {
     const old_order_id = item.old?.order_id;
@@ -329,6 +367,9 @@ const SeasonDifference = () => {
           new_season_year: newYear,
           new_season_type: newType,
           min_similarity: minSimilarity,
+          ...(selectedGroupIds.length > 0
+            ? { group_ids: selectedGroupIds.join(",") }
+            : {}),
         },
       });
       setData(res.data?.data || []);
@@ -350,6 +391,7 @@ const SeasonDifference = () => {
     persist("seasonDiffNewYear", newYear);
     persist("seasonDiffNewType", newType);
     persist("seasonDiffMinSimilarity", minSimilarity);
+    persist("seasonDiffGroupIds", JSON.stringify(selectedGroupIds));
     getData();
   };
 
@@ -374,8 +416,9 @@ const SeasonDifference = () => {
       </header>
 
       {/* FILTERS */}
-      <div className="flex flex-wrap items-center gap-4 bg-white shadow-sm border border-slate-200 p-5 rounded-2xl">
-        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+      <div className="bg-white shadow-sm border border-slate-200 p-5 rounded-2xl space-y-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
           <Calendar size={16} className="text-slate-400 shrink-0" />
           <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
             Eski mavsum:
@@ -455,6 +498,50 @@ const SeasonDifference = () => {
           <Search size={14} className="mr-1.5" />
           {loading ? "Yuklanmoqda..." : "Qidirish"}
         </Button>
+      </div>
+
+      {groups.length > 0 && (
+        <div className="pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600">
+              <Users size={14} className="text-slate-400" />
+              Guruhlar
+              {selectedGroupIds.length > 0 && (
+                <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 text-[10px] h-4 px-1.5">
+                  {selectedGroupIds.length}
+                </Badge>
+              )}
+            </div>
+            {selectedGroupIds.length > 0 && (
+              <button
+                onClick={clearGroups}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-rose-500 transition-colors"
+              >
+                <X size={12} />
+                Tozalash
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {groups.map((group) => {
+              const active = selectedGroupIds.includes(group.id);
+              return (
+                <button
+                  key={group.id}
+                  onClick={() => toggleGroup(group.id)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    active
+                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                      : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+                  }`}
+                >
+                  {group.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       </div>
 
       {/* RESULTS */}
