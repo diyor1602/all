@@ -13,6 +13,14 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Calendar,
   RefreshCcw,
@@ -20,6 +28,9 @@ import {
   Users,
   DollarSign,
   Package,
+  Plus,
+  Pencil,
+  Loader2,
 } from "lucide-react";
 import {
   Select,
@@ -76,6 +87,17 @@ const Overall3 = () => {
     return saved || "summer";
   });
 
+  // Monthly expense CRUD
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [expenseForm, setExpenseForm] = useState({
+    name: "",
+    type: "monthly",
+    amount: "",
+    month: "",
+  });
+  const [savingExpense, setSavingExpense] = useState(false);
+
   const seasonTypes = [
     { value: "summer", label: "Bahor" },
     { value: "winter", label: "Qish" },
@@ -115,6 +137,69 @@ const Overall3 = () => {
   const getSeasonLabel = (season) => {
     const seasonTypeLabel = season.type === "summer" ? "Bahor" : "Qish";
     return `${season.year} ${seasonTypeLabel} mavsum`;
+  };
+
+  const openCreateExpense = () => {
+    setEditingExpense(null);
+    setExpenseForm({
+      name: "",
+      type: "monthly",
+      amount: "",
+      month: new Date().toISOString().slice(0, 7),
+    });
+    setExpenseDialogOpen(true);
+  };
+
+  const openEditExpense = (expense) => {
+    setEditingExpense(expense);
+    setExpenseForm({
+      name: expense.name || "",
+      type: expense.type || "monthly",
+      amount: expense.amount != null ? String(expense.amount) : "",
+      month: expense.month
+        ? new Date(expense.month).toISOString().slice(0, 7)
+        : new Date().toISOString().slice(0, 7),
+    });
+    setExpenseDialogOpen(true);
+  };
+
+  const handleExpenseFormChange = (field, value) => {
+    setExpenseForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveExpense = async () => {
+    try {
+      setSavingExpense(true);
+      const payload = {
+        name: expenseForm.name,
+        type: expenseForm.type,
+        amount: parseFloat(expenseForm.amount) || 0,
+        month: expenseForm.month ? `${expenseForm.month}-01` : undefined,
+      };
+
+      if (editingExpense) {
+        await api.patch(`/ceo/monthlyExpense/${editingExpense.id}`, payload);
+      } else {
+        await api.post("/ceo/monthlyExpense", payload);
+      }
+
+      toast({
+        title: "Saqlandi",
+        description: editingExpense
+          ? "Xarajat yangilandi"
+          : "Yangi xarajat qo'shildi",
+      });
+      setExpenseDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Xatolik",
+        description: "Xarajatni saqlab bo'lmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingExpense(false);
+    }
   };
 
   const fetchData = async () => {
@@ -791,12 +876,24 @@ const Overall3 = () => {
           {/* MONTHLY EXPENSES BREAKDOWN */}
           <Card className="shadow-sm border-slate-200">
             <CardHeader>
-              <CardTitle className="text-base">
-                Oylik Xarajatlar Tafsiloti
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Oylik xarajatlar bo'linishi (davr bo'yicha)
-              </CardDescription>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-base">
+                    Oylik Xarajatlar Tafsiloti
+                  </CardTitle>
+                  <CardDescription className="text-xs mt-1.5">
+                    Oylik xarajatlar bo'linishi (davr bo'yicha)
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={openCreateExpense}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-xs shrink-0"
+                >
+                  <Plus size={14} className="mr-1" />
+                  Xarajat qo'shish
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="max-h-96 overflow-y-auto border border-slate-200 rounded-lg">
@@ -818,13 +915,16 @@ const Overall3 = () => {
                       <th className="text-right text-xs font-semibold text-slate-600 p-3">
                         Hisoblangan (USD)
                       </th>
+                      <th className="text-right text-xs font-semibold text-slate-600 p-3">
+                        Amal
+                      </th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {data.monthly_expenses?.map((expense, index) => (
                       <tr
-                        key={index}
+                        key={expense.id ?? index}
                         className="border-b border-slate-100 hover:bg-slate-50"
                       >
                         <td className="text-sm font-medium text-slate-700 p-3">
@@ -853,6 +953,16 @@ const Overall3 = () => {
                             : "..."}{" "}
                           USD
                         </td>
+                        <td className="text-right p-3">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => openEditExpense(expense)}
+                          >
+                            <Pencil size={14} className="text-slate-500" />
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -877,6 +987,7 @@ const Overall3 = () => {
                           : "..."}{" "}
                         USD
                       </td>
+                      <td className="p-3"></td>
                     </tr>
                   </tfoot>
                 </table>
@@ -889,6 +1000,109 @@ const Overall3 = () => {
           <p className="text-slate-500 font-medium text-sm">Ma'lumotlar yo'q</p>
         </div>
       )}
+
+      {/* MONTHLY EXPENSE CREATE/EDIT DIALOG */}
+      <Dialog open={expenseDialogOpen} onOpenChange={setExpenseDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingExpense ? "Xarajatni tahrirlash" : "Yangi xarajat"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="expense-name" className="text-xs">
+                Nomi
+              </Label>
+              <Input
+                id="expense-name"
+                value={expenseForm.name}
+                onChange={(e) =>
+                  handleExpenseFormChange("name", e.target.value)
+                }
+                placeholder="Xarajat nomi"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="expense-type" className="text-xs">
+                Turi
+              </Label>
+              <Select
+                value={expenseForm.type}
+                onValueChange={(value) =>
+                  handleExpenseFormChange("type", value)
+                }
+              >
+                <SelectTrigger id="expense-type">
+                  <SelectValue placeholder="Turi" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(monthly_expence_types).map(
+                    ([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="expense-amount" className="text-xs">
+                Summa
+              </Label>
+              <Input
+                id="expense-amount"
+                type="text"
+                inputMode="decimal"
+                value={expenseForm.amount}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9.]/g, "");
+                  handleExpenseFormChange("amount", value);
+                }}
+                placeholder="0"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="expense-month" className="text-xs">
+                Oy
+              </Label>
+              <Input
+                id="expense-month"
+                type="month"
+                value={expenseForm.month}
+                onChange={(e) =>
+                  handleExpenseFormChange("month", e.target.value)
+                }
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setExpenseDialogOpen(false)}
+              disabled={savingExpense}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={handleSaveExpense}
+              disabled={savingExpense || !expenseForm.name}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              {savingExpense && (
+                <Loader2 size={14} className="mr-1 animate-spin" />
+              )}
+              Saqlash
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
