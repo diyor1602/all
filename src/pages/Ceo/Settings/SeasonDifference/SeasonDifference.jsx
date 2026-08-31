@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import formatNumber from "@/utils/formatNumber";
 import ModelImages from "@/components/ModelImages";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -43,6 +49,9 @@ import {
   SearchX,
   Users,
   X,
+  Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const seasonTypes = [
@@ -94,8 +103,58 @@ const columnThemes = {
   },
 };
 
+const ModelImagesToggle = ({ modelCode }) => {
+  const [show, setShow] = useState(false);
+
+  if (!modelCode) return null;
+
+  if (show) {
+    return <ModelImages modelCode={modelCode} />;
+  }
+
+  return (
+    <button
+      onClick={() => setShow(true)}
+      title="Rasmlarni yuklash"
+      className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+    >
+      <ImageIcon size={12} />
+      Rasm
+    </button>
+  );
+};
+
 const OrderColumn = ({ title, order, theme }) => {
   const t = columnThemes[theme];
+
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const images = order?.images || [];
+  const getImageSrc = (img) => img?.image || img;
+
+  const openGalleryAt = (idx) => {
+    setSelectedIndex(idx);
+    setGalleryOpen(true);
+  };
+
+  const nextImage = () =>
+    setSelectedIndex((prev) => (prev + 1) % images.length);
+  const prevImage = () =>
+    setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
+
+  useEffect(() => {
+    if (!galleryOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowRight") nextImage();
+      else if (e.key === "ArrowLeft") prevImage();
+      else if (e.key === "Escape") setGalleryOpen(false);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [galleryOpen, images.length]);
 
   if (!order) {
     return (
@@ -105,8 +164,6 @@ const OrderColumn = ({ title, order, theme }) => {
       </div>
     );
   }
-
-  const images = order.images || [];
 
   return (
     <div className="flex-1 min-w-0">
@@ -136,13 +193,60 @@ const OrderColumn = ({ title, order, theme }) => {
             {images.map((img, idx) => (
               <img
                 key={idx}
-                src={img?.image || img}
+                src={getImageSrc(img)}
                 alt="-"
-                className="w-12 h-12 object-cover rounded-lg border-2 border-white shadow-sm"
+                onClick={() => openGalleryAt(idx)}
+                className="w-12 h-12 object-cover rounded-lg border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform"
               />
             ))}
           </div>
         )}
+
+        <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+          <DialogContent className="max-w-3xl w-full p-0 bg-white rounded-2xl overflow-hidden flex flex-col items-center justify-center pb-6">
+            <DialogHeader className="p-4 border-b border-gray-200 w-full">
+              <DialogTitle className="text-lg font-semibold text-center">
+                {order.order_name}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="relative flex items-center justify-center bg-gray-50 w-full h-[500px]">
+              {images.length > 1 && (
+                <button
+                  onClick={prevImage}
+                  className="absolute left-2 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-md"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
+
+              <img
+                src={getImageSrc(images[selectedIndex])}
+                alt="-"
+                className="max-h-full max-w-full object-contain rounded-md shadow-md"
+              />
+
+              {images.length > 1 && (
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-md"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              )}
+
+              {images.length > 1 && (
+                <div className="absolute bottom-3 bg-black/40 text-white text-sm px-3 py-1 rounded-full">
+                  {selectedIndex + 1} / {images.length}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <div className="mt-2">
+          <ModelImagesToggle modelCode={order.order_name} />
+        </div>
       </div>
 
       <div className="mt-3 space-y-3">
@@ -154,12 +258,9 @@ const OrderColumn = ({ title, order, theme }) => {
             <div
               className={`flex items-center justify-between px-3 py-2 border-b ${t.modelHeader}`}
             >
-              <div className="flex items-center gap-2">
-                <ModelImages modelCode={order.order_name} />
-                <p className="text-xs font-semibold text-slate-700">
-                  Model #{model.model_id}
-                </p>
-              </div>
+              <p className="text-xs font-semibold text-slate-700">
+                Model #{model.model_id}
+              </p>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-500">
                   Daqiqa: {formatNumber(model.planned_minute)} daq
