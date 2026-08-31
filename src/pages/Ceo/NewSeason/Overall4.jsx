@@ -62,7 +62,7 @@ const getSeasonLabel = (year, type) => {
 };
 
 const COST_BREAKDOWN_META = {
-  rasxod: { label: "Rasxod (mato/material)", color: "bg-indigo-500" },
+  rasxod: { label: "Patok uchun", color: "bg-indigo-500" },
   season_salary: { label: "Mavsumiy ish haqi", color: "bg-emerald-500" },
   attendance: { label: "Davomat", color: "bg-amber-500" },
   transport: { label: "Transport", color: "bg-sky-500" },
@@ -824,9 +824,6 @@ const Overall4 = () => {
                           Nomi
                         </TableHead>
                         <TableHead className="border border-slate-200">
-                          Model
-                        </TableHead>
-                        <TableHead className="border border-slate-200">
                           Miqdor
                         </TableHead>
                         <TableHead className="border border-slate-200">
@@ -868,10 +865,10 @@ const Overall4 = () => {
                               {order.id}
                             </TableCell>
                             <TableCell className="border border-slate-200">
-                              {order.name}
-                            </TableCell>
-                            <TableCell className="border border-slate-200">
-                              {order.model_name}
+                              <div>{order.name}</div>
+                              <div className="text-slate-400">
+                                {order.model_name}
+                              </div>
                             </TableCell>
                             <TableCell className="border border-slate-200">
                               <div className="font-mono">
@@ -927,6 +924,12 @@ const Overall4 = () => {
                               {formatNumber(order.forecast_cost_per_unit)} so'm
                             </TableCell>
                             <TableCell className="font-mono border border-slate-200">
+                              <div>
+                                {formatNumber(
+                                  order.cost_breakdown?.rasxod || 0,
+                                )}{" "}
+                                so'm
+                              </div>
                               <div className="flex items-center gap-2">
                                 {chokPercent > 30 && (
                                   <TriangleAlert
