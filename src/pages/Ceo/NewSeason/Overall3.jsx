@@ -155,7 +155,7 @@ const Overall3 = () => {
     setExpenseForm({
       name: expense.name || "",
       type: expense.type || "monthly",
-      amount: expense.amount != null ? String(expense.amount) : "",
+      amount: expense.amount != null ? String(Number(expense.amount)) : "",
       month: expense.month
         ? new Date(expense.month).toISOString().slice(0, 7)
         : new Date().toISOString().slice(0, 7),
