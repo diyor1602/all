@@ -529,9 +529,7 @@ const Overall3 = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-2">
                   <Package className="text-orange-600" size={18} />
-                  <p className="text-xs text-slate-500">
-                    Bugungi tikilgan buyurtmalar
-                  </p>
+                  <p className="text-xs text-slate-500">Tikilgan buyurtmalar</p>
                 </div>
                 <p className="text-xl font-bold text-slate-900">
                   {formatNumber(data.today_total_sewed_orders)} ta
@@ -695,10 +693,10 @@ const Overall3 = () => {
             <Card className="shadow-sm border-slate-200">
               <CardHeader>
                 <CardTitle className="text-base">
-                  Bugungi Tikilgan Buyurtmalar
+                  Tikilgan Buyurtmalar
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Bugun tikilgan {data.today_sewed_orders.length} ta buyurtma
+                  Ttikilgan {data.today_sewed_orders.length} ta buyurtma
                   bo'yicha tafsilotlar
                 </CardDescription>
               </CardHeader>
