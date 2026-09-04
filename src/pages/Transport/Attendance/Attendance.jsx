@@ -25,6 +25,7 @@ import { addDays, format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { Download, Loader2 } from "lucide-react";
 import ExcelJS from "exceljs";
+import { Calendar } from "@/components/ui/calendar";
 
 const formatValue = (value) => {
   if (value === 0) {
@@ -1577,6 +1578,22 @@ const Attendance = () => {
                       ? `${format(dateRange.from, "dd.MM.yyyy")}`
                       : "Sana tanlanmagan"}
                 </div>
+              </div>
+
+              <div className="w-full flex items-center justify-center">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  className="border rounded-md"
+                  month={new Date(selectedYear, selectedMonth)}
+                  disabled={[
+                    {
+                      before: new Date(selectedYear, selectedMonth, 1),
+                      after: new Date(selectedYear, selectedMonth + 1, 0),
+                    },
+                  ]}
+                />
               </div>
             </div>
           </div>
