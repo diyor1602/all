@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,9 @@ import {
   ChevronUp,
   ChevronDown,
   Search,
+  Plus,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -20,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -30,6 +33,26 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import formatNumber from "@/utils/formatNumber";
+
+const emptyAssignmentForm = {
+  employee_id: "",
+  department_id: "",
+  group_id: "",
+  start_date: new Date().toISOString().slice(0, 10),
+  end_date: "",
+  sum: "",
+};
+
+// Accepts "YYYY-MM-DD" or a full ISO timestamp ("YYYY-MM-DDTHH:mm:ss.SSSSSSZ") and displays "DD.MM.YYYY"
+const formatDate = (value) => {
+  if (!value) return "";
+  const [year, month, day] = value.slice(0, 10).split("-");
+  if (!year || !month || !day) return value;
+  return `${day}.${month}.${year}`;
+};
+
+// Normalizes "YYYY-MM-DD" or a full ISO timestamp to "YYYY-MM-DD" for <Input type="date">
+const toDateInputValue = (value) => (value ? value.slice(0, 10) : "");
 
 const DepartmentView = () => {
   const { toast } = useToast();
@@ -42,10 +65,7 @@ const DepartmentView = () => {
       new Date().toISOString().slice(0, 7),
   );
   const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [editingValue, setEditingValue] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -64,6 +84,26 @@ const DepartmentView = () => {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [groupFilter, setGroupFilter] = useState("");
+  const [assignmentsSectionOpen, setAssignmentsSectionOpen] = useState(() => {
+    const saved = localStorage.getItem("departmentViewAssignmentsOpen");
+    return saved ? saved === "true" : true;
+  });
+
+  // Departments/groups (for the assignment form selects)
+  const [departmentGroups, setDepartmentGroups] = useState([]);
+
+  // Employees of this department (for the assignment form employee select)
+  const [employees, setEmployees] = useState([]);
+
+  // Assignment records (employeeSums): employee_id, department_id, group_id, start_date, end_date, sum
+  const [assignments, setAssignments] = useState([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+
+  const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState(null);
+  const [assignmentForm, setAssignmentForm] = useState(emptyAssignmentForm);
+  const [savingAssignment, setSavingAssignment] = useState(false);
+  const [deletingAssignmentId, setDeletingAssignmentId] = useState(null);
 
   const getData = async () => {
     try {
@@ -86,34 +126,204 @@ const DepartmentView = () => {
     }
   };
 
+  const fetchDepartmentGroups = async () => {
+    try {
+      const response = await api.get("/departments");
+      const flat = (response.data || []).flatMap(
+        (item) => item?.departments || [],
+      );
+      setDepartmentGroups(flat);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Bo'limlar ro'yxatini olishda xatolik",
+      });
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await api.get("/ceo/employees", {
+        params: { department_id: id, status: "working" },
+      });
+      setEmployees(response.data?.data || response.data || []);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Xodimlar ro'yxatini olishda xatolik",
+      });
+    }
+  };
+
+  const fetchAssignments = async () => {
+    try {
+      setAssignmentsLoading(true);
+      const response = await api.get("/ceo/employeeSums", {
+        params: { department_id: id },
+      });
+      const list = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
+      setAssignments(list);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Tayinlashlar ro'yxatini olishda xatolik",
+      });
+    } finally {
+      setAssignmentsLoading(false);
+    }
+  };
+
   useEffect(() => {
     getData();
   }, [id, selectedMonth]);
 
-  const handleSubmit = async () => {
-    setSending(true);
-    try {
-      await api.post("/ceo/employeeSums", {
-        month: selectedMonth,
-        employee_id: selectedEmployee?.employee?.id,
-        sum: editingValue,
+  useEffect(() => {
+    fetchDepartmentGroups();
+    fetchEmployees();
+    fetchAssignments();
+  }, [id]);
+
+  const currentDepartment = useMemo(
+    () =>
+      departmentGroups.find((dept) => String(dept.id) === String(id)) ||
+      null,
+    [departmentGroups, id],
+  );
+
+  const groupsForDepartment = (departmentId) => {
+    const dept = departmentGroups.find(
+      (d) => String(d.id) === String(departmentId),
+    );
+    return dept?.groups || [];
+  };
+
+  const openAddAssignment = (employee) => {
+    setEditingAssignment(null);
+    setAssignmentForm({
+      ...emptyAssignmentForm,
+      employee_id: employee?.id ? String(employee.id) : "",
+      department_id: String(id),
+      group_id: employee?.group?.id ? String(employee.group.id) : "",
+    });
+    setAssignmentDialogOpen(true);
+  };
+
+  const openEditAssignment = (assignment) => {
+    setEditingAssignment(assignment);
+    setAssignmentForm({
+      employee_id: assignment?.employee_id
+        ? String(assignment.employee_id)
+        : "",
+      department_id: assignment?.department_id
+        ? String(assignment.department_id)
+        : "",
+      group_id: assignment?.group_id ? String(assignment.group_id) : "",
+      start_date: toDateInputValue(assignment?.start_date),
+      end_date: toDateInputValue(assignment?.end_date),
+      sum: assignment?.sum ?? "",
+    });
+    setAssignmentDialogOpen(true);
+  };
+
+  const closeAssignmentDialog = () => {
+    setAssignmentDialogOpen(false);
+    setEditingAssignment(null);
+    setAssignmentForm(emptyAssignmentForm);
+  };
+
+  const isAssignmentFormValid = () => {
+    if (!assignmentForm.employee_id || !assignmentForm.department_id)
+      return false;
+    if (!assignmentForm.start_date) return false;
+    if (
+      assignmentForm.end_date &&
+      assignmentForm.end_date < assignmentForm.start_date
+    )
+      return false;
+    if (assignmentForm.sum === "" || Number.isNaN(Number(assignmentForm.sum)))
+      return false;
+    return true;
+  };
+
+  const handleAssignmentSubmit = async () => {
+    if (!isAssignmentFormValid()) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description: "Barcha majburiy maydonlarni to'g'ri to'ldiring",
       });
-      getData();
-      setEditDialogOpen(false);
-      setEditingValue(null);
-      setSelectedEmployee(null);
+      return;
+    }
+
+    setSavingAssignment(true);
+    try {
+      const payload = {
+        employee_id: Number(assignmentForm.employee_id),
+        department_id: Number(assignmentForm.department_id),
+        group_id: assignmentForm.group_id
+          ? Number(assignmentForm.group_id)
+          : null,
+        start_date: assignmentForm.start_date,
+        end_date: assignmentForm.end_date || null,
+        sum: Number(assignmentForm.sum),
+      };
+
+      if (editingAssignment) {
+        await api.patch(`/ceo/employeeSums/${editingAssignment.id}`, payload);
+      } else {
+        await api.post("/ceo/employeeSums", payload);
+      }
+
       toast({
         title: "Muvaffaqiyatli",
         description: "Ma'lumotlar saqlandi",
       });
+      closeAssignmentDialog();
+      fetchAssignments();
+      getData();
     } catch (err) {
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description: "Ma'lumotlar saqlanmadi",
+        description:
+          err?.response?.data?.message || "Ma'lumotlar saqlanmadi",
       });
     } finally {
-      setSending(false);
+      setSavingAssignment(false);
+    }
+  };
+
+  const handleDeleteAssignment = async (assignment) => {
+    if (
+      !window.confirm(
+        `${assignment?.employee?.name || "Xodim"} uchun tayinlashni o'chirishni tasdiqlaysizmi?`,
+      )
+    )
+      return;
+
+    setDeletingAssignmentId(assignment.id);
+    try {
+      await api.delete(`/ceo/employeeSums/${assignment.id}`);
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Tayinlash o'chirildi",
+      });
+      fetchAssignments();
+      getData();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik",
+        description:
+          err?.response?.data?.message || "O'chirishda xatolik yuz berdi",
+      });
+    } finally {
+      setDeletingAssignmentId(null);
     }
   };
 
@@ -185,7 +395,6 @@ const DepartmentView = () => {
     const sorted = getSortedData();
     let filtered = sorted;
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = sorted.filter((item) =>
@@ -193,14 +402,12 @@ const DepartmentView = () => {
       );
     }
 
-    // Filter by group
     if (groupFilter && groupFilter !== "all") {
       filtered = filtered.filter(
         (item) => item?.employee?.group?.name === groupFilter,
       );
     }
 
-    // Filter by zero per minute
     if (hideZeroPerMinute) {
       filtered = filtered.filter(
         (item) => (Number(item?.per_minute_sum) || 0) !== 0,
@@ -238,6 +445,14 @@ const DepartmentView = () => {
     localStorage.setItem("newSeasonSelectedMonth", newMonthString);
   };
 
+  const sortedAssignments = useMemo(() => {
+    return [...assignments].sort((a, b) => {
+      const aName = a?.employee?.name || "";
+      const bName = b?.employee?.name || "";
+      return aName.localeCompare(bName);
+    });
+  }, [assignments]);
+
   return (
     <div className="min-h-screen">
       <div className="space-y-6">
@@ -247,7 +462,7 @@ const DepartmentView = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <h1 className="text-lg sm:text-xl font-bold text-slate-900">
-                  Bo'lim ma'lumotlari
+                  {currentDepartment?.name || "Bo'lim ma'lumotlari"}
                 </h1>
                 <p className="text-xs text-slate-500">
                   Xodimlarning oylik ma'lumotlari
@@ -289,6 +504,175 @@ const DepartmentView = () => {
               </div>
             </div>
           </CardContent>
+        </Card>
+
+        {/* Assignments (employeeSums) CRUD */}
+        <Card className="bg-white shadow-sm border-0">
+          <CardHeader
+            className="p-4 sm:p-6 cursor-pointer select-none"
+            onClick={() =>
+              setAssignmentsSectionOpen((prev) => {
+                const next = !prev;
+                localStorage.setItem(
+                  "departmentViewAssignmentsOpen",
+                  String(next),
+                );
+                return next;
+              })
+            }
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                {assignmentsSectionOpen ? (
+                  <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                    <span>Tayinlashlar</span>
+                    <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium">
+                      {assignments.length}
+                    </span>
+                  </CardTitle>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Xodimni bo'lim/guruhga qaysi sanadan qaysi sanagacha va
+                    qancha daqiqalik stavka bilan biriktirilganini shu yerda
+                    boshqaring
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="text-xs h-8 gap-1 shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAddAssignment(null);
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Yangi tayinlash
+              </Button>
+            </div>
+          </CardHeader>
+          {assignmentsSectionOpen && (
+          <CardContent className="p-3 sm:p-6 pt-0">
+            {assignmentsLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <Skeleton key={index} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border border-slate-200 border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                        #
+                      </th>
+                      <th className="text-left py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                        Xodim
+                      </th>
+                      <th className="text-left py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                        Bo'lim / Guruh
+                      </th>
+                      <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                        Boshlanish
+                      </th>
+                      <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                        Tugash
+                      </th>
+                      <th className="text-right py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                        Daqiqasiga
+                      </th>
+                      <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                        Amallar
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedAssignments.map((assignment, index) => (
+                      <tr
+                        key={assignment.id}
+                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                      >
+                        <td className="py-2 px-2 text-center border border-slate-200">
+                          <span className="font-medium text-slate-600 text-xs">
+                            {index + 1}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 border border-slate-200">
+                          <span className="font-medium text-slate-900 text-xs">
+                            {assignment?.employee?.name || "-"}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 border border-slate-200">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-slate-900 text-xs">
+                              {assignment?.department?.name || "-"}
+                            </span>
+                            <span className="text-slate-500 text-xs">
+                              {assignment?.group?.name || "-"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-2 text-center border border-slate-200">
+                          <span className="text-slate-700 text-xs">
+                            {formatDate(assignment?.start_date)}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 text-center border border-slate-200">
+                          <span className="text-slate-700 text-xs">
+                            {assignment?.end_date
+                              ? formatDate(assignment.end_date)
+                              : "Hozirgacha"}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 text-right border border-slate-200">
+                          <span className="font-semibold text-slate-900 text-xs">
+                            {formatNumber(assignment?.sum, 0)} so'm
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 border border-slate-200">
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              onClick={() => openEditAssignment(assignment)}
+                            >
+                              <Pencil className="h-3.5 w-3.5 text-slate-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              disabled={deletingAssignmentId === assignment.id}
+                              onClick={() => handleDeleteAssignment(assignment)}
+                            >
+                              {deletingAssignmentId === assignment.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
+                              ) : (
+                                <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                              )}
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {sortedAssignments.length === 0 && (
+                  <div className="text-center py-8 text-slate-500 text-xs">
+                    Tayinlashlar topilmadi
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+          )}
         </Card>
 
         {/* Loading State */}
@@ -455,6 +839,9 @@ const DepartmentView = () => {
                             ))}
                         </div>
                       </th>
+                      <th className="text-center py-2 px-2 sm:py-3 sm:px-4 font-semibold text-slate-700 text-xs border border-slate-200">
+                        Amallar
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -503,18 +890,9 @@ const DepartmentView = () => {
                           </div>
                         </td>
                         <td className="py-2 px-2 text-right border border-slate-200">
-                          <div
-                            className="flex items-center justify-end gap-1 cursor-pointer"
-                            onClick={() => {
-                              setEditingValue(item?.per_minute_sum);
-                              setEditDialogOpen(true);
-                              setSelectedEmployee(item);
-                            }}
-                          >
-                            <span className="font-semibold text-slate-900 text-xs">
-                              {item?.per_minute_sum || 0} so'm
-                            </span>
-                          </div>
+                          <span className="font-semibold text-slate-900 text-xs">
+                            {item?.per_minute_sum || 0} so'm
+                          </span>
                         </td>
                         <td className="py-2 px-2 text-right border border-slate-200">
                           <div className="flex items-center justify-end gap-1">
@@ -525,7 +903,7 @@ const DepartmentView = () => {
                         </td>
                         <td className="py-2 px-2 text-right border border-slate-200">
                           <div
-                            className="flex items-center justify-end gap-1"
+                            className="flex items-center justify-end gap-1 cursor-pointer"
                             onClick={() => {
                               setSelectedEmployee(item);
                               setDetailsDialogOpen(true);
@@ -549,6 +927,17 @@ const DepartmentView = () => {
                               {formatNumber(item?.possible_amount, 0)} so'm
                             </span>
                           </div>
+                        </td>
+                        <td className="py-2 px-2 text-center border border-slate-200">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => openAddAssignment(item?.employee)}
+                          >
+                            <Plus className="h-3.5 w-3.5 mr-1" />
+                            Tayinlash
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -625,6 +1014,7 @@ const DepartmentView = () => {
                             so'm
                           </span>
                         </td>
+                        <td className="py-3 px-2 border border-slate-200" />
                       </tr>
                     )}
                   </tbody>
@@ -640,52 +1030,193 @@ const DepartmentView = () => {
           </Card>
         )}
 
-        {/* Edit Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        {/* Assignment Add/Edit Dialog */}
+        <Dialog
+          open={assignmentDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) closeAssignmentDialog();
+            else setAssignmentDialogOpen(true);
+          }}
+        >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-sm">
-                {selectedEmployee?.employee?.name} - Daqiqa uchun summa
+                {editingAssignment ? "Tayinlashni tahrirlash" : "Yangi tayinlash"}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
                 <label className="text-xs font-medium text-slate-700">
-                  Summa (so'm)
+                  Xodim
+                </label>
+                <Select
+                  value={assignmentForm.employee_id}
+                  onValueChange={(value) =>
+                    setAssignmentForm((prev) => ({
+                      ...prev,
+                      employee_id: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger className="mt-1 text-xs h-9">
+                    <SelectValue placeholder="Xodimni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees.map((employee) => (
+                      <SelectItem
+                        key={employee.id}
+                        value={String(employee.id)}
+                      >
+                        {employee.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-medium text-slate-700">
+                    Bo'lim
+                  </label>
+                  <Select
+                    value={assignmentForm.department_id}
+                    onValueChange={(value) =>
+                      setAssignmentForm((prev) => ({
+                        ...prev,
+                        department_id: value,
+                        group_id: "",
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="mt-1 text-xs h-9">
+                      <SelectValue placeholder="Bo'lim" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departmentGroups.map((dept) => (
+                        <SelectItem key={dept.id} value={String(dept.id)}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700">
+                    Guruh
+                  </label>
+                  <Select
+                    value={assignmentForm.group_id}
+                    onValueChange={(value) =>
+                      setAssignmentForm((prev) => ({
+                        ...prev,
+                        group_id: value,
+                      }))
+                    }
+                    disabled={
+                      !assignmentForm.department_id ||
+                      groupsForDepartment(assignmentForm.department_id)
+                        .length === 0
+                    }
+                  >
+                    <SelectTrigger className="mt-1 text-xs h-9">
+                      <SelectValue
+                        placeholder={
+                          assignmentForm.department_id &&
+                          groupsForDepartment(assignmentForm.department_id)
+                            .length === 0
+                            ? "Bu bo'limda guruh yo'q"
+                            : "Guruh (ixtiyoriy)"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {groupsForDepartment(assignmentForm.department_id).map(
+                        (group) => (
+                          <SelectItem key={group.id} value={String(group.id)}>
+                            {group.name}
+                          </SelectItem>
+                        ),
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-medium text-slate-700">
+                    Boshlanish sanasi
+                  </label>
+                  <Input
+                    type="date"
+                    value={assignmentForm.start_date}
+                    onChange={(e) =>
+                      setAssignmentForm((prev) => ({
+                        ...prev,
+                        start_date: e.target.value,
+                      }))
+                    }
+                    className="mt-1 text-sm h-9"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700">
+                    Tugash sanasi
+                  </label>
+                  <Input
+                    type="date"
+                    value={assignmentForm.end_date}
+                    onChange={(e) =>
+                      setAssignmentForm((prev) => ({
+                        ...prev,
+                        end_date: e.target.value,
+                      }))
+                    }
+                    className="mt-1 text-sm h-9"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-slate-700">
+                  Summa (daqiqasiga, so'm)
                 </label>
                 <Input
                   type="number"
-                  value={editingValue}
-                  onChange={(e) => setEditingValue(e.target.value)}
+                  value={assignmentForm.sum}
+                  onChange={(e) =>
+                    setAssignmentForm((prev) => ({
+                      ...prev,
+                      sum: e.target.value,
+                    }))
+                  }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      handleSubmit();
+                      handleAssignmentSubmit();
                     }
                   }}
                   className="mt-1 text-sm"
                   placeholder="Summani kiriting"
                 />
               </div>
-              <div className="flex gap-2 justify-end">
+
+              <div className="flex gap-2 justify-end pt-1">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setEditDialogOpen(false);
-                    setEditingValue(null);
-                    setSelectedEmployee(null);
-                  }}
+                  onClick={closeAssignmentDialog}
                   className="text-xs"
                 >
                   Bekor qilish
                 </Button>
                 <Button
                   size="sm"
-                  onClick={handleSubmit}
-                  disabled={sending}
+                  onClick={handleAssignmentSubmit}
+                  disabled={savingAssignment}
                   className="text-xs"
                 >
-                  {sending && (
+                  {savingAssignment && (
                     <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 animate-spin" />
                   )}
                   Saqlash
@@ -807,7 +1338,7 @@ const DepartmentView = () => {
                               <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                                 <span className="font-medium text-slate-900 text-sm">
-                                  {day?.date?.split("-").reverse().join(".")}
+                                  {formatDate(day?.date)}
                                 </span>
                               </div>
                             </td>
