@@ -15,8 +15,6 @@ import {
   Check,
   Search,
   Plus,
-  Pencil,
-  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -52,9 +50,6 @@ const formatDate = (value) => {
   if (!year || !month || !day) return value;
   return `${day}.${month}.${year}`;
 };
-
-// Normalizes "YYYY-MM-DD" or a full ISO timestamp to "YYYY-MM-DD" for <Input type="date">
-const toDateInputValue = (value) => (value ? value.slice(0, 10) : "");
 
 const StatusBadge = ({ status, className }) => {
   if (!status) return null;
@@ -124,7 +119,6 @@ const DepartmentView = () => {
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [assignmentForm, setAssignmentForm] = useState(emptyAssignmentForm);
   const [savingAssignment, setSavingAssignment] = useState(false);
-  const [deletingAssignmentId, setDeletingAssignmentId] = useState(null);
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
   const [employeePickerQuery, setEmployeePickerQuery] = useState("");
   const [employeeFieldLocked, setEmployeeFieldLocked] = useState(false);
@@ -246,27 +240,6 @@ const DepartmentView = () => {
     setAssignmentDialogOpen(true);
   };
 
-  const openEditAssignment = (assignment) => {
-    setEditingAssignment(assignment);
-    setAssignmentForm({
-      employee_id: assignment?.employee_id
-        ? String(assignment.employee_id)
-        : "",
-      department_id: assignment?.department_id
-        ? String(assignment.department_id)
-        : "",
-      group_id: assignment?.group_id ? String(assignment.group_id) : "",
-      start_date: toDateInputValue(assignment?.start_date),
-      end_date: toDateInputValue(assignment?.end_date),
-      sum: assignment?.sum ?? "",
-    });
-    setEmployeePickerQuery("");
-    setEmployeePickerOpen(false);
-    setEmployeeFieldLocked(false);
-    setLockedEmployeeInfo(null);
-    setAssignmentDialogOpen(true);
-  };
-
   const closeAssignmentDialog = () => {
     setAssignmentDialogOpen(false);
     setEditingAssignment(null);
@@ -335,35 +308,6 @@ const DepartmentView = () => {
       });
     } finally {
       setSavingAssignment(false);
-    }
-  };
-
-  const handleDeleteAssignment = async (assignment) => {
-    if (
-      !window.confirm(
-        `${assignment?.employee?.name || "Xodim"} uchun tayinlashni o'chirishni tasdiqlaysizmi?`,
-      )
-    )
-      return;
-
-    setDeletingAssignmentId(assignment.id);
-    try {
-      await api.delete(`/ceo/employeeSums/${assignment.id}`);
-      toast({
-        title: "Muvaffaqiyatli",
-        description: "Tayinlash o'chirildi",
-      });
-      fetchAssignments();
-      getData();
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Xatolik",
-        description:
-          err?.response?.data?.message || "O'chirishda xatolik yuz berdi",
-      });
-    } finally {
-      setDeletingAssignmentId(null);
     }
   };
 
@@ -656,9 +600,6 @@ const DepartmentView = () => {
                         <th className="text-right py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
                           Daqiqasiga
                         </th>
-                        <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
-                          Amallar
-                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -706,37 +647,8 @@ const DepartmentView = () => {
                           </td>
                           <td className="py-2 px-2 text-right border border-slate-200">
                             <span className="font-semibold text-slate-900 text-xs">
-                              {formatNumber(assignment?.sum, 0)} so'm
+                              {assignment?.sum} so'm
                             </span>
-                          </td>
-                          <td className="py-2 px-2 border border-slate-200">
-                            <div className="flex items-center justify-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0"
-                                onClick={() => openEditAssignment(assignment)}
-                              >
-                                <Pencil className="h-3.5 w-3.5 text-slate-500" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0"
-                                disabled={
-                                  deletingAssignmentId === assignment.id
-                                }
-                                onClick={() =>
-                                  handleDeleteAssignment(assignment)
-                                }
-                              >
-                                {deletingAssignmentId === assignment.id ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
-                                ) : (
-                                  <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                                )}
-                              </Button>
-                            </div>
                           </td>
                         </tr>
                       ))}
