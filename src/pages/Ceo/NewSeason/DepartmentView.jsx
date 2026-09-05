@@ -12,6 +12,7 @@ import {
   AlarmClock,
   ChevronUp,
   ChevronDown,
+  Check,
   Search,
   Plus,
   Pencil,
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import formatNumber from "@/utils/formatNumber";
+import { cn } from "@/lib/utils";
 
 const emptyAssignmentForm = {
   employee_id: "",
@@ -53,6 +55,24 @@ const formatDate = (value) => {
 
 // Normalizes "YYYY-MM-DD" or a full ISO timestamp to "YYYY-MM-DD" for <Input type="date">
 const toDateInputValue = (value) => (value ? value.slice(0, 10) : "");
+
+const StatusBadge = ({ status, className }) => {
+  if (!status) return null;
+  const isKicked = status === "kicked";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border shrink-0",
+        isKicked
+          ? "bg-red-50 text-red-600 border-red-200"
+          : "bg-green-50 text-green-600 border-green-200",
+        className,
+      )}
+    >
+      {isKicked ? "Ishdan ketgan" : "Ishlamoqda"}
+    </span>
+  );
+};
 
 const DepartmentView = () => {
   const { toast } = useToast();
@@ -84,6 +104,7 @@ const DepartmentView = () => {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [groupFilter, setGroupFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [assignmentsSectionOpen, setAssignmentsSectionOpen] = useState(() => {
     const saved = localStorage.getItem("departmentViewAssignmentsOpen");
     return saved ? saved === "true" : true;
@@ -104,6 +125,11 @@ const DepartmentView = () => {
   const [assignmentForm, setAssignmentForm] = useState(emptyAssignmentForm);
   const [savingAssignment, setSavingAssignment] = useState(false);
   const [deletingAssignmentId, setDeletingAssignmentId] = useState(null);
+  const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
+  const [employeePickerQuery, setEmployeePickerQuery] = useState("");
+  const [employeeFieldLocked, setEmployeeFieldLocked] = useState(false);
+  const [lockedEmployeeInfo, setLockedEmployeeInfo] = useState(null);
+  const [assignmentSearchQuery, setAssignmentSearchQuery] = useState("");
 
   const getData = async () => {
     try {
@@ -190,8 +216,7 @@ const DepartmentView = () => {
 
   const currentDepartment = useMemo(
     () =>
-      departmentGroups.find((dept) => String(dept.id) === String(id)) ||
-      null,
+      departmentGroups.find((dept) => String(dept.id) === String(id)) || null,
     [departmentGroups, id],
   );
 
@@ -210,6 +235,14 @@ const DepartmentView = () => {
       department_id: String(id),
       group_id: employee?.group?.id ? String(employee.group.id) : "",
     });
+    setEmployeePickerQuery("");
+    setEmployeePickerOpen(false);
+    setEmployeeFieldLocked(!!employee?.id);
+    setLockedEmployeeInfo(
+      employee?.id
+        ? { id: employee.id, name: employee.name, status: employee.status }
+        : null,
+    );
     setAssignmentDialogOpen(true);
   };
 
@@ -227,6 +260,10 @@ const DepartmentView = () => {
       end_date: toDateInputValue(assignment?.end_date),
       sum: assignment?.sum ?? "",
     });
+    setEmployeePickerQuery("");
+    setEmployeePickerOpen(false);
+    setEmployeeFieldLocked(false);
+    setLockedEmployeeInfo(null);
     setAssignmentDialogOpen(true);
   };
 
@@ -234,6 +271,10 @@ const DepartmentView = () => {
     setAssignmentDialogOpen(false);
     setEditingAssignment(null);
     setAssignmentForm(emptyAssignmentForm);
+    setEmployeePickerQuery("");
+    setEmployeePickerOpen(false);
+    setEmployeeFieldLocked(false);
+    setLockedEmployeeInfo(null);
   };
 
   const isAssignmentFormValid = () => {
@@ -290,8 +331,7 @@ const DepartmentView = () => {
       toast({
         variant: "destructive",
         title: "Xatolik",
-        description:
-          err?.response?.data?.message || "Ma'lumotlar saqlanmadi",
+        description: err?.response?.data?.message || "Ma'lumotlar saqlanmadi",
       });
     } finally {
       setSavingAssignment(false);
@@ -408,6 +448,12 @@ const DepartmentView = () => {
       );
     }
 
+    if (statusFilter && statusFilter !== "all") {
+      filtered = filtered.filter(
+        (item) => (item?.employee?.status || "working") === statusFilter,
+      );
+    }
+
     if (hideZeroPerMinute) {
       filtered = filtered.filter(
         (item) => (Number(item?.per_minute_sum) || 0) !== 0,
@@ -446,12 +492,26 @@ const DepartmentView = () => {
   };
 
   const sortedAssignments = useMemo(() => {
-    return [...assignments].sort((a, b) => {
+    const sorted = [...assignments].sort((a, b) => {
       const aName = a?.employee?.name || "";
       const bName = b?.employee?.name || "";
       return aName.localeCompare(bName);
     });
-  }, [assignments]);
+
+    const query = assignmentSearchQuery.trim().toLowerCase();
+    if (!query) return sorted;
+
+    return sorted.filter((assignment) => {
+      const employeeName = assignment?.employee?.name?.toLowerCase() || "";
+      const departmentName = assignment?.department?.name?.toLowerCase() || "";
+      const groupName = assignment?.group?.name?.toLowerCase() || "";
+      return (
+        employeeName.includes(query) ||
+        departmentName.includes(query) ||
+        groupName.includes(query)
+      );
+    });
+  }, [assignments, assignmentSearchQuery]);
 
   return (
     <div className="min-h-screen">
@@ -556,122 +616,141 @@ const DepartmentView = () => {
             </div>
           </CardHeader>
           {assignmentsSectionOpen && (
-          <CardContent className="p-3 sm:p-6 pt-0">
-            {assignmentsLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <Skeleton key={index} className="h-10 w-full" />
-                ))}
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="relative w-full sm:w-72 mb-3">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="Xodim, bo'lim yoki guruh bo'yicha qidirish..."
+                  value={assignmentSearchQuery}
+                  onChange={(e) => setAssignmentSearchQuery(e.target.value)}
+                  className="pl-10 text-xs h-8"
+                />
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border border-slate-200 border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
-                        #
-                      </th>
-                      <th className="text-left py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
-                        Xodim
-                      </th>
-                      <th className="text-left py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
-                        Bo'lim / Guruh
-                      </th>
-                      <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
-                        Boshlanish
-                      </th>
-                      <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
-                        Tugash
-                      </th>
-                      <th className="text-right py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
-                        Daqiqasiga
-                      </th>
-                      <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
-                        Amallar
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedAssignments.map((assignment, index) => (
-                      <tr
-                        key={assignment.id}
-                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="py-2 px-2 text-center border border-slate-200">
-                          <span className="font-medium text-slate-600 text-xs">
-                            {index + 1}
-                          </span>
-                        </td>
-                        <td className="py-2 px-2 border border-slate-200">
-                          <span className="font-medium text-slate-900 text-xs">
-                            {assignment?.employee?.name || "-"}
-                          </span>
-                        </td>
-                        <td className="py-2 px-2 border border-slate-200">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-slate-900 text-xs">
-                              {assignment?.department?.name || "-"}
-                            </span>
-                            <span className="text-slate-500 text-xs">
-                              {assignment?.group?.name || "-"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-2 px-2 text-center border border-slate-200">
-                          <span className="text-slate-700 text-xs">
-                            {formatDate(assignment?.start_date)}
-                          </span>
-                        </td>
-                        <td className="py-2 px-2 text-center border border-slate-200">
-                          <span className="text-slate-700 text-xs">
-                            {assignment?.end_date
-                              ? formatDate(assignment.end_date)
-                              : "Hozirgacha"}
-                          </span>
-                        </td>
-                        <td className="py-2 px-2 text-right border border-slate-200">
-                          <span className="font-semibold text-slate-900 text-xs">
-                            {formatNumber(assignment?.sum, 0)} so'm
-                          </span>
-                        </td>
-                        <td className="py-2 px-2 border border-slate-200">
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => openEditAssignment(assignment)}
-                            >
-                              <Pencil className="h-3.5 w-3.5 text-slate-500" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              disabled={deletingAssignmentId === assignment.id}
-                              onClick={() => handleDeleteAssignment(assignment)}
-                            >
-                              {deletingAssignmentId === assignment.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
-                              ) : (
-                                <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                              )}
-                            </Button>
-                          </div>
-                        </td>
+              {assignmentsLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <Skeleton key={index} className="h-10 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border border-slate-200 border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                          #
+                        </th>
+                        <th className="text-left py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                          Xodim
+                        </th>
+                        <th className="text-left py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                          Bo'lim / Guruh
+                        </th>
+                        <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                          Boshlanish
+                        </th>
+                        <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                          Tugash
+                        </th>
+                        <th className="text-right py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                          Daqiqasiga
+                        </th>
+                        <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                          Amallar
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {sortedAssignments.map((assignment, index) => (
+                        <tr
+                          key={assignment.id}
+                          className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                        >
+                          <td className="py-2 px-2 text-center border border-slate-200">
+                            <span className="font-medium text-slate-600 text-xs">
+                              {index + 1}
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 border border-slate-200">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-slate-900 text-xs">
+                                {assignment?.employee?.name || "-"}
+                              </span>
+                              <StatusBadge
+                                status={assignment?.employee?.status}
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2 px-2 border border-slate-200">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-slate-900 text-xs">
+                                {assignment?.department?.name || "-"}
+                              </span>
+                              <span className="text-slate-500 text-xs">
+                                {assignment?.group?.name || "-"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-2 px-2 text-center border border-slate-200">
+                            <span className="text-slate-700 text-xs">
+                              {formatDate(assignment?.start_date)}
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 text-center border border-slate-200">
+                            <span className="text-slate-700 text-xs">
+                              {assignment?.end_date
+                                ? formatDate(assignment.end_date)
+                                : "Hozirgacha"}
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 text-right border border-slate-200">
+                            <span className="font-semibold text-slate-900 text-xs">
+                              {formatNumber(assignment?.sum, 0)} so'm
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 border border-slate-200">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                onClick={() => openEditAssignment(assignment)}
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-slate-500" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                disabled={
+                                  deletingAssignmentId === assignment.id
+                                }
+                                onClick={() =>
+                                  handleDeleteAssignment(assignment)
+                                }
+                              >
+                                {deletingAssignmentId === assignment.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                                )}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
-                {sortedAssignments.length === 0 && (
-                  <div className="text-center py-8 text-slate-500 text-xs">
-                    Tayinlashlar topilmadi
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
+                  {sortedAssignments.length === 0 && (
+                    <div className="text-center py-8 text-slate-500 text-xs">
+                      Tayinlashlar topilmadi
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
           )}
         </Card>
 
@@ -722,6 +801,16 @@ const DepartmentView = () => {
                           {group}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-40 h-8 text-xs">
+                      <SelectValue placeholder="Holati" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Barcha holatlar</SelectItem>
+                      <SelectItem value="working">Ishlamoqda</SelectItem>
+                      <SelectItem value="kicked">Ishdan ketgan</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -874,9 +963,15 @@ const DepartmentView = () => {
                               </div>
                             )}
 
-                            <span className="font-medium text-slate-900 text-xs">
-                              {item?.employee?.name}
-                            </span>
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span className="font-medium text-slate-900 text-xs">
+                                {item?.employee?.name}
+                              </span>
+                              <StatusBadge
+                                status={item?.employee?.status}
+                                className="w-fit"
+                              />
+                            </div>
                           </div>
                         </td>
                         <td className="py-2 px-2 border border-slate-200">
@@ -1041,37 +1136,116 @@ const DepartmentView = () => {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-sm">
-                {editingAssignment ? "Tayinlashni tahrirlash" : "Yangi tayinlash"}
+                {editingAssignment
+                  ? "Tayinlashni tahrirlash"
+                  : "Yangi tayinlash"}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <div>
+              <div className="relative">
                 <label className="text-xs font-medium text-slate-700">
                   Xodim
                 </label>
-                <Select
-                  value={assignmentForm.employee_id}
-                  onValueChange={(value) =>
-                    setAssignmentForm((prev) => ({
-                      ...prev,
-                      employee_id: value,
-                    }))
-                  }
-                >
-                  <SelectTrigger className="mt-1 text-xs h-9">
-                    <SelectValue placeholder="Xodimni tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map((employee) => (
-                      <SelectItem
-                        key={employee.id}
-                        value={String(employee.id)}
-                      >
-                        {employee.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {employeeFieldLocked ? (
+                  <div className="mt-1 flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 h-9">
+                    <span className="text-xs font-medium text-slate-700 truncate">
+                      {lockedEmployeeInfo?.name || "-"}
+                    </span>
+                    <StatusBadge status={lockedEmployeeInfo?.status} />
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative mt-1">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                      <Input
+                        type="text"
+                        autoComplete="off"
+                        placeholder="Xodimni qidiring..."
+                        value={
+                          employeePickerOpen
+                            ? employeePickerQuery
+                            : employees.find(
+                                (employee) =>
+                                  String(employee.id) ===
+                                  assignmentForm.employee_id,
+                              )?.name || ""
+                        }
+                        onFocus={() => {
+                          setEmployeePickerQuery("");
+                          setEmployeePickerOpen(true);
+                        }}
+                        onChange={(e) => {
+                          setEmployeePickerQuery(e.target.value);
+                          setEmployeePickerOpen(true);
+                        }}
+                        onBlur={() => {
+                          // Delay so a click on a dropdown option registers before we close it
+                          setTimeout(() => setEmployeePickerOpen(false), 150);
+                        }}
+                        className="pl-8 text-xs h-9"
+                      />
+                    </div>
+
+                    {employeePickerOpen && (
+                      <div className="absolute z-50 mt-1 w-full max-h-56 overflow-auto rounded-md border border-slate-200 bg-white shadow-md">
+                        {employees.filter((employee) =>
+                          employee.name
+                            ?.toLowerCase()
+                            .includes(employeePickerQuery.trim().toLowerCase()),
+                        ).length === 0 ? (
+                          <div className="py-3 px-3 text-center text-xs text-slate-500">
+                            Xodim topilmadi
+                          </div>
+                        ) : (
+                          employees
+                            .filter((employee) =>
+                              employee.name
+                                ?.toLowerCase()
+                                .includes(
+                                  employeePickerQuery.trim().toLowerCase(),
+                                ),
+                            )
+                            .map((employee) => (
+                              <div
+                                key={employee.id}
+                                onMouseDown={(e) => {
+                                  // Fires before the input's onBlur, so the selection isn't lost
+                                  e.preventDefault();
+                                  setAssignmentForm((prev) => ({
+                                    ...prev,
+                                    employee_id: String(employee.id),
+                                  }));
+                                  setEmployeePickerQuery("");
+                                  setEmployeePickerOpen(false);
+                                }}
+                                className={cn(
+                                  "flex items-center justify-between gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-slate-50",
+                                  String(employee.id) ===
+                                    assignmentForm.employee_id && "bg-slate-50",
+                                )}
+                              >
+                                <span className="flex items-center gap-1.5 min-w-0">
+                                  <Check
+                                    className={cn(
+                                      "h-3.5 w-3.5 shrink-0 text-slate-900",
+                                      String(employee.id) ===
+                                        assignmentForm.employee_id
+                                        ? "opacity-100"
+                                        : "opacity-0",
+                                    )}
+                                  />
+                                  <span className="truncate">
+                                    {employee.name}
+                                  </span>
+                                </span>
+                                <StatusBadge status={employee.status} />
+                              </div>
+                            ))
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -1248,8 +1422,9 @@ const DepartmentView = () => {
         <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
           <DialogContent className="sm:max-w-4xl max-w-[95vw]">
             <DialogHeader className="pb-4">
-              <DialogTitle className="text-lg sm:text-xl font-semibold text-slate-900">
-                {selectedEmployee?.employee?.name}
+              <DialogTitle className="text-lg sm:text-xl font-semibold text-slate-900 flex items-center gap-2">
+                <span>{selectedEmployee?.employee?.name}</span>
+                <StatusBadge status={selectedEmployee?.employee?.status} />
               </DialogTitle>
               <p className="text-sm text-slate-500 mt-1">
                 Kunlik ish haqi ma'lumotlari
