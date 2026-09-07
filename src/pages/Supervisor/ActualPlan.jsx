@@ -1,17 +1,9 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Building2,
   Loader2,
   GripVertical,
   Users,
@@ -323,40 +315,6 @@ const ActualPlan = () => {
         </div>
         <h1 className="text-3xl font-bold text-gray-900">Ish rejasi navbati</h1>
       </div>
-
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-gray-500" />
-            <Select
-              value={selectedDepartment}
-              onValueChange={(value) => setSelectedDepartment(value)}
-              disabled={departmentsLoading}
-            >
-              <SelectTrigger className="w-64 bg-white border-gray-200">
-                <SelectValue
-                  placeholder={
-                    departmentsLoading ? "Yuklanmoqda..." : "Bo'limni tanlang"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {departmentsLoading ? (
-                  <div className="flex items-center justify-center p-2">
-                    <Loader2 className="animate-spin h-4 w-4" />
-                  </div>
-                ) : (
-                  departments.map((dept) => (
-                    <SelectItem key={dept.id} value={String(dept.id)}>
-                      {dept.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
 
       {!loading && sortedGroups?.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
