@@ -1,8 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/utils/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Loader2,
   GripVertical,
@@ -15,6 +37,11 @@ import {
   CalendarClock,
   ListOrdered,
   LayoutGrid,
+  Plus,
+  Move,
+  Check,
+  Search,
+  Package,
 } from "lucide-react";
 import {
   DndContext,
@@ -38,7 +65,7 @@ import { statuses } from "@/lib/status";
 const keywords = ["tikuv", "тикув"];
 
 const COLUMNS =
-  "grid-cols-[24px_32px_180px_70px_80px_100px_80px_80px_120px_120px_140px] min-w-max";
+  "grid-cols-[24px_32px_180px_70px_80px_100px_80px_80px_120px_120px_140px_36px] min-w-max";
 
 // previous_order_id / next_order_id point to sibling orders' order.id (not the pivot row id)
 const buildOrderedQueue = (orders = []) => {
@@ -66,7 +93,100 @@ const buildOrderedQueue = (orders = []) => {
   return ordered;
 };
 
-const QueueRow = ({ item, index, disabled }) => {
+const MoveGroupPopover = ({ item, groups, currentGroupId, onMoved }) => {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [newGroupId, setNewGroupId] = useState("");
+  const [changing, setChanging] = useState(false);
+
+  const handleChangeGroup = async () => {
+    if (!newGroupId) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Guruhni tanlang",
+      });
+      return;
+    }
+
+    setChanging(true);
+    try {
+      await api.post("/supervisor/plans", {
+        order_id: item.order.id,
+        submodel_id: item.order_submodel.id,
+        group_id: Number(newGroupId),
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Guruh o'zgartirildi",
+        style: { backgroundColor: "green", color: "white" },
+      });
+      setOpen(false);
+      setNewGroupId("");
+      onMoved();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description:
+          error.response?.data?.message ||
+          "Guruhni o'zgartirishda xatolik yuz berdi!",
+      });
+    } finally {
+      setChanging(false);
+    }
+  };
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value);
+        if (!value) setNewGroupId("");
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-6 w-6 text-gray-400 hover:text-indigo-600"
+        >
+          <Move className="h-3.5 w-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72">
+        <div className="grid gap-3">
+          <p className="text-sm text-muted-foreground">
+            {item.order?.name} ni boshqa guruhga ko'chirish
+          </p>
+          <div className="grid gap-2">
+            <Label htmlFor="newGroup">Yangi guruh</Label>
+            <Select value={newGroupId} onValueChange={setNewGroupId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Guruhni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {groups
+                  ?.filter((g) => g.id !== currentGroupId)
+                  .map((g) => (
+                    <SelectItem key={g.id} value={g.id.toString()}>
+                      {g.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleChangeGroup} disabled={changing}>
+            {changing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Ko'chirish
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+const QueueRow = ({ item, index, disabled, groups, currentGroupId, onMoved }) => {
   const {
     attributes,
     listeners,
@@ -89,7 +209,7 @@ const QueueRow = ({ item, index, disabled }) => {
         "grid gap-2 px-3 py-2.5 border-b border-l-4 items-center bg-white transition-colors hover:bg-gray-50",
         COLUMNS,
         statuses[item.order?.status]?.border,
-        isDragging && "relative z-10 bg-blue-50 shadow-lg rounded-md",
+        isDragging && "relative z-10 bg-blue-50 shadow-lg rounded-md"
       )}
     >
       <div
@@ -115,7 +235,7 @@ const QueueRow = ({ item, index, disabled }) => {
         <span
           className={cn(
             statuses[item.order?.status]?.color,
-            "whitespace-nowrap rounded-full px-2 py-1 text-white",
+            "whitespace-nowrap rounded-full px-2 py-1 text-white"
           )}
         >
           {statuses[item.order?.status]?.text}
@@ -135,6 +255,14 @@ const QueueRow = ({ item, index, disabled }) => {
           </div>
         )}
       </div>
+      <div>
+        <MoveGroupPopover
+          item={item}
+          groups={groups}
+          currentGroupId={currentGroupId}
+          onMoved={onMoved}
+        />
+      </div>
     </div>
   );
 };
@@ -142,9 +270,7 @@ const QueueRow = ({ item, index, disabled }) => {
 const ActualPlan = () => {
   const { toast } = useToast();
 
-  const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [departmentsLoading, setDepartmentsLoading] = useState(false);
   const [department, setDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [reorderingGroupId, setReorderingGroupId] = useState(null);
@@ -153,11 +279,18 @@ const ActualPlan = () => {
     return stored === "all" ? "all" : stored ? Number(stored) : "all";
   });
 
+  const [unassignedOrders, setUnassignedOrders] = useState([]);
+  const [addGroupId, setAddGroupId] = useState(null);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [selectedOrderId, setSelectedOrderId] = useState("");
+  const [selectedSubmodelId, setSelectedSubmodelId] = useState("");
+  const [adding, setAdding] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    })
   );
 
   const handleError = (error, defaultMessage) => {
@@ -170,17 +303,14 @@ const ActualPlan = () => {
 
   useEffect(() => {
     const fetchDepartments = async () => {
-      setDepartmentsLoading(true);
       try {
         const response = await api.get("/supervisor/departments");
         const fetchedDepartments = response.data || [];
 
-        setDepartments(fetchedDepartments);
-
         const selectedDept = fetchedDepartments.find((dept) =>
           keywords.some((keyword) =>
-            dept.name?.toLowerCase().includes(keyword.toLowerCase()),
-          ),
+            dept.name?.toLowerCase().includes(keyword.toLowerCase())
+          )
         );
 
         if (selectedDept) {
@@ -188,15 +318,14 @@ const ActualPlan = () => {
         }
       } catch (error) {
         handleError(error, "Bo'limlarni olishda xatolik yuz berdi!");
-      } finally {
-        setDepartmentsLoading(false);
       }
     };
 
     fetchDepartments();
   }, [toast]);
 
-  const fetchQueue = async () => {
+  const fetchQueue = useCallback(async () => {
+    if (!selectedDepartment) return;
     setLoading(true);
     try {
       const response = await api.get("/supervisor/plans/queue", {
@@ -208,16 +337,28 @@ const ActualPlan = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDepartment]);
+
+  const fetchUnassignedOrders = useCallback(async () => {
+    if (!selectedDepartment) return;
+    try {
+      const response = await api.get("/supervisor/orders/groups", {
+        params: { department_id: selectedDepartment },
+      });
+      setUnassignedOrders(response.data || []);
+    } catch (error) {
+      handleError(error, "Buyurtmalarni olishda xatolik yuz berdi!");
+    }
+  }, [selectedDepartment]);
 
   useEffect(() => {
-    if (!selectedDepartment) return;
     fetchQueue();
-  }, [selectedDepartment]);
+    fetchUnassignedOrders();
+  }, [fetchQueue, fetchUnassignedOrders]);
 
   const findGroupByItemId = (itemId) =>
     department?.groups?.find((g) =>
-      g.orders?.some((o) => String(o.id) === String(itemId)),
+      g.orders?.some((o) => String(o.id) === String(itemId))
     );
 
   const handleDragEnd = async (event) => {
@@ -230,10 +371,10 @@ const ActualPlan = () => {
 
     const orderedBefore = buildOrderedQueue(group.orders);
     const sourceIndex = orderedBefore.findIndex(
-      (o) => String(o.id) === String(active.id),
+      (o) => String(o.id) === String(active.id)
     );
     const destinationIndex = orderedBefore.findIndex(
-      (o) => String(o.id) === String(over.id),
+      (o) => String(o.id) === String(over.id)
     );
     if (sourceIndex === -1 || destinationIndex === -1) return;
 
@@ -271,7 +412,7 @@ const ActualPlan = () => {
     if (newNext) patch(newNext.id, { previous_order_id: moved.order.id });
 
     const updatedOrders = group.orders.map((item) =>
-      patches.has(item.id) ? { ...item, ...patches.get(item.id) } : item,
+      patches.has(item.id) ? { ...item, ...patches.get(item.id) } : item
     );
 
     const payload = {
@@ -284,7 +425,7 @@ const ActualPlan = () => {
     setDepartment((prev) => ({
       ...prev,
       groups: prev.groups.map((g) =>
-        g.id === group.id ? { ...g, orders: updatedOrders } : g,
+        g.id === group.id ? { ...g, orders: updatedOrders } : g
       ),
     }));
 
@@ -299,13 +440,68 @@ const ActualPlan = () => {
     }
   };
 
+  const getSelectedOrder = useCallback(
+    () => unassignedOrders.find((order) => order.id === Number(selectedOrderId)),
+    [selectedOrderId, unassignedOrders]
+  );
+
+  const closeAddDialog = () => {
+    setAddGroupId(null);
+    setOrderSearch("");
+    setSelectedOrderId("");
+    setSelectedSubmodelId("");
+  };
+
+  const handleAddOrder = async (e) => {
+    e.preventDefault();
+
+    if (!selectedOrderId || !selectedSubmodelId) {
+      toast({
+        variant: "destructive",
+        title: "Xatolik!",
+        description: "Barcha maydonlarni to'ldiring",
+      });
+      return;
+    }
+
+    setAdding(true);
+    try {
+      await api.post("/supervisor/plans", {
+        order_id: Number(selectedOrderId),
+        submodel_id: Number(selectedSubmodelId),
+        group_id: addGroupId,
+      });
+      toast({
+        title: "Muvaffaqiyatli",
+        description: "Buyurtma guruhga biriktirildi",
+        style: { backgroundColor: "green", color: "white" },
+      });
+      closeAddDialog();
+      fetchQueue();
+      fetchUnassignedOrders();
+    } catch (error) {
+      handleError(error, "Buyurtma qo'shishda xatolik yuz berdi!");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const filteredUnassignedOrders = unassignedOrders
+    .filter((order) =>
+      order.name?.toLowerCase().includes(orderSearch.toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   const sortedGroups = department?.groups
     ?.slice()
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const visibleGroups = sortedGroups?.filter(
-    (group) => selectedGroup === "all" || group.id === selectedGroup,
+    (group) => selectedGroup === "all" || group.id === selectedGroup
   );
+
+  const addGroup = sortedGroups?.find((g) => g.id === addGroupId);
+  const selectedOrder = getSelectedOrder();
 
   return (
     <div className="space-y-6">
@@ -313,7 +509,9 @@ const ActualPlan = () => {
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-sm">
           <ListOrdered className="h-5 w-5 text-white" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Ish rejasi navbati</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Ish rejasi navbati
+        </h1>
       </div>
 
       {!loading && sortedGroups?.length > 0 && (
@@ -340,7 +538,7 @@ const ActualPlan = () => {
                 setSelectedGroup(group.id);
                 localStorage.setItem(
                   "actualPlanSelectedGroup",
-                  group.id.toString(),
+                  group.id.toString()
                 );
               }}
             >
@@ -402,6 +600,14 @@ const ActualPlan = () => {
                         <ListOrdered className="h-3.5 w-3.5 text-indigo-500" />
                         {ordered.length} ta
                       </span>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-7 w-7 bg-white hover:bg-green-50 hover:text-green-600"
+                        onClick={() => setAddGroupId(group.id)}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </div>
 
@@ -410,7 +616,7 @@ const ActualPlan = () => {
                       <div
                         className={cn(
                           "grid gap-2 px-3 py-2 border-b bg-gray-50 font-medium text-gray-500",
-                          COLUMNS,
+                          COLUMNS
                         )}
                       >
                         <div />
@@ -432,6 +638,7 @@ const ActualPlan = () => {
                         <div className="flex items-center gap-1">
                           <Hourglass className="h-3.5 w-3.5" /> Prognoz
                         </div>
+                        <div />
                       </div>
 
                       <SortableContext
@@ -445,6 +652,9 @@ const ActualPlan = () => {
                             item={item}
                             index={index}
                             disabled={isReordering}
+                            groups={sortedGroups}
+                            currentGroupId={group.id}
+                            onMoved={fetchQueue}
                           />
                         ))}
                       </SortableContext>
@@ -456,6 +666,148 @@ const ActualPlan = () => {
           </div>
         </DndContext>
       )}
+
+      <Dialog
+        open={addGroupId !== null}
+        onOpenChange={(value) => !value && closeAddDialog()}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Buyurtma qo'shish
+            </DialogTitle>
+            <DialogDescription>
+              {addGroup?.name} guruhiga biriktirilishi kerak bo'lgan
+              buyurtmani tanlang
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleAddOrder} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Buyurtma</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Buyurtma qidirish..."
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <div className="max-h-56 divide-y overflow-y-auto rounded-md border">
+                {filteredUnassignedOrders.length === 0 && (
+                  <div className="p-3 text-center text-sm text-muted-foreground">
+                    Buyurtma topilmadi.
+                  </div>
+                )}
+                {filteredUnassignedOrders.map((order) => {
+                  const isSelected = selectedOrderId === order.id.toString();
+                  return (
+                    <div
+                      key={order.id}
+                      onClick={() => {
+                        setSelectedOrderId(order.id.toString());
+                        if (order?.order_model?.submodels?.length === 1) {
+                          setSelectedSubmodelId(
+                            order.order_model.submodels[0].id.toString()
+                          );
+                        } else {
+                          setSelectedSubmodelId("");
+                        }
+                      }}
+                      className={cn(
+                        "flex cursor-pointer flex-col gap-1 p-3 hover:bg-gray-50",
+                        isSelected && "bg-indigo-50 hover:bg-indigo-50"
+                      )}
+                    >
+                      <div className="flex w-full items-center justify-between gap-2">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Check
+                            className={cn(
+                              "h-4 w-4 text-indigo-600",
+                              isSelected ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {order.name}
+                        </span>
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "text-xs text-white",
+                            statuses[order.status]?.color
+                          )}
+                        >
+                          {statuses[order.status]?.text}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 pl-6 text-sm text-muted-foreground">
+                        <span>{order.quantity} ta</span>
+                        <span>
+                          {order?.order_model?.submodels
+                            ?.map((sub) => sub.submodel.name)
+                            .join(", ")}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {selectedOrderId && (
+              <div className="space-y-2">
+                <Label>Submodel</Label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedOrder?.order_model?.submodels?.map((sub) => {
+                    const isSelected =
+                      selectedSubmodelId === sub.id.toString();
+                    return (
+                      <div
+                        key={sub.id}
+                        onClick={() => setSelectedSubmodelId(sub.id.toString())}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors",
+                          isSelected
+                            ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                            : "border-gray-200 hover:bg-gray-50"
+                        )}
+                      >
+                        <Check
+                          className={cn(
+                            "h-3.5 w-3.5",
+                            isSelected ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {sub.submodel.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeAddDialog}
+                disabled={adding}
+              >
+                Bekor qilish
+              </Button>
+              <Button
+                type="submit"
+                disabled={adding}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Qo'shish
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
