@@ -10,6 +10,7 @@ import Plan from "./Plan/Plan";
 import Analysis from "./Analysis/Analysis";
 import Employees from "./Employees/Employees";
 import ViewEmployees from "./Employees/ViewEmployees";
+import ActualPlan from "./ActualPlan";
 
 const Supervisor = () => {
   return (
@@ -25,6 +26,7 @@ const Supervisor = () => {
       <Route path="analysis" element={<Analysis />} />
       <Route path="employees" element={<Employees />} />
       <Route path="employees/view/:id" element={<ViewEmployees />} />
+      <Route path="actualPlan" element={<ActualPlan />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

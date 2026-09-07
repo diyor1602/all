@@ -1,5 +1,12 @@
 import BaseLayout from "./BaseLayout";
-import { Puzzle, Box, NotebookPen, ChartArea, Users } from "lucide-react";
+import {
+  Puzzle,
+  Box,
+  NotebookPen,
+  ChartArea,
+  Users,
+  ChartNoAxesCombined,
+} from "lucide-react";
 
 const navigation = [
   {
@@ -31,6 +38,12 @@ const navigation = [
     href: "/supervisor/plan",
     icon: NotebookPen,
     onMobile: true,
+  },
+  {
+    name: "Haqiqiy reja",
+    href: "/supervisor/actualPlan",
+    icon: ChartNoAxesCombined,
+    onMobile: false,
   },
 ];
 

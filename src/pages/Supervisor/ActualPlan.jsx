@@ -1,0 +1,432 @@
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import api from "@/utils/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Building2,
+  Loader2,
+  GripVertical,
+  Users,
+  Scissors,
+  Warehouse,
+  Shirt,
+  Layers,
+  Hourglass,
+  CalendarClock,
+  ListOrdered,
+} from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { cn } from "@/lib/utils";
+import { statuses } from "@/lib/status";
+
+const keywords = ["tikuv", "тикув"];
+
+const COLUMNS =
+  "grid-cols-[24px_32px_minmax(160px,1fr)_70px_80px_100px_80px_80px_120px_120px_120px]";
+
+// previous_order_id / next_order_id point to sibling orders' order.id (not the pivot row id)
+const buildOrderedQueue = (orders = []) => {
+  if (!orders.length) return [];
+
+  const byOrderId = new Map(orders.map((item) => [item.order?.id, item]));
+  const head = orders.find((item) => item.previous_order_id === null);
+
+  const ordered = [];
+  const seen = new Set();
+  let current = head;
+
+  while (current && !seen.has(current.order?.id)) {
+    ordered.push(current);
+    seen.add(current.order?.id);
+    current = current.next_order_id
+      ? byOrderId.get(current.next_order_id)
+      : null;
+  }
+
+  orders.forEach((item) => {
+    if (!seen.has(item.order?.id)) ordered.push(item);
+  });
+
+  return ordered;
+};
+
+const ActualPlan = () => {
+  const { toast } = useToast();
+
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [departmentsLoading, setDepartmentsLoading] = useState(false);
+  const [department, setDepartment] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [reorderingGroupId, setReorderingGroupId] = useState(null);
+
+  const handleError = (error, defaultMessage) => {
+    toast({
+      variant: "destructive",
+      title: "Xatolik!",
+      description: error.response?.data?.message || defaultMessage,
+    });
+  };
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      setDepartmentsLoading(true);
+      try {
+        const response = await api.get("/supervisor/departments");
+        const fetchedDepartments = response.data || [];
+
+        setDepartments(fetchedDepartments);
+
+        const selectedDept = fetchedDepartments.find((dept) =>
+          keywords.some((keyword) =>
+            dept.name?.toLowerCase().includes(keyword.toLowerCase())
+          )
+        );
+
+        if (selectedDept) {
+          setSelectedDepartment(String(selectedDept.id));
+        }
+      } catch (error) {
+        handleError(error, "Bo'limlarni olishda xatolik yuz berdi!");
+      } finally {
+        setDepartmentsLoading(false);
+      }
+    };
+
+    fetchDepartments();
+  }, [toast]);
+
+  const fetchQueue = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/supervisor/plans/queue", {
+        params: { department_id: selectedDepartment },
+      });
+      setDepartment(response.data);
+    } catch (error) {
+      handleError(error, "Navbatni olishda xatolik yuz berdi!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedDepartment) return;
+    fetchQueue();
+  }, [selectedDepartment]);
+
+  const handleDragEnd = async (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    )
+      return;
+
+    const groupId = Number(source.droppableId);
+    const group = department.groups.find((g) => g.id === groupId);
+    if (!group) return;
+
+    const orderedBefore = buildOrderedQueue(group.orders);
+    const oldPrev = orderedBefore[source.index - 1];
+    const oldNext = orderedBefore[source.index + 1];
+
+    const ordered = [...orderedBefore];
+    const [moved] = ordered.splice(source.index, 1);
+    ordered.splice(destination.index, 0, moved);
+
+    const newPrev = ordered[destination.index - 1];
+    const newNext = ordered[destination.index + 1];
+
+    // Repair the previous_order_id / next_order_id links locally so the
+    // list stays correct on re-render, instead of only updating the moved
+    // row (which left the old neighbors' links stale and snapped the
+    // order back on the next render).
+    const patches = new Map();
+    const patch = (id, fields) => {
+      if (id == null) return;
+      patches.set(id, { ...(patches.get(id) || {}), ...fields });
+    };
+
+    patch(moved.id, {
+      previous_order_id: newPrev ? newPrev.order.id : null,
+      next_order_id: newNext ? newNext.order.id : null,
+    });
+    if (oldPrev)
+      patch(oldPrev.id, {
+        next_order_id: oldNext ? oldNext.order.id : null,
+      });
+    if (oldNext)
+      patch(oldNext.id, {
+        previous_order_id: oldPrev ? oldPrev.order.id : null,
+      });
+    if (newPrev) patch(newPrev.id, { next_order_id: moved.order.id });
+    if (newNext) patch(newNext.id, { previous_order_id: moved.order.id });
+
+    const updatedOrders = group.orders.map((item) =>
+      patches.has(item.id) ? { ...item, ...patches.get(item.id) } : item
+    );
+
+    const payload = {
+      group_id: groupId,
+      order_id: moved.order.id,
+      previous_order_id: newPrev ? newPrev.order.id : null,
+      next_order_id: newNext ? newNext.order.id : null,
+    };
+
+    setDepartment((prev) => ({
+      ...prev,
+      groups: prev.groups.map((g) =>
+        g.id === groupId ? { ...g, orders: updatedOrders } : g
+      ),
+    }));
+
+    setReorderingGroupId(groupId);
+    try {
+      await api.post("/supervisor/plans/queue", payload);
+    } catch (error) {
+      handleError(error, "Navbatni o'zgartirishda xatolik yuz berdi!");
+      fetchQueue();
+    } finally {
+      setReorderingGroupId(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-sm">
+          <ListOrdered className="h-5 w-5 text-white" />
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Ish rejasi navbati
+        </h1>
+      </div>
+
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-gray-500" />
+            <Select
+              value={selectedDepartment}
+              onValueChange={(value) => setSelectedDepartment(value)}
+              disabled={departmentsLoading}
+            >
+              <SelectTrigger className="w-64 bg-white border-gray-200">
+                <SelectValue
+                  placeholder={
+                    departmentsLoading ? "Yuklanmoqda..." : "Bo'limni tanlang"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {departmentsLoading ? (
+                  <div className="flex items-center justify-center p-2">
+                    <Loader2 className="animate-spin h-4 w-4" />
+                  </div>
+                ) : (
+                  departments.map((dept) => (
+                    <SelectItem key={dept.id} value={String(dept.id)}>
+                      {dept.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {loading && (
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-12">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <Loader2 className="animate-spin h-12 w-12 text-blue-600" />
+              <p className="text-lg font-medium text-gray-600">
+                Ma'lumotlar yuklanmoqda...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!loading && department && (
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 gap-4">
+            {department.groups
+              ?.slice()
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((group) => {
+                const ordered = buildOrderedQueue(group.orders);
+                const isReordering = reorderingGroupId === group.id;
+
+                return (
+                  <Card
+                    key={group.id}
+                    className="border-0 shadow-md overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-indigo-600">
+                          <Layers className="h-4 w-4" />
+                        </div>
+                        <h2 className="text-base font-semibold text-gray-900">
+                          {group.name}
+                        </h2>
+                        {isReordering && (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3.5 w-3.5" />
+                          {group.avg_attendance ?? 0}
+                        </span>
+                        <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-full shadow-sm text-gray-700 font-medium">
+                          <ListOrdered className="h-3.5 w-3.5 text-indigo-500" />
+                          {ordered.length} ta
+                        </span>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-0">
+                      <div className="overflow-auto text-xs">
+                        <div
+                          className={cn(
+                            "grid gap-2 px-3 py-2 border-b bg-gray-50 font-medium text-gray-500",
+                            COLUMNS
+                          )}
+                        >
+                          <div />
+                          <div>№</div>
+                          <div>Buyurtma nomi</div>
+                          <div>Miqdor</div>
+                          <div className="flex items-center gap-1">
+                            <Scissors className="h-3.5 w-3.5" /> Kesilgan
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Warehouse className="h-3.5 w-3.5" /> Omborda
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Shirt className="h-3.5 w-3.5" /> Tikilgan
+                          </div>
+                          <div>Qolgan</div>
+                          <div>Submodel</div>
+                          <div>Status</div>
+                          <div className="flex items-center gap-1">
+                            <Hourglass className="h-3.5 w-3.5" /> Prognoz
+                          </div>
+                        </div>
+
+                        <Droppable droppableId={String(group.id)}>
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                            >
+                              {ordered.map((item, index) => (
+                                <Draggable
+                                  key={item.id}
+                                  draggableId={String(item.id)}
+                                  index={index}
+                                  isDragDisabled={isReordering}
+                                >
+                                  {(provided, snapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      style={provided.draggableProps.style}
+                                      className={cn(
+                                        "grid gap-2 px-3 py-2.5 border-b border-l-4 items-center bg-white transition-colors hover:bg-gray-50",
+                                        COLUMNS,
+                                        statuses[item.order?.status]?.border,
+                                        snapshot.isDragging &&
+                                          "bg-blue-50 shadow-lg rounded-md"
+                                      )}
+                                    >
+                                      <div
+                                        {...provided.dragHandleProps}
+                                        className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-indigo-500 transition-colors"
+                                      >
+                                        <GripVertical className="h-4 w-4" />
+                                      </div>
+                                      <div className="font-semibold text-gray-400">
+                                        {index + 1}
+                                      </div>
+                                      <div className="truncate font-medium text-gray-800">
+                                        {item.order?.name}
+                                      </div>
+                                      <div>{item.order?.quantity}</div>
+                                      <div>{item.cut_quantity}</div>
+                                      <div>
+                                        {item.warehouse_completed_quantity}
+                                      </div>
+                                      <div>
+                                        {item.order_submodel?.sewing_quantity}
+                                      </div>
+                                      <div className="text-orange-600 font-medium">
+                                        {
+                                          item.order_submodel
+                                            ?.remaining_quantity
+                                        }
+                                      </div>
+                                      <div className="truncate">
+                                        {
+                                          item.order_submodel?.submodel
+                                            ?.name
+                                        }
+                                      </div>
+                                      <div>
+                                        <span
+                                          className={cn(
+                                            statuses[item.order?.status]
+                                              ?.color,
+                                            "px-2 py-1 rounded-full text-white whitespace-nowrap"
+                                          )}
+                                        >
+                                          {statuses[item.order?.status]?.text}
+                                        </span>
+                                      </div>
+                                      <div className="text-gray-600">
+                                        {item.forecast_days ? (
+                                          <div className="flex items-center gap-1">
+                                            <Hourglass className="h-3 w-3 text-indigo-400" />
+                                            {item.forecast_days} kun
+                                          </div>
+                                        ) : null}
+                                        {item.forecast_finish_date && (
+                                          <div className="flex items-center gap-1 text-gray-400">
+                                            <CalendarClock className="h-3 w-3" />
+                                            {item.forecast_finish_date}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+          </div>
+        </DragDropContext>
+      )}
+    </div>
+  );
+};
+
+export default ActualPlan;
