@@ -1,5 +1,5 @@
 import BaseLayout from "./BaseLayout";
-import { Users, Settings, Box, Calculator } from "lucide-react";
+import { Users, Settings, Box, Calculator, Stamp } from "lucide-react";
 
 const navigation = [
   {
@@ -12,6 +12,12 @@ const navigation = [
     name: "Buyurtmalar",
     href: "/internalAccountant/analysis",
     icon: Box,
+    onMobile: false,
+  },
+  {
+    name: "OTK shtamplar",
+    href: "/internalAccountant/otkStamps",
+    icon: Stamp,
     onMobile: false,
   },
   {

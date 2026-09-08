@@ -8,6 +8,7 @@ import Manual from "./Manual/Manual";
 import ViewEmployees from "./Employees/ViewEmployees";
 import OverCalc from "./OverCalc/OverCalc";
 import Analysis from "./Analysis";
+import OtkStamps from "./OtkStamps/OtkStamps";
 
 const InternalAccountant = () => {
   return (
@@ -21,6 +22,7 @@ const InternalAccountant = () => {
       <Route path="manual/*" element={<Manual />} />
       <Route path="overCalc/*" element={<OverCalc />} />
       <Route path="analysis" element={<Analysis />} />
+      <Route path="otkStamps" element={<OtkStamps />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
