@@ -18,7 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { History, Loader2, Plus, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock, History, Loader2, Plus, User } from "lucide-react";
 
 const emptyForm = {
   stamp_number: "",
@@ -190,6 +191,12 @@ const OtkStamps = () => {
         setHistoryLoading(false);
       });
   };
+
+  const historyList = Array.isArray(historyData)
+    ? historyData
+    : historyData
+      ? [historyData]
+      : [];
 
   return (
     <div className="space-y-4">
@@ -435,11 +442,72 @@ const OtkStamps = () => {
           </DialogHeader>
 
           {historyLoading ? (
-            <p className="text-xs text-slate-500">Yuklanmoqda...</p>
+            <div className="flex items-center justify-center gap-2 py-8 text-xs text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Yuklanmoqda...
+            </div>
+          ) : historyList.length > 0 ? (
+            <div className="max-h-[28rem] space-y-0 overflow-auto px-1">
+              {historyList.map((item, index) => {
+                const isCurrent = !item.assigned_to;
+                const isLast = index === historyList.length - 1;
+
+                return (
+                  <div key={item.id ?? index} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${
+                          isCurrent
+                            ? "bg-emerald-500 ring-4 ring-emerald-100"
+                            : "bg-slate-300"
+                        }`}
+                      />
+                      {!isLast && <div className="w-px flex-1 bg-slate-200" />}
+                    </div>
+
+                    <div className="mb-3 flex-1 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100">
+                            <User className="h-3.5 w-3.5 text-slate-500" />
+                          </div>
+                          <span className="text-xs font-semibold text-slate-800">
+                            {item.employee?.name || item.employee_id || "-"}
+                          </span>
+                        </div>
+                        {isCurrent ? (
+                          <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
+                            Joriy
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-slate-500">
+                            Tugagan
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-600">
+                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                        {formatDate(item.assigned_from)}
+                        {" — "}
+                        {item.assigned_to
+                          ? formatDate(item.assigned_to)
+                          : "hozirgacha"}
+                      </div>
+
+                      <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+                        <Clock className="h-3 w-3" />
+                        Yaratilgan: {formatDateTime(item.created_at)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
-            <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all rounded-md bg-slate-50 p-2 text-xs text-slate-700">
-              {JSON.stringify(historyData, null, 2)}
-            </pre>
+            <p className="py-6 text-center text-xs text-slate-500">
+              Tarix topilmadi
+            </p>
           )}
         </DialogContent>
       </Dialog>
