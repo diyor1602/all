@@ -15,6 +15,7 @@ import {
   Check,
   Search,
   Plus,
+  Pencil,
 } from "lucide-react";
 import {
   Dialog,
@@ -235,6 +236,48 @@ const DepartmentView = () => {
     setLockedEmployeeInfo(
       employee?.id
         ? { id: employee.id, name: employee.name, status: employee.status }
+        : null,
+    );
+    setAssignmentDialogOpen(true);
+  };
+
+  const openEditAssignment = (assignment) => {
+    setEditingAssignment(assignment);
+    setAssignmentForm({
+      employee_id: assignment?.employee?.id
+        ? String(assignment.employee.id)
+        : assignment?.employee_id
+          ? String(assignment.employee_id)
+          : "",
+      department_id: assignment?.department?.id
+        ? String(assignment.department.id)
+        : assignment?.department_id
+          ? String(assignment.department_id)
+          : "",
+      group_id: assignment?.group?.id
+        ? String(assignment.group.id)
+        : assignment?.group_id
+          ? String(assignment.group_id)
+          : "",
+      start_date: assignment?.start_date
+        ? assignment.start_date.slice(0, 10)
+        : "",
+      end_date: assignment?.end_date ? assignment.end_date.slice(0, 10) : "",
+      sum:
+        assignment?.sum === undefined || assignment?.sum === null
+          ? ""
+          : String(assignment.sum),
+    });
+    setEmployeePickerQuery("");
+    setEmployeePickerOpen(false);
+    setEmployeeFieldLocked(true);
+    setLockedEmployeeInfo(
+      assignment?.employee
+        ? {
+            id: assignment.employee.id,
+            name: assignment.employee.name,
+            status: assignment.employee.status,
+          }
         : null,
     );
     setAssignmentDialogOpen(true);
@@ -600,6 +643,9 @@ const DepartmentView = () => {
                         <th className="text-right py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
                           Daqiqasiga
                         </th>
+                        <th className="text-center py-2 px-2 font-semibold text-slate-700 text-xs border border-slate-200">
+                          Amallar
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -649,6 +695,17 @@ const DepartmentView = () => {
                             <span className="font-semibold text-slate-900 text-xs">
                               {assignment?.sum} so'm
                             </span>
+                          </td>
+                          <td className="py-2 px-2 text-center border border-slate-200">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => openEditAssignment(assignment)}
+                            >
+                              <Pencil className="h-3.5 w-3.5 mr-1" />
+                              Tahrirlash
+                            </Button>
                           </td>
                         </tr>
                       ))}
