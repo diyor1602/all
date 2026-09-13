@@ -31,6 +31,7 @@ const LatePenalties = () => {
     START_DATE: "late_penalties_start_date",
     END_DATE: "late_penalties_end_date",
     CURRENT_PAGE: "late_penalties_current_page",
+    SEARCH_TEXT: "late_penalties_search_text",
   };
 
   const [latePenalties, setLatePenalties] = useState([]);
@@ -51,6 +52,10 @@ const LatePenalties = () => {
     const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_PAGE);
     return saved ? parseInt(saved, 10) : 1;
   });
+  const [searchText, setSearchText] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.SEARCH_TEXT) || "";
+  });
+  const [debouncedSearchText, setDebouncedSearchText] = useState(searchText);
   const [loading, setLoading] = useState(true);
   const [reverseDialogOpen, setReverseDialogOpen] = useState(false);
   const [selectedPenalty, setSelectedPenalty] = useState(null);
@@ -67,6 +72,7 @@ const LatePenalties = () => {
           start_date: startDate,
           end_date: endDate,
           page: page,
+          search: debouncedSearchText,
         },
       });
       setLatePenalties(response.data?.data || []);
@@ -84,7 +90,7 @@ const LatePenalties = () => {
 
   useEffect(() => {
     getData(currentPage);
-  }, [startDate, endDate, currentPage]);
+  }, [startDate, endDate, currentPage, debouncedSearchText]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CURRENT_PAGE, currentPage.toString());
@@ -98,6 +104,18 @@ const LatePenalties = () => {
     localStorage.setItem(STORAGE_KEYS.END_DATE, endDate);
   }, [endDate]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SEARCH_TEXT, searchText);
+  }, [searchText]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchText(searchText);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
   const handleStartDateChange = (e) => {
     const value = e.target.value;
     setStartDate(value);
@@ -107,6 +125,12 @@ const LatePenalties = () => {
   const handleEndDateChange = (e) => {
     const value = e.target.value;
     setEndDate(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
     setCurrentPage(1);
   };
 
@@ -191,6 +215,13 @@ const LatePenalties = () => {
               value={endDate}
               onChange={handleEndDateChange}
               className="w-full sm:w-[140px] bg-white text-xs"
+            />
+            <Input
+              type="text"
+              placeholder="Qidirish..."
+              value={searchText}
+              onChange={handleSearchChange}
+              className="w-full sm:w-[200px] bg-white text-xs"
             />
           </div>
         </div>
