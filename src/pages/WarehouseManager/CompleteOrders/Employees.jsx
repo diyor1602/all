@@ -199,7 +199,7 @@ const Employees = () => {
     try {
       setAssignmentsLoading(true);
       const response = await api.get("/v1/warehouseManager/employeeSums", {
-        params: { department_id: id },
+        params: { department_id: id, month: selectedMonth },
       });
       const list = Array.isArray(response.data)
         ? response.data
@@ -218,12 +218,9 @@ const Employees = () => {
 
   useEffect(() => {
     getData();
-  }, [id, selectedMonth]);
-
-  useEffect(() => {
-    fetchEmployees();
     fetchAssignments();
-  }, [id]);
+    fetchEmployees();
+  }, [id, selectedMonth]);
 
   const currentDepartment = useMemo(
     () =>
@@ -592,8 +589,7 @@ const Employees = () => {
                   </CardTitle>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Xodimni guruhga qaysi sanadan qaysi sanagacha va qancha
-                    daqiqalik stavka bilan biriktirilganini shu yerda
-                    boshqaring
+                    daqiqalik stavka bilan biriktirilganini shu yerda boshqaring
                   </p>
                 </div>
               </div>

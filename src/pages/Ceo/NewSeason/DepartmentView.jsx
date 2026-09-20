@@ -182,7 +182,7 @@ const DepartmentView = () => {
     try {
       setAssignmentsLoading(true);
       const response = await api.get("/ceo/employeeSums", {
-        params: { department_id: id },
+        params: { department_id: id, month: selectedMonth },
       });
       const list = Array.isArray(response.data)
         ? response.data
@@ -201,12 +201,12 @@ const DepartmentView = () => {
 
   useEffect(() => {
     getData();
+    fetchAssignments();
+    fetchEmployees();
   }, [id, selectedMonth]);
 
   useEffect(() => {
     fetchDepartmentGroups();
-    fetchEmployees();
-    fetchAssignments();
   }, [id]);
 
   const currentDepartment = useMemo(
