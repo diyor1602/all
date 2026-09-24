@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { ArrowRight, X } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const DOWNLOAD_BASE = "https://update.vizzano-apparel.uz/download";
 
@@ -9,7 +13,10 @@ const DOWNLOAD_BASE = "https://update.vizzano-apparel.uz/download";
 const apps = {
   tailor: { name: "Tikuvchi", pkg: "uz.vizzano.tikuvchi" },
   universalTailor: { name: "Tikuvchi", pkg: "uz.vizzano.tikuvchi" },
-  qualityController: { name: "SifatNazoratchi", pkg: "uz.vizzano.sifatnazoratchi" },
+  qualityController: {
+    name: "SifatNazoratchi",
+    pkg: "uz.vizzano.sifatnazoratchi",
+  },
 };
 
 const DISMISS_KEY = "appDownloadBannerDismissedAt";
@@ -25,6 +32,7 @@ function isDismissed() {
 }
 
 // Banner ko'rinsa, layout sidebar va kontentni uning balandligiga (h-10) suradi
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAppDownloadBanner() {
   const app = apps[localStorage.getItem("role")];
   const [hidden, setHidden] = useState(isDismissed);
@@ -61,7 +69,9 @@ export default function AppDownloadBanner({ app, url, onDismiss }) {
   return (
     <div className="fixed inset-x-0 top-0 z-[60] flex h-10 items-center justify-center bg-gradient-to-r from-blue-600 to-violet-600 pl-4 pr-10 text-sm text-white">
       <p className="truncate">
-        <span className="font-medium">{app.name} ilovasi telefoningiz uchun tayyor.</span>{" "}
+        <span className="font-medium">
+          {app.name} ilovasi telefoningiz uchun tayyor.
+        </span>{" "}
         {/* Telefonda: to'g'ridan yuklab olish */}
         <a href={url} className={`${linkClass} md:hidden`}>
           Yuklab olish
@@ -84,7 +94,10 @@ export default function AppDownloadBanner({ app, url, onDismiss }) {
             <p className="mt-2 text-sm text-gray-600">
               Telefon kamerasi bilan skanerlang
             </p>
-            <a href={url} className="mt-2 inline-block text-xs text-blue-600 hover:underline">
+            <a
+              href={url}
+              className="mt-2 inline-block text-xs text-blue-600 hover:underline"
+            >
               yoki APK faylni shu yerda yuklab oling
             </a>
           </PopoverContent>
