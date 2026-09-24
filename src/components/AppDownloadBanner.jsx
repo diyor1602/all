@@ -12,13 +12,11 @@ const apps = {
 };
 
 const DISMISS_KEY = "appDownloadBannerDismissedAt";
-// Yopilgandan keyin shuncha vaqtdan so'ng yana ko'rsatiladi
-const SHOW_AGAIN_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-
+// Kuniga bir marta: bugun yopilgan bo'lsa, ertaga yana ko'rsatiladi
 function isDismissed() {
   try {
     const at = Number(localStorage.getItem(DISMISS_KEY));
-    return at > 0 && Date.now() - at < SHOW_AGAIN_AFTER_MS;
+    return at > 0 && new Date(at).toDateString() === new Date().toDateString();
   } catch {
     return false;
   }
