@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
+import AppDownloadBanner from "@/components/AppDownloadBanner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -324,6 +325,7 @@ export default function BaseLayout({ children, navigation }) {
             isChatPage ? "p-0" : "",
           )}
         >
+          {!isChatPage && <AppDownloadBanner />}
           {children}
         </main>
       </div>
