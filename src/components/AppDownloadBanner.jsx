@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { Download, Smartphone, X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const DOWNLOAD_BASE = "https://update.vizzano-apparel.uz/download";
 
@@ -12,6 +13,7 @@ const apps = {
 };
 
 const DISMISS_KEY = "appDownloadBannerDismissedAt";
+
 // Kuniga bir marta: bugun yopilgan bo'lsa, ertaga yana ko'rsatiladi
 function isDismissed() {
   try {
@@ -22,21 +24,10 @@ function isDismissed() {
   }
 }
 
-export default function AppDownloadBanner() {
+// Banner ko'rinsa, layout sidebar va kontentni uning balandligiga (h-10) suradi
+export function useAppDownloadBanner() {
   const app = apps[localStorage.getItem("role")];
   const [hidden, setHidden] = useState(isDismissed);
-  const [qr, setQr] = useState(null);
-
-  const url = app ? `${DOWNLOAD_BASE}/${app.pkg}` : null;
-
-  useEffect(() => {
-    if (!url || hidden) return;
-    QRCode.toDataURL(url, { margin: 1, width: 160 })
-      .then(setQr)
-      .catch(() => setQr(null));
-  }, [url, hidden]);
-
-  if (!app || hidden) return null;
 
   const dismiss = () => {
     try {
@@ -47,43 +38,63 @@ export default function AppDownloadBanner() {
     setHidden(true);
   };
 
+  return {
+    visible: Boolean(app) && !hidden,
+    app,
+    url: app ? `${DOWNLOAD_BASE}/${app.pkg}` : null,
+    dismiss,
+  };
+}
+
+export default function AppDownloadBanner({ app, url, onDismiss }) {
+  const [qr, setQr] = useState(null);
+
+  useEffect(() => {
+    QRCode.toDataURL(url, { margin: 1, width: 180 })
+      .then(setQr)
+      .catch(() => setQr(null));
+  }, [url]);
+
+  const linkClass =
+    "inline-flex items-center gap-1 font-semibold underline-offset-4 hover:underline";
+
   return (
-    <div className="relative mb-6 flex items-center gap-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 pr-10">
-      <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white sm:flex">
-        <Smartphone className="h-5 w-5" />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold text-gray-900">
-          {app.name} ilovasini telefoningizga o'rnating
-        </p>
-        <p className="mt-0.5 text-sm text-gray-600">
-          Ishlaringiz telefonda qulayroq.
-          <span className="hidden md:inline">
-            {" "}Kompyuterdan kirgan bo'lsangiz, QR-kodni telefon kamerasi bilan skanerlang.
-          </span>
-        </p>
-        <a
-          href={url}
-          className="mt-3 inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-        >
-          <Download className="h-4 w-4" />
+    <div className="fixed inset-x-0 top-0 z-[60] flex h-10 items-center justify-center bg-gradient-to-r from-blue-600 to-violet-600 pl-4 pr-10 text-sm text-white">
+      <p className="truncate">
+        <span className="font-medium">{app.name} ilovasi telefoningiz uchun tayyor.</span>{" "}
+        {/* Telefonda: to'g'ridan yuklab olish */}
+        <a href={url} className={`${linkClass} md:hidden`}>
           Yuklab olish
+          <ArrowRight className="h-4 w-4" />
         </a>
-      </div>
-
-      {qr && (
-        <img
-          src={qr}
-          alt={`${app.name} yuklab olish QR-kodi`}
-          className="hidden h-28 w-28 shrink-0 rounded-lg border border-blue-200 bg-white p-1 md:block"
-        />
-      )}
+        {/* Kompyuterda: APK kerak emas, telefon bilan skanerlash uchun QR */}
+        <Popover>
+          <PopoverTrigger className={`${linkClass} hidden md:inline-flex`}>
+            Yuklab olish
+            <ArrowRight className="h-4 w-4" />
+          </PopoverTrigger>
+          <PopoverContent className="z-[70] w-60 text-center">
+            {qr && (
+              <img
+                src={qr}
+                alt={`${app.name} yuklab olish QR-kodi`}
+                className="mx-auto h-40 w-40"
+              />
+            )}
+            <p className="mt-2 text-sm text-gray-600">
+              Telefon kamerasi bilan skanerlang
+            </p>
+            <a href={url} className="mt-2 inline-block text-xs text-blue-600 hover:underline">
+              yoki APK faylni shu yerda yuklab oling
+            </a>
+          </PopoverContent>
+        </Popover>
+      </p>
 
       <button
-        onClick={dismiss}
+        onClick={onDismiss}
         aria-label="Yopish"
-        className="absolute right-2 top-2 rounded-full p-1.5 text-gray-500 transition-colors hover:bg-blue-100 hover:text-gray-700"
+        className="absolute right-2 rounded-full p-1.5 transition-colors hover:bg-white/20"
       >
         <X className="h-4 w-4" />
       </button>

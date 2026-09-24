@@ -21,7 +21,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import api from "@/utils/api";
-import AppDownloadBanner from "@/components/AppDownloadBanner";
+import AppDownloadBanner, {
+  useAppDownloadBanner,
+} from "@/components/AppDownloadBanner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +40,8 @@ export default function BaseLayout({ children, navigation }) {
   const location = useLocation();
 
   const isChatPage = location.pathname.startsWith("/chat");
+  const banner = useAppDownloadBanner();
+  const showBanner = banner.visible && !isChatPage;
 
   const imageUrl = localStorage.getItem("imgUrl");
   const hasValidImage = imageUrl && imageUrl !== "null";
@@ -138,9 +142,21 @@ export default function BaseLayout({ children, navigation }) {
           </p>
         </div>
       )}
+      {showBanner && (
+        <AppDownloadBanner
+          app={banner.app}
+          url={banner.url}
+          onDismiss={banner.dismiss}
+        />
+      )}
       {/* Sidebar trigger button for mobile */}
       {!isChatPage && (
-        <div className="lg:hidden fixed top-4 right-4 z-50">
+        <div
+          className={cn(
+            "lg:hidden fixed right-4 z-50",
+            showBanner ? "top-14" : "top-4",
+          )}
+        >
           <Button
             variant="outline"
             size="icon"
@@ -167,7 +183,8 @@ export default function BaseLayout({ children, navigation }) {
       {/* Sidebar for desktop */}
       <div
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0",
+          "fixed left-0 z-50 w-64 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0",
+          showBanner ? "top-10 h-[calc(100%-2.5rem)]" : "top-0 h-full",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -318,14 +335,19 @@ export default function BaseLayout({ children, navigation }) {
       </div>
 
       {/* Main content */}
-      <div className={cn("lg:pl-64 pb-16 lg:pb-0", isChatPage ? "pb-0" : "")}>
+      <div
+        className={cn(
+          "lg:pl-64 pb-16 lg:pb-0",
+          isChatPage ? "pb-0" : "",
+          showBanner ? "pt-10" : "",
+        )}
+      >
         <main
           className={cn(
             "min-h-screen py-8 px-4 sm:px-6 lg:px-8",
             isChatPage ? "p-0" : "",
           )}
         >
-          {!isChatPage && <AppDownloadBanner />}
           {children}
         </main>
       </div>
